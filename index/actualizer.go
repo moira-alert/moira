@@ -96,5 +96,11 @@ func (index *Index) actualizeIndex() error {
 			Int("triggers_count", len(triggersToUpdate)).
 			Msg("Some triggers reindexed")
 	}
+
+	count, _ := index.triggerIndex.GetCount()
+	log.Debug().
+		Int("count docs: ", int(count)).
+		Msg("Actualizer debug")
+
 	return nil
 }

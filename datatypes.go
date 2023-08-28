@@ -270,8 +270,8 @@ type Trigger struct {
 	Name             string          `json:"name" example:"Not enough disk space left"`
 	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log"`
 	Targets          []string        `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
-	WarnValue        *float64        `json:"warn_value" example:"5000"`
-	ErrorValue       *float64        `json:"error_value" example:"1000"`
+	WarnValue        *float64        `json:"warn_value" example:"5000" swaggertype:"primitive,number"`
+	ErrorValue       *float64        `json:"error_value" example:"1000" extensions:"nullable,!omitempty"`
 	TriggerType      string          `json:"trigger_type" example:"rising"`
 	Tags             []string        `json:"tags" example:"server,disk"`
 	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA"`

@@ -1,9 +1,10 @@
 package index
 
 import (
+	"log"
+
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/index/bleve"
-	"github.com/moira-alert/moira/index/mapping"
+	"github.com/moira-alert/moira/index/bluge"
 	"github.com/moira-alert/moira/metrics"
 	"gopkg.in/tomb.v2"
 )
@@ -39,9 +40,10 @@ func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistr
 		database: database,
 	}
 	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry)
-	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
-	newIndex.triggerIndex, err = bleve.CreateTriggerIndex(indexMapping)
+	// indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
+	newIndex.triggerIndex, err = bluge.CreateTriggerIndex()
 	if err != nil {
+		log.Println("ERROR INDEX: ", err)
 		return nil
 	}
 	return &newIndex
@@ -53,10 +55,10 @@ func (index *Index) Start() error {
 		return nil
 	}
 
-	err := index.fillIndex()
-	if err != nil {
-		return err
-	}
+	// err := index.fillIndex()
+	// if err != nil {
+	// 	return err
+	// }
 
 	index.indexed = true
 	index.inProgress = false

@@ -1,6 +1,8 @@
 package bleve
 
 import (
+	"os"
+
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/index/scorch"
 	"github.com/blevesearch/bleve/v2/mapping"
@@ -13,7 +15,24 @@ type TriggerIndex struct {
 
 // CreateTriggerIndex returns TriggerIndex by provided mapping
 func CreateTriggerIndex(mapping mapping.IndexMapping) (*TriggerIndex, error) {
-	bleveIdx, err := bleve.NewUsing("", mapping, scorch.Name, scorch.Name, map[string]interface{}{})
+	kvConfig := map[string]interface{}{
+		"create_if_missing":        true,
+		"error_if_exists":          true,
+		"unsafe_batch":             true,
+		"eventCallbackName":        "scorchEventCallbacks",
+		"asyncErrorCallbackName":   "scorchAsyncErrorCallbacks",
+		"numSnapshotsToKeep":       3,
+		"rollbackSamplingInterval": "10m",
+		"forceSegmentType":         "zap",
+		"bolt_timeout":             "30s",
+	}
+	kvConfig["kvStoreName"] = "scorch"
+	kvConfig["forceSegmentVersion"] = "7.0.0"
+
+	if err := os.MkdirAll("index", os.ModePerm); err != nil {
+		return nil, err
+	}
+	bleveIdx, err := bleve.NewUsing("index", mapping, scorch.Name, scorch.Name, kvConfig)
 	if err != nil {
 		return nil, err
 	}

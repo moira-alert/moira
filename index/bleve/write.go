@@ -1,6 +1,8 @@
 package bleve
 
 import (
+	"log"
+
 	"github.com/blevesearch/bleve/v2"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
@@ -8,6 +10,9 @@ import (
 
 // Write adds moira.TriggerChecks to TriggerIndex
 func (index *TriggerIndex) Write(checks []*moira.TriggerCheck) error {
+	stats, _ := index.index.Stats().MarshalJSON()
+	log.Println("INDEX STATS: ", string(stats))
+
 	batch := index.index.NewBatch()
 	defer batch.Reset()
 
