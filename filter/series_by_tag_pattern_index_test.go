@@ -156,14 +156,33 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			{
 				"cpu1",
 				map[string]string{},
-				[]string{"dc!=ru1", "dc!=~ru", "name=cpu1", "name=~cpu", "name=~cpu;dc=", "name=~cpu;dc=~"},
+				[]string{
+					// "dc!=ru1",
+					// "dc!=~ru",
+					"name=cpu1",
+					"name=~cpu",
+					// "name=~cpu;dc=",
+					// "name=~cpu;dc=~",
+				},
 			},
 			{
 				"cpu2",
 				map[string]string{},
-				[]string{"dc!=ru1", "dc!=~ru", "name!=cpu1", "name=~cpu", "name=~cpu;dc=", "name=~cpu;dc=~"},
+				[]string{
+					// "dc!=ru1",
+					// "dc!=~ru",
+					"name!=cpu1",
+					"name=~cpu",
+					// "name=~cpu;dc=",
+					// "name=~cpu;dc=~",
+				},
 			},
-			{"disk", map[string]string{}, []string{"dc!=ru1", "dc!=~ru", "name!=cpu1", "name!=~cpu"}},
+			{"disk", map[string]string{}, []string{
+				// "dc!=ru1",
+				// "dc!=~ru",
+				"name!=cpu1",
+				"name!=~cpu",
+			}},
 			{
 				"cpu1",
 				map[string]string{"dc": "ru1"},
@@ -206,7 +225,14 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			{
 				"cpu1",
 				map[string]string{"machine": "machine"},
-				[]string{"dc!=ru1", "dc!=~ru", "name=cpu1", "name=~cpu", "name=~cpu;dc=", "name=~cpu;dc=~"},
+				[]string{
+					// "dc!=ru1",
+					// "dc!=~ru",
+					"name=cpu1",
+					"name=~cpu",
+					// "name=~cpu;dc=",
+					// "name=~cpu;dc=~",
+				},
 			},
 		}
 
@@ -384,11 +410,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				[]string{
 					"name=something;tag1=*",
 					"name=something;tag1=val1",
-					"name=something;tag1=val1;tag2!=~sh.*e",
-					"name=something;tag1=val1;tag2=~*",
+					// "name=something;tag1=val1;tag2!=~sh.*e",
 					"name=something;tag1=~a",
-					"name=something;tag1=~a;tag2!=sh",
-					"name=something;tag1=~a;tag2!=~sh*e",
+					// "name=something;tag1=~a;tag2!=sh",
+					// "name=something;tag1=~a;tag2!=~sh*e",
 				},
 			},
 			{
@@ -409,15 +434,12 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				map[string]string{"job": "coding"},
 				[]string{
 					"name=something;job=cod*",
-					"name=something;tag1=*",
 				},
 			},
 			{
 				"something",
 				map[string]string{"job": "tag2"},
-				[]string{
-					"name=something;tag1=*",
-				},
+				[]string{},
 			},
 			{
 				"something",

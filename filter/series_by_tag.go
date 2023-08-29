@@ -214,7 +214,7 @@ func createMatchingHandlerForOneTag(spec TagSpec) (MatchingHandler, error) {
 		}
 	}
 
-	matchEmpty := matchingHandlerCondition("")
+	// matchEmpty := matchingHandlerCondition("")
 	return func(metric string, labels map[string]string) bool {
 		if spec.Name == "name" {
 			return matchingHandlerCondition(metric)
@@ -222,6 +222,6 @@ func createMatchingHandlerForOneTag(spec TagSpec) (MatchingHandler, error) {
 		if value, found := labels[spec.Name]; found {
 			return matchingHandlerCondition(value)
 		}
-		return matchEmpty
+		return false
 	}, nil
 }
