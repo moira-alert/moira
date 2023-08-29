@@ -3,7 +3,7 @@ package worker
 import (
 	"time"
 
-	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/metrics"
 	w "github.com/moira-alert/moira/worker"
 )
 
@@ -12,54 +12,95 @@ const (
 	remoteTriggerName     = "Remote checker"
 )
 
-func (worker *Checker) remoteTriggerGetter() error {
+type remoteChecker struct {
+	check *Checker
+}
+
+func newRemoteChecker(check *Checker) checkerWorker {
+	return &remoteChecker{
+		check: check,
+	}
+}
+
+func (ch *remoteChecker) Name() string {
+	return "Remote"
+}
+
+func (ch *remoteChecker) IsEnabled() bool {
+	return ch.check.RemoteConfig.Enabled
+}
+
+func (ch *remoteChecker) MaxParallelChecks() int {
+	return ch.check.Config.MaxParallelRemoteChecks
+}
+
+func (ch *remoteChecker) Metrics() *metrics.CheckMetrics {
+	return ch.check.Metrics.RemoteMetrics
+}
+
+func (ch *remoteChecker) StartTriggerGetter() error {
 	w.NewWorker(
 		remoteTriggerName,
-		worker.Logger,
-		worker.Database.NewLock(remoteTriggerLockName, nodataCheckerLockTTL),
-		worker.remoteTriggerChecker,
-	).Run(worker.tomb.Dying())
+		ch.check.Logger,
+		ch.check.Database.NewLock(remoteTriggerLockName, nodataCheckerLockTTL),
+		ch.remoteTriggerChecker,
+	).Run(ch.check.tomb.Dying())
 
 	return nil
 }
 
-func (worker *Checker) remoteTriggerChecker(stop <-chan struct{}) error {
-	checkTicker := time.NewTicker(worker.RemoteConfig.CheckInterval)
-	worker.Logger.Info().Msg(remoteTriggerName + " started")
+func (ch *remoteChecker) GetTriggersToCheck(count int) ([]string, error) {
+	return ch.check.Database.GetRemoteTriggersToCheck(count)
+}
+
+func (ch *remoteChecker) remoteTriggerChecker(stop <-chan struct{}) error {
+	checkTicker := time.NewTicker(ch.check.RemoteConfig.CheckInterval)
+	ch.check.Logger.Info().Msg(remoteTriggerName + " started")
 	for {
 		select {
 		case <-stop:
-			worker.Logger.Info().Msg(remoteTriggerName + " stopped")
+			ch.check.Logger.Info().Msg(remoteTriggerName + " stopped")
 			checkTicker.Stop()
 			return nil
+
 		case <-checkTicker.C:
-			if err := worker.checkRemote(); err != nil {
-				worker.Logger.Error().
+			if err := ch.checkRemote(); err != nil {
+				ch.check.Logger.Error().
 					Error(err).
-					String("remote_trigger_name", remoteTriggerName).
 					Msg("Remote trigger failed")
 			}
 		}
 	}
 }
 
-func (worker *Checker) checkRemote() error {
-	source, err := worker.SourceProvider.GetRemote()
+func (ch *remoteChecker) checkRemote() error {
+	source, err := ch.check.SourceProvider.GetRemote()
 	if err != nil {
 		return err
 	}
-	remoteAvailable, err := source.(*remote.Remote).IsRemoteAvailable()
-	if !remoteAvailable {
-		worker.Logger.Info().
+
+	available, err := source.IsAvailable()
+	if !available {
+		ch.check.Logger.Info().
 			Error(err).
 			Msg("Remote API is unavailable. Stop checking remote triggers")
-	} else {
-		worker.Logger.Debug().Msg("Checking remote triggers")
-		triggerIds, err := worker.Database.GetRemoteTriggerIDs()
-		if err != nil {
-			return err
-		}
-		worker.addRemoteTriggerIDsIfNeeded(triggerIds)
+		return nil
 	}
+
+	ch.check.Logger.Debug().Msg("Checking remote triggers")
+
+	triggerIds, err := ch.check.Database.GetRemoteTriggerIDs()
+	if err != nil {
+		return err
+	}
+	ch.addRemoteTriggerIDsIfNeeded(triggerIds)
+
 	return nil
+}
+
+func (ch *remoteChecker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
+	needToCheckRemoteTriggerIDs := ch.check.getTriggerIDsToCheck(triggerIDs)
+	if len(needToCheckRemoteTriggerIDs) > 0 {
+		ch.check.Database.AddRemoteTriggersToCheck(needToCheckRemoteTriggerIDs) //nolint
+	}
 }

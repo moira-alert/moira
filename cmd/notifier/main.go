@@ -9,6 +9,7 @@ import (
 
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
 
 	"github.com/moira-alert/moira"
@@ -83,10 +84,19 @@ func main() {
 	notificationHistorySettings := config.NotificationHistory.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.Notifier)
 
-	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
+
+	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	prometheusSource, err := prometheus.Create(prometheusConfig, logger)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize prometheus metric source")
+	}
+
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, prometheusSource)
 
 	// Initialize the image store
 	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)

@@ -19,6 +19,7 @@ type config struct {
 	Web                 webConfig                     `yaml:"web"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
 	Remote              cmd.RemoteConfig              `yaml:"remote"`
+	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 }
 
@@ -62,10 +63,10 @@ type featureFlags struct {
 
 func (config *apiConfig) getSettings(localMetricTTL, remoteMetricTTL string) *api.Config {
 	return &api.Config{
-		EnableCORS:      config.EnableCORS,
-		Listen:          config.Listen,
-		LocalMetricTTL:  to.Duration(localMetricTTL),
-		RemoteMetricTTL: to.Duration(remoteMetricTTL),
+		EnableCORS:              config.EnableCORS,
+		Listen:                  config.Listen,
+		GraphiteLocalMetricTTL:  to.Duration(localMetricTTL),
+		GraphiteRemoteMetricTTL: to.Duration(remoteMetricTTL),
 	}
 }
 

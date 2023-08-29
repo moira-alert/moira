@@ -17,6 +17,10 @@ func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) erro
 	return connector.addTriggersToCheck(remoteTriggersToCheckKey, triggerIDs)
 }
 
+func (connector *DbConnector) AddPrometheusTriggersToCheck(triggerIDs []string) error {
+	return connector.addTriggersToCheck(prometheusTriggersToCheckKey, triggerIDs)
+}
+
 // GetLocalTriggersToCheck return random trigger ID from Redis Set
 func (connector *DbConnector) GetLocalTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(localTriggersToCheckKey, count)
@@ -27,6 +31,10 @@ func (connector *DbConnector) GetRemoteTriggersToCheck(count int) ([]string, err
 	return connector.getTriggersToCheck(remoteTriggersToCheckKey, count)
 }
 
+func (connector *DbConnector) GetPrometheusTriggersToCheck(count int) ([]string, error) {
+	return connector.getTriggersToCheck(prometheusTriggersToCheckKey, count)
+}
+
 // GetLocalTriggersToCheckCount return number of triggers ID to check from Redis Set
 func (connector *DbConnector) GetLocalTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(localTriggersToCheckKey)
@@ -35,6 +43,10 @@ func (connector *DbConnector) GetLocalTriggersToCheckCount() (int64, error) {
 // GetRemoteTriggersToCheckCount return number of remote triggers ID to check from Redis Set
 func (connector *DbConnector) GetRemoteTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(remoteTriggersToCheckKey)
+}
+
+func (connector *DbConnector) GetPrometheusTriggersToCheckCount() (int64, error) {
+	return connector.getTriggersToCheckCount(prometheusTriggersToCheckKey)
 }
 
 func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string) error {
@@ -81,4 +93,5 @@ func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error)
 }
 
 var remoteTriggersToCheckKey = "moira-remote-triggers-to-check"
+var prometheusTriggersToCheckKey = "moira-prometheus-triggers-to-check"
 var localTriggersToCheckKey = "moira-triggers-to-check"

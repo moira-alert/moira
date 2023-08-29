@@ -19,10 +19,10 @@ func Test_apiConfig_getSettings(t *testing.T) {
 		}
 
 		expectedResult := &api.Config{
-			EnableCORS:      true,
-			Listen:          "0000",
-			LocalMetricTTL:  time.Hour,
-			RemoteMetricTTL: 24 * time.Hour,
+			EnableCORS:              true,
+			Listen:                  "0000",
+			GraphiteLocalMetricTTL:  time.Hour,
+			GraphiteRemoteMetricTTL: 24 * time.Hour,
 		}
 
 		result := apiConf.getSettings("1h", "24h")

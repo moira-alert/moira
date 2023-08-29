@@ -129,10 +129,15 @@ func HandlePushTriggerMetrics(
 	return nil
 }
 
-func HandlePushTriggerLastCheck(logger moira.Logger, database moira.Database, triggerID string,
-	lastCheck *moira.CheckData, isRemoteTrigger bool) error {
+func HandlePushTriggerLastCheck(
+	logger moira.Logger,
+	database moira.Database,
+	triggerID string,
+	lastCheck *moira.CheckData,
+	triggerSource moira.TriggerSource,
+) error {
 	logger.Info().Msg("Save trigger last check")
-	if err := database.SetTriggerLastCheck(triggerID, lastCheck, isRemoteTrigger); err != nil {
+	if err := database.SetTriggerLastCheck(triggerID, lastCheck, triggerSource); err != nil {
 		return fmt.Errorf("cannot set trigger last check: %w", err)
 	}
 	logger.Info().Msg("Trigger last check was saved")

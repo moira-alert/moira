@@ -82,7 +82,12 @@ func TestBuildCommandData(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Test send events", t, func() {
 		sender := Sender{exec: "script.go first second", logger: logger}
-		scriptFile, args, scriptBody, err := sender.buildCommandData([]moira.NotificationEvent{{Metric: "New metric"}}, moira.ContactData{ID: "ContactID"}, moira.TriggerData{ID: "TriggerID"}, true)
+		scriptFile, args, scriptBody, err := sender.buildCommandData(
+			[]moira.NotificationEvent{{Metric: "New metric"}},
+			moira.ContactData{ID: "ContactID"},
+			moira.TriggerData{ID: "TriggerID"},
+			true,
+		)
 		So(scriptFile, ShouldResemble, "script.go")
 		So(args, ShouldResemble, []string{"first", "second"})
 		So(err, ShouldBeNil)

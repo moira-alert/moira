@@ -19,6 +19,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
 	_ "go.uber.org/automaxprocs"
 )
@@ -114,10 +115,23 @@ func main() {
 		String("listen_address", apiConfig.Listen).
 		Msg("Start listening")
 
-	localSource := local.Create(database)
 	remoteConfig := applicationConfig.Remote.GetRemoteSourceSettings()
+	prometheusConfig := applicationConfig.Prometheus.GetPrometheusSourceSettings()
+
+	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	prometheusSource, err := prometheus.Create(prometheusConfig, logger)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize prometheus metric source")
+	}
+
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(
+		localSource,
+		remoteSource,
+		prometheusSource,
+	)
 
 	webConfigContent, err := applicationConfig.Web.getSettings(remoteConfig.Enabled)
 	if err != nil {

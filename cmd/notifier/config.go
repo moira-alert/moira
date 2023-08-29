@@ -18,6 +18,7 @@ type config struct {
 	Notifier            notifierConfig                `yaml:"notifier"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
 	Remote              cmd.RemoteConfig              `yaml:"remote"`
+	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
 	ImageStores         cmd.ImageStoreConfig          `yaml:"image_store"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 }

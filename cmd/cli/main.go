@@ -293,8 +293,13 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to handle push trigger metrics")
 		}
-		if err := support.HandlePushTriggerLastCheck(logger, dataBase, dump.Trigger.ID, &dump.LastCheck,
-			dump.Trigger.IsRemote); err != nil {
+		if err := support.HandlePushTriggerLastCheck(
+			logger,
+			dataBase,
+			dump.Trigger.ID,
+			&dump.LastCheck,
+			dump.Trigger.TriggerSource,
+		); err != nil {
 			logger.Fatal().
 				Error(err).
 				Msg("Failed to handle push trigger last check")

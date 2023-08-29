@@ -31,7 +31,14 @@ type TriggerChecker struct {
 // MakeTriggerChecker initialize new triggerChecker data
 // if trigger does not exists then return ErrTriggerNotExists error
 // if trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
-func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.Logger, config *Config, sourceProvider *metricSource.SourceProvider, metrics *metrics.CheckerMetrics) (*TriggerChecker, error) {
+func MakeTriggerChecker(
+	triggerID string,
+	dataBase moira.Database,
+	logger moira.Logger,
+	config *Config,
+	sourceProvider *metricSource.SourceProvider,
+	metrics *metrics.CheckerMetrics,
+) (*TriggerChecker, error) {
 	until := time.Now().Unix()
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
