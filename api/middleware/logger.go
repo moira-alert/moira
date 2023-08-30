@@ -69,6 +69,7 @@ func getErrorResponseIfItHas(writer http.ResponseWriter) *api.ErrorResponse {
 		return &api.ErrorResponse{
 			HTTPStatusCode: http.StatusInternalServerError,
 			Err:            err,
+			ErrorText:      err.Error(),
 		}
 	}
 
@@ -125,6 +126,7 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 		errorResponse := getErrorResponseIfItHas(response)
 		if errorResponse != nil {
 			event.Error(errorResponse.Err)
+			event.String("error_text", errorResponse.ErrorText)
 		}
 	} else {
 		event = entry.logger.Info()
