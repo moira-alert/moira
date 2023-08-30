@@ -55,10 +55,10 @@ func (index *Index) Start() error {
 		return nil
 	}
 
-	// err := index.fillIndex()
-	// if err != nil {
-	// 	return err
-	// }
+	err := index.fillIndex()
+	if err != nil {
+		return err
+	}
 
 	index.indexed = true
 	index.inProgress = false

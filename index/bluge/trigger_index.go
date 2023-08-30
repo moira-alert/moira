@@ -9,9 +9,6 @@ type TriggerIndex struct {
 }
 
 func CreateTriggerIndex() (*TriggerIndex, error) {
-	// if err := os.MkdirAll("index", os.ModePerm); err != nil {
-	// 	return nil, err
-	// }
 	config := bluge.InMemoryOnlyConfig()
 	writer, err := bluge.OpenWriter(config)
 	if err != nil {

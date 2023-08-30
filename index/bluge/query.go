@@ -13,7 +13,8 @@ func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool) bluge.Q
 	searchQuery := bluge.NewBooleanQuery()
 	searchQuery.AddShould(buildQueryForTags(filterTags))
 	searchQuery.AddShould(buildQueryForTerms(searchTerms))
-	searchQuery.AddMust(buildQueryForOnlyErrors(onlyErrors))
+	// TODO: add ability to search only error triggers
+	// searchQuery.AddShould(buildQueryForOnlyErrors(onlyErrors))
 
 	return searchQuery
 }
@@ -48,14 +49,14 @@ func buildQueryForTerms(searchTerms []string) bluge.Query {
 	return searchQuery
 }
 
-func buildQueryForOnlyErrors(onlyErrors bool) bluge.Query {
-	searchQuery := bluge.NewBooleanQuery()
-	if !onlyErrors {
-		return searchQuery
-	}
-	minScore := 1.0
-	maxScore := 10.0
-	query := bluge.NewNumericRangeQuery(minScore, maxScore)
-	query.SetField(mapping.TriggerLastCheckScore.GetName())
-	return searchQuery.AddMust(query)
-}
+// func buildQueryForOnlyErrors(onlyErrors bool) bluge.Query {
+// 	if !onlyErrors {
+// 		return bluge.NewMatchAllQuery()
+// 	}
+// 	boolQuery := bluge.NewBooleanQuery()
+// 	minScore := 1.0
+// 	maxScore := 5.0
+// 	query := bluge.NewNumericRangeQuery(minScore, maxScore)
+// 	query.SetField(mapping.TriggerLastCheckScore.GetName())
+// 	return boolQuery.AddMust(query)
+// }

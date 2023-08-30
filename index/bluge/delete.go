@@ -12,6 +12,6 @@ func (index *TriggerIndex) Delete(triggerIDs []string) error {
 		doc := bluge.NewDocument(triggerID)
 		batch.Delete(doc.ID())
 	}
-	
+
 	return index.writer.Batch(batch)
 }
