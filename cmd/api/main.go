@@ -99,6 +99,15 @@ func main() {
 	}
 	defer searchIndex.Stop() //nolint
 
+	stats := newTriggerStats(logger, database, telemetry.Metrics)
+	err = stats.Start()
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to start trigger stats worker")
+	}
+	defer stats.Stop() //nolint
+
 	if !searchIndex.IsReady() {
 		logger.Fatal().Msg("Search index is not ready, exit")
 	}
