@@ -53,7 +53,6 @@ func (connector *DbConnector) GetPrometheusTriggerIDs() ([]string, error) {
 }
 
 func (connector *DbConnector) GetTriggerCount() (map[moira.TriggerSource]int64, error) {
-
 	pipe := (*connector.client).TxPipeline()
 
 	total := pipe.SCard(connector.context, triggersListKey)
