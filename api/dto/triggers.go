@@ -58,7 +58,7 @@ type TriggerModel struct {
 	// Set of tags to manipulate subscriptions
 	Tags []string `json:"tags" example:"server,disk"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
-	TTLState *moira.TTLState `json:"ttl_state,omitempty" example:"NODATA"`
+	TTLState *moira.TTLState `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
 	TTL int64 `json:"ttl,omitempty" example:"600" format:"int64"`
 	// Determines when Moira should monitor trigger
