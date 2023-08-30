@@ -28,10 +28,8 @@ func newTriggerStats(
 	}
 }
 
-func (stats *triggerStats) Start() error {
+func (stats *triggerStats) Start() {
 	stats.tomb.Go(stats.startCheckingTriggerCount)
-
-	return nil
 }
 
 func (stats *triggerStats) startCheckingTriggerCount() error {
