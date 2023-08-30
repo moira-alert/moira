@@ -57,6 +57,10 @@ func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mappin
 			for _, fragment := range fragments {
 				highlightValue.WriteString(fragment)
 			}
+			// log.Println("HIGHLIGHT: ", moira.SearchHighlight{
+			// 	Field: triggerField.GetTagValue(),
+			// 	Value: highlightValue.String(),
+			// })
 			highlights = append(highlights, moira.SearchHighlight{
 				Field: triggerField.GetTagValue(),
 				Value: highlightValue.String(),

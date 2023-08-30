@@ -1,8 +1,6 @@
 package bleve
 
 import (
-	"os"
-
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/index/scorch"
 	"github.com/blevesearch/bleve/v2/mapping"
@@ -29,10 +27,7 @@ func CreateTriggerIndex(mapping mapping.IndexMapping) (*TriggerIndex, error) {
 	kvConfig["kvStoreName"] = "scorch"
 	kvConfig["forceSegmentVersion"] = "7.0.0"
 
-	if err := os.MkdirAll("index", os.ModePerm); err != nil {
-		return nil, err
-	}
-	bleveIdx, err := bleve.NewUsing("index", mapping, scorch.Name, scorch.Name, kvConfig)
+	bleveIdx, err := bleve.NewUsing("", mapping, scorch.Name, scorch.Name, kvConfig)
 	if err != nil {
 		return nil, err
 	}

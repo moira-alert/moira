@@ -45,26 +45,43 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 	next, err := searchResult.Next()
 	for err == nil && next != nil {
 		log.Println("NEXT")
+		var docID string
 		err = next.VisitStoredFields(func(field string, value []byte) bool {
-			highlights := []moira.SearchHighlight{
-				{
-					Field: field,
-					Value: string(value),
-				},
+			switch field {
+			case "_id":
+				fmt.Println("ID: ", string(value))
+				docID = string(value)
+			case "desc":
+				fmt.Println("DESC: ", string(value))
+			case "name":
+				fmt.Println("NAME: ", string(value))
+			case "tags":
+				fmt.Println("TAGS: ", string(value))
+			case "last_check_score":
+				fmt.Println("LAST_CHECK_SCORE: ", string(value))
+			default:
+				fmt.Println("UNDEFINED FIELD")
 			}
-
-			triggerSearchResult := moira.SearchResult{
-				ObjectID:   field,
-				Highlights: highlights,
-			}
-
-			searchResults = append(searchResults, &triggerSearchResult)
 
 			return true
 		})
 		if err != nil {
 			return
 		}
+		highlights := []moira.SearchHighlight{
+			{
+				Field: "desc",
+				Value: "aaa",
+			},
+		}
+
+		triggerSearchResult := moira.SearchResult{
+			ObjectID:   docID,
+			Highlights: highlights,
+		}
+
+		searchResults = append(searchResults, &triggerSearchResult)
+
 		next, err = searchResult.Next()
 	}
 	if err != nil {

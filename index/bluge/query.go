@@ -11,8 +11,8 @@ func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool) bluge.Q
 	}
 
 	searchQuery := bluge.NewBooleanQuery()
-	searchQuery.AddMust(buildQueryForTags(filterTags))
-	searchQuery.AddMust(buildQueryForTerms(searchTerms))
+	searchQuery.AddShould(buildQueryForTags(filterTags))
+	searchQuery.AddShould(buildQueryForTerms(searchTerms))
 	searchQuery.AddMust(buildQueryForOnlyErrors(onlyErrors))
 
 	return searchQuery

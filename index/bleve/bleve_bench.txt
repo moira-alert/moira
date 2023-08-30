@@ -1,0 +1,264 @@
+2023-08-29 16:44:44.628 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.670 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+goos: linux
+goarch: amd64
+pkg: github.com/moira-alert/moira/index/bleve
+cpu: AMD Ryzen 5 5500U with Radeon Graphics         
+BenchmarkFillIndex/BenchmarkFillIndex_Size:50_Batch:1000-12         	2023-08-29 16:44:44.674 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.709 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.710 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.742 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.742 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.774 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.774 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.816 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.816 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.859 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.860 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.892 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.892 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.929 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.929 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.966 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:44.967 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.012 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.012 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.050 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.050 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.085 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.085 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.119 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.119 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.158 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.158 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.194 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.194 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.233 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.233 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.272 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.272 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.310 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.310 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.344 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.344 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.379 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.380 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.417 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.418 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.453 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.453 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.486 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.486 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.516 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.517 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.545 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.545 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.582 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.582 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.620 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.620 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.660 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.665 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.698 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.699 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.740 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.740 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.793 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.793 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.829 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.829 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.861 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.861 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.903 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.903 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.950 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.951 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.985 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:45.985 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.034 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.034 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.087 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.087 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.124 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.124 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.165 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.165 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.200 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.200 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.236 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.236 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.292 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.293 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.351 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.351 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.401 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.401 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.448 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.448 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.502 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.502 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.546 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.547 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.589 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.589 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.640 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.640 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.678 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.678 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.728 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.728 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.770 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.770 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.826 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.826 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.862 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.862 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.896 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.896 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.945 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.945 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.973 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:46.973 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:47.004 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:47.004 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=50
+2023-08-29 16:44:47.033 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=50
+      32	  42776467 ns/op	12875621 B/op	  159651 allocs/op
+2023-08-29 16:44:47.038 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.114 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+BenchmarkFillIndex/BenchmarkFillIndex_Size:100_Batch:1000-12        	2023-08-29 16:44:47.121 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.236 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.236 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.339 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.340 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.422 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.422 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.490 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.490 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.577 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.577 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.659 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.659 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.740 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.740 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.823 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.824 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.907 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.907 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.973 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:47.973 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.055 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.055 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.140 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.140 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.214 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.214 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.293 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.293 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=100
+2023-08-29 16:44:48.366 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=100
+      15	  83053099 ns/op	26307512 B/op	  319685 allocs/op
+2023-08-29 16:44:48.373 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:48.590 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+BenchmarkFillIndex/BenchmarkFillIndex_Size:250_Batch:1000-12        	2023-08-29 16:44:48.605 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:48.799 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:48.800 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.004 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.005 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.177 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.178 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.346 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.355 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.526 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.526 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.722 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.722 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.942 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:49.942 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:50.125 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:50.125 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:50.314 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:50.314 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=250
+2023-08-29 16:44:50.497 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=250
+       6	 190267558 ns/op	64348077 B/op	  767309 allocs/op
+2023-08-29 16:44:50.509 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:50.907 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=500
+BenchmarkFillIndex/BenchmarkFillIndex_Size:500_Batch:1000-12        	2023-08-29 16:44:50.920 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:51.329 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:51.330 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:51.681 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:51.701 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:52.053 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:52.053 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:52.405 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:52.405 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=500
+2023-08-29 16:44:52.763 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=500
+       3	 354278286 ns/op	123600938 B/op	 1447185 allocs/op
+2023-08-29 16:44:52.799 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=1000
+2023-08-29 16:44:53.554 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=1000
+BenchmarkFillIndex/BenchmarkFillIndex_Size:1000_Batch:1000-12       	2023-08-29 16:44:53.597 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=1000
+2023-08-29 16:44:54.299 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=1000
+2023-08-29 16:44:54.299 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=1000
+2023-08-29 16:44:54.985 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=1000
+       2	 693821924 ns/op	239279736 B/op	 2727942 allocs/op
+2023-08-29 16:44:55.051 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=5000
+2023-08-29 16:44:58.609 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=5000
+BenchmarkFillIndex/BenchmarkFillIndex_Size:5000_Batch:1000-12       	       1	3557733452 ns/op	1197734192 B/op	13640323 allocs/op
+2023-08-29 16:44:58.735 Benchmark INF [Benchmark] Start batch_size=1000 module=Benchmark triggers_count=10000
+2023-08-29 16:45:05.758 Benchmark INF [Benchmark] Finish batch_size=1000 module=Benchmark triggers_count=10000
+BenchmarkFillIndex/BenchmarkFillIndex_Size:10000_Batch:1000-12      	       1	7023817861 ns/op	2397398616 B/op	27315811 allocs/op
+2023-08-29 16:45:05.774 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:05.859 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+BenchmarkFillIndex/BenchmarkFillIndex_Size:100_Batch:10-12          	2023-08-29 16:45:05.864 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:05.943 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:05.943 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.044 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.044 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.122 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.122 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.191 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.191 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.270 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.270 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.330 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.330 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.403 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.403 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.497 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.497 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.575 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.576 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.671 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.672 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.766 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.766 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.863 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.863 Benchmark INF [Benchmark] Start batch_size=10 module=Benchmark triggers_count=100
+2023-08-29 16:45:06.951 Benchmark INF [Benchmark] Finish batch_size=10 module=Benchmark triggers_count=100
+      13	  83650183 ns/op	31258321 B/op	  300051 allocs/op
+2023-08-29 16:45:06.959 Benchmark INF [Benchmark] Start batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:07.312 Benchmark INF [Benchmark] Finish batch_size=50 module=Benchmark triggers_count=500
+BenchmarkFillIndex/BenchmarkFillIndex_Size:500_Batch:50-12          	2023-08-29 16:45:07.320 Benchmark INF [Benchmark] Start batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:07.696 Benchmark INF [Benchmark] Finish batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:07.696 Benchmark INF [Benchmark] Start batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:08.095 Benchmark INF [Benchmark] Finish batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:08.104 Benchmark INF [Benchmark] Start batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:08.459 Benchmark INF [Benchmark] Finish batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:08.459 Benchmark INF [Benchmark] Start batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:08.889 Benchmark INF [Benchmark] Finish batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:08.889 Benchmark INF [Benchmark] Start batch_size=50 module=Benchmark triggers_count=500
+2023-08-29 16:45:09.220 Benchmark INF [Benchmark] Finish batch_size=50 module=Benchmark triggers_count=500
+       3	 372020144 ns/op	131101512 B/op	 1594333 allocs/op
+2023-08-29 16:45:09.243 Benchmark INF [Benchmark] Start batch_size=100 module=Benchmark triggers_count=1000
+2023-08-29 16:45:10.006 Benchmark INF [Benchmark] Finish batch_size=100 module=Benchmark triggers_count=1000
+BenchmarkFillIndex/BenchmarkFillIndex_Size:1000_Batch:100-12        	2023-08-29 16:45:10.035 Benchmark INF [Benchmark] Start batch_size=100 module=Benchmark triggers_count=1000
+2023-08-29 16:45:10.808 Benchmark INF [Benchmark] Finish batch_size=100 module=Benchmark triggers_count=1000
+2023-08-29 16:45:10.808 Benchmark INF [Benchmark] Start batch_size=100 module=Benchmark triggers_count=1000
+2023-08-29 16:45:11.491 Benchmark INF [Benchmark] Finish batch_size=100 module=Benchmark triggers_count=1000
+       2	 728492026 ns/op	260249084 B/op	 3150225 allocs/op
+2023-08-29 16:45:11.519 Benchmark INF [Benchmark] Start batch_size=250 module=Benchmark triggers_count=2500
+2023-08-29 16:45:13.248 Benchmark INF [Benchmark] Finish batch_size=250 module=Benchmark triggers_count=2500
+BenchmarkFillIndex/BenchmarkFillIndex_Size:2500_Batch:250-12        	       1	1729366553 ns/op	633102680 B/op	 7540855 allocs/op
+2023-08-29 16:45:13.302 Benchmark INF [Benchmark] Start batch_size=500 module=Benchmark triggers_count=5000
+2023-08-29 16:45:16.808 Benchmark INF [Benchmark] Finish batch_size=500 module=Benchmark triggers_count=5000
+BenchmarkFillIndex/BenchmarkFillIndex_Size:5000_Batch:500-12        	       1	3506525073 ns/op	1233729264 B/op	14491374 allocs/op
+PASS
+ok  	github.com/moira-alert/moira/index/bleve	32.265s

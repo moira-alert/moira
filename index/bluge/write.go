@@ -24,13 +24,13 @@ func (index *TriggerIndex) batchIndexTrigger(batch *index.Batch, triggerCheck *m
 	doc := bluge.NewDocument(triggerCheck.ID)
 	indexedTrigger := mapping.CreateIndexedTrigger(triggerCheck)
 
-	doc.AddField(bluge.NewTextField("id", indexedTrigger.ID))
-	doc.AddField(bluge.NewTextField("desc", indexedTrigger.Desc))
-	doc.AddField(bluge.NewTextField("name", indexedTrigger.Name))
+	doc.AddField(bluge.NewTextField("id", indexedTrigger.ID).StoreValue())
+	doc.AddField(bluge.NewTextField("desc", indexedTrigger.Desc).StoreValue().HighlightMatches())
+	doc.AddField(bluge.NewTextField("name", indexedTrigger.Name).StoreValue().HighlightMatches())
 	for _, tag := range triggerCheck.Tags {
-		doc.AddField(bluge.NewKeywordField("tags", tag))
+		doc.AddField(bluge.NewKeywordField("tags", tag).StoreValue())
 	}
-	doc.AddField(bluge.NewNumericField("last_check_score", float64(indexedTrigger.LastCheckScore)).Sortable())
+	doc.AddField(bluge.NewNumericField("last_check_score", float64(indexedTrigger.LastCheckScore)).Sortable().StoreValue())
 
 	batch.Update(doc.ID(), doc)
 }
