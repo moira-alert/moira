@@ -2,22 +2,23 @@ package metrics
 
 import "github.com/moira-alert/moira"
 
-const triggersMetricsPrefix = "triggersMetrics"
-
+// Collection of metrics for trigger count metrics
 type TriggersMetrics struct {
-	countByTriggerSource map[moira.TriggerSource]Histogram
+	countByTriggerSource map[moira.TriggerSource]Meter
 }
 
-func ConfigureTriggersMetrics(registry Registry) *TriggersMetrics {
+// Creates and configurates the instance of TriggersMetrics
+func NewTriggersMetrics(registry Registry) *TriggersMetrics {
 	return &TriggersMetrics{
-		countByTriggerSource: map[moira.TriggerSource]Histogram{
-			moira.GraphiteLocal:    registry.NewHistogram(triggersMetricsPrefix, string(moira.GraphiteLocal)),
-			moira.GraphiteRemote:   registry.NewHistogram(triggersMetricsPrefix, string(moira.GraphiteRemote)),
-			moira.PrometheusRemote: registry.NewHistogram(triggersMetricsPrefix, string(moira.PrometheusRemote)),
+		countByTriggerSource: map[moira.TriggerSource]Meter{
+			moira.GraphiteLocal:    registry.NewMeter("triggers", "count", "source", string(moira.GraphiteLocal)),
+			moira.GraphiteRemote:   registry.NewMeter("triggers", "count", "source", string(moira.GraphiteRemote)),
+			moira.PrometheusRemote: registry.NewMeter("triggers", "count", "source", string(moira.PrometheusRemote)),
 		},
 	}
 }
 
-func (metrics *TriggersMetrics) Update(source moira.TriggerSource, count int64) {
-	metrics.countByTriggerSource[source].Update(count)
+// Marks the number of triger for given trigger source
+func (metrics *TriggersMetrics) Mark(source moira.TriggerSource, count int64) {
+	metrics.countByTriggerSource[source].Mark(count)
 }

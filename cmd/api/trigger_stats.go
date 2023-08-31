@@ -24,7 +24,7 @@ func newTriggerStats(
 	return &triggerStats{
 		logger:   logger,
 		database: database,
-		metrics:  metrics.ConfigureTriggersMetrics(metricsRegistry),
+		metrics:  metrics.NewTriggersMetrics(metricsRegistry),
 	}
 }
 
@@ -60,7 +60,7 @@ func (stats *triggerStats) checkTriggerCount() {
 	}
 
 	for source, count := range triggersCount {
-		stats.metrics.Update(source, count)
+		stats.metrics.Mark(source, count)
 		stats.logger.Debug().Msg(fmt.Sprintf("source: %s, count: %d", string(source), count))
 	}
 }
