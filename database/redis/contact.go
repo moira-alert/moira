@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -99,8 +100,7 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 
 	contactIDs := make([]string, 0, len(keys))
 	for _, key := range keys {
-		key = key[14:]
-		contactIDs = append(contactIDs, key)
+		contactIDs = append(contactIDs, strings.TrimPrefix(key, contactKey("")))
 	}
 	return connector.GetContacts(contactIDs)
 }
