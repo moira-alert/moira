@@ -891,6 +891,21 @@ func (mr *MockDatabaseMockRecorder) GetTriggerChecks(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerChecks", reflect.TypeOf((*MockDatabase)(nil).GetTriggerChecks), arg0)
 }
 
+// GetTriggerCount mocks base method.
+func (m *MockDatabase) GetTriggerCount() (map[moira.TriggerSource]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTriggerCount")
+	ret0, _ := ret[0].(map[moira.TriggerSource]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerCount indicates an expected call of GetTriggerCount.
+func (mr *MockDatabaseMockRecorder) GetTriggerCount() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggerCount))
+}
+
 // GetTriggerIDsStartWith mocks base method.
 func (m *MockDatabase) GetTriggerIDsStartWith(arg0 string) ([]string, error) {
 	m.ctrl.T.Helper()

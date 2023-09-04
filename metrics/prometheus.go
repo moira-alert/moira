@@ -78,8 +78,9 @@ type prometheusMeter struct {
 	summary prometheus.Summary
 }
 
-func (source *prometheusMeter) Mark(int64) {
+func (source *prometheusMeter) Mark(value int64) {
 	atomic.AddInt64(&source.count, 1)
+	source.summary.Observe(float64(value))
 }
 
 func (source *prometheusMeter) Count() int64 {

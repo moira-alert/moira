@@ -52,6 +52,38 @@ func (connector *DbConnector) GetPrometheusTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
+func (connector *DbConnector) GetTriggerCount() (map[moira.TriggerSource]int64, error) {
+	pipe := (*connector.client).TxPipeline()
+
+	total := pipe.SCard(connector.context, triggersListKey)
+	remote := pipe.SCard(connector.context, remoteTriggersListKey)
+	prometheus := pipe.SCard(connector.context, prometheusTriggersListKey)
+
+	_, err := pipe.Exec(connector.context)
+	if err != nil {
+		return nil, err
+	}
+
+	totalCount, err := total.Result()
+	if err != nil {
+		return nil, err
+	}
+	remoteCount, err := remote.Result()
+	if err != nil {
+		return nil, err
+	}
+	prometheusCount, err := prometheus.Result()
+	if err != nil {
+		return nil, err
+	}
+
+	return map[moira.TriggerSource]int64{
+		moira.GraphiteLocal:    totalCount - remoteCount - prometheusCount,
+		moira.GraphiteRemote:   remoteCount,
+		moira.PrometheusRemote: prometheusCount,
+	}, nil
+}
+
 // GetTrigger gets trigger and trigger tags by given ID and return it in merged object
 func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error) {
 	pipe := (*connector.client).TxPipeline()

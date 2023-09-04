@@ -38,6 +38,8 @@ type Database interface {
 	GetRemoteTriggerIDs() ([]string, error)
 	GetPrometheusTriggerIDs() ([]string, error)
 
+	GetTriggerCount() (map[TriggerSource]int64, error)
+
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 	GetTriggerChecks(triggerIDs []string) ([]*TriggerCheck, error)
