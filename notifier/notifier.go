@@ -225,7 +225,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 						Int("fail_count", pkg.FailCount).
 						Msg("Cannot send notification")
 				} else {
-					log.Debug().
+					log.Warning().
 						Error(err).
 						Msg("Cannot send notification")
 				}
