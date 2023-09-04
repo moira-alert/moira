@@ -50,6 +50,8 @@ type notifierConfig struct {
 	DateTimeFormat string `yaml:"date_time_format"`
 	// Amount of messages notifier reads from Redis per iteration. Use notifier.NotificationsLimitUnlimited for unlimited.
 	ReadBatchSize int `yaml:"read_batch_size"`
+	// Count available mute resend call, if more than set - you see error in logs
+	MaxFailAttemptToSendAvailable int `yaml:"max_fail_attempt_to_send_available"`
 	// Specify log level by entities
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
 }
@@ -99,9 +101,10 @@ func getDefault() config {
 				LastCheckDelay:          "60s",
 				NoticeInterval:          "300s",
 			},
-			FrontURI:      "http://localhost",
-			Timezone:      "UTC",
-			ReadBatchSize: int(notifier.NotificationsLimitUnlimited),
+			FrontURI:                      "http://localhost",
+			Timezone:                      "UTC",
+			ReadBatchSize:                 int(notifier.NotificationsLimitUnlimited),
+			MaxFailAttemptToSendAvailable: 3,
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8093",
@@ -178,17 +181,18 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		Msg("Found dynamic log rules in config for some contacts and subscriptions")
 
 	return notifier.Config{
-		SelfStateEnabled:        config.SelfState.Enabled,
-		SelfStateContacts:       config.SelfState.Contacts,
-		SendingTimeout:          to.Duration(config.SenderTimeout),
-		ResendingTimeout:        to.Duration(config.ResendingTimeout),
-		Senders:                 config.Senders,
-		FrontURL:                config.FrontURI,
-		Location:                location,
-		DateTimeFormat:          format,
-		ReadBatchSize:           readBatchSize,
-		LogContactsToLevel:      contacts,
-		LogSubscriptionsToLevel: subscriptions,
+		SelfStateEnabled:              config.SelfState.Enabled,
+		SelfStateContacts:             config.SelfState.Contacts,
+		SendingTimeout:                to.Duration(config.SenderTimeout),
+		ResendingTimeout:              to.Duration(config.ResendingTimeout),
+		Senders:                       config.Senders,
+		FrontURL:                      config.FrontURI,
+		Location:                      location,
+		DateTimeFormat:                format,
+		ReadBatchSize:                 readBatchSize,
+		MaxFailAttemptToSendAvailable: config.MaxFailAttemptToSendAvailable,
+		LogContactsToLevel:            contacts,
+		LogSubscriptionsToLevel:       subscriptions,
 	}
 }
 
