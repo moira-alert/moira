@@ -17,7 +17,7 @@ func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) *CheckMet
 	return metrics.GetCheckMetricsBySource(trigger.TriggerSource)
 }
 
-// GetCheckMetrics return check metrics dependent on given trigger type
+// GetCheckMetricsBySource return check metrics dependent on given trigger type
 func (metrics *CheckerMetrics) GetCheckMetricsBySource(triggerSource moira.TriggerSource) *CheckMetrics {
 	switch triggerSource {
 	case moira.GraphiteLocal:
