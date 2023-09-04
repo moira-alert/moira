@@ -11,14 +11,14 @@ type TriggersMetrics struct {
 func NewTriggersMetrics(registry Registry) *TriggersMetrics {
 	return &TriggersMetrics{
 		countByTriggerSource: map[moira.TriggerSource]Meter{
-			moira.GraphiteLocal:    registry.NewMeter("triggers", "count", "source", string(moira.GraphiteLocal)),
-			moira.GraphiteRemote:   registry.NewMeter("triggers", "count", "source", string(moira.GraphiteRemote)),
-			moira.PrometheusRemote: registry.NewMeter("triggers", "count", "source", string(moira.PrometheusRemote)),
+			moira.GraphiteLocal:    registry.NewMeter("triggers", string(moira.GraphiteLocal), "count"),
+			moira.GraphiteRemote:   registry.NewMeter("triggers", string(moira.GraphiteRemote), "count"),
+			moira.PrometheusRemote: registry.NewMeter("triggers", string(moira.PrometheusRemote), "count"),
 		},
 	}
 }
 
-// Marks the number of triger for given trigger source
+// Marks the number of trigger for given trigger source
 func (metrics *TriggersMetrics) Mark(source moira.TriggerSource, count int64) {
 	metrics.countByTriggerSource[source].Mark(count)
 }
