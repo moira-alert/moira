@@ -93,4 +93,9 @@ func TestTriggerIndex_Write(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 	})
+
+	Convey("Test close index", t, func() {
+		err = newIndex.Close()
+		So(err, ShouldBeNil)
+	})
 }
