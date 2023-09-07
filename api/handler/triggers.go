@@ -227,7 +227,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@param			size			query		integer							false	"Page size"				default(10)
 //	@param			createPager		query		boolean							false	"Create pager"			default(false)
 //	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param			createdBy			query		string							false	"Created By"				default(moira.team)
+//	@param			createdBy		query		string							false	"Created By"			default(moira.team)
 //	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
 //	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found"
