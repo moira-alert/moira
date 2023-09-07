@@ -66,7 +66,7 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 }
 
 // SearchTriggers gets trigger page and filter trigger by tags and search request terms
-func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64, size int64, onlyErrors bool, filterTags []string, searchString string, createPager bool, pagerID string) (*dto.TriggersList, *api.ErrorResponse) { //nolint
+func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64, size int64, onlyErrors bool, filterTags []string, searchString string, createPager bool, pagerID string, createdBy string) (*dto.TriggersList, *api.ErrorResponse) { //nolint
 	var searchResults []*moira.SearchResult
 	var total int64
 	pagerShouldExist := pagerID != ""
@@ -89,7 +89,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 		if createPager {
 			passSize = pageSizeUnlimited
 		}
-		searchResults, total, err = searcher.SearchTriggers(filterTags, searchString, onlyErrors, page, passSize)
+		searchResults, total, err = searcher.SearchTriggers(filterTags, searchString, onlyErrors, page, passSize, createdBy)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}

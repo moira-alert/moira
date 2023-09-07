@@ -6,8 +6,8 @@ import (
 	"github.com/moira-alert/moira/index/mapping"
 )
 
-func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool) query.Query {
-	if !onlyErrors && len(filterTags) == 0 && len(searchTerms) == 0 {
+func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool, createdBy string) query.Query {
+	if !onlyErrors && len(filterTags) == 0 && len(searchTerms) == 0 && createdBy == "" {
 		return bleve.NewMatchAllQuery()
 	}
 
@@ -16,6 +16,7 @@ func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool) query.Q
 	searchQueries = append(searchQueries, buildQueryForTags(filterTags)...)
 	searchQueries = append(searchQueries, buildQueryForTerms(searchTerms)...)
 	searchQueries = append(searchQueries, buildQueryForOnlyErrors(onlyErrors)...)
+	searchQueries = append(searchQueries, buildQueryForCreatedBy(createdBy)...)
 
 	return bleve.NewConjunctionQuery(searchQueries...)
 }
@@ -26,6 +27,16 @@ func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 		qr.FieldVal = mapping.TriggerTags.GetName()
 		searchQueries = append(searchQueries, qr)
 	}
+	return
+}
+
+func buildQueryForCreatedBy(createdBy string) (searchQueries []query.Query) {
+	if createdBy == "" {
+		return
+	}
+	qr := bleve.NewTermQuery(createdBy)
+	qr.FieldVal = mapping.TriggerCreatedBy.GetName()
+	searchQueries = append(searchQueries, qr)
 	return
 }
 

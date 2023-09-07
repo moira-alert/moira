@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -237,6 +238,8 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	onlyErrors := getOnlyProblemsFlag(request)
 	filterTags := getRequestTags(request)
 	searchString := getSearchRequestString(request)
+	createdBy := getTriggerCreatedBy(request)
+	log.Println(createdBy)
 
 	page := middleware.GetPage(request)
 	size := middleware.GetSize(request)
@@ -244,7 +247,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	createPager := middleware.GetCreatePager(request)
 	pagerID := middleware.GetPagerID(request)
 
-	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, page, size, onlyErrors, filterTags, searchString, createPager, pagerID)
+	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, page, size, onlyErrors, filterTags, searchString, createPager, pagerID, createdBy)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
@@ -303,6 +306,10 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 		return onlyProblems
 	}
 	return false
+}
+
+func getTriggerCreatedBy(request *http.Request) string {
+	return request.FormValue("createdBy")
 }
 
 func getSearchRequestString(request *http.Request) string {

@@ -16,14 +16,14 @@ import (
 // TriggerCheck.Score (desc)
 // Relevance (asc)
 // Trigger.Name (asc)
-func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (searchResults []*moira.SearchResult, total int64, err error) {
+func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64, createdBy string) (searchResults []*moira.SearchResult, total int64, err error) {
 	if size < 0 {
 		page = 0
 		docs, _ := index.index.DocCount()
 		size = int64(docs)
 	}
 
-	req := buildSearchRequest(filterTags, searchString, onlyErrors, int(page), int(size))
+	req := buildSearchRequest(filterTags, searchString, onlyErrors, int(page), int(size), createdBy)
 
 	searchResult, err := index.index.Search(req)
 	if err != nil {
@@ -62,9 +62,9 @@ func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mappin
 	return highlights
 }
 
-func buildSearchRequest(filterTags []string, searchString string, onlyErrors bool, page, size int) *bleve.SearchRequest {
+func buildSearchRequest(filterTags []string, searchString string, onlyErrors bool, page, size int, createdBy string) *bleve.SearchRequest {
 	searchTerms := splitStringToTerms(searchString)
-	searchQuery := buildSearchQuery(filterTags, searchTerms, onlyErrors)
+	searchQuery := buildSearchQuery(filterTags, searchTerms, onlyErrors, createdBy)
 
 	from := page * size
 	req := bleve.NewSearchRequestOptions(searchQuery, size, from, false)
