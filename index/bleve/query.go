@@ -6,8 +6,8 @@ import (
 	"github.com/moira-alert/moira/index/mapping"
 )
 
-func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool, createdBy string) query.Query {
-	if !onlyErrors && len(filterTags) == 0 && len(searchTerms) == 0 && createdBy == "" {
+func buildSearchQuery(filterTags, searchTerms []string, onlyErrors, needSearchByCreatedBy bool, createdBy string) query.Query {
+	if !onlyErrors && len(filterTags) == 0 && len(searchTerms) == 0 && !needSearchByCreatedBy {
 		return bleve.NewMatchAllQuery()
 	}
 
@@ -16,7 +16,7 @@ func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool, created
 	searchQueries = append(searchQueries, buildQueryForTags(filterTags)...)
 	searchQueries = append(searchQueries, buildQueryForTerms(searchTerms)...)
 	searchQueries = append(searchQueries, buildQueryForOnlyErrors(onlyErrors)...)
-	searchQueries = append(searchQueries, buildQueryForCreatedBy(createdBy)...)
+	searchQueries = append(searchQueries, buildQueryForCreatedBy(createdBy, needSearchByCreatedBy)...)
 
 	return bleve.NewConjunctionQuery(searchQueries...)
 }
@@ -30,8 +30,8 @@ func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 	return
 }
 
-func buildQueryForCreatedBy(createdBy string) (searchQueries []query.Query) {
-	if createdBy == "" {
+func buildQueryForCreatedBy(createdBy string, needSearchByCreatedBy bool) (searchQueries []query.Query) {
+	if !needSearchByCreatedBy {
 		return
 	}
 	qr := bleve.NewTermQuery(createdBy)

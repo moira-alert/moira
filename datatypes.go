@@ -340,6 +340,17 @@ type TriggerCheck struct {
 	Highlights map[string]string `json:"highlights"`
 }
 
+// SearchOptions represents the options that can be selected when searching triggers
+type SearchOptions struct {
+	Page                  int64
+	Size                  int64
+	OnlyProblems          bool
+	SearchString          string
+	Tags                  []string
+	CreatedBy             string
+	NeedSearchByCreatedBy bool
+}
+
 // MaintenanceCheck set maintenance user, time
 type MaintenanceCheck interface {
 	SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64)

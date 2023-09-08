@@ -13,11 +13,12 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 	searchTerms := make([]string, 0)
 	onlyErrors := false
 	var createdBy string
+	needSearchByCreatedBy := false
 
 	Convey("Test build search query", t, func() {
 		Convey("Empty query", func() {
 			expected := bleve.NewMatchAllQuery()
-			actual := buildSearchQuery(tags, searchTerms, onlyErrors, createdBy)
+			actual := buildSearchQuery(tags, searchTerms, onlyErrors, needSearchByCreatedBy, createdBy)
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -26,7 +27,7 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				onlyErrors = true
 				qr := buildQueryForOnlyErrors(onlyErrors)
 				expected := bleve.NewConjunctionQuery(qr...)
-				actual := buildSearchQuery(tags, searchTerms, onlyErrors, createdBy)
+				actual := buildSearchQuery(tags, searchTerms, onlyErrors, needSearchByCreatedBy, createdBy)
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -35,7 +36,7 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				tags = []string{"123", "456"}
 				qr := buildQueryForTags(tags)
 				expected := bleve.NewConjunctionQuery(qr...)
-				actual := buildSearchQuery(tags, searchTerms, onlyErrors, createdBy)
+				actual := buildSearchQuery(tags, searchTerms, onlyErrors, needSearchByCreatedBy, createdBy)
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -45,7 +46,7 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				searchTerms = []string{"123", "456"}
 				qr := buildQueryForTerms(searchTerms)
 				expected := bleve.NewConjunctionQuery(qr...)
-				actual := buildSearchQuery(tags, searchTerms, onlyErrors, createdBy)
+				actual := buildSearchQuery(tags, searchTerms, onlyErrors, needSearchByCreatedBy, createdBy)
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -60,7 +61,7 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				searchQueries = append(searchQueries, buildQueryForOnlyErrors(onlyErrors)...)
 				expected := bleve.NewConjunctionQuery(searchQueries...)
 
-				actual := buildSearchQuery(tags, searchTerms, onlyErrors, createdBy)
+				actual := buildSearchQuery(tags, searchTerms, onlyErrors, needSearchByCreatedBy, createdBy)
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -69,10 +70,11 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				tags = make([]string, 0)
 				searchTerms = make([]string, 0)
 				createdBy = "test"
-				qr := buildQueryForCreatedBy(createdBy)
+				needSearchByCreatedBy = true
+				qr := buildQueryForCreatedBy(createdBy, needSearchByCreatedBy)
 				expected := bleve.NewConjunctionQuery(qr...)
 
-				actual := buildSearchQuery(tags, searchTerms, onlyErrors, createdBy)
+				actual := buildSearchQuery(tags, searchTerms, onlyErrors, needSearchByCreatedBy, createdBy)
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -85,10 +87,10 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				searchQueries = append(searchQueries, buildQueryForTags(tags)...)
 				searchQueries = append(searchQueries, buildQueryForTerms(searchTerms)...)
 				searchQueries = append(searchQueries, buildQueryForOnlyErrors(onlyErrors)...)
-				searchQueries = append(searchQueries, buildQueryForCreatedBy(createdBy)...)
+				searchQueries = append(searchQueries, buildQueryForCreatedBy(createdBy, needSearchByCreatedBy)...)
 				expected := bleve.NewConjunctionQuery(searchQueries...)
 
-				actual := buildSearchQuery(tags, searchTerms, onlyErrors, createdBy)
+				actual := buildSearchQuery(tags, searchTerms, onlyErrors, needSearchByCreatedBy, createdBy)
 				So(actual, ShouldResemble, expected)
 			})
 		})

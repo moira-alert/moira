@@ -167,9 +167,8 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 					},
 				},
 			},
-			triggerTags:      []string{"DND-generator", "Rust-Monster", "encounters"},
-			triggerCreatedBy: "moira",
-			triggerScore:     26, //nolint
+			triggerTags:  []string{"DND-generator", "Rust-Monster", "encounters"},
+			triggerScore: 26, //nolint
 		},
 		{
 			triggerID: "SuperTrigger6",
@@ -179,9 +178,8 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerDesc: fixtureIndexedField{
 				content: "5: Any way the wind blows doesn't really matter to me, to me",
 			},
-			triggerTags:      []string{"Giant", "DND-generator", "Snake", "encounters"},
-			triggerCreatedBy: "moira",
-			triggerScore:     25, //nolint
+			triggerTags:  []string{"Giant", "DND-generator", "Snake", "encounters", "Darkness"},
+			triggerScore: 25, //nolint
 		},
 		{
 			triggerID: "SuperTrigger7",
@@ -191,9 +189,8 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerDesc: fixtureIndexedField{
 				content: "6",
 			},
-			triggerTags:      []string{"Darkling", "DND-generator", "encounters"},
-			triggerCreatedBy: "moira",
-			triggerScore:     24, //nolint
+			triggerTags:  []string{"Darkling", "DND-generator", "encounters", "Darkness"},
+			triggerScore: 24, //nolint
 		},
 		{
 			triggerID: "SuperTrigger8",

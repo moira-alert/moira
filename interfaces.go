@@ -215,8 +215,7 @@ type Searcher interface {
 	Start() error
 	Stop() error
 	IsReady() bool
-	SearchTriggers(filterTags []string, searchString string, onlyErrors bool,
-		page int64, size int64, createdBy string) (searchResults []*SearchResult, total int64, err error)
+	SearchTriggers(options SearchOptions) (searchResults []*SearchResult, total int64, err error)
 }
 
 // PlotTheme is an interface to access plot theme styles

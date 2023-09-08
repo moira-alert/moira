@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -236,19 +235,22 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@router			/trigger/search [get]
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
-	onlyErrors := getOnlyProblemsFlag(request)
-	filterTags := getRequestTags(request)
-	searchString := getSearchRequestString(request)
-	createdBy := getTriggerCreatedBy(request)
-	log.Println(createdBy)
 
-	page := middleware.GetPage(request)
-	size := middleware.GetSize(request)
+	createdBy, ok := getTriggerCreatedBy(request)
+	searchOptions := moira.SearchOptions{
+		Page:                  middleware.GetPage(request),
+		Size:                  middleware.GetSize(request),
+		OnlyProblems:          getOnlyProblemsFlag(request),
+		Tags:                  getRequestTags(request),
+		SearchString:          getSearchRequestString(request),
+		CreatedBy:             createdBy,
+		NeedSearchByCreatedBy: ok,
+	}
 
 	createPager := middleware.GetCreatePager(request)
 	pagerID := middleware.GetPagerID(request)
 
-	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, page, size, onlyErrors, filterTags, searchString, createPager, pagerID, createdBy)
+	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions, createPager, pagerID)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
@@ -309,8 +311,14 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 	return false
 }
 
-func getTriggerCreatedBy(request *http.Request) string {
-	return request.FormValue("createdBy")
+// Checks if the createdBy field has been set:
+// if the field has been set, searches for triggers with a specific author createdBy
+// if the field has not been set, searches for triggers with any author
+func getTriggerCreatedBy(request *http.Request) (string, bool) {
+	if createdBy, ok := request.Form["createdBy"]; ok {
+		return createdBy[0], true
+	}
+	return "", false
 }
 
 func getSearchRequestString(request *http.Request) string {
