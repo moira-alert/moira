@@ -3,6 +3,8 @@ package selfstate
 import (
 	"time"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 
 	"gopkg.in/tomb.v2"
@@ -28,8 +30,8 @@ type SelfCheckWorker struct {
 }
 
 // NewSelfCheckWorker creates SelfCheckWorker.
-func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config) *SelfCheckWorker {
-	heartbeats := createStandardHeartbeats(logger, database, config)
+func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config, metrics *metrics.HeartBeatMetrics) *SelfCheckWorker {
+	heartbeats := createStandardHeartbeats(logger, database, config, metrics)
 	return &SelfCheckWorker{Logger: logger, Database: database, Notifier: notifier, Config: config, heartbeats: heartbeats}
 }
 
@@ -59,7 +61,7 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config) []heartbeat.Heartbeater {
+func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config, metrics *metrics.HeartBeatMetrics) []heartbeat.Heartbeater {
 	heartbeats := make([]heartbeat.Heartbeater, 0)
 
 	if hb := heartbeat.GetDatabase(conf.RedisDisconnectDelaySeconds, logger, database); hb != nil {
@@ -78,7 +80,7 @@ func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf
 		heartbeats = append(heartbeats, hb)
 	}
 
-	if hb := heartbeat.GetNotifier(logger, database); hb != nil {
+	if hb := heartbeat.GetNotifier(logger, database, metrics.NotifierIsAlive); hb != nil {
 		heartbeats = append(heartbeats, hb)
 	}
 

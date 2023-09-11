@@ -3,18 +3,22 @@ package heartbeat
 import (
 	"fmt"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"github.com/moira-alert/moira"
 )
 
 type notifier struct {
-	db  moira.Database
-	log moira.Logger
+	db              moira.Database
+	log             moira.Logger
+	notifierIsAlive metrics.Meter
 }
 
-func GetNotifier(logger moira.Logger, database moira.Database) Heartbeater {
+func GetNotifier(logger moira.Logger, database moira.Database, notifierIsAlive metrics.Meter) Heartbeater {
 	return &notifier{
-		db:  database,
-		log: logger,
+		db:              database,
+		log:             logger,
+		notifierIsAlive: notifierIsAlive,
 	}
 }
 
@@ -26,6 +30,7 @@ func (check notifier) Check(int64) (int64, bool, error) {
 
 		return 0, true, nil
 	}
+
 	return 0, false, nil
 }
 
@@ -39,5 +44,12 @@ func (notifier) NeedToCheckOthers() bool {
 
 func (check notifier) GetErrorMessage() string {
 	state, _ := check.db.GetNotifierState()
+	alive := int64(0)
+	if state == moira.SelfStateOK {
+		alive = 1
+	}
+
+	check.notifierIsAlive.Mark(alive)
+
 	return fmt.Sprintf("Moira-Notifier does not send messages. State: %v", state)
 }

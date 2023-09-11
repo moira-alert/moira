@@ -29,27 +29,25 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 }
 
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.NotificationEvent {
-	var events []moira.NotificationEvent //nolint
+	var events []moira.NotificationEvent
 
 	for _, heartbeat := range selfCheck.heartbeats {
-		currentValue, needSend, err := heartbeat.Check(nowTS)
+		currentValue, hasErrors, err := heartbeat.Check(nowTS)
 		if err != nil {
 			selfCheck.Logger.Error().
 				Error(err).
 				Msg("Heartbeat failed")
 		}
 
-		if !needSend {
-			continue
-		}
+		if hasErrors {
+			events = append(events, generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue))
+			if heartbeat.NeedTurnOffNotifier() {
+				selfCheck.setNotifierState(moira.SelfStateERROR)
+			}
 
-		events = append(events, generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue))
-		if heartbeat.NeedTurnOffNotifier() {
-			selfCheck.setNotifierState(moira.SelfStateERROR)
-		}
-
-		if !heartbeat.NeedToCheckOthers() {
-			break
+			if !heartbeat.NeedToCheckOthers() {
+				break
+			}
 		}
 	}
 

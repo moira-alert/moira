@@ -30,5 +30,6 @@ func (config *Config) checkConfig(senders map[string]bool) error {
 			return fmt.Errorf("value for [%s] must be present", adminContact["type"])
 		}
 	}
+
 	return nil
 }
