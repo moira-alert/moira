@@ -121,6 +121,12 @@ func getDefault() config {
 			Timeout:    "60s",
 			MetricsTTL: "24h",
 		},
+		Prometheus: cmd.PrometheusConfig{
+			Timeout:      "60s",
+			MetricsTTL:   "7d",
+			Retries:      1,
+			RetryTimeout: "10s",
+		},
 		ImageStores: cmd.ImageStoreConfig{},
 	}
 }

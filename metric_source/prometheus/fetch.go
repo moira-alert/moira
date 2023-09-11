@@ -8,17 +8,43 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 
 	"github.com/moira-alert/moira"
-	prometheusApi "github.com/prometheus/client_golang/api/prometheus/v1"
+	promApi "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 )
 
 func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	from = moira.MaxInt64(from, until-int64(prometheus.config.MetricsTTL.Seconds()))
 
-	ctx, cancel := context.WithTimeout(context.Background(), prometheus.config.Timeout)
+	var err error
+	for i := 1; ; i++ {
+		var res metricSource.FetchResult
+		res, err = prometheus.fetch(target, from, until, allowRealTimeAlerting)
+
+		if err == nil {
+			return res, nil
+		}
+
+		prometheus.logger.Warning().
+			Error(err).
+			Int("retries left", prometheus.config.Retries-i).
+			String("target", target).
+			Msg("Failed to fetch prometheus target")
+
+		if i >= prometheus.config.Retries {
+			break
+		}
+
+		time.Sleep(prometheus.config.RetryTimeout)
+	}
+
+	return nil, err
+}
+
+func (prometheus *Prometheus) fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), prometheus.config.RequestTimeout)
 	defer cancel()
 
-	val, warns, err := prometheus.api.QueryRange(ctx, target, prometheusApi.Range{
+	val, warns, err := prometheus.api.QueryRange(ctx, target, promApi.Range{
 		Start: time.Unix(from, 0),
 		End:   time.Unix(until, 0),
 		Step:  time.Second * time.Duration(StepTimeSeconds),
