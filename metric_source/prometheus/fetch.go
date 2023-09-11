@@ -16,7 +16,7 @@ func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealT
 	from = moira.MaxInt64(from, until-int64(prometheus.config.MetricsTTL.Seconds()))
 
 	var err error
-	for i := 0; i < prometheus.config.Retries; i++ {
+	for i := 0; ; i++ {
 		var res metricSource.FetchResult
 		res, err = prometheus.fetch(target, from, until, allowRealTimeAlerting)
 
@@ -29,9 +29,11 @@ func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealT
 			Int("retries left", prometheus.config.Retries-i-1).
 			Msg("Failed to fetch prometheus target")
 
-		if i+1 < prometheus.config.Retries {
-			time.Sleep(prometheus.config.RetryTimeout)
+		if i >= prometheus.config.Retries {
+			break
 		}
+
+		time.Sleep(prometheus.config.RetryTimeout)
 	}
 
 	return nil, err
