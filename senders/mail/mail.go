@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"html/template"
-	"log"
 	"net/smtp"
 	"path/filepath"
 	"time"
@@ -62,7 +61,6 @@ func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logg
 	var m mail
 	err := mapstructure.Decode(senderSettings, &m)
 	if err != nil {
-		log.Println(fmt.Errorf("failed to decode senderSettings to mail config: %w", err))
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
 
