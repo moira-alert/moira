@@ -1,15 +1,21 @@
 package prometheus
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 
 	"github.com/prometheus/client_golang/api"
-	prometheusApi "github.com/prometheus/client_golang/api/prometheus/v1"
+	promApi "github.com/prometheus/client_golang/api/prometheus/v1"
 	promConfig "github.com/prometheus/common/config"
+	"github.com/prometheus/common/model"
 )
 
-func createPrometheusApi(config *Config) (prometheusApi.API, error) {
+type PrometheusApi interface {
+	QueryRange(ctx context.Context, query string, r promApi.Range, opts ...promApi.Option) (model.Value, promApi.Warnings, error)
+}
+
+func createPrometheusApi(config *Config) (promApi.API, error) {
 	roundTripper := api.DefaultRoundTripper
 
 	if config.User != "" && config.Password != "" {
@@ -33,5 +39,5 @@ func createPrometheusApi(config *Config) (prometheusApi.API, error) {
 		return nil, err
 	}
 
-	return prometheusApi.NewAPI(promCl), nil
+	return promApi.NewAPI(promCl), nil
 }

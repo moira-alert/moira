@@ -6,8 +6,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
-
-	prometheusApi "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
 const StepTimeSeconds int64 = 60
@@ -38,7 +36,7 @@ func Create(config *Config, logger moira.Logger) (metricSource.MetricSource, err
 type Prometheus struct {
 	config *Config
 	logger moira.Logger
-	api    prometheusApi.API
+	api    PrometheusApi
 }
 
 func (prometheus *Prometheus) GetMetricsTTLSeconds() int64 {
