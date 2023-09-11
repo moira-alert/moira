@@ -40,6 +40,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
 	}
+
 	if s.Name == "" {
 		return fmt.Errorf("required name for sender type script")
 	}

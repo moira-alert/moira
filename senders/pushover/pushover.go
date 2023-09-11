@@ -38,6 +38,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to pushover config: %w", err)
 	}
+
 	sender.apiToken = p.APIToken
 	if sender.apiToken == "" {
 		return fmt.Errorf("can not read pushover api_token from config")

@@ -39,6 +39,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to victorops config: %w", err)
 	}
+
 	sender.routingURL = victorops.RoutingURL
 	if sender.routingURL == "" {
 		return fmt.Errorf("cannot read the routing url from the yaml config")

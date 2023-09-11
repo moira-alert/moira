@@ -4,9 +4,9 @@ import (
 	"crypto/tls"
 	"fmt"
 	"html/template"
+	"log"
 	"net/smtp"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -18,8 +18,8 @@ type mail struct {
 	MailFrom     string `mapstructure:"mail_from"`
 	SMTPHello    string `mapstructure:"smtp_hello"`
 	SMTPHost     string `mapstructure:"smtp_host"`
-	SMTPPort     string `mapstructure:"smtp_port"`
-	InsecureTLS  string `mapstructure:"insecure_tls"`
+	SMTPPort     int64  `mapstructure:"smtp_port"`
+	InsecureTLS  bool   `mapstructure:"insecure_tls"`
 	FrontURI     string `mapstructure:"front_uri"`
 	SMTPPass     string `mapstructure:"smtp_pass"`
 	SMTPUser     string `mapstructure:"smtp_user"`
@@ -62,14 +62,16 @@ func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logg
 	var m mail
 	err := mapstructure.Decode(senderSettings, &m)
 	if err != nil {
+		log.Println(fmt.Errorf("failed to decode senderSettings to mail config: %w", err))
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
+
 	sender.logger = logger
 	sender.From = m.MailFrom
 	sender.SMTPHello = m.SMTPHello
 	sender.SMTPHost = m.SMTPHost
-	sender.SMTPPort, _ = strconv.ParseInt(m.SMTPPort, 10, 64)
-	sender.InsecureTLS, _ = strconv.ParseBool(m.InsecureTLS)
+	sender.SMTPPort = m.SMTPPort
+	sender.InsecureTLS = m.InsecureTLS
 	sender.FrontURI = m.FrontURI
 	sender.Password = m.SMTPPass
 	sender.Username = m.SMTPUser

@@ -3,7 +3,6 @@ package slack
 import (
 	"bytes"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -44,7 +43,7 @@ var stateEmoji = map[moira.State]string{
 // Structure that represents the Slack configuration in the YAML file
 type slack struct {
 	APIToken string `mapstructure:"api_token"`
-	UseEmoji string `mapstructure:"use_emoji"`
+	UseEmoji bool   `mapstructure:"use_emoji"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
@@ -64,15 +63,15 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to slack config: %w", err)
 	}
-	apiToken := s.APIToken
-	if apiToken == "" {
+
+	if s.APIToken == "" {
 		return fmt.Errorf("can not read slack api_token from config")
 	}
-	sender.useEmoji, _ = strconv.ParseBool(s.UseEmoji)
+	sender.useEmoji = s.UseEmoji
 	sender.logger = logger
 	sender.frontURI = s.FrontURI
 	sender.location = location
-	sender.client = slack_client.New(apiToken)
+	sender.client = slack_client.New(s.APIToken)
 	return nil
 }
 

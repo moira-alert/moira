@@ -40,11 +40,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to discord config: %w", err)
 	}
-	token := ds.Token
-	if token == "" {
+
+	if ds.Token == "" {
 		return fmt.Errorf("cannot read the discord token from the config")
 	}
-	sender.session, err = discordgo.New("Bot " + token)
+	sender.session, err = discordgo.New("Bot " + ds.Token)
 	if err != nil {
 		return fmt.Errorf("error creating discord session: %s", err)
 	}

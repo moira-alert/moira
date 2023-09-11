@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -39,7 +38,7 @@ var headers = map[string]string{
 // Structure that represents the MSTeams configuration in the YAML file
 type msTeams struct {
 	FrontURI  string `mapstructure:"front_uri"`
-	MaxEvents string `mapstructure:"max_events"`
+	MaxEvents int    `mapstructure:"max_events"`
 }
 
 // Sender implements moira sender interface via MS Teams
@@ -58,14 +57,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to msteams config: %w", err)
 	}
+
 	sender.logger = logger
 	sender.location = location
 	sender.frontURI = msteams.FrontURI
-	maxEvents, err := strconv.Atoi(msteams.MaxEvents)
-	if err != nil {
-		return fmt.Errorf("max_events should be an integer: %w", err)
-	}
-	sender.maxEvents = maxEvents
+	sender.maxEvents = msteams.MaxEvents
 	sender.client = &http.Client{
 		Timeout: time.Duration(30) * time.Second, //nolint
 	}

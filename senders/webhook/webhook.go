@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -17,7 +16,7 @@ type webHook struct {
 	URL      string `mapstructure:"url"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
-	Timeout  string `mapstructure:"timeout"`
+	Timeout  int    `mapstructure:"timeout"`
 }
 
 // Sender implements moira sender interface via webhook
@@ -54,13 +53,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		"Content-Type": "application/json",
 	}
 
-	timeout := 30
-	timeoutRaw := webhook.Timeout
-	if timeoutRaw != "" {
-		timeout, err = strconv.Atoi(timeoutRaw)
-		if err != nil {
-			return fmt.Errorf("can not read timeout from config: %s", err.Error())
-		}
+	var timeout int
+	if webhook.Timeout != 0 {
+		timeout = webhook.Timeout
+	} else {
+		timeout = 30
 	}
 
 	sender.log = logger

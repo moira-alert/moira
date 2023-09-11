@@ -65,12 +65,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
 	}
-	apiToken := tg.APIToken
-	if apiToken == "" {
+
+	if tg.APIToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
-
-	sender.apiToken = apiToken
+	sender.apiToken = tg.APIToken
 	sender.frontURI = tg.FrontURI
 	sender.logger = logger
 	sender.location = location
