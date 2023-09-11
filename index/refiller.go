@@ -2,7 +2,7 @@ package index
 
 import "time"
 
-const refillerRunInterval = 2 * time.Minute
+const refillerRunInterval = 15 * time.Minute
 const batchSizeForTest = 50 // TODO: DELETE BEFORE MERGE
 
 func (index *Index) runIndexRefiller() error {
