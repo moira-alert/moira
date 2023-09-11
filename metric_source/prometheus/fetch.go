@@ -27,6 +27,7 @@ func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealT
 		prometheus.logger.Warning().
 			Error(err).
 			Int("retries left", prometheus.config.Retries-i).
+			String("target", target).
 			Msg("Failed to fetch prometheus target")
 
 		if i >= prometheus.config.Retries {
