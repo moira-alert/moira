@@ -157,25 +157,39 @@ func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 }
 
 type PrometheusConfig struct {
-	URL           string `yaml:"url"`
+	// Url of prometheus API
+	URL string `yaml:"url"`
+	// Min period to perform triggers re-check
 	CheckInterval string `yaml:"check_interval"`
-	MetricsTTL    string `yaml:"metrics_ttl"`
-	Timeout       string `yaml:"timeout"`
-	User          string `yaml:"user"`
-	Password      string `yaml:"password"`
-	Enabled       bool   `yaml:"enabled"`
+	// Moira won't fetch metrics older than this value from prometheus remote storage.
+	// Large values will lead to OOM problems in checker.
+	MetricsTTL string `yaml:"metrics_ttl"`
+	// Timeout for prometheus api requests
+	Timeout string `yaml:"timeout"`
+	// Number of retries for prometheus api requests
+	Retries int `yaml:"retries"`
+	// Timeout between retries for prometheus api requests
+	RetryTimeout string `yaml:"retry_timeout"`
+	// Username for basic auth
+	User string `yaml:"user"`
+	// Password for basic auth
+	Password string `yaml:"password"`
+	// If true, prometheus remote worker will be enabled.
+	Enabled bool `yaml:"enabled"`
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
 func (config *PrometheusConfig) GetPrometheusSourceSettings() *prometheus.Config {
 	return &prometheus.Config{
-		Enabled:       config.Enabled,
-		URL:           config.URL,
-		CheckInterval: to.Duration(config.CheckInterval),
-		MetricsTTL:    to.Duration(config.MetricsTTL),
-		User:          config.User,
-		Password:      config.Password,
-		Timeout:       to.Duration(config.Timeout),
+		Enabled:        config.Enabled,
+		URL:            config.URL,
+		CheckInterval:  to.Duration(config.CheckInterval),
+		MetricsTTL:     to.Duration(config.MetricsTTL),
+		User:           config.User,
+		Password:       config.Password,
+		RequestTimeout: to.Duration(config.Timeout),
+		Retries:        config.Retries,
+		RetryTimeout:   to.Duration(config.RetryTimeout),
 	}
 }
 

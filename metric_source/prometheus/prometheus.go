@@ -15,13 +15,15 @@ const StepTimeSeconds int64 = 60
 var ErrPrometheusStorageDisabled = fmt.Errorf("remote prometheus storage is not enabled")
 
 type Config struct {
-	Enabled       bool
-	CheckInterval time.Duration
-	MetricsTTL    time.Duration
-	Timeout       time.Duration
-	URL           string
-	User          string
-	Password      string
+	Enabled        bool
+	CheckInterval  time.Duration
+	MetricsTTL     time.Duration
+	RequestTimeout time.Duration
+	Retries        int
+	RetryTimeout   time.Duration
+	URL            string
+	User           string
+	Password       string
 }
 
 func Create(config *Config, logger moira.Logger) (metricSource.MetricSource, error) {
