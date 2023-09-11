@@ -59,7 +59,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	twilioClient := twilio_client.NewClient(t.APIAsid, t.APIAuthToken)
 
-	twilioSender := twilioSender{
+	tSender := twilioSender{
 		client:       twilioClient,
 		APIFromPhone: t.APIFromPhone,
 		logger:       logger,
@@ -67,7 +67,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	switch apiType {
 	case "twilio sms":
-		sender.sender = &twilioSenderSms{twilioSender}
+		sender.sender = &twilioSenderSms{tSender}
 
 	case "twilio voice":
 		appendMessage := t.AppendMessage || t.TwimletsEcho
@@ -77,7 +77,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		}
 
 		sender.sender = &twilioSenderVoice{
-			twilioSender:  twilioSender,
+			twilioSender:  tSender,
 			voiceURL:      t.VoiceURL,
 			twimletsEcho:  t.TwimletsEcho,
 			appendMessage: appendMessage,
