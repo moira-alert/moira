@@ -109,6 +109,8 @@ func getDefault() config {
 			CheckInterval: "60s",
 			Timeout:       "60s",
 			MetricsTTL:    "7d",
+			Retries:       1,
+			RetryTimeout:  "10s",
 		},
 	}
 }

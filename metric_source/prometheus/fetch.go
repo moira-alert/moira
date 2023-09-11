@@ -29,7 +29,9 @@ func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealT
 			Int("retries left", prometheus.config.Retries-i-1).
 			Msg("Failed to fetch prometheus target")
 
-		time.Sleep(prometheus.config.RetryTimeout)
+		if i+1 < prometheus.config.Retries {
+			time.Sleep(prometheus.config.RetryTimeout)
+		}
 	}
 
 	return nil, err

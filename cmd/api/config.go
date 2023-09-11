@@ -146,5 +146,11 @@ func getDefault() config {
 			Timeout:    "60s",
 			MetricsTTL: "7d",
 		},
+		Prometheus: cmd.PrometheusConfig{
+			Timeout:      "60s",
+			MetricsTTL:   "7d",
+			Retries:      1,
+			RetryTimeout: "10s",
+		},
 	}
 }
