@@ -1,16 +1,20 @@
 package index
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 const refillerRunInterval = 15 * time.Minute
-const batchSizeForTest = 50 // TODO: DELETE BEFORE MERGE
+
+// const batchSizeForTest = 50 // TODO: DELETE BEFORE MERGE
 
 func (index *Index) runIndexRefiller() error {
 	ticker := time.NewTicker(refillerRunInterval)
 	defer ticker.Stop()
 	index.logger.Info().
 		Interface("refilling_interval", refillerRunInterval).
-		Msg("Start refilling search index")
+		Msg("Start refiller for search index")
 
 	for {
 		select {
@@ -20,12 +24,16 @@ func (index *Index) runIndexRefiller() error {
 		case <-ticker.C:
 			index.logger.Info().Msg("Refill search index by timeout")
 
+			start := time.Now()
 			if err := index.Refill(); err != nil {
 				index.logger.Warning().
 					Error(err).
 					Msg("Cannot refill index")
 				continue
 			}
+			end := time.Now()
+			index.logger.Debug().
+				Msg(fmt.Sprintf("Refill took %v sec", end.Sub(start).Seconds()))
 		}
 	}
 }
@@ -41,12 +49,9 @@ func (index *Index) Refill() error {
 	defer func() {
 		index.indexed = true
 	}()
-	if err := index.deleteByBatches(triggerIds, batchSizeForTest); err != nil {
+	if err := index.deleteByBatches(triggerIds, defaultIndexBatchSize); err != nil {
 		return err
 	}
-	// if err := index.triggerIndex.Delete(triggerIds); err != nil {
-	// 	return err
-	// }
 	if err := index.fillIndex(); err != nil {
 		return err
 	}
