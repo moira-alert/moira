@@ -24,12 +24,15 @@ func GetNotifier(logger moira.Logger, database moira.Database, notifierIsAlive m
 
 func (check notifier) Check(int64) (int64, bool, error) {
 	if state, _ := check.db.GetNotifierState(); state != moira.SelfStateOK {
+		check.notifierIsAlive.Mark(0)
+
 		check.log.Error().
 			String("error", check.GetErrorMessage()).
 			Msg("Notifier is not healthy")
 
 		return 0, true, nil
 	}
+	check.notifierIsAlive.Mark(1)
 
 	return 0, false, nil
 }
@@ -44,12 +47,5 @@ func (notifier) NeedToCheckOthers() bool {
 
 func (check notifier) GetErrorMessage() string {
 	state, _ := check.db.GetNotifierState()
-	alive := int64(0)
-	if state == moira.SelfStateOK {
-		alive = 1
-	}
-
-	check.notifierIsAlive.Mark(alive)
-
 	return fmt.Sprintf("Moira-Notifier does not send messages. State: %v", state)
 }

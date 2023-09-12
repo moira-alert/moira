@@ -6,8 +6,8 @@ type HeartBeatMetrics struct {
 }
 
 // ConfigureHeartBeatMetrics is notifier metrics configurator
-func ConfigureHeartBeatMetrics(registry Registry, serviceName string) *HeartBeatMetrics {
+func ConfigureHeartBeatMetrics(registry Registry) *HeartBeatMetrics {
 	return &HeartBeatMetrics{
-		NotifierIsAlive: registry.NewMeter(serviceName, "alive"),
+		NotifierIsAlive: registry.NewMeter("", "alive"),
 	}
 }

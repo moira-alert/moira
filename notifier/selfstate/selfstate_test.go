@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/metrics"
+
 	mock_heartbeat "github.com/moira-alert/moira/mock/heartbeat"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 
@@ -172,9 +174,11 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 		database.EXPECT().NewLock(gomock.Any(), gomock.Any()).Return(lock)
 	}
 
+	metric := &metrics.HeartBeatMetrics{}
+
 	return &selfCheckWorkerMock{
 
-		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, metric),
 		database:        database,
 		notif:           notif,
 		conf:            conf,

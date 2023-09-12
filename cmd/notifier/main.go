@@ -121,7 +121,7 @@ func main() {
 
 	// Start moira self state checker
 	if config.Notifier.SelfState.getSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings(), metrics.ConfigureHeartBeatMetrics(telemetry.Metrics, serviceName))
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings(), metrics.ConfigureHeartBeatMetrics(telemetry.Metrics))
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).
