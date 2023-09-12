@@ -26,13 +26,18 @@ func health(router chi.Router) {
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/health/notifier [get]
 func getNotifierState(writer http.ResponseWriter, request *http.Request) {
-	state, err := controller.GetNotifierState(database)
-	if err != nil {
-		render.Render(writer, request, err) //nolint
-		return
+	// state, err := controller.GetNotifierState(database)
+	// if err != nil {
+	// 	render.Render(writer, request, err) //nolint
+	// 	return
+	// }
+
+	notifierState := &dto.NotifierState{
+		State: "ERROR",
+		Message: "Something unexpected happened to Moira, so we temporarily turned off the notification mailing. We are already working on the problem and will fix it in the near future.",
 	}
 
-	if err := render.Render(writer, request, state); err != nil {
+	if err := render.Render(writer, request, notifierState); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
