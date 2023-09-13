@@ -145,7 +145,6 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 		"type":  "admin-mail",
 		"value": "admin@company.com",
 	}
-	defaultCheckInterval = time.Second * 1
 	conf := Config{
 		Enabled: true,
 		Contacts: []map[string]string{
@@ -156,6 +155,7 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 		LastCheckDelaySeconds:          120,
 		NoticeIntervalSeconds:          60,
 		LastRemoteCheckDelaySeconds:    120,
+		CheckInterval:                  1 * time.Second,
 	}
 
 	mockCtrl := gomock.NewController(t)

@@ -14,8 +14,6 @@ import (
 	w "github.com/moira-alert/moira/worker"
 )
 
-var defaultCheckInterval = time.Second * 10
-
 const selfStateLockName = "moira-self-state-monitor"
 const selfStateLockTTL = time.Second * 15
 

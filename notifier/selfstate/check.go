@@ -12,7 +12,7 @@ import (
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	selfCheck.Logger.Info().Msg("Moira Notifier Self State Monitor started")
 
-	checkTicker := time.NewTicker(defaultCheckInterval)
+	checkTicker := time.NewTicker(selfCheck.Config.CheckInterval)
 	defer checkTicker.Stop()
 
 	nextSendErrorMessage := time.Now().Unix()
@@ -69,11 +69,9 @@ func (selfCheck *SelfCheckWorker) sendNotification(events []moira.NotificationEv
 }
 
 func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64) int64 {
-	if nextSendErrorMessage < nowTS {
-		events := selfCheck.handleCheckServices(nowTS)
-		if len(events) > 0 {
-			nextSendErrorMessage = selfCheck.sendNotification(events, nowTS)
-		}
+	events := selfCheck.handleCheckServices(nowTS)
+	if nextSendErrorMessage < nowTS && len(events) > 0 {
+		nextSendErrorMessage = selfCheck.sendNotification(events, nowTS)
 	}
 
 	return nextSendErrorMessage
