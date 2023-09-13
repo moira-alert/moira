@@ -69,7 +69,7 @@ func main() {
 	}
 	defer logger.Info().
 		String("moira_version", MoiraVersion).
-		Msg("Moira Notifier stopped. Version")
+		Msg("Moira Notifier stopped.")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {

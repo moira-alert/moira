@@ -23,6 +23,10 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 			selfCheck.Logger.Info().Msg("Moira Notifier Self State Monitor stopped")
 			return nil
 		case <-checkTicker.C:
+			selfCheck.Logger.Debug().
+				Int64("nextSendErrorMessage", nextSendErrorMessage).
+				Msg("call check")
+
 			nextSendErrorMessage = selfCheck.check(time.Now().Unix(), nextSendErrorMessage)
 		}
 	}
