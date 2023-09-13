@@ -25,7 +25,7 @@ func GetNotifier(logger moira.Logger, database moira.Database, metrics *metrics.
 func (check notifier) Check(int64) (int64, bool, error) {
 	state, _ := check.db.GetNotifierState()
 	if state != moira.SelfStateOK {
-		check.metrics.NotifierIsAlive.Mark(0)
+		check.metrics.MarkNotifierIsAlive(true)
 
 		check.log.Error().
 			String("error", check.GetErrorMessage()).
@@ -33,7 +33,7 @@ func (check notifier) Check(int64) (int64, bool, error) {
 
 		return 0, true, nil
 	}
-	check.metrics.NotifierIsAlive.Mark(1)
+	check.metrics.MarkNotifierIsAlive(false)
 
 	check.log.Debug().
 		String("state", state).
