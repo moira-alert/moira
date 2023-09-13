@@ -49,5 +49,5 @@ func createNotifierStateTest(t *testing.T) *notifier {
 	logger, _ := logging.GetLogger("MetricDelay")
 	metric := metrics.ConfigureHeartBeatMetrics(metrics.NewDummyRegistry())
 
-	return GetNotifier(logger, mock_moira_alert.NewMockDatabase(mockCtrl), metric.NotifierIsAlive).(*notifier)
+	return GetNotifier(logger, mock_moira_alert.NewMockDatabase(mockCtrl), metric).(*notifier)
 }

@@ -78,7 +78,7 @@ func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf
 		heartbeats = append(heartbeats, hb)
 	}
 
-	if hb := heartbeat.GetNotifier(logger, database, metrics.NotifierIsAlive); hb != nil {
+	if hb := heartbeat.GetNotifier(logger, database, metrics); hb != nil {
 		heartbeats = append(heartbeats, hb)
 	}
 

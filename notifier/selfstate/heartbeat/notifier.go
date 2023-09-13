@@ -9,23 +9,23 @@ import (
 )
 
 type notifier struct {
-	db              moira.Database
-	log             moira.Logger
-	notifierIsAlive metrics.Meter
+	db      moira.Database
+	log     moira.Logger
+	metrics *metrics.HeartBeatMetrics
 }
 
-func GetNotifier(logger moira.Logger, database moira.Database, notifierIsAlive metrics.Meter) Heartbeater {
+func GetNotifier(logger moira.Logger, database moira.Database, metrics *metrics.HeartBeatMetrics) Heartbeater {
 	return &notifier{
-		db:              database,
-		log:             logger,
-		notifierIsAlive: notifierIsAlive,
+		db:      database,
+		log:     logger,
+		metrics: metrics,
 	}
 }
 
 func (check notifier) Check(int64) (int64, bool, error) {
 	state, _ := check.db.GetNotifierState()
 	if state != moira.SelfStateOK {
-		check.notifierIsAlive.Mark(0)
+		check.metrics.NotifierIsAlive.Mark(0)
 
 		check.log.Error().
 			String("error", check.GetErrorMessage()).
@@ -33,7 +33,7 @@ func (check notifier) Check(int64) (int64, bool, error) {
 
 		return 0, true, nil
 	}
-	check.notifierIsAlive.Mark(1)
+	check.metrics.NotifierIsAlive.Mark(1)
 
 	check.log.Debug().
 		String("state", state).
