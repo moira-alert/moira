@@ -36,7 +36,7 @@ func (worker *FetchNotificationsWorker) Start() {
 					switch err.(type) {
 					case notifierInBadStateError:
 						worker.Logger.Warning().
-							String("stop_sending_notofocations_for", sleepAfterNotifierBadState.String()).
+							String("stop_sending_notifications_for", sleepAfterNotifierBadState.String()).
 							Error(err).
 							Msg("Stop sending notifications for some time. Fix SelfState errors and turn on notifier in /notifications page")
 						<-time.After(sleepAfterNotifierBadState)
