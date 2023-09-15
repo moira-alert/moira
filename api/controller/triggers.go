@@ -113,7 +113,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 		searchResults = searchResults[from:to]
 	}
 
-	triggerIDs := make([]string, 0)
+	triggerIDs := make([]string, 0, len(searchResults))
 	for _, searchResult := range searchResults {
 		triggerIDs = append(triggerIDs, searchResult.ObjectID)
 	}
@@ -189,7 +189,7 @@ func getTriggerChecks(database moira.Database, triggerIDs []string) ([]moira.Tri
 	if err != nil {
 		return nil, err
 	}
-	list := make([]moira.TriggerCheck, 0)
+	list := make([]moira.TriggerCheck, 0, len(triggerChecks))
 	for _, triggerCheck := range triggerChecks {
 		if triggerCheck != nil {
 			list = append(list, *triggerCheck)
