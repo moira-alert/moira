@@ -1184,7 +1184,7 @@ func TestHandleTrigger(t *testing.T) {
 	})
 
 	metricState := lastCheck.Metrics[metric]
-	metricState.Maintenance = 4000
+	metricState.Maintenance = time.Now().Add(time.Minute).Unix()
 	lastCheck.Metrics[metric] = metricState
 
 	Convey("No data too long and ttlState is delete, but the metric is on maintenance and NeedToDeleteAfterMaintenance is false, so it won't be deleted", t, func() {
@@ -1266,7 +1266,11 @@ func TestHandleTrigger(t *testing.T) {
 	// 	})
 	// })
 
-	Convey("No data too long and ttlState is delete, but the metric is on maintenance and NeedToDeleteAfterMaintenance is true, so it will be deleted", t, func() {
+	metricState = lastCheck.Metrics[metric]
+	metricState.Maintenance = 4000
+	lastCheck.Metrics[metric] = metricState
+
+	Convey("No data too long and ttlState is delete, the time for Maintenance of metric is over, so it will be deleted", t, func() {
 		triggerChecker.from = 4217
 		triggerChecker.until = 4267
 		triggerChecker.ttlState = moira.TTLStateDEL
