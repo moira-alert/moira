@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"sort"
 	"strconv"
@@ -377,15 +378,17 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64              `json:"event_timestamp" example:"1590741878" format:"int64"`
-	State           State              `json:"state" example:"OK"`
-	Suppressed      bool               `json:"suppressed" example:"false"`
-	SuppressedState State              `json:"suppressed_state,omitempty"`
-	Timestamp       int64              `json:"timestamp" example:"1590741878" format:"int64"`
-	Value           *float64           `json:"value,omitempty" example:"70"`
-	Values          map[string]float64 `json:"values,omitempty"`
-	Maintenance     int64              `json:"maintenance,omitempty" example:"0" format:"int64"`
-	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
+	EventTimestamp               int64              `json:"event_timestamp" example:"1590741878" format:"int64"`
+	State                        State              `json:"state" example:"OK"`
+	Suppressed                   bool               `json:"suppressed" example:"false"`
+	SuppressedState              State              `json:"suppressed_state,omitempty"`
+	Timestamp                    int64              `json:"timestamp" example:"1590741878" format:"int64"`
+	Value                        *float64           `json:"value,omitempty" example:"70"`
+	Values                       map[string]float64 `json:"values,omitempty"`
+	Maintenance                  int64              `json:"maintenance,omitempty" example:"0" format:"int64"`
+	MaintenanceInfo              MaintenanceInfo    `json:"maintenance_info"`
+	// NeedToDeleteAfterMaintenance controls whether the metric will be shown to the user if the trigger has ttlState = Del and the metric is in Maintenance
+	NeedToDeleteAfterMaintenance bool               `json:"need_to_delete_after_maintenance,omitempty" example:"false"`
 	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
 }
 
@@ -586,6 +589,7 @@ func (event NotificationEvent) FormatTimestamp(location *time.Location, timeForm
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
 func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, muteNewMetric bool) MetricState {
+	log.Printf("GetOrCreateMetricState: metricName: %v, metrics: %v", metric, checkData.Metrics)
 	_, ok := checkData.Metrics[metric]
 	if !ok {
 		checkData.Metrics[metric] = createEmptyMetricState(emptyTimestampValue, !muteNewMetric)

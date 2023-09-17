@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker/metrics/conversion"
@@ -310,11 +311,26 @@ func (triggerChecker *TriggerChecker) check(
 		targets = conversion.Merge(targets, aloneMetrics)
 
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, log)
+		prevMetricState := checkData.Metrics[metricName]
+		isNewMetric := prevMetricState.Timestamp != metricState.Timestamp
+
 		if needToDeleteMetric {
-			log.Info().Msg("Remove metric")
-			checkData.RemoveMetricState(metricName)
-			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
+			if metricState.Maintenance != 0 {
+				if metricState.NeedToDeleteAfterMaintenance && time.Now().Unix() >= metricState.Maintenance {
+					checkData.RemoveMetricState(metricName)
+					err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
+				} else if !metricState.NeedToDeleteAfterMaintenance {
+					metricState.NeedToDeleteAfterMaintenance = true
+					checkData.Metrics[metricName] = metricState
+				}
+			} else {
+				checkData.RemoveMetricState(metricName)
+				err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
+			}
 		} else {
+			if prevMetricState.NeedToDeleteAfterMaintenance && isNewMetric {
+				metricState.NeedToDeleteAfterMaintenance = false
+			}
 			checkData.Metrics[metricName] = metricState
 		}
 
@@ -325,7 +341,7 @@ func (triggerChecker *TriggerChecker) check(
 	return checkData, nil
 }
 
-// checkTargets is a Function that takes a
+// checkTargets is a function which determines the last state of the metric and information about whether it should be deleted
 func (triggerChecker *TriggerChecker) checkTargets(
 	metricName string,
 	metrics map[string]metricSource.MetricData,

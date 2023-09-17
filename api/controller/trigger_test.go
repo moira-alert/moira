@@ -372,6 +372,44 @@ func TestGetTriggerLastCheck(t *testing.T) {
 		})
 	})
 
+	Convey("Returns all metrics, because their NeedToDeleteAfterMaintenance is false", t, func ()  {
+		lastCheck = moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				"metric": {},
+				"metric2": {},
+			},
+		}
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
+		check, err := GetTriggerLastCheck(dataBase, triggerID)
+		So(err, ShouldBeNil)
+		So(check, ShouldResemble, &dto.TriggerCheck{
+			TriggerID: triggerID,
+			CheckData: &lastCheck,
+		})
+	})
+
+	Convey("Does not return all metrics, as some NeedToDeleteAfterMaintenance is true", t, func ()  {
+		lastCheck = moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				"metric": {
+					NeedToDeleteAfterMaintenance: true,
+				},
+				"metric2": {},
+			},
+		}
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
+		check, err := GetTriggerLastCheck(dataBase, triggerID)
+		So(err, ShouldBeNil)
+		So(check, ShouldResemble, &dto.TriggerCheck{
+			TriggerID: triggerID,
+			CheckData: &moira.CheckData{
+				Metrics: map[string]moira.MetricState{
+					"metric2": {},
+				},
+			},
+		})
+	})
+
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("oooops! Error get")
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
