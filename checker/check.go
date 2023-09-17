@@ -315,17 +315,13 @@ func (triggerChecker *TriggerChecker) check(
 		isNewMetric := prevMetricState.Timestamp != metricState.Timestamp
 
 		if needToDeleteMetric {
-			if metricState.Maintenance != 0 {
-				if metricState.NeedToDeleteAfterMaintenance && time.Now().Unix() >= metricState.Maintenance {
-					checkData.RemoveMetricState(metricName)
-					err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
-				} else if !metricState.NeedToDeleteAfterMaintenance {
-					metricState.NeedToDeleteAfterMaintenance = true
-					checkData.Metrics[metricName] = metricState
-				}
-			} else {
+			if metricState.Maintenance == 0 || (metricState.Maintenance != 0 && time.Now().Unix() >= metricState.Maintenance) {
+				log.Info().Msg("Remove metric")
 				checkData.RemoveMetricState(metricName)
 				err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
+			} else if metricState.Maintenance != 0 && !metricState.NeedToDeleteAfterMaintenance {
+				metricState.NeedToDeleteAfterMaintenance = true
+				checkData.Metrics[metricName] = metricState
 			}
 		} else {
 			if prevMetricState.NeedToDeleteAfterMaintenance && isNewMetric {
