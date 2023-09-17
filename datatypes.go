@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math"
 	"sort"
 	"strconv"
@@ -589,7 +588,6 @@ func (event NotificationEvent) FormatTimestamp(location *time.Location, timeForm
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
 func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, muteNewMetric bool) MetricState {
-	log.Printf("GetOrCreateMetricState: metricName: %v, metrics: %v", metric, checkData.Metrics)
 	_, ok := checkData.Metrics[metric]
 	if !ok {
 		checkData.Metrics[metric] = createEmptyMetricState(emptyTimestampValue, !muteNewMetric)
