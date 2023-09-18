@@ -19,7 +19,11 @@ import (
 func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (searchResults []*moira.SearchResult, total int64, err error) {
 	if size < 0 {
 		page = 0
-		docs, _ := index.index.DocCount()
+		var docs uint64
+		docs, err = index.index.DocCount()
+		if err != nil {
+			return
+		}
 		size = int64(docs)
 	}
 
@@ -48,14 +52,14 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mapping.FieldData) []moira.SearchHighlight {
 	highlights := make([]moira.SearchHighlight, 0)
 	for _, triggerField := range triggerFields {
-		var highlightValue string
+		var highlightValue strings.Builder
 		if fragments, ok := fragmentsMap[triggerField.GetName()]; ok {
 			for _, fragment := range fragments {
-				highlightValue += fragment
+				highlightValue.WriteString(fragment)
 			}
 			highlights = append(highlights, moira.SearchHighlight{
 				Field: triggerField.GetTagValue(),
-				Value: highlightValue,
+				Value: highlightValue.String(),
 			})
 		}
 	}

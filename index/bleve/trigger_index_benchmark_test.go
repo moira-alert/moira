@@ -49,7 +49,14 @@ func runBenchmark(b *testing.B, triggersSize int, batchSize int) {
 	b.ReportAllocs()
 
 	for n := 0; n < b.N; n++ {
-		newIndex, _ := CreateTriggerIndex(triggerMapping)
+		newIndex, err := CreateTriggerIndex(triggerMapping)
+		if err != nil {
+			logger.Warning().
+				Msg("Cannot create new trigger index for benchmark test")
+			continue
+		}
+		defer newIndex.Close()
+
 		logger.Info().
 			Int("batch_size", batchSize).
 			Int("triggers_count", triggersSize).

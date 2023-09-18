@@ -288,6 +288,17 @@ func (connector *DbConnector) getTriggersIdsByTags(tags []string) ([]string, err
 	return values, nil
 }
 
+func (connector *DbConnector) DeleteAllSubscriptions() {
+	subs := connector.Client().Keys(context.Background(), subscriptionKey("*"))
+	connector.Client().Del(context.Background(), subs.Val()...)
+
+	subs = connector.Client().Keys(context.Background(), userSubscriptionsKey("*"))
+	connector.Client().Del(context.Background(), subs.Val()...)
+
+	subs = connector.Client().Keys(context.Background(), teamSubscriptionsKey("*"))
+	connector.Client().Del(context.Background(), subs.Val()...)
+}
+
 func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.SubscriptionData) ([]*moira.Trigger, error) {
 	if subscription == nil {
 		return make([]*moira.Trigger, 0), nil

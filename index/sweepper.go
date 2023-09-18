@@ -9,6 +9,8 @@ const (
 
 func (index *Index) runTriggersToReindexSweepper() error {
 	ticker := time.NewTicker(sweeperRunInterval)
+	defer ticker.Stop()
+
 	index.logger.Info().
 		String("trigger_time_to_keep", sweeperTimeToKeep.String()).
 		String("time_between_sweeps", sweeperRunInterval.String()).
@@ -20,6 +22,11 @@ func (index *Index) runTriggersToReindexSweepper() error {
 			index.logger.Info().Msg("Stop index sweepper")
 			return nil
 		case <-ticker.C:
+			if !index.checkIfIndexIsReady() {
+				index.logger.Warning().
+					Msg("Cannot sweep triggers to reindex cause index is not ready")
+				continue
+			}
 			timeToDelete := time.Now().Add(-sweeperTimeToKeep).Unix()
 			if err := index.database.RemoveTriggersToReindex(timeToDelete); err != nil {
 				index.logger.Warning().

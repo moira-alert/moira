@@ -46,7 +46,7 @@ func buildQueryForOnlyErrors(onlyErrors bool) (searchQueries []query.Query) {
 	if !onlyErrors {
 		return
 	}
-	minScore := float64(1)
+	minScore := 1.0
 	qr := bleve.NewNumericRangeQuery(&minScore, nil)
 	qr.FieldVal = mapping.TriggerLastCheckScore.GetName()
 	return append(searchQueries, qr)

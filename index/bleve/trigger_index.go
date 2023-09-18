@@ -31,3 +31,7 @@ func (index *TriggerIndex) GetCount() (int64, error) {
 	}
 	return int64(documents), nil
 }
+
+func (index *TriggerIndex) Close() error {
+	return index.index.Close()
+}

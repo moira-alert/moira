@@ -11,7 +11,67 @@ import (
 func (index *Index) writeByBatches(triggerIDs []string, batchSize int) error {
 	triggerIDsBatches := moira.ChunkSlice(triggerIDs, batchSize)
 	triggerChecksChan, errorsChan := index.getTriggerChecksBatches(triggerIDsBatches)
-	return index.handleTriggerBatches(triggerChecksChan, errorsChan, len(triggerIDs))
+	return index.writeTriggerBatches(triggerChecksChan, errorsChan, len(triggerIDs))
+}
+
+func (index *Index) deleteByBatches(triggerIDs []string, batchSize int) error {
+	triggerIDsBatches := moira.ChunkSlice(triggerIDs, batchSize)
+	triggerIDsChan := getChannelWithTriggerIDsBatches(triggerIDsBatches)
+	return index.deleteTriggerBatches(triggerIDsChan, len(triggerIDs))
+}
+
+func getChannelWithTriggerIDsBatches(triggerIDsBatches [][]string) <-chan []string {
+	ch := make(chan []string, len(triggerIDsBatches))
+
+	go func() {
+		defer close(ch)
+
+		for _, triggerIDsBatch := range triggerIDsBatches {
+			ch <- triggerIDsBatch
+		}
+	}()
+
+	return ch
+}
+
+func (index *Index) deleteTriggerBatches(triggerIDsChan <-chan []string, triggersTotal int) error {
+	indexErrors := make(chan error)
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+	var count int64
+
+	for {
+		select {
+		case batch, ok := <-triggerIDsChan:
+			if !ok {
+				return nil
+			}
+
+			wg.Add(1)
+			go func(b []string) {
+				defer wg.Done()
+				err := index.triggerIndex.Delete(b)
+				atomic.AddInt64(&count, int64(len(b)))
+				if err != nil {
+					indexErrors <- err
+					return
+				}
+				index.logger.Debug().
+					Int("batch_size", len(batch)).
+					Int64("count", atomic.LoadInt64(&count)).
+					Int("triggers_total", triggersTotal).
+					Msg("Batch of triggers deleted from index")
+			}(batch)
+
+		case err, ok := <-indexErrors:
+			if ok {
+				index.logger.Error().
+					Error(err).
+					Msg("Cannot index trigger checks")
+			}
+			return err
+		}
+	}
 }
 
 func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (triggerChecksChan chan []*moira.TriggerCheck, errors chan error) {
@@ -61,7 +121,7 @@ func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.Trigge
 	return nil, fmt.Errorf("cannot get trigger checks from DB after %d tries, last error: %s", triesCount, err.Error())
 }
 
-func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, triggersTotal int) error {
+func (index *Index) writeTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, triggersTotal int) error {
 	indexErrors := make(chan error)
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
@@ -76,10 +136,10 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 			wg.Add(1)
 			go func(b []*moira.TriggerCheck) {
 				defer wg.Done()
-				err2 := index.triggerIndex.Write(b)
+				err := index.triggerIndex.Write(b)
 				atomic.AddInt64(&count, int64(len(b)))
-				if err2 != nil {
-					indexErrors <- err2
+				if err != nil {
+					indexErrors <- err
 					return
 				}
 				index.logger.Debug().

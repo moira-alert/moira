@@ -10,6 +10,7 @@ const actualizerRunInterval = time.Second
 
 func (index *Index) runIndexActualizer() error {
 	ticker := time.NewTicker(actualizerRunInterval)
+	defer ticker.Stop()
 	index.logger.Info().
 		Interface("actualizer_interval", actualizerRunInterval).
 		Msg("Start index actualizer: reindex changed triggers in loop with given interval")
@@ -20,6 +21,11 @@ func (index *Index) runIndexActualizer() error {
 			index.logger.Info().Msg("Stop index actualizer")
 			return nil
 		case <-ticker.C:
+			if !index.checkIfIndexIsReady() {
+				index.logger.Warning().
+					Msg("Cannot actualize triggers cause index is not ready")
+				continue
+			}
 			newTime := time.Now().Unix()
 			if float64(newTime-index.indexActualizedTS) > sweeperTimeToKeep.Seconds() {
 				index.logger.Error().
@@ -76,9 +82,9 @@ func (index *Index) actualizeIndex() error {
 	}
 
 	if len(triggersToDelete) > 0 {
-		err2 := index.triggerIndex.Delete(triggersToDelete)
-		if err2 != nil {
-			return err2
+		err = index.triggerIndex.Delete(triggersToDelete)
+		if err != nil {
+			return err
 		}
 		log.Debug().
 			Int("triggers_count", len(triggersToDelete)).
@@ -86,9 +92,9 @@ func (index *Index) actualizeIndex() error {
 	}
 
 	if len(triggersToUpdate) > 0 {
-		err2 := index.triggerIndex.Write(triggersToUpdate)
-		if err2 != nil {
-			return err2
+		err = index.triggerIndex.Write(triggersToUpdate)
+		if err != nil {
+			return err
 		}
 		log.Debug().
 			Int("triggers_count", len(triggersToUpdate)).
