@@ -2,8 +2,6 @@ package bleve
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/search"
@@ -63,8 +61,7 @@ func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mappin
 }
 
 func buildSearchRequest(options moira.SearchOptions) *bleve.SearchRequest {
-	searchTerms := splitStringToTerms(options.SearchString)
-	searchQuery := buildSearchQuery(options.Tags, searchTerms, options.OnlyProblems, options.NeedSearchByCreatedBy, options.CreatedBy)
+	searchQuery := buildSearchQuery(options)
 
 	from := options.Page * options.Size
 	req := bleve.NewSearchRequestOptions(searchQuery, int(options.Size), int(from), false)
@@ -76,14 +73,4 @@ func buildSearchRequest(options moira.SearchOptions) *bleve.SearchRequest {
 	req.Highlight = bleve.NewHighlight()
 
 	return req
-}
-
-func splitStringToTerms(searchString string) (searchTerms []string) {
-	searchString = escapeString(searchString)
-
-	return strings.Fields(searchString)
-}
-
-func escapeString(original string) (escaped string) {
-	return regexp.MustCompile(`[|+\-=&<>!(){}\[\]^"'~*?\\/.,:;_@]`).ReplaceAllString(original, " ")
 }

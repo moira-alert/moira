@@ -1,22 +1,27 @@
 package bleve
 
 import (
+	"regexp"
+	"strings"
+
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/search/query"
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
 )
 
-func buildSearchQuery(filterTags, searchTerms []string, onlyErrors, needSearchByCreatedBy bool, createdBy string) query.Query {
-	if !onlyErrors && len(filterTags) == 0 && len(searchTerms) == 0 && !needSearchByCreatedBy {
+func buildSearchQuery(options moira.SearchOptions) query.Query {
+	searchTerms := splitStringToTerms(options.SearchString)
+	if !options.OnlyProblems && len(options.Tags) == 0 && len(searchTerms) == 0 && !options.NeedSearchByCreatedBy {
 		return bleve.NewMatchAllQuery()
 	}
 
 	searchQueries := make([]query.Query, 0)
 
-	searchQueries = append(searchQueries, buildQueryForTags(filterTags)...)
+	searchQueries = append(searchQueries, buildQueryForTags(options.Tags)...)
 	searchQueries = append(searchQueries, buildQueryForTerms(searchTerms)...)
-	searchQueries = append(searchQueries, buildQueryForOnlyErrors(onlyErrors)...)
-	searchQueries = append(searchQueries, buildQueryForCreatedBy(createdBy, needSearchByCreatedBy)...)
+	searchQueries = append(searchQueries, buildQueryForOnlyErrors(options.OnlyProblems)...)
+	searchQueries = append(searchQueries, buildQueryForCreatedBy(options.CreatedBy, options.NeedSearchByCreatedBy)...)
 
 	return bleve.NewConjunctionQuery(searchQueries...)
 }
@@ -61,4 +66,14 @@ func buildQueryForOnlyErrors(onlyErrors bool) (searchQueries []query.Query) {
 	qr := bleve.NewNumericRangeQuery(&minScore, nil)
 	qr.FieldVal = mapping.TriggerLastCheckScore.GetName()
 	return append(searchQueries, qr)
+}
+
+func splitStringToTerms(searchString string) (searchTerms []string) {
+	searchString = escapeString(searchString)
+
+	return strings.Fields(searchString)
+}
+
+func escapeString(original string) (escaped string) {
+	return regexp.MustCompile(`[|+\-=&<>!(){}\[\]^"'~*?\\/.,:;_@]`).ReplaceAllString(original, " ")
 }
