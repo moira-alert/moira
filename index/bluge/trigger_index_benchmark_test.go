@@ -1,4 +1,4 @@
-package bleve
+package bluge
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/index/mapping"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
@@ -43,13 +42,12 @@ func BenchmarkFillIndex(b *testing.B) {
 func runBenchmark(b *testing.B, triggersSize int, batchSize int) {
 	logger, _ := logging.GetLogger("Benchmark")
 	triggersPointers := generateTriggerChecks(triggersSize)
-	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
 	b.ResetTimer()
 	b.ReportAllocs()
 
 	for n := 0; n < b.N; n++ {
-		newIndex, _ := CreateTriggerIndex(triggerMapping)
+		newIndex, _ := CreateTriggerIndex()
 		defer newIndex.Close()
 
 		logger.Info().

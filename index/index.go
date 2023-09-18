@@ -1,9 +1,10 @@
 package index
 
 import (
+	"log"
+
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/index/bleve"
-	"github.com/moira-alert/moira/index/mapping"
+	"github.com/moira-alert/moira/index/bluge"
 	"github.com/moira-alert/moira/metrics"
 	"gopkg.in/tomb.v2"
 )
@@ -16,6 +17,7 @@ type TriggerIndex interface {
 	Write(checks []*moira.TriggerCheck) error
 	Delete(triggerIDs []string) error
 	GetCount() (int64, error)
+	Close() error
 }
 
 // Index represents Index for Bleve.Index type
@@ -38,9 +40,10 @@ func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistr
 		database: database,
 	}
 	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry)
-	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
-	newIndex.triggerIndex, err = bleve.CreateTriggerIndex(indexMapping)
+	// indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
+	newIndex.triggerIndex, err = bluge.CreateTriggerIndex()
 	if err != nil {
+		log.Println("ERROR INDEX: ", err)
 		return nil
 	}
 	return &newIndex
@@ -76,6 +79,7 @@ func (index *Index) IsReady() bool {
 // Stop stops checks triggers
 func (index *Index) Stop() error {
 	index.logger.Info().Msg("Stop search index")
+	index.triggerIndex.Close()
 	index.tomb.Kill(nil)
 	return index.tomb.Wait()
 }

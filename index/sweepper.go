@@ -9,6 +9,8 @@ const (
 
 func (index *Index) runTriggersToReindexSweepper() error {
 	ticker := time.NewTicker(sweeperRunInterval)
+	defer ticker.Stop()
+
 	index.logger.Info().
 		String("trigger_time_to_keep", sweeperTimeToKeep.String()).
 		String("time_between_sweeps", sweeperRunInterval.String()).

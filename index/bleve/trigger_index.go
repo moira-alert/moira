@@ -13,7 +13,21 @@ type TriggerIndex struct {
 
 // CreateTriggerIndex returns TriggerIndex by provided mapping
 func CreateTriggerIndex(mapping mapping.IndexMapping) (*TriggerIndex, error) {
-	bleveIdx, err := bleve.NewUsing("", mapping, scorch.Name, scorch.Name, map[string]interface{}{})
+	kvConfig := map[string]interface{}{
+		"create_if_missing":        true,
+		"error_if_exists":          true,
+		"unsafe_batch":             true,
+		"eventCallbackName":        "scorchEventCallbacks",
+		"asyncErrorCallbackName":   "scorchAsyncErrorCallbacks",
+		"numSnapshotsToKeep":       3,
+		"rollbackSamplingInterval": "10m",
+		"forceSegmentType":         "zap",
+		"bolt_timeout":             "30s",
+	}
+	kvConfig["kvStoreName"] = "scorch"
+	kvConfig["forceSegmentVersion"] = "7.0.0"
+
+	bleveIdx, err := bleve.NewUsing("", mapping, scorch.Name, scorch.Name, kvConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -30,4 +44,8 @@ func (index *TriggerIndex) GetCount() (int64, error) {
 		return 0, err
 	}
 	return int64(documents), nil
+}
+
+func (index *TriggerIndex) Close() error {
+	return index.index.Close()
 }

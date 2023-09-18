@@ -76,10 +76,10 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 			wg.Add(1)
 			go func(b []*moira.TriggerCheck) {
 				defer wg.Done()
-				err2 := index.triggerIndex.Write(b)
+				err := index.triggerIndex.Write(b)
 				atomic.AddInt64(&count, int64(len(b)))
-				if err2 != nil {
-					indexErrors <- err2
+				if err != nil {
+					indexErrors <- err
 					return
 				}
 				index.logger.Debug().

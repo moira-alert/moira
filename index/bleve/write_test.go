@@ -10,6 +10,7 @@ import (
 
 func TestTriggerIndex_Write(t *testing.T) {
 	var newIndex *TriggerIndex
+
 	var err error
 	var count int64
 
@@ -92,5 +93,10 @@ func TestTriggerIndex_Write(t *testing.T) {
 			So(count, ShouldEqual, int64(32))
 			So(err, ShouldBeNil)
 		})
+	})
+
+	Convey("Test close index", t, func() {
+		err = newIndex.Close()
+		So(err, ShouldBeNil)
 	})
 }

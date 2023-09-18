@@ -21,6 +21,7 @@ import (
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/pkg/profile"
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -40,6 +41,9 @@ var (
 )
 
 func main() {
+	// for profiling app
+	defer profile.Start(profile.MemProfileHeap, profile.MemProfileRate(1)).Stop()
+
 	flag.Parse()
 	if *printVersion {
 		fmt.Println("Moira Api")

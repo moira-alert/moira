@@ -12,6 +12,7 @@ import (
 
 func TestTriggerIndex_Search(t *testing.T) {
 	var newIndex *TriggerIndex
+
 	var err error
 	var count int64
 
@@ -245,6 +246,11 @@ func TestTriggerIndex_Search(t *testing.T) {
 			So(count, ShouldEqual, 2)
 			So(err, ShouldBeNil)
 		})
+	})
+
+	Convey("Test close index", t, func() {
+		err := newIndex.Close()
+		So(err, ShouldBeNil)
 	})
 }
 

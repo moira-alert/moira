@@ -8,6 +8,9 @@ import (
 
 // Write adds moira.TriggerChecks to TriggerIndex
 func (index *TriggerIndex) Write(checks []*moira.TriggerCheck) error {
+	// stats, _ := index.index.Stats().MarshalJSON()
+	// log.Println("INDEX STATS: ", string(stats))
+
 	batch := index.index.NewBatch()
 	defer batch.Reset()
 

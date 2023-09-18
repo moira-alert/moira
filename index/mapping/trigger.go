@@ -8,15 +8,15 @@ import (
 
 var (
 	// TriggerID represents field data for moira.Trigger.ID
-	TriggerID = FieldData{"ID", "id", 5}
+	TriggerID = FieldData{"id", "id", 5}
 	// TriggerName represents field data for moira.Trigger.Name
-	TriggerName = FieldData{"Name", "name", 3}
+	TriggerName = FieldData{"name", "name", 3}
 	// TriggerDesc represents field data for moira.Trigger.Desc
-	TriggerDesc = FieldData{"Desc", "desc", 1}
+	TriggerDesc = FieldData{"desc", "desc", 1}
 	// TriggerTags represents field data for moira.Trigger.Tags
-	TriggerTags = FieldData{"Tags", "tags", 0}
+	TriggerTags = FieldData{"tags", "tags", 0}
 	// TriggerLastCheckScore represents field data for moira.CheckData score
-	TriggerLastCheckScore = FieldData{"LastCheckScore", "", 0}
+	TriggerLastCheckScore = FieldData{"last_check_score", "", 0}
 )
 
 // Trigger represents Moira.Trigger type for full-text search index. It includes only indexed fields
