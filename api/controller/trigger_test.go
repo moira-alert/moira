@@ -372,7 +372,7 @@ func TestGetTriggerLastCheck(t *testing.T) {
 		})
 	})
 
-	Convey("Returns all metrics, because their NeedToDeleteAfterMaintenance is false", t, func() {
+	Convey("Returns all metrics, because their HiddenMetricDueMaintenance is false", t, func() {
 		lastCheck = moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				"metric":  {},
@@ -388,11 +388,11 @@ func TestGetTriggerLastCheck(t *testing.T) {
 		})
 	})
 
-	Convey("Does not return all metrics, as some NeedToDeleteAfterMaintenance is true", t, func() {
+	Convey("Does not return all metrics, as some HiddenMetricDueMaintenance is true", t, func() {
 		lastCheck = moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				"metric": {
-					NeedToDeleteAfterMaintenance: true,
+					HiddenMetricDueMaintenance: true,
 				},
 				"metric2": {},
 			},

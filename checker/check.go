@@ -2,7 +2,6 @@ package checker
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker/metrics/conversion"
@@ -313,17 +312,12 @@ func (triggerChecker *TriggerChecker) check(
 		isNewMetric := prevMetricState.Timestamp != metricState.Timestamp
 
 		if needToDeleteMetric {
-			if metricState.Maintenance == 0 || (metricState.Maintenance != 0 && time.Now().Unix() >= metricState.Maintenance) {
-				log.Info().Msg("Remove metric")
-				checkData.RemoveMetricState(metricName)
-				err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
-			} else if metricState.Maintenance != 0 && !metricState.NeedToDeleteAfterMaintenance {
-				metricState.NeedToDeleteAfterMaintenance = true
-				checkData.Metrics[metricName] = metricState
-			}
+			log.Debug().String("metric_name", metricName).Msg("Remove metric")
+			checkData.RemoveMetricState(metricName)
+			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
-			if prevMetricState.NeedToDeleteAfterMaintenance && isNewMetric {
-				metricState.NeedToDeleteAfterMaintenance = false
+			if metricState.HiddenMetricDueMaintenance && isNewMetric {
+				metricState.HiddenMetricDueMaintenance = false
 			}
 			checkData.Metrics[metricName] = metricState
 		}
@@ -391,6 +385,10 @@ func (triggerChecker *TriggerChecker) checkForNoData(
 		Msg("Metric TTL expired for state")
 
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
+		if metricLastState.Maintenance != 0 && lastCheckTimeStamp <= metricLastState.Maintenance {
+			metricLastState.HiddenMetricDueMaintenance = true
+			return false, &metricLastState
+		}
 		return true, nil
 	}
 

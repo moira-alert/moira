@@ -563,10 +563,32 @@ func TestCheckForNODATA(t *testing.T) {
 	metricLastState.Timestamp = 399
 	triggerChecker.ttlState = moira.TTLStateDEL
 
-	Convey("TTLState is DEL and has EventTimeStamp", t, func() {
+	Convey("TTLState is DEL, has EventTimeStamp, Maintenance metric has expired and will be deleted", t, func() {
+		metricLastState.Maintenance = 111
 		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
 		So(needToDeleteMetric, ShouldBeTrue)
 		So(currentState, ShouldBeNil)
+	})
+
+	Convey("TTLState is DEL, has EventTimeStamp, the metric doesn't have Maintenance and will be deleted", t, func() {
+		metricLastState.Maintenance = 0
+		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
+		So(needToDeleteMetric, ShouldBeTrue)
+		So(currentState, ShouldBeNil)
+	})
+
+	Convey("TTLState is DEL, has EventTimeStamp, but the metric is on Maintenance, so it's not deleted and HiddenMetricDueMaintenance = true", t, func() {
+		metricLastState.Maintenance = 11111
+		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
+		So(needToDeleteMetric, ShouldBeFalse)
+		So(currentState, ShouldNotBeNil)
+		So(*currentState, ShouldResemble, moira.MetricState{
+			Timestamp:                  metricLastState.Timestamp,
+			EventTimestamp:             metricLastState.EventTimestamp,
+			Maintenance:                metricLastState.Maintenance,
+			Suppressed:                 metricLastState.Suppressed,
+			HiddenMetricDueMaintenance: true,
+		})
 	})
 
 	Convey("Has new metricState", t, func() {
@@ -1184,10 +1206,10 @@ func TestHandleTrigger(t *testing.T) {
 	})
 
 	metricState := lastCheck.Metrics[metric]
-	metricState.Maintenance = time.Now().Add(time.Minute).Unix()
+	metricState.Maintenance = 5000
 	lastCheck.Metrics[metric] = metricState
 
-	Convey("No data too long and ttlState is delete, but the metric is on maintenance and NeedToDeleteAfterMaintenance is false, so it won't be deleted", t, func() {
+	Convey("No data too long and ttlState is delete, but the metric is on maintenance and HiddenMetricDueMaintenance is false, so it won't be deleted", t, func() {
 		triggerChecker.from = 4217
 		triggerChecker.until = 4267
 		triggerChecker.ttlState = moira.TTLStateDEL
@@ -1205,12 +1227,12 @@ func TestHandleTrigger(t *testing.T) {
 		So(checkData, ShouldResemble, moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				metric: {
-					Timestamp:                    oldMetricState.Timestamp,
-					EventTimestamp:               oldMetricState.EventTimestamp,
-					State:                        oldMetricState.State,
-					Values:                       oldMetricState.Values,
-					Maintenance:                  oldMetricState.Maintenance,
-					NeedToDeleteAfterMaintenance: true,
+					Timestamp:                  oldMetricState.Timestamp,
+					EventTimestamp:             oldMetricState.EventTimestamp,
+					State:                      oldMetricState.State,
+					Values:                     oldMetricState.Values,
+					Maintenance:                oldMetricState.Maintenance,
+					HiddenMetricDueMaintenance: true,
 				},
 			},
 			MetricsToTargetRelation: map[string]string{},
@@ -1221,10 +1243,10 @@ func TestHandleTrigger(t *testing.T) {
 	})
 
 	metricState = lastCheck.Metrics[metric]
-	metricState.NeedToDeleteAfterMaintenance = true
+	metricState.HiddenMetricDueMaintenance = true
 	lastCheck.Metrics[metric] = metricState
 
-	Convey("Metric on maintenance, NeedToDeleteAfterMaintenance is true, ttlState is delete, but a new metric comes in and NeedToDeleteAfterMaintenance becomes false", t, func() {
+	Convey("Metric on maintenance, HiddenMetricDueMaintenance is true, ttlState is delete, but a new metric comes in and HiddenMetricDueMaintenance becomes false", t, func() {
 		triggerChecker.from = 4217
 		triggerChecker.until = 4267
 		triggerChecker.ttlState = moira.TTLStateDEL
@@ -1242,12 +1264,12 @@ func TestHandleTrigger(t *testing.T) {
 		So(checkData, ShouldResemble, moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				metric: {
-					Timestamp:                    triggerChecker.from,
-					EventTimestamp:               oldMetricState.EventTimestamp,
-					State:                        oldMetricState.State,
-					Values:                       map[string]float64{"t1": 5},
-					Maintenance:                  oldMetricState.Maintenance,
-					NeedToDeleteAfterMaintenance: false,
+					Timestamp:                  triggerChecker.from,
+					EventTimestamp:             oldMetricState.EventTimestamp,
+					State:                      oldMetricState.State,
+					Values:                     map[string]float64{"t1": 5},
+					Maintenance:                oldMetricState.Maintenance,
+					HiddenMetricDueMaintenance: false,
 				},
 			},
 			MetricsToTargetRelation: map[string]string{},

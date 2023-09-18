@@ -130,7 +130,7 @@ func GetTriggerLastCheck(dataBase moira.Database, triggerID string) (*dto.Trigge
 	if lastCheck != nil && len(lastCheck.Metrics) != 0 {
 		aliveMetrics := make(map[string]moira.MetricState, len(lastCheck.Metrics))
 		for metricName, metricState := range lastCheck.Metrics {
-			if !metricState.NeedToDeleteAfterMaintenance {
+			if !metricState.HiddenMetricDueMaintenance {
 				aliveMetrics[metricName] = metricState
 			}
 		}
