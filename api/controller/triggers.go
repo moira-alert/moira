@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/database"
+	db "github.com/moira-alert/moira/database"
 )
 
 const pageSizeUnlimited int64 = -1
@@ -50,19 +50,16 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
+
+	triggerChecks, err := getTriggerChecks(database, triggerIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	triggersList := dto.TriggersList{
-		List: make([]moira.TriggerCheck, 0),
+	triggersList := &dto.TriggersList{
+		List: triggerChecks,
 	}
-	for _, triggerCheck := range triggerChecks {
-		if triggerCheck != nil {
-			triggersList.List = append(triggersList.List, *triggerCheck)
-		}
-	}
-	return &triggersList, nil
+
+	return triggersList, nil
 }
 
 // SearchTriggers gets trigger page and filter trigger by tags and search request terms
@@ -100,7 +97,10 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 			return nil, api.ErrorInternalServer(err)
 		}
 		options.PagerID = uuid4.String()
-		database.SaveTriggersSearchResults(options.PagerID, searchResults) //nolint
+		err = database.SaveTriggersSearchResults(options.PagerID, searchResults)
+		if err != nil {
+			return nil, api.ErrorInternalServer(err)
+		}
 	}
 
 	if options.CreatePager {
@@ -112,7 +112,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 		searchResults = searchResults[from:to]
 	}
 
-	var triggerIDs []string //nolint
+	triggerIDs := make([]string, 0, len(searchResults))
 	for _, searchResult := range searchResults {
 		triggerIDs = append(triggerIDs, searchResult.ObjectID)
 	}
@@ -150,24 +150,57 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 	return &triggersList, nil
 }
 
-func DeleteTriggersPager(dataBase moira.Database, pagerID string) (dto.TriggersSearchResultDeleteResponse, *api.ErrorResponse) {
-	exists, err := dataBase.IsTriggersSearchResultsExist(pagerID)
+func DeleteTriggersPager(database moira.Database, pagerID string) (dto.TriggersSearchResultDeleteResponse, *api.ErrorResponse) {
+	exists, err := database.IsTriggersSearchResultsExist(pagerID)
 	if err != nil {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorInternalServer(err)
 	}
 	if !exists {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorNotFound(fmt.Sprintf("pager with id %s not found", pagerID))
 	}
-	err = dataBase.DeleteTriggersSearchResults(pagerID)
+	err = database.DeleteTriggersSearchResults(pagerID)
 	if err != nil {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorInternalServer(err)
 	}
 	return dto.TriggersSearchResultDeleteResponse{PagerID: pagerID}, nil
 }
 
-func triggerExists(dataBase moira.Database, triggerID string) (bool, error) {
-	_, err := dataBase.GetTrigger(triggerID)
-	if err == database.ErrNil {
+// GetUnusedTriggerIDs returns unused triggers ids.
+func GetUnusedTriggerIDs(database moira.Database) (*dto.TriggersList, *api.ErrorResponse) {
+	triggerIDs, err := database.GetUnusedTriggerIDs()
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	triggerChecks, err := getTriggerChecks(database, triggerIDs)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+	triggersList := &dto.TriggersList{
+		List: triggerChecks,
+	}
+
+	return triggersList, nil
+}
+
+func getTriggerChecks(database moira.Database, triggerIDs []string) ([]moira.TriggerCheck, error) {
+	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]moira.TriggerCheck, 0, len(triggerChecks))
+	for _, triggerCheck := range triggerChecks {
+		if triggerCheck != nil {
+			list = append(list, *triggerCheck)
+		}
+	}
+
+	return list, nil
+}
+
+func triggerExists(database moira.Database, triggerID string) (bool, error) {
+	_, err := database.GetTrigger(triggerID)
+	if err == db.ErrNil {
 		return false, nil
 	}
 	if err != nil {

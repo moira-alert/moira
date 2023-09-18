@@ -12,7 +12,7 @@ import (
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	selfCheck.Logger.Info().Msg("Moira Notifier Self State Monitor started")
 
-	checkTicker := time.NewTicker(defaultCheckInterval)
+	checkTicker := time.NewTicker(selfCheck.Config.CheckInterval)
 	defer checkTicker.Stop()
 
 	nextSendErrorMessage := time.Now().Unix()
@@ -23,33 +23,35 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 			selfCheck.Logger.Info().Msg("Moira Notifier Self State Monitor stopped")
 			return nil
 		case <-checkTicker.C:
+			selfCheck.Logger.Debug().
+				Int64("nextSendErrorMessage", nextSendErrorMessage).
+				Msg("call check")
+
 			nextSendErrorMessage = selfCheck.check(time.Now().Unix(), nextSendErrorMessage)
 		}
 	}
 }
 
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.NotificationEvent {
-	var events []moira.NotificationEvent //nolint
+	var events []moira.NotificationEvent
 
 	for _, heartbeat := range selfCheck.heartbeats {
-		currentValue, needSend, err := heartbeat.Check(nowTS)
+		currentValue, hasErrors, err := heartbeat.Check(nowTS)
 		if err != nil {
 			selfCheck.Logger.Error().
 				Error(err).
 				Msg("Heartbeat failed")
 		}
 
-		if !needSend {
-			continue
-		}
+		if hasErrors {
+			events = append(events, generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue))
+			if heartbeat.NeedTurnOffNotifier() {
+				selfCheck.setNotifierState(moira.SelfStateERROR)
+			}
 
-		events = append(events, generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue))
-		if heartbeat.NeedTurnOffNotifier() {
-			selfCheck.setNotifierState(moira.SelfStateERROR)
-		}
-
-		if !heartbeat.NeedToCheckOthers() {
-			break
+			if !heartbeat.NeedToCheckOthers() {
+				break
+			}
 		}
 	}
 
@@ -67,11 +69,9 @@ func (selfCheck *SelfCheckWorker) sendNotification(events []moira.NotificationEv
 }
 
 func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64) int64 {
-	if nextSendErrorMessage < nowTS {
-		events := selfCheck.handleCheckServices(nowTS)
-		if len(events) > 0 {
-			nextSendErrorMessage = selfCheck.sendNotification(events, nowTS)
-		}
+	events := selfCheck.handleCheckServices(nowTS)
+	if nextSendErrorMessage < nowTS && len(events) > 0 {
+		nextSendErrorMessage = selfCheck.sendNotification(events, nowTS)
 	}
 
 	return nextSendErrorMessage

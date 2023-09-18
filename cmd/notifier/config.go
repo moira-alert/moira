@@ -73,6 +73,8 @@ type selfStateConfig struct {
 	Contacts []map[string]string `yaml:"contacts"`
 	// Self state monitor alerting interval
 	NoticeInterval string `yaml:"notice_interval"`
+	// Self state monitor check interval
+	CheckInterval string `yaml:"check_interval"`
 }
 
 func getDefault() config {
@@ -120,6 +122,12 @@ func getDefault() config {
 		Remote: cmd.RemoteConfig{
 			Timeout:    "60s",
 			MetricsTTL: "24h",
+		},
+		Prometheus: cmd.PrometheusConfig{
+			Timeout:      "60s",
+			MetricsTTL:   "7d",
+			Retries:      1,
+			RetryTimeout: "10s",
 		},
 		ImageStores: cmd.ImageStoreConfig{},
 	}
@@ -206,12 +214,19 @@ func checkDateTimeFormat(format string) error {
 }
 
 func (config *selfStateConfig) getSettings() selfstate.Config {
+	// 10 sec is default check value
+	checkInterval := 10 * time.Second
+	if config.CheckInterval != "" {
+		checkInterval = to.Duration(config.CheckInterval)
+	}
+
 	return selfstate.Config{
 		Enabled:                        config.Enabled,
 		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
 		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
 		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
 		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelay).Seconds()),
+		CheckInterval:                  checkInterval,
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
 	}

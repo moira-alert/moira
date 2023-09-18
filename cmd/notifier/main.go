@@ -69,7 +69,7 @@ func main() {
 	}
 	defer logger.Info().
 		String("moira_version", MoiraVersion).
-		Msg("Moira Notifier stopped. Version")
+		Msg("Moira Notifier stopped.")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
@@ -79,7 +79,6 @@ func main() {
 	}
 	defer telemetry.Stop()
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
 	databaseSettings := config.Redis.GetSettings()
 	notificationHistorySettings := config.NotificationHistory.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.Notifier)
@@ -103,7 +102,15 @@ func main() {
 
 	notifierConfig := config.Notifier.getSettings(logger)
 
-	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider, imageStoreMap)
+	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+	sender := notifier.NewNotifier(
+		database,
+		logger,
+		notifierConfig,
+		notifierMetrics,
+		metricSourceProvider,
+		imageStoreMap,
+	)
 
 	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {
@@ -114,7 +121,7 @@ func main() {
 
 	// Start moira self state checker
 	if config.Notifier.SelfState.getSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings(), metrics.ConfigureHeartBeatMetrics(telemetry.Metrics))
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).

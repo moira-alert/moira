@@ -92,6 +92,12 @@ func Test_webConfig_getDefault(t *testing.T) {
 				Timeout:    "60s",
 				MetricsTTL: "7d",
 			},
+			Prometheus: cmd.PrometheusConfig{
+				Timeout:      "60s",
+				MetricsTTL:   "7d",
+				Retries:      1,
+				RetryTimeout: "10s",
+			},
 			NotificationHistory: cmd.NotificationHistoryConfig{
 				NotificationHistoryTTL:        "48h",
 				NotificationHistoryQueryLimit: -1,

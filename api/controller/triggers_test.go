@@ -927,3 +927,45 @@ func TestDeleteTriggersPager(t *testing.T) {
 		})
 	})
 }
+
+func TestGetUnusedTriggerIDs(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	Convey("Has triggers", t, func() {
+		triggerIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+		triggers := []*moira.TriggerCheck{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
+		triggersList := []moira.TriggerCheck{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
+		mockDatabase.EXPECT().GetUnusedTriggerIDs().Return(triggerIDs, nil)
+		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
+		list, err := GetUnusedTriggerIDs(mockDatabase)
+		So(err, ShouldBeNil)
+		So(list, ShouldResemble, &dto.TriggersList{List: triggersList})
+	})
+
+	Convey("No triggers", t, func() {
+		mockDatabase.EXPECT().GetUnusedTriggerIDs().Return(make([]string, 0), nil)
+		mockDatabase.EXPECT().GetTriggerChecks(make([]string, 0)).Return(make([]*moira.TriggerCheck, 0), nil)
+		list, err := GetUnusedTriggerIDs(mockDatabase)
+		So(err, ShouldBeNil)
+		So(list, ShouldResemble, &dto.TriggersList{List: make([]moira.TriggerCheck, 0)})
+	})
+
+	Convey("GetUnusedTriggerIDs error", t, func() {
+		expected := fmt.Errorf("getTriggerIDs error")
+		mockDatabase.EXPECT().GetUnusedTriggerIDs().Return(nil, expected)
+		list, err := GetUnusedTriggerIDs(mockDatabase)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(list, ShouldBeNil)
+	})
+
+	Convey("GetTriggerChecks error", t, func() {
+		expected := fmt.Errorf("getTriggerChecks error")
+		mockDatabase.EXPECT().GetUnusedTriggerIDs().Return(make([]string, 0), nil)
+		mockDatabase.EXPECT().GetTriggerChecks(make([]string, 0)).Return(nil, expected)
+		list, err := GetUnusedTriggerIDs(mockDatabase)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(list, ShouldBeNil)
+	})
+}

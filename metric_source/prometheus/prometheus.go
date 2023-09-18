@@ -6,8 +6,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
-
-	prometheusApi "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
 const StepTimeSeconds int64 = 60
@@ -15,13 +13,15 @@ const StepTimeSeconds int64 = 60
 var ErrPrometheusStorageDisabled = fmt.Errorf("remote prometheus storage is not enabled")
 
 type Config struct {
-	Enabled       bool
-	CheckInterval time.Duration
-	MetricsTTL    time.Duration
-	Timeout       time.Duration
-	URL           string
-	User          string
-	Password      string
+	Enabled        bool
+	CheckInterval  time.Duration
+	MetricsTTL     time.Duration
+	RequestTimeout time.Duration
+	Retries        int
+	RetryTimeout   time.Duration
+	URL            string
+	User           string
+	Password       string
 }
 
 func Create(config *Config, logger moira.Logger) (metricSource.MetricSource, error) {
@@ -36,7 +36,7 @@ func Create(config *Config, logger moira.Logger) (metricSource.MetricSource, err
 type Prometheus struct {
 	config *Config
 	logger moira.Logger
-	api    prometheusApi.API
+	api    PrometheusApi
 }
 
 func (prometheus *Prometheus) GetMetricsTTLSeconds() int64 {

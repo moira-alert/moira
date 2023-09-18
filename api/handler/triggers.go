@@ -28,6 +28,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
+		router.Get("/unused", getUnusedTriggers)
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
@@ -50,6 +51,29 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 //	@router		/trigger [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, triggersList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get unused triggers
+//	@id			get-unused-triggers
+//	@tags		trigger
+//	@produce	json
+//	@success	200	{object}	dto.TriggersList				"Fetched unused triggers"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger [get]
+func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
+	triggersList, errorResponse := controller.GetUnusedTriggerIDs(database)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
