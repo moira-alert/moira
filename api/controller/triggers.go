@@ -66,17 +66,17 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 }
 
 // SearchTriggers gets trigger page and filter trigger by tags and search request terms
-func SearchTriggers(database moira.Database, searcher moira.Searcher, options moira.SearchOptions, createPager bool, pagerID string) (*dto.TriggersList, *api.ErrorResponse) { //nolint
+func SearchTriggers(database moira.Database, searcher moira.Searcher, options moira.SearchOptions) (*dto.TriggersList, *api.ErrorResponse) { //nolint
 	var searchResults []*moira.SearchResult
 	var total int64
-	pagerShouldExist := pagerID != ""
+	pagerShouldExist := options.PagerID != ""
 
 	if pagerShouldExist && (options.SearchString != "" || len(options.Tags) > 0) {
 		return nil, api.ErrorInvalidRequest(fmt.Errorf("cannot handle request with search string or tags and pager ID set"))
 	}
 	if pagerShouldExist {
 		var err error
-		searchResults, total, err = database.GetTriggersSearchResults(pagerID, options.Page, options.Size)
+		searchResults, total, err = database.GetTriggersSearchResults(options.PagerID, options.Page, options.Size)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
@@ -85,7 +85,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 		}
 	} else {
 		var err error
-		if createPager {
+		if options.CreatePager {
 			options.Size = pageSizeUnlimited
 		}
 		searchResults, total, err = searcher.SearchTriggers(options)
@@ -94,16 +94,16 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 		}
 	}
 
-	if createPager && !pagerShouldExist {
+	if options.CreatePager && !pagerShouldExist {
 		uuid4, err := uuid.NewV4()
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
-		pagerID = uuid4.String()
-		database.SaveTriggersSearchResults(pagerID, searchResults) //nolint
+		options.PagerID = uuid4.String()
+		database.SaveTriggersSearchResults(options.PagerID, searchResults) //nolint
 	}
 
-	if createPager {
+	if options.CreatePager {
 		var from, to int64 = 0, int64(len(searchResults))
 		if options.Size >= 0 {
 			from = int64(math.Min(float64(options.Page*options.Size), float64(len(searchResults))))
@@ -123,8 +123,8 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 	}
 
 	var pagerIDPtr *string
-	if pagerID != "" {
-		pagerIDPtr = &pagerID
+	if options.PagerID != "" {
+		pagerIDPtr = &options.PagerID
 	}
 
 	triggersList := dto.TriggersList{

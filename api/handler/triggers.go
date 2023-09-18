@@ -245,12 +245,11 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		SearchString:          getSearchRequestString(request),
 		CreatedBy:             createdBy,
 		NeedSearchByCreatedBy: ok,
+		CreatePager:           middleware.GetCreatePager(request),
+		PagerID:               middleware.GetPagerID(request),
 	}
 
-	createPager := middleware.GetCreatePager(request)
-	pagerID := middleware.GetPagerID(request)
-
-	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions, createPager, pagerID)
+	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return

@@ -349,6 +349,8 @@ type SearchOptions struct {
 	Tags                  []string
 	CreatedBy             string
 	NeedSearchByCreatedBy bool
+	CreatePager           bool
+	PagerID               string
 }
 
 // MaintenanceCheck set maintenance user, time
