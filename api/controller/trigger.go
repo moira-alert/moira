@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -129,7 +128,6 @@ func GetTriggerLastCheck(dataBase moira.Database, triggerID string) (*dto.Trigge
 	// Need to not show the user metrics that should have been deleted due to ttlState = Del,
 	// but remained in the database because their Maintenance did not expire
 	if lastCheck != nil && len(lastCheck.Metrics) != 0 {
-		log.Println("Last check in controller", *lastCheck)
 		aliveMetrics := make(map[string]moira.MetricState, len(lastCheck.Metrics))
 		for metricName, metricState := range lastCheck.Metrics {
 			if !metricState.NeedToDeleteAfterMaintenance {

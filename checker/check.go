@@ -28,7 +28,6 @@ func (triggerChecker *TriggerChecker) Check() error {
 	if err != nil {
 		return triggerChecker.handleFetchError(checkData, err)
 	}
-	triggerChecker.logger.Debug().Msg(fmt.Sprintf("Fetched metrics: %v", triggerMetricsData))
 
 	preparedMetrics, aloneMetrics, err := triggerChecker.prepareMetrics(triggerMetricsData)
 	if err != nil {
@@ -37,7 +36,6 @@ func (triggerChecker *TriggerChecker) Check() error {
 			return err
 		}
 	}
-	triggerChecker.logger.Debug().Msg(fmt.Sprintf("Prepared metrics: %v, alone metrics: %v", preparedMetrics, aloneMetrics))
 
 	checkData.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
 
@@ -45,7 +43,6 @@ func (triggerChecker *TriggerChecker) Check() error {
 	if err != nil {
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}
-	triggerChecker.logger.Debug().Msg(fmt.Sprintf("New checkdata: %v", checkData))
 
 	if errorSeverity == NoCheckError {
 		checkData.State = moira.StateOK
@@ -309,29 +306,23 @@ func (triggerChecker *TriggerChecker) check(
 		log := logger.Clone().
 			String(moira.LogFieldNameMetricName, metricName)
 
-		log.Debug().Msg("Checking metrics")
-
 		targets = conversion.Merge(targets, aloneMetrics)
 
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, log)
 		prevMetricState := checkData.Metrics[metricName]
 		isNewMetric := prevMetricState.Timestamp != metricState.Timestamp
-		logger.Debug().Msg(fmt.Sprintf("Prev metric state: %v, new metric state: %v, isNewMetric: %v", prevMetricState, metricState, isNewMetric))
 
 		if needToDeleteMetric {
-			logger.Debug().Msg("Need to delete metric!")
 			if metricState.Maintenance == 0 || (metricState.Maintenance != 0 && time.Now().Unix() >= metricState.Maintenance) {
 				log.Info().Msg("Remove metric")
 				checkData.RemoveMetricState(metricName)
 				err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 			} else if metricState.Maintenance != 0 && !metricState.NeedToDeleteAfterMaintenance {
-				logger.Debug().Msg("Set true to NeedToDeleteAfterMaintenance")
 				metricState.NeedToDeleteAfterMaintenance = true
 				checkData.Metrics[metricName] = metricState
 			}
 		} else {
 			if prevMetricState.NeedToDeleteAfterMaintenance && isNewMetric {
-				logger.Debug().Msg("Set false to NeedToDeleteAfterMaintenance")
 				metricState.NeedToDeleteAfterMaintenance = false
 			}
 			checkData.Metrics[metricName] = metricState
@@ -358,7 +349,6 @@ func (triggerChecker *TriggerChecker) checkTargets(
 	if err != nil {
 		return lastState, needToDeleteMetric, err
 	}
-	logger.Debug().Msg(fmt.Sprintf("Last state: %v", lastState))
 
 	for _, currentState := range metricStates {
 		lastState, err = triggerChecker.compareMetricStates(metricName, currentState, lastState)
@@ -375,8 +365,6 @@ func (triggerChecker *TriggerChecker) checkTargets(
 	if noDataState != nil {
 		lastState, err = triggerChecker.compareMetricStates(metricName, *noDataState, lastState)
 	}
-
-	logger.Debug().Msg(fmt.Sprintf("New last state: %v", lastState))
 
 	return lastState, needToDeleteMetric, err
 }
