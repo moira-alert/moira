@@ -71,7 +71,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@success	200	{object}	dto.TriggersList				"Fetched unused triggers"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/trigger [get]
+//	@router		/trigger/unused [get]
 func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetUnusedTriggerIDs(database)
 	if errorResponse != nil {

@@ -297,7 +297,7 @@ type Trigger struct {
 
 type TriggerSource string
 
-const (
+var (
 	TriggerSourceNotSet TriggerSource = ""
 	GraphiteLocal       TriggerSource = "graphite_local"
 	GraphiteRemote      TriggerSource = "graphite_remote"
