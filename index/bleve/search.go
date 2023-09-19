@@ -2,8 +2,6 @@ package bleve
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/search"
@@ -16,14 +14,14 @@ import (
 // TriggerCheck.Score (desc)
 // Relevance (asc)
 // Trigger.Name (asc)
-func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (searchResults []*moira.SearchResult, total int64, err error) {
-	if size < 0 {
-		page = 0
+func (index *TriggerIndex) Search(options moira.SearchOptions) (searchResults []*moira.SearchResult, total int64, err error) {
+	if options.Size < 0 {
+		options.Page = 0
 		docs, _ := index.index.DocCount()
-		size = int64(docs)
+		options.Size = int64(docs)
 	}
 
-	req := buildSearchRequest(filterTags, searchString, onlyErrors, int(page), int(size))
+	req := buildSearchRequest(options)
 
 	searchResult, err := index.index.Search(req)
 	if err != nil {
@@ -62,12 +60,11 @@ func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mappin
 	return highlights
 }
 
-func buildSearchRequest(filterTags []string, searchString string, onlyErrors bool, page, size int) *bleve.SearchRequest {
-	searchTerms := splitStringToTerms(searchString)
-	searchQuery := buildSearchQuery(filterTags, searchTerms, onlyErrors)
+func buildSearchRequest(options moira.SearchOptions) *bleve.SearchRequest {
+	searchQuery := buildSearchQuery(options)
 
-	from := page * size
-	req := bleve.NewSearchRequestOptions(searchQuery, size, from, false)
+	from := options.Page * options.Size
+	req := bleve.NewSearchRequestOptions(searchQuery, int(options.Size), int(from), false)
 	// sorting order:
 	// TriggerCheck.Score (desc)
 	// Relevance (asc)
@@ -76,14 +73,4 @@ func buildSearchRequest(filterTags []string, searchString string, onlyErrors boo
 	req.Highlight = bleve.NewHighlight()
 
 	return req
-}
-
-func splitStringToTerms(searchString string) (searchTerms []string) {
-	searchString = escapeString(searchString)
-
-	return strings.Fields(searchString)
-}
-
-func escapeString(original string) (escaped string) {
-	return regexp.MustCompile(`[|+\-=&<>!(){}\[\]^"'~*?\\/.,:;_@]`).ReplaceAllString(original, " ")
 }
