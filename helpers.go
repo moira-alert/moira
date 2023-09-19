@@ -205,16 +205,16 @@ func MaxInt64(a, b int64) int64 {
 	return b
 }
 
-// ReplaceSubstring removes one substring between the beg and end substrings and replaces it with a rep
-func ReplaceSubstring(str, beg, end, rep string) string {
+// ReplaceSubstring removes one substring between the beginning and end substrings and replaces it with a replaced
+func ReplaceSubstring(str, begin, end, replaced string) string {
 	result := str
-	startIndex := strings.Index(str, beg)
+	startIndex := strings.Index(str, begin)
 	if startIndex != -1 {
-		startIndex += len(beg)
+		startIndex += len(begin)
 		endIndex := strings.Index(str[startIndex:], end)
 		if endIndex != -1 {
 			endIndex += len(str[:startIndex])
-			result = str[:startIndex] + rep + str[endIndex:]
+			result = str[:startIndex] + replaced + str[endIndex:]
 		}
 	}
 	return result

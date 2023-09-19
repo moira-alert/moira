@@ -176,11 +176,11 @@ var triggerVal3 = &Trigger{
 }
 
 var triggerVal4 = &Trigger{
-	ID:       "trigger-id-4",
-	Name:     "Super Trigger 4",
-	IsRemote: true,
-	TTL:      600,
-	Tags:     []string{"4"},
+	ID:            "trigger-id-4",
+	Name:          "Super Trigger 4",
+	TriggerSource: GraphiteRemote,
+	TTL:           600,
+	Tags:          []string{"4"},
 }
 
 func TestChunkSlice(t *testing.T) {

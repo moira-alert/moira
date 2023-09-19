@@ -68,7 +68,11 @@ type TriggerModel struct {
 	// Graphite patterns for trigger
 	Patterns []string `json:"patterns" example:""`
 	// Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB
+	//
+	// Deprecated: Use TriggerSource field instead
 	IsRemote bool `json:"is_remote" example:"false"`
+	// Shows the source from where the metrics are fetched
+	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_local"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics" example:"false"`
 	// A list of targets that have only alone metrics
@@ -99,7 +103,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Schedule:       model.Schedule,
 		Expression:     &model.Expression,
 		Patterns:       model.Patterns,
-		IsRemote:       model.IsRemote,
+		TriggerSource:  model.TriggerSource,
 		MuteNewMetrics: model.MuteNewMetrics,
 		AloneMetrics:   model.AloneMetrics,
 		UpdatedBy:      model.UpdatedBy,
@@ -122,7 +126,8 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Schedule:       trigger.Schedule,
 		Expression:     moira.UseString(trigger.Expression),
 		Patterns:       trigger.Patterns,
-		IsRemote:       trigger.IsRemote,
+		IsRemote:       trigger.TriggerSource == moira.GraphiteRemote,
+		TriggerSource:  trigger.TriggerSource,
 		MuteNewMetrics: trigger.MuteNewMetrics,
 		AloneMetrics:   trigger.AloneMetrics,
 		CreatedAt:      getDateTime(trigger.CreatedAt),
@@ -172,8 +177,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		Expression:              &trigger.Expression,
 	}
 
+	trigger.TriggerSource = trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
+
 	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
-	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.IsRemote)
+	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.TriggerSource)
 	if err != nil {
 		return err
 	}
@@ -216,10 +223,19 @@ func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) e
 	maximumAllowedTTL := metricsSource.GetMetricsTTLSeconds()
 
 	if trigger.TTL > maximumAllowedTTL {
-		triggerType := "local"
-		if trigger.IsRemote {
-			triggerType = "remote"
+		var triggerType string
+
+		switch trigger.TriggerSource {
+		case moira.GraphiteLocal:
+			triggerType = "graphite local"
+
+		case moira.GraphiteRemote:
+			triggerType = "graphite remote"
+
+		case moira.PrometheusRemote:
+			triggerType = "prometheus remote"
 		}
+
 		return fmt.Errorf("TTL for %s trigger can't be more than %d seconds", triggerType, maximumAllowedTTL)
 	}
 	return nil

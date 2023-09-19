@@ -219,9 +219,17 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 					Msg("Cannot send to broken contact")
 
 			default:
-				log.Error().
-					Error(err).
-					Msg("Cannot send notification")
+				if pkg.FailCount > notifier.config.MaxFailAttemptToSendAvailable {
+					log.Error().
+						Error(err).
+						Int("fail_count", pkg.FailCount).
+						Msg("Cannot send notification")
+				} else {
+					log.Warning().
+						Error(err).
+						Msg("Cannot send notification")
+				}
+
 				notifier.resend(&pkg, err.Error())
 			}
 		}

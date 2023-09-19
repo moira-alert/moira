@@ -25,7 +25,7 @@ func TestTriggerValidation(t *testing.T) {
 		localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
 
 		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")
@@ -46,7 +46,7 @@ func TestTriggerValidation(t *testing.T) {
 			Tags:           tags,
 			TTLState:       &moira.TTLStateNODATA,
 			TTL:            600,
-			IsRemote:       false,
+			TriggerSource:  moira.GraphiteLocal,
 			MuteNewMetrics: false,
 		}
 
@@ -271,7 +271,7 @@ func TestTriggerModel_ToMoiraTrigger(t *testing.T) {
 			},
 			Expression:     expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
-			IsRemote:       true,
+			TriggerSource:  moira.GraphiteRemote,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,
@@ -304,7 +304,7 @@ func TestTriggerModel_ToMoiraTrigger(t *testing.T) {
 			},
 			Expression:     &expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
-			IsRemote:       true,
+			TriggerSource:  moira.GraphiteRemote,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,
@@ -345,7 +345,7 @@ func TestCreateTriggerModel(t *testing.T) {
 			},
 			Expression:     &expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
-			IsRemote:       true,
+			TriggerSource:  moira.GraphiteRemote,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,
@@ -376,6 +376,7 @@ func TestCreateTriggerModel(t *testing.T) {
 			},
 			Expression:     expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
+			TriggerSource:  moira.GraphiteRemote,
 			IsRemote:       true,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{

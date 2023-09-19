@@ -63,6 +63,21 @@ func (mr *MockMetricSourceMockRecorder) GetMetricsTTLSeconds() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsTTLSeconds", reflect.TypeOf((*MockMetricSource)(nil).GetMetricsTTLSeconds))
 }
 
+// IsAvailable mocks base method.
+func (m *MockMetricSource) IsAvailable() (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsAvailable")
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsAvailable indicates an expected call of IsAvailable.
+func (mr *MockMetricSourceMockRecorder) IsAvailable() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAvailable", reflect.TypeOf((*MockMetricSource)(nil).IsAvailable))
+}
+
 // IsConfigured mocks base method.
 func (m *MockMetricSource) IsConfigured() (bool, error) {
 	m.ctrl.T.Helper()

@@ -119,7 +119,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// resolve remote trigger window.
 	// window is wide: use package window to fetch limited historical data from graphite
 	// window is not wide: use shifted window to fetch extended historical data from graphite
-	if trigger.IsRemote {
+	if trigger.GetTriggerSource() == moira.GraphiteRemote {
 		if isWideWindow {
 			return fromTime.Unix(), toTime.Unix()
 		}

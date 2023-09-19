@@ -24,7 +24,7 @@ func TestGetMetricDataState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	var warnValue float64 = 10
 	var errValue float64 = 20
-	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 	triggerChecker := TriggerChecker{
 		logger:  logger,
 		metrics: checkerMetrics.LocalMetrics,
@@ -535,7 +535,7 @@ func TestCheckForNODATA(t *testing.T) {
 
 	var ttl int64 = 600
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 	triggerChecker := TriggerChecker{
 		metrics: checkerMetrics.LocalMetrics,
 		logger:  logger,
@@ -634,7 +634,7 @@ func TestCheck(t *testing.T) {
 
 		var ttl int64 = 30
 
-		checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+		checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 		triggerChecker := TriggerChecker{
 			triggerID: "SuperId",
 			database:  dataBase,
@@ -688,7 +688,11 @@ func TestCheck(t *testing.T) {
 					Timestamp:      int64(67),
 					Metric:         triggerChecker.trigger.Name,
 				}, true).Return(nil),
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -719,7 +723,11 @@ func TestCheck(t *testing.T) {
 				gomock.InOrder(
 					source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, unknownFunctionExc),
 					dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-					dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+					dataBase.EXPECT().SetTriggerLastCheck(
+						triggerChecker.triggerID,
+						&lastCheck,
+						triggerChecker.trigger.TriggerSource,
+					).Return(nil),
 				)
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
@@ -764,7 +772,11 @@ func TestCheck(t *testing.T) {
 					dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 					dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-metricsTTL).Return(nil),
 					dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-					dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+					dataBase.EXPECT().SetTriggerLastCheck(
+						triggerChecker.triggerID,
+						&lastCheck,
+						triggerChecker.trigger.TriggerSource,
+					).Return(nil),
 				)
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
@@ -808,7 +820,11 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 				dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-metricsTTL).Return(nil),
 				dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -850,7 +866,11 @@ func TestCheck(t *testing.T) {
 			})
 			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
 			dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil)
+			dataBase.EXPECT().SetTriggerLastCheck(
+				triggerChecker.triggerID,
+				&lastCheck,
+				triggerChecker.trigger.TriggerSource,
+			).Return(nil)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
 		})
@@ -920,7 +940,11 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 				dataBase.EXPECT().RemoveMetricsValues([]string{metricName1, metricNameAlone, metricName2}, triggerChecker.until-metricsTTL).Return(nil),
 
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -1183,7 +1207,7 @@ func TestTriggerChecker_Check(t *testing.T) {
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false).LocalMetrics,
+		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false).LocalMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,
@@ -1234,7 +1258,11 @@ func TestTriggerChecker_Check(t *testing.T) {
 	source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)})
 	fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
-	dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil)
+	dataBase.EXPECT().SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&lastCheck,
+		triggerChecker.trigger.TriggerSource,
+	).Return(nil)
 	_ = triggerChecker.Check()
 }
 
@@ -1262,7 +1290,7 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false).LocalMetrics,
+		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false).LocalMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,
@@ -1313,7 +1341,12 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil).AnyTimes()
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)}).AnyTimes()
 	fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil).AnyTimes()
-	dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil).AnyTimes()
+	dataBase.EXPECT().SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&lastCheck,
+		triggerChecker.trigger.TriggerSource,
+	).Return(nil).AnyTimes()
+
 	for n := 0; n < b.N; n++ {
 		err := triggerChecker.Check()
 		if err != nil {
@@ -1430,7 +1463,9 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
 
-		trigger := &moira.Trigger{}
+		trigger := &moira.Trigger{
+			TriggerSource: moira.GraphiteLocal,
+		}
 		triggerChecker := TriggerChecker{
 			triggerID: "test trigger",
 			trigger:   trigger,
@@ -1443,7 +1478,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 			err := ErrTriggerHasSameMetricNames{}
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeTrue)
+			So(pass, ShouldEqual, CanContinueCheck)
 			So(checkDataReturn, ShouldResemble, moira.CheckData{
 				State:   moira.StateEXCEPTION,
 				Message: err.Error(),
@@ -1472,10 +1507,10 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				Metric:           triggerChecker.trigger.Name,
 				MessageEventInfo: nil,
 			}, true)
-			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeFalse)
+			So(pass, ShouldEqual, MustStopCheck)
 			So(checkDataReturn, ShouldResemble, expectedCheckData)
 		})
 		Convey("with ErrEmptyAloneMetricsTarget-this error is handled as NODATA", func() {
@@ -1489,10 +1524,10 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				State:          moira.StateNODATA,
 				EventTimestamp: 10,
 			}
-			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeFalse)
+			So(pass, ShouldEqual, MustStopCheck)
 			So(checkDataReturn, ShouldResemble, expectedCheckData)
 		})
 	})

@@ -15,6 +15,8 @@ var (
 	TriggerDesc = FieldData{"Desc", "desc", 1}
 	// TriggerTags represents field data for moira.Trigger.Tags
 	TriggerTags = FieldData{"Tags", "tags", 0}
+	// TriggerCreatedBy represents field data for moira.Trigger.CreatedBy
+	TriggerCreatedBy = FieldData{"CreatedBy", "created_by", 0}
 	// TriggerLastCheckScore represents field data for moira.CheckData score
 	TriggerLastCheckScore = FieldData{"LastCheckScore", "", 0}
 )
@@ -25,6 +27,7 @@ type Trigger struct {
 	Name           string
 	Desc           string
 	Tags           []string
+	CreatedBy      string
 	LastCheckScore int64
 }
 
@@ -40,6 +43,7 @@ func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
 	triggerMapping.AddFieldMappingsAt(TriggerName.GetName(), getStandardMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerTags.GetName(), getKeywordMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerDesc.GetName(), getStandardMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerCreatedBy.GetName(), getKeywordMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerLastCheckScore.GetName(), getNumericMapping())
 
 	return triggerMapping
@@ -52,6 +56,7 @@ func CreateIndexedTrigger(triggerCheck *moira.TriggerCheck) Trigger {
 		Name:           triggerCheck.Name,
 		Desc:           moira.UseString(triggerCheck.Desc),
 		Tags:           triggerCheck.Tags,
+		CreatedBy:      triggerCheck.CreatedBy,
 		LastCheckScore: triggerCheck.LastCheck.Score,
 	}
 }

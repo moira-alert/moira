@@ -2,6 +2,7 @@ package moira
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
@@ -157,14 +158,19 @@ func NotificationEventsToTemplatingEvents(events NotificationEvents) []templatin
 
 // TriggerData represents trigger object
 type TriggerData struct {
-	ID         string   `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
-	Name       string   `json:"name" example:"Not enough disk space left"`
-	Desc       string   `json:"desc" example:"check the size of /var/log"`
-	Targets    []string `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
-	WarnValue  float64  `json:"warn_value" example:"5000"`
-	ErrorValue float64  `json:"error_value" example:"1000"`
-	IsRemote   bool     `json:"is_remote" example:"false"`
-	Tags       []string `json:"__notifier_trigger_tags" example:"server,disk"`
+	ID            string        `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Name          string        `json:"name" example:"Not enough disk space left"`
+	Desc          string        `json:"desc" example:"check the size of /var/log"`
+	Targets       []string      `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
+	WarnValue     float64       `json:"warn_value" example:"5000"`
+	ErrorValue    float64       `json:"error_value" example:"1000"`
+	IsRemote      bool          `json:"is_remote" example:"false"`
+	TriggerSource TriggerSource `json:"trigger_source,omitempty" example:"graphite_local"`
+	Tags          []string      `json:"__notifier_trigger_tags" example:"server,disk"`
+}
+
+func (trigger TriggerData) GetTriggerSource() TriggerSource {
+	return trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
 }
 
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
@@ -280,7 +286,7 @@ type Trigger struct {
 	Expression       *string         `json:"expression,omitempty" example:"" extensions:"x-nullable"`
 	PythonExpression *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
 	Patterns         []string        `json:"patterns" example:""`
-	IsRemote         bool            `json:"is_remote" example:"false"`
+	TriggerSource    TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
 	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
 	CreatedAt        *int64          `json:"created_at" format:"int64" extensions:"x-nullable"`
@@ -289,12 +295,62 @@ type Trigger struct {
 	UpdatedBy        string          `json:"updated_by"`
 }
 
+type TriggerSource string
+
+const (
+	TriggerSourceNotSet TriggerSource = ""
+	GraphiteLocal       TriggerSource = "graphite_local"
+	GraphiteRemote      TriggerSource = "graphite_remote"
+	PrometheusRemote    TriggerSource = "prometheus_remote"
+)
+
+func (s *TriggerSource) UnmarshalJSON(data []byte) error {
+	var v string
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	source := TriggerSource(v)
+	if source != GraphiteLocal && source != GraphiteRemote && source != PrometheusRemote {
+		*s = TriggerSourceNotSet
+		return nil
+	}
+
+	*s = source
+	return nil
+}
+
+// Neede for backwards compatibility with moira versions that used oly isRemote flag
+func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
+	if triggerSource == TriggerSourceNotSet {
+		if isRempte {
+			return GraphiteRemote
+		} else {
+			return GraphiteLocal
+		}
+	}
+	return triggerSource
+}
+
 // TriggerCheck represents trigger data with last check data and check timestamp
 type TriggerCheck struct {
 	Trigger
 	Throttling int64             `json:"throttling" example:"0" format:"int64"`
 	LastCheck  CheckData         `json:"last_check"`
 	Highlights map[string]string `json:"highlights"`
+}
+
+// SearchOptions represents the options that can be selected when searching triggers
+type SearchOptions struct {
+	Page                  int64
+	Size                  int64
+	OnlyProblems          bool
+	SearchString          string
+	Tags                  []string
+	CreatedBy             string
+	NeedSearchByCreatedBy bool
+	CreatePager           bool
+	PagerID               string
 }
 
 // MaintenanceCheck set maintenance user, time

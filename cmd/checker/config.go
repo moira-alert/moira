@@ -8,11 +8,12 @@ import (
 )
 
 type config struct {
-	Redis     cmd.RedisConfig     `yaml:"redis"`
-	Logger    cmd.LoggerConfig    `yaml:"log"`
-	Checker   checkerConfig       `yaml:"checker"`
-	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
-	Remote    cmd.RemoteConfig    `yaml:"remote"`
+	Redis      cmd.RedisConfig      `yaml:"redis"`
+	Logger     cmd.LoggerConfig     `yaml:"log"`
+	Checker    checkerConfig        `yaml:"checker"`
+	Telemetry  cmd.TelemetryConfig  `yaml:"telemetry"`
+	Remote     cmd.RemoteConfig     `yaml:"remote"`
+	Prometheus cmd.PrometheusConfig `yaml:"prometheus"`
 }
 
 type triggerLogConfig struct {
@@ -60,7 +61,7 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 		LazyTriggersCheckInterval:   to.Duration(config.LazyTriggersCheckInterval),
 		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
 		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
-		MaxParallelChecks:           config.MaxParallelChecks,
+		MaxParallelLocalChecks:      config.MaxParallelChecks,
 		MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
 		LogTriggersToLevel:          logTriggersToLevel,
 		MetricEventPopBatchSize:     int64(config.MetricEventPopBatchSize),
@@ -103,6 +104,13 @@ func getDefault() config {
 			CheckInterval: "60s",
 			Timeout:       "60s",
 			MetricsTTL:    "7d",
+		},
+		Prometheus: cmd.PrometheusConfig{
+			CheckInterval: "60s",
+			Timeout:       "60s",
+			MetricsTTL:    "7d",
+			Retries:       1,
+			RetryTimeout:  "10s",
 		},
 	}
 }
