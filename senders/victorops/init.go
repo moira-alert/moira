@@ -11,7 +11,7 @@ import (
 )
 
 // Structure that represents the VictorOps configuration in the YAML file
-type victorOps struct {
+type victorOpsConfig struct {
 	RoutingURL string `mapstructure:"routing_url"`
 	ImageStore string `mapstructure:"image_store"`
 	FrontURI   string `mapstructure:"front_uri"`
@@ -34,7 +34,7 @@ type Sender struct {
 
 // Init loads yaml config, configures the victorops sender
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var victorops victorOps
+	var victorops victorOpsConfig
 	err := mapstructure.Decode(senderSettings, &victorops)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to victorops config: %w", err)
