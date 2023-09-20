@@ -11,7 +11,7 @@ import (
 )
 
 // Structure that represents the VictorOps configuration in the YAML file
-type victorOpsConfig struct {
+type config struct {
 	RoutingURL string `mapstructure:"routing_url"`
 	ImageStore string `mapstructure:"image_store"`
 	FrontURI   string `mapstructure:"front_uri"`
@@ -34,18 +34,18 @@ type Sender struct {
 
 // Init loads yaml config, configures the victorops sender
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var victorops victorOpsConfig
-	err := mapstructure.Decode(senderSettings, &victorops)
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to victorops config: %w", err)
 	}
 
-	sender.routingURL = victorops.RoutingURL
+	sender.routingURL = cfg.RoutingURL
 	if sender.routingURL == "" {
 		return fmt.Errorf("cannot read the routing url from the yaml config")
 	}
 
-	sender.imageStoreID = victorops.ImageStore
+	sender.imageStoreID = cfg.ImageStore
 	if sender.imageStoreID == "" {
 		logger.Warning().Msg("Cannot read image_store from the config, will not be able to attach plot images to events")
 	} else {
@@ -62,7 +62,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.client = api.NewClient(sender.routingURL, nil)
 
-	sender.frontURI = victorops.FrontURI
+	sender.frontURI = cfg.FrontURI
 	sender.logger = logger
 	sender.location = location
 

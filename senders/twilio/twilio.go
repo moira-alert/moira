@@ -10,7 +10,7 @@ import (
 )
 
 // Structure that represents the Twilio configuration in the YAML file
-type twilioConfig struct {
+type config struct {
 	Type          string `mapstructure:"type"`
 	APIAsid       string `mapstructure:"api_asid"`
 	APIAuthToken  string `mapstructure:"api_authtoken"`
@@ -38,30 +38,30 @@ type twilioSender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var twilio twilioConfig
-	err := mapstructure.Decode(senderSettings, &twilio)
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
-	apiType := twilio.Type
+	apiType := cfg.Type
 
-	if twilio.APIAsid == "" {
+	if cfg.APIAsid == "" {
 		return fmt.Errorf("can not read [%s] api_sid param from config", apiType)
 	}
 
-	if twilio.APIAuthToken == "" {
+	if cfg.APIAuthToken == "" {
 		return fmt.Errorf("can not read [%s] api_authtoken param from config", apiType)
 	}
 
-	if twilio.APIFromPhone == "" {
+	if cfg.APIFromPhone == "" {
 		return fmt.Errorf("can not read [%s] api_fromphone param from config", apiType)
 	}
 
-	twilioClient := twilio_client.NewClient(twilio.APIAsid, twilio.APIAuthToken)
+	twilioClient := twilio_client.NewClient(cfg.APIAsid, cfg.APIAuthToken)
 
 	tSender := twilioSender{
 		client:       twilioClient,
-		APIFromPhone: twilio.APIFromPhone,
+		APIFromPhone: cfg.APIFromPhone,
 		logger:       logger,
 		location:     location,
 	}
@@ -70,16 +70,16 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		sender.sender = &twilioSenderSms{tSender}
 
 	case "twilio voice":
-		appendMessage := twilio.AppendMessage || twilio.TwimletsEcho
+		appendMessage := cfg.AppendMessage || cfg.TwimletsEcho
 
-		if twilio.VoiceURL == "" && !twilio.TwimletsEcho {
+		if cfg.VoiceURL == "" && !cfg.TwimletsEcho {
 			return fmt.Errorf("can not read [%s] voiceurl param from config", apiType)
 		}
 
 		sender.sender = &twilioSenderVoice{
 			twilioSender:  tSender,
-			voiceURL:      twilio.VoiceURL,
-			twimletsEcho:  twilio.TwimletsEcho,
+			voiceURL:      cfg.VoiceURL,
+			twimletsEcho:  cfg.TwimletsEcho,
 			appendMessage: appendMessage,
 		}
 

@@ -13,7 +13,7 @@ import (
 )
 
 // Structure that represents the Mail configuration in the YAML file
-type mailConfig struct {
+type config struct {
 	MailFrom     string `mapstructure:"mail_from"`
 	SMTPHello    string `mapstructure:"smtp_hello"`
 	SMTPHost     string `mapstructure:"smtp_host"`
@@ -58,22 +58,22 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 }
 
 func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var mail mailConfig
-	err := mapstructure.Decode(senderSettings, &mail)
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
 
 	sender.logger = logger
-	sender.From = mail.MailFrom
-	sender.SMTPHello = mail.SMTPHello
-	sender.SMTPHost = mail.SMTPHost
-	sender.SMTPPort = mail.SMTPPort
-	sender.InsecureTLS = mail.InsecureTLS
-	sender.FrontURI = mail.FrontURI
-	sender.Password = mail.SMTPPass
-	sender.Username = mail.SMTPUser
-	sender.TemplateFile = mail.TemplateFile
+	sender.From = cfg.MailFrom
+	sender.SMTPHello = cfg.SMTPHello
+	sender.SMTPHost = cfg.SMTPHost
+	sender.SMTPPort = cfg.SMTPPort
+	sender.InsecureTLS = cfg.InsecureTLS
+	sender.FrontURI = cfg.FrontURI
+	sender.Password = cfg.SMTPPass
+	sender.Username = cfg.SMTPUser
+	sender.TemplateFile = cfg.TemplateFile
 	sender.location = location
 	sender.dateTimeFormat = dateTimeFormat
 	if sender.Username == "" {
