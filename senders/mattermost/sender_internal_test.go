@@ -25,7 +25,7 @@ func TestSendEvents(t *testing.T) {
 			"url":          "qwerty",
 			"api_token":    "qwerty",
 			"front_uri":    "qwerty",
-			"insecure_tls": "true",
+			"insecure_tls": true,
 		}
 		err := sender.Init(senderSettings, logger, nil, "")
 		So(err, ShouldBeNil)
@@ -80,7 +80,7 @@ func TestBuildMessage(t *testing.T) {
 		senderSettings := map[string]interface{}{
 			"url": "qwerty", "api_token": "qwerty", // redundant, but necessary config
 			"front_uri":    "http://moira.url",
-			"insecure_tls": "true",
+			"insecure_tls": true,
 		}
 		location, _ := time.LoadLocation("UTC")
 		err := sender.Init(senderSettings, logger, location, "")

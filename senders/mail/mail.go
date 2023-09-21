@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"net/smtp"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -14,12 +13,12 @@ import (
 )
 
 // Structure that represents the Mail configuration in the YAML file
-type mail struct {
+type config struct {
 	MailFrom     string `mapstructure:"mail_from"`
 	SMTPHello    string `mapstructure:"smtp_hello"`
 	SMTPHost     string `mapstructure:"smtp_host"`
-	SMTPPort     string `mapstructure:"smtp_port"`
-	InsecureTLS  string `mapstructure:"insecure_tls"`
+	SMTPPort     int64  `mapstructure:"smtp_port"`
+	InsecureTLS  bool   `mapstructure:"insecure_tls"`
 	FrontURI     string `mapstructure:"front_uri"`
 	SMTPPass     string `mapstructure:"smtp_pass"`
 	SMTPUser     string `mapstructure:"smtp_user"`
@@ -59,21 +58,22 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 }
 
 func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var m mail
-	err := mapstructure.Decode(senderSettings, &m)
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
+
 	sender.logger = logger
-	sender.From = m.MailFrom
-	sender.SMTPHello = m.SMTPHello
-	sender.SMTPHost = m.SMTPHost
-	sender.SMTPPort, _ = strconv.ParseInt(m.SMTPPort, 10, 64)
-	sender.InsecureTLS, _ = strconv.ParseBool(m.InsecureTLS)
-	sender.FrontURI = m.FrontURI
-	sender.Password = m.SMTPPass
-	sender.Username = m.SMTPUser
-	sender.TemplateFile = m.TemplateFile
+	sender.From = cfg.MailFrom
+	sender.SMTPHello = cfg.SMTPHello
+	sender.SMTPHost = cfg.SMTPHost
+	sender.SMTPPort = cfg.SMTPPort
+	sender.InsecureTLS = cfg.InsecureTLS
+	sender.FrontURI = cfg.FrontURI
+	sender.Password = cfg.SMTPPass
+	sender.Username = cfg.SMTPUser
+	sender.TemplateFile = cfg.TemplateFile
 	sender.location = location
 	sender.dateTimeFormat = dateTimeFormat
 	if sender.Username == "" {
