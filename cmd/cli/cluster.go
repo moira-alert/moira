@@ -19,14 +19,19 @@ var tagSubscriptionsKeyPrefixNew = "{moira-tag-subscriptions}:"
 var tagTriggersKeyKeyPrefixOld = "moira-tag-triggers:"
 var tagTriggersKeyKeyPrefixNew = "{moira-tag-triggers}:"
 
-func renameKey(database moira.Database, oldKey string, newKey string) error {
+func renameKey(database moira.Database, oldValue, newValue string) error {
 	switch d := database.(type) {
 	case *redis.DbConnector:
-		err := d.Client().Rename(d.Context(), oldKey, newKey).Err()
+		pipe := d.Client().TxPipeline()
+		iter := d.Client().Scan(d.Context(), 0, oldValue, 0).Iterator()
+		for iter.Next(d.Context()) {
+			oldKey := iter.Val()
+			newKey := strings.Replace(iter.Val(), oldValue, newValue, 1)
+			pipe.Rename(d.Context(), oldKey, newKey)
+		}
+		_, err := pipe.Exec(d.Context())
 		if err != nil {
-			if err.Error() != noSuchKeyError {
-				return err
-			}
+			return err
 		}
 	}
 
