@@ -11,7 +11,6 @@ func updateFrom27(logger moira.Logger, dataBase moira.Database) error {
 
 	logger.Info().Msg("Rename keys was started")
 	if err := updateSubscriptionKeyForAnonymous(logger, dataBase); err != nil {
-		logger.Error().Msg("Cannot call updateSubscriptionKeyForAnonymous")
 		return fmt.Errorf("сannot call updateSubscriptionKeyForAnonymous, has error %v", err)
 	}
 
