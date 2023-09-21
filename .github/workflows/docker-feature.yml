@@ -11,7 +11,7 @@ jobs:
       pull-requests: write
     strategy:
       matrix:
-          service: [api, checker, cli, notifier, filter]
+          services: [api, checker, cli, notifier, filter]
     runs-on: ubuntu-22.04
     if: ${{github.event.issue.pull_request != null && startsWith(github.event.comment.body, '/build') && github.event.comment.author_association == 'MEMBER'}}
     steps:
@@ -64,12 +64,12 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: "https://github.com/${{fromJSON(steps.get-pr.outputs.result).head.repo.full_name}}.git#${{fromJSON(steps.get-pr.outputs.result).head.ref}}"
-          file: ./Dockerfile.${{matrix.service}}
+          file: ./Dockerfile.${{matrix.services}}
           build-args: |
             MoiraVersion=${{ env.DOCKER_TAG }}
             GIT_COMMIT=${{ fromJSON(steps.get-pr.outputs.result).head.sha }}
           push: true
-          tags: moira/${{matrix.service}}-unstable:${{env.DOCKER_TAG}}
+          tags: moira/${{matrix.services}}-unstable:${{env.DOCKER_TAG}}
 
       - name: Comment PR with build tag
         uses: mshick/add-pr-comment@v2
