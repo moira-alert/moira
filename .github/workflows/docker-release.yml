@@ -28,7 +28,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile.${{matrix.service}}
-          draft: true
           build-args: |
             MoiraVersion=${{env.DOCKER_TAG}}
             GIT_COMMIT=${{github.sha}}
