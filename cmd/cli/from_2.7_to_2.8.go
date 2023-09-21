@@ -7,10 +7,12 @@ func updateFrom27(logger moira.Logger, dataBase moira.Database) error {
 
 	logger.Info().Msg("Rename keys was started")
 	if err := updateSubscriptionKeyForAnonymous(logger, dataBase); err != nil {
+		logger.Error().Msg("Cannot call updateSubscriptionKeyForAnonymous")
 		return err
 	}
 
 	if err := updateContactKeyForAnonymous(logger, dataBase); err != nil {
+		logger.Error().Msg("updateContactKeyForAnonymous")
 		return err
 	}
 
@@ -42,7 +44,7 @@ var (
 )
 
 func updateSubscriptionKeyForAnonymous(logger moira.Logger, database moira.Database) error {
-	err := changeKeysPrefix(database, subscriptionKeyForAnonymousOld, subscriptionKeyForAnonymousNew)
+	err := renameKey(database, subscriptionKeyForAnonymousOld, subscriptionKeyForAnonymousNew)
 	if err != nil {
 		return err
 	}
@@ -53,7 +55,7 @@ func updateSubscriptionKeyForAnonymous(logger moira.Logger, database moira.Datab
 }
 
 func updateContactKeyForAnonymous(logger moira.Logger, database moira.Database) error {
-	err := changeKeysPrefix(database, contactKeyForAnonymousOld, contactKeyForAnonymousNew)
+	err := renameKey(database, contactKeyForAnonymousOld, contactKeyForAnonymousNew)
 	if err != nil {
 		return err
 	}
