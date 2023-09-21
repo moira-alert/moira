@@ -10,14 +10,14 @@ import (
 )
 
 // Structure that represents the Twilio configuration in the YAML file
-type twilio struct {
+type config struct {
 	Type          string `mapstructure:"type"`
 	APIAsid       string `mapstructure:"api_asid"`
 	APIAuthToken  string `mapstructure:"api_authtoken"`
 	APIFromPhone  string `mapstructure:"api_fromphone"`
 	VoiceURL      string `mapstructure:"voiceurl"`
-	TwimletsEcho  string `mapstructure:"twimlets_echo"`
-	AppendMessage string `mapstructure:"append_message"`
+	TwimletsEcho  bool   `mapstructure:"twimlets_echo"`
+	AppendMessage bool   `mapstructure:"append_message"`
 }
 
 // Sender implements moira sender interface via twilio
@@ -38,53 +38,48 @@ type twilioSender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var t twilio
-	err := mapstructure.Decode(senderSettings, &t)
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
-	apiType := t.Type
+	apiType := cfg.Type
 
-	apiASID := t.APIAsid
-	if apiASID == "" {
+	if cfg.APIAsid == "" {
 		return fmt.Errorf("can not read [%s] api_sid param from config", apiType)
 	}
 
-	apiAuthToken := t.APIAuthToken
-	if apiAuthToken == "" {
+	if cfg.APIAuthToken == "" {
 		return fmt.Errorf("can not read [%s] api_authtoken param from config", apiType)
 	}
 
-	apiFromPhone := t.APIFromPhone
-	if apiFromPhone == "" {
+	if cfg.APIFromPhone == "" {
 		return fmt.Errorf("can not read [%s] api_fromphone param from config", apiType)
 	}
 
-	twilioClient := twilio_client.NewClient(apiASID, apiAuthToken)
+	twilioClient := twilio_client.NewClient(cfg.APIAsid, cfg.APIAuthToken)
 
-	twilioSender1 := twilioSender{
+	tSender := twilioSender{
 		client:       twilioClient,
-		APIFromPhone: apiFromPhone,
+		APIFromPhone: cfg.APIFromPhone,
 		logger:       logger,
 		location:     location,
 	}
 	switch apiType {
 	case "twilio sms":
-		sender.sender = &twilioSenderSms{twilioSender1}
+		sender.sender = &twilioSenderSms{tSender}
 
 	case "twilio voice":
-		twimletsEcho := t.TwimletsEcho == "true" //nolint
-		appendMessage := (t.AppendMessage == "true") || (twimletsEcho)
+		appendMessage := cfg.AppendMessage || cfg.TwimletsEcho
 
-		voiceURL := t.VoiceURL
-		if voiceURL == "" && !twimletsEcho {
+		if cfg.VoiceURL == "" && !cfg.TwimletsEcho {
 			return fmt.Errorf("can not read [%s] voiceurl param from config", apiType)
 		}
 
 		sender.sender = &twilioSenderVoice{
-			twilioSender:  twilioSender1,
-			voiceURL:      voiceURL,
-			twimletsEcho:  twimletsEcho,
+			twilioSender:  tSender,
+			voiceURL:      cfg.VoiceURL,
+			twimletsEcho:  cfg.TwimletsEcho,
 			appendMessage: appendMessage,
 		}
 
