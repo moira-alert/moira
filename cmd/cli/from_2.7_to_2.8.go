@@ -1,6 +1,10 @@
 package main
 
-import "github.com/moira-alert/moira"
+import (
+	"fmt"
+
+	"github.com/moira-alert/moira"
+)
 
 func updateFrom27(logger moira.Logger, dataBase moira.Database) error {
 	logger.Info().Msg("Update 2.7 -> 2.8 was started")
@@ -8,12 +12,11 @@ func updateFrom27(logger moira.Logger, dataBase moira.Database) error {
 	logger.Info().Msg("Rename keys was started")
 	if err := updateSubscriptionKeyForAnonymous(logger, dataBase); err != nil {
 		logger.Error().Msg("Cannot call updateSubscriptionKeyForAnonymous")
-		return err
+		return fmt.Errorf("сannot call updateSubscriptionKeyForAnonymous, has error %v", err)
 	}
 
 	if err := updateContactKeyForAnonymous(logger, dataBase); err != nil {
-		logger.Error().Msg("updateContactKeyForAnonymous")
-		return err
+		return fmt.Errorf("сannot call updateContactKeyForAnonymous, has error %v", err)
 	}
 
 	logger.Info().Msg("Update 2.7 -> 2.8 was finished")
