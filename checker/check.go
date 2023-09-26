@@ -285,6 +285,12 @@ func (triggerChecker *TriggerChecker) preparePatternMetrics(fetchedMetrics conve
 	return result, duplicates
 }
 
+// Checks if the metric has changed since the previous check
+func isMetricChanged(metrics map[string]moira.MetricState, metricName string, metricState moira.MetricState) bool {
+	prevMetricState := metrics[metricName]
+	return prevMetricState.Timestamp != metricState.Timestamp
+}
+
 // check is the function that handles check on prepared metrics.
 func (triggerChecker *TriggerChecker) check(
 	metrics map[string]map[string]metricSource.MetricData,
@@ -308,15 +314,14 @@ func (triggerChecker *TriggerChecker) check(
 		targets = conversion.Merge(targets, aloneMetrics)
 
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, log)
-		prevMetricState := checkData.Metrics[metricName]
-		isNewMetric := prevMetricState.Timestamp != metricState.Timestamp
 
 		if needToDeleteMetric {
 			log.Debug().String("metric_name", metricName).Msg("Remove metric")
 			checkData.RemoveMetricState(metricName)
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
-			if metricState.HiddenMetricDueMaintenance && isNewMetric {
+			// Starting to show user the updated metric, which has been hidden as its Maintenance time is not over
+			if metricState.HiddenMetricDueMaintenance && isMetricChanged(checkData.Metrics, metricName, metricState) {
 				metricState.HiddenMetricDueMaintenance = false
 			}
 			checkData.Metrics[metricName] = metricState
