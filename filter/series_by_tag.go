@@ -42,7 +42,7 @@ type TagSpec struct {
 func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	var isTransformed = false
 
-	result := input
+	result := strings.ReplaceAll(input, ".", "\\.")
 
 	if strings.Contains(result, "*") {
 		result = strings.ReplaceAll(result, "*", ".*")
@@ -67,11 +67,10 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 		isTransformed = true
 	}
 
-	if isTransformed {
-		result = "^" + result + "$"
+	if !isTransformed {
+		return input, false
 	}
-
-	return result, isTransformed
+	return "^" + result + "$", true
 }
 
 // ParseSeriesByTag parses seriesByTag pattern and returns tags specs

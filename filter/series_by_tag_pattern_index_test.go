@@ -22,27 +22,32 @@ func TestTransformTaggedWildCardToMatchOperator(t *testing.T) {
 			},
 			{
 				`aaa.{405,406,407,411,413,414,415}.bbb`,
-				`^aaa.(405|406|407|411|413|414|415).bbb$`,
+				`^aaa\.(405|406|407|411|413|414|415)\.bbb$`,
 				true,
 			},
 			{
 				`aaa.{405,406}.bbb.{301,302}`,
-				`^aaa.(405|406).bbb.(301|302)$`,
+				`^aaa\.(405|406)\.bbb\.(301|302)$`,
 				true,
 			},
 			{
 				`aaa.bbb*`,
-				`^aaa.bbb.*$`,
+				`^aaa\.bbb.*$`,
 				true,
 			},
 			{
 				`aaa.bbb.*`,
-				`^aaa.bbb..*$`,
+				`^aaa\.bbb\..*$`,
 				true,
 			},
 			{
 				`a(b|c|d)e`,
 				`a(b|c|d)e`,
+				false,
+			},
+			{
+				`a.e`,
+				`a.e`,
 				false,
 			},
 		}
@@ -79,7 +84,8 @@ func TestParseSeriesByTag(t *testing.T) {
 			{`seriesByTag("a!={b,c,d}", "e=f")`, []TagSpec{{"a", NotMatchOperator, "^(b|c|d)$"}, {"e", EqualOperator, "f"}}},
 			{`seriesByTag('a!={b,c,d}', 'e=f')`, []TagSpec{{"a", NotMatchOperator, "^(b|c|d)$"}, {"e", EqualOperator, "f"}}},
 			{`seriesByTag('a=b*', 'e=f')`, []TagSpec{{"a", MatchOperator, "^b.*$"}, {"e", EqualOperator, "f"}}},
-			{`seriesByTag('a=b.*')`, []TagSpec{{"a", MatchOperator, "^b..*$"}}},
+			{`seriesByTag('a=b.*')`, []TagSpec{{"a", MatchOperator, "^b\\..*$"}}},
+			{`seriesByTag('a=b.c')`, []TagSpec{{"a", EqualOperator, "b.c"}}},
 		}
 
 		for _, validCase := range validSeriesByTagCases {
