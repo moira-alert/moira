@@ -44,6 +44,11 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 
 	result := input
 
+	if strings.Contains(result, "*") {
+		result = strings.ReplaceAll(result, "*", ".*")
+		isTransformed = true
+	}
+
 	for {
 		matchedWildcardIndexes := wildcardExprRegex.FindStringSubmatchIndex(result)
 		if len(matchedWildcardIndexes) != correctLengthOfMatchedWildcardIndexesSlice {
@@ -63,7 +68,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	}
 
 	if isTransformed {
-		result += "$"
+		result = "^" + result + "$"
 	}
 
 	return result, isTransformed
