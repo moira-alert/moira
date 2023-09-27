@@ -583,11 +583,11 @@ func TestCheckForNODATA(t *testing.T) {
 		So(needToDeleteMetric, ShouldBeFalse)
 		So(currentState, ShouldNotBeNil)
 		So(*currentState, ShouldResemble, moira.MetricState{
-			Timestamp:                  metricLastState.Timestamp,
-			EventTimestamp:             metricLastState.EventTimestamp,
-			Maintenance:                metricLastState.Maintenance,
-			Suppressed:                 metricLastState.Suppressed,
-			HiddenMetricDueMaintenance: true,
+			Timestamp:      metricLastState.Timestamp,
+			EventTimestamp: metricLastState.EventTimestamp,
+			Maintenance:    metricLastState.Maintenance,
+			Suppressed:     metricLastState.Suppressed,
+			DeletedButKept: true,
 		})
 	})
 
@@ -1227,12 +1227,12 @@ func TestHandleTrigger(t *testing.T) {
 		So(checkData, ShouldResemble, moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				metric: {
-					Timestamp:                  oldMetricState.Timestamp,
-					EventTimestamp:             oldMetricState.EventTimestamp,
-					State:                      oldMetricState.State,
-					Values:                     oldMetricState.Values,
-					Maintenance:                oldMetricState.Maintenance,
-					HiddenMetricDueMaintenance: true,
+					Timestamp:      oldMetricState.Timestamp,
+					EventTimestamp: oldMetricState.EventTimestamp,
+					State:          oldMetricState.State,
+					Values:         oldMetricState.Values,
+					Maintenance:    oldMetricState.Maintenance,
+					DeletedButKept: true,
 				},
 			},
 			MetricsToTargetRelation: map[string]string{},
@@ -1243,7 +1243,7 @@ func TestHandleTrigger(t *testing.T) {
 	})
 
 	metricState = lastCheck.Metrics[metric]
-	metricState.HiddenMetricDueMaintenance = true
+	metricState.DeletedButKept = true
 	lastCheck.Metrics[metric] = metricState
 
 	Convey("Metric on maintenance, HiddenMetricDueMaintenance is true, ttlState is delete, but a new metric comes in and HiddenMetricDueMaintenance becomes false", t, func() {
@@ -1264,12 +1264,12 @@ func TestHandleTrigger(t *testing.T) {
 		So(checkData, ShouldResemble, moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				metric: {
-					Timestamp:                  triggerChecker.from,
-					EventTimestamp:             oldMetricState.EventTimestamp,
-					State:                      oldMetricState.State,
-					Values:                     map[string]float64{"t1": 5},
-					Maintenance:                oldMetricState.Maintenance,
-					HiddenMetricDueMaintenance: false,
+					Timestamp:      triggerChecker.from,
+					EventTimestamp: oldMetricState.EventTimestamp,
+					State:          oldMetricState.State,
+					Values:         map[string]float64{"t1": 5},
+					Maintenance:    oldMetricState.Maintenance,
+					DeletedButKept: false,
 				},
 			},
 			MetricsToTargetRelation: map[string]string{},

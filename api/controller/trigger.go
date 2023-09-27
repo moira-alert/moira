@@ -117,7 +117,7 @@ func GetTriggerThrottling(database moira.Database, triggerID string) (*dto.Throt
 func getAliveMetrics(metrics map[string]moira.MetricState) map[string]moira.MetricState {
 	aliveMetrics := make(map[string]moira.MetricState, len(metrics))
 	for metricName, metricState := range metrics {
-		if !metricState.HiddenMetricDueMaintenance {
+		if !metricState.DeletedButKept {
 			aliveMetrics[metricName] = metricState
 		}
 	}

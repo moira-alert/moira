@@ -392,7 +392,7 @@ func TestGetTriggerLastCheck(t *testing.T) {
 		lastCheck = moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				"metric": {
-					HiddenMetricDueMaintenance: true,
+					DeletedButKept: true,
 				},
 				"metric2": {},
 			},

@@ -321,8 +321,8 @@ func (triggerChecker *TriggerChecker) check(
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
 			// Starting to show user the updated metric, which has been hidden as its Maintenance time is not over
-			if metricState.HiddenMetricDueMaintenance && isMetricChanged(checkData.Metrics, metricName, metricState) {
-				metricState.HiddenMetricDueMaintenance = false
+			if metricState.DeletedButKept && isMetricChanged(checkData.Metrics, metricName, metricState) {
+				metricState.DeletedButKept = false
 			}
 			checkData.Metrics[metricName] = metricState
 		}
@@ -391,7 +391,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(
 
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		if metricLastState.Maintenance != 0 && lastCheckTimeStamp <= metricLastState.Maintenance {
-			metricLastState.HiddenMetricDueMaintenance = true
+			metricLastState.DeletedButKept = true
 			return false, &metricLastState
 		}
 		return true, nil
