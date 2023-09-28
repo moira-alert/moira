@@ -26,7 +26,7 @@ func TestPatternIndex(t *testing.T) {
 			"Question.at_the_end?",
 		}
 
-		index := NewPatternIndex(logger, patterns)
+		index := NewPatternIndex(logger, patterns, Compatibility{RegexTreatment: LooseStartMatch})
 		testCases := []struct {
 			Metric          string
 			MatchedPatterns []string

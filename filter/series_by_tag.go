@@ -133,7 +133,8 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
 			nameTagValue = tagSpec.Value
 		} else {
-			matchingHandlers = append(matchingHandlers, createMatchingHandlerForOneTag(tagSpec))
+			hanler := createMatchingHandlerForOneTag(tagSpec)
+			matchingHandlers = append(matchingHandlers, hanler)
 		}
 	}
 
@@ -163,8 +164,15 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			return value != spec.Value
 		}
 	case MatchOperator:
-		allowMatchEmpty = true
-		matchRegex := regexp.MustCompile("^" + spec.Value)
+		allowMatchEmpty = spec.Value == ""
+		// matchRegex := regexp.MustCompile("^" + spec.Value)
+
+		value := spec.Value
+		if value == "*" {
+			value = ".*"
+		}
+		matchRegex := regexp.MustCompile(value)
+
 		matchingHandlerCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
 		}

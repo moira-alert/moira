@@ -6,17 +6,18 @@ import (
 
 // PatternIndex helps to index patterns and allows to match them by metric
 type PatternIndex struct {
-	Tree *PrefixTree
+	Tree          *PrefixTree
+	compatibility Compatibility
 }
 
 // NewPatternIndex creates new PatternIndex using patterns
-func NewPatternIndex(logger moira.Logger, patterns []string) *PatternIndex {
+func NewPatternIndex(logger moira.Logger, patterns []string, compatibility Compatibility) *PatternIndex {
 	prefixTree := &PrefixTree{Logger: logger, Root: &PatternNode{}}
 	for _, pattern := range patterns {
 		prefixTree.Add(pattern)
 	}
 
-	return &PatternIndex{Tree: prefixTree}
+	return &PatternIndex{Tree: prefixTree, compatibility: compatibility}
 }
 
 // MatchPatterns allows matching pattern by metric

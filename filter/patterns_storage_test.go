@@ -30,12 +30,17 @@ func TestProcessIncomingMetric(t *testing.T) {
 	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func() {
 		database.EXPECT().GetPatterns().Return(nil, fmt.Errorf("some error here"))
 		filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
-		_, err := NewPatternStorage(database, filterMetrics, logger)
+		_, err := NewPatternStorage(database, filterMetrics, logger, Compatibility{RegexTreatment: LooseStartMatch})
 		So(err, ShouldBeError, fmt.Errorf("some error here"))
 	})
 
 	database.EXPECT().GetPatterns().Return(testPatterns, nil)
-	patternsStorage, err := NewPatternStorage(database, metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry()), logger)
+	patternsStorage, err := NewPatternStorage(
+		database,
+		metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry()),
+		logger,
+		Compatibility{RegexTreatment: LooseStartMatch},
+	)
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	systemClock.EXPECT().Now().Return(time.Date(2009, 2, 13, 23, 31, 30, 0, time.UTC)).AnyTimes()
 	patternsStorage.clock = systemClock

@@ -69,6 +69,13 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira Filter stopped. Version")
 
+	compatibility, err := config.Filter.Compatibility.ToFilterCompatibility()
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Can not read compatibility settings")
+	}
+
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().
@@ -103,7 +110,7 @@ func main() {
 			Msg("Failed to initialize cache storage with given config")
 	}
 
-	patternStorage, err := filter.NewPatternStorage(database, filterMetrics, logger)
+	patternStorage, err := filter.NewPatternStorage(database, filterMetrics, logger, compatibility)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
