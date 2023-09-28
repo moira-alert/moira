@@ -28,7 +28,7 @@ type filterConfig struct {
 	PatternsUpdatePeriod string `yaml:"patterns_update_period"`
 	// DropMetricsTTL this is time window how older metric we can get from now.
 	DropMetricsTTL string `yaml:"drop_metrics_ttl"`
-	// Flags for compatibility with different graphite behavoiurs
+	// Flags for compatibility with different graphite behaviours
 	Compatibility Compatibility `yaml:"graphite_compatibility"`
 }
 

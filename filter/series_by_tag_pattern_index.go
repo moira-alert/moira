@@ -10,7 +10,7 @@ type SeriesByTagPatternIndex struct {
 	namesPrefixTree *PrefixTree
 	// withoutStrictNameTagPatternMatchers stores MatchingHandler's for patterns that have no name tag
 	withoutStrictNameTagPatternMatchers map[string]MatchingHandler
-	// Flags for compatibility with different graphite behavoiurs
+	// Flags for compatibility with different graphite behaviours
 	compatibility Compatibility
 }
 
