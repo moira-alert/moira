@@ -168,6 +168,10 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 		}
 	case MatchOperator:
 		allowMatchEmpty = true
+		value := spec.Value
+		if value == "*" {
+			value = ".*"
+		}
 		matchRegex := regexp.MustCompile("^" + spec.Value)
 		matchingHandlerCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
