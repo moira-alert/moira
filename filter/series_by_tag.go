@@ -125,7 +125,7 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 type MatchingHandler func(string, map[string]string) bool
 
 // CreateMatchingHandlerForPattern creates function for matching by tag list
-func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandler) {
+func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string
 
@@ -133,7 +133,7 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
 			nameTagValue = tagSpec.Value
 		} else {
-			hanler := createMatchingHandlerForOneTag(tagSpec)
+			hanler := createMatchingHandlerForOneTag(tagSpec, compatibility)
 			matchingHandlers = append(matchingHandlers, hanler)
 		}
 	}
@@ -150,7 +150,7 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 	return nameTagValue, matchingHandler
 }
 
-func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
+func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) MatchingHandler {
 	var matchingHandlerCondition func(string) bool
 	allowMatchEmpty := false
 	switch spec.Operator {
@@ -164,14 +164,18 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			return value != spec.Value
 		}
 	case MatchOperator:
-		allowMatchEmpty = spec.Value == ""
-		// matchRegex := regexp.MustCompile("^" + spec.Value)
-
-		value := spec.Value
-		if value == "*" {
-			value = ".*"
+		var matchRegex *regexp.Regexp
+		if compatibility.RegexTreatment == LooseStartMatch {
+			allowMatchEmpty = spec.Value == ""
+			value := spec.Value
+			if value == "*" {
+				value = ".*"
+			}
+			matchRegex = regexp.MustCompile(value)
+		} else {
+			allowMatchEmpty = true
+			matchRegex = regexp.MustCompile("^" + spec.Value)
 		}
-		matchRegex := regexp.MustCompile(value)
 
 		matchingHandlerCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
