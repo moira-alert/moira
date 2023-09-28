@@ -577,7 +577,7 @@ func TestCheckForNODATA(t *testing.T) {
 		So(currentState, ShouldBeNil)
 	})
 
-	Convey("TTLState is DEL, has EventTimeStamp, but the metric is on Maintenance, so it's not deleted and HiddenMetricDueMaintenance = true", t, func() {
+	Convey("TTLState is DEL, has EventTimeStamp, but the metric is on Maintenance, so it's not deleted and DeletedButKept = true", t, func() {
 		metricLastState.Maintenance = 11111
 		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
 		So(needToDeleteMetric, ShouldBeFalse)
@@ -1209,7 +1209,7 @@ func TestHandleTrigger(t *testing.T) {
 	metricState.Maintenance = 5000
 	lastCheck.Metrics[metric] = metricState
 
-	Convey("No data too long and ttlState is delete, but the metric is on maintenance and HiddenMetricDueMaintenance is false, so it won't be deleted", t, func() {
+	Convey("No data too long and ttlState is delete, but the metric is on maintenance and DeletedButKept is false, so it won't be deleted", t, func() {
 		triggerChecker.from = 4217
 		triggerChecker.until = 4267
 		triggerChecker.ttlState = moira.TTLStateDEL
@@ -1246,7 +1246,7 @@ func TestHandleTrigger(t *testing.T) {
 	metricState.DeletedButKept = true
 	lastCheck.Metrics[metric] = metricState
 
-	Convey("Metric on maintenance, HiddenMetricDueMaintenance is true, ttlState is delete, but a new metric comes in and HiddenMetricDueMaintenance becomes false", t, func() {
+	Convey("Metric on maintenance, DeletedButKept is true, ttlState is delete, but a new metric comes in and DeletedButKept becomes false", t, func() {
 		triggerChecker.from = 4217
 		triggerChecker.until = 4267
 		triggerChecker.ttlState = moira.TTLStateDEL
