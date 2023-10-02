@@ -10,7 +10,7 @@ import (
 )
 
 // Structure that represents the PagerDuty configuration in the YAML file
-type pagerDuty struct {
+type config struct {
 	FrontURI string `mapstructure:"front_uri"`
 }
 
@@ -27,13 +27,13 @@ type Sender struct {
 
 // Init loads yaml config, configures the pagerduty client
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var pagerduty pagerDuty
-	err := mapstructure.Decode(senderSettings, &pagerduty)
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to pagerduty config: %w", err)
 	}
 
-	sender.frontURI = pagerduty.FrontURI
+	sender.frontURI = cfg.FrontURI
 
 	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
 		senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)

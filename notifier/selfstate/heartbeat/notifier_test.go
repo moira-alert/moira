@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
@@ -45,6 +47,7 @@ func TestNotifierState(t *testing.T) {
 func createNotifierStateTest(t *testing.T) *notifier {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
+	metric := metrics.ConfigureHeartBeatMetrics(metrics.NewDummyRegistry())
 
-	return GetNotifier(logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*notifier)
+	return GetNotifier(logger, mock_moira_alert.NewMockDatabase(mockCtrl), metric).(*notifier)
 }

@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -16,9 +15,9 @@ import (
 )
 
 // Structure that represents the Mattermost configuration in the YAML file
-type mattermost struct {
+type config struct {
 	Url         string `mapstructure:"url"`
-	InsecureTLS string `mapstructure:"insecure_tls"`
+	InsecureTLS bool   `mapstructure:"insecure_tls"`
 	APIToken    string `mapstructure:"api_token"`
 	FrontURI    string `mapstructure:"front_uri"`
 }
@@ -35,41 +34,38 @@ type Sender struct {
 
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
-	var mm mattermost
-	err := mapstructure.Decode(senderSettings, &mm)
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
 	}
-	url := mm.Url
-	if url == "" {
+
+	if cfg.Url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
-	client := model.NewAPIv4Client(url)
+	client := model.NewAPIv4Client(cfg.Url)
 
-	insecureTLS, err := strconv.ParseBool(mm.InsecureTLS)
 	if err != nil {
 		return fmt.Errorf("can not parse insecure_tls: %v", err)
 	}
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: insecureTLS,
+				InsecureSkipVerify: cfg.InsecureTLS,
 			},
 		},
 	}
 	sender.client = client
 
-	token := mm.APIToken
-	if token == "" {
+	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read Mattermost api_token from config")
 	}
-	sender.client.SetToken(token)
+	sender.client.SetToken(cfg.APIToken)
 
-	frontURI := mm.FrontURI
-	if frontURI == "" {
+	if cfg.FrontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
-	sender.frontURI = frontURI
+	sender.frontURI = cfg.FrontURI
 	sender.location = location
 	sender.logger = logger
 

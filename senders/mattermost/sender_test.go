@@ -18,7 +18,7 @@ func TestInit(t *testing.T) {
 			senderSettings := map[string]interface{}{
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
-				"insecure_tls": "true",
+				"insecure_tls": true,
 			}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
@@ -29,7 +29,7 @@ func TestInit(t *testing.T) {
 				"url":          "",
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
-				"insecure_tls": "true",
+				"insecure_tls": true,
 			}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
@@ -64,7 +64,7 @@ func TestInit(t *testing.T) {
 				"url":          "qwerty",
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
-				"insecure_tls": "true",
+				"insecure_tls": true,
 			}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldBeNil)

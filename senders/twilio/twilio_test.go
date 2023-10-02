@@ -71,7 +71,7 @@ func TestInit(t *testing.T) {
 			Convey("has voice url", func() {
 				settings["voiceurl"] = "url here"
 				Convey("append_message == true", func() {
-					settings["append_message"] = "true"
+					settings["append_message"] = true
 					err := sender.Init(settings, logger, location, "15:04")
 					So(err, ShouldBeNil)
 					So(sender, ShouldResemble, Sender{sender: &twilioSenderVoice{
@@ -86,8 +86,8 @@ func TestInit(t *testing.T) {
 					}})
 				})
 
-				Convey("append_message is something another string", func() {
-					settings["append_message"] = "something another string"
+				Convey("append_message is false", func() {
+					settings["append_message"] = false
 					err := sender.Init(settings, logger, location, "15:04")
 					So(err, ShouldBeNil)
 					So(sender, ShouldResemble, Sender{sender: &twilioSenderVoice{

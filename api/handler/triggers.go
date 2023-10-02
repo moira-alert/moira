@@ -28,6 +28,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
+		router.Get("/unused", getUnusedTriggers)
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
@@ -50,6 +51,29 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 //	@router		/trigger [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, triggersList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get unused triggers
+//	@id			get-unused-triggers
+//	@tags		trigger
+//	@produce	json
+//	@success	200	{object}	dto.TriggersList				"Fetched unused triggers"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger [get]
+func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
+	triggersList, errorResponse := controller.GetUnusedTriggerIDs(database)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
@@ -226,6 +250,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@param			size			query		integer							false	"Page size"				default(10)
 //	@param			createPager		query		boolean							false	"Create pager"			default(false)
 //	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param			createdBy		query		string							false	"Created By"			default(moira.team)
 //	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
 //	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found"
@@ -234,17 +259,21 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@router			/trigger/search [get]
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
-	onlyErrors := getOnlyProblemsFlag(request)
-	filterTags := getRequestTags(request)
-	searchString := getSearchRequestString(request)
 
-	page := middleware.GetPage(request)
-	size := middleware.GetSize(request)
+	createdBy, ok := getTriggerCreatedBy(request)
+	searchOptions := moira.SearchOptions{
+		Page:                  middleware.GetPage(request),
+		Size:                  middleware.GetSize(request),
+		OnlyProblems:          getOnlyProblemsFlag(request),
+		Tags:                  getRequestTags(request),
+		SearchString:          getSearchRequestString(request),
+		CreatedBy:             createdBy,
+		NeedSearchByCreatedBy: ok,
+		CreatePager:           middleware.GetCreatePager(request),
+		PagerID:               middleware.GetPagerID(request),
+	}
 
-	createPager := middleware.GetCreatePager(request)
-	pagerID := middleware.GetPagerID(request)
-
-	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, page, size, onlyErrors, filterTags, searchString, createPager, pagerID)
+	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
@@ -303,6 +332,16 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 		return onlyProblems
 	}
 	return false
+}
+
+// Checks if the createdBy field has been set:
+// if the field has been set, searches for triggers with a specific author createdBy
+// if the field has not been set, searches for triggers with any author
+func getTriggerCreatedBy(request *http.Request) (string, bool) {
+	if createdBy, ok := request.Form["createdBy"]; ok {
+		return createdBy[0], true
+	}
+	return "", false
 }
 
 func getSearchRequestString(request *http.Request) string {

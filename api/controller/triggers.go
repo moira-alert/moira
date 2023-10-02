@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/database"
+	db "github.com/moira-alert/moira/database"
 )
 
 const pageSizeUnlimited int64 = -1
@@ -50,33 +50,30 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
+
+	triggerChecks, err := getTriggerChecks(database, triggerIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	triggersList := dto.TriggersList{
-		List: make([]moira.TriggerCheck, 0),
+	triggersList := &dto.TriggersList{
+		List: triggerChecks,
 	}
-	for _, triggerCheck := range triggerChecks {
-		if triggerCheck != nil {
-			triggersList.List = append(triggersList.List, *triggerCheck)
-		}
-	}
-	return &triggersList, nil
+
+	return triggersList, nil
 }
 
 // SearchTriggers gets trigger page and filter trigger by tags and search request terms
-func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64, size int64, onlyErrors bool, filterTags []string, searchString string, createPager bool, pagerID string) (*dto.TriggersList, *api.ErrorResponse) { //nolint
+func SearchTriggers(database moira.Database, searcher moira.Searcher, options moira.SearchOptions) (*dto.TriggersList, *api.ErrorResponse) { //nolint
 	var searchResults []*moira.SearchResult
 	var total int64
-	pagerShouldExist := pagerID != ""
+	pagerShouldExist := options.PagerID != ""
 
-	if pagerShouldExist && (searchString != "" || len(filterTags) > 0) {
+	if pagerShouldExist && (options.SearchString != "" || len(options.Tags) > 0) {
 		return nil, api.ErrorInvalidRequest(fmt.Errorf("cannot handle request with search string or tags and pager ID set"))
 	}
 	if pagerShouldExist {
 		var err error
-		searchResults, total, err = database.GetTriggersSearchResults(pagerID, page, size)
+		searchResults, total, err = database.GetTriggersSearchResults(options.PagerID, options.Page, options.Size)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
@@ -85,35 +82,37 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 		}
 	} else {
 		var err error
-		var passSize = size
-		if createPager {
-			passSize = pageSizeUnlimited
+		if options.CreatePager {
+			options.Size = pageSizeUnlimited
 		}
-		searchResults, total, err = searcher.SearchTriggers(filterTags, searchString, onlyErrors, page, passSize)
+		searchResults, total, err = searcher.SearchTriggers(options)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
 	}
 
-	if createPager && !pagerShouldExist {
+	if options.CreatePager && !pagerShouldExist {
 		uuid4, err := uuid.NewV4()
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
-		pagerID = uuid4.String()
-		database.SaveTriggersSearchResults(pagerID, searchResults) //nolint
+		options.PagerID = uuid4.String()
+		err = database.SaveTriggersSearchResults(options.PagerID, searchResults)
+		if err != nil {
+			return nil, api.ErrorInternalServer(err)
+		}
 	}
 
-	if createPager {
+	if options.CreatePager {
 		var from, to int64 = 0, int64(len(searchResults))
-		if size >= 0 {
-			from = int64(math.Min(float64(page*size), float64(len(searchResults))))
-			to = int64(math.Min(float64(from+size), float64(len(searchResults))))
+		if options.Size >= 0 {
+			from = int64(math.Min(float64(options.Page*options.Size), float64(len(searchResults))))
+			to = int64(math.Min(float64(from+options.Size), float64(len(searchResults))))
 		}
 		searchResults = searchResults[from:to]
 	}
 
-	var triggerIDs []string //nolint
+	triggerIDs := make([]string, 0, len(searchResults))
 	for _, searchResult := range searchResults {
 		triggerIDs = append(triggerIDs, searchResult.ObjectID)
 	}
@@ -124,15 +123,15 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 	}
 
 	var pagerIDPtr *string
-	if pagerID != "" {
-		pagerIDPtr = &pagerID
+	if options.PagerID != "" {
+		pagerIDPtr = &options.PagerID
 	}
 
 	triggersList := dto.TriggersList{
 		List:  make([]moira.TriggerCheck, 0),
 		Total: &total,
-		Page:  &page,
-		Size:  &size,
+		Page:  &options.Page,
+		Size:  &options.Size,
 		Pager: pagerIDPtr,
 	}
 
@@ -151,24 +150,57 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 	return &triggersList, nil
 }
 
-func DeleteTriggersPager(dataBase moira.Database, pagerID string) (dto.TriggersSearchResultDeleteResponse, *api.ErrorResponse) {
-	exists, err := dataBase.IsTriggersSearchResultsExist(pagerID)
+func DeleteTriggersPager(database moira.Database, pagerID string) (dto.TriggersSearchResultDeleteResponse, *api.ErrorResponse) {
+	exists, err := database.IsTriggersSearchResultsExist(pagerID)
 	if err != nil {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorInternalServer(err)
 	}
 	if !exists {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorNotFound(fmt.Sprintf("pager with id %s not found", pagerID))
 	}
-	err = dataBase.DeleteTriggersSearchResults(pagerID)
+	err = database.DeleteTriggersSearchResults(pagerID)
 	if err != nil {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorInternalServer(err)
 	}
 	return dto.TriggersSearchResultDeleteResponse{PagerID: pagerID}, nil
 }
 
-func triggerExists(dataBase moira.Database, triggerID string) (bool, error) {
-	_, err := dataBase.GetTrigger(triggerID)
-	if err == database.ErrNil {
+// GetUnusedTriggerIDs returns unused triggers ids.
+func GetUnusedTriggerIDs(database moira.Database) (*dto.TriggersList, *api.ErrorResponse) {
+	triggerIDs, err := database.GetUnusedTriggerIDs()
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	triggerChecks, err := getTriggerChecks(database, triggerIDs)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+	triggersList := &dto.TriggersList{
+		List: triggerChecks,
+	}
+
+	return triggersList, nil
+}
+
+func getTriggerChecks(database moira.Database, triggerIDs []string) ([]moira.TriggerCheck, error) {
+	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]moira.TriggerCheck, 0, len(triggerChecks))
+	for _, triggerCheck := range triggerChecks {
+		if triggerCheck != nil {
+			list = append(list, *triggerCheck)
+		}
+	}
+
+	return list, nil
+}
+
+func triggerExists(database moira.Database, triggerID string) (bool, error) {
+	_, err := database.GetTrigger(triggerID)
+	if err == db.ErrNil {
 		return false, nil
 	}
 	if err != nil {
