@@ -27,8 +27,8 @@ jobs:
         uses: docker://antonyurchenko/git-release:latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DRAFT_RELEASE: "false"
-          PRE_RELEASE: "false"
+          DRAFT_RELEASE: "true"
+          PRE_RELEASE: "true"
           CHANGELOG_FILE: "none"
           ALLOW_EMPTY_CHANGELOG: "true"
         with:
