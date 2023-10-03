@@ -563,10 +563,32 @@ func TestCheckForNODATA(t *testing.T) {
 	metricLastState.Timestamp = 399
 	triggerChecker.ttlState = moira.TTLStateDEL
 
-	Convey("TTLState is DEL and has EventTimeStamp", t, func() {
+	Convey("TTLState is DEL, has EventTimeStamp, Maintenance metric has expired and will be deleted", t, func() {
+		metricLastState.Maintenance = 111
 		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
 		So(needToDeleteMetric, ShouldBeTrue)
 		So(currentState, ShouldBeNil)
+	})
+
+	Convey("TTLState is DEL, has EventTimeStamp, the metric doesn't have Maintenance and will be deleted", t, func() {
+		metricLastState.Maintenance = 0
+		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
+		So(needToDeleteMetric, ShouldBeTrue)
+		So(currentState, ShouldBeNil)
+	})
+
+	Convey("TTLState is DEL, has EventTimeStamp, but the metric is on Maintenance, so it's not deleted and DeletedButKept = true", t, func() {
+		metricLastState.Maintenance = 11111
+		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
+		So(needToDeleteMetric, ShouldBeFalse)
+		So(currentState, ShouldNotBeNil)
+		So(*currentState, ShouldResemble, moira.MetricState{
+			Timestamp:      metricLastState.Timestamp,
+			EventTimestamp: metricLastState.EventTimestamp,
+			Maintenance:    metricLastState.Maintenance,
+			Suppressed:     metricLastState.Suppressed,
+			DeletedButKept: true,
+		})
 	})
 
 	Convey("Has new metricState", t, func() {
@@ -1157,7 +1179,111 @@ func TestHandleTrigger(t *testing.T) {
 		})
 	})
 
-	Convey("No data too long and ttlState is delete", t, func() {
+	Convey("No data too long and ttlState is delete, the metric is not on Maintenance, so it will be removed", t, func() {
+		triggerChecker.from = 4217
+		triggerChecker.until = 4267
+		triggerChecker.ttlState = moira.TTLStateDEL
+		lastCheck.Timestamp = 4267
+
+		dataBase.EXPECT().RemovePatternsMetrics(triggerChecker.trigger.Patterns).Return(nil)
+
+		aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)}
+		lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
+		checkData := newCheckData(&lastCheck, triggerChecker.until)
+		metricsToCheck := map[string]map[string]metricSource.MetricData{}
+
+		checkData, err := triggerChecker.check(metricsToCheck, aloneMetrics, checkData, logger)
+
+		So(err, ShouldBeNil)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics:                      make(map[string]moira.MetricState),
+			Timestamp:                    triggerChecker.until,
+			State:                        moira.StateOK,
+			Score:                        0,
+			LastSuccessfulCheckTimestamp: 0,
+			MetricsToTargetRelation:      map[string]string{},
+		})
+	})
+
+	metricState := lastCheck.Metrics[metric]
+	metricState.Maintenance = 5000
+	lastCheck.Metrics[metric] = metricState
+
+	Convey("No data too long and ttlState is delete, but the metric is on maintenance and DeletedButKept is false, so it won't be deleted", t, func() {
+		triggerChecker.from = 4217
+		triggerChecker.until = 4267
+		triggerChecker.ttlState = moira.TTLStateDEL
+		lastCheck.Timestamp = 4267
+
+		aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)}
+		lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
+		checkData := newCheckData(&lastCheck, triggerChecker.until)
+		metricsToCheck := map[string]map[string]metricSource.MetricData{}
+		oldMetricState := lastCheck.Metrics[metric]
+
+		checkData, err := triggerChecker.check(metricsToCheck, aloneMetrics, checkData, logger)
+
+		So(err, ShouldBeNil)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				metric: {
+					Timestamp:      oldMetricState.Timestamp,
+					EventTimestamp: oldMetricState.EventTimestamp,
+					State:          oldMetricState.State,
+					Values:         oldMetricState.Values,
+					Maintenance:    oldMetricState.Maintenance,
+					DeletedButKept: true,
+				},
+			},
+			MetricsToTargetRelation: map[string]string{},
+			Timestamp:               triggerChecker.until,
+			State:                   moira.StateOK,
+			Score:                   0,
+		})
+	})
+
+	metricState = lastCheck.Metrics[metric]
+	metricState.DeletedButKept = true
+	lastCheck.Metrics[metric] = metricState
+
+	Convey("Metric on maintenance, DeletedButKept is true, ttlState is delete, but a new metric comes in and DeletedButKept becomes false", t, func() {
+		triggerChecker.from = 4217
+		triggerChecker.until = 4267
+		triggerChecker.ttlState = moira.TTLStateDEL
+		lastCheck.Timestamp = 4227
+
+		aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{5}, retention, triggerChecker.from)}
+		lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
+		checkData := newCheckData(&lastCheck, triggerChecker.until)
+		metricsToCheck := map[string]map[string]metricSource.MetricData{}
+		oldMetricState := lastCheck.Metrics[metric]
+
+		checkData, err := triggerChecker.check(metricsToCheck, aloneMetrics, checkData, logger)
+
+		So(err, ShouldBeNil)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				metric: {
+					Timestamp:      triggerChecker.from,
+					EventTimestamp: oldMetricState.EventTimestamp,
+					State:          oldMetricState.State,
+					Values:         map[string]float64{"t1": 5},
+					Maintenance:    oldMetricState.Maintenance,
+					DeletedButKept: false,
+				},
+			},
+			MetricsToTargetRelation: map[string]string{},
+			Timestamp:               triggerChecker.until,
+			State:                   moira.StateOK,
+			Score:                   0,
+		})
+	})
+
+	metricState = lastCheck.Metrics[metric]
+	metricState.Maintenance = 4000
+	lastCheck.Metrics[metric] = metricState
+
+	Convey("No data too long and ttlState is delete, the time for Maintenance of metric is over, so it will be deleted", t, func() {
 		triggerChecker.from = 4217
 		triggerChecker.until = 4267
 		triggerChecker.ttlState = moira.TTLStateDEL
