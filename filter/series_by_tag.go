@@ -172,7 +172,7 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 		if value == "*" {
 			value = ".*"
 		}
-		matchRegex := regexp.MustCompile("^" + spec.Value)
+		matchRegex := regexp.MustCompile("^" + value)
 		matchingHandlerCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
 		}
