@@ -2,6 +2,7 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
+  delayed_time: 5m
 telemetry:
   graphite:
     enabled: true
@@ -44,5 +45,5 @@ notification_history:
   query_limit: 10000
 log:
   log_file: stdout
-  log_level: info
+  log_level: debug
   log_pretty_format: true

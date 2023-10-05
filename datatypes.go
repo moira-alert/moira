@@ -242,6 +242,17 @@ type ScheduledNotification struct {
 	Throttled bool              `json:"throttled" example:"false"`
 	SendFail  int               `json:"send_fail" example:"0"`
 	Timestamp int64             `json:"timestamp" example:"1594471927" format:"int64"`
+	CreatedAt int64             `json:"created_at" example:"1594471900" format:"int64"`
+}
+
+// Less is needed for the ScheduledNotification to match the Lesser interface
+func (notification *ScheduledNotification) Less(other Lesser) (bool, error) {
+	otherNotification, ok := other.(*ScheduledNotification)
+	if !ok {
+		return false, fmt.Errorf("cannot to compare ScheduledNotification with different type")
+	}
+
+	return notification.Timestamp < otherNotification.Timestamp, nil
 }
 
 // MatchedMetric represents parsed and matched metric data

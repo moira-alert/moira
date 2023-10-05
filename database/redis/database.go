@@ -42,6 +42,7 @@ type DbConnector struct {
 	metricsCache         *cache.Cache
 	sync                 *redsync.Redsync
 	metricsTTLSeconds    int64
+	delayedTime          int64
 	context              context.Context
 	source               DBSource
 	clock                moira.Clock
@@ -75,6 +76,7 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		sync:                 redsync.New(syncPool),
 		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
+		delayedTime:          int64(config.DelayedTime.Seconds()),
 		source:               source,
 		clock:                clock.NewSystemClock(),
 		notificationHistory:  nh,
@@ -85,7 +87,8 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger, DatabaseConfig{
-		Addrs: []string{"0.0.0.0:6379"},
+		Addrs:       []string{"0.0.0.0:6379"},
+		DelayedTime: 5 * time.Minute,
 	},
 		NotificationHistoryConfig{
 			NotificationHistoryTTL:        time.Hour * 48,

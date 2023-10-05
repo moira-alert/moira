@@ -219,3 +219,40 @@ func ReplaceSubstring(str, begin, end, replaced string) string {
 	}
 	return result
 }
+
+type Lesser interface {
+	Less(other Lesser) (bool, error)
+}
+
+// Merge is a generic function that performs a merge of two sorted arrays
+func Merge[T Lesser](arr1, arr2 []T) ([]T, error) {
+	merged := make([]T, 0, len(arr1)+len(arr2))
+	i, j := 0, 0
+
+	for i < len(arr1) && j < len(arr2) {
+		less, err := arr1[i].Less(arr2[j])
+		if err != nil {
+			return nil, err
+		}
+
+		if less {
+			merged = append(merged, arr1[i])
+			i++
+		} else {
+			merged = append(merged, arr2[j])
+			j++
+		}
+	}
+
+	for i < len(arr1) {
+		merged = append(merged, arr1[i])
+		i++
+	}
+
+	for j < len(arr2) {
+		merged = append(merged, arr2[j])
+		j++
+	}
+
+	return merged, nil
+}

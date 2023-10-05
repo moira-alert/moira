@@ -2,6 +2,7 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
+  delayed_time: 5m
 telemetry:
   graphite:
     enabled: true
@@ -27,7 +28,7 @@ prometheus:
 checker:
   nodata_check_interval: 60s
   check_interval: 10s
-  stop_checking_interval: 30s
+  stop_checking_interval: 3000s
 log:
   log_file: stdout
   log_level: debug

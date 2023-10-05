@@ -469,6 +469,136 @@ func TestLastCheckErrorConnection(t *testing.T) {
 	})
 }
 
+func TestGetTriggersLastCheck(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
+		Timestamp: 1,
+	}, moira.TriggerSourceNotSet)
+
+	_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
+		Timestamp: 2,
+	}, moira.TriggerSourceNotSet)
+
+	_ = dataBase.SetTriggerLastCheck("test3", &moira.CheckData{
+		Timestamp: 3,
+	}, moira.TriggerSourceNotSet)
+
+	Convey("getTriggersLastCheck manipulations", t, func() {
+		Convey("Test with nil id array", func() {
+			actual, err := dataBase.getTriggersLastCheck(nil)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []*moira.CheckData{})
+		})
+
+		Convey("Test with correct id array", func() {
+			actual, err := dataBase.getTriggersLastCheck([]string{"test1", "test2", "test3"})
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []*moira.CheckData{
+				{
+					Timestamp:               1,
+					MetricsToTargetRelation: map[string]string{},
+				},
+				{
+					Timestamp:               2,
+					MetricsToTargetRelation: map[string]string{},
+				},
+				{
+					Timestamp:               3,
+					MetricsToTargetRelation: map[string]string{},
+				},
+			})
+		})
+
+		Convey("Test with deleted trigger", func() {
+			dataBase.RemoveTriggerLastCheck("test2") //nolint
+			defer func() {
+				_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
+					Timestamp: 2,
+				}, moira.TriggerSourceNotSet)
+			}()
+
+			actual, err := dataBase.getTriggersLastCheck([]string{"test1", "test2", "test3"})
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []*moira.CheckData{
+				{
+					Timestamp:               1,
+					MetricsToTargetRelation: map[string]string{},
+				},
+				nil,
+				{
+					Timestamp:               3,
+					MetricsToTargetRelation: map[string]string{},
+				},
+			})
+		})
+
+		Convey("Test with a nonexistent trigger id", func() {
+			actual, err := dataBase.getTriggersLastCheck([]string{"test1", "test2", "test4"})
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []*moira.CheckData{
+				{
+					Timestamp:               1,
+					MetricsToTargetRelation: map[string]string{},
+				},
+				{
+					Timestamp:               2,
+					MetricsToTargetRelation: map[string]string{},
+				},
+				nil,
+			})
+		})
+
+		Convey("Test with an empty trigger id", func() {
+			actual, err := dataBase.getTriggersLastCheck([]string{"", "test2", "test3"})
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []*moira.CheckData{
+				nil,
+				{
+					Timestamp:               2,
+					MetricsToTargetRelation: map[string]string{},
+				},
+				{
+					Timestamp:               3,
+					MetricsToTargetRelation: map[string]string{},
+				},
+			})
+		})
+	})
+}
+
+func TestIsTriggerOnMaintenance(t *testing.T) {
+	Convey("isTriggerOnMaintenance manipulations", t, func() {
+		triggerCheck := &moira.CheckData{
+			Maintenance:                  120,
+			LastSuccessfulCheckTimestamp: 100,
+		}
+
+		Convey("Test with nil trigger check", func() {
+			actual := isTriggerOnMaintenance(nil)
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with trigger check Maintenance more than last check timestamp", func() {
+			actual := isTriggerOnMaintenance(triggerCheck)
+			So(actual, ShouldBeTrue)
+		})
+
+		Convey("Test with trigger check Maintenance less than last check timestamp", func() {
+			triggerCheck.LastSuccessfulCheckTimestamp = 150
+			defer func() {
+				triggerCheck.LastSuccessfulCheckTimestamp = 100
+			}()
+
+			actual := isTriggerOnMaintenance(triggerCheck)
+			So(actual, ShouldBeFalse)
+		})
+	})
+}
+
 func TestMaintenanceUserSave(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)

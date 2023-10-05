@@ -198,6 +198,36 @@ func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData 
 	return oldScore != float64(checkData.Score)
 }
 
+// getTriggersLastCheck returns an array of trigger checks by the passed ids, if the trigger does not exist, it is nil
+func (connector *DbConnector) getTriggersLastCheck(triggerIDs []string) ([]*moira.CheckData, error) {
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
+
+	results := make([]*redis.StringCmd, len(triggerIDs))
+	for i, id := range triggerIDs {
+		var result *redis.StringCmd
+		if id != "" {
+			result = pipe.Get(ctx, metricLastCheckKey(id))
+		}
+		results[i] = result
+	}
+
+	_, err := pipe.Exec(ctx)
+	if err != nil && err != redis.Nil {
+		return nil, err
+	}
+
+	return reply.Checks(results)
+}
+
+// isTriggerOnMaintenance checks if the trigger is on Maintenance
+func isTriggerOnMaintenance(triggerCheck *moira.CheckData) bool {
+	if triggerCheck != nil && triggerCheck.LastSuccessfulCheckTimestamp <= triggerCheck.Maintenance {
+		return true
+	}
+	return false
+}
+
 var badStateTriggersKey = "moira-bad-state-triggers"
 var triggersChecksKey = "moira-triggers-checks"
 

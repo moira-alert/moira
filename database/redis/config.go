@@ -14,6 +14,7 @@ type DatabaseConfig struct {
 	DialTimeout      time.Duration
 	ReadTimeout      time.Duration
 	WriteTimeout     time.Duration
+	DelayedTime      time.Duration
 	MaxRetries       int
 }
 

@@ -138,6 +138,87 @@ func (connector *DbConnector) removeNotifications(notifications []*moira.Schedul
 	return total, nil
 }
 
+// GetDelayedTimeInSeconds returns the time, if the difference between notification
+// creation and sending time is greater than this time, the notification will be considered delayed
+func (connector *DbConnector) GetDelayedTimeInSeconds() int64 {
+	return connector.delayedTime
+}
+
+// filterNotificationsByDelay filters notifications into delayed and not delayed notifications
+func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, delayedTime int64) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification) {
+	delayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+	notDelayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+
+	for _, notification := range notifications {
+		if notification.CreatedAt != 0 && notification.Timestamp-notification.CreatedAt > delayedTime {
+			delayedNotifications = append(delayedNotifications, notification)
+		} else {
+			notDelayedNotifications = append(notDelayedNotifications, notification)
+		}
+	}
+
+	return delayedNotifications, notDelayedNotifications
+}
+
+// getNotificationsTriggerChecks returns notifications trigger checks
+func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moira.ScheduledNotification) ([]*moira.CheckData, error) {
+	triggerIDs := make([]string, len(notifications))
+	for i, notification := range notifications {
+		if notification != nil {
+			triggerIDs[i] = notification.Trigger.ID
+		}
+	}
+
+	return connector.getTriggersLastCheck(triggerIDs)
+}
+
+/*
+validateNotifications filters notifications into delayed and not delayed,
+then validates the delayed ones - checks that:
+  - the trigger for which the notification was generated has not been deleted
+  - if the metric is on Maintenance, ignores the notification
+  - if the trigger is on Maintenance, ignores the notification
+
+Returns valid notifications in sorted order by timestamp and notifications to remove
+*/
+func (connector *DbConnector) validateNotifications(notifications []*moira.ScheduledNotification) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification, error) {
+	if len(notifications) == 0 {
+		return notifications, nil, nil
+	}
+
+	delayedNotifications, notDelayedNotifications := filterNotificationsByDelay(notifications, connector.GetDelayedTimeInSeconds())
+
+	if len(delayedNotifications) == 0 {
+		return notDelayedNotifications, notDelayedNotifications, nil
+	}
+
+	validNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+	toRemoveNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+
+	triggerChecks, err := connector.getNotificationsTriggerChecks(delayedNotifications)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get notifications trigger checks: %s", err)
+	}
+
+	for i := range delayedNotifications {
+		if triggerChecks[i] == nil {
+			toRemoveNotifications = append(toRemoveNotifications, delayedNotifications[i])
+		} else if !isMetricOnMaintenance(triggerChecks[i], delayedNotifications[i].Event.Metric) &&
+			!isTriggerOnMaintenance(triggerChecks[i]) {
+			validNotifications = append(validNotifications, delayedNotifications[i])
+		}
+	}
+
+	validNotifications, err = moira.Merge[*moira.ScheduledNotification](validNotifications, notDelayedNotifications)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to merge valid and not delayed notifications: %w", err)
+	}
+
+	toRemoveNotifications = append(toRemoveNotifications, validNotifications...)
+
+	return validNotifications, toRemoveNotifications, nil
+}
+
 // FetchNotifications fetch notifications by given timestamp and delete it
 func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	if limit == 0 {
@@ -215,22 +296,22 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 	}, notifierNotificationsKey)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to ZRANGEBYSCORE: %s", err)
+		return nil, fmt.Errorf("failed to ZRANGEBYSCORE: %w", err)
 	}
 
 	notifications, err := reply.Notifications(response)
 	if err != nil {
-		return nil, fmt.Errorf("failed to EXEC: %s", err)
+		return nil, fmt.Errorf("failed to reply notifications: %w", err)
 	}
 
 	if len(notifications) == 0 {
 		return notifications, nil
 	}
 
-	// ZRANGEBYSCORE with LIMIT may return not all notification with last timestamp
-	// (e.g. if we have notifications with timestamps [1, 2, 3, 3, 3] and limit == 3)
-	// but ZREMRANGEBYSCORE does not have LIMIT, so will delete all notifications with last timestamp
-	// (ts 3 in our example) and then run ZRANGEBYSCORE with our new last timestamp (2 in our example).
+	// ZRANGEBYSCORE with LIMIT may return not all notifications with last timestamp
+	// (e.g. we have notifications with timestamps [1, 2, 3, 3, 3] and limit = 3,
+	// we will get [1, 2, 3]), then limit notifications by last timestamp and return and delete
+	// valid notifications with our new timestamp
 
 	notificationsLimited := limitNotifications(notifications)
 	lastTs := notificationsLimited[len(notificationsLimited)-1].Timestamp
@@ -241,22 +322,20 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 		return connector.fetchNotificationsNoLimit(lastTs)
 	}
 
-	pipe := c.TxPipeline()
-	pipe.ZRemRangeByScore(ctx, notifierNotificationsKey, "-inf", strconv.FormatInt(lastTs, 10))
-	rangeResponse, errDelete := pipe.Exec(ctx)
-
-	if errDelete != nil {
-		return nil, fmt.Errorf("failed to EXEC: %w", errDelete)
+	validNotifications, toRemoveNotifications, err := connector.validateNotifications(notificationsLimited)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get valid notifications: %w", err)
 	}
+
+	deleteCount, err := connector.removeNotifications(toRemoveNotifications)
 
 	// someone has changed notifierNotificationsKey while we do our job
 	// and transaction fail (no notifications were deleted) :(
-	deleteCount, errConvert := rangeResponse[0].(*redis.IntCmd).Result()
-	if errConvert != nil || deleteCount == 0 {
+	if err != nil || deleteCount == 0 {
 		return nil, &transactionError{}
 	}
 
-	return notificationsLimited, nil
+	return validNotifications, nil
 }
 
 // FetchNotifications fetch notifications by given timestamp and delete it
@@ -264,14 +343,26 @@ func (connector *DbConnector) fetchNotificationsNoLimit(to int64) ([]*moira.Sche
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
 	pipe.ZRangeByScore(ctx, notifierNotificationsKey, &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10)})
-	pipe.ZRemRangeByScore(ctx, notifierNotificationsKey, "-inf", strconv.FormatInt(to, 10))
 	response, err := pipe.Exec(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to EXEC: %s", err)
 	}
 
-	return reply.Notifications(response[0].(*redis.StringSliceCmd))
+	notifications, err := reply.Notifications(response[0].(*redis.StringSliceCmd))
+	if err != nil {
+		return nil, err
+	}
+
+	validNotifications, toRemoveNotifications, err := connector.validateNotifications(notifications)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get valid notifications: %s", err)
+	}
+
+	if _, err := connector.removeNotifications(toRemoveNotifications); err != nil {
+		return nil, fmt.Errorf("failed to remove notifications: %s", err)
+	}
+
+	return validNotifications, nil
 }
 
 // AddNotification store notification at given timestamp

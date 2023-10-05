@@ -724,3 +724,29 @@ func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenan
 		So(lastCheckTest.Maintenance, ShouldEqual, maintenance)
 	})
 }
+
+func TestScheduledNotificationLess(t *testing.T) {
+	Convey("Test Scheduled notification Less function", t, func() {
+		notification := &ScheduledNotification{
+			Timestamp: 5,
+		}
+
+		Convey("Test Less with nil", func() {
+			actual, err := notification.Less(nil)
+			So(err, ShouldResemble, fmt.Errorf("cannot to compare ScheduledNotification with different type"))
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test Less with less notification :)", func() {
+			actual, err := notification.Less(&ScheduledNotification{Timestamp: 1})
+			So(err, ShouldBeNil)
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test Less with greater notification", func() {
+			actual, err := notification.Less(&ScheduledNotification{Timestamp: 10})
+			So(err, ShouldBeNil)
+			So(actual, ShouldBeTrue)
+		})
+	})
+}

@@ -43,6 +43,8 @@ type RedisConfig struct {
 	ReadTimeout string `yaml:"read_timeout"`
 	// Write-operation timeout. Default is ReadTimeout seconds.
 	WriteTimeout string `yaml:"write_timeout"`
+	// Need to determine if notification is delayed - the difference between creation time and sending time is greater than delayedTime
+	DelayedTime string `yaml:"delayed_time"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
 }
@@ -59,6 +61,7 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 		DialTimeout:  to.Duration(config.DialTimeout),
 		ReadTimeout:  to.Duration(config.ReadTimeout),
 		WriteTimeout: to.Duration(config.WriteTimeout),
+		DelayedTime:  to.Duration(config.DelayedTime),
 	}
 }
 

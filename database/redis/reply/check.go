@@ -110,6 +110,26 @@ func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 	return checkSE.toCheckData(), nil
 }
 
+// Checks converts an array of redis DB reply to moira.CheckData objects, if reply is nil, then checkdata is nil
+func Checks(rep []*redis.StringCmd) ([]*moira.CheckData, error) {
+	checks := make([]*moira.CheckData, len(rep))
+	for i, value := range rep {
+		if value != nil {
+			if check, err := Check(value); err != nil {
+				if err != database.ErrNil {
+					return nil, err
+				}
+				checks[i] = nil
+			} else {
+				checks[i] = &check
+			}
+		} else {
+			checks[i] = nil
+		}
+	}
+	return checks, nil
+}
+
 // GetCheckBytes is a function that takes moira.CheckData and turns it to bytes that will be saved in redis.
 func GetCheckBytes(check moira.CheckData) ([]byte, error) {
 	checkSE := toCheckDataStorageElement(check)

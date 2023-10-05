@@ -863,3 +863,62 @@ func TestRemoveAllMetrics(t *testing.T) {
 		})
 	})
 }
+
+func TestIsMetricOnMaintenance(t *testing.T) {
+	Convey("isMetricOnMaintenance manipulations", t, func() {
+		triggerCheck := &moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				"test1": {
+					Maintenance: 110,
+				},
+				"test2": {},
+			},
+			LastSuccessfulCheckTimestamp: 100,
+		}
+
+		Convey("Test with empty trigger check", func() {
+			actual := isMetricOnMaintenance(nil, "")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with a metric that is not in the trigger", func() {
+			actual := isMetricOnMaintenance(triggerCheck, "")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with metrics that are in the trigger but not on maintenance", func() {
+			actual := isMetricOnMaintenance(triggerCheck, "test2")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with metrics that are in the trigger and on maintenance", func() {
+			actual := isMetricOnMaintenance(triggerCheck, "test1")
+			So(actual, ShouldBeTrue)
+		})
+
+		Convey("Test with the metric that is in the trigger, but the last successful check of the trigger is more than Maintenance", func() {
+			triggerCheck.LastSuccessfulCheckTimestamp = 120
+			defer func() {
+				triggerCheck.LastSuccessfulCheckTimestamp = 100
+			}()
+
+			actual := isMetricOnMaintenance(triggerCheck, "test1")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with trigger without metrics", func() {
+			triggerCheck.Metrics = make(map[string]moira.MetricState)
+			defer func() {
+				triggerCheck.Metrics = map[string]moira.MetricState{
+					"test1": {
+						Maintenance: 110,
+					},
+					"test2": {},
+				}
+			}()
+
+			actual := isMetricOnMaintenance(triggerCheck, "test1")
+			So(actual, ShouldBeFalse)
+		})
+	})
+}

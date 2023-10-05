@@ -483,6 +483,20 @@ func flushMetric(database moira.Database, metric string, duration time.Duration)
 	return deletedCount, nil
 }
 
+// isMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
+func isMetricOnMaintenance(triggerCheck *moira.CheckData, metric string) bool {
+	if triggerCheck == nil || triggerCheck.Metrics == nil {
+		return false
+	}
+
+	metricState, ok := triggerCheck.Metrics[metric]
+	if !ok {
+		return false
+	}
+
+	return triggerCheck.LastSuccessfulCheckTimestamp <= metricState.Maintenance
+}
+
 var patternsListKey = "moira-pattern-list"
 
 var metricEventsChannels = []string{
