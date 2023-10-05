@@ -45,5 +45,5 @@ notification_history:
   query_limit: 10000
 log:
   log_file: stdout
-  log_level: debug
+  log_level: info
   log_pretty_format: true
