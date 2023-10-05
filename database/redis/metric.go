@@ -167,6 +167,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 		for {
 			response, ok := <-responseChannel
 			if !ok {
+				close(metricChannel)
 				return
 			}
 
@@ -194,7 +195,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 				select {
 				case <-tomb.Dying():
 					if closedEventChannels.Add(1) == int32(totalEventsChannels) {
-						close(metricChannel)
+						close(responseChannel)
 					}
 
 					return
