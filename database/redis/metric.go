@@ -184,7 +184,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 	}()
 
 	totalEventsChannels := len(metricEventsChannels)
-	var closedEventChannels atomic.Int64
+	closedEventChannels := int32(0)
 
 	for channelIdx := 0; channelIdx < totalEventsChannels; channelIdx++ {
 		metricEventsChannel := metricEventsChannels[channelIdx]
@@ -194,7 +194,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 				startPop := time.After(popDelay)
 				select {
 				case <-tomb.Dying():
-					if closedEventChannels.Add(1) == int64(totalEventsChannels) {
+					if atomic.AddInt32(&closedEventChannels, 1) == int32(totalEventsChannels) {
 						close(responseChannel)
 					}
 
