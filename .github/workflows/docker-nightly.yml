@@ -33,8 +33,8 @@ jobs:
             MoiraVersion=${{env.DOCKER_TAG}}
             GIT_COMMIT=${{github.sha}}
           push: true
-          tags: moira/${{matrix.services}}-nightly:${{env.DOCKER_TAG}}
-
+          tags: moira/${{matrix.services}}-nightly:${{env.DOCKER_TAG}},moira/${{matrix.services}}-nightly:latest
+          
       - name: Comment PR with build tag
         uses: mshick/add-pr-comment@v2
         if: always()
