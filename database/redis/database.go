@@ -94,7 +94,7 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 			NotificationHistoryQueryLimit: 1000,
 		},
 		NotificationConfig{
-			DelayedTime: 5 * time.Minute,
+			DelayedTime: time.Minute,
 		},
 		testSource)
 }
