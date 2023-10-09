@@ -43,8 +43,6 @@ type RedisConfig struct {
 	ReadTimeout string `yaml:"read_timeout"`
 	// Write-operation timeout. Default is ReadTimeout seconds.
 	WriteTimeout string `yaml:"write_timeout"`
-	// Need to determine if notification is delayed - the difference between creation time and sending time is greater than delayedTime
-	DelayedTime string `yaml:"delayed_time"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
 }
@@ -61,7 +59,6 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 		DialTimeout:  to.Duration(config.DialTimeout),
 		ReadTimeout:  to.Duration(config.ReadTimeout),
 		WriteTimeout: to.Duration(config.WriteTimeout),
-		DelayedTime:  to.Duration(config.DelayedTime),
 	}
 }
 
@@ -79,6 +76,19 @@ func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.
 	return redis.NotificationHistoryConfig{
 		NotificationHistoryTTL:        to.Duration(notificationHistoryConfig.NotificationHistoryTTL),
 		NotificationHistoryQueryLimit: notificationHistoryConfig.NotificationHistoryQueryLimit,
+	}
+}
+
+// NotificationConfig is a config that stores the time after which notifications should be considered delayed
+type NotificationConfig struct {
+	// Need to determine if notification is delayed - the difference between creation time and sending time is greater than delayedTime
+	DelayedTime string `yaml:"delayed_time"`
+}
+
+// GetSettings returns notification storage configuration
+func (notificationConfig *NotificationConfig) GetSettings() redis.NotificationConfig {
+	return redis.NotificationConfig{
+		DelayedTime: to.Duration(notificationConfig.DelayedTime),
 	}
 }
 

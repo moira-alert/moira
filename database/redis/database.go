@@ -42,14 +42,14 @@ type DbConnector struct {
 	metricsCache         *cache.Cache
 	sync                 *redsync.Redsync
 	metricsTTLSeconds    int64
-	delayedTime          int64
 	context              context.Context
 	source               DBSource
 	clock                moira.Clock
 	notificationHistory  NotificationHistoryConfig
+	notification         NotificationConfig
 }
 
-func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, source DBSource) *DbConnector {
+func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:       config.MasterName,
 		Addrs:            config.Addrs,
@@ -76,10 +76,10 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		sync:                 redsync.New(syncPool),
 		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
-		delayedTime:          int64(config.DelayedTime.Seconds()),
 		source:               source,
 		clock:                clock.NewSystemClock(),
 		notificationHistory:  nh,
+		notification:         n,
 	}
 	return &connector
 }
@@ -87,13 +87,16 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger, DatabaseConfig{
-		Addrs:       []string{"0.0.0.0:6379"},
-		DelayedTime: 5 * time.Minute,
+		Addrs: []string{"0.0.0.0:6379"},
 	},
 		NotificationHistoryConfig{
 			NotificationHistoryTTL:        time.Hour * 48,
 			NotificationHistoryQueryLimit: 1000,
-		}, testSource)
+		},
+		NotificationConfig{
+			DelayedTime: 5 * time.Minute,
+		},
+		testSource)
 }
 
 // NewTestDatabaseWithIncorrectConfig use it only for tests
@@ -103,6 +106,9 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 		NotificationHistoryConfig{
 			NotificationHistoryTTL:        time.Hour * 48,
 			NotificationHistoryQueryLimit: 1000,
+		},
+		NotificationConfig{
+			DelayedTime: time.Minute,
 		},
 		testSource)
 }

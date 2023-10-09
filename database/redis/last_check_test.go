@@ -570,35 +570,6 @@ func TestGetTriggersLastCheck(t *testing.T) {
 	})
 }
 
-func TestIsTriggerOnMaintenance(t *testing.T) {
-	Convey("isTriggerOnMaintenance manipulations", t, func() {
-		triggerCheck := &moira.CheckData{
-			Maintenance:                  120,
-			LastSuccessfulCheckTimestamp: 100,
-		}
-
-		Convey("Test with nil trigger check", func() {
-			actual := isTriggerOnMaintenance(nil)
-			So(actual, ShouldBeFalse)
-		})
-
-		Convey("Test with trigger check Maintenance more than last check timestamp", func() {
-			actual := isTriggerOnMaintenance(triggerCheck)
-			So(actual, ShouldBeTrue)
-		})
-
-		Convey("Test with trigger check Maintenance less than last check timestamp", func() {
-			triggerCheck.LastSuccessfulCheckTimestamp = 150
-			defer func() {
-				triggerCheck.LastSuccessfulCheckTimestamp = 100
-			}()
-
-			actual := isTriggerOnMaintenance(triggerCheck)
-			So(actual, ShouldBeFalse)
-		})
-	})
-}
-
 func TestMaintenanceUserSave(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)

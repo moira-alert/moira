@@ -220,11 +220,6 @@ func (connector *DbConnector) getTriggersLastCheck(triggerIDs []string) ([]*moir
 	return reply.Checks(results)
 }
 
-// isTriggerOnMaintenance checks if the trigger is on Maintenance
-func isTriggerOnMaintenance(triggerCheck *moira.CheckData) bool {
-	return triggerCheck != nil && triggerCheck.LastSuccessfulCheckTimestamp <= triggerCheck.Maintenance
-}
-
 var badStateTriggersKey = "moira-bad-state-triggers"
 var triggersChecksKey = "moira-triggers-checks"
 

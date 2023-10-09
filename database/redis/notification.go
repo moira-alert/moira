@@ -141,7 +141,7 @@ func (connector *DbConnector) removeNotifications(notifications []*moira.Schedul
 // GetDelayedTimeInSeconds returns the time, if the difference between notification
 // creation and sending time is greater than this time, the notification will be considered delayed
 func (connector *DbConnector) GetDelayedTimeInSeconds() int64 {
-	return connector.delayedTime
+	return int64(connector.notification.DelayedTime)
 }
 
 // filterNotificationsByDelay filters notifications into delayed and not delayed notifications
@@ -203,8 +203,8 @@ func (connector *DbConnector) validateNotifications(notifications []*moira.Sched
 	for i := range delayedNotifications {
 		if triggerChecks[i] == nil {
 			toRemoveNotifications = append(toRemoveNotifications, delayedNotifications[i])
-		} else if !isMetricOnMaintenance(triggerChecks[i], delayedNotifications[i].Event.Metric) &&
-			!isTriggerOnMaintenance(triggerChecks[i]) {
+		} else if triggerChecks[i] != nil && !triggerChecks[i].IsMetricOnMaintenance(delayedNotifications[i].Event.Metric) &&
+			!triggerChecks[i].IsTriggerOnMaintenance() {
 			validNotifications = append(validNotifications, delayedNotifications[i])
 		}
 	}
