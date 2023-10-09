@@ -12,7 +12,7 @@ type Compatibility struct {
 	// "loose_start_match" treats /<regex>/ as /^.*<regex>.*$/
 	RegexTreatment string `yaml:"regex_treatment"`
 	// Controls how the match expression with single star works
-	// The deafult value of "disabled" disbles this feature
+	// The default value of "disabled" disbles this feature
 	// "match_all_existing" makes 'some_tag~=*' match every metrics that has tag 'some_tag'
 	SingleStarMatch string `yaml:"single_star_match"`
 }
