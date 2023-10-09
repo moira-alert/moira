@@ -17,9 +17,9 @@ type compatibility struct {
 	AllowRegexMatchEmpty bool `yaml:"allow_regex_match_empty"`
 }
 
-func (compatibility *compatibility) ToFilterCompatibility() (filter.Compatibility, error) {
+func (compatibility *compatibility) ToFilterCompatibility() filter.Compatibility {
 	return filter.Compatibility{
 		AllowRegexLooseStartMatch: compatibility.AllowRegexLooseStartMatch,
 		AllowRegexMatchEmpty:      compatibility.AllowRegexMatchEmpty,
-	}, nil
+	}
 }

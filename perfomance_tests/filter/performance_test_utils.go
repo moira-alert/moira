@@ -42,7 +42,7 @@ func createPatternsStorage(patterns *[]string, b *testing.B) (*filter.PatternSto
 
 	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 	logger, _ := logging.GetLogger("Benchmark")
-	compatibility := filter.Compatibility{RegexTreatment: filter.LooseStartMatch}
+	compatibility := filter.Compatibility{AllowRegexLooseStartMatch: true}
 	patternsStorage, err := filter.NewPatternStorage(database, filterMetrics, logger, compatibility)
 	if err != nil {
 		return nil, err

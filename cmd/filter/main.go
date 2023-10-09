@@ -69,12 +69,7 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira Filter stopped. Version")
 
-	compatibility, err := config.Filter.Compatibility.ToFilterCompatibility()
-	if err != nil {
-		logger.Fatal().
-			Error(err).
-			Msg("Can not read compatibility settings")
-	}
+	compatibility := config.Filter.Compatibility.ToFilterCompatibility()
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
