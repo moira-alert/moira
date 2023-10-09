@@ -42,6 +42,8 @@ notifier:
 notification_history:
   ttl: 48h
   query_limit: 10000
+notification:
+  delayed_time: 1m
 log:
   log_file: stdout
   log_level: info
