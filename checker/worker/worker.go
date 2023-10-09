@@ -39,12 +39,12 @@ type Checker struct {
 func (check *Checker) Start() error {
 	var err error
 
-	err = check.startLocalMetricEvents()
+	err = check.startLazyTriggers()
 	if err != nil {
 		return err
 	}
 
-	err = check.startLazyTriggers()
+	err = check.startLocalMetricEvents()
 	if err != nil {
 		return err
 	}

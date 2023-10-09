@@ -399,6 +399,9 @@ type MetricState struct {
 	Values          map[string]float64 `json:"values,omitempty"`
 	Maintenance     int64              `json:"maintenance,omitempty" example:"0" format:"int64"`
 	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
+	// DeletedButKept controls whether the metric is shown to the user if the trigger has ttlState = Del
+	// and the metric is in Maintenance. The metric remains in the database
+	DeletedButKept bool `json:"deleted_but_kept,omitempty" example:"false"`
 	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
 }
 

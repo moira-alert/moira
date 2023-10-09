@@ -7,7 +7,6 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 )
 
-var noSuchKeyError = "ERR no such key"
 var anyTagsSubscriptionsKeyOld = "moira-any-tags-subscriptions"
 var anyTagsSubscriptionsKeyNew = "{moira-tag-subscriptions}:moira-any-tags-subscriptions"
 var triggersListKeyOld = "moira-triggers-list"

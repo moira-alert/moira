@@ -285,6 +285,12 @@ func (triggerChecker *TriggerChecker) preparePatternMetrics(fetchedMetrics conve
 	return result, duplicates
 }
 
+// Checks if the metric has changed since the previous check
+func isMetricChanged(metrics map[string]moira.MetricState, metricName string, metricState moira.MetricState) bool {
+	prevMetricState := metrics[metricName]
+	return prevMetricState.Timestamp != metricState.Timestamp
+}
+
 // check is the function that handles check on prepared metrics.
 func (triggerChecker *TriggerChecker) check(
 	metrics map[string]map[string]metricSource.MetricData,
@@ -305,16 +311,19 @@ func (triggerChecker *TriggerChecker) check(
 		log := logger.Clone().
 			String(moira.LogFieldNameMetricName, metricName)
 
-		log.Debug().Msg("Checking metrics")
-
 		targets = conversion.Merge(targets, aloneMetrics)
 
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, log)
+
 		if needToDeleteMetric {
-			log.Info().Msg("Remove metric")
+			log.Debug().String("metric_name", metricName).Msg("Remove metric")
 			checkData.RemoveMetricState(metricName)
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
+			// Starting to show user the updated metric, which has been hidden as its Maintenance time is not over
+			if metricState.DeletedButKept && isMetricChanged(checkData.Metrics, metricName, metricState) {
+				metricState.DeletedButKept = false
+			}
 			checkData.Metrics[metricName] = metricState
 		}
 
@@ -325,7 +334,7 @@ func (triggerChecker *TriggerChecker) check(
 	return checkData, nil
 }
 
-// checkTargets is a Function that takes a
+// checkTargets is a function which determines the last state of the metric and information about whether it should be deleted
 func (triggerChecker *TriggerChecker) checkTargets(
 	metricName string,
 	metrics map[string]metricSource.MetricData,
@@ -381,6 +390,10 @@ func (triggerChecker *TriggerChecker) checkForNoData(
 		Msg("Metric TTL expired for state")
 
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
+		if metricLastState.Maintenance != 0 && lastCheckTimeStamp <= metricLastState.Maintenance {
+			metricLastState.DeletedButKept = true
+			return false, &metricLastState
+		}
 		return true, nil
 	}
 
