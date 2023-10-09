@@ -208,9 +208,3 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 		return allowMatchEmpty && matchEmpty
 	}
 }
-
-// func MakeMatchOperatorHandler(regex regexp.Regexp) func(string) bool {
-// 	return func(value string) bool {
-// 		return matchRegex.MatchString(value)
-// 	}
-// }

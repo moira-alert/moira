@@ -6,6 +6,8 @@ import (
 	"github.com/moira-alert/moira/filter"
 )
 
+// Compatibility struct contains feature-flags that give user control over
+// features supported by different versions of graphit compatible with moira
 type Compatibility struct {
 	// Controls how regexps are treated.
 	// The default of "strict_start_match" treats /<regex>/ as /^<regex>.*$/
