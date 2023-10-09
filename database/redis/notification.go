@@ -182,11 +182,25 @@ then validates the delayed ones - checks that:
 Returns valid notifications in sorted order by timestamp and notifications to remove
 */
 func (connector *DbConnector) validateNotifications(notifications []*moira.ScheduledNotification) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification, error) {
+	connector.logger.Debug().
+		Interface("notifications_to_validate", notifications).
+		Int("notifications_to_validate_count", len(notifications)).
+		Msg("Notifications to validate")
+
 	if len(notifications) == 0 {
 		return notifications, nil, nil
 	}
 
 	delayedNotifications, notDelayedNotifications := filterNotificationsByDelay(notifications, connector.GetDelayedTimeInSeconds())
+	connector.logger.Debug().
+		Interface("delayed_notifications", delayedNotifications).
+		Int("delayed_notifications_count", len(delayedNotifications)).
+		Msg("Delayed notifications")
+
+	connector.logger.Debug().
+		Interface("not_delayed_notifications", notDelayedNotifications).
+		Int("not_delayed_notifications_count", len(notDelayedNotifications)).
+		Msg("Not delayed notifications")
 
 	if len(delayedNotifications) == 0 {
 		return notDelayedNotifications, notDelayedNotifications, nil
@@ -200,7 +214,19 @@ func (connector *DbConnector) validateNotifications(notifications []*moira.Sched
 		return nil, nil, fmt.Errorf("failed to get notifications trigger checks: %s", err)
 	}
 
+	connector.logger.Debug().
+		Interface("trigger_checks", triggerChecks).
+		Int("trigger_checks_count", len(triggerChecks)).
+		Msg("Trigger checks")
+
 	for i := range delayedNotifications {
+		connector.logger.Debug().Fields(map[string]interface{}{
+			"check_trigger":             triggerChecks[i] == nil,
+			"check_trigger_maintenance": triggerChecks[i].IsTriggerOnMaintenance(),
+			"check_metric_maintenance":  triggerChecks[i].IsMetricOnMaintenance(delayedNotifications[i].Event.Metric),
+		}).
+			Msg("Conditions")
+
 		if triggerChecks[i] == nil {
 			toRemoveNotifications = append(toRemoveNotifications, delayedNotifications[i])
 		} else if triggerChecks[i] != nil && !triggerChecks[i].IsMetricOnMaintenance(delayedNotifications[i].Event.Metric) &&
@@ -213,6 +239,16 @@ func (connector *DbConnector) validateNotifications(notifications []*moira.Sched
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to merge valid and not delayed notifications: %w", err)
 	}
+
+	connector.logger.Debug().
+		Interface("valid_notifications", validNotifications).
+		Int("valid_notifications_count", len(validNotifications)).
+		Msg("Valid notifications")
+
+	connector.logger.Debug().
+		Interface("to_remove_notifications", toRemoveNotifications).
+		Int("to_remove_notifications_count", len(toRemoveNotifications)).
+		Msg("To remove notifications")
 
 	toRemoveNotifications = append(toRemoveNotifications, validNotifications...)
 
@@ -281,6 +317,10 @@ func (connector *DbConnector) fetchNotificationsWithLimit(to int64, limit int64)
 // same as fetchNotificationsWithLimit, but only once
 func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// see https://redis.io/topics/transactions
+	connector.logger.Debug().
+		Int64("to", to).
+		Int64("limit", limit).
+		Msg("Fetch notifications with limit")
 
 	ctx := connector.context
 	c := *connector.client
@@ -315,6 +355,11 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 
 	notificationsLimited := limitNotifications(notifications)
 	lastTs := notificationsLimited[len(notificationsLimited)-1].Timestamp
+	connector.logger.Debug().
+		Interface("limited_notifications", notificationsLimited).
+		Int("limited_notifications_count", len(notificationsLimited)).
+		Int64("last_ts", lastTs).
+		Msg("Notifications limited")
 
 	if len(notifications) == len(notificationsLimited) {
 		// this means that all notifications have same timestamp,
@@ -328,6 +373,9 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 	}
 
 	deleteCount, err := connector.removeNotifications(toRemoveNotifications)
+	connector.logger.Debug().
+		Int64("delete_count", deleteCount).
+		Msg("Delete count")
 
 	// someone has changed notifierNotificationsKey while we do our job
 	// and transaction fail (no notifications were deleted) :(
@@ -340,6 +388,8 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 
 // FetchNotifications fetch notifications by given timestamp and delete it
 func (connector *DbConnector) fetchNotificationsNoLimit(to int64) ([]*moira.ScheduledNotification, error) {
+	connector.logger.Debug().Msg("Fetch notifications with no limit")
+
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
 	pipe.ZRangeByScore(ctx, notifierNotificationsKey, &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10)})

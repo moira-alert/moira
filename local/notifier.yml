@@ -46,5 +46,5 @@ notification:
   delayed_time: 1m
 log:
   log_file: stdout
-  log_level: info
+  log_level: debug
   log_pretty_format: true

@@ -50,6 +50,10 @@ type DbConnector struct {
 }
 
 func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {
+	logger.Debug().
+		String("delayed_time_str", n.DelayedTime.String()).
+		Msg("Delayed time")
+
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:       config.MasterName,
 		Addrs:            config.Addrs,
