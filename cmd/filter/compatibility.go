@@ -1,51 +1,25 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/moira-alert/moira/filter"
 )
 
 // Compatibility struct contains feature-flags that give user control over
 // features supported by different versions of graphit compatible with moira
-type Compatibility struct {
-	// Controls how regexps are treated.
-	// The default of "strict_start_match" treats /<regex>/ as /^<regex>.*$/
-	// "loose_start_match" treats /<regex>/ as /^.*<regex>.*$/
-	RegexTreatment string `yaml:"regex_treatment"`
-	// Controls how the match expression with single star works
-	// The default value of "disabled" disbles this feature
-	// "match_all_existing" makes 'some_tag~=*' match every metrics that has tag 'some_tag'
-	SingleStarMatch string `yaml:"single_star_match"`
+type compatibility struct {
+	// Controls how regices in tag matching are treated
+	// If false (default value), regex will match start of the string strictly. 'tag~=foo' is equivalent to 'tag~=^foo.*'
+	// If true, regex will match start of the string loosely. 'tag~=foo' is equivalent to 'tag~=.*foo.*'
+	AllowRegexLooseStartMatch bool `yaml:"allow_regex_loose_start_match"`
+	// Controls how absent tags are treated
+	// If true (default value), empty tags in regices will be matched
+	// If false, empty tags will be discarded
+	AllowRegexMatchEmpty bool `yaml:"allow_regex_match_empty"`
 }
 
-var regexTreatmentMap = map[string]filter.RegexTreatment{
-	"":                   filter.StrictStartMatch,
-	"strict_start_match": filter.StrictStartMatch,
-	"loose_start_match":  filter.LooseStartMatch,
-}
-
-var singleStarMatchMap = map[string]filter.SingleStarMatch{
-	"":                   filter.SingleStarMatchDisabled,
-	"disabled":           filter.SingleStarMatchDisabled,
-	"match_all_existing": filter.SingleStarMatchAllExisting,
-}
-
-func (compatibility *Compatibility) ToFilterCompatibility() (filter.Compatibility, error) {
-	regexTreatment, ok := regexTreatmentMap[compatibility.RegexTreatment]
-	if !ok {
-		err := fmt.Errorf("cannot unmarshal `%s` into RegexTreatment", compatibility.RegexTreatment)
-		return filter.Compatibility{}, err
-	}
-
-	singleStarMatch, ok := singleStarMatchMap[compatibility.SingleStarMatch]
-	if !ok {
-		err := fmt.Errorf("cannot unmarshal `%s` into SingleStarMatch", compatibility.SingleStarMatch)
-		return filter.Compatibility{}, err
-	}
-
+func (compatibility *compatibility) ToFilterCompatibility() (filter.Compatibility, error) {
 	return filter.Compatibility{
-		RegexTreatment:  regexTreatment,
-		SingleStarMatch: singleStarMatch,
+		AllowRegexLooseStartMatch: compatibility.AllowRegexLooseStartMatch,
+		AllowRegexMatchEmpty:      compatibility.AllowRegexMatchEmpty,
 	}, nil
 }

@@ -29,7 +29,7 @@ type filterConfig struct {
 	// DropMetricsTTL this is time window how older metric we can get from now.
 	DropMetricsTTL string `yaml:"drop_metrics_ttl"`
 	// Flags for compatibility with different graphite behaviours
-	Compatibility Compatibility `yaml:"graphite_compatibility"`
+	Compatibility compatibility `yaml:"graphite_compatibility"`
 }
 
 func getDefault() config {
@@ -51,8 +51,9 @@ func getDefault() config {
 			MaxParallelMatches:   0,
 			PatternsUpdatePeriod: "1s",
 			DropMetricsTTL:       "1h",
-			Compatibility: Compatibility{
-				RegexTreatment: "",
+			Compatibility: compatibility{
+				AllowRegexLooseStartMatch: false,
+				AllowRegexMatchEmpty:      true,
 			},
 		},
 		Telemetry: cmd.TelemetryConfig{

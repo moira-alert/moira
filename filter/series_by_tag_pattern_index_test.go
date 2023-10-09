@@ -112,7 +112,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 	var logger, _ = logging.GetLogger("SeriesByTag")
 	Convey("Given empty patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		compatibility := Compatibility{
-			RegexTreatment: LooseStartMatch,
+			AllowRegexLooseStartMatch: true,
 		}
 		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility)
 		c.So(index.MatchPatterns("", nil), ShouldResemble, []string{})
@@ -149,18 +149,18 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			Labels          map[string]string
 			MatchedPatterns []string
 		}{
-			{"cpu1", map[string]string{}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
-			{"cpu2", map[string]string{}, []string{"name!=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc="}},
+			{"cpu2", map[string]string{}, []string{"name!=cpu1", "name~=cpu", "name~=cpu;dc="}},
 			{"disk", map[string]string{}, []string{"name!=cpu1", "name!~=cpu"}},
 			{"cpu1", map[string]string{"dc": "ru1"}, []string{"dc=ru1", "dc~=ru", "name=cpu1", "name=cpu1;dc=ru1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
 			{"cpu1", map[string]string{"dc": "ru2"}, []string{"dc!=ru1", "dc~=ru", "name=cpu1", "name=cpu1;dc=ru2", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
 			{"cpu1", map[string]string{"dc": "us"}, []string{"dc!=ru1", "dc!~=ru", "name=cpu1", "name=cpu1;dc=us", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
-			{"cpu1", map[string]string{"machine": "machine"}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{"machine": "machine"}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc="}},
 		}
 
 		compatibility := Compatibility{
-			RegexTreatment:  LooseStartMatch,
-			SingleStarMatch: SingleStarMatchAllExisting,
+			AllowRegexMatchEmpty:      false,
+			AllowRegexLooseStartMatch: true,
 		}
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility)
 		for _, testCase := range testCases {
@@ -207,6 +207,9 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			},
 			"tag2=~*": {
 				{"tag2", MatchOperator, "*"},
+			},
+			"tag2=~.*": {
+				{"tag2", MatchOperator, ".*"},
 			},
 			"tag1=val1;tag2=val2": {
 				{"tag1", EqualOperator, "val1"},
@@ -270,6 +273,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=~test1",
 					"tag1=~al1",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test1.test2",
 				map[string]string{"tag2": "val2"},
@@ -280,6 +284,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=cpu.test1.test2",
 					"name=~test1",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test3.test2",
 				map[string]string{"tag2": "val2"},
@@ -287,6 +292,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=cpu.*.test2",
 					"name=cpu.*.test2;tag2=val2",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test1.test2",
 				map[string]string{"tag1": "val1", "tag2": "val2"},
@@ -303,12 +309,13 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"tag1=val1;tag2=val2",
 					"tag1=~al1",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 		}
 
 		compatibility := Compatibility{
-			RegexTreatment:  LooseStartMatch,
-			SingleStarMatch: SingleStarMatchAllExisting,
+			AllowRegexLooseStartMatch: true,
+			AllowRegexMatchEmpty:      false,
 		}
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility)
 		for _, testCase := range testCases {
@@ -360,6 +367,9 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 			"tag2=~*": {
 				{"tag2", MatchOperator, "*"},
 			},
+			"tag2=~.*": {
+				{"tag2", MatchOperator, ".*"},
+			},
 			"tag1=val1;tag2=val2": {
 				{"tag1", EqualOperator, "val1"},
 				{"tag2", EqualOperator, "val2"},
@@ -379,6 +389,7 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.*",
 					"name=cpu.test1.test2",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test1.test2",
 				map[string]string{"tag": "val"},
@@ -388,6 +399,7 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.*",
 					"name=cpu.test1.test2",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test1.test2",
 				map[string]string{"tag1": "val1"},
@@ -399,6 +411,7 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.test2",
 					"name=~cpu;tag1=val1",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test1.test2",
 				map[string]string{"tag1": "val2"},
@@ -408,6 +421,7 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.*",
 					"name=cpu.test1.test2",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test1.test2",
 				map[string]string{"tag1": "val1", "tag2": "val1"},
@@ -419,6 +433,7 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.test2",
 					"name=~cpu;tag1=val1",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test1.test2",
 				map[string]string{"tag2": "val2"},
@@ -428,6 +443,7 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.*",
 					"name=cpu.test1.test2",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test3.test2",
 				map[string]string{"tag2": "val2"},
@@ -435,6 +451,7 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.*.test2",
 					"name=cpu.*.test2;tag2=val2",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 			{"cpu.test1.test2",
 				map[string]string{"tag1": "val1", "tag2": "val2"},
@@ -449,11 +466,13 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=~cpu;tag1=val1",
 					"tag1=val1;tag2=val2",
 					"tag2=~*",
+					"tag2=~.*",
 				}},
 		}
 
 		compatibility := Compatibility{
-			RegexTreatment: StrictStartMatch,
+			AllowRegexLooseStartMatch: false,
+			AllowRegexMatchEmpty:      true,
 		}
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility)
 		for _, testCase := range testCases {

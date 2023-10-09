@@ -1,20 +1,7 @@
 package filter
 
+// See cmd/filter/compatibility for usage examples
 type Compatibility struct {
-	RegexTreatment  RegexTreatment
-	SingleStarMatch SingleStarMatch
+	AllowRegexLooseStartMatch bool
+	AllowRegexMatchEmpty      bool
 }
-
-type RegexTreatment bool
-
-const (
-	StrictStartMatch RegexTreatment = false
-	LooseStartMatch  RegexTreatment = true
-)
-
-type SingleStarMatch bool
-
-const (
-	SingleStarMatchDisabled    SingleStarMatch = false
-	SingleStarMatchAllExisting SingleStarMatch = true
-)
