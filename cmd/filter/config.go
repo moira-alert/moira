@@ -52,7 +52,7 @@ func getDefault() config {
 			PatternsUpdatePeriod: "1s",
 			DropMetricsTTL:       "1h",
 			Compatibility: Compatibility{
-				RegexTreatment: strictStartMatchString,
+				RegexTreatment: "",
 			},
 		},
 		Telemetry: cmd.TelemetryConfig{

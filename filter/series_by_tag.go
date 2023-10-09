@@ -169,15 +169,17 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 		}
 	case MatchOperator:
 		var matchRegex *regexp.Regexp
+
+		allowMatchEmpty = true
+
+		if compatibility.SingleStarMatch == SingleStarMatchAllExisting && spec.Value == "*" {
+			spec.Value = ".*"
+			allowMatchEmpty = false
+		}
+
 		if compatibility.RegexTreatment == LooseStartMatch {
-			allowMatchEmpty = spec.Value == ""
-			value := spec.Value
-			if value == "*" {
-				value = ".*"
-			}
-			matchRegex = regexp.MustCompile(value)
+			matchRegex = regexp.MustCompile(spec.Value)
 		} else {
-			allowMatchEmpty = true
 			matchRegex = regexp.MustCompile("^" + spec.Value)
 		}
 
@@ -206,3 +208,9 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 		return allowMatchEmpty && matchEmpty
 	}
 }
+
+// func MakeMatchOperatorHandler(regex regexp.Regexp) func(string) bool {
+// 	return func(value string) bool {
+// 		return matchRegex.MatchString(value)
+// 	}
+// }

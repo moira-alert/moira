@@ -159,7 +159,8 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		}
 
 		compatibility := Compatibility{
-			RegexTreatment: LooseStartMatch,
+			RegexTreatment:  LooseStartMatch,
+			SingleStarMatch: SingleStarMatchAllExisting,
 		}
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility)
 		for _, testCase := range testCases {
@@ -306,7 +307,8 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		}
 
 		compatibility := Compatibility{
-			RegexTreatment: LooseStartMatch,
+			RegexTreatment:  LooseStartMatch,
+			SingleStarMatch: SingleStarMatchAllExisting,
 		}
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility)
 		for _, testCase := range testCases {
