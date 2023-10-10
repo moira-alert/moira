@@ -30,12 +30,12 @@ func loadPatterns(filename string) (*[]string, error) {
 	patterns := make([]string, 0)
 	patternsReader := bufio.NewReader(patternsFile)
 	for {
-		pattern, parceErr := patternsReader.ReadString('\n')
-		if len(pattern) == 0 && parceErr != nil {
-			if parceErr == io.EOF {
+		pattern, parseErr := patternsReader.ReadString('\n')
+		if len(pattern) == 0 && parseErr != nil {
+			if parseErr == io.EOF {
 				break
 			}
-			return &patterns, parceErr
+			return &patterns, parseErr
 		}
 		patterns = append(patterns, pattern[:len(pattern)-1])
 	}
