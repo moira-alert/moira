@@ -141,7 +141,7 @@ func (connector *DbConnector) removeNotifications(notifications []*moira.Schedul
 // GetDelayedTimeInSeconds returns the time, if the difference between notification
 // creation and sending time is greater than this time, the notification will be considered delayed
 func (connector *DbConnector) GetDelayedTimeInSeconds() int64 {
-	return int64(connector.notification.DelayedTime)
+	return int64(connector.notification.DelayedTime.Seconds())
 }
 
 // filterNotificationsByDelay filters notifications into delayed and not delayed notifications

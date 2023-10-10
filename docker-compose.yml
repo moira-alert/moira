@@ -35,6 +35,7 @@ services:
       - relay
     ports:
       - "8094:8094"
+      - "2004:2003"
     restart: always
 
   checker:
