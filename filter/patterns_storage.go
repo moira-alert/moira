@@ -19,15 +19,22 @@ type PatternStorage struct {
 	logger                  moira.Logger
 	PatternIndex            atomic.Value
 	SeriesByTagPatternIndex atomic.Value
+	compatibility           Compatibility
 }
 
 // NewPatternStorage creates new PatternStorage struct
-func NewPatternStorage(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger) (*PatternStorage, error) {
+func NewPatternStorage(
+	database moira.Database,
+	metrics *metrics.FilterMetrics,
+	logger moira.Logger,
+	compatibility Compatibility,
+) (*PatternStorage, error) {
 	storage := &PatternStorage{
-		database: database,
-		metrics:  metrics,
-		logger:   logger,
-		clock:    clock.NewSystemClock(),
+		database:      database,
+		metrics:       metrics,
+		logger:        logger,
+		clock:         clock.NewSystemClock(),
+		compatibility: compatibility,
 	}
 	err := storage.Refresh()
 	return storage, err
@@ -51,8 +58,8 @@ func (storage *PatternStorage) Refresh() error {
 		}
 	}
 
-	storage.PatternIndex.Store(NewPatternIndex(storage.logger, patterns))
-	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(storage.logger, seriesByTagPatterns))
+	storage.PatternIndex.Store(NewPatternIndex(storage.logger, patterns, storage.compatibility))
+	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(storage.logger, seriesByTagPatterns, storage.compatibility))
 	return nil
 }
 
