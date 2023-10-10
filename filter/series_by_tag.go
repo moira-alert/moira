@@ -129,7 +129,7 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 type MatchingHandler func(string, map[string]string) bool
 
 // CreateMatchingHandlerForPattern creates function for matching by tag list
-func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler) {
+func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string
 
@@ -137,7 +137,11 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
 			nameTagValue = tagSpec.Value
 		} else {
-			handler := createMatchingHandlerForOneTag(tagSpec, compatibility)
+			handler, err := createMatchingHandlerForOneTag(tagSpec, compatibility)
+			if err != nil {
+				return "", nil, err
+			}
+
 			matchingHandlers = append(matchingHandlers, handler)
 		}
 	}
@@ -151,10 +155,10 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 		return true
 	}
 
-	return nameTagValue, matchingHandler
+	return nameTagValue, matchingHandler, nil
 }
 
-func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) MatchingHandler {
+func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) (MatchingHandler, error) {
 	var matchingHandlerCondition func(string) bool
 	allowMatchEmpty := false
 
@@ -171,7 +175,10 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 	case MatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchRegex := newMatchRegex(spec.Value, compatibility)
+		matchRegex, err := newMatchRegex(spec.Value, compatibility)
+		if err != nil {
+			return nil, err
+		}
 
 		matchingHandlerCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
@@ -179,7 +186,10 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 	case NotMatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchRegex := newMatchRegex(spec.Value, compatibility)
+		matchRegex, err := newMatchRegex(spec.Value, compatibility)
+		if err != nil {
+			return nil, err
+		}
 
 		matchingHandlerCondition = func(value string) bool {
 			return !matchRegex.MatchString(value)
@@ -199,21 +209,19 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 			return matchingHandlerCondition(value)
 		}
 		return allowMatchEmpty && matchEmpty
-	}
+	}, nil
 }
 
-func newMatchRegex(value string, compatibility *Compatibility) *regexp.Regexp {
-	var matchRegex *regexp.Regexp
-
+func newMatchRegex(value string, compatibility *Compatibility) (*regexp.Regexp, error) {
 	if value == "*" {
 		value = ".*"
 	}
 
-	if compatibility.AllowRegexLooseStartMatch {
-		matchRegex = regexp.MustCompile(value)
-	} else {
-		matchRegex = regexp.MustCompile("^" + value)
+	if !compatibility.AllowRegexLooseStartMatch {
+		value = "^" + value
 	}
 
-	return matchRegex
+	matchRegex, err := regexp.Compile(value)
+
+	return matchRegex, err
 }
