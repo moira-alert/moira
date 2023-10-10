@@ -165,7 +165,7 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]metricSource.MetricData, error) {
 	realtimeFetchResult, realtimeErr := metricsSource.Fetch(target, from, to, true)
 	if realtimeErr == nil {
-		return realtimeFetchResult.GetMetricsData(), realtimeErr
+		return realtimeFetchResult.GetMetricsData(), nil
 	}
 	if errFailedWithPanic, ok := realtimeErr.(local.ErrEvaluateTargetFailedWithPanic); ok {
 		fetchResult, err := metricsSource.Fetch(target, from, to, false)

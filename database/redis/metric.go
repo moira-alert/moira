@@ -22,7 +22,7 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 	c := *connector.client
 	patterns, err := c.SMembers(connector.context, patternsListKey).Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get moira patterns, error: %v", err)
+		return nil, fmt.Errorf("failed to get moira patterns, error: %w", err)
 	}
 	return patterns, nil
 }
@@ -85,11 +85,11 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 		if err == redis.Nil {
 			return 60, database.ErrNil //nolint
 		}
-		return 0, fmt.Errorf("failed GET metric retention:%s, error: %v", metric, err)
+		return 0, fmt.Errorf("failed GET metric retention:%s, error: %w", metric, err)
 	}
 	retention, err := strconv.ParseInt(retentionStr, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("failed GET metric retention:%s, error: %v", metric, err)
+		return 0, fmt.Errorf("failed GET metric retention:%s, error: %w", metric, err)
 	}
 	return retention, nil
 }
