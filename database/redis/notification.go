@@ -220,12 +220,14 @@ func (connector *DbConnector) validateNotifications(notifications []*moira.Sched
 		Msg("Trigger checks")
 
 	for i := range delayedNotifications {
-		connector.logger.Debug().Fields(map[string]interface{}{
-			"check_trigger":             triggerChecks[i] == nil,
-			"check_trigger_maintenance": triggerChecks[i].IsTriggerOnMaintenance(),
-			"check_metric_maintenance":  triggerChecks[i].IsMetricOnMaintenance(delayedNotifications[i].Event.Metric),
-		}).
-			Msg("Conditions")
+		connector.logger.Debug().Interface("check_trigger", triggerChecks[i] == nil).Msg("Check trigger")
+		if triggerChecks[i] != nil {
+			connector.logger.Debug().Fields(map[string]interface{}{
+				"check_trigger_maintenance": triggerChecks[i].IsTriggerOnMaintenance(),
+				"check_metric_maintenance":  triggerChecks[i].IsMetricOnMaintenance(delayedNotifications[i].Event.Metric),
+			}).
+				Msg("Conditions")
+		}
 
 		if triggerChecks[i] == nil {
 			toRemoveNotifications = append(toRemoveNotifications, delayedNotifications[i])
