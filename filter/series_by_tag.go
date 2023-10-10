@@ -137,8 +137,8 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
 			nameTagValue = tagSpec.Value
 		} else {
-			hanler := createMatchingHandlerForOneTag(tagSpec, compatibility)
-			matchingHandlers = append(matchingHandlers, hanler)
+			handler := createMatchingHandlerForOneTag(tagSpec, compatibility)
+			matchingHandlers = append(matchingHandlers, handler)
 		}
 	}
 
