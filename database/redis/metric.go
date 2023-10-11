@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -163,11 +164,6 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 	}
 
 	go func() {
-		<-tomb.Dying()
-		close(responseChannel)
-	}()
-
-	go func() {
 		for {
 			response, ok := <-responseChannel
 			if !ok {
@@ -187,7 +183,10 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 		}
 	}()
 
-	for channelIdx := 0; channelIdx < len(metricEventsChannels); channelIdx++ {
+	totalEventsChannels := len(metricEventsChannels)
+	closedEventChannels := int32(0)
+
+	for channelIdx := 0; channelIdx < totalEventsChannels; channelIdx++ {
 		metricEventsChannel := metricEventsChannels[channelIdx]
 		go func() {
 			var popDelay time.Duration
@@ -195,6 +194,10 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 				startPop := time.After(popDelay)
 				select {
 				case <-tomb.Dying():
+					if atomic.AddInt32(&closedEventChannels, 1) == int32(totalEventsChannels) {
+						close(responseChannel)
+					}
+
 					return
 				case <-startPop:
 					data, err := c.SPopN(ctx, metricEventsChannel, params.BatchSize).Result()

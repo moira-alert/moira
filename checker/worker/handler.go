@@ -34,8 +34,7 @@ func (check *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metri
 	}
 }
 
-func (check *Checker) handleTrigger(triggerID string, metrics *metrics.CheckMetrics) error {
-	var err error
+func (check *Checker) handleTrigger(triggerID string, metrics *metrics.CheckMetrics) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: '%s' stack: %s", r, debug.Stack())
