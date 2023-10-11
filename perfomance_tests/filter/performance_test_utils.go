@@ -3,6 +3,7 @@ package filter
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"strings"
@@ -23,12 +24,18 @@ func loadPatterns(filename string) (*[]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer patternsFile.Close()
+
 	patterns := make([]string, 0)
 	patternsReader := bufio.NewReader(patternsFile)
 	for {
-		pattern, err1 := patternsReader.ReadString('\n')
-		if err1 != nil {
-			break
+		pattern, parseErr := patternsReader.ReadString('\n')
+		if len(pattern) == 0 && parseErr != nil {
+			if parseErr == io.EOF {
+				break
+			}
+			return &patterns, parseErr
 		}
 		patterns = append(patterns, pattern[:len(pattern)-1])
 	}
