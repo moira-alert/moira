@@ -24,7 +24,15 @@ func NewSeriesByTagPatternIndex(
 	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
 
 	for pattern, tagSpecs := range tagSpecsByPattern {
-		nameTagValue, matchingHandler := CreateMatchingHandlerForPattern(tagSpecs, &compatibility)
+		nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs, &compatibility)
+
+		if err != nil {
+			logger.Info().
+				Error(err).
+				String("pattern", pattern).
+				Msg("Failed to create MatchingHandler for pattern")
+			continue
+		}
 
 		if nameTagValue == "" {
 			withoutStrictNameTagPatternMatchers[pattern] = matchingHandler
