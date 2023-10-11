@@ -1,0 +1,14 @@
+goos: linux
+goarch: amd64
+cpu: AMD Ryzen 5 5500U with Radeon Graphics         
+BenchmarkFetchNotificationsWithoutLimit
+BenchmarkFetchNotificationsWithoutLimit/With_100_notifications
+BenchmarkFetchNotificationsWithoutLimit/With_100_notifications-12         	1000000000	         0.001491 ns/op
+BenchmarkFetchNotificationsWithoutLimit/With_1000_notifications
+BenchmarkFetchNotificationsWithoutLimit/With_1000_notifications-12        	1000000000	         0.003267 ns/op
+BenchmarkFetchNotificationsWithoutLimit/With_10000_notifications
+BenchmarkFetchNotificationsWithoutLimit/With_10000_notifications-12       	1000000000	         0.02052 ns/op
+BenchmarkFetchNotificationsWithoutLimit/With_50000_notifications
+BenchmarkFetchNotificationsWithoutLimit/With_50000_notifications-12       	1000000000	         0.07967 ns/op
+PASS
+ok  	command-line-arguments	29.676s
