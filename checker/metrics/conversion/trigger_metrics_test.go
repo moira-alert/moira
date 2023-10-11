@@ -438,7 +438,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 	Convey("Diff", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
-				actual := tt.m.Diff(tt.declaredAloneMetrics)
+				actual := tt.m.Diff(NewSet(tt.declaredAloneMetrics))
 				So(actual, ShouldResemble, tt.want)
 			})
 		}

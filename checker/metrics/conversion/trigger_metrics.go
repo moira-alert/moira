@@ -1,6 +1,8 @@
 package conversion
 
 import (
+	"fmt"
+
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
@@ -68,8 +70,11 @@ func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, decla
 	// current received metrics alone metrics from last check.
 	allMetrics := make(map[string]map[string]bool, len(m))
 
+	fmt.Printf("\n\n")
+
 	for metricName, metricState := range lastMetrics {
 		for targetName := range metricState.Values {
+			fmt.Printf("targetName = %v, metricName = %v\n\n", targetName, metricName)
 			if _, ok := allMetrics[targetName]; !ok {
 				allMetrics[targetName] = make(map[string]bool)
 			}
@@ -77,8 +82,10 @@ func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, decla
 		}
 	}
 
+	fmt.Printf("--- = ---\n\n")
 	for targetName, metrics := range m {
 		for metricName := range metrics {
+			fmt.Printf("targetName = %v, metricName = %v\n\n", targetName, metricName)
 			if _, ok := allMetrics[targetName]; !ok {
 				allMetrics[targetName] = make(map[string]bool)
 			}
@@ -86,11 +93,13 @@ func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, decla
 		}
 	}
 
-	diff := m.Diff(declaredAloneMetrics)
+	fmt.Printf("==== - ====\n\n")
+
+	diff := m.Diff(NewSet(declaredAloneMetrics))
 
 	for targetName, metrics := range diff {
 		for metricName := range metrics {
-			allMetrics[targetName][metricName] = true
+			allMetrics[targetName][metricName] = true // panic
 		}
 	}
 
@@ -173,17 +182,17 @@ func (m TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool)
 
 // Diff is a function that returns a map of target names with metric names that are absent in
 // current target but appear in another targets.
-func (m TriggerMetrics) Diff(declaredAloneMetrics map[string]bool) map[string]map[string]bool {
-	result := make(map[string]map[string]bool)
+func (m TriggerMetrics) Diff(declaredAloneMetrics setᐸstringᐳ) map[string]setᐸstringᐳ {
+	result := make(map[string]setᐸstringᐳ)
 
 	if len(m) == 0 {
 		return result
 	}
 
-	fullMetrics := make(setHelper)
+	fullMetrics := make(setᐸstringᐳ)
 
 	for targetName, targetMetrics := range m {
-		if declaredAloneMetrics[targetName] {
+		if declaredAloneMetrics.Contains(targetName) {
 			continue
 		}
 		currentMetrics := newSetHelperFromTriggerTargetMetrics(targetMetrics)
@@ -192,7 +201,7 @@ func (m TriggerMetrics) Diff(declaredAloneMetrics map[string]bool) map[string]ma
 
 	for targetName, targetMetrics := range m {
 		metricsSet := newSetHelperFromTriggerTargetMetrics(targetMetrics)
-		if declaredAloneMetrics[targetName] {
+		if declaredAloneMetrics.Contains(targetName) {
 			continue
 		}
 		diff := metricsSet.diff(fullMetrics)
