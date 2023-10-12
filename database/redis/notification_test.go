@@ -374,14 +374,14 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 			"test1": {},
 			"test2": {},
 		},
-		LastSuccessfulCheckTimestamp: 110,
+		Timestamp: 110,
 	}, moira.TriggerSourceNotSet)
 
 	_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"test1": {},
 		},
-		LastSuccessfulCheckTimestamp: 110,
+		Timestamp: 110,
 	}, moira.TriggerSourceNotSet)
 
 	Convey("notificationsCount in db", t, func() {
@@ -500,7 +500,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 						"test1": {},
 						"test2": {},
 					},
-					LastSuccessfulCheckTimestamp: 110,
+					Timestamp: 110,
 				}, moira.TriggerSourceNotSet)
 			}()
 
@@ -522,7 +522,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 						Maintenance: 130,
 					},
 				},
-				LastSuccessfulCheckTimestamp: 110,
+				Timestamp: 110,
 			}, moira.TriggerSourceNotSet)
 			defer func() {
 				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
@@ -530,7 +530,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 						"test1": {},
 						"test2": {},
 					},
-					LastSuccessfulCheckTimestamp: 110,
+					Timestamp: 110,
 				}, moira.TriggerSourceNotSet)
 			}()
 
@@ -554,8 +554,8 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 					"test1": {},
 					"test2": {},
 				},
-				Maintenance:                  130,
-				LastSuccessfulCheckTimestamp: 110,
+				Maintenance: 130,
+				Timestamp:   110,
 			}, moira.TriggerSourceNotSet)
 			defer func() {
 				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
@@ -563,7 +563,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 						"test1": {},
 						"test2": {},
 					},
-					LastSuccessfulCheckTimestamp: 110,
+					Timestamp: 110,
 				}, moira.TriggerSourceNotSet)
 			}()
 
@@ -696,14 +696,14 @@ func TestFetchNotificationsNoLimit(t *testing.T) {
 			"test1": {},
 			"test2": {},
 		},
-		LastSuccessfulCheckTimestamp: 110,
+		Timestamp: 110,
 	}, moira.TriggerSourceNotSet)
 
 	_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"test1": {},
 		},
-		LastSuccessfulCheckTimestamp: 110,
+		Timestamp: 110,
 	}, moira.TriggerSourceNotSet)
 
 	Convey("fetchNotificationsNoLimit manipulation", t, func() {
@@ -803,7 +803,7 @@ func TestFetchNotificationsNoLimit(t *testing.T) {
 						"test1": {},
 						"test2": {},
 					},
-					LastSuccessfulCheckTimestamp: 110,
+					Timestamp: 110,
 				}, moira.TriggerSourceNotSet)
 			}()
 
@@ -825,7 +825,7 @@ func TestFetchNotificationsNoLimit(t *testing.T) {
 						Maintenance: 130,
 					},
 				},
-				LastSuccessfulCheckTimestamp: 110,
+				Timestamp: 110,
 			}, moira.TriggerSourceNotSet)
 			defer func() {
 				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
@@ -833,7 +833,7 @@ func TestFetchNotificationsNoLimit(t *testing.T) {
 						"test1": {},
 						"test2": {},
 					},
-					LastSuccessfulCheckTimestamp: 110,
+					Timestamp: 110,
 				}, moira.TriggerSourceNotSet)
 			}()
 
@@ -856,15 +856,15 @@ func TestFetchNotificationsNoLimit(t *testing.T) {
 				Metrics: map[string]moira.MetricState{
 					"test1": {},
 				},
-				Maintenance:                  130,
-				LastSuccessfulCheckTimestamp: 110,
+				Maintenance: 130,
+				Timestamp:   110,
 			}, moira.TriggerSourceNotSet)
 			defer func() {
 				_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
 					Metrics: map[string]moira.MetricState{
 						"test1": {},
 					},
-					LastSuccessfulCheckTimestamp: 110,
+					Timestamp: 110,
 				}, moira.TriggerSourceNotSet)
 			}()
 
