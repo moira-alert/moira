@@ -253,6 +253,7 @@ func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moi
 validateNotifications filters notifications into delayed and not delayed,
 then validates the delayed ones - checks that:
   - the trigger for which the notification was generated has not been deleted
+    otherwise removes the notification
   - if the metric is on Maintenance, ignores the notification
   - if the trigger is on Maintenance, ignores the notification
 
@@ -430,7 +431,7 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 	// ZRANGEBYSCORE with LIMIT may return not all notifications with last timestamp
 	// (e.g. we have notifications with timestamps [1, 2, 3, 3, 3] and limit = 3,
 	// we will get [1, 2, 3]), then limit notifications by last timestamp and return and delete
-	// valid notifications with our new timestamp
+	// valid notifications with our new timestamp [1, 2]
 
 	notificationsLimited := limitNotifications(notifications)
 	lastTs := notificationsLimited[len(notificationsLimited)-1].Timestamp

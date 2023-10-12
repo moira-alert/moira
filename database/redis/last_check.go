@@ -177,6 +177,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 	if triggerMaintenance != nil {
 		moira.SetMaintenanceUserAndTime(&lastCheck, *triggerMaintenance, userLogin, timeCallMaintenance)
 	}
+	connector.logger.Debug().Interface("last_check", lastCheck).Msg("New last check after setting maintenance")
 	newLastCheck, err := json.Marshal(lastCheck)
 	if err != nil {
 		return err

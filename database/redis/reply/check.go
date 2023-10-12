@@ -119,12 +119,9 @@ func Checks(rep []*redis.StringCmd) ([]*moira.CheckData, error) {
 				if err != database.ErrNil {
 					return nil, err
 				}
-				checks[i] = nil
 			} else {
 				checks[i] = &check
 			}
-		} else {
-			checks[i] = nil
 		}
 	}
 	return checks, nil

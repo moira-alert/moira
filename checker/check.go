@@ -390,7 +390,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(
 		Msg("Metric TTL expired for state")
 
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
-		if metricLastState.Maintenance != 0 && lastCheckTimeStamp <= metricLastState.Maintenance {
+		if metricLastState.Maintenance != 0 && lastCheckTimeStamp < metricLastState.Maintenance {
 			metricLastState.DeletedButKept = true
 			return false, &metricLastState
 		}
