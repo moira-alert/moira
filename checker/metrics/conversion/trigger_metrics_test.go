@@ -307,7 +307,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 		name                 string
 		m                    TriggerMetrics
 		declaredAloneMetrics map[string]bool
-		want                 map[string]map[string]bool
+		want                 map[string]setᐸstringᐳ
 	}{
 		{
 			name: "all targets have same metrics",
@@ -324,7 +324,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]map[string]bool{},
+			want:                 map[string]setᐸstringᐳ{},
 		},
 		{
 			name: "one target have missed metric",
@@ -340,7 +340,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]map[string]bool{"t2": {"metric.test.3": true}},
+			want:                 map[string]setᐸstringᐳ{"t2": {"metric.test.3": void}},
 		},
 		{
 			name: "one target is alone metric",
@@ -355,7 +355,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{"t2": true},
-			want:                 map[string]map[string]bool{},
+			want:                 map[string]setᐸstringᐳ{},
 		},
 		{
 			name: "another target have missed metric",
@@ -373,7 +373,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]map[string]bool{"t1": {"metric.test.4": true}},
+			want:                 map[string]setᐸstringᐳ{"t1": {"metric.test.4": void}},
 		},
 		{
 			name: "one target is empty",
@@ -387,11 +387,11 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want: map[string]map[string]bool{"t1": {
-				"metric.test.1": true,
-				"metric.test.2": true,
-				"metric.test.3": true,
-				"metric.test.4": true,
+			want: map[string]setᐸstringᐳ{"t1": {
+				"metric.test.1": void,
+				"metric.test.2": void,
+				"metric.test.3": void,
+				"metric.test.4": void,
 			}},
 		},
 		{
@@ -419,18 +419,18 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want: map[string]map[string]bool{
+			want: map[string]setᐸstringᐳ{
 				"t1": {
-					"metric.test.1": true,
+					"metric.test.1": void,
 				},
 				"t2": {
-					"metric.test.2": true,
+					"metric.test.2": void,
 				},
 				"t3": {
-					"metric.test.3": true,
+					"metric.test.3": void,
 				},
 				"t4": {
-					"metric.test.4": true,
+					"metric.test.4": void,
 				},
 			},
 		},
