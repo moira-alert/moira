@@ -376,8 +376,8 @@ func TestTrigger_IsSimple(t *testing.T) {
 func TestCheckData_IsTriggerOnMaintenance(t *testing.T) {
 	Convey("IsTriggerOnMaintenance manipulations", t, func() {
 		checkData := &CheckData{
-			Maintenance:                  120,
-			LastSuccessfulCheckTimestamp: 100,
+			Maintenance: 120,
+			Timestamp:   100,
 		}
 
 		Convey("Test with trigger check Maintenance more than last check timestamp", func() {
@@ -386,9 +386,9 @@ func TestCheckData_IsTriggerOnMaintenance(t *testing.T) {
 		})
 
 		Convey("Test with trigger check Maintenance less than last check timestamp", func() {
-			checkData.LastSuccessfulCheckTimestamp = 150
+			checkData.Timestamp = 150
 			defer func() {
-				checkData.LastSuccessfulCheckTimestamp = 100
+				checkData.Timestamp = 100
 			}()
 
 			actual := checkData.IsTriggerOnMaintenance()
@@ -406,7 +406,7 @@ func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
 				},
 				"test2": {},
 			},
-			LastSuccessfulCheckTimestamp: 100,
+			Timestamp: 100,
 		}
 
 		Convey("Test with a metric that is not in the trigger", func() {
@@ -425,9 +425,9 @@ func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
 		})
 
 		Convey("Test with the metric that is in the trigger, but the last successful check of the trigger is more than Maintenance", func() {
-			checkData.LastSuccessfulCheckTimestamp = 120
+			checkData.Timestamp = 120
 			defer func() {
-				checkData.LastSuccessfulCheckTimestamp = 100
+				checkData.Timestamp = 100
 			}()
 
 			actual := checkData.IsMetricOnMaintenance("test1")

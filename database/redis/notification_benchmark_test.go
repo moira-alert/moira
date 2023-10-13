@@ -10,13 +10,6 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
-var TestCases map[string]int = map[string]int{
-	"With 100 notifications":   100,
-	"With 1000 notifications":  1000,
-	"With 10000 notifications": 10000,
-	"With 50000 notifications": 50000,
-}
-
 func BenchmarkFetchNotificationsWithoutLimit(b *testing.B) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := redis.NewTestDatabase(logger)
@@ -119,12 +112,6 @@ func BenchmarkFetchNotificationsWithoutLimit(b *testing.B) {
 // 	}
 // }
 
-func addNotifications(dataBase *redis.DbConnector, notifications []moira.ScheduledNotification) {
-	for _, notification := range notifications {
-		dataBase.AddNotification(&notification) // nolint
-	}
-}
-
 // func BenchmarkFetchNotificationsWithLimit(b *testing.B) {
 // 	logger, _ := logging.GetLogger("dataBase")
 // 	dataBase := redis.NewTestDatabase(logger)
@@ -226,23 +213,3 @@ func addNotifications(dataBase *redis.DbConnector, notifications []moira.Schedul
 // 		})
 // 	}
 // }
-
-func getDelayedNotification(n int) moira.ScheduledNotification {
-	return moira.ScheduledNotification{
-		Trigger: moira.TriggerData{
-			ID: fmt.Sprintf("test%v", n),
-		},
-		Timestamp: 200,
-		CreatedAt: 100,
-	}
-}
-
-func getNotDelayedNotification() moira.ScheduledNotification {
-	return moira.ScheduledNotification{
-		Trigger: moira.TriggerData{
-			ID: "test",
-		},
-		Timestamp: 120,
-		CreatedAt: 100,
-	}
-}
