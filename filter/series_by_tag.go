@@ -42,7 +42,12 @@ type TagSpec struct {
 func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	var isTransformed = false
 
-	result := input
+	result := strings.ReplaceAll(input, ".", "\\.")
+
+	if strings.Contains(result, "*") {
+		result = strings.ReplaceAll(result, "*", ".*")
+		isTransformed = true
+	}
 
 	for {
 		matchedWildcardIndexes := wildcardExprRegex.FindStringSubmatchIndex(result)
@@ -62,11 +67,10 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 		isTransformed = true
 	}
 
-	if isTransformed {
-		result += "$"
+	if !isTransformed {
+		return input, false
 	}
-
-	return result, isTransformed
+	return "^" + result + "$", true
 }
 
 // ParseSeriesByTag parses seriesByTag pattern and returns tags specs
@@ -125,7 +129,7 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 type MatchingHandler func(string, map[string]string) bool
 
 // CreateMatchingHandlerForPattern creates function for matching by tag list
-func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandler) {
+func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string
 
@@ -133,7 +137,12 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
 			nameTagValue = tagSpec.Value
 		} else {
-			matchingHandlers = append(matchingHandlers, createMatchingHandlerForOneTag(tagSpec))
+			handler, err := createMatchingHandlerForOneTag(tagSpec, compatibility)
+			if err != nil {
+				return "", nil, err
+			}
+
+			matchingHandlers = append(matchingHandlers, handler)
 		}
 	}
 
@@ -146,12 +155,13 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 		return true
 	}
 
-	return nameTagValue, matchingHandler
+	return nameTagValue, matchingHandler, nil
 }
 
-func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
+func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) (MatchingHandler, error) {
 	var matchingHandlerCondition func(string) bool
 	allowMatchEmpty := false
+
 	switch spec.Operator {
 	case EqualOperator:
 		allowMatchEmpty = true
@@ -163,13 +173,24 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			return value != spec.Value
 		}
 	case MatchOperator:
-		allowMatchEmpty = true
-		matchRegex := regexp.MustCompile("^" + spec.Value)
+		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
+
+		matchRegex, err := newMatchRegex(spec.Value, compatibility)
+		if err != nil {
+			return nil, err
+		}
+
 		matchingHandlerCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
 		}
 	case NotMatchOperator:
-		matchRegex := regexp.MustCompile("^" + spec.Value)
+		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
+
+		matchRegex, err := newMatchRegex(spec.Value, compatibility)
+		if err != nil {
+			return nil, err
+		}
+
 		matchingHandlerCondition = func(value string) bool {
 			return !matchRegex.MatchString(value)
 		}
@@ -188,5 +209,19 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			return matchingHandlerCondition(value)
 		}
 		return allowMatchEmpty && matchEmpty
+	}, nil
+}
+
+func newMatchRegex(value string, compatibility *Compatibility) (*regexp.Regexp, error) {
+	if value == "*" {
+		value = ".*"
 	}
+
+	if !compatibility.AllowRegexLooseStartMatch {
+		value = "^" + value
+	}
+
+	matchRegex, err := regexp.Compile(value)
+
+	return matchRegex, err
 }

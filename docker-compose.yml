@@ -102,14 +102,14 @@ services:
     restart: always
 
   relay:
-    image: openmetric/carbon-c-relay
+    image: openitcockpit/carbon-c-relay
     ports:
       - "2003:2003"
     depends_on:
       - graphite
     volumes:
-      - ./local/relay.conf:/openmetric/conf/relay.conf
-    command: /usr/bin/relay -E -s -f /openmetric/conf/relay.conf
+      - ./local/relay.conf:/opt/carbon-c-relay/relay.conf
+    command: /opt/carbon-c-relay/bin/relay -E -s -f /opt/carbon-c-relay/relay.conf
     restart: always
 networks:
   balancer:
