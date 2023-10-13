@@ -1,0 +1,8 @@
+=== RUN   TestFetchNotificationsWithoutLimit
+2023/10/12 22:31:24 With 100 notifications: 0.001018736
+2023/10/12 22:31:25 With 1000 notifications: 0.001813473
+2023/10/12 22:31:32 With 10000 notifications: 0.008610751
+2023/10/12 22:32:10 With 50000 notifications: 0.0418285
+--- PASS: TestFetchNotificationsWithoutLimit (45.82s)
+PASS
+ok  	command-line-arguments	45.832s

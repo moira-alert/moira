@@ -1,0 +1,7 @@
+=== RUN   TestFetchNotificationsWithoutLimit
+2023/10/13 17:18:06 With 100 notifications: average 0.00046935710000000003 in seconds
+2023/10/13 17:18:10 With 1000 notifications: average 0.0004260249 in seconds
+2023/10/13 17:18:51 With 10000 notifications: average 0.0005008650999999999 in seconds
+--- PASS: TestFetchNotificationsWithoutLimit (45.63s)
+PASS
+ok  	command-line-arguments	45.649s
