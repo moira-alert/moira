@@ -199,7 +199,6 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 	Convey("Populate", t, func() {
 		for _, testCase := range tests {
 			Convey(testCase.name, func() {
-
 				actual := testCase.triggerMetrics.Populate(
 					testCase.args.lastCheck,
 					testCase.args.declaredAloneMetrics,
