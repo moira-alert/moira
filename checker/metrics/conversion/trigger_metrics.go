@@ -182,14 +182,14 @@ func (m TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool)
 
 // Diff is a function that returns a map of target names with metric names that are absent in
 // current target but appear in another targets.
-func (m TriggerMetrics) Diff(declaredAloneMetrics setᐸstringᐳ) map[string]setᐸstringᐳ {
-	result := make(map[string]setᐸstringᐳ)
+func (m TriggerMetrics) Diff(declaredAloneMetrics set[string]) map[string]set[string] {
+	result := make(map[string]set[string])
 
 	if len(m) == 0 {
 		return result
 	}
 
-	fullMetrics := make(setᐸstringᐳ)
+	fullMetrics := make(set[string])
 
 	for targetName, targetMetrics := range m {
 		if declaredAloneMetrics.Contains(targetName) {

@@ -38,7 +38,7 @@ func (m FetchedTargetMetrics) CleanWildcards() FetchedTargetMetrics {
 // the same name and returns new FetchedPatternMetrics without duplicates and slice of duplicated metrics names.
 func (m FetchedTargetMetrics) Deduplicate() (FetchedTargetMetrics, []string) {
 	deduplicated := NewFetchedTargetMetricsWithCapacity(len(m))
-	collectedNames := make(setᐸstringᐳ, len(m))
+	collectedNames := make(set[string], len(m))
 	var duplicates []string
 	for _, metric := range m {
 		if collectedNames.Contains(metric.Name) {

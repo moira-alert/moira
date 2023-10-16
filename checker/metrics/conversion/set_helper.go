@@ -2,22 +2,22 @@ package conversion
 
 var void struct{} = struct{}{}
 
-// setᐸstringᐳ is a map that represents a set of strings with corresponding methods.
-type setᐸstringᐳ map[string]struct{}
+// set[string] is a map that represents a set of strings with corresponding methods.
+type set[K comparable] map[K]struct{}
 
-func (set setᐸstringᐳ) Contains(str string) bool {
+func (set set[K]) Contains(str K) bool {
 	_, ok := set[str]
 	return ok
 }
 
-func (set setᐸstringᐳ) Insert(str string) {
+func (set set[K]) Insert(str K) {
 	set[str] = void
 }
 
-func NewSet(set map[string]bool) setᐸstringᐳ {
-	res := make(setᐸstringᐳ, len(set))
+func NewSet[K comparable](value map[K]bool) set[K] {
+	res := make(set[K], len(value))
 
-	for k, v := range set {
+	for k, v := range value {
 		if v {
 			res.Insert(k)
 		}
@@ -27,8 +27,8 @@ func NewSet(set map[string]bool) setᐸstringᐳ {
 }
 
 // newSetHelperFromTriggerTargetMetrics is a constructor function for setHelper.
-func newSetHelperFromTriggerTargetMetrics(metrics TriggerTargetMetrics) setᐸstringᐳ {
-	result := make(setᐸstringᐳ, len(metrics))
+func newSetHelperFromTriggerTargetMetrics(metrics TriggerTargetMetrics) set[string] {
+	result := make(set[string], len(metrics))
 	for metricName := range metrics {
 		result[metricName] = void
 	}
@@ -37,8 +37,8 @@ func newSetHelperFromTriggerTargetMetrics(metrics TriggerTargetMetrics) setᐸst
 
 // diff is a set relative complement operation that returns a new set with elements
 // that appear only in second set.
-func (self setᐸstringᐳ) diff(other setᐸstringᐳ) setᐸstringᐳ {
-	result := make(setᐸstringᐳ, len(self))
+func (self set[string]) diff(other set[string]) set[string] {
+	result := make(set[string], len(self))
 
 	for metricName := range other {
 		if !self.Contains(metricName) {
@@ -50,8 +50,8 @@ func (self setᐸstringᐳ) diff(other setᐸstringᐳ) setᐸstringᐳ {
 }
 
 // union is a sets union operation that return a new set with elements from both sets.
-func (self setᐸstringᐳ) union(other setᐸstringᐳ) setᐸstringᐳ {
-	result := make(setᐸstringᐳ, len(self)+len(other))
+func (self set[string]) union(other set[string]) set[string] {
+	result := make(set[string], len(self)+len(other))
 
 	for metricName := range self {
 		result.Insert(metricName)

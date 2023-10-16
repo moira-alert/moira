@@ -307,7 +307,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 		name                 string
 		m                    TriggerMetrics
 		declaredAloneMetrics map[string]bool
-		want                 map[string]setᐸstringᐳ
+		want                 map[string]set[string]
 	}{
 		{
 			name: "all targets have same metrics",
@@ -324,7 +324,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]setᐸstringᐳ{},
+			want:                 map[string]set[string]{},
 		},
 		{
 			name: "one target have missed metric",
@@ -340,7 +340,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]setᐸstringᐳ{"t2": {"metric.test.3": void}},
+			want:                 map[string]set[string]{"t2": {"metric.test.3": void}},
 		},
 		{
 			name: "one target is alone metric",
@@ -355,7 +355,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{"t2": true},
-			want:                 map[string]setᐸstringᐳ{},
+			want:                 map[string]set[string]{},
 		},
 		{
 			name: "another target have missed metric",
@@ -373,7 +373,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]setᐸstringᐳ{"t1": {"metric.test.4": void}},
+			want:                 map[string]set[string]{"t1": {"metric.test.4": void}},
 		},
 		{
 			name: "one target is empty",
@@ -387,7 +387,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want: map[string]setᐸstringᐳ{"t1": {
+			want: map[string]set[string]{"t1": {
 				"metric.test.1": void,
 				"metric.test.2": void,
 				"metric.test.3": void,
@@ -419,7 +419,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want: map[string]setᐸstringᐳ{
+			want: map[string]set[string]{
 				"t1": {
 					"metric.test.1": void,
 				},
