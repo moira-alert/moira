@@ -36,7 +36,7 @@ func Test_newSetHelperFromTriggerTargetMetrics(t *testing.T) {
 	Convey("TriggerPatterMetrics", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
-				actual := newSetHelperFromTriggerTargetMetrics(tt.args.metrics)
+				actual := newSetFromTriggerTargetMetrics(tt.args.metrics)
 				So(actual, ShouldResemble, tt.want)
 			})
 		}

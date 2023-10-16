@@ -5,13 +5,13 @@ var void struct{} = struct{}{}
 // set[string] is a map that represents a set of strings with corresponding methods.
 type set[K comparable] map[K]struct{}
 
-func (set set[K]) Contains(str K) bool {
-	_, ok := set[str]
+func (set set[K]) Contains(key K) bool {
+	_, ok := set[key]
 	return ok
 }
 
-func (set set[K]) Insert(str K) {
-	set[str] = void
+func (set set[K]) Insert(key K) {
+	set[key] = void
 }
 
 func NewSet[K comparable](value map[K]bool) set[K] {
@@ -26,8 +26,8 @@ func NewSet[K comparable](value map[K]bool) set[K] {
 	return res
 }
 
-// newSetHelperFromTriggerTargetMetrics is a constructor function for setHelper.
-func newSetHelperFromTriggerTargetMetrics(metrics TriggerTargetMetrics) set[string] {
+// newSetFromTriggerTargetMetrics is a constructor function for setHelper.
+func newSetFromTriggerTargetMetrics(metrics TriggerTargetMetrics) set[string] {
 	result := make(set[string], len(metrics))
 	for metricName := range metrics {
 		result[metricName] = void
