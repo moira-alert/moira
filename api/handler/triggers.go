@@ -71,7 +71,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@success	200	{object}	dto.TriggersList				"Fetched unused triggers"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/trigger [get]
+//	@router		/trigger/unused [get]
 func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetUnusedTriggerIDs(database)
 	if errorResponse != nil {
@@ -288,14 +288,15 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 // nolint: gofmt,goimports
 //
 //	@summary	Delete triggers pager
+//	@id			delete-pager
 //	@tags		trigger
 //	@produce	json
-//	@param		pagerID	path		string									true	"Pager ID to delete"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		pagerID	query		string									false	"Pager ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200		{object}	dto.TriggersSearchResultDeleteResponse	"Successfully deleted pager"
 //	@failure	404		{object}	api.ErrorNotFoundExample				"Resource not found"
 //	@failure	422		{object}	api.ErrorRenderExample					"Render error"
 //	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error"
-//	@router		/trigger/pagers/{pagerID} [delete]
+//	@router		/trigger/search/pager [delete]
 func deletePager(writer http.ResponseWriter, request *http.Request) {
 	pagerID := middleware.GetPagerID(request)
 
