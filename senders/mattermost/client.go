@@ -1,10 +1,14 @@
 package mattermost
 
-import "github.com/mattermost/mattermost-server/v6/model"
+import (
+	"context"
+
+	"github.com/mattermost/mattermost/server/public/model"
+)
 
 // Client is abstraction over model.Client4.
 type Client interface {
 	SetToken(token string)
-	CreatePost(post *model.Post) (*model.Post, *model.Response, error)
-	UploadFile(data []byte, channelId string, filename string) (*model.FileUploadResponse, *model.Response, error)
+	CreatePost(ctx context.Context, post *model.Post) (*model.Post, *model.Response, error)
+	UploadFile(ctx context.Context, data []byte, channelId string, filename string) (*model.FileUploadResponse, *model.Response, error)
 }
