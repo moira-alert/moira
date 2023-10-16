@@ -291,7 +291,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@id			delete-pager
 //	@tags		trigger
 //	@produce	json
-//	@param		pagerID	query		string									false	"Pager ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)	true	"Pager ID to delete"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		pagerID	query		string									false	"Pager ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200		{object}	dto.TriggersSearchResultDeleteResponse	"Successfully deleted pager"
 //	@failure	404		{object}	api.ErrorNotFoundExample				"Resource not found"
 //	@failure	422		{object}	api.ErrorRenderExample					"Render error"
