@@ -1,12 +1,13 @@
 package mattermost
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/moira-alert/moira"
 
@@ -33,7 +34,7 @@ func TestSendEvents(t *testing.T) {
 		Convey("When client return error, SendEvents should return error", func() {
 			ctrl := gomock.NewController(t)
 			client := mock.NewMockClient(ctrl)
-			client.EXPECT().CreatePost(gomock.Any()).Return(nil, nil, errors.New(""))
+			client.EXPECT().CreatePost(context.Background(), gomock.Any()).Return(nil, nil, errors.New(""))
 			sender.client = client
 
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
@@ -44,7 +45,7 @@ func TestSendEvents(t *testing.T) {
 		Convey("When client CreatePost is success and no plots, SendEvents should not return error", func() {
 			ctrl := gomock.NewController(t)
 			client := mock.NewMockClient(ctrl)
-			client.EXPECT().CreatePost(gomock.Any()).Return(&model.Post{Id: "postID"}, nil, nil)
+			client.EXPECT().CreatePost(context.Background(), gomock.Any()).Return(&model.Post{Id: "postID"}, nil, nil)
 			sender.client = client
 
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
@@ -55,8 +56,8 @@ func TestSendEvents(t *testing.T) {
 		Convey("When client CreatePost is success and have succeeded sent plots, SendEvents should not return error", func() {
 			ctrl := gomock.NewController(t)
 			client := mock.NewMockClient(ctrl)
-			client.EXPECT().CreatePost(gomock.Any()).Return(&model.Post{Id: "postID"}, nil, nil).Times(2)
-			client.EXPECT().UploadFile(gomock.Any(), "contactDataID", "triggerID.png").
+			client.EXPECT().CreatePost(context.Background(), gomock.Any()).Return(&model.Post{Id: "postID"}, nil, nil).Times(2)
+			client.EXPECT().UploadFile(context.Background(), gomock.Any(), "contactDataID", "triggerID.png").
 				Return(
 					&model.FileUploadResponse{
 						FileInfos: []*model.FileInfo{{Id: "fileID"}},
