@@ -155,6 +155,36 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 	return total, nil
 }
 
+func (connector *DbConnector) removeNotificationsForTest(ctx context.Context, pipe redis.Pipeliner, notifications []*moira.ScheduledNotification, name string) (int64, error) {
+	if len(notifications) == 0 {
+		return 0, nil
+	}
+
+	for _, notification := range notifications {
+		notificationString, err := reply.GetNotificationBytes(*notification)
+		if err != nil {
+			return 0, err
+		}
+		if name == "notifier-3" {
+			time.Sleep(600 * time.Millisecond)
+		}
+		pipe.ZRem(ctx, notifierNotificationsKey, notificationString)
+	}
+	response, err := pipe.Exec(ctx)
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to remove notifier-notification: %s", err.Error())
+	}
+
+	total := int64(0)
+	for _, val := range response {
+		intVal, _ := val.(*redis.IntCmd).Result()
+		total += intVal
+	}
+
+	return total, nil
+}
+
 // GetDelayedTimeInSeconds returns the time, if the difference between notification
 // creation and sending time is greater than this time, the notification will be considered delayed
 func (connector *DbConnector) GetDelayedTimeInSeconds() int64 {
@@ -324,7 +354,7 @@ func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moi
 			return res, nil
 		}
 
-		if !errors.As(err, &transactionError{}) {
+		if !errors.Is(err, &transactionError{}) {
 			return nil, err
 		}
 
@@ -364,7 +394,7 @@ func (connector *DbConnector) FetchNotificationsForTest(wg *sync.WaitGroup, to i
 			Interface("transaction_timeout", connector.TransactionTimeout).
 			Interface("name", name).
 			Msg("Transaction timeout")
-		time.Sleep(connector.TransactionTimeout) //nolint
+		time.Sleep(connector.TransactionTimeout)
 	}
 
 	return nil, fmt.Errorf("transaction tries limit exceeded")
@@ -452,8 +482,10 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 
 	err := c.Watch(ctx, func(tx *redis.Tx) error {
 		notifications, err := getNotificationsInTxWithLimit(ctx, tx, to, limit)
-		if err != nil {
+		if err != nil && err != redis.TxFailedErr {
 			return fmt.Errorf("failed to get notifications with limit in transaction: %w", err)
+		} else if err == redis.TxFailedErr {
+			return &transactionError{}
 		}
 
 		if len(notifications) == 0 {
@@ -475,7 +507,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 		}
 		result = validNotifications
 
-		_, err = tx.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 			var deleteCount int64
 			deleteCount, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications)
 
@@ -549,13 +581,14 @@ func (connector *DbConnector) fetchNotificationsDoForTest(to int64, limit *int64
 		}
 		result = validNotifications
 
-		// if name == "notifier-3" || name == "notifier-2" {
-		// 	time.Sleep(220 * time.Millisecond)
+		// if name == "notifier-1" || name == "notifier-2" {
+		// 	time.Sleep(150 * time.Millisecond)
 		// }
+		//time.Sleep(150 * time.Millisecond)
 
-		_, err = tx.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 			var deleteCount int64
-			deleteCount, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications)
+			deleteCount, err = connector.removeNotificationsForTest(ctx, pipe, toRemoveNotifications, name)
 
 			// someone has changed notifierNotificationsKey while we do our job
 			// and transaction fail (no notifications were deleted) :(
