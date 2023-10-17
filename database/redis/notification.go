@@ -352,8 +352,10 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 	// it is necessary to do these operations in one transaction to avoid data race
 	err := c.Watch(ctx, func(tx *redis.Tx) error {
 		notifications, err := getNotificationsInTxWithLimit(ctx, tx, to, limit)
-		if err != nil {
+		if err != nil && err != redis.TxFailedErr {
 			return fmt.Errorf("failed to get notifications with limit in transaction: %w", err)
+		} else if err == redis.TxFailedErr {
+			return &transactionError{}
 		}
 
 		if len(notifications) == 0 {
@@ -375,7 +377,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 		}
 		result = validNotifications
 
-		_, err = tx.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 			var deleteCount int64
 			deleteCount, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications)
 
