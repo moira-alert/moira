@@ -267,7 +267,7 @@ func TestReplaceSubstring(t *testing.T) {
 
 type myInt int
 
-func (m myInt) Less(other Lesser) (bool, error) {
+func (m myInt) Less(other Comparable) (bool, error) {
 	otherInt := other.(myInt)
 	return m < otherInt, nil
 }
@@ -276,7 +276,7 @@ type myTest struct {
 	value int
 }
 
-func (test myTest) Less(other Lesser) (bool, error) {
+func (test myTest) Less(other Comparable) (bool, error) {
 	otherTest := other.(myTest)
 	return test.value < otherTest.value, nil
 }
@@ -284,31 +284,31 @@ func (test myTest) Less(other Lesser) (bool, error) {
 func TestMerge(t *testing.T) {
 	Convey("Test Merge function", t, func() {
 		Convey("Test with two nil arrays", func() {
-			merged, err := Merge[myInt](nil, nil)
+			merged, err := MergeToSorted[myInt](nil, nil)
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{})
 		})
 
 		Convey("Test with one nil array", func() {
-			merged, err := Merge[myInt](nil, []myInt{1, 2, 3})
+			merged, err := MergeToSorted[myInt](nil, []myInt{1, 2, 3})
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{1, 2, 3})
 		})
 
 		Convey("Test with two arrays", func() {
-			merged, err := Merge[myInt]([]myInt{4, 5}, []myInt{1, 2, 3})
+			merged, err := MergeToSorted[myInt]([]myInt{4, 5}, []myInt{1, 2, 3})
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{1, 2, 3, 4, 5})
 		})
 
 		Convey("Test with empty array", func() {
-			merged, err := Merge[myInt]([]myInt{-4, 5}, []myInt{})
+			merged, err := MergeToSorted[myInt]([]myInt{-4, 5}, []myInt{})
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{-4, 5})
 		})
 
 		Convey("Test with sorted values but mixed up", func() {
-			merged, err := Merge[myInt]([]myInt{1, 9, 10}, []myInt{4, 8, 12})
+			merged, err := MergeToSorted[myInt]([]myInt{1, 9, 10}, []myInt{4, 8, 12})
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{1, 4, 8, 9, 10, 12})
 		})
@@ -333,7 +333,7 @@ func TestMerge(t *testing.T) {
 			}
 
 			expected := append(arr2, arr1...)
-			merged, err := Merge[myTest](arr1, arr2)
+			merged, err := MergeToSorted[myTest](arr1, arr2)
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, expected)
 		})
