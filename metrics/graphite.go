@@ -30,11 +30,11 @@ func NewGraphiteRegistry(config GraphiteRegistryConfig, serviceName string) (*Gr
 	if config.Enabled {
 		address, err := net.ResolveTCPAddr("tcp", config.URI)
 		if err != nil {
-			return nil, fmt.Errorf("can't resolve graphiteURI %s: %s", config.URI, err)
+			return nil, fmt.Errorf("can't resolve graphiteURI %s: %w", config.URI, err)
 		}
 		prefix, err := initPrefix(config.Prefix)
 		if err != nil {
-			return nil, fmt.Errorf("can't get OS hostname %s: %s", config.Prefix, err)
+			return nil, fmt.Errorf("can't get OS hostname %s: %w", config.Prefix, err)
 		}
 		if config.RuntimeStats {
 			goMetrics.RegisterRuntimeMemStats(registry)
