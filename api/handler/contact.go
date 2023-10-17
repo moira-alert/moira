@@ -176,7 +176,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 //	@router		/contact/{contactID} [delete]
 func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
-	err := controller.RemoveContact(database, contactData.ID, contactData.User, "")
+	err := controller.RemoveContact(database, contactData.ID, contactData.User, contactData.Team)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 	}
