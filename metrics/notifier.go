@@ -12,6 +12,7 @@ type NotifierMetrics struct {
 	SendersFailedMetrics           MetersCollection
 	PlotsBuildDurationMs           Histogram
 	PlotsEvaluateTriggerDurationMs Histogram
+	FetchNotificationsDurationMs   Histogram
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator
@@ -27,5 +28,6 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		SendersFailedMetrics:           NewMetersCollection(registry),
 		PlotsBuildDurationMs:           registry.NewHistogram("plots", "build", "duration", "ms"),
 		PlotsEvaluateTriggerDurationMs: registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
+		FetchNotificationsDurationMs:   registry.NewHistogram("fetch", "notifications", "duration", "ms"),
 	}
 }

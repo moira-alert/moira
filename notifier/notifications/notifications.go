@@ -8,6 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
 )
 
@@ -18,6 +19,7 @@ type FetchNotificationsWorker struct {
 	Logger   moira.Logger
 	Database moira.Database
 	Notifier notifier.Notifier
+	Metrics  *metrics.NotifierMetrics
 	tomb     tomb.Tomb
 }
 
@@ -63,14 +65,18 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	if err != nil {
 		return notifierInBadStateError("can't get current notifier state")
 	}
+
 	if state != moira.SelfStateOK {
 		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
 	}
-	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
 
+	fetchNotificationsStartTime := time.Now()
+	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
 	if err != nil {
 		return err
 	}
+	worker.Metrics.FetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
+
 	notificationPackages := make(map[string]*notifier.NotificationPackage)
 	for _, notification := range notifications {
 		packageKey := fmt.Sprintf("%s:%s:%s", notification.Contact.Type, notification.Contact.Value, notification.Event.TriggerID)
