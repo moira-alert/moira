@@ -45,20 +45,23 @@ type RedisConfig struct {
 	WriteTimeout string `yaml:"write_timeout"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
+	// TransactionTimeout defines the timeout between transactions
+	TransactionTimeout string `yaml:"transaction_timeout"`
 }
 
 // GetSettings returns redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 	return redis.DatabaseConfig{
-		MasterName:   config.MasterName,
-		Addrs:        strings.Split(config.Addrs, ","),
-		Username:     config.Username,
-		Password:     config.Password,
-		MaxRetries:   config.MaxRetries,
-		MetricsTTL:   to.Duration(config.MetricsTTL),
-		DialTimeout:  to.Duration(config.DialTimeout),
-		ReadTimeout:  to.Duration(config.ReadTimeout),
-		WriteTimeout: to.Duration(config.WriteTimeout),
+		MasterName:         config.MasterName,
+		Addrs:              strings.Split(config.Addrs, ","),
+		Username:           config.Username,
+		Password:           config.Password,
+		MaxRetries:         config.MaxRetries,
+		MetricsTTL:         to.Duration(config.MetricsTTL),
+		DialTimeout:        to.Duration(config.DialTimeout),
+		ReadTimeout:        to.Duration(config.ReadTimeout),
+		WriteTimeout:       to.Duration(config.WriteTimeout),
+		TransactionTimeout: to.Duration(config.TransactionTimeout),
 	}
 }
 
@@ -81,7 +84,7 @@ func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.
 
 // NotificationConfig is a config that stores the time after which notifications should be considered delayed
 type NotificationConfig struct {
-	// Need to determine if notification is delayed - the difference between creation time and sending time is greater than delayedTime
+	// Need to determine if notification is delayed - the difference between creation time and sending time is greater than DelayedTime
 	DelayedTime string `yaml:"delayed_time"`
 }
 

@@ -1,6 +1,7 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
+  transaction_timeout: 200ms
 log_file: stdout
 log_level: debug
 log_pretty_format: true
