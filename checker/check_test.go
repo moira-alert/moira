@@ -974,6 +974,54 @@ func TestCheck(t *testing.T) {
 	})
 }
 
+func TestCheckWithNoMetrics(t *testing.T) {
+	logger, _ := logging.GetLogger("Test")
+	metricsToCheck := map[string]map[string]metricSource.MetricData{}
+
+	Convey("given triggerChecker.check is called with empty metric map", t, func() {
+		warnValue := float64(10)
+		errValue := float64(20)
+		pattern := "super.puper.pattern"
+		ttl := int64(600)
+
+		lastCheck := moira.CheckData{
+			Metrics:   make(map[string]moira.MetricState),
+			State:     moira.StateNODATA,
+			Timestamp: 66,
+		}
+
+		triggerChecker := TriggerChecker{
+			triggerID: "SuperId",
+			logger:    logger,
+			config:    &Config{},
+			from:      3617,
+			until:     3667,
+			ttl:       ttl,
+			ttlState:  moira.TTLStateNODATA,
+			trigger: &moira.Trigger{
+				ErrorValue:  &errValue,
+				WarnValue:   &warnValue,
+				TriggerType: moira.RisingTrigger,
+				Targets:     []string{pattern},
+				Patterns:    []string{pattern},
+			},
+			lastCheck: &lastCheck,
+		}
+		aloneMetrics := map[string]metricSource.MetricData{}
+		checkData := newCheckData(&lastCheck, triggerChecker.until)
+		newCheckData, err := triggerChecker.check(metricsToCheck, aloneMetrics, checkData, logger)
+
+		So(err, ShouldBeNil)
+		So(newCheckData, ShouldResemble, moira.CheckData{
+			Metrics:                 map[string]moira.MetricState{},
+			MetricsToTargetRelation: map[string]string{},
+			Timestamp:               triggerChecker.until,
+			State:                   moira.StateNODATA,
+			Score:                   0,
+		})
+	})
+}
+
 func TestIgnoreNodataToOk(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("Test")

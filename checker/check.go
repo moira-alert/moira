@@ -300,6 +300,9 @@ func (triggerChecker *TriggerChecker) check(
 ) (moira.CheckData, error) {
 	// Case when trigger have only alone metrics
 	if len(metrics) == 0 {
+		if len(aloneMetrics) == 0 {
+			return checkData, nil
+		}
 		if metrics == nil {
 			metrics = make(map[string]map[string]metricSource.MetricData, 1)
 		}
