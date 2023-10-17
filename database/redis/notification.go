@@ -269,11 +269,11 @@ func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moi
 			return res, nil
 		}
 
-		if !errors.As(err, &transactionError{}) {
+		if !errors.Is(err, &transactionError{}) {
 			return nil, err
 		}
 
-		time.Sleep(connector.TransactionTimeout) //nolint
+		time.Sleep(connector.TransactionTimeout)
 	}
 
 	return nil, fmt.Errorf("transaction tries limit exceeded")
