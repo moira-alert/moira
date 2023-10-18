@@ -1,37 +1,64 @@
 package conversion
 
-// setHelper is a map that represents a set of strings with corresponding methods.
-type setHelper map[string]bool
+var void struct{} = struct{}{}
 
-// newSetHelperFromTriggerTargetMetrics is a constructor function for setHelper.
-func newSetHelperFromTriggerTargetMetrics(metrics TriggerTargetMetrics) setHelper {
-	result := make(setHelper, len(metrics))
+// set[string] is a map that represents a set of strings with corresponding methods.
+type set[K comparable] map[K]struct{}
+
+func (set set[K]) contains(key K) bool {
+	_, ok := set[key]
+	return ok
+}
+
+func (set set[K]) insert(key K) {
+	set[key] = void
+}
+
+func newSet[K comparable](value map[K]bool) set[K] {
+	res := make(set[K], len(value))
+
+	for k, v := range value {
+		if v {
+			res.insert(k)
+		}
+	}
+
+	return res
+}
+
+// newSetFromTriggerTargetMetrics is a constructor function for setHelper.
+func newSetFromTriggerTargetMetrics(metrics TriggerTargetMetrics) set[string] {
+	result := make(set[string], len(metrics))
 	for metricName := range metrics {
-		result[metricName] = true
+		result.insert(metricName)
 	}
 	return result
 }
 
 // diff is a set relative complement operation that returns a new set with elements
 // that appear only in second set.
-func (h setHelper) diff(other setHelper) setHelper {
-	result := make(setHelper, len(h))
+func (self set[string]) diff(other set[string]) set[string] {
+	result := make(set[string], len(self))
+
 	for metricName := range other {
-		if _, ok := h[metricName]; !ok {
-			result[metricName] = true
+		if !self.contains(metricName) {
+			result.insert(metricName)
 		}
 	}
+
 	return result
 }
 
 // union is a sets union operation that return a new set with elements from both sets.
-func (h setHelper) union(other setHelper) setHelper {
-	result := make(setHelper, len(h)+len(other))
-	for metricName := range h {
-		result[metricName] = true
+func (self set[string]) union(other set[string]) set[string] {
+	result := make(set[string], len(self)+len(other))
+
+	for metricName := range self {
+		result.insert(metricName)
 	}
 	for metricName := range other {
-		result[metricName] = true
+		result.insert(metricName)
 	}
+
 	return result
 }
