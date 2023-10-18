@@ -47,7 +47,6 @@ type DbConnector struct {
 	clock                moira.Clock
 	notificationHistory  NotificationHistoryConfig
 	notification         NotificationConfig
-	TransactionTimeout   time.Duration
 }
 
 func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {
@@ -81,7 +80,6 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		clock:                clock.NewSystemClock(),
 		notificationHistory:  nh,
 		notification:         n,
-		TransactionTimeout:   config.TransactionTimeout,
 	}
 
 	return &connector
@@ -90,15 +88,16 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger, DatabaseConfig{
-		Addrs:              []string{"0.0.0.0:6379"},
-		TransactionTimeout: 200 * time.Millisecond,
+		Addrs: []string{"0.0.0.0:6379"},
 	},
 		NotificationHistoryConfig{
 			NotificationHistoryTTL:        time.Hour * 48,
 			NotificationHistoryQueryLimit: 1000,
 		},
 		NotificationConfig{
-			DelayedTime: time.Minute,
+			DelayedTime:           time.Minute,
+			TransactionTimeout:    200 * time.Millisecond,
+			TransactionMaxRetries: 10,
 		},
 		testSource)
 }
@@ -112,7 +111,9 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 			NotificationHistoryQueryLimit: 1000,
 		},
 		NotificationConfig{
-			DelayedTime: time.Minute,
+			DelayedTime:           time.Minute,
+			TransactionTimeout:    200 * time.Millisecond,
+			TransactionMaxRetries: 10,
 		},
 		testSource)
 }

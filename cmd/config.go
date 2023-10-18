@@ -45,23 +45,20 @@ type RedisConfig struct {
 	WriteTimeout string `yaml:"write_timeout"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
-	// TransactionTimeout defines the timeout between transactions
-	TransactionTimeout string `yaml:"transaction_timeout"`
 }
 
 // GetSettings returns redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 	return redis.DatabaseConfig{
-		MasterName:         config.MasterName,
-		Addrs:              strings.Split(config.Addrs, ","),
-		Username:           config.Username,
-		Password:           config.Password,
-		MaxRetries:         config.MaxRetries,
-		MetricsTTL:         to.Duration(config.MetricsTTL),
-		DialTimeout:        to.Duration(config.DialTimeout),
-		ReadTimeout:        to.Duration(config.ReadTimeout),
-		WriteTimeout:       to.Duration(config.WriteTimeout),
-		TransactionTimeout: to.Duration(config.TransactionTimeout),
+		MasterName:   config.MasterName,
+		Addrs:        strings.Split(config.Addrs, ","),
+		Username:     config.Username,
+		Password:     config.Password,
+		MaxRetries:   config.MaxRetries,
+		MetricsTTL:   to.Duration(config.MetricsTTL),
+		DialTimeout:  to.Duration(config.DialTimeout),
+		ReadTimeout:  to.Duration(config.ReadTimeout),
+		WriteTimeout: to.Duration(config.WriteTimeout),
 	}
 }
 
@@ -86,12 +83,18 @@ func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.
 type NotificationConfig struct {
 	// Need to determine if notification is delayed - the difference between creation time and sending time is greater than DelayedTime
 	DelayedTime string `yaml:"delayed_time"`
+	// TransactionTimeout defines the timeout between fetch notifications transactions
+	TransactionTimeout string `yaml:"transaction_timeout"`
+	// TransactionMaxRetries is the maximum number of fetch notifications transactions
+	TransactionMaxRetries int `yaml:"transaction_max_retries"`
 }
 
 // GetSettings returns notification storage configuration
 func (notificationConfig *NotificationConfig) GetSettings() redis.NotificationConfig {
 	return redis.NotificationConfig{
-		DelayedTime: to.Duration(notificationConfig.DelayedTime),
+		DelayedTime:           to.Duration(notificationConfig.DelayedTime),
+		TransactionTimeout:    to.Duration(notificationConfig.TransactionTimeout),
+		TransactionMaxRetries: notificationConfig.TransactionMaxRetries,
 	}
 }
 

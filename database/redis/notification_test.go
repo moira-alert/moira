@@ -729,25 +729,8 @@ func TestFetchNotificationsDoWithLimit(t *testing.T) {
 		})
 
 		Convey("Test delayed notifications with ts, limit = count in db and metric on meintenance", func() {
-			_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-				Metrics: map[string]moira.MetricState{
-					"test1": {},
-					"test2": {
-						Timestamp:   100,
-						Maintenance: 130,
-					},
-				},
-				Timestamp: 110,
-			}, moira.TriggerSourceNotSet)
-			defer func() {
-				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-					Metrics: map[string]moira.MetricState{
-						"test1": {},
-						"test2": {},
-					},
-					Timestamp: 110,
-				}, moira.TriggerSourceNotSet)
-			}()
+			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{"test2": 130}, nil, "test", 100) //nolint
+			defer dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{"test2": 0}, nil, "test", 100) //nolint
 
 			addNotifications(dataBase, []moira.ScheduledNotification{notificationNew, notificationNew2, notificationNew3, notificationNew4})
 			limit = 4
@@ -765,22 +748,11 @@ func TestFetchNotificationsDoWithLimit(t *testing.T) {
 		})
 
 		Convey("Test delayed notifications with ts, with small limit in db and trigger on meintenance", func() {
-			_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-				Metrics: map[string]moira.MetricState{
-					"test1": {},
-					"test2": {},
-				},
-				Maintenance: 130,
-				Timestamp:   110,
-			}, moira.TriggerSourceNotSet)
+			var triggerMaintenance int64 = 130
+			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
-				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-					Metrics: map[string]moira.MetricState{
-						"test1": {},
-						"test2": {},
-					},
-					Timestamp: 110,
-				}, moira.TriggerSourceNotSet)
+				triggerMaintenance = 0
+				dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			}()
 
 			addNotifications(dataBase, []moira.ScheduledNotification{notificationNew, notificationNew2, notificationNew3, notificationNew4})

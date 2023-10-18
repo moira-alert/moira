@@ -103,7 +103,9 @@ func Test_webConfig_getDefault(t *testing.T) {
 				NotificationHistoryQueryLimit: -1,
 			},
 			Notification: cmd.NotificationConfig{
-				DelayedTime: "1m",
+				DelayedTime:           "1m",
+				TransactionTimeout:    "200ms",
+				TransactionMaxRetries: 10,
 			},
 		}
 

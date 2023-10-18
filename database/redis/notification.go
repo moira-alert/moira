@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	transactionTriesLimit     = 10
 	transactionHeuristicLimit = 10000
 )
 
@@ -160,16 +159,35 @@ func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, de
 	return delayedNotifications, notDelayedNotifications
 }
 
-// getNotificationsTriggerChecks returns notifications trigger checks
+// getNotificationsTriggerChecks returns notifications trigger checks, optimized for the case when there are many notifications at one trigger
 func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moira.ScheduledNotification) ([]*moira.CheckData, error) {
-	triggerIDs := make([]string, len(notifications))
-	for i, notification := range notifications {
+	checkDataSet := make(map[string]*moira.CheckData, len(notifications))
+	for _, notification := range notifications {
 		if notification != nil {
-			triggerIDs[i] = notification.Trigger.ID
+			checkDataSet[notification.Trigger.ID] = nil
 		}
 	}
 
-	return connector.getTriggersLastCheck(triggerIDs)
+	triggerIDs := make([]string, 0, len(checkDataSet))
+	for triggerID := range checkDataSet {
+		triggerIDs = append(triggerIDs, triggerID)
+	}
+
+	triggersLastCheck, err := connector.getTriggersLastCheck(triggerIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, triggerID := range triggerIDs {
+		checkDataSet[triggerID] = triggersLastCheck[i]
+	}
+
+	result := make([]*moira.CheckData, len(notifications))
+	for i, notification := range notifications {
+		result[i] = checkDataSet[notification.Trigger.ID]
+	}
+
+	return result, nil
 }
 
 /*
@@ -262,7 +280,7 @@ func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moi
 	// fetchNotificationsDo uses WATCH, so transaction may fail and will retry it
 	// see https://redis.io/topics/transactions
 
-	for i := 0; i < transactionTriesLimit; i++ {
+	for i := 0; i < connector.notification.TransactionMaxRetries; i++ {
 		res, err := connector.fetchNotificationsDo(to, limit)
 
 		if err == nil {
@@ -273,7 +291,11 @@ func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moi
 			return nil, err
 		}
 
-		time.Sleep(connector.TransactionTimeout)
+		connector.logger.Info().
+			Int("transaction_retries", i+1).
+			Msg("Transaction error. Retry")
+
+		time.Sleep(connector.notification.TransactionTimeout)
 	}
 
 	return nil, fmt.Errorf("transaction tries limit exceeded")
