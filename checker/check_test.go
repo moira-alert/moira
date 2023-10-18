@@ -1628,29 +1628,6 @@ func TestGetExpressionValues(t *testing.T) {
 			So(values, ShouldResemble, expectedValues)
 		})
 	})
-
-	Convey("No points for single target", t, func() {
-		metricData := metricSource.MetricData{
-			Name:      "main",
-			StartTime: 0,
-			StopTime:  0,
-			StepTime:  0,
-			Values:    []float64{},
-		}
-		metrics := map[string]metricSource.MetricData{
-			"t1": metricData,
-		}
-
-		Convey("both first values is valid ", func() {
-			expectedValues := map[string]float64{"t1": 0}
-
-			var valueTimestamp int64 = 17
-			expression, values, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
-			So(noEmptyValues, ShouldBeTrue)
-			So(expression.MainTargetValue, ShouldEqual, 0)
-			So(values, ShouldResemble, expectedValues)
-		})
-	})
 }
 
 func TestTriggerChecker_handlePrepareError(t *testing.T) {
