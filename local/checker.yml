@@ -2,7 +2,6 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
-  transaction_timeout: 200ms
 telemetry:
   graphite:
     enabled: true
