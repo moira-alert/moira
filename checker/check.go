@@ -442,14 +442,13 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	// Specific optimization magic
 	previousState := last
 	difference := moira.MaxInt64(checkPoint-startTime, 0)
-	stepsDifference := difference / stepTime // First panic
+	stepsDifference := difference / stepTime
 	if (difference % stepTime) > 0 {
 		stepsDifference++
 	}
 	valueTimestamp := startTime + stepTime*stepsDifference
 	endTimestamp := triggerChecker.until + stepTime
 	for ; valueTimestamp < endTimestamp; valueTimestamp += stepTime {
-		// Second panic ↓
 		metricNewState, err := triggerChecker.getMetricDataState(metrics, &previousState, &valueTimestamp, &checkPoint, logger)
 		if err != nil {
 			return last, current, err
@@ -473,7 +472,6 @@ func (triggerChecker *TriggerChecker) getMetricDataState(
 		return nil, nil
 	}
 
-	// Second panic ↓
 	triggerExpression, values, noEmptyValues := getExpressionValues(metrics, valueTimestamp)
 	if !noEmptyValues {
 		return nil, nil
@@ -517,11 +515,6 @@ func getExpressionValues(metrics map[string]metricSource.MetricData, valueTimest
 		targetName := fmt.Sprintf("t%d", i+1)
 		metric := metrics[targetName]
 
-		if metric.StepTime == 0 {
-			panic(fmt.Errorf("StepTime is zero for metrics = %+v", metrics))
-		}
-
-		// Second panic ↓
 		value := metric.GetTimestampValue(*valueTimestamp)
 		values[targetName] = value
 

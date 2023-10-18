@@ -48,7 +48,6 @@ func (metricData *MetricData) GetTimestampValue(valueTimestamp int64) float64 {
 		return math.NaN()
 	}
 
-	// Second panic
 	valueIndex := int((valueTimestamp - metricData.StartTime) / metricData.StepTime)
 
 	if len(metricData.Values) <= valueIndex {
