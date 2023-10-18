@@ -1026,10 +1026,10 @@ func TestFetchNotificationsDoWithNoLimit(t *testing.T) {
 
 		Convey("Test delayed notifications with trigger on maintenance", func() {
 			var triggerMaintenance int64 = 130
-			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
+			dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
 				triggerMaintenance = 0
-				dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
+				dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			}()
 
 			addNotifications(dataBase, []moira.ScheduledNotification{notificationNew, notificationNew2, notificationNew3, notificationNew4})
