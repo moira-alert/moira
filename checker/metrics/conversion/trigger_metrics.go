@@ -92,7 +92,7 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 
 	for targetName, metrics := range diff {
 		for metricName := range metrics {
-			allMetrics[targetName].Insert(metricName) // panic
+			allMetrics[targetName].Insert(metricName)
 		}
 	}
 
@@ -145,8 +145,9 @@ func (triggerMetrics TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map
 		return triggerMetrics, NewAloneMetricsWithCapacity(0), nil
 	}
 
-	result := NewTriggerMetricsWithCapacity(len(triggerMetrics))
-	aloneMetrics := NewAloneMetricsWithCapacity(len(triggerMetrics)) // Just use len of m for optimization
+	metricCountUpperBound := len(triggerMetrics)
+	result := NewTriggerMetricsWithCapacity(metricCountUpperBound)
+	aloneMetrics := NewAloneMetricsWithCapacity(metricCountUpperBound)
 
 	errorBuilder := newErrUnexpectedAloneMetricBuilder()
 	errorBuilder.setDeclared(declaredAloneMetrics)

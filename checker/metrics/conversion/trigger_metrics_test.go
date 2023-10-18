@@ -170,7 +170,7 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 			},
 		},
 		{
-			name: "origin has no metrics for target",
+			name: "no trigger metrics for t2, empty last check (used to panic before PR #939)",
 			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},

@@ -30,7 +30,7 @@ func NewSet[K comparable](value map[K]bool) set[K] {
 func newSetFromTriggerTargetMetrics(metrics TriggerTargetMetrics) set[string] {
 	result := make(set[string], len(metrics))
 	for metricName := range metrics {
-		result[metricName] = void
+		result.Insert(metricName)
 	}
 	return result
 }
