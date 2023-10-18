@@ -41,7 +41,7 @@ func (m FetchedTargetMetrics) Deduplicate() (FetchedTargetMetrics, []string) {
 	collectedNames := make(set[string], len(m))
 	var duplicates []string
 	for _, metric := range m {
-		if collectedNames.Contains(metric.Name) {
+		if collectedNames.contains(metric.Name) {
 			duplicates = append(duplicates, metric.Name)
 		} else {
 			deduplicated = append(deduplicated, metric)

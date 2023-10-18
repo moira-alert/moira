@@ -74,7 +74,7 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 				allMetrics[targetName] = make(set[string])
 			}
 
-			allMetrics[targetName].Insert(metricName)
+			allMetrics[targetName].insert(metricName)
 		}
 	}
 
@@ -84,15 +84,15 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 		}
 
 		for metricName := range metrics {
-			allMetrics[targetName].Insert(metricName)
+			allMetrics[targetName].insert(metricName)
 		}
 	}
 
-	diff := triggerMetrics.FindMissingMetrics(NewSet(declaredAloneMetrics))
+	diff := triggerMetrics.FindMissingMetrics(newSet(declaredAloneMetrics))
 
 	for targetName, metrics := range diff {
 		for metricName := range metrics {
-			allMetrics[targetName].Insert(metricName)
+			allMetrics[targetName].insert(metricName)
 		}
 	}
 
@@ -186,7 +186,7 @@ func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set
 	fullMetrics := make(set[string])
 
 	for targetName, targetMetrics := range triggerMetrics {
-		if declaredAloneMetrics.Contains(targetName) {
+		if declaredAloneMetrics.contains(targetName) {
 			continue
 		}
 		currentMetrics := newSetFromTriggerTargetMetrics(targetMetrics)
@@ -195,7 +195,7 @@ func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set
 
 	for targetName, targetMetrics := range triggerMetrics {
 		metricsSet := newSetFromTriggerTargetMetrics(targetMetrics)
-		if declaredAloneMetrics.Contains(targetName) {
+		if declaredAloneMetrics.contains(targetName) {
 			continue
 		}
 		diff := metricsSet.diff(fullMetrics)

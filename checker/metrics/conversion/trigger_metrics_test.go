@@ -470,7 +470,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 	Convey("Diff", t, func() {
 		for _, testCase := range tests {
 			Convey(testCase.name, func() {
-				actual := testCase.triggerMetrics.FindMissingMetrics(NewSet(testCase.declaredAloneMetrics))
+				actual := testCase.triggerMetrics.FindMissingMetrics(newSet(testCase.declaredAloneMetrics))
 				So(actual, ShouldResemble, testCase.want)
 			})
 		}
