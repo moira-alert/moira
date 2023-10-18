@@ -1007,25 +1007,8 @@ func TestFetchNotificationsDoWithNoLimit(t *testing.T) {
 		})
 
 		Convey("Test delayed notifications with metric on maintenance", func() {
-			_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-				Metrics: map[string]moira.MetricState{
-					"test1": {},
-					"test2": {
-						Timestamp:   100,
-						Maintenance: 130,
-					},
-				},
-				Timestamp: 110,
-			}, moira.TriggerSourceNotSet)
-			defer func() {
-				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-					Metrics: map[string]moira.MetricState{
-						"test1": {},
-						"test2": {},
-					},
-					Timestamp: 110,
-				}, moira.TriggerSourceNotSet)
-			}()
+			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{"test2": 130}, nil, "test", 100) //nolint
+			defer dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{"test2": 0}, nil, "test", 100) //nolint
 
 			addNotifications(dataBase, []moira.ScheduledNotification{notificationNew, notificationNew2, notificationNew3, notificationNew4})
 			actual, err := dataBase.fetchNotificationsDo(now+dataBase.GetDelayedTimeInSeconds()+3, nil)
@@ -1042,20 +1025,11 @@ func TestFetchNotificationsDoWithNoLimit(t *testing.T) {
 		})
 
 		Convey("Test delayed notifications with trigger on maintenance", func() {
-			_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
-				Metrics: map[string]moira.MetricState{
-					"test1": {},
-				},
-				Maintenance: 130,
-				Timestamp:   110,
-			}, moira.TriggerSourceNotSet)
+			var triggerMaintenance int64 = 130
+			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
-				_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
-					Metrics: map[string]moira.MetricState{
-						"test1": {},
-					},
-					Timestamp: 110,
-				}, moira.TriggerSourceNotSet)
+				triggerMaintenance = 0
+				dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			}()
 
 			addNotifications(dataBase, []moira.ScheduledNotification{notificationNew, notificationNew2, notificationNew3, notificationNew4})
