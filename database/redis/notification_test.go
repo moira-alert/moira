@@ -728,7 +728,7 @@ func TestFetchNotificationsDoWithLimit(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("Test delayed notifications with ts, limit = count in db and metric on meintenance", func() {
+		Convey("Test delayed notifications with ts, limit = count in db and metric on maintenance", func() {
 			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{"test2": 130}, nil, "test", 100) //nolint
 			defer dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{"test2": 0}, nil, "test", 100) //nolint
 
@@ -747,7 +747,7 @@ func TestFetchNotificationsDoWithLimit(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("Test delayed notifications with ts, with small limit in db and trigger on meintenance", func() {
+		Convey("Test delayed notifications with ts, with small limit in db and trigger on maintenance", func() {
 			var triggerMaintenance int64 = 130
 			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
