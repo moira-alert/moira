@@ -517,6 +517,10 @@ func getExpressionValues(metrics map[string]metricSource.MetricData, valueTimest
 		targetName := fmt.Sprintf("t%d", i+1)
 		metric := metrics[targetName]
 
+		if metric.StepTime == 0 {
+			panic(fmt.Errorf("StepTime is zero for metrics = %+v", metrics))
+		}
+
 		// Second panic ↓
 		value := metric.GetTimestampValue(*valueTimestamp)
 		values[targetName] = value
