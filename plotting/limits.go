@@ -33,7 +33,7 @@ func resolveLimits(metricsData []metricSource.MetricData) plotLimits {
 	allTimes := make([]time.Time, 0)
 	for _, metricData := range metricsData {
 		for _, metricValue := range metricData.Values {
-			if moira.IsValidFloat64(metricValue) {
+			if moira.IsFiniteNumber(metricValue) {
 				allValues = append(allValues, metricValue)
 			}
 		}
