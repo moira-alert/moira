@@ -46,7 +46,8 @@ type DbConnector struct {
 	source               DBSource
 	clock                moira.Clock
 	notificationHistory  NotificationHistoryConfig
-	notification         NotificationConfig
+	// Notifier configuration in redis
+	notification NotificationConfig
 }
 
 func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {

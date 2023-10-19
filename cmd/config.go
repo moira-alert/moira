@@ -79,13 +79,14 @@ func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.
 	}
 }
 
-// NotificationConfig is a config that stores the time after which notifications should be considered delayed
+// NotificationConfig is a config that stores the necessary configuration of the notifier
 type NotificationConfig struct {
-	// Need to determine if notification is delayed - the difference between creation time and sending time is greater than DelayedTime
+	// Need to determine if notification is delayed - the difference between creation time and sending time
+	// is greater than DelayedTime
 	DelayedTime string `yaml:"delayed_time"`
 	// TransactionTimeout defines the timeout between fetch notifications transactions
 	TransactionTimeout string `yaml:"transaction_timeout"`
-	// TransactionMaxRetries is the maximum number of fetch notifications transactions
+	// TransactionTimeout defines the timeout between fetch notifications transactions
 	TransactionMaxRetries int `yaml:"transaction_max_retries"`
 }
 

@@ -828,3 +828,32 @@ func TestScheduledNotificationLess(t *testing.T) {
 		})
 	})
 }
+
+func TestScheduledNotificationIsDelayed(t *testing.T) {
+	Convey("Test Scheduled notification IsDelayed function", t, func() {
+		notification := &ScheduledNotification{
+			Timestamp: 5,
+		}
+
+		var delayedTime int64 = 2
+
+		Convey("Test notification with empty created at field", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeFalse)
+		})
+
+		notification.CreatedAt = 1
+
+		Convey("Test notification which is to be defined as delayed", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeTrue)
+		})
+
+		notification.CreatedAt = 4
+
+		Convey("Test notification which is to be defined as not delayed", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeFalse)
+		})
+	})
+}

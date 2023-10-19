@@ -149,11 +149,11 @@ func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, de
 	notDelayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
 
 	for _, notification := range notifications {
-		if notification.CreatedAt != 0 && notification.Timestamp-notification.CreatedAt > delayedTime {
+		if notification.IsDelayed(delayedTime) {
 			delayedNotifications = append(delayedNotifications, notification)
-		} else {
-			notDelayedNotifications = append(notDelayedNotifications, notification)
+			continue
 		}
+		notDelayedNotifications = append(notDelayedNotifications, notification)
 	}
 
 	return delayedNotifications, notDelayedNotifications
@@ -161,15 +161,15 @@ func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, de
 
 // getNotificationsTriggerChecks returns notifications trigger checks, optimized for the case when there are many notifications at one trigger
 func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moira.ScheduledNotification) ([]*moira.CheckData, error) {
-	checkDataSet := make(map[string]*moira.CheckData, len(notifications))
+	checkDataMap := make(map[string]*moira.CheckData, len(notifications))
 	for _, notification := range notifications {
 		if notification != nil {
-			checkDataSet[notification.Trigger.ID] = nil
+			checkDataMap[notification.Trigger.ID] = nil
 		}
 	}
 
-	triggerIDs := make([]string, 0, len(checkDataSet))
-	for triggerID := range checkDataSet {
+	triggerIDs := make([]string, 0, len(checkDataMap))
+	for triggerID := range checkDataMap {
 		triggerIDs = append(triggerIDs, triggerID)
 	}
 
@@ -179,28 +179,48 @@ func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moi
 	}
 
 	for i, triggerID := range triggerIDs {
-		checkDataSet[triggerID] = triggersLastCheck[i]
+		checkDataMap[triggerID] = triggersLastCheck[i]
 	}
 
 	result := make([]*moira.CheckData, len(notifications))
 	for i, notification := range notifications {
-		result[i] = checkDataSet[notification.Trigger.ID]
+		result[i] = checkDataMap[notification.Trigger.ID]
 	}
 
 	return result, nil
 }
 
+// filterNotificationsByState filters notifications based on their state to the corresponding arrays
+func (connector *DbConnector) filterNotificationsByState(notifications []*moira.ScheduledNotification) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification, error) {
+	validNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+	toRemoveNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+
+	triggerChecks, err := connector.getNotificationsTriggerChecks(notifications)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get notifications trigger checks: %w", err)
+	}
+
+	for i := range notifications {
+		switch notifications[i].GetState(triggerChecks[i]) {
+		case moira.ValidNotification:
+			validNotifications = append(validNotifications, notifications[i])
+
+		case moira.RemovedNotification:
+			toRemoveNotifications = append(toRemoveNotifications, notifications[i])
+		}
+	}
+
+	return validNotifications, toRemoveNotifications, nil
+}
+
 /*
-validateNotifications filters notifications into delayed and not delayed,
-then validates the delayed ones - checks that:
-  - the trigger for which the notification was generated has not been deleted
-    otherwise removes the notification
-  - if the metric is on Maintenance, ignores the notification
-  - if the trigger is on Maintenance, ignores the notification
+handleNotifications filters notifications into delayed and not delayed,
+then filters delayed notifications by notification state, then merges the 2 arrays
+of not delayed and valid delayed notifications into a single sorted array
 
 Returns valid notifications in sorted order by timestamp and notifications to remove
 */
-func (connector *DbConnector) validateNotifications(notifications []*moira.ScheduledNotification) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification, error) {
+func (connector *DbConnector) handleNotifications(notifications []*moira.ScheduledNotification) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification, error) {
 	if len(notifications) == 0 {
 		return notifications, nil, nil
 	}
@@ -211,21 +231,9 @@ func (connector *DbConnector) validateNotifications(notifications []*moira.Sched
 		return notDelayedNotifications, notDelayedNotifications, nil
 	}
 
-	validNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
-	toRemoveNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
-
-	triggerChecks, err := connector.getNotificationsTriggerChecks(delayedNotifications)
+	validNotifications, toRemoveNotifications, err := connector.filterNotificationsByState(delayedNotifications)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get notifications trigger checks: %s", err)
-	}
-
-	for i := range delayedNotifications {
-		if triggerChecks[i] == nil {
-			toRemoveNotifications = append(toRemoveNotifications, delayedNotifications[i])
-		} else if triggerChecks[i] != nil && !triggerChecks[i].IsMetricOnMaintenance(delayedNotifications[i].Event.Metric) &&
-			!triggerChecks[i].IsTriggerOnMaintenance() {
-			validNotifications = append(validNotifications, delayedNotifications[i])
-		}
+		return nil, nil, fmt.Errorf("failed to filter delayed notifications by state: %w", err)
 	}
 
 	validNotifications, err = moira.MergeToSorted[*moira.ScheduledNotification](validNotifications, notDelayedNotifications)
@@ -362,9 +370,9 @@ func getLimitedNotifications(
 	return limitedNotifications, nil
 }
 
-// same as fetchNotifications, but only once
+// fetchNotificationsDo performs fetching of notifications within a single transaction
 func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
-	// see https://redis.io/topics/transactions
+	// See https://redis.io/topics/transactions
 
 	ctx := connector.context
 	c := *connector.client
@@ -374,10 +382,11 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 	// it is necessary to do these operations in one transaction to avoid data race
 	err := c.Watch(ctx, func(tx *redis.Tx) error {
 		notifications, err := getNotificationsInTxWithLimit(ctx, tx, to, limit)
-		if err != nil && err != redis.TxFailedErr {
+		if err != nil {
+			if err == redis.TxFailedErr {
+				return &transactionError{}
+			}
 			return fmt.Errorf("failed to get notifications with limit in transaction: %w", err)
-		} else if err == redis.TxFailedErr {
-			return &transactionError{}
 		}
 
 		if len(notifications) == 0 {
@@ -393,7 +402,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 			return fmt.Errorf("failed to get limited notifications: %w", err)
 		}
 
-		validNotifications, toRemoveNotifications, err := connector.validateNotifications(limitedNotifications)
+		validNotifications, toRemoveNotifications, err := connector.handleNotifications(limitedNotifications)
 		if err != nil {
 			return fmt.Errorf("failed to validate notifications: %w", err)
 		}
@@ -408,6 +417,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 			if err != nil || deleteCount == 0 {
 				return &transactionError{}
 			}
+
 			return nil
 		})
 
