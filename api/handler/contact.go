@@ -100,7 +100,7 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	}
 	userLogin := middleware.GetLogin(request)
 
-	if err := controller.CreateContact(database, contact, userLogin, ""); err != nil {
+	if err := controller.CreateContact(database, contact, userLogin, contact.TeamID); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
