@@ -198,7 +198,7 @@ func TestCreateNewContact(t *testing.T) {
 			ID:     defaultContact,
 			Type:   "mail",
 			Value:  "moira@skbkontur.ru",
-			User:   "test",
+			User:   login,
 			TeamID: "",
 		}
 
