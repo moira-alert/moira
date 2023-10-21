@@ -111,19 +111,23 @@ func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 }
 
 // Checks converts an array of redis DB reply to moira.CheckData objects, if reply is nil, then checkdata is nil
-func Checks(rep []*redis.StringCmd) ([]*moira.CheckData, error) {
-	checks := make([]*moira.CheckData, len(rep))
-	for i, value := range rep {
+func Checks(replies []*redis.StringCmd) ([]*moira.CheckData, error) {
+	checks := make([]*moira.CheckData, len(replies))
+
+	for i, value := range replies {
 		if value != nil {
-			if check, err := Check(value); err != nil {
+			check, err := Check(value)
+			if err != nil {
 				if err != database.ErrNil {
 					return nil, err
 				}
-			} else {
-				checks[i] = &check
+				continue
 			}
+
+			checks[i] = &check
 		}
 	}
+
 	return checks, nil
 }
 

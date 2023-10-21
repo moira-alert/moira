@@ -1,7 +1,6 @@
 package redis_test
 
 import (
-	"sync"
 	"testing"
 	"time"
 
@@ -35,14 +34,14 @@ func TestFetchNotificationsForTest(t *testing.T) {
 	}
 
 	addNotifications(dataBase, []moira.ScheduledNotification{notificationOld, notification, notificationNew})
-	wg := sync.WaitGroup{}
-	var limit int64 = 2
-	wg.Add(3)
-	go dataBase.FetchNotificationsForTest(&wg, now + dataBase.GetDelayedTimeInSeconds() * 2, &limit, "notifier-1") //nolint
-	go dataBase.FetchNotificationsForTest(&wg, now + dataBase.GetDelayedTimeInSeconds() * 2, &limit, "notifier-2") //nolint
-	// time.Sleep(100 * time.Millisecond)
-	go dataBase.FetchNotificationsForTest(&wg, now + dataBase.GetDelayedTimeInSeconds() * 2, &limit, "notifier-3") //nolint
-	wg.Wait()
+	// wg := sync.WaitGroup{}
+	//var limit int64 = 2
+	// wg.Add(3)
+	// go dataBase.FetchNotificationsForTest(&wg, now + dataBase.GetDelayedTimeInSeconds() * 2, &limit, "notifier-1") //nolint
+	// go dataBase.FetchNotificationsForTest(&wg, now + dataBase.GetDelayedTimeInSeconds() * 2, &limit, "notifier-2") //nolint
+	// // time.Sleep(100 * time.Millisecond)
+	// go dataBase.FetchNotificationsForTest(&wg, now + dataBase.GetDelayedTimeInSeconds() * 2, &limit, "notifier-3") //nolint
+	// wg.Wait()
 
 	assert.True(t, false)
 }

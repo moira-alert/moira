@@ -245,6 +245,14 @@ type ScheduledNotification struct {
 	CreatedAt int64             `json:"created_at" example:"1594471900" format:"int64"`
 }
 
+type ScheduledNotificationState int
+
+const (
+	IgnoredNotification ScheduledNotificationState = iota
+	ValidNotification
+	RemovedNotification
+)
+
 // Less is needed for the ScheduledNotification to match the Comparable interface
 func (notification *ScheduledNotification) Less(other Comparable) (bool, error) {
 	otherNotification, ok := other.(*ScheduledNotification)
@@ -253,6 +261,29 @@ func (notification *ScheduledNotification) Less(other Comparable) (bool, error) 
 	}
 
 	return notification.Timestamp < otherNotification.Timestamp, nil
+}
+
+// IsDelayed checks if the notification is delayed, the difference between the send time and the create time
+// is greater than the delayedTime
+func (notification *ScheduledNotification) IsDelayed(delayedTime int64) bool {
+	return notification.CreatedAt != 0 && notification.Timestamp-notification.CreatedAt > delayedTime
+}
+
+/*
+GetState checks:
+  - If the trigger for which the notification was generated has been deleted, returns Removed state
+  - If the metric is on Maintenance, returns Ignored state
+  - If the trigger is on Maintenance, returns Ignored state
+
+Otherwise returns Valid state
+*/
+func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) ScheduledNotificationState {
+	if triggerCheck == nil {
+		return RemovedNotification
+	} else if !triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) && !triggerCheck.IsTriggerOnMaintenance() {
+		return ValidNotification
+	}
+	return IgnoredNotification
 }
 
 // MatchedMetric represents parsed and matched metric data

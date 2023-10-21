@@ -281,8 +281,8 @@ func (test myTest) Less(other Comparable) (bool, error) {
 	return test.value < otherTest.value, nil
 }
 
-func TestMerge(t *testing.T) {
-	Convey("Test Merge function", t, func() {
+func TestMergeToSorted(t *testing.T) {
+	Convey("Test MergeToSorted function", t, func() {
 		Convey("Test with two nil arrays", func() {
 			merged, err := MergeToSorted[myInt](nil, nil)
 			So(err, ShouldBeNil)

@@ -116,7 +116,9 @@ func getDefault() config {
 			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
 		},
 		Notification: cmd.NotificationConfig{
-			DelayedTime: "1m",
+			DelayedTime:           "1m",
+			TransactionTimeout:    "200ms",
+			TransactionMaxRetries: 10,
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",
