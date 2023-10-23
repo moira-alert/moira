@@ -460,7 +460,7 @@ func getLimitedNotifications(
 			var err error
 			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, nil)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get notification without limit in transaction: %w", err)
+				return nil, fmt.Errorf("failed to get notifications without limit in transaction: %w", err)
 			}
 		}
 	}
