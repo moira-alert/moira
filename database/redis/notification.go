@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/moira-alert/moira/notifier"
@@ -140,7 +143,7 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 	response, err := pipe.Exec(ctx)
 
 	if err != nil {
-		return 0, fmt.Errorf("failed to remove notifier-notification: %s", err.Error())
+		return 0, fmt.Errorf("failed to remove notifier-notification: %w", err)
 	}
 
 	total := int64(0)
@@ -373,6 +376,38 @@ func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moi
 	return nil, fmt.Errorf("transaction tries limit exceeded")
 }
 
+// fetchNotificationsWithLimit reads and drops notifications from DB with limit
+func (connector *DbConnector) FetchNotificationsForTest(wg *sync.WaitGroup, to int64, limit *int64, name string) ([]*moira.ScheduledNotification, error) {
+	defer wg.Done()
+	// fetchNotificationsDo uses WATCH, so transaction may fail and will retry it
+	// see https://redis.io/topics/transactions
+
+	for i := 0; i < connector.notification.TransactionMaxRetries; i++ {
+		res, err := connector.fetchNotificationsDoForTest(to, limit, name)
+
+		if err == nil {
+			log.Printf("%v result: \n", name)
+			for _, r := range res {
+				log.Println(r.Timestamp)
+			}
+			return res, nil
+		}
+
+		if !errors.Is(err, &transactionError{}) {
+			return nil, err
+		}
+
+		log.Printf("%v: transaction retries %v\n", name, i)
+		connector.logger.Info().
+			Int("transaction_retries", i+1).
+			Msg("Transaction error. Retry")
+
+		time.Sleep(connector.notification.TransactionTimeout)
+	}
+
+	return nil, fmt.Errorf("transaction tries limit exceeded")
+}
+
 // getNotificationsInTxWithLimit receives notifications from the database by a certain time
 // sorted by timestamp in one transaction with or without limit, depending on whether limit is nil
 func getNotificationsInTxWithLimit(ctx context.Context, tx *redis.Tx, to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
@@ -472,13 +507,86 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 		result = validNotifications
 
 		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-			var deleteCount int64
-			deleteCount, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications)
-
 			// someone has changed notifierNotificationsKey while we do our job
 			// and transaction fail (no notifications were deleted) :(
-			if err != nil || deleteCount == 0 {
+			if _, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications); err != nil {
 				return &transactionError{}
+			}
+
+			return nil
+		})
+
+		return err
+	}, notifierNotificationsKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// fetchNotificationsDo performs fetching of notifications within a single transaction
+func (connector *DbConnector) fetchNotificationsDoForTest(to int64, limit *int64, name string) ([]*moira.ScheduledNotification, error) {
+	// See https://redis.io/topics/transactions
+	if limit != nil {
+		connector.logger.Debug().
+			Int64("to", to).
+			Int64("limit", *limit).
+			Interface("name", name).
+			Msg("Fetch notifications with limit")
+		log.Printf("name: %v, to: %v, limit: %v, fetch notifications with limit\n", name, to, *limit)
+	} else {
+		connector.logger.Debug().
+			Int64("to", to).
+			Interface("name", name).
+			Msg("Fetch notifications without limit")
+		log.Printf("name: %v, to: %v, fetch notifications without limit\n", name, to)
+	}
+
+	ctx := connector.context
+	c := *connector.client
+
+	result := make([]*moira.ScheduledNotification, 0)
+
+	err := c.Watch(ctx, func(tx *redis.Tx) error {
+		notifications, err := getNotificationsInTxWithLimit(ctx, tx, to, limit)
+		if err != nil {
+			if err == redis.TxFailedErr {
+				return &transactionError{}
+			}
+			return fmt.Errorf("failed to get notifications with limit in transaction: %w", err)
+		}
+
+		if len(notifications) == 0 {
+			return nil
+		}
+
+		// ZRANGEBYSCORE with LIMIT may return not all notifications with last timestamp
+		// (e.g. we have notifications with timestamps [1, 2, 3, 3, 3] and limit = 3,
+		// we will get [1, 2, 3]) other notifications with timestamp 3 remain in the database, so then
+		// limit notifications by last timestamp and return and delete valid notifications with our new timestamp [1, 2]
+		limitedNotifications, err := getLimitedNotifications(ctx, tx, limit, notifications)
+		if err != nil {
+			return fmt.Errorf("failed to get limited notifications: %w", err)
+		}
+		log.Printf("name: %v, limited notifications: \n", name)
+
+		validNotifications, toRemoveNotifications, err := connector.handleNotifications(limitedNotifications)
+		if err != nil {
+			return fmt.Errorf("failed to validate notifications: %w", err)
+		}
+		result = validNotifications
+
+		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+			// someone has changed notifierNotificationsKey while we do our job
+			// and transaction fail (no notifications were deleted) :(
+			if _, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications); err != nil {
+				if errors.Is(err, redis.TxFailedErr) {
+					return &transactionError{}
+				}
+				log.Println(err, reflect.TypeOf(err))
+				return fmt.Errorf("failed to remove notifications in transaction: %w", err)
 			}
 
 			return nil
