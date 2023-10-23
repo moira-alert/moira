@@ -125,7 +125,7 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 	response, err := pipe.Exec(ctx)
 
 	if err != nil {
-		return 0, fmt.Errorf("failed to remove notifier-notification: %s", err.Error())
+		return 0, fmt.Errorf("failed to remove notifications: %w", err)
 	}
 
 	total := int64(0)
@@ -383,7 +383,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 	err := c.Watch(ctx, func(tx *redis.Tx) error {
 		notifications, err := getNotificationsInTxWithLimit(ctx, tx, to, limit)
 		if err != nil {
-			if err == redis.TxFailedErr {
+			if errors.Is(err, redis.TxFailedErr) {
 				return &transactionError{}
 			}
 			return fmt.Errorf("failed to get notifications with limit in transaction: %w", err)
@@ -409,13 +409,13 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 		result = validNotifications
 
 		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
-			var deleteCount int64
-			deleteCount, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications)
-
 			// someone has changed notifierNotificationsKey while we do our job
 			// and transaction fail (no notifications were deleted) :(
-			if err != nil || deleteCount == 0 {
-				return &transactionError{}
+			if _, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications); err != nil {
+				if errors.Is(err, redis.TxFailedErr) {
+					return &transactionError{}
+				}
+				return fmt.Errorf("failed to remove notifications in transaction: %w", err)
 			}
 
 			return nil
