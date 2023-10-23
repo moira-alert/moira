@@ -460,6 +460,9 @@ func getLimitedNotifications(
 			var err error
 			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, nil)
 			if err != nil {
+				if errors.Is(err, redis.TxFailedErr) {
+					return nil, &transactionError{}
+				}
 				return nil, fmt.Errorf("failed to get notification without limit in transaction: %w", err)
 			}
 		}
@@ -471,6 +474,16 @@ func getLimitedNotifications(
 // fetchNotificationsDo performs fetching of notifications within a single transaction
 func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
 	// See https://redis.io/topics/transactions
+	if limit != nil {
+		connector.logger.Debug().
+			Int64("to", to).
+			Int64("limit", *limit).
+			Msg("Fetch notifications with limit")
+	} else {
+		connector.logger.Debug().
+			Int64("to", to).
+			Msg("Fetch notifications without limit")
+	}
 
 	ctx := connector.context
 	c := *connector.client
