@@ -1,6 +1,6 @@
 package metrics
 
-// NotifierMetrics is a collection of metrics used in notifier
+// NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
 	SubsMalformed                  Meter
 	EventsReceived                 Meter
@@ -15,7 +15,7 @@ type NotifierMetrics struct {
 	PlotsEvaluateTriggerDurationMs Histogram
 }
 
-// ConfigureNotifierMetrics is notifier metrics configurator
+// ConfigureNotifierMetrics is notifier metrics configurator.
 func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics {
 	return &NotifierMetrics{
 		SubsMalformed:                  registry.NewMeter("subs", "malformed"),
@@ -29,5 +29,19 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		SendersDroppedNotifications:    NewMetersCollection(registry),
 		PlotsBuildDurationMs:           registry.NewHistogram("plots", "build", "duration", "ms"),
 		PlotsEvaluateTriggerDurationMs: registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
+	}
+}
+
+// MarkSendersDroppedNotifications marks metrics as 1 by contactType for dropped notifications.
+func (metrics *NotifierMetrics) MarkSendersDroppedNotifications(contactType string) {
+	if metric, found := metrics.SendersDroppedNotifications.GetRegisteredMeter(contactType); found {
+		metric.Mark(1)
+	}
+}
+
+// MarkSendersOkMetrics marks metrics as 1 by contactType when notifications were successfully sent.
+func (metrics *NotifierMetrics) MarkSendersOkMetrics(contactType string) {
+	if metric, found := metrics.SendersOkMetrics.GetRegisteredMeter(contactType); found {
+		metric.Mark(1)
 	}
 }

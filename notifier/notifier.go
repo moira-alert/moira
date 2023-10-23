@@ -208,9 +208,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 		if err == nil {
-			if metric, found := notifier.metrics.SendersOkMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
-				metric.Mark(1)
-			}
+			notifier.metrics.MarkSendersOkMetrics(pkg.Contact.Type)
 			continue
 		}
 		switch e := err.(type) {
@@ -218,9 +216,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			log.Warning().
 				Error(e).
 				Msg("Cannot send to broken contact")
-			if metric, found := notifier.metrics.SendersDroppedNotifications.GetRegisteredMeter(pkg.Contact.Type); found {
-				metric.Mark(1)
-			}
+			notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
 		default:
 			if pkg.FailCount > notifier.config.MaxFailAttemptToSendAvailable {
 				log.Error().
@@ -231,9 +227,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				log.Warning().
 					Error(err).
 					Msg("Cannot send notification")
-				if metric, found := notifier.metrics.SendersDroppedNotifications.GetRegisteredMeter(pkg.Contact.Type); found {
-					metric.Mark(1)
-				}
+				notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
 			}
 
 			notifier.resend(&pkg, err.Error())
