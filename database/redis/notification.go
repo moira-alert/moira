@@ -460,9 +460,6 @@ func getLimitedNotifications(
 			var err error
 			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, nil)
 			if err != nil {
-				if errors.Is(err, redis.TxFailedErr) {
-					return nil, &transactionError{}
-				}
 				return nil, fmt.Errorf("failed to get notification without limit in transaction: %w", err)
 			}
 		}
