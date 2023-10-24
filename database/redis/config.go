@@ -31,4 +31,7 @@ type NotificationConfig struct {
 	TransactionTimeout time.Duration
 	// TransactionMaxRetries defines the maximum number of attempts to make a transaction
 	TransactionMaxRetries int
+	// TransactionHeuristicLimit maximum allowable limit, after this limit all notifications
+	// without limit will be taken
+	TransactionHeuristicLimit int64
 }

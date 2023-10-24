@@ -88,14 +88,18 @@ type NotificationConfig struct {
 	TransactionTimeout string `yaml:"transaction_timeout"`
 	// TransactionMaxRetries defines the maximum number of attempts to make a transaction
 	TransactionMaxRetries int `yaml:"transaction_max_retries"`
+	// TransactionHeuristicLimit maximum allowable limit, after this limit all notifications
+	// without limit will be taken
+	TransactionHeuristicLimit int64 `yaml:"transaction_heuristic_limit"`
 }
 
 // GetSettings returns notification storage configuration
 func (notificationConfig *NotificationConfig) GetSettings() redis.NotificationConfig {
 	return redis.NotificationConfig{
-		DelayedTime:           to.Duration(notificationConfig.DelayedTime),
-		TransactionTimeout:    to.Duration(notificationConfig.TransactionTimeout),
-		TransactionMaxRetries: notificationConfig.TransactionMaxRetries,
+		DelayedTime:               to.Duration(notificationConfig.DelayedTime),
+		TransactionTimeout:        to.Duration(notificationConfig.TransactionTimeout),
+		TransactionMaxRetries:     notificationConfig.TransactionMaxRetries,
+		TransactionHeuristicLimit: notificationConfig.TransactionHeuristicLimit,
 	}
 }
 
