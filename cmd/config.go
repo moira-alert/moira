@@ -86,7 +86,7 @@ type NotificationConfig struct {
 	DelayedTime string `yaml:"delayed_time"`
 	// TransactionTimeout defines the timeout between fetch notifications transactions
 	TransactionTimeout string `yaml:"transaction_timeout"`
-	// TransactionTimeout defines the timeout between fetch notifications transactions
+	// TransactionMaxRetries defines the maximum number of attempts to make a transaction
 	TransactionMaxRetries int `yaml:"transaction_max_retries"`
 }
 
