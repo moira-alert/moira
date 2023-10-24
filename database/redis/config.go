@@ -21,3 +21,14 @@ type NotificationHistoryConfig struct {
 	NotificationHistoryTTL        time.Duration
 	NotificationHistoryQueryLimit int
 }
+
+// Notifier configuration in redis
+type NotificationConfig struct {
+	// Need to determine if notification is delayed - the difference between creation time and sending time
+	// is greater than DelayedTime
+	DelayedTime time.Duration
+	// TransactionTimeout defines the timeout between fetch notifications transactions
+	TransactionTimeout time.Duration
+	// TransactionTimeout defines the timeout between fetch notifications transactions
+	TransactionMaxRetries int
+}
