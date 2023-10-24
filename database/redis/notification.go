@@ -139,7 +139,7 @@ func (connector *DbConnector) GetDelayedTimeInSeconds() int64 {
 	return int64(connector.notification.DelayedTime.Seconds())
 }
 
-// filterNotificationsByDelay filters notifications into delayed and not delayed notifications
+// filterNotificationsByDelay  filters notifications into delayed and not delayed notifications
 func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, delayedTime int64) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification) {
 	delayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
 	notDelayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
