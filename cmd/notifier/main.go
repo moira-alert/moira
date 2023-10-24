@@ -81,7 +81,8 @@ func main() {
 
 	databaseSettings := config.Redis.GetSettings()
 	notificationHistorySettings := config.NotificationHistory.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.Notifier)
+	notificationSettings := config.Notification.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
