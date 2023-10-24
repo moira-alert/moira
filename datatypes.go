@@ -245,14 +245,6 @@ type ScheduledNotification struct {
 	CreatedAt int64             `json:"created_at" example:"1594471900" format:"int64"`
 }
 
-type ScheduledNotificationState int
-
-const (
-	IgnoredNotification ScheduledNotificationState = iota
-	ValidNotification
-	RemovedNotification
-)
-
 // Less is needed for the ScheduledNotification to match the Comparable interface
 func (notification *ScheduledNotification) Less(other Comparable) (bool, error) {
 	otherNotification, ok := other.(*ScheduledNotification)

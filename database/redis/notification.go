@@ -15,11 +15,6 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-const (
-	transactionTriesLimit     = 10
-	transactionHeuristicLimit = 10000
-)
-
 // Custom error for transaction error
 type transactionError struct{}
 
@@ -155,7 +150,7 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 	}
 
 	// Hope count will be not greater then limit when we call fetchNotificationsNoLimit
-	if limit > transactionHeuristicLimit && count < limit/2 {
+	if limit > connector.notification.TransactionHeuristicLimit && count < limit/2 {
 		return connector.fetchNotificationsNoLimit(to)
 	}
 
@@ -180,7 +175,7 @@ func (connector *DbConnector) fetchNotificationsWithLimit(to int64, limit int64)
 	// fetchNotifecationsWithLimitDo uses WATCH, so transaction may fail and will retry it
 	// see https://redis.io/topics/transactions
 
-	for i := 0; i < transactionTriesLimit; i++ {
+	for i := 0; i < connector.notification.TransactionMaxRetries; i++ {
 		res, err := connector.fetchNotificationsWithLimitDo(to, limit)
 
 		if err == nil {
