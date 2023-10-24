@@ -242,7 +242,7 @@ func testRounding(baseTimestamp, retention int64) {
 }
 
 func TestReplaceSubstring(t *testing.T) {
-	Convey("test replace substring", t, func() {
+	Convey("Test replace substring", t, func() {
 		Convey("replacement string in the middle", func() {
 			So(ReplaceSubstring("telebot: Post https://api.telegram.org/botXXX/getMe", "/bot", "/", "[DELETED]"), ShouldResemble, "telebot: Post https://api.telegram.org/bot[DELETED]/getMe")
 		})

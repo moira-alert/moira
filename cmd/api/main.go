@@ -83,7 +83,8 @@ func main() {
 
 	databaseSettings := applicationConfig.Redis.GetSettings()
 	notificationHistorySettings := applicationConfig.NotificationHistory.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.API)
+	notificationSettings := applicationConfig.Notification.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.API)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)

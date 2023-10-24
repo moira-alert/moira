@@ -373,6 +373,84 @@ func TestTrigger_IsSimple(t *testing.T) {
 	})
 }
 
+func TestCheckData_IsTriggerOnMaintenance(t *testing.T) {
+	Convey("IsTriggerOnMaintenance manipulations", t, func() {
+		checkData := &CheckData{
+			Maintenance: 120,
+			Timestamp:   100,
+		}
+
+		Convey("Test with trigger check Maintenance more than last check timestamp", func() {
+			actual := checkData.IsTriggerOnMaintenance()
+			So(actual, ShouldBeTrue)
+		})
+
+		Convey("Test with trigger check Maintenance less than last check timestamp", func() {
+			checkData.Timestamp = 150
+			defer func() {
+				checkData.Timestamp = 100
+			}()
+
+			actual := checkData.IsTriggerOnMaintenance()
+			So(actual, ShouldBeFalse)
+		})
+	})
+}
+
+func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
+	Convey("isMetricOnMaintenance manipulations", t, func() {
+		checkData := &CheckData{
+			Metrics: map[string]MetricState{
+				"test1": {
+					Maintenance: 110,
+				},
+				"test2": {},
+			},
+			Timestamp: 100,
+		}
+
+		Convey("Test with a metric that is not in the trigger", func() {
+			actual := checkData.IsMetricOnMaintenance("")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with metrics that are in the trigger but not on maintenance", func() {
+			actual := checkData.IsMetricOnMaintenance("test2")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with metrics that are in the trigger and on maintenance", func() {
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeTrue)
+		})
+
+		Convey("Test with the metric that is in the trigger, but the last successful check of the trigger is more than Maintenance", func() {
+			checkData.Timestamp = 120
+			defer func() {
+				checkData.Timestamp = 100
+			}()
+
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with trigger without metrics", func() {
+			checkData.Metrics = make(map[string]MetricState)
+			defer func() {
+				checkData.Metrics = map[string]MetricState{
+					"test1": {
+						Maintenance: 110,
+					},
+					"test2": {},
+				}
+			}()
+
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeFalse)
+		})
+	})
+}
+
 func TestCheckData_GetEventTimestamp(t *testing.T) {
 	Convey("Get event timestamp", t, func() {
 		checkData := CheckData{Timestamp: 800, EventTimestamp: 0}

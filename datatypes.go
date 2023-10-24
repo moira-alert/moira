@@ -242,6 +242,7 @@ type ScheduledNotification struct {
 	Throttled bool              `json:"throttled" example:"false"`
 	SendFail  int               `json:"send_fail" example:"0"`
 	Timestamp int64             `json:"timestamp" example:"1594471927" format:"int64"`
+	CreatedAt int64             `json:"created_at" example:"1594471900" format:"int64"`
 }
 
 // MatchedMetric represents parsed and matched metric data
@@ -365,17 +366,19 @@ type CheckData struct {
 	// MetricsToTargetRelation is a map that holds relation between metric names that was alone during last
 	// check and targets that fetched this metric
 	//	{"t1": "metric.name.1", "t2": "metric.name.2"}
-	MetricsToTargetRelation      map[string]string `json:"metrics_to_target_relation" example:"t1:metric.name.1,t2:metric.name.2"`
-	Score                        int64             `json:"score" example:"100" format:"int64"`
-	State                        State             `json:"state" example:"OK"`
-	Maintenance                  int64             `json:"maintenance,omitempty" example:"0" format:"int64"`
-	MaintenanceInfo              MaintenanceInfo   `json:"maintenance_info"`
-	Timestamp                    int64             `json:"timestamp,omitempty" example:"1590741916" format:"int64"`
-	EventTimestamp               int64             `json:"event_timestamp,omitempty" example:"1590741878" format:"int64"`
-	LastSuccessfulCheckTimestamp int64             `json:"last_successful_check_timestamp" example:"1590741916" format:"int64"`
-	Suppressed                   bool              `json:"suppressed,omitempty" example:"true"`
-	SuppressedState              State             `json:"suppressed_state,omitempty"`
-	Message                      string            `json:"msg,omitempty"`
+	MetricsToTargetRelation map[string]string `json:"metrics_to_target_relation" example:"t1:metric.name.1,t2:metric.name.2"`
+	Score                   int64             `json:"score" example:"100" format:"int64"`
+	State                   State             `json:"state" example:"OK"`
+	Maintenance             int64             `json:"maintenance,omitempty" example:"0" format:"int64"`
+	MaintenanceInfo         MaintenanceInfo   `json:"maintenance_info"`
+	// Timestamp - time, which means when the checker last checked this trigger, updated every checkInterval seconds
+	Timestamp      int64 `json:"timestamp,omitempty" example:"1590741916" format:"int64"`
+	EventTimestamp int64 `json:"event_timestamp,omitempty" example:"1590741878" format:"int64"`
+	// LastSuccessfulCheckTimestamp - time of the last check of the trigger, during which there were no errors
+	LastSuccessfulCheckTimestamp int64  `json:"last_successful_check_timestamp" example:"1590741916" format:"int64"`
+	Suppressed                   bool   `json:"suppressed,omitempty" example:"true"`
+	SuppressedState              State  `json:"suppressed_state,omitempty"`
+	Message                      string `json:"msg,omitempty"`
 }
 
 // RemoveMetricState is a function that removes MetricState from map of states.
@@ -386,6 +389,25 @@ func (checkData CheckData) RemoveMetricState(metricName string) {
 // RemoveMetricsToTargetRelation is a function that sets an empty map to MetricsToTargetRelation.
 func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 	checkData.MetricsToTargetRelation = make(map[string]string)
+}
+
+// isTriggerOnMaintenance checks if the trigger is on Maintenance
+func (checkData *CheckData) IsTriggerOnMaintenance() bool {
+	return checkData.Timestamp <= checkData.Maintenance
+}
+
+// isMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
+func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
+	if checkData.Metrics == nil {
+		return false
+	}
+
+	metricState, ok := checkData.Metrics[metric]
+	if !ok {
+		return false
+	}
+
+	return checkData.Timestamp <= metricState.Maintenance
 }
 
 // MetricState represents metric state data for given timestamp
