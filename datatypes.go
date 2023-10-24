@@ -391,25 +391,6 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 	checkData.MetricsToTargetRelation = make(map[string]string)
 }
 
-// isTriggerOnMaintenance checks if the trigger is on Maintenance
-func (checkData *CheckData) IsTriggerOnMaintenance() bool {
-	return checkData.Timestamp <= checkData.Maintenance
-}
-
-// isMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
-func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
-	if checkData.Metrics == nil {
-		return false
-	}
-
-	metricState, ok := checkData.Metrics[metric]
-	if !ok {
-		return false
-	}
-
-	return checkData.Timestamp <= metricState.Maintenance
-}
-
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
 	EventTimestamp  int64              `json:"event_timestamp" example:"1590741878" format:"int64"`
