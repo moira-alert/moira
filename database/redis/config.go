@@ -29,6 +29,9 @@ type NotificationConfig struct {
 	DelayedTime time.Duration
 	// TransactionTimeout defines the timeout between fetch notifications transactions
 	TransactionTimeout time.Duration
-	// TransactionTimeout defines the timeout between fetch notifications transactions
+	// TransactionMaxRetries defines the maximum number of attempts to make a transaction
 	TransactionMaxRetries int
+	// TransactionHeuristicLimit maximum allowable limit, after this limit all notifications
+	// without limit will be taken
+	TransactionHeuristicLimit int64
 }
