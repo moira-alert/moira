@@ -41,6 +41,7 @@ Code in this repository is the backend part of Moira monitoring application.
 * [doc](https://github.com/moira-alert/doc) is the documentation (hosted on [Read the Docs](https://moira.readthedocs.io)).
 * [moira-trigger-role](https://github.com/moira-alert/moira-trigger-role) is the Ansible role you can use to manage triggers.
 * [python-moira-client](https://github.com/moira-alert/python-moira-client) is the Python API client.
+* [go-client](https://github.com/moira-alert/client-go) is the GO API client.
 
 ## Contact us
 
