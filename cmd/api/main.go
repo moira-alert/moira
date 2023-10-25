@@ -137,7 +137,7 @@ func main() {
 		prometheusSource,
 	)
 
-	webConfigContent, err := applicationConfig.Web.getSettings(remoteConfig.Enabled)
+	webConfigContent, err := applicationConfig.Web.getSettings(remoteConfig.Enabled || prometheusConfig.Enabled)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
