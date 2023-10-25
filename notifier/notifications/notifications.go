@@ -23,6 +23,15 @@ type FetchNotificationsWorker struct {
 	tomb     tomb.Tomb
 }
 
+func (worker *FetchNotificationsWorker) updateFetchNotificationsMetric(fetchNotificationsStartTime time.Time) {
+	if worker.Metrics == nil {
+		worker.Logger.Warning().Msg("Cannot update fetch notifications metric because Metrics is nil")
+		return
+	}
+
+	worker.Metrics.FetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
+}
+
 // Start is a cycle that fetches scheduled notifications from database
 func (worker *FetchNotificationsWorker) Start() {
 	worker.tomb.Go(func() error {
@@ -75,7 +84,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	if err != nil {
 		return err
 	}
-	worker.Metrics.FetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
+	worker.updateFetchNotificationsMetric(fetchNotificationsStartTime)
 
 	notificationPackages := make(map[string]*notifier.NotificationPackage)
 	for _, notification := range notifications {
