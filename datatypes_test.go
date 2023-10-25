@@ -296,6 +296,58 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 	})
 }
 
+func TestScheduledNotification_GetState(t *testing.T) {
+	Convey("Test get state of scheduled notifications", t, func() {
+		notification := ScheduledNotification{
+			Event: NotificationEvent{
+				Metric: "test",
+			},
+		}
+
+		Convey("Get Removed state with nil check data", func() {
+			state := notification.GetState(nil)
+			So(state, ShouldEqual, RemovedNotification)
+		})
+
+		Convey("Get Ignored state with metric on maintenance", func() {
+			state := notification.GetState(&CheckData{
+				Metrics: map[string]MetricState{
+					"test": {
+						Maintenance: 100,
+					},
+				},
+				Timestamp: 80,
+			})
+			So(state, ShouldEqual, IgnoredNotification)
+		})
+
+		Convey("Get Ignored state with trigger on maintenance", func() {
+			state := notification.GetState(&CheckData{
+				Maintenance: 100,
+				Timestamp:   80,
+			})
+			So(state, ShouldEqual, IgnoredNotification)
+		})
+
+		Convey("Get Valid state with trigger without metrics", func() {
+			state := notification.GetState(&CheckData{
+				Timestamp: 80,
+			})
+			So(state, ShouldEqual, ValidNotification)
+		})
+
+		Convey("Get Valid state with trigger with test metric", func() {
+			state := notification.GetState(&CheckData{
+				Metrics: map[string]MetricState{
+					"test": {},
+				},
+				Timestamp: 80,
+			})
+			So(state, ShouldEqual, ValidNotification)
+		})
+	})
+}
+
 func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 	Convey("Test no metric", t, func() {
 		checkData := CheckData{

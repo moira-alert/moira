@@ -203,10 +203,10 @@ func TestChunkSlice(t *testing.T) {
 
 func TestIsValidFloat64(t *testing.T) {
 	Convey("values +Inf -Inf and NaN is invalid", t, func() {
-		So(IsValidFloat64(math.NaN()), ShouldBeFalse)
-		So(IsValidFloat64(math.Inf(-1)), ShouldBeFalse)
-		So(IsValidFloat64(math.Inf(1)), ShouldBeFalse)
-		So(IsValidFloat64(3.14), ShouldBeTrue)
+		So(IsFiniteNumber(math.NaN()), ShouldBeFalse)
+		So(IsFiniteNumber(math.Inf(-1)), ShouldBeFalse)
+		So(IsFiniteNumber(math.Inf(1)), ShouldBeFalse)
+		So(IsFiniteNumber(3.14), ShouldBeTrue)
 	})
 }
 

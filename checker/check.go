@@ -300,6 +300,9 @@ func (triggerChecker *TriggerChecker) check(
 ) (moira.CheckData, error) {
 	// Case when trigger have only alone metrics
 	if len(metrics) == 0 {
+		if len(aloneMetrics) == 0 {
+			return checkData, nil
+		}
 		if metrics == nil {
 			metrics = make(map[string]map[string]metricSource.MetricData, 1)
 		}
@@ -446,7 +449,7 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	valueTimestamp := startTime + stepTime*stepsDifference
 	endTimestamp := triggerChecker.until + stepTime
 	for ; valueTimestamp < endTimestamp; valueTimestamp += stepTime {
-		metricNewState, err := triggerChecker.getMetricDataState(&metrics, &previousState, &valueTimestamp, &checkPoint, logger)
+		metricNewState, err := triggerChecker.getMetricDataState(metrics, &previousState, &valueTimestamp, &checkPoint, logger)
 		if err != nil {
 			return last, current, err
 		}
@@ -459,11 +462,16 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	return last, current, nil
 }
 
-func (triggerChecker *TriggerChecker) getMetricDataState(metrics *map[string]metricSource.MetricData,
-	lastState *moira.MetricState, valueTimestamp, checkPoint *int64, logger moira.Logger) (*moira.MetricState, error) {
+func (triggerChecker *TriggerChecker) getMetricDataState(
+	metrics map[string]metricSource.MetricData,
+	lastState *moira.MetricState,
+	valueTimestamp, checkPoint *int64,
+	logger moira.Logger,
+) (*moira.MetricState, error) {
 	if *valueTimestamp <= *checkPoint {
 		return nil, nil
 	}
+
 	triggerExpression, values, noEmptyValues := getExpressionValues(metrics, valueTimestamp)
 	if !noEmptyValues {
 		return nil, nil
@@ -493,18 +501,24 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metrics *map[string]met
 	), nil
 }
 
-func getExpressionValues(metrics *map[string]metricSource.MetricData, valueTimestamp *int64) (*expression.TriggerExpression, map[string]float64, bool) {
+func getExpressionValues(metrics map[string]metricSource.MetricData, valueTimestamp *int64) (
+	triggerExpression *expression.TriggerExpression,
+	values map[string]float64,
+	noEmptyValues bool,
+) {
 	expression := &expression.TriggerExpression{
-		AdditionalTargetsValues: make(map[string]float64, len(*metrics)-1),
+		AdditionalTargetsValues: make(map[string]float64, len(metrics)-1),
 	}
-	values := make(map[string]float64, len(*metrics))
+	values = make(map[string]float64, len(metrics))
 
-	for i := 0; i < len(*metrics); i++ {
+	for i := 0; i < len(metrics); i++ {
 		targetName := fmt.Sprintf("t%d", i+1)
-		metric := (*metrics)[targetName]
+		metric := metrics[targetName]
+
 		value := metric.GetTimestampValue(*valueTimestamp)
 		values[targetName] = value
-		if !moira.IsValidFloat64(value) {
+
+		if !moira.IsFiniteNumber(value) {
 			return expression, values, false
 		}
 		if i == 0 {

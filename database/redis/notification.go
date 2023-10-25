@@ -18,10 +18,6 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-const (
-	transactionHeuristicLimit = 10000
-)
-
 // Custom error for transaction error
 type transactionError struct{}
 
@@ -329,7 +325,7 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 	}
 
 	// Hope count will be not greater then limit when we call fetchNotificationsNoLimit
-	if limit > transactionHeuristicLimit && count < limit/2 {
+	if limit > connector.notification.TransactionHeuristicLimit && count < limit/2 {
 		return connector.fetchNotifications(to, nil)
 	}
 
@@ -419,6 +415,9 @@ func getNotificationsInTxWithLimit(ctx context.Context, tx *redis.Tx, to int64, 
 
 	response := tx.ZRangeByScore(ctx, notifierNotificationsKey, rng)
 	if response.Err() != nil {
+		if errors.Is(response.Err(), redis.TxFailedErr) {
+			return nil, &transactionError{}
+		}
 		return nil, fmt.Errorf("failed to ZRANGEBYSCORE: %w", response.Err())
 	}
 
@@ -490,9 +489,6 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 	err := c.Watch(ctx, func(tx *redis.Tx) error {
 		notifications, err := getNotificationsInTxWithLimit(ctx, tx, to, limit)
 		if err != nil {
-			if errors.Is(err, redis.TxFailedErr) {
-				return &transactionError{}
-			}
 			return fmt.Errorf("failed to get notifications with limit in transaction: %w", err)
 		}
 

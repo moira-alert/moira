@@ -46,6 +46,7 @@ notification:
   delayed_time: 1m
   transaction_timeout: 200ms
   transaction_max_retries: 10
+  transaction_heuristic_limit: 10000
 log:
   log_file: stdout
   log_level: debug

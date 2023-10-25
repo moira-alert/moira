@@ -76,15 +76,9 @@ func UseFloat64(f *float64) float64 {
 	return *f
 }
 
-// IsValidFloat64 checks float64 for Inf and NaN. If it is then float64 is not valid
-func IsValidFloat64(val float64) bool {
-	if math.IsNaN(val) {
-		return false
-	}
-	if math.IsInf(val, 0) {
-		return false
-	}
-	return true
+// IsFiniteNumber checks float64 for Inf and NaN. If it is then float64 is not valid
+func IsFiniteNumber(val float64) bool {
+	return !(math.IsNaN(val) || math.IsInf(val, 0))
 }
 
 // Subset return whether first is a subset of second

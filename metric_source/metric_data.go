@@ -47,7 +47,9 @@ func (metricData *MetricData) GetTimestampValue(valueTimestamp int64) float64 {
 	if valueTimestamp < metricData.StartTime {
 		return math.NaN()
 	}
+
 	valueIndex := int((valueTimestamp - metricData.StartTime) / metricData.StepTime)
+
 	if len(metricData.Values) <= valueIndex {
 		return math.NaN()
 	}

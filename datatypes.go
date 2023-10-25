@@ -245,10 +245,10 @@ type ScheduledNotification struct {
 	CreatedAt int64             `json:"created_at" example:"1594471900" format:"int64"`
 }
 
-type ScheduledNotificationState int
+type scheduledNotificationState int
 
 const (
-	IgnoredNotification ScheduledNotificationState = iota
+	IgnoredNotification scheduledNotificationState = iota
 	ValidNotification
 	RemovedNotification
 )
@@ -277,10 +277,11 @@ GetState checks:
 
 Otherwise returns Valid state
 */
-func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) ScheduledNotificationState {
+func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) scheduledNotificationState {
 	if triggerCheck == nil {
 		return RemovedNotification
-	} else if !triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) && !triggerCheck.IsTriggerOnMaintenance() {
+	}
+	if !triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) && !triggerCheck.IsTriggerOnMaintenance() {
 		return ValidNotification
 	}
 	return IgnoredNotification
@@ -432,12 +433,12 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 	checkData.MetricsToTargetRelation = make(map[string]string)
 }
 
-// isTriggerOnMaintenance checks if the trigger is on Maintenance
+// IsTriggerOnMaintenance checks if the trigger is on Maintenance
 func (checkData *CheckData) IsTriggerOnMaintenance() bool {
 	return checkData.Timestamp <= checkData.Maintenance
 }
 
-// isMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
+// IsMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
 func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
 	if checkData.Metrics == nil {
 		return false

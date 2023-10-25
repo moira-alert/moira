@@ -13,14 +13,14 @@ func Test_newSetHelperFromTriggerTargetMetrics(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want setHelper
+		want set[string]
 	}{
 		{
 			name: "is empty",
 			args: args{
 				metrics: TriggerTargetMetrics{},
 			},
-			want: setHelper{},
+			want: set[string]{},
 		},
 		{
 			name: "is not empty",
@@ -29,14 +29,14 @@ func Test_newSetHelperFromTriggerTargetMetrics(t *testing.T) {
 					"metric.test.1": {Name: "metric.name.1"},
 				},
 			},
-			want: setHelper{"metric.test.1": true},
+			want: set[string]{"metric.test.1": void},
 		},
 	}
 
 	Convey("TriggerPatterMetrics", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
-				actual := newSetHelperFromTriggerTargetMetrics(tt.args.metrics)
+				actual := newSetFromTriggerTargetMetrics(tt.args.metrics)
 				So(actual, ShouldResemble, tt.want)
 			})
 		}
@@ -45,53 +45,53 @@ func Test_newSetHelperFromTriggerTargetMetrics(t *testing.T) {
 
 func Test_setHelper_union(t *testing.T) {
 	type args struct {
-		other setHelper
+		other set[string]
 	}
 	tests := []struct {
 		name string
-		h    setHelper
+		h    set[string]
 		args args
-		want setHelper
+		want set[string]
 	}{
 		{
 			name: "Both empty",
-			h:    setHelper{},
+			h:    set[string]{},
 			args: args{
-				other: setHelper{},
+				other: set[string]{},
 			},
-			want: setHelper{},
+			want: set[string]{},
 		},
 		{
 			name: "Target is empty, other is not empty",
-			h:    setHelper{},
+			h:    set[string]{},
 			args: args{
-				other: setHelper{"metric.test.1": true},
+				other: set[string]{"metric.test.1": void},
 			},
-			want: setHelper{"metric.test.1": true},
+			want: set[string]{"metric.test.1": void},
 		},
 		{
 			name: "Target is not empty, other is empty",
-			h:    setHelper{"metric.test.1": true},
+			h:    set[string]{"metric.test.1": void},
 			args: args{
-				other: setHelper{},
+				other: set[string]{},
 			},
-			want: setHelper{"metric.test.1": true},
+			want: set[string]{"metric.test.1": void},
 		},
 		{
 			name: "Both are not empty",
-			h:    setHelper{"metric.test.1": true},
+			h:    set[string]{"metric.test.1": void},
 			args: args{
-				other: setHelper{"metric.test.2": true},
+				other: set[string]{"metric.test.2": void},
 			},
-			want: setHelper{"metric.test.1": true, "metric.test.2": true},
+			want: set[string]{"metric.test.1": void, "metric.test.2": void},
 		},
 		{
 			name: "Both are not empty and have same names",
-			h:    setHelper{"metric.test.1": true, "metric.test.2": true},
+			h:    set[string]{"metric.test.1": void, "metric.test.2": void},
 			args: args{
-				other: setHelper{"metric.test.2": true, "metric.test.3": true},
+				other: set[string]{"metric.test.2": void, "metric.test.3": void},
 			},
-			want: setHelper{"metric.test.1": true, "metric.test.2": true, "metric.test.3": true},
+			want: set[string]{"metric.test.1": void, "metric.test.2": void, "metric.test.3": void},
 		},
 	}
 	Convey("union", t, func() {
@@ -106,37 +106,37 @@ func Test_setHelper_union(t *testing.T) {
 
 func Test_setHelper_diff(t *testing.T) {
 	type args struct {
-		other setHelper
+		other set[string]
 	}
 	tests := []struct {
 		name string
-		h    setHelper
+		h    set[string]
 		args args
-		want setHelper
+		want set[string]
 	}{
 		{
 			name: "both have same elements",
-			h:    setHelper{"t1": true, "t2": true},
+			h:    set[string]{"t1": void, "t2": void},
 			args: args{
-				other: setHelper{"t1": true, "t2": true},
+				other: set[string]{"t1": void, "t2": void},
 			},
-			want: setHelper{},
+			want: set[string]{},
 		},
 		{
 			name: "other have additional values",
-			h:    setHelper{"t1": true, "t2": true},
+			h:    set[string]{"t1": void, "t2": void},
 			args: args{
-				other: setHelper{"t1": true, "t2": true, "t3": true},
+				other: set[string]{"t1": void, "t2": void, "t3": void},
 			},
-			want: setHelper{"t3": true},
+			want: set[string]{"t3": void},
 		},
 		{
 			name: "origin have additional values",
-			h:    setHelper{"t1": true, "t2": true, "t3": true},
+			h:    set[string]{"t1": void, "t2": void, "t3": void},
 			args: args{
-				other: setHelper{"t1": true, "t2": true},
+				other: set[string]{"t1": void, "t2": void},
 			},
-			want: setHelper{},
+			want: set[string]{},
 		},
 	}
 	Convey("diff", t, func() {
