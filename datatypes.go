@@ -280,7 +280,8 @@ Otherwise returns Valid state
 func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) scheduledNotificationState {
 	if triggerCheck == nil {
 		return RemovedNotification
-	} else if !triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) && !triggerCheck.IsTriggerOnMaintenance() {
+	}
+	if !triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) && !triggerCheck.IsTriggerOnMaintenance() {
 		return ValidNotification
 	}
 	return IgnoredNotification
