@@ -55,6 +55,7 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		String("delayed_time_str", n.DelayedTime.String()).
 		Int("transaction_max_retries", n.TransactionMaxRetries).
 		String("transaction_timeout", n.TransactionTimeout.String()).
+		Int64("transaction_heuristic_limit", n.TransactionHeuristicLimit).
 		Msg("Delayed time")
 
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
