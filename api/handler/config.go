@@ -5,9 +5,9 @@ import "net/http"
 type ContactExample struct {
 	Type        string `json:"type" example:"webhook kontur"`
 	Label       string `json:"label" example:"Webhook Kontur"`
-	Validation  string `json:"validation" example:"^(http|https):\\/\\/.*(testkontur.ru|kontur.host|skbkontur.ru)(:[0-9]{2,5})?\\/"`
-	Placeholder string `json:"placeholder" example:"https://service.testkontur.ru/webhooks/moira"`
-	Help        string `json:"help" example:"### Domains whitelist:\n - skbkontur.ru\n - testkontur.ru\n - kontur.host"`
+	Validation  string `json:"validation" example:"^(http|https):\\/\\/.*(moira.ru)(:[0-9]{2,5})?\\/"`
+	Placeholder string `json:"placeholder" example:"https://moira.ru/webhooks/moira"`
+	Help        string `json:"help" example:"### Domains whitelist:\n - moira.ru\n"`
 }
 
 type ConfigurationResponse struct {
