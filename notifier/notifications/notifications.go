@@ -29,7 +29,7 @@ func (worker *FetchNotificationsWorker) updateFetchNotificationsMetric(fetchNoti
 		return
 	}
 
-	worker.Metrics.FetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
+	worker.Metrics.UpdateFetchNotificationsDurationMs(fetchNotificationsStartTime)
 }
 
 // Start is a cycle that fetches scheduled notifications from database

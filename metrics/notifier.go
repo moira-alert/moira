@@ -1,5 +1,7 @@
 package metrics
 
+import "time"
+
 // NotifierMetrics is a collection of metrics used in notifier
 type NotifierMetrics struct {
 	SubsMalformed                  Meter
@@ -30,4 +32,9 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		PlotsEvaluateTriggerDurationMs: registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
 		FetchNotificationsDurationMs:   registry.NewHistogram("fetch", "notifications", "duration", "ms"),
 	}
+}
+
+// UpdateFetchNotificationsDurationMs - counts how much time has passed since fetchNotificationsStartTime in ms and updates the metric
+func (metrics *NotifierMetrics) UpdateFetchNotificationsDurationMs(fetchNotificationsStartTime time.Time) {
+	metrics.FetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
 }
