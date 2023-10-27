@@ -65,7 +65,7 @@ func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSour
 			for i, l := 0, len(timeSeries.Values); i < l; i++ {
 				timestamp := timeSeries.StartTime + int64(i)*timeSeries.StepTime
 				value := timeSeries.GetTimestampValue(timestamp)
-				if moira.IsValidFloat64(value) {
+				if moira.IsFiniteNumber(value) {
 					values = append(values, moira.MetricValue{Value: value, Timestamp: timestamp})
 				}
 			}

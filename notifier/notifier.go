@@ -208,30 +208,29 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 		if err == nil {
-			if metric, found := notifier.metrics.SendersOkMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
-				metric.Mark(1)
-			}
-		} else {
-			switch e := err.(type) {
-			case moira.SenderBrokenContactError:
+			notifier.metrics.MarkSendersOkMetrics(pkg.Contact.Type)
+			continue
+		}
+		switch e := err.(type) {
+		case moira.SenderBrokenContactError:
+			log.Warning().
+				Error(e).
+				Msg("Cannot send to broken contact")
+			notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
+		default:
+			if pkg.FailCount > notifier.config.MaxFailAttemptToSendAvailable {
+				log.Error().
+					Error(err).
+					Int("fail_count", pkg.FailCount).
+					Msg("Cannot send notification")
+			} else {
 				log.Warning().
-					Error(e).
-					Msg("Cannot send to broken contact")
-
-			default:
-				if pkg.FailCount > notifier.config.MaxFailAttemptToSendAvailable {
-					log.Error().
-						Error(err).
-						Int("fail_count", pkg.FailCount).
-						Msg("Cannot send notification")
-				} else {
-					log.Warning().
-						Error(err).
-						Msg("Cannot send notification")
-				}
-
-				notifier.resend(&pkg, err.Error())
+					Error(err).
+					Msg("Cannot send notification")
+				notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
 			}
+
+			notifier.resend(&pkg, err.Error())
 		}
 	}
 }
