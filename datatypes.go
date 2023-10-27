@@ -435,7 +435,7 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 
 // IsTriggerOnMaintenance checks if the trigger is on Maintenance
 func (checkData *CheckData) IsTriggerOnMaintenance() bool {
-	return checkData.Timestamp <= checkData.Maintenance
+	return time.Now().Unix() <= checkData.Maintenance
 }
 
 // IsMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
@@ -449,7 +449,7 @@ func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
 		return false
 	}
 
-	return checkData.Timestamp <= metricState.Maintenance
+	return time.Now().Unix() <= metricState.Maintenance
 }
 
 // MetricState represents metric state data for given timestamp

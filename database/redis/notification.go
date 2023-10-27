@@ -242,9 +242,6 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get notifications trigger checks: %w", err)
 	}
-	connector.logger.Debug().Interface(
-		"trigger_checks", triggerChecks,
-	).Msg("Trigger checks")
 
 	for i := range notifications {
 		switch notifications[i].GetState(triggerChecks[i]) {
