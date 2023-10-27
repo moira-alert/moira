@@ -44,7 +44,7 @@ var testRetentions = `
 	retentions = 120:7d
 	`
 
-var expectedRetentionIntervals = []int{60, 1200, 3600, 86400, 604800, 31536000, 120}
+var expectedRetentionIntervals = []int{60, 1200, 3600, 86400, 604800, 31536000, 10, 120}
 
 var matchedMetrics = []moira.MatchedMetric{
 	{
