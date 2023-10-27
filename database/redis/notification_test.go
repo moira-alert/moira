@@ -533,15 +533,12 @@ func TestFilterNotificationsByState(t *testing.T) {
 		CreatedAt: now,
 	}
 
-	_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-		Timestamp: 100,
-	}, moira.TriggerSourceNotSet)
+	_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{}, moira.TriggerSourceNotSet)
 
 	_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"test": {},
 		},
-		Timestamp: 100,
 	}, moira.TriggerSourceNotSet)
 
 	Convey("Test filter notifications by state", t, func() {
@@ -562,9 +559,7 @@ func TestFilterNotificationsByState(t *testing.T) {
 		Convey("With removed check data", func() {
 			dataBase.RemoveTriggerLastCheck("test1") //nolint
 			defer func() {
-				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-					Timestamp: 100,
-				}, moira.TriggerSourceNotSet)
+				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{}, moira.TriggerSourceNotSet)
 			}()
 
 			validNotifications, removedNotifications, err := dataBase.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
@@ -574,7 +569,7 @@ func TestFilterNotificationsByState(t *testing.T) {
 		})
 
 		Convey("With metric on maintenance", func() {
-			dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test": 130}, nil, "test", 100)     //nolint
+			dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test": time.Now().Add(time.Hour).Unix()}, nil, "test", 100)     //nolint
 			defer dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test": 0}, nil, "test", 100) //nolint
 
 			validNotifications, removedNotifications, err := dataBase.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
@@ -584,7 +579,7 @@ func TestFilterNotificationsByState(t *testing.T) {
 		})
 
 		Convey("With trigger on maintenance", func() {
-			var triggerMaintenance int64 = 130
+			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
 			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
 				triggerMaintenance = 0
@@ -665,15 +660,12 @@ func TestHandleNotifications(t *testing.T) {
 		CreatedAt: now,
 	}
 
-	_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-		Timestamp: 100,
-	}, moira.TriggerSourceNotSet)
+	_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{}, moira.TriggerSourceNotSet)
 
 	_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"test": {},
 		},
-		Timestamp: 100,
 	}, moira.TriggerSourceNotSet)
 
 	Convey("Test handle notifications", t, func() {
@@ -694,9 +686,7 @@ func TestHandleNotifications(t *testing.T) {
 		Convey("With both delayed and not delayed notifications and removed check data", func() {
 			dataBase.RemoveTriggerLastCheck("test1") //nolint
 			defer func() {
-				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{
-					Timestamp: 100,
-				}, moira.TriggerSourceNotSet)
+				_ = dataBase.SetTriggerLastCheck("test1", &moira.CheckData{}, moira.TriggerSourceNotSet)
 			}()
 
 			validNotifications, removedNotifications, err := dataBase.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
@@ -706,7 +696,7 @@ func TestHandleNotifications(t *testing.T) {
 		})
 
 		Convey("With both delayed and not delayed valid notifications and metric on maintenance", func() {
-			dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test": 130}, nil, "test", 100)     //nolint
+			dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test": time.Now().Add(time.Hour).Unix()}, nil, "test", 100)     //nolint
 			defer dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test": 0}, nil, "test", 100) //nolint
 
 			validNotifications, removedNotifications, err := dataBase.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
@@ -716,7 +706,7 @@ func TestHandleNotifications(t *testing.T) {
 		})
 
 		Convey("With both delayed and not delayed valid notifications and trigger on maintenance", func() {
-			var triggerMaintenance int64 = 130
+			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
 			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
 				triggerMaintenance = 0
@@ -809,7 +799,6 @@ func TestFetchNotificationsDo(t *testing.T) {
 		Metrics: map[string]moira.MetricState{
 			"test1": {},
 		},
-		Timestamp: 110,
 	}, moira.TriggerSourceNotSet)
 
 	_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
@@ -817,7 +806,6 @@ func TestFetchNotificationsDo(t *testing.T) {
 			"test1": {},
 			"test2": {},
 		},
-		Timestamp: 110,
 	}, moira.TriggerSourceNotSet)
 
 	now := time.Now().Unix()
@@ -974,7 +962,6 @@ func TestFetchNotificationsDo(t *testing.T) {
 					Metrics: map[string]moira.MetricState{
 						"test1": {},
 					},
-					Timestamp: 110,
 				}, moira.TriggerSourceNotSet)
 			}()
 
@@ -1011,7 +998,7 @@ func TestFetchNotificationsDo(t *testing.T) {
 		})
 
 		Convey("Test notifications with ts and metric on maintenance", func() {
-			dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test2": 130}, nil, "test", 100)     //nolint
+			dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test2": time.Now().Add(time.Hour).Unix()}, nil, "test", 100)     //nolint
 			defer dataBase.SetTriggerCheckMaintenance("test2", map[string]int64{"test2": 0}, nil, "test", 100) //nolint
 
 			Convey("With limit = count", func() {
@@ -1047,7 +1034,7 @@ func TestFetchNotificationsDo(t *testing.T) {
 		})
 
 		Convey("Test delayed notifications with ts and trigger on maintenance", func() {
-			var triggerMaintenance int64 = 130
+			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
 			dataBase.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
 				triggerMaintenance = 0

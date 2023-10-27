@@ -313,26 +313,22 @@ func TestScheduledNotification_GetState(t *testing.T) {
 			state := notification.GetState(&CheckData{
 				Metrics: map[string]MetricState{
 					"test": {
-						Maintenance: 100,
+						Maintenance: time.Now().Add(time.Hour).Unix(),
 					},
 				},
-				Timestamp: 80,
 			})
 			So(state, ShouldEqual, IgnoredNotification)
 		})
 
 		Convey("Get Ignored state with trigger on maintenance", func() {
 			state := notification.GetState(&CheckData{
-				Maintenance: 100,
-				Timestamp:   80,
+				Maintenance: time.Now().Add(time.Hour).Unix(),
 			})
 			So(state, ShouldEqual, IgnoredNotification)
 		})
 
 		Convey("Get Valid state with trigger without metrics", func() {
-			state := notification.GetState(&CheckData{
-				Timestamp: 80,
-			})
+			state := notification.GetState(&CheckData{})
 			So(state, ShouldEqual, ValidNotification)
 		})
 
@@ -341,7 +337,6 @@ func TestScheduledNotification_GetState(t *testing.T) {
 				Metrics: map[string]MetricState{
 					"test": {},
 				},
-				Timestamp: 80,
 			})
 			So(state, ShouldEqual, ValidNotification)
 		})
@@ -428,19 +423,18 @@ func TestTrigger_IsSimple(t *testing.T) {
 func TestCheckData_IsTriggerOnMaintenance(t *testing.T) {
 	Convey("IsTriggerOnMaintenance manipulations", t, func() {
 		checkData := &CheckData{
-			Maintenance: 120,
-			Timestamp:   100,
+			Maintenance: time.Now().Add(time.Hour).Unix(),
 		}
 
-		Convey("Test with trigger check Maintenance more than last check timestamp", func() {
+		Convey("Test with trigger check Maintenance more than time now", func() {
 			actual := checkData.IsTriggerOnMaintenance()
 			So(actual, ShouldBeTrue)
 		})
 
-		Convey("Test with trigger check Maintenance less than last check timestamp", func() {
-			checkData.Timestamp = 150
+		Convey("Test with trigger check Maintenance less than time now", func() {
+			checkData.Maintenance = time.Now().Add(-time.Hour).Unix()
 			defer func() {
-				checkData.Timestamp = 100
+				checkData.Maintenance = time.Now().Add(time.Hour).Unix()
 			}()
 
 			actual := checkData.IsTriggerOnMaintenance()
@@ -454,11 +448,10 @@ func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
 		checkData := &CheckData{
 			Metrics: map[string]MetricState{
 				"test1": {
-					Maintenance: 110,
+					Maintenance: time.Now().Add(time.Hour).Unix(),
 				},
 				"test2": {},
 			},
-			Timestamp: 100,
 		}
 
 		Convey("Test with a metric that is not in the trigger", func() {
@@ -476,10 +469,14 @@ func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
 			So(actual, ShouldBeTrue)
 		})
 
-		Convey("Test with the metric that is in the trigger, but the last successful check of the trigger is more than Maintenance", func() {
-			checkData.Timestamp = 120
+		Convey("Test with the metric that is in the trigger, but the time now is more than Maintenance", func() {
+			metric := checkData.Metrics["test1"]
+			metric.Maintenance = time.Now().Add(-time.Hour).Unix()
+			checkData.Metrics["test1"] = metric
 			defer func() {
-				checkData.Timestamp = 100
+				metric := checkData.Metrics["test1"]
+				metric.Maintenance = time.Now().Add(time.Hour).Unix()
+				checkData.Metrics["test1"] = metric
 			}()
 
 			actual := checkData.IsMetricOnMaintenance("test1")
@@ -491,7 +488,7 @@ func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
 			defer func() {
 				checkData.Metrics = map[string]MetricState{
 					"test1": {
-						Maintenance: 110,
+						Maintenance: time.Now().Add(time.Hour).Unix(),
 					},
 					"test2": {},
 				}

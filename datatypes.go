@@ -413,7 +413,7 @@ type CheckData struct {
 	State                   State             `json:"state" example:"OK"`
 	Maintenance             int64             `json:"maintenance,omitempty" example:"0" format:"int64"`
 	MaintenanceInfo         MaintenanceInfo   `json:"maintenance_info"`
-	// Timestamp - time, which means when the checker last checked this trigger, updated every checkInterval seconds
+	// Timestamp - time, which means when the checker last checked this trigger, this value stops updating if the trigger does not receive metrics
 	Timestamp      int64 `json:"timestamp,omitempty" example:"1590741916" format:"int64"`
 	EventTimestamp int64 `json:"event_timestamp,omitempty" example:"1590741878" format:"int64"`
 	// LastSuccessfulCheckTimestamp - time of the last check of the trigger, during which there were no errors
@@ -435,7 +435,7 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 
 // IsTriggerOnMaintenance checks if the trigger is on Maintenance
 func (checkData *CheckData) IsTriggerOnMaintenance() bool {
-	return checkData.Timestamp <= checkData.Maintenance
+	return time.Now().Unix() <= checkData.Maintenance
 }
 
 // IsMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
@@ -449,7 +449,7 @@ func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
 		return false
 	}
 
-	return checkData.Timestamp <= metricState.Maintenance
+	return time.Now().Unix() <= metricState.Maintenance
 }
 
 // MetricState represents metric state data for given timestamp
