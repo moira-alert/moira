@@ -15,7 +15,7 @@ type NotifierMetrics struct {
 	SendersDroppedNotifications    MetersCollection
 	PlotsBuildDurationMs           Histogram
 	PlotsEvaluateTriggerDurationMs Histogram
-	FetchNotificationsDurationMs   Histogram
+	fetchNotificationsDurationMs   Histogram
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
@@ -32,13 +32,13 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		SendersDroppedNotifications:    NewMetersCollection(registry),
 		PlotsBuildDurationMs:           registry.NewHistogram("plots", "build", "duration", "ms"),
 		PlotsEvaluateTriggerDurationMs: registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
-		FetchNotificationsDurationMs:   registry.NewHistogram("fetch", "notifications", "duration", "ms"),
+		fetchNotificationsDurationMs:   registry.NewHistogram("fetch", "notifications", "duration", "ms"),
 	}
 }
 
 // UpdateFetchNotificationsDurationMs - counts how much time has passed since fetchNotificationsStartTime in ms and updates the metric
 func (metrics *NotifierMetrics) UpdateFetchNotificationsDurationMs(fetchNotificationsStartTime time.Time) {
-	metrics.FetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
+	metrics.fetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
 }
 
 // MarkSendersDroppedNotifications marks metrics as 1 by contactType for dropped notifications.
