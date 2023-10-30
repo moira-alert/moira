@@ -196,13 +196,13 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 		return nil, nil, fmt.Errorf("failed to get notifications trigger checks: %w", err)
 	}
 
-	for i := range notifications {
-		switch notifications[i].GetState(triggerChecks[i]) {
+	for i, notification := range notifications {
+		switch notification.GetState(triggerChecks[i]) {
 		case moira.ValidNotification:
-			validNotifications = append(validNotifications, notifications[i])
+			validNotifications = append(validNotifications, notification)
 
 		case moira.RemovedNotification:
-			toRemoveNotifications = append(toRemoveNotifications, notifications[i])
+			toRemoveNotifications = append(toRemoveNotifications, notification)
 		}
 	}
 
