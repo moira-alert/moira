@@ -1,6 +1,6 @@
 # Moira 2.0 ![Build Status](https://github.com/moira-alert/moira/actions/workflows/test.yml/badge.svg?branch=master) [![codecov](https://codecov.io/gh/moira-alert/moira/branch/master/graph/badge.svg)](https://codecov.io/gh/moira-alert/moira) [![Documentation Status](https://readthedocs.org/projects/moira/badge/?version=latest)](http://moira.readthedocs.io/en/latest/?badge=latest) [![Telegram](https://img.shields.io/badge/telegram-join%20chat-3796cd.svg)](https://t.me/moira_alert) [![Go Report Card](https://goreportcard.com/badge/github.com/moira-alert/moira)](https://goreportcard.com/report/github.com/moira-alert/moira)
 
-Moira is a real-time alerting tool, based on [Graphite](https://graphite.readthedocs.io) data or [Prometheus](https://prometheus.io/)/[VictoriaMetrics](https://victoriametrics.com/) data.
+Moira is a real-time alerting tool, based on [Graphite](https://graphite.readthedocs.io) or [Prometheus](https://prometheus.io/)/[VictoriaMetrics](https://victoriametrics.com/) metrics.
 
 ## Installation
 
