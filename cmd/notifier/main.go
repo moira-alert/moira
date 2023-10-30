@@ -137,6 +137,7 @@ func main() {
 		Logger:   logger,
 		Database: database,
 		Notifier: sender,
+		Metrics:  notifierMetrics,
 	}
 	fetchNotificationsWorker.Start()
 	defer stopNotificationsFetcher(fetchNotificationsWorker)
