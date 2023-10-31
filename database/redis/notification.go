@@ -250,7 +250,7 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 
 	// No limit
 	if limit == notifier.NotificationsLimitUnlimited {
-		return connector.fetchNotifications(to, nil)
+		return connector.fetchNotifications(to, notifier.NotificationsLimitUnlimited)
 	}
 
 	count, err := connector.notificationsCount(to)
@@ -260,10 +260,10 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 
 	// Hope count will be not greater then limit when we call fetchNotificationsNoLimit
 	if limit > connector.notification.TransactionHeuristicLimit && count < limit/2 {
-		return connector.fetchNotifications(to, nil)
+		return connector.fetchNotifications(to, notifier.NotificationsLimitUnlimited)
 	}
 
-	return connector.fetchNotifications(to, &limit)
+	return connector.fetchNotifications(to, limit)
 }
 
 func (connector *DbConnector) notificationsCount(to int64) (int64, error) {
@@ -280,7 +280,7 @@ func (connector *DbConnector) notificationsCount(to int64) (int64, error) {
 }
 
 // fetchNotificationsWithLimit reads and drops notifications from DB with limit
-func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
+func (connector *DbConnector) fetchNotifications(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// fetchNotificationsDo uses WATCH, so transaction may fail and will retry it
 	// see https://redis.io/topics/transactions
 
@@ -307,10 +307,10 @@ func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moi
 
 // getNotificationsInTxWithLimit receives notifications from the database by a certain time
 // sorted by timestamp in one transaction with or without limit, depending on whether limit is nil
-func getNotificationsInTxWithLimit(ctx context.Context, tx *redis.Tx, to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
+func getNotificationsInTxWithLimit(ctx context.Context, tx *redis.Tx, to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	var rng *redis.ZRangeBy
-	if limit != nil {
-		rng = &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10), Offset: 0, Count: *limit}
+	if limit != notifier.NotificationsLimitUnlimited {
+		rng = &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10), Offset: 0, Count: limit}
 	} else {
 		rng = &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10)}
 	}
@@ -342,7 +342,7 @@ This is to ensure that notifications with the same timestamp are always clumped 
 func getLimitedNotifications(
 	ctx context.Context,
 	tx *redis.Tx,
-	limit *int64,
+	limit int64,
 	notifications []*moira.ScheduledNotification,
 ) ([]*moira.ScheduledNotification, error) {
 	if len(notifications) == 0 {
@@ -351,7 +351,7 @@ func getLimitedNotifications(
 
 	limitedNotifications := notifications
 
-	if limit != nil {
+	if limit != notifier.NotificationsLimitUnlimited {
 		limitedNotifications = limitNotifications(notifications)
 		lastTs := limitedNotifications[len(limitedNotifications)-1].Timestamp
 
@@ -359,7 +359,7 @@ func getLimitedNotifications(
 			// this means that all notifications have same timestamp,
 			// we hope that all notifications with same timestamp should fit our memory
 			var err error
-			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, nil)
+			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, notifier.NotificationsLimitUnlimited)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get notification without limit in transaction: %w", err)
 			}
@@ -370,7 +370,7 @@ func getLimitedNotifications(
 }
 
 // fetchNotificationsDo performs fetching of notifications within a single transaction
-func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
+func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// See https://redis.io/topics/transactions
 
 	ctx := connector.context
