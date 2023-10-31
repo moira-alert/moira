@@ -91,8 +91,8 @@ type NotificationConfig struct {
 	// TransactionHeuristicLimit maximum allowable limit, after this limit all notifications
 	// without limit will be taken
 	TransactionHeuristicLimit int64 `yaml:"transaction_heuristic_limit"`
-	// ResaveTime is the time to resave a notification whose trigger or metric is in Maintenance,
-	// for more details see PR #946
+	// ResaveTime is the time by which the timestamp of notifications with triggers
+	// or metrics on Maintenance is incremented
 	ResaveTime string `yaml:"resave_time"`
 }
 

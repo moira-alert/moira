@@ -23,6 +23,12 @@ func (e transactionError) Error() string {
 	return "Transaction Error"
 }
 
+/*
+A structure that groups notifications into three categories:
+  - valid notifications
+  - toRemove notifications that should be removed, e.g., due to a removed trigger or outdated notifications with triggers or metrics on Maintenance
+  - toResave notifications on Maintenance with updated timestamps
+*/
 type notificationTypes struct {
 	toRemove, valid, toResave []*moira.ScheduledNotification
 }
@@ -218,9 +224,9 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 
 		case moira.ResavedNotification:
 			types.toRemove = append(types.toRemove, notification)
-			resaveNotification := *notification
-			resaveNotification.Timestamp += connector.GetResaveTimeInSeconds()
-			types.toResave = append(types.toResave, &resaveNotification)
+			toResaveNotification := *notification
+			toResaveNotification.Timestamp += connector.GetResaveTimeInSeconds()
+			types.toResave = append(types.toResave, &toResaveNotification)
 		}
 	}
 
@@ -439,7 +445,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 				if errors.Is(err, redis.TxFailedErr) {
 					return &transactionError{}
 				}
-				return fmt.Errorf("failed to resave notifications in transaction: %w", err)
+				return fmt.Errorf("failed to save notifications in transaction: %w", err)
 			}
 
 			return nil
@@ -468,7 +474,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	z := &redis.Z{Score: float64(notification.Timestamp), Member: bytes}
 	_, err = c.ZAdd(ctx, notifierNotificationsKey, z).Result()
 	if err != nil {
-		return fmt.Errorf("failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
+		return fmt.Errorf("failed to add scheduled notification: %s, error: %w", string(bytes), err)
 	}
 
 	return err
@@ -490,7 +496,7 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 	_, err := pipe.Exec(ctx)
 
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err)
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 
 	return nil
