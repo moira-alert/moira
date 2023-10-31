@@ -91,6 +91,9 @@ type NotificationConfig struct {
 	// TransactionHeuristicLimit maximum allowable limit, after this limit all notifications
 	// without limit will be taken
 	TransactionHeuristicLimit int64 `yaml:"transaction_heuristic_limit"`
+	// ResaveTime is the time to resave a notification whose trigger or metric is in Maintenance,
+	// for more details see PR #946
+	ResaveTime string `yaml:"resave_time"`
 }
 
 // GetSettings returns notification storage configuration
@@ -100,6 +103,7 @@ func (notificationConfig *NotificationConfig) GetSettings() redis.NotificationCo
 		TransactionTimeout:        to.Duration(notificationConfig.TransactionTimeout),
 		TransactionMaxRetries:     notificationConfig.TransactionMaxRetries,
 		TransactionHeuristicLimit: notificationConfig.TransactionHeuristicLimit,
+		ResaveTime:                to.Duration(notificationConfig.ResaveTime),
 	}
 }
 

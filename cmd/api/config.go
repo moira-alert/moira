@@ -120,6 +120,7 @@ func getDefault() config {
 			TransactionTimeout:        "200ms",
 			TransactionMaxRetries:     10,
 			TransactionHeuristicLimit: 10000,
+			ResaveTime:                "30s",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",

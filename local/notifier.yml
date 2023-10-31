@@ -47,6 +47,7 @@ notification:
   transaction_timeout: 200ms
   transaction_max_retries: 10
   transaction_heuristic_limit: 10000
+  resave_time: 30s
 log:
   log_file: stdout
   log_level: info

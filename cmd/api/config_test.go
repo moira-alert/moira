@@ -107,6 +107,7 @@ func Test_webConfig_getDefault(t *testing.T) {
 				TransactionTimeout:        "200ms",
 				TransactionMaxRetries:     10,
 				TransactionHeuristicLimit: 10000,
+				ResaveTime:                "30s",
 			},
 		}
 

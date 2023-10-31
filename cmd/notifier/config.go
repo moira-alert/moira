@@ -99,6 +99,7 @@ func getDefault() config {
 			TransactionTimeout:        "200ms",
 			TransactionMaxRetries:     10,
 			TransactionHeuristicLimit: 10000,
+			ResaveTime:                "30s",
 		},
 		Notifier: notifierConfig{
 			SenderTimeout:    "10s",
