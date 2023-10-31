@@ -51,6 +51,13 @@ type DbConnector struct {
 }
 
 func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {
+	logger.Debug().
+		Interface("delayed_time", n.DelayedTime).
+		Interface("transaction_timeout", n.TransactionTimeout).
+		Int("transaction_max_retries", n.TransactionMaxRetries).
+		Int64("transaction_heuristic_limit", n.TransactionHeuristicLimit).
+		Interface("resave_time", n.ResaveTime)
+
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:       config.MasterName,
 		Addrs:            config.Addrs,

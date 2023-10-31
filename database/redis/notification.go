@@ -238,8 +238,20 @@ func (connector *DbConnector) handleNotifications(notifications []*moira.Schedul
 	if len(notifications) == 0 {
 		return notificationTypes{}, nil
 	}
+	connector.logger.Debug().
+		Interface("notifications", notifications).
+		Int("count_notifications", len(notifications)).
+		Msg("All notifications")
 
 	delayedNotifications, notDelayedNotifications := filterNotificationsByDelay(notifications, connector.GetDelayedTimeInSeconds())
+	connector.logger.Debug().
+		Fields(map[string]interface{}{
+			"delayed":     delayedNotifications,
+			"not delayed": notDelayedNotifications,
+		}).
+		Int("count_delayed", len(delayedNotifications)).
+		Int("count_not_delayed", len(notDelayedNotifications)).
+		Msg("Notifications by delay")
 
 	if len(delayedNotifications) == 0 {
 		return notificationTypes{
@@ -252,6 +264,16 @@ func (connector *DbConnector) handleNotifications(notifications []*moira.Schedul
 	if err != nil {
 		return notificationTypes{}, fmt.Errorf("failed to filter delayed notifications by state: %w", err)
 	}
+	connector.logger.Debug().
+		Fields(map[string]interface{}{
+			"valid":    types.valid,
+			"toRemove": types.toRemove,
+			"toResave": types.toResave,
+		}).
+		Int("valid_count", len(types.valid)).
+		Int("removed_count", len(types.toRemove)).
+		Int("resaved_count", len(types.toResave)).
+		Msg("Types of notifications")
 
 	types.valid, err = moira.MergeToSorted[*moira.ScheduledNotification](types.valid, notDelayedNotifications)
 	if err != nil {
@@ -392,6 +414,16 @@ func getLimitedNotifications(
 
 // fetchNotificationsDo performs fetching of notifications within a single transaction
 func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
+	if limit != nil {
+		connector.logger.Debug().
+			Int64("to", to).
+			Msg("Fetch without limit")
+	} else {
+		connector.logger.Debug().
+			Int64("to", to).
+			Int64("limit", *limit).
+			Msg("Fetch with limit")
+	}
 	// See https://redis.io/topics/transactions
 
 	ctx := connector.context
@@ -439,7 +471,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*m
 				if errors.Is(err, redis.TxFailedErr) {
 					return &transactionError{}
 				}
-				return fmt.Errorf("failed to resave notifications in transaction: %w", err)
+				return fmt.Errorf("failed to save notifications in transaction: %w", err)
 			}
 
 			return nil

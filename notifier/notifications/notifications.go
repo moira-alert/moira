@@ -24,7 +24,8 @@ type FetchNotificationsWorker struct {
 // Start is a cycle that fetches scheduled notifications from database
 func (worker *FetchNotificationsWorker) Start() {
 	worker.tomb.Go(func() error {
-		checkTicker := time.NewTicker(time.Second)
+		fetchInterval := 30 * time.Second
+		checkTicker := time.NewTicker(fetchInterval)
 		for {
 			select {
 			case <-worker.tomb.Dying():
