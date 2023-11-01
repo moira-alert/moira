@@ -362,6 +362,66 @@ func TestLocalSourceFetch(t *testing.T) {
 			Patterns: []string{pattern1},
 		})
 	})
+
+	Convey("Test success evaluate target with aliasByTags('name')", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("super.puper.pattern | aliasByTags('name')", from, until, true)
+
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "super.puper.metric",
+				StartTime: retentionFrom,
+				StopTime:  retentionUntil,
+				StepTime:  retention,
+				Values:    []float64{0, 1, 2, 3, 4},
+			}},
+			Metrics:  []string{metric},
+			Patterns: []string{pattern1},
+		})
+	})
+
+	Convey("Test success evaluate target with currentAbove(3.99)", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("super.puper.pattern | currentAbove(3.99)", from, until, true)
+
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "super.puper.metric",
+				StartTime: retentionFrom,
+				StopTime:  retentionUntil,
+				StepTime:  retention,
+				Values:    []float64{0, 1, 2, 3, 4},
+			}},
+			Metrics:  []string{metric},
+			Patterns: []string{pattern1},
+		})
+	})
+
+	Convey("Test success evaluate target with currentAbove(4)", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("super.puper.pattern | currentAbove(4)", from, until, true)
+
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []metricSource.MetricData{},
+			Metrics:     []string{metric},
+			Patterns:    []string{pattern1},
+		})
+	})
 }
 
 func TestLocalSourceFetchNoRealTimeAlerting(t *testing.T) {
