@@ -1,5 +1,3 @@
-bitbucket.org/tebeka/strftime v0.0.0-20140926081919-2194253a23c0 h1:800dI8vRxVMgss6UcZY8gxk8PvYw7Qo1ZI3TrUkTKjc=
-bitbucket.org/tebeka/strftime v0.0.0-20140926081919-2194253a23c0/go.mod h1:9BKpS/J2txC7Ql3QUhesesiV3HsIsA7zl7VK6cQVg5M=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.31.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
@@ -589,8 +587,8 @@ github.com/go-errors/errors v1.1.1/go.mod h1:psDX2osz5VnTOnFWbDeWwS7yejl+uV3FEWE
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20191125211704-12ad95a8df72/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
-github.com/go-graphite/carbonapi v0.16.0 h1:HvPjAKYChiwdHtNpFu33hLRpPCYA7gyyeFWpPR2XvXs=
-github.com/go-graphite/carbonapi v0.16.0/go.mod h1:RQpis4h2a1kxn1s/R5LQXbumFj+kR2bRz+BebPN1Z1Q=
+github.com/go-graphite/carbonapi v0.16.2-0.20231101113133-39b476ab3e6d h1:XzKqULyL0Qlsz5VVl7Q82YWFbdnJTZYCc1lO4kKKUEs=
+github.com/go-graphite/carbonapi v0.16.2-0.20231101113133-39b476ab3e6d/go.mod h1:vefIVMyWf471SFMpHS4CSbySjGaMPtNxmMTnTlU2tSc=
 github.com/go-graphite/protocol v1.0.0 h1:Fqb0mkVVtfMrn6vw6Ntm3raf3gVVZCOVdZu4JosW5qE=
 github.com/go-graphite/protocol v1.0.0/go.mod h1:eonkg/0UGhJUYu+PshOg1NzWSUcXskr/yHeQXJHJr8Y=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
@@ -1084,6 +1082,8 @@ github.com/swaggo/http-swagger v1.3.4/go.mod h1:9dAh0unqMBAlbp1uE2Uc2mQTxNMU/ha4
 github.com/swaggo/swag v1.8.12 h1:pctzkNPu0AlQP2royqX3apjKCQonAnf7KGoxeO4y64w=
 github.com/swaggo/swag v1.8.12/go.mod h1:lNfm6Gg+oAq3zRJQNEMBE66LIJKM44mxFqhEEgy2its=
 github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07/go.mod h1:kDXzergiv9cbyO7IOYJZWg1U88JhDg3PB6klq9Hg2pA=
+github.com/tebeka/strftime v0.1.5 h1:1NQKN1NiQgkqd/2moD6ySP/5CoZQsKa1d3ZhJ44Jpmg=
+github.com/tebeka/strftime v0.1.5/go.mod h1:29/OidkoWHdEKZqzyDLUyC+LmgDgdHo4WAFCDT7D/Ig=
 github.com/tinylib/msgp v1.1.8 h1:FCXC1xanKO4I8plpHGH2P7koL/RzZs12l/+r7vakfm0=
 github.com/tinylib/msgp v1.1.8/go.mod h1:qkpG+2ldGg4xRFmx+jfTvZPxfGFhi64BcnL9vkCm/Tw=
 github.com/viant/assertly v0.4.8/go.mod h1:aGifi++jvCrUaklKEKT0BU95igDNaqkvz+49uaYMPRU=
