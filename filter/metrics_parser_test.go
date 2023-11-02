@@ -170,7 +170,7 @@ func TestParseMetric(t *testing.T) {
 		// [n=19] One.two.three 123 1234567890.6790847778320312500
 
 		for i := 1; i < 7; i++ {
-			rawTimestamp := strconv.FormatFloat(float64(testTimestamp)+rand.Float64(), 'f', i, 64)
+			rawTimestamp := strconv.FormatFloat(float64(testTimestamp)+0.9*rand.Float64(), 'f', i, 64)
 			rawMetric := "One.two.three 123 " + rawTimestamp
 			validMetric := ValidMetricCase{rawMetric, "One.two.three", "One.two.three", map[string]string{}, 123, testTimestamp}
 			parsedMetric, err := ParseMetric([]byte(validMetric.input))
