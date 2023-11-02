@@ -397,7 +397,7 @@ func TestGetLimitedNotifications(t *testing.T) {
 	ctx := dataBase.context
 
 	Convey("Test getLimitedNotifications", t, func() {
-		var limit int64 = 0
+		var limit int64
 		now = time.Now().Unix()
 		notificationNew := moira.ScheduledNotification{
 			SendFail:  1,

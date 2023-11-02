@@ -178,9 +178,9 @@ func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moi
 		checkDataMap[triggerID] = triggersLastCheck[i]
 	}
 
-	result := make([]*moira.CheckData, len(notifications))
-	for i, notification := range notifications {
-		result[i] = checkDataMap[notification.Trigger.ID]
+	result := make([]*moira.CheckData, 0, len(notifications))
+	for _, notification := range notifications {
+		result = append(result, checkDataMap[notification.Trigger.ID])
 	}
 
 	return result, nil
