@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/moira-alert/moira/notifier"
+
 	"github.com/xiam/to"
 
 	"github.com/moira-alert/moira/api"
@@ -11,12 +13,14 @@ import (
 )
 
 type config struct {
-	Redis     cmd.RedisConfig     `yaml:"redis"`
-	Logger    cmd.LoggerConfig    `yaml:"log"`
-	API       apiConfig           `yaml:"api"`
-	Web       webConfig           `yaml:"web"`
-	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
-	Remote    cmd.RemoteConfig    `yaml:"remote"`
+	Redis               cmd.RedisConfig               `yaml:"redis"`
+	Logger              cmd.LoggerConfig              `yaml:"log"`
+	API                 apiConfig                     `yaml:"api"`
+	Web                 webConfig                     `yaml:"web"`
+	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
+	Remote              cmd.RemoteConfig              `yaml:"remote"`
+	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
+	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 }
 
 type apiConfig struct {
@@ -59,10 +63,10 @@ type featureFlags struct {
 
 func (config *apiConfig) getSettings(localMetricTTL, remoteMetricTTL string) *api.Config {
 	return &api.Config{
-		EnableCORS:      config.EnableCORS,
-		Listen:          config.Listen,
-		LocalMetricTTL:  to.Duration(localMetricTTL),
-		RemoteMetricTTL: to.Duration(remoteMetricTTL),
+		EnableCORS:              config.EnableCORS,
+		Listen:                  config.Listen,
+		GraphiteLocalMetricTTL:  to.Duration(localMetricTTL),
+		GraphiteRemoteMetricTTL: to.Duration(remoteMetricTTL),
 	}
 }
 
@@ -106,6 +110,10 @@ func getDefault() config {
 			DialTimeout: "500ms",
 			MaxRetries:  3,
 		},
+		NotificationHistory: cmd.NotificationHistoryConfig{
+			NotificationHistoryTTL:        "48h",
+			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
+		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",
 			LogLevel:        "info",
@@ -137,6 +145,12 @@ func getDefault() config {
 		Remote: cmd.RemoteConfig{
 			Timeout:    "60s",
 			MetricsTTL: "7d",
+		},
+		Prometheus: cmd.PrometheusConfig{
+			Timeout:      "60s",
+			MetricsTTL:   "7d",
+			Retries:      1,
+			RetryTimeout: "10s",
 		},
 	}
 }

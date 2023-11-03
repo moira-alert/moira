@@ -176,11 +176,11 @@ var triggerVal3 = &Trigger{
 }
 
 var triggerVal4 = &Trigger{
-	ID:       "trigger-id-4",
-	Name:     "Super Trigger 4",
-	IsRemote: true,
-	TTL:      600,
-	Tags:     []string{"4"},
+	ID:            "trigger-id-4",
+	Name:          "Super Trigger 4",
+	TriggerSource: GraphiteRemote,
+	TTL:           600,
+	Tags:          []string{"4"},
 }
 
 func TestChunkSlice(t *testing.T) {
@@ -203,10 +203,10 @@ func TestChunkSlice(t *testing.T) {
 
 func TestIsValidFloat64(t *testing.T) {
 	Convey("values +Inf -Inf and NaN is invalid", t, func() {
-		So(IsValidFloat64(math.NaN()), ShouldBeFalse)
-		So(IsValidFloat64(math.Inf(-1)), ShouldBeFalse)
-		So(IsValidFloat64(math.Inf(1)), ShouldBeFalse)
-		So(IsValidFloat64(3.14), ShouldBeTrue)
+		So(IsFiniteNumber(math.NaN()), ShouldBeFalse)
+		So(IsFiniteNumber(math.Inf(-1)), ShouldBeFalse)
+		So(IsFiniteNumber(math.Inf(1)), ShouldBeFalse)
+		So(IsFiniteNumber(3.14), ShouldBeTrue)
 	})
 }
 

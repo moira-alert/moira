@@ -8,14 +8,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/moira-alert/moira/checker/worker"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
-	"github.com/moira-alert/moira/checker/worker"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -79,17 +80,36 @@ func main() {
 	}
 	defer telemetry.Stop()
 
+	logger.Info().Msg("Debug: checker started")
+
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
+	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.Checker)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
+
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	prometheusSource, err := prometheus.Create(prometheusConfig, logger)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize prometheus metric source")
+	}
 
-	isConfigured, _ := remoteSource.IsConfigured()
-	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, isConfigured)
+	// TODO: Abstractions over sources, so that they all are handled the same way
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(
+		localSource,
+		remoteSource,
+		prometheusSource,
+	)
+
+	remoteConfigured, _ := remoteSource.IsConfigured()
+	prometheusConfigured, _ := prometheusSource.IsConfigured()
+
+	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, remoteConfigured, prometheusConfigured)
 	checkerSettings := config.Checker.getSettings(logger)
+
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
@@ -99,6 +119,7 @@ func main() {
 		Database:          database,
 		Config:            checkerSettings,
 		RemoteConfig:      remoteConfig,
+		PrometheusConfig:  prometheusConfig,
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
 		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint

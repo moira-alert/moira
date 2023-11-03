@@ -28,8 +28,8 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.Check
 }
 
 // SetTriggerLastCheck sets trigger last check data
-func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, isRemote bool) error {
-	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(isRemote)
+func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, triggerSource moira.TriggerSource) error {
+	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(triggerSource)
 	bytes, err := reply.GetCheckBytes(*checkData)
 	if err != nil {
 		return err
@@ -65,14 +65,23 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	return nil
 }
 
-func (connector *DbConnector) getSelfStateCheckCountKey(isRemote bool) string {
+func (connector *DbConnector) getSelfStateCheckCountKey(triggerSource moira.TriggerSource) string {
 	if connector.source != Checker {
 		return ""
 	}
-	if isRemote {
+	switch triggerSource {
+	case moira.GraphiteLocal:
+		return selfStateChecksCounterKey
+
+	case moira.GraphiteRemote:
 		return selfStateRemoteChecksCounterKey
+
+	case moira.PrometheusRemote:
+		return selfStatePrometheusChecksCounterKey
+
+	default:
+		return ""
 	}
-	return selfStateChecksCounterKey
 }
 
 func appendRemoveTriggerLastCheckToRedisPipeline(ctx context.Context, pipe redis.Pipeliner, triggerID string) redis.Pipeliner {
@@ -131,28 +140,7 @@ func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client 
 
 // CleanUpAbandonedTriggerLastCheck cleans up abandoned triggers last check.
 func (connector *DbConnector) CleanUpAbandonedTriggerLastCheck() error {
-	client := *connector.client
-
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			err := cleanUpAbandonedTriggerLastCheckOnRedisNode(connector, shard)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	default:
-		err := cleanUpAbandonedTriggerLastCheckOnRedisNode(connector, c)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return connector.callFunc(cleanUpAbandonedTriggerLastCheckOnRedisNode)
 }
 
 // SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,

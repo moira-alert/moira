@@ -248,7 +248,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
 			//Add check data
-			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, false)
+			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, moira.GraphiteLocal)
 			So(err, ShouldBeNil)
 
 			triggerCheck.LastCheck = lastCheckTest
@@ -305,23 +305,25 @@ func TestTriggerStoring(t *testing.T) {
 			metric2 := "my.new.test.super.metric2"
 
 			triggerVer1 := &moira.Trigger{
-				ID:           "test-triggerID-id1",
-				Name:         "test trigger 1 v1.0",
-				Targets:      []string{pattern1},
-				Tags:         []string{"test-tag-1"},
-				Patterns:     []string{pattern1},
-				TriggerType:  moira.RisingTrigger,
-				AloneMetrics: map[string]bool{},
+				ID:            "test-triggerID-id1",
+				Name:          "test trigger 1 v1.0",
+				Targets:       []string{pattern1},
+				Tags:          []string{"test-tag-1"},
+				Patterns:      []string{pattern1},
+				TriggerType:   moira.RisingTrigger,
+				TriggerSource: moira.GraphiteLocal,
+				AloneMetrics:  map[string]bool{},
 			}
 
 			triggerVer2 := &moira.Trigger{
-				ID:           "test-triggerID-id1",
-				Name:         "test trigger 1 v2.0",
-				Targets:      []string{pattern2},
-				Tags:         []string{"test-tag-1"},
-				Patterns:     []string{pattern2},
-				TriggerType:  moira.RisingTrigger,
-				AloneMetrics: map[string]bool{},
+				ID:            "test-triggerID-id1",
+				Name:          "test trigger 1 v2.0",
+				Targets:       []string{pattern2},
+				Tags:          []string{"test-tag-1"},
+				Patterns:      []string{pattern2},
+				TriggerType:   moira.RisingTrigger,
+				TriggerSource: moira.GraphiteLocal,
+				AloneMetrics:  map[string]bool{},
 			}
 
 			val1 := &moira.MatchedMetric{
@@ -534,13 +536,13 @@ func TestRemoteTrigger(t *testing.T) {
 	dataBase.clock = systemClock
 	pattern := "test.pattern.remote1"
 	trigger := &moira.Trigger{
-		ID:           "triggerID-0000000000010",
-		Name:         "remote",
-		Targets:      []string{"test.target.remote1"},
-		Patterns:     []string{pattern},
-		IsRemote:     true,
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000010",
+		Name:          "remote",
+		Targets:       []string{"test.target.remote1"},
+		Patterns:      []string{pattern},
+		TriggerSource: moira.GraphiteRemote,
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
 	}
 	dataBase.Flush()
 	defer dataBase.Flush()
@@ -591,7 +593,7 @@ func TestRemoteTrigger(t *testing.T) {
 	})
 
 	Convey("Update remote trigger as local", t, func() {
-		trigger.IsRemote = false
+		trigger.TriggerSource = moira.GraphiteLocal
 		trigger.Patterns = []string{pattern}
 		Convey("Trigger should be saved correctly", func() {
 			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
@@ -634,7 +636,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(patterns, ShouldResemble, trigger.Patterns)
 		})
 
-		trigger.IsRemote = true
+		trigger.TriggerSource = moira.GraphiteRemote
 		Convey("Update this trigger as remote", func() {
 			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
 
@@ -726,9 +728,10 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 
 	Convey("When a local trigger", t, func() {
 		trigger := &moira.Trigger{
-			ID:        "trigger-id",
-			Patterns:  patterns,
-			UpdatedBy: "awesome_user",
+			ID:            "trigger-id",
+			Patterns:      patterns,
+			UpdatedBy:     "awesome_user",
+			TriggerSource: moira.GraphiteLocal,
 		}
 
 		Convey("UpdatedAt CreatedAt fields should be set `now` on creation.", func() {
@@ -769,7 +772,11 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 	})
 
 	Convey("When a remote trigger", t, func() {
-		trigger := &moira.Trigger{ID: "trigger-id", Patterns: patterns, IsRemote: true}
+		trigger := &moira.Trigger{
+			ID:            "trigger-id",
+			Patterns:      patterns,
+			TriggerSource: moira.GraphiteRemote,
+		}
 
 		Convey("UpdatedAt CreatedAt fields should be set `now` on creation; patterns should be empty.", func() {
 			connector.preSaveTrigger(trigger, nil)
@@ -843,71 +850,81 @@ var testTriggers = []moira.Trigger{
 		TriggerType:  moira.RisingTrigger,
 		TTLState:     &moira.TTLStateNODATA,
 		AloneMetrics: map[string]bool{},
+		//TODO: Test that empty TriggerSource is filled on getting vale from db
+		TriggerSource: moira.GraphiteLocal,
 	},
 	{
-		ID:           "triggerID-0000000000001",
-		Name:         "test trigger 1 v2.0",
-		Targets:      []string{"test.target.1", "test.target.2"},
-		Tags:         []string{"test-tag-2", "test-tag-1"},
-		Patterns:     []string{"test.pattern.2", "test.pattern.1"},
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{"t2": true},
+		ID:            "triggerID-0000000000001",
+		Name:          "test trigger 1 v2.0",
+		Targets:       []string{"test.target.1", "test.target.2"},
+		Tags:          []string{"test-tag-2", "test-tag-1"},
+		Patterns:      []string{"test.pattern.2", "test.pattern.1"},
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{"t2": true},
+		TriggerSource: moira.GraphiteLocal,
 	},
 	{
-		ID:           "triggerID-0000000000001",
-		Name:         "test trigger 1 v3.0",
-		Targets:      []string{"test.target.3"},
-		Tags:         []string{"test-tag-2", "test-tag-3"},
-		Patterns:     []string{"test.pattern.3", "test.pattern.2"},
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000001",
+		Name:          "test trigger 1 v3.0",
+		Targets:       []string{"test.target.3"},
+		Tags:          []string{"test-tag-2", "test-tag-3"},
+		Patterns:      []string{"test.pattern.3", "test.pattern.2"},
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
+		TriggerSource: moira.GraphiteLocal,
 	},
 	{
-		ID:           "triggerID-0000000000004",
-		Name:         "test trigger 4",
-		Targets:      []string{"test.target.4"},
-		Tags:         []string{"test-tag-4"},
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000004",
+		Name:          "test trigger 4",
+		Targets:       []string{"test.target.4"},
+		Tags:          []string{"test-tag-4"},
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
+		TriggerSource: moira.GraphiteLocal,
 	},
 	{
-		ID:           "triggerID-0000000000005",
-		Name:         "test trigger 5 (nobody is subscribed)",
-		Targets:      []string{"test.target.5"},
-		Tags:         []string{"test-tag-nosub"},
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000005",
+		Name:          "test trigger 5 (nobody is subscribed)",
+		Targets:       []string{"test.target.5"},
+		Tags:          []string{"test-tag-nosub"},
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
+		TriggerSource: moira.GraphiteLocal,
 	},
 	{
-		ID:           "triggerID-0000000000006",
-		Name:         "test trigger 6 (throttling disabled)",
-		Targets:      []string{"test.target.6"},
-		Tags:         []string{"test-tag-throttling-disabled"},
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000006",
+		Name:          "test trigger 6 (throttling disabled)",
+		Targets:       []string{"test.target.6"},
+		Tags:          []string{"test-tag-throttling-disabled"},
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
+		TriggerSource: moira.GraphiteLocal,
 	},
 	{
-		ID:           "triggerID-0000000000007",
-		Name:         "test trigger 7 (multiple subscribers)",
-		Targets:      []string{"test.target.7"},
-		Tags:         []string{"test-tag-multiple-subs"},
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000007",
+		Name:          "test trigger 7 (multiple subscribers)",
+		Targets:       []string{"test.target.7"},
+		Tags:          []string{"test-tag-multiple-subs"},
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
+		TriggerSource: moira.GraphiteLocal,
 	},
 	{
-		ID:           "triggerID-0000000000008",
-		Name:         "test trigger 8 (duplicated contacts)",
-		Targets:      []string{"test.target.8"},
-		Tags:         []string{"test-tag-dup-contacts"},
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000008",
+		Name:          "test trigger 8 (duplicated contacts)",
+		Targets:       []string{"test.target.8"},
+		Tags:          []string{"test-tag-dup-contacts"},
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
+		TriggerSource: moira.GraphiteLocal,
 	},
 	{
-		ID:           "triggerID-0000000000009",
-		Name:         "test trigger 9 (pseudo tag)",
-		Targets:      []string{"test.target.9"},
-		Tags:         []string{"test-degradation"},
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000009",
+		Name:          "test trigger 9 (pseudo tag)",
+		Targets:       []string{"test.target.9"},
+		Tags:          []string{"test-degradation"},
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
+		TriggerSource: moira.GraphiteLocal,
 	},
 }

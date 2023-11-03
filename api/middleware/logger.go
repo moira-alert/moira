@@ -65,7 +65,14 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 func getErrorResponseIfItHas(writer http.ResponseWriter) *api.ErrorResponse {
 	writerWithBody := writer.(*responseWriterWithBody)
 	var errResp = &api.ErrorResponse{}
-	json.NewDecoder(&writerWithBody.body).Decode(errResp) //nolint
+	if err := json.NewDecoder(&writerWithBody.body).Decode(errResp); err != nil {
+		return &api.ErrorResponse{
+			HTTPStatusCode: http.StatusInternalServerError,
+			Err:            err,
+			ErrorText:      err.Error(),
+		}
+	}
+
 	return errResp
 }
 
@@ -119,6 +126,7 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 		errorResponse := getErrorResponseIfItHas(response)
 		if errorResponse != nil {
 			event.Error(errorResponse.Err)
+			event.String("error_text", errorResponse.ErrorText)
 		}
 	} else {
 		event = entry.logger.Info()

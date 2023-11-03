@@ -23,7 +23,7 @@ var (
 	GoVersion    = "unknown"
 )
 
-var moiraValidVersions = []string{"2.3", "2.6"}
+var moiraValidVersions = []string{"2.3", "2.6", "2.7"}
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/cli.yml", "Path to configuration file")
@@ -293,8 +293,13 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to handle push trigger metrics")
 		}
-		if err := support.HandlePushTriggerLastCheck(logger, dataBase, dump.Trigger.ID, &dump.LastCheck,
-			dump.Trigger.IsRemote); err != nil {
+		if err := support.HandlePushTriggerLastCheck(
+			logger,
+			dataBase,
+			dump.Trigger.ID,
+			&dump.LastCheck,
+			dump.Trigger.TriggerSource,
+		); err != nil {
 			logger.Fatal().
 				Error(err).
 				Msg("Failed to handle push trigger last check")
@@ -340,7 +345,7 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	dataBase := redis.NewDatabase(logger, databaseSettings, redis.Cli)
+	dataBase := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.Cli)
 	return config.Cleanup, logger, dataBase
 }
 

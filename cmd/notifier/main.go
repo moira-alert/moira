@@ -9,6 +9,7 @@ import (
 
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
 
 	"github.com/moira-alert/moira"
@@ -68,7 +69,7 @@ func main() {
 	}
 	defer logger.Info().
 		String("moira_version", MoiraVersion).
-		Msg("Moira Notifier stopped. Version")
+		Msg("Moira Notifier stopped.")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
@@ -78,21 +79,38 @@ func main() {
 	}
 	defer telemetry.Stop()
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
+	notificationHistorySettings := config.NotificationHistory.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.Notifier)
+
+	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
 
 	localSource := local.Create(database)
-	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	prometheusSource, err := prometheus.Create(prometheusConfig, logger)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize prometheus metric source")
+	}
+
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, prometheusSource)
 
 	// Initialize the image store
 	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)
 
 	notifierConfig := config.Notifier.getSettings(logger)
 
-	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider, imageStoreMap)
+	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+	sender := notifier.NewNotifier(
+		database,
+		logger,
+		notifierConfig,
+		notifierMetrics,
+		metricSourceProvider,
+		imageStoreMap,
+	)
 
 	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {
@@ -103,7 +121,7 @@ func main() {
 
 	// Start moira self state checker
 	if config.Notifier.SelfState.getSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings(), metrics.ConfigureHeartBeatMetrics(telemetry.Metrics))
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).
@@ -119,6 +137,7 @@ func main() {
 		Logger:   logger,
 		Database: database,
 		Notifier: sender,
+		Metrics:  notifierMetrics,
 	}
 	fetchNotificationsWorker.Start()
 	defer stopNotificationsFetcher(fetchNotificationsWorker)

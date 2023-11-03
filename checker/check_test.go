@@ -24,7 +24,7 @@ func TestGetMetricDataState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	var warnValue float64 = 10
 	var errValue float64 = 20
-	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 	triggerChecker := TriggerChecker{
 		logger:  logger,
 		metrics: checkerMetrics.LocalMetrics,
@@ -62,7 +62,7 @@ func TestGetMetricDataState(t *testing.T) {
 	var valueTimestamp int64 = 37
 	var checkPoint int64 = 47
 	Convey("Checkpoint more than valueTimestamp", t, func() {
-		metricState, err := triggerChecker.getMetricDataState(&metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
+		metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 		So(err, ShouldBeNil)
 		So(metricState, ShouldBeNil)
 	})
@@ -71,7 +71,7 @@ func TestGetMetricDataState(t *testing.T) {
 		Convey("Has all value by eventTimestamp step", func() {
 			var valueTimestamp int64 = 42
 			var checkPoint int64 = 27
-			metricState, err := triggerChecker.getMetricDataState(&metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
+			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
 			So(metricState, ShouldResemble, &moira.MetricState{
 				State:          moira.StateOK,
@@ -86,7 +86,7 @@ func TestGetMetricDataState(t *testing.T) {
 		Convey("No value in main metric data by eventTimestamp step", func() {
 			var valueTimestamp int64 = 66
 			var checkPoint int64 = 11
-			metricState, err := triggerChecker.getMetricDataState(&metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
+			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
 		})
@@ -94,7 +94,7 @@ func TestGetMetricDataState(t *testing.T) {
 		Convey("IsAbsent in main metric data by eventTimestamp step", func() {
 			var valueTimestamp int64 = 29
 			var checkPoint int64 = 11
-			metricState, err := triggerChecker.getMetricDataState(&metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
+			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
 		})
@@ -102,7 +102,7 @@ func TestGetMetricDataState(t *testing.T) {
 		Convey("No value in additional metric data by eventTimestamp step", func() {
 			var valueTimestamp int64 = 26
 			var checkPoint int64 = 11
-			metricState, err := triggerChecker.getMetricDataState(&metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
+			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
 		})
@@ -113,7 +113,7 @@ func TestGetMetricDataState(t *testing.T) {
 		triggerChecker.trigger.ErrorValue = nil
 		var valueTimestamp int64 = 42
 		var checkPoint int64 = 27
-		metricState, err := triggerChecker.getMetricDataState(&metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
+		metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
@@ -535,7 +535,7 @@ func TestCheckForNODATA(t *testing.T) {
 
 	var ttl int64 = 600
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 	triggerChecker := TriggerChecker{
 		metrics: checkerMetrics.LocalMetrics,
 		logger:  logger,
@@ -563,10 +563,32 @@ func TestCheckForNODATA(t *testing.T) {
 	metricLastState.Timestamp = 399
 	triggerChecker.ttlState = moira.TTLStateDEL
 
-	Convey("TTLState is DEL and has EventTimeStamp", t, func() {
+	Convey("TTLState is DEL, has EventTimeStamp, Maintenance metric has expired and will be deleted", t, func() {
+		metricLastState.Maintenance = 111
 		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
 		So(needToDeleteMetric, ShouldBeTrue)
 		So(currentState, ShouldBeNil)
+	})
+
+	Convey("TTLState is DEL, has EventTimeStamp, the metric doesn't have Maintenance and will be deleted", t, func() {
+		metricLastState.Maintenance = 0
+		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
+		So(needToDeleteMetric, ShouldBeTrue)
+		So(currentState, ShouldBeNil)
+	})
+
+	Convey("TTLState is DEL, has EventTimeStamp, but the metric is on Maintenance, so it's not deleted and DeletedButKept = true", t, func() {
+		metricLastState.Maintenance = 11111
+		needToDeleteMetric, currentState := triggerChecker.checkForNoData(metricLastState, logger)
+		So(needToDeleteMetric, ShouldBeFalse)
+		So(currentState, ShouldNotBeNil)
+		So(*currentState, ShouldResemble, moira.MetricState{
+			Timestamp:      metricLastState.Timestamp,
+			EventTimestamp: metricLastState.EventTimestamp,
+			Maintenance:    metricLastState.Maintenance,
+			Suppressed:     metricLastState.Suppressed,
+			DeletedButKept: true,
+		})
 	})
 
 	Convey("Has new metricState", t, func() {
@@ -634,7 +656,7 @@ func TestCheck(t *testing.T) {
 
 		var ttl int64 = 30
 
-		checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+		checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 		triggerChecker := TriggerChecker{
 			triggerID: "SuperId",
 			database:  dataBase,
@@ -688,7 +710,11 @@ func TestCheck(t *testing.T) {
 					Timestamp:      int64(67),
 					Metric:         triggerChecker.trigger.Name,
 				}, true).Return(nil),
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -719,7 +745,11 @@ func TestCheck(t *testing.T) {
 				gomock.InOrder(
 					source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, unknownFunctionExc),
 					dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-					dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+					dataBase.EXPECT().SetTriggerLastCheck(
+						triggerChecker.triggerID,
+						&lastCheck,
+						triggerChecker.trigger.TriggerSource,
+					).Return(nil),
 				)
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
@@ -764,7 +794,11 @@ func TestCheck(t *testing.T) {
 					dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 					dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-metricsTTL).Return(nil),
 					dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-					dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+					dataBase.EXPECT().SetTriggerLastCheck(
+						triggerChecker.triggerID,
+						&lastCheck,
+						triggerChecker.trigger.TriggerSource,
+					).Return(nil),
 				)
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
@@ -808,7 +842,11 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 				dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-metricsTTL).Return(nil),
 				dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -850,7 +888,11 @@ func TestCheck(t *testing.T) {
 			})
 			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
 			dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil)
+			dataBase.EXPECT().SetTriggerLastCheck(
+				triggerChecker.triggerID,
+				&lastCheck,
+				triggerChecker.trigger.TriggerSource,
+			).Return(nil)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
 		})
@@ -920,10 +962,62 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 				dataBase.EXPECT().RemoveMetricsValues([]string{metricName1, metricNameAlone, metricName2}, triggerChecker.until-metricsTTL).Return(nil),
 
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
+		})
+	})
+}
+
+func TestCheckWithNoMetrics(t *testing.T) {
+	logger, _ := logging.GetLogger("Test")
+	metricsToCheck := map[string]map[string]metricSource.MetricData{}
+
+	Convey("given triggerChecker.check is called with empty metric map", t, func() {
+		warnValue := float64(10)
+		errValue := float64(20)
+		pattern := "super.puper.pattern"
+		ttl := int64(600)
+
+		lastCheck := moira.CheckData{
+			Metrics:   make(map[string]moira.MetricState),
+			State:     moira.StateNODATA,
+			Timestamp: 66,
+		}
+
+		triggerChecker := TriggerChecker{
+			triggerID: "SuperId",
+			logger:    logger,
+			config:    &Config{},
+			from:      3617,
+			until:     3667,
+			ttl:       ttl,
+			ttlState:  moira.TTLStateNODATA,
+			trigger: &moira.Trigger{
+				ErrorValue:  &errValue,
+				WarnValue:   &warnValue,
+				TriggerType: moira.RisingTrigger,
+				Targets:     []string{pattern},
+				Patterns:    []string{pattern},
+			},
+			lastCheck: &lastCheck,
+		}
+		aloneMetrics := map[string]metricSource.MetricData{}
+		checkData := newCheckData(&lastCheck, triggerChecker.until)
+		newCheckData, err := triggerChecker.check(metricsToCheck, aloneMetrics, checkData, logger)
+
+		So(err, ShouldBeNil)
+		So(newCheckData, ShouldResemble, moira.CheckData{
+			Metrics:                 map[string]moira.MetricState{},
+			MetricsToTargetRelation: map[string]string{},
+			Timestamp:               triggerChecker.until,
+			State:                   moira.StateNODATA,
+			Score:                   0,
 		})
 	})
 }
@@ -1133,7 +1227,111 @@ func TestHandleTrigger(t *testing.T) {
 		})
 	})
 
-	Convey("No data too long and ttlState is delete", t, func() {
+	Convey("No data too long and ttlState is delete, the metric is not on Maintenance, so it will be removed", t, func() {
+		triggerChecker.from = 4217
+		triggerChecker.until = 4267
+		triggerChecker.ttlState = moira.TTLStateDEL
+		lastCheck.Timestamp = 4267
+
+		dataBase.EXPECT().RemovePatternsMetrics(triggerChecker.trigger.Patterns).Return(nil)
+
+		aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)}
+		lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
+		checkData := newCheckData(&lastCheck, triggerChecker.until)
+		metricsToCheck := map[string]map[string]metricSource.MetricData{}
+
+		checkData, err := triggerChecker.check(metricsToCheck, aloneMetrics, checkData, logger)
+
+		So(err, ShouldBeNil)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics:                      make(map[string]moira.MetricState),
+			Timestamp:                    triggerChecker.until,
+			State:                        moira.StateOK,
+			Score:                        0,
+			LastSuccessfulCheckTimestamp: 0,
+			MetricsToTargetRelation:      map[string]string{},
+		})
+	})
+
+	metricState := lastCheck.Metrics[metric]
+	metricState.Maintenance = 5000
+	lastCheck.Metrics[metric] = metricState
+
+	Convey("No data too long and ttlState is delete, but the metric is on maintenance and DeletedButKept is false, so it won't be deleted", t, func() {
+		triggerChecker.from = 4217
+		triggerChecker.until = 4267
+		triggerChecker.ttlState = moira.TTLStateDEL
+		lastCheck.Timestamp = 4267
+
+		aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)}
+		lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
+		checkData := newCheckData(&lastCheck, triggerChecker.until)
+		metricsToCheck := map[string]map[string]metricSource.MetricData{}
+		oldMetricState := lastCheck.Metrics[metric]
+
+		checkData, err := triggerChecker.check(metricsToCheck, aloneMetrics, checkData, logger)
+
+		So(err, ShouldBeNil)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				metric: {
+					Timestamp:      oldMetricState.Timestamp,
+					EventTimestamp: oldMetricState.EventTimestamp,
+					State:          oldMetricState.State,
+					Values:         oldMetricState.Values,
+					Maintenance:    oldMetricState.Maintenance,
+					DeletedButKept: true,
+				},
+			},
+			MetricsToTargetRelation: map[string]string{},
+			Timestamp:               triggerChecker.until,
+			State:                   moira.StateOK,
+			Score:                   0,
+		})
+	})
+
+	metricState = lastCheck.Metrics[metric]
+	metricState.DeletedButKept = true
+	lastCheck.Metrics[metric] = metricState
+
+	Convey("Metric on maintenance, DeletedButKept is true, ttlState is delete, but a new metric comes in and DeletedButKept becomes false", t, func() {
+		triggerChecker.from = 4217
+		triggerChecker.until = 4267
+		triggerChecker.ttlState = moira.TTLStateDEL
+		lastCheck.Timestamp = 4227
+
+		aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{5}, retention, triggerChecker.from)}
+		lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
+		checkData := newCheckData(&lastCheck, triggerChecker.until)
+		metricsToCheck := map[string]map[string]metricSource.MetricData{}
+		oldMetricState := lastCheck.Metrics[metric]
+
+		checkData, err := triggerChecker.check(metricsToCheck, aloneMetrics, checkData, logger)
+
+		So(err, ShouldBeNil)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				metric: {
+					Timestamp:      triggerChecker.from,
+					EventTimestamp: oldMetricState.EventTimestamp,
+					State:          oldMetricState.State,
+					Values:         map[string]float64{"t1": 5},
+					Maintenance:    oldMetricState.Maintenance,
+					DeletedButKept: false,
+				},
+			},
+			MetricsToTargetRelation: map[string]string{},
+			Timestamp:               triggerChecker.until,
+			State:                   moira.StateOK,
+			Score:                   0,
+		})
+	})
+
+	metricState = lastCheck.Metrics[metric]
+	metricState.Maintenance = 4000
+	lastCheck.Metrics[metric] = metricState
+
+	Convey("No data too long and ttlState is delete, the time for Maintenance of metric is over, so it will be deleted", t, func() {
 		triggerChecker.from = 4217
 		triggerChecker.until = 4267
 		triggerChecker.ttlState = moira.TTLStateDEL
@@ -1183,7 +1381,7 @@ func TestTriggerChecker_Check(t *testing.T) {
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false).LocalMetrics,
+		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false).LocalMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,
@@ -1234,7 +1432,11 @@ func TestTriggerChecker_Check(t *testing.T) {
 	source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)})
 	fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
-	dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil)
+	dataBase.EXPECT().SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&lastCheck,
+		triggerChecker.trigger.TriggerSource,
+	).Return(nil)
 	_ = triggerChecker.Check()
 }
 
@@ -1262,7 +1464,7 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false).LocalMetrics,
+		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false).LocalMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,
@@ -1313,7 +1515,12 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil).AnyTimes()
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)}).AnyTimes()
 	fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil).AnyTimes()
-	dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil).AnyTimes()
+	dataBase.EXPECT().SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&lastCheck,
+		triggerChecker.trigger.TriggerSource,
+	).Return(nil).AnyTimes()
+
 	for n := 0; n < b.N; n++ {
 		err := triggerChecker.Check()
 		if err != nil {
@@ -1342,25 +1549,25 @@ func TestGetExpressionValues(t *testing.T) {
 			expectedValues := map[string]float64{"t1": 0}
 
 			var valueTimestamp int64 = 17
-			expression, values, noEmptyValues := getExpressionValues(&metrics, &valueTimestamp)
+			expression, values, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
 			So(noEmptyValues, ShouldBeTrue)
 			So(expression, ShouldResemble, expectedExpression)
 			So(values, ShouldResemble, expectedValues)
 		})
 		Convey("last value is empty", func() {
 			var valueTimestamp int64 = 67
-			_, _, noEmptyValues := getExpressionValues(&metrics, &valueTimestamp)
+			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
 			So(noEmptyValues, ShouldBeFalse)
 		})
 		Convey("value before first value", func() {
 			var valueTimestamp int64 = 11
-			_, _, noEmptyValues := getExpressionValues(&metrics, &valueTimestamp)
+			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
 			So(noEmptyValues, ShouldBeFalse)
 		})
 
 		Convey("value in the middle is empty ", func() {
 			var valueTimestamp int64 = 44
-			_, _, noEmptyValues := getExpressionValues(&metrics, &valueTimestamp)
+			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
 			So(noEmptyValues, ShouldBeFalse)
 		})
 
@@ -1372,7 +1579,7 @@ func TestGetExpressionValues(t *testing.T) {
 			expectedValues := map[string]float64{"t1": 3}
 
 			var valueTimestamp int64 = 53
-			expression, values, noEmptyValues := getExpressionValues(&metrics, &valueTimestamp)
+			expression, values, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
 			So(noEmptyValues, ShouldBeTrue)
 			So(expression, ShouldResemble, expectedExpression)
 			So(values, ShouldResemble, expectedValues)
@@ -1401,13 +1608,13 @@ func TestGetExpressionValues(t *testing.T) {
 
 		Convey("t1 value in the middle is empty ", func() {
 			var valueTimestamp int64 = 29
-			_, _, noEmptyValues := getExpressionValues(&metrics, &valueTimestamp)
+			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
 			So(noEmptyValues, ShouldBeFalse)
 		})
 
 		Convey("t1 and t2 values in the middle is empty ", func() {
 			var valueTimestamp int64 = 42
-			_, _, noEmptyValues := getExpressionValues(&metrics, &valueTimestamp)
+			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
 			So(noEmptyValues, ShouldBeFalse)
 		})
 
@@ -1415,7 +1622,7 @@ func TestGetExpressionValues(t *testing.T) {
 			expectedValues := map[string]float64{"t1": 0, "t2": 4}
 
 			var valueTimestamp int64 = 17
-			expression, values, noEmptyValues := getExpressionValues(&metrics, &valueTimestamp)
+			expression, values, noEmptyValues := getExpressionValues(metrics, &valueTimestamp)
 			So(noEmptyValues, ShouldBeTrue)
 			So(expression.MainTargetValue, ShouldBeIn, []float64{0, 4})
 			So(values, ShouldResemble, expectedValues)
@@ -1430,7 +1637,9 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
 
-		trigger := &moira.Trigger{}
+		trigger := &moira.Trigger{
+			TriggerSource: moira.GraphiteLocal,
+		}
 		triggerChecker := TriggerChecker{
 			triggerID: "test trigger",
 			trigger:   trigger,
@@ -1443,7 +1652,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 			err := ErrTriggerHasSameMetricNames{}
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeTrue)
+			So(pass, ShouldEqual, CanContinueCheck)
 			So(checkDataReturn, ShouldResemble, moira.CheckData{
 				State:   moira.StateEXCEPTION,
 				Message: err.Error(),
@@ -1472,10 +1681,10 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				Metric:           triggerChecker.trigger.Name,
 				MessageEventInfo: nil,
 			}, true)
-			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeFalse)
+			So(pass, ShouldEqual, MustStopCheck)
 			So(checkDataReturn, ShouldResemble, expectedCheckData)
 		})
 		Convey("with ErrEmptyAloneMetricsTarget-this error is handled as NODATA", func() {
@@ -1489,10 +1698,10 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				State:          moira.StateNODATA,
 				EventTimestamp: 10,
 			}
-			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeFalse)
+			So(pass, ShouldEqual, MustStopCheck)
 			So(checkDataReturn, ShouldResemble, expectedCheckData)
 		})
 	})

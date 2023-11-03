@@ -1,10 +1,13 @@
 package mattermost
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/moira-alert/moira"
 
@@ -23,7 +26,7 @@ func TestSendEvents(t *testing.T) {
 			"url":          "qwerty",
 			"api_token":    "qwerty",
 			"front_uri":    "qwerty",
-			"insecure_tls": "true",
+			"insecure_tls": true,
 		}
 		err := sender.Init(senderSettings, logger, nil, "")
 		So(err, ShouldBeNil)
@@ -31,7 +34,7 @@ func TestSendEvents(t *testing.T) {
 		Convey("When client return error, SendEvents should return error", func() {
 			ctrl := gomock.NewController(t)
 			client := mock.NewMockClient(ctrl)
-			client.EXPECT().CreatePost(gomock.Any()).Return(nil, nil, errors.New(""))
+			client.EXPECT().CreatePost(context.Background(), gomock.Any()).Return(nil, nil, errors.New(""))
 			sender.client = client
 
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
@@ -39,13 +42,31 @@ func TestSendEvents(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("When client CreatePost is success, SendEvents should not return error", func() {
+		Convey("When client CreatePost is success and no plots, SendEvents should not return error", func() {
 			ctrl := gomock.NewController(t)
 			client := mock.NewMockClient(ctrl)
-			client.EXPECT().CreatePost(gomock.Any()).Return(nil, nil, nil)
+			client.EXPECT().CreatePost(context.Background(), gomock.Any()).Return(&model.Post{Id: "postID"}, nil, nil)
 			sender.client = client
 
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
+			err = sender.SendEvents(events, contact, trigger, plots, throttled)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("When client CreatePost is success and have succeeded sent plots, SendEvents should not return error", func() {
+			ctrl := gomock.NewController(t)
+			client := mock.NewMockClient(ctrl)
+			client.EXPECT().CreatePost(context.Background(), gomock.Any()).Return(&model.Post{Id: "postID"}, nil, nil).Times(2)
+			client.EXPECT().UploadFile(context.Background(), gomock.Any(), "contactDataID", "triggerID.png").
+				Return(
+					&model.FileUploadResponse{
+						FileInfos: []*model.FileInfo{{Id: "fileID"}},
+					}, nil, nil)
+			sender.client = client
+
+			plots := make([][]byte, 0)
+			plots = append(plots, []byte("my_awesome_plot"))
+			events, contact, trigger, throttled := moira.NotificationEvents{}, moira.ContactData{Value: "contactDataID"}, moira.TriggerData{ID: "triggerID"}, false
 			err = sender.SendEvents(events, contact, trigger, plots, throttled)
 			So(err, ShouldBeNil)
 		})
@@ -60,7 +81,7 @@ func TestBuildMessage(t *testing.T) {
 		senderSettings := map[string]interface{}{
 			"url": "qwerty", "api_token": "qwerty", // redundant, but necessary config
 			"front_uri":    "http://moira.url",
-			"insecure_tls": "true",
+			"insecure_tls": true,
 		}
 		location, _ := time.LoadLocation("UTC")
 		err := sender.Init(senderSettings, logger, location, "")

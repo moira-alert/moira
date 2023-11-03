@@ -65,7 +65,7 @@ func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSour
 			for i, l := 0, len(timeSeries.Values); i < l; i++ {
 				timestamp := timeSeries.StartTime + int64(i)*timeSeries.StepTime
 				value := timeSeries.GetTimestampValue(timestamp)
-				if moira.IsValidFloat64(value) {
+				if moira.IsFiniteNumber(value) {
 					values = append(values, moira.MetricValue{Value: value, Timestamp: timestamp})
 				}
 			}
@@ -113,7 +113,7 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

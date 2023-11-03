@@ -49,9 +49,9 @@ func (mr *MockSearcherMockRecorder) IsReady() *gomock.Call {
 }
 
 // SearchTriggers mocks base method.
-func (m *MockSearcher) SearchTriggers(arg0 []string, arg1 string, arg2 bool, arg3, arg4 int64) ([]*moira.SearchResult, int64, error) {
+func (m *MockSearcher) SearchTriggers(arg0 moira.SearchOptions) ([]*moira.SearchResult, int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SearchTriggers", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "SearchTriggers", arg0)
 	ret0, _ := ret[0].([]*moira.SearchResult)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(error)
@@ -59,9 +59,9 @@ func (m *MockSearcher) SearchTriggers(arg0 []string, arg1 string, arg2 bool, arg
 }
 
 // SearchTriggers indicates an expected call of SearchTriggers.
-func (mr *MockSearcherMockRecorder) SearchTriggers(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockSearcherMockRecorder) SearchTriggers(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchTriggers", reflect.TypeOf((*MockSearcher)(nil).SearchTriggers), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchTriggers", reflect.TypeOf((*MockSearcher)(nil).SearchTriggers), arg0)
 }
 
 // Start mocks base method.

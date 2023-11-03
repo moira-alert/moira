@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        servis: [api, checker, cli, notifier, filter]
+        services: [api, checker, cli, notifier, filter]
     steps:
     
       - name: Set up Docker Buildx
@@ -28,13 +28,13 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          file: ./Dockerfile.${{matrix.servis}}
+          file: ./Dockerfile.${{matrix.services}}
           build-args: |
             MoiraVersion=${{env.DOCKER_TAG}}
             GIT_COMMIT=${{github.sha}}
           push: true
-          tags: moira/${{matrix.servis}}-nightly:${{env.DOCKER_TAG}}
-
+          tags: moira/${{matrix.services}}-nightly:${{env.DOCKER_TAG}},moira/${{matrix.services}}-nightly:latest
+          
       - name: Comment PR with build tag
         uses: mshick/add-pr-comment@v2
         if: always()

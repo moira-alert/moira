@@ -2,6 +2,7 @@ package moira
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
@@ -42,24 +43,35 @@ const (
 
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
-	IsTriggerEvent   bool               `json:"trigger_event,omitempty"`
-	Timestamp        int64              `json:"timestamp"`
-	Metric           string             `json:"metric"`
-	Value            *float64           `json:"value,omitempty"`
+	IsTriggerEvent   bool               `json:"trigger_event,omitempty" example:"true"`
+	Timestamp        int64              `json:"timestamp" example:"1590741878" format:"int64"`
+	Metric           string             `json:"metric" example:"carbon.agents.*.metricsReceived"`
+	Value            *float64           `json:"value,omitempty" example:"70" extensions:"x-nullable"`
 	Values           map[string]float64 `json:"values,omitempty"`
-	State            State              `json:"state"`
-	TriggerID        string             `json:"trigger_id"`
-	SubscriptionID   *string            `json:"sub_id,omitempty"`
-	ContactID        string             `json:"contactId,omitempty"`
-	OldState         State              `json:"old_state"`
-	Message          *string            `json:"msg,omitempty"`
-	MessageEventInfo *EventInfo         `json:"event_message"`
+	State            State              `json:"state" example:"OK"`
+	TriggerID        string             `json:"trigger_id" example:"5ff37996-8927-4cab-8987-970e80d8e0a8"`
+	SubscriptionID   *string            `json:"sub_id,omitempty" extensions:"x-nullable"`
+	ContactID        string             `json:"contact_id,omitempty"`
+	OldState         State              `json:"old_state" example:"ERROR"`
+	Message          *string            `json:"msg,omitempty" extensions:"x-nullable"`
+	MessageEventInfo *EventInfo         `json:"event_message" extensions:"x-nullable"`
+}
+
+// NotificationEventHistoryItem is in use to store notifications history of channel
+// (see database/redis/contact_notifications_history.go
+type NotificationEventHistoryItem struct {
+	TimeStamp int64  `json:"timestamp" format:"int64"`
+	Metric    string `json:"metric"`
+	State     State  `json:"state"`
+	OldState  State  `json:"old_state"`
+	TriggerID string `json:"trigger_id"`
+	ContactID string `json:"contact_id"`
 }
 
 // EventInfo - a base for creating messages.
 type EventInfo struct {
-	Maintenance *MaintenanceInfo `json:"maintenance,omitempty"`
-	Interval    *int64           `json:"interval,omitempty"`
+	Maintenance *MaintenanceInfo `json:"maintenance,omitempty" extensions:"x-nullable"`
+	Interval    *int64           `json:"interval,omitempty" example:"0" format:"int64" extensions:"x-nullable"`
 }
 
 // CreateMessage - creates a message based on EventInfo.
@@ -146,14 +158,19 @@ func NotificationEventsToTemplatingEvents(events NotificationEvents) []templatin
 
 // TriggerData represents trigger object
 type TriggerData struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	Desc       string   `json:"desc"`
-	Targets    []string `json:"targets"`
-	WarnValue  float64  `json:"warn_value"`
-	ErrorValue float64  `json:"error_value"`
-	IsRemote   bool     `json:"is_remote"`
-	Tags       []string `json:"__notifier_trigger_tags"`
+	ID            string        `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Name          string        `json:"name" example:"Not enough disk space left"`
+	Desc          string        `json:"desc" example:"check the size of /var/log"`
+	Targets       []string      `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
+	WarnValue     float64       `json:"warn_value" example:"5000"`
+	ErrorValue    float64       `json:"error_value" example:"1000"`
+	IsRemote      bool          `json:"is_remote" example:"false"`
+	TriggerSource TriggerSource `json:"trigger_source,omitempty" example:"graphite_local"`
+	Tags          []string      `json:"__notifier_trigger_tags" example:"server,disk"`
+}
+
+func (trigger TriggerData) GetTriggerSource() TriggerSource {
+	return trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
 }
 
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
@@ -173,47 +190,47 @@ type Team struct {
 
 // ContactData represents contact object
 type ContactData struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-	ID    string `json:"id"`
-	User  string `json:"user"`
+	Type  string `json:"type" example:"mail"`
+	Value string `json:"value" example:"devops@example.com"`
+	ID    string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User  string `json:"user" example:""`
 	Team  string `json:"team"`
 }
 
 // SubscriptionData represents user subscription
 type SubscriptionData struct {
-	Contacts          []string     `json:"contacts"`
-	Tags              []string     `json:"tags"`
+	Contacts          []string     `json:"contacts" example:"acd2db98-1659-4a2f-b227-52d71f6e3ba1"`
+	Tags              []string     `json:"tags" example:"server,cpu"`
 	Schedule          ScheduleData `json:"sched"`
 	Plotting          PlottingData `json:"plotting"`
-	ID                string       `json:"id"`
-	Enabled           bool         `json:"enabled"`
-	AnyTags           bool         `json:"any_tags"`
-	IgnoreWarnings    bool         `json:"ignore_warnings,omitempty"`
-	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty"`
-	ThrottlingEnabled bool         `json:"throttling"`
-	User              string       `json:"user"`
-	TeamID            string       `json:"team_id"`
+	ID                string       `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Enabled           bool         `json:"enabled" example:"true"`
+	AnyTags           bool         `json:"any_tags" example:"false"`
+	IgnoreWarnings    bool         `json:"ignore_warnings,omitempty" example:"false"`
+	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty" example:"false"`
+	ThrottlingEnabled bool         `json:"throttling" example:"false"`
+	User              string       `json:"user" example:""`
+	TeamID            string       `json:"team_id" example:"324516ed-4924-4154-a62c-eb124234fce"`
 }
 
 // PlottingData represents plotting settings
 type PlottingData struct {
-	Enabled bool   `json:"enabled"`
-	Theme   string `json:"theme"`
+	Enabled bool   `json:"enabled" example:"true"`
+	Theme   string `json:"theme" example:"dark"`
 }
 
 // ScheduleData represents subscription schedule
 type ScheduleData struct {
 	Days           []ScheduleDataDay `json:"days"`
-	TimezoneOffset int64             `json:"tzOffset"`
-	StartOffset    int64             `json:"startOffset"`
-	EndOffset      int64             `json:"endOffset"`
+	TimezoneOffset int64             `json:"tzOffset" example:"-60" format:"int64"`
+	StartOffset    int64             `json:"startOffset" example:"0" format:"int64"`
+	EndOffset      int64             `json:"endOffset" example:"1439" format:"int64"`
 }
 
 // ScheduleDataDay represents week day of schedule
 type ScheduleDataDay struct {
-	Enabled bool   `json:"enabled"`
-	Name    string `json:"name,omitempty"`
+	Enabled bool   `json:"enabled" example:"true"`
+	Name    string `json:"name,omitempty" example:"Mon"`
 }
 
 // ScheduledNotification represent notification object
@@ -222,9 +239,9 @@ type ScheduledNotification struct {
 	Trigger   TriggerData       `json:"trigger"`
 	Contact   ContactData       `json:"contact"`
 	Plotting  PlottingData      `json:"plotting"`
-	Throttled bool              `json:"throttled"`
-	SendFail  int               `json:"send_fail"`
-	Timestamp int64             `json:"timestamp"`
+	Throttled bool              `json:"throttled" example:"false"`
+	SendFail  int               `json:"send_fail" example:"0"`
+	Timestamp int64             `json:"timestamp" example:"1594471927" format:"int64"`
 }
 
 // MatchedMetric represents parsed and matched metric data
@@ -239,8 +256,8 @@ type MatchedMetric struct {
 
 // MetricValue represents metric data
 type MetricValue struct {
-	RetentionTimestamp int64   `json:"step,omitempty"`
-	Timestamp          int64   `json:"ts"`
+	RetentionTimestamp int64   `json:"step,omitempty" format:"int64"`
+	Timestamp          int64   `json:"ts" format:"int64"`
 	Value              float64 `json:"value"`
 }
 
@@ -255,35 +272,85 @@ const (
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID               string          `json:"id"`
-	Name             string          `json:"name"`
-	Desc             *string         `json:"desc,omitempty"`
-	Targets          []string        `json:"targets"`
-	WarnValue        *float64        `json:"warn_value"`
-	ErrorValue       *float64        `json:"error_value"`
-	TriggerType      string          `json:"trigger_type"`
-	Tags             []string        `json:"tags"`
-	TTLState         *TTLState       `json:"ttl_state,omitempty"`
-	TTL              int64           `json:"ttl,omitempty"`
-	Schedule         *ScheduleData   `json:"sched,omitempty"`
-	Expression       *string         `json:"expression,omitempty"`
-	PythonExpression *string         `json:"python_expression,omitempty"`
-	Patterns         []string        `json:"patterns"`
-	IsRemote         bool            `json:"is_remote"`
-	MuteNewMetrics   bool            `json:"mute_new_metrics"`
-	AloneMetrics     map[string]bool `json:"alone_metrics"`
-	CreatedAt        *int64          `json:"created_at"`
-	UpdatedAt        *int64          `json:"updated_at"`
+	ID               string          `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Name             string          `json:"name" example:"Not enough disk space left"`
+	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
+	Targets          []string        `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
+	WarnValue        *float64        `json:"warn_value" example:"5000" extensions:"x-nullable"`
+	ErrorValue       *float64        `json:"error_value" example:"1000" extensions:"x-nullable"`
+	TriggerType      string          `json:"trigger_type" example:"rising"`
+	Tags             []string        `json:"tags" example:"server,disk"`
+	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
+	TTL              int64           `json:"ttl,omitempty" example:"600" format:"int64"`
+	Schedule         *ScheduleData   `json:"sched,omitempty" extensions:"x-nullable"`
+	Expression       *string         `json:"expression,omitempty" example:"" extensions:"x-nullable"`
+	PythonExpression *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
+	Patterns         []string        `json:"patterns" example:""`
+	TriggerSource    TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
+	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
+	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
+	CreatedAt        *int64          `json:"created_at" format:"int64" extensions:"x-nullable"`
+	UpdatedAt        *int64          `json:"updated_at" format:"int64" extensions:"x-nullable"`
 	CreatedBy        string          `json:"created_by"`
 	UpdatedBy        string          `json:"updated_by"`
+}
+
+type TriggerSource string
+
+var (
+	TriggerSourceNotSet TriggerSource = ""
+	GraphiteLocal       TriggerSource = "graphite_local"
+	GraphiteRemote      TriggerSource = "graphite_remote"
+	PrometheusRemote    TriggerSource = "prometheus_remote"
+)
+
+func (s *TriggerSource) UnmarshalJSON(data []byte) error {
+	var v string
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	source := TriggerSource(v)
+	if source != GraphiteLocal && source != GraphiteRemote && source != PrometheusRemote {
+		*s = TriggerSourceNotSet
+		return nil
+	}
+
+	*s = source
+	return nil
+}
+
+// Neede for backwards compatibility with moira versions that used oly isRemote flag
+func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
+	if triggerSource == TriggerSourceNotSet {
+		if isRempte {
+			return GraphiteRemote
+		} else {
+			return GraphiteLocal
+		}
+	}
+	return triggerSource
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp
 type TriggerCheck struct {
 	Trigger
-	Throttling int64             `json:"throttling"`
+	Throttling int64             `json:"throttling" example:"0" format:"int64"`
 	LastCheck  CheckData         `json:"last_check"`
 	Highlights map[string]string `json:"highlights"`
+}
+
+// SearchOptions represents the options that can be selected when searching triggers
+type SearchOptions struct {
+	Page                  int64
+	Size                  int64
+	OnlyProblems          bool
+	SearchString          string
+	Tags                  []string
+	CreatedBy             string
+	NeedSearchByCreatedBy bool
+	CreatePager           bool
+	PagerID               string
 }
 
 // MaintenanceCheck set maintenance user, time
@@ -298,15 +365,15 @@ type CheckData struct {
 	// MetricsToTargetRelation is a map that holds relation between metric names that was alone during last
 	// check and targets that fetched this metric
 	//	{"t1": "metric.name.1", "t2": "metric.name.2"}
-	MetricsToTargetRelation      map[string]string `json:"metrics_to_target_relation"`
-	Score                        int64             `json:"score"`
-	State                        State             `json:"state"`
-	Maintenance                  int64             `json:"maintenance,omitempty"`
+	MetricsToTargetRelation      map[string]string `json:"metrics_to_target_relation" example:"t1:metric.name.1,t2:metric.name.2"`
+	Score                        int64             `json:"score" example:"100" format:"int64"`
+	State                        State             `json:"state" example:"OK"`
+	Maintenance                  int64             `json:"maintenance,omitempty" example:"0" format:"int64"`
 	MaintenanceInfo              MaintenanceInfo   `json:"maintenance_info"`
-	Timestamp                    int64             `json:"timestamp,omitempty"`
-	EventTimestamp               int64             `json:"event_timestamp,omitempty"`
-	LastSuccessfulCheckTimestamp int64             `json:"last_successful_check_timestamp"`
-	Suppressed                   bool              `json:"suppressed,omitempty"`
+	Timestamp                    int64             `json:"timestamp,omitempty" example:"1590741916" format:"int64"`
+	EventTimestamp               int64             `json:"event_timestamp,omitempty" example:"1590741878" format:"int64"`
+	LastSuccessfulCheckTimestamp int64             `json:"last_successful_check_timestamp" example:"1590741916" format:"int64"`
+	Suppressed                   bool              `json:"suppressed,omitempty" example:"true"`
 	SuppressedState              State             `json:"suppressed_state,omitempty"`
 	Message                      string            `json:"msg,omitempty"`
 }
@@ -323,15 +390,18 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64              `json:"event_timestamp"`
-	State           State              `json:"state"`
-	Suppressed      bool               `json:"suppressed"`
+	EventTimestamp  int64              `json:"event_timestamp" example:"1590741878" format:"int64"`
+	State           State              `json:"state" example:"OK"`
+	Suppressed      bool               `json:"suppressed" example:"false"`
 	SuppressedState State              `json:"suppressed_state,omitempty"`
-	Timestamp       int64              `json:"timestamp"`
-	Value           *float64           `json:"value,omitempty"`
+	Timestamp       int64              `json:"timestamp" example:"1590741878" format:"int64"`
+	Value           *float64           `json:"value,omitempty" example:"70" extensions:"x-nullable"`
 	Values          map[string]float64 `json:"values,omitempty"`
-	Maintenance     int64              `json:"maintenance,omitempty"`
+	Maintenance     int64              `json:"maintenance,omitempty" example:"0" format:"int64"`
 	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
+	// DeletedButKept controls whether the metric is shown to the user if the trigger has ttlState = Del
+	// and the metric is in Maintenance. The metric remains in the database
+	DeletedButKept bool `json:"deleted_but_kept,omitempty" example:"false"`
 	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
 }
 
@@ -348,10 +418,10 @@ func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 
 // MaintenanceInfo represents user and time set/unset maintenance
 type MaintenanceInfo struct {
-	StartUser *string `json:"setup_user"`
-	StartTime *int64  `json:"setup_time"`
-	StopUser  *string `json:"remove_user"`
-	StopTime  *int64  `json:"remove_time"`
+	StartUser *string `json:"setup_user" extensions:"x-nullable"`
+	StartTime *int64  `json:"setup_time" example:"0" format:"int64" extensions:"x-nullable"`
+	StopUser  *string `json:"remove_user" extensions:"x-nullable"`
+	StopTime  *int64  `json:"remove_time" example:"0" format:"int64" extensions:"x-nullable"`
 }
 
 // Set maintanace start and stop users and times

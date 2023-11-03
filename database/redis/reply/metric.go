@@ -18,11 +18,11 @@ func MetricValues(values *redis.ZSliceCmd) ([]*moira.MetricValue, error) {
 		}
 		return nil, fmt.Errorf("failed to read metricValues: %s", err.Error())
 	}
-	metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr)) //nolint
+	metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr))
 	for i := 0; i < len(resultByMetricArr); i++ {
 		val := resultByMetricArr[i].Member.(string)
 		valuesArr := strings.Split(val, " ")
-		if len(valuesArr) != 2 { //nolint
+		if len(valuesArr) != 2 {
 			return nil, fmt.Errorf("value format is not valid: %s", val)
 		}
 		timestamp, err := strconv.ParseInt(valuesArr[0], 10, 64)

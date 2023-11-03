@@ -45,9 +45,10 @@ type DbConnector struct {
 	context              context.Context
 	source               DBSource
 	clock                moira.Clock
+	notificationHistory  NotificationHistoryConfig
 }
 
-func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
+func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, source DBSource) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:       config.MasterName,
 		Addrs:            config.Addrs,
@@ -76,36 +77,40 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		source:               source,
 		clock:                clock.NewSystemClock(),
+		notificationHistory:  nh,
 	}
 	return &connector
 }
 
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, Config{
+	return NewDatabase(logger, DatabaseConfig{
 		Addrs: []string{"0.0.0.0:6379"},
-	}, testSource)
+	},
+		NotificationHistoryConfig{
+			NotificationHistoryTTL:        time.Hour * 48,
+			NotificationHistoryQueryLimit: 1000,
+		}, testSource)
 }
 
 // NewTestDatabaseWithIncorrectConfig use it only for tests
 func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:0000"}}, testSource)
+	return NewDatabase(logger,
+		DatabaseConfig{Addrs: []string{"0.0.0.0:0000"}},
+		NotificationHistoryConfig{
+			NotificationHistoryTTL:        time.Hour * 48,
+			NotificationHistoryQueryLimit: 1000,
+		},
+		testSource)
 }
 
 // Flush deletes all the keys of the DB, use it only for tests
 func (connector *DbConnector) Flush() {
-	client := *connector.client
-
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			return shard.FlushDB(ctx).Err()
-		})
-		if err != nil {
-			return
-		}
-	default:
-		(*connector.client).FlushDB(connector.context)
+	err := connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
+		return client.FlushDB(connector.context).Err()
+	})
+	if err != nil {
+		return
 	}
 }
 
@@ -125,4 +130,18 @@ func (connector *DbConnector) Client() redis.UniversalClient {
 
 func (connector *DbConnector) Context() context.Context {
 	return connector.context
+}
+
+// callFunc calls the fn dependent of Redis client type (cluster or standalone).
+func (connector *DbConnector) callFunc(fn func(connector *DbConnector, client redis.UniversalClient) error) error {
+	client := *connector.client
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		return c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			return fn(connector, shard)
+		})
+	default:
+		return fn(connector, client)
+	}
 }

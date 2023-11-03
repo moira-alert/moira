@@ -14,7 +14,7 @@ func (*PatternList) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type PatternData struct {
-	Metrics  []string       `json:"metrics"`
-	Pattern  string         `json:"pattern"`
+	Metrics  []string       `json:"metrics" example:"DevOps.my_server.hdd.freespace_mbytes, DevOps.my_server.hdd.freespace_mbytes, DevOps.my_server.db.*"`
+	Pattern  string         `json:"pattern" example:"Devops.my_server.*"`
 	Triggers []TriggerModel `json:"triggers"`
 }

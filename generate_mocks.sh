@@ -22,4 +22,8 @@ mockgen -destination=mock/heartbeat/heartbeat.go -package=mock_heartbeat github.
 mockgen -destination=mock/clock/clock.go -package=mock_clock github.com/moira-alert/moira Clock
 mockgen -destination=mock/notifier/mattermost/client.go -package=mock_mattermost github.com/moira-alert/moira/senders/mattermost Client
 
+mockgen -destination=mock/moira-alert/metrics/registry.go -package=mock_moira_alert github.com/moira-alert/moira/metrics Registry
+mockgen -destination=mock/moira-alert/metrics/meter.go -package=mock_moira_alert github.com/moira-alert/moira/metrics Meter
+mockgen -destination=mock/moira-alert/prometheus_api.go -package=mock_moira_alert github.com/moira-alert/moira/metric_source/prometheus PrometheusApi
+
 git add mock/*

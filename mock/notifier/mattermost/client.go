@@ -5,10 +5,11 @@
 package mock_mattermost
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	model "github.com/mattermost/mattermost-server/v6/model"
+	model "github.com/mattermost/mattermost/server/public/model"
 )
 
 // MockClient is a mock of Client interface.
@@ -35,9 +36,9 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // CreatePost mocks base method.
-func (m *MockClient) CreatePost(arg0 *model.Post) (*model.Post, *model.Response, error) {
+func (m *MockClient) CreatePost(arg0 context.Context, arg1 *model.Post) (*model.Post, *model.Response, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePost", arg0)
+	ret := m.ctrl.Call(m, "CreatePost", arg0, arg1)
 	ret0, _ := ret[0].(*model.Post)
 	ret1, _ := ret[1].(*model.Response)
 	ret2, _ := ret[2].(error)
@@ -45,9 +46,9 @@ func (m *MockClient) CreatePost(arg0 *model.Post) (*model.Post, *model.Response,
 }
 
 // CreatePost indicates an expected call of CreatePost.
-func (mr *MockClientMockRecorder) CreatePost(arg0 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) CreatePost(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePost", reflect.TypeOf((*MockClient)(nil).CreatePost), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePost", reflect.TypeOf((*MockClient)(nil).CreatePost), arg0, arg1)
 }
 
 // SetToken mocks base method.
@@ -60,4 +61,20 @@ func (m *MockClient) SetToken(arg0 string) {
 func (mr *MockClientMockRecorder) SetToken(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetToken", reflect.TypeOf((*MockClient)(nil).SetToken), arg0)
+}
+
+// UploadFile mocks base method.
+func (m *MockClient) UploadFile(arg0 context.Context, arg1 []byte, arg2, arg3 string) (*model.FileUploadResponse, *model.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadFile", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*model.FileUploadResponse)
+	ret1, _ := ret[1].(*model.Response)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// UploadFile indicates an expected call of UploadFile.
+func (mr *MockClientMockRecorder) UploadFile(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFile", reflect.TypeOf((*MockClient)(nil).UploadFile), arg0, arg1, arg2, arg3)
 }

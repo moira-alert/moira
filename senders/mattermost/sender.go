@@ -1,24 +1,24 @@
 package mattermost
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
 
-	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mitchellh/mapstructure"
 )
 
 // Structure that represents the Mattermost configuration in the YAML file
-type mattermost struct {
+type config struct {
 	Url         string `mapstructure:"url"`
-	InsecureTLS string `mapstructure:"insecure_tls"`
+	InsecureTLS bool   `mapstructure:"insecure_tls"`
 	APIToken    string `mapstructure:"api_token"`
 	FrontURI    string `mapstructure:"front_uri"`
 }
@@ -28,58 +28,68 @@ type mattermost struct {
 // You must call Init method before SendEvents method.
 type Sender struct {
 	frontURI string
+	logger   moira.Logger
 	location *time.Location
 	client   Client
 }
 
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
-	var mm mattermost
-	err := mapstructure.Decode(senderSettings, &mm)
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
 	}
-	url := mm.Url
-	if url == "" {
+
+	if cfg.Url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
-	client := model.NewAPIv4Client(url)
+	client := model.NewAPIv4Client(cfg.Url)
 
-	insecureTLS, err := strconv.ParseBool(mm.InsecureTLS)
 	if err != nil {
 		return fmt.Errorf("can not parse insecure_tls: %v", err)
 	}
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: insecureTLS,
+				InsecureSkipVerify: cfg.InsecureTLS,
 			},
 		},
 	}
 	sender.client = client
 
-	token := mm.APIToken
-	if token == "" {
+	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read Mattermost api_token from config")
 	}
-	sender.client.SetToken(token)
+	sender.client.SetToken(cfg.APIToken)
 
-	frontURI := mm.FrontURI
-	if frontURI == "" {
+	if cfg.FrontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
-	sender.frontURI = frontURI
+	sender.frontURI = cfg.FrontURI
 	sender.location = location
+	sender.logger = logger
 
 	return nil
 }
 
 // SendEvents implements moira.Sender interface.
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
-	err := sender.sendMessage(message, contact.Value, trigger.ID)
+	ctx := context.Background()
+	post, err := sender.sendMessage(ctx, message, contact.Value, trigger.ID)
 	if err != nil {
 		return err
+	}
+	if len(plots) > 0 {
+		err = sender.sendPlots(ctx, plots, contact.Value, post.Id, trigger.ID)
+		if err != nil {
+			sender.logger.Warning().
+				String("trigger_id", trigger.ID).
+				String("contact_value", contact.Value).
+				String("contact_type", contact.Type).
+				Error(err)
+		}
 	}
 
 	return nil
@@ -187,15 +197,46 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) sendMessage(message string, contact string, triggerID string) error {
+func (sender *Sender) sendMessage(ctx context.Context, message string, contact string, triggerID string) (*model.Post, error) {
 	post := model.Post{
 		ChannelId: contact,
 		Message:   message,
 	}
 
-	_, _, err := sender.client.CreatePost(&post)
+	sentPost, _, err := sender.client.CreatePost(ctx, &post)
 	if err != nil {
-		return fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+		return nil, fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+	}
+
+	return sentPost, nil
+}
+
+func (sender *Sender) sendPlots(ctx context.Context, plots [][]byte, channelID, postID, triggerID string) error {
+	var filesID []string
+
+	filename := fmt.Sprintf("%s.png", triggerID)
+	for _, plot := range plots {
+		file, _, err := sender.client.UploadFile(ctx, plot, channelID, filename)
+		if err != nil {
+			return err
+		}
+		for _, info := range file.FileInfos {
+			filesID = append(filesID, info.Id)
+		}
+	}
+
+	if len(filesID) > 0 {
+		_, _, err := sender.client.CreatePost(
+			ctx,
+			&model.Post{
+				ChannelId: channelID,
+				RootId:    postID,
+				FileIds:   filesID,
+			},
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

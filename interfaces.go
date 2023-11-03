@@ -15,6 +15,7 @@ type Database interface {
 	GetMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
 	GetRemoteChecksUpdatesCount() (int64, error)
+	GetPrometheusChecksUpdatesCount() (int64, error)
 	GetNotifierState() (string, error)
 	SetNotifierState(string) error
 
@@ -26,15 +27,19 @@ type Database interface {
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
-	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
+	SetTriggerLastCheck(triggerID string, checkData *CheckData, triggerSource TriggerSource) error
 	RemoveTriggerLastCheck(triggerID string) error
 	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error
 	CleanUpAbandonedTriggerLastCheck() error
 
 	// Trigger storing
-	GetLocalTriggerIDs() ([]string, error)
 	GetAllTriggerIDs() ([]string, error)
+	GetLocalTriggerIDs() ([]string, error)
 	GetRemoteTriggerIDs() ([]string, error)
+	GetPrometheusTriggerIDs() ([]string, error)
+
+	GetTriggerCount() (map[TriggerSource]int64, error)
+
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 	GetTriggerChecks(triggerIDs []string) ([]*TriggerCheck, error)
@@ -83,11 +88,13 @@ type Database interface {
 
 	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
+	GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*NotificationEventHistoryItem, error)
 	RemoveNotification(notificationKey string) (int64, error)
 	RemoveAllNotifications() error
 	FetchNotifications(to int64, limit int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
+	PushContactNotificationToHistory(notification *ScheduledNotification) error
 
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
@@ -113,6 +120,10 @@ type Database interface {
 	AddRemoteTriggersToCheck(triggerIDs []string) error
 	GetRemoteTriggersToCheck(count int) ([]string, error)
 	GetRemoteTriggersToCheckCount() (int64, error)
+
+	AddPrometheusTriggersToCheck(triggerIDs []string) error
+	GetPrometheusTriggersToCheck(count int) ([]string, error)
+	GetPrometheusTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error
@@ -204,8 +215,7 @@ type Searcher interface {
 	Start() error
 	Stop() error
 	IsReady() bool
-	SearchTriggers(filterTags []string, searchString string, onlyErrors bool,
-		page int64, size int64) (searchResults []*SearchResult, total int64, err error)
+	SearchTriggers(options SearchOptions) (searchResults []*SearchResult, total int64, err error)
 }
 
 // PlotTheme is an interface to access plot theme styles

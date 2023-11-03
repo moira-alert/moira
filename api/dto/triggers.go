@@ -23,10 +23,10 @@ var targetNameRegex = regexp.MustCompile("t(\\d+)")
 var asteriskPattern = "*"
 
 type TriggersList struct {
-	Page  *int64               `json:"page,omitempty"`
-	Size  *int64               `json:"size,omitempty"`
-	Total *int64               `json:"total,omitempty"`
-	Pager *string              `json:"pager,omitempty"`
+	Page  *int64               `json:"page,omitempty" format:"int64" extensions:"x-nullable"`
+	Size  *int64               `json:"size,omitempty" format:"int64" extensions:"x-nullable"`
+	Total *int64               `json:"total,omitempty" format:"int64" extensions:"x-nullable"`
+	Pager *string              `json:"pager,omitempty" extensions:"x-nullable"`
 	List  []moira.TriggerCheck `json:"list"`
 }
 
@@ -36,47 +36,51 @@ func (*TriggersList) Render(http.ResponseWriter, *http.Request) error {
 
 type Trigger struct {
 	TriggerModel
-	Throttling int64 `json:"throttling"`
+	Throttling int64 `json:"throttling" example:"0" format:"int64"`
 }
 
 // TriggerModel is moira.Trigger api representation
 type TriggerModel struct {
 	// Trigger unique ID
-	ID string `json:"id"`
+	ID string `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 	// Trigger name
-	Name string `json:"name"`
+	Name string `json:"name" example:"Not enough disk space left"`
 	// Description string
-	Desc *string `json:"desc,omitempty"`
+	Desc *string `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
 	// Graphite-like targets: t1, t2, ...
-	Targets []string `json:"targets"`
+	Targets []string `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
 	// WARN threshold
-	WarnValue *float64 `json:"warn_value"`
+	WarnValue *float64 `json:"warn_value" example:"500" extensions:"x-nullable"`
 	// ERROR threshold
-	ErrorValue *float64 `json:"error_value"`
+	ErrorValue *float64 `json:"error_value" example:"1000" extensions:"x-nullable"`
 	// Could be: rising, falling, expression
-	TriggerType string `json:"trigger_type"`
+	TriggerType string `json:"trigger_type" example:"rising"`
 	// Set of tags to manipulate subscriptions
-	Tags []string `json:"tags"`
+	Tags []string `json:"tags" example:"server,disk"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
-	TTLState *moira.TTLState `json:"ttl_state,omitempty"`
+	TTLState *moira.TTLState `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
-	TTL int64 `json:"ttl,omitempty"`
+	TTL int64 `json:"ttl,omitempty" example:"600" format:"int64"`
 	// Determines when Moira should monitor trigger
-	Schedule *moira.ScheduleData `json:"sched,omitempty"`
+	Schedule *moira.ScheduleData `json:"sched,omitempty" extensions:"x-nullable"`
 	// Used if you need more complex logic than provided by WARN/ERROR values
-	Expression string `json:"expression"`
+	Expression string `json:"expression" example:""`
 	// Graphite patterns for trigger
-	Patterns []string `json:"patterns"`
+	Patterns []string `json:"patterns" example:""`
 	// Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB
-	IsRemote bool `json:"is_remote"`
+	//
+	// Deprecated: Use TriggerSource field instead
+	IsRemote bool `json:"is_remote" example:"false"`
+	// Shows the source from where the metrics are fetched
+	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_local"`
 	// If true, first event NODATA → OK will be omitted
-	MuteNewMetrics bool `json:"mute_new_metrics"`
+	MuteNewMetrics bool `json:"mute_new_metrics" example:"false"`
 	// A list of targets that have only alone metrics
-	AloneMetrics map[string]bool `json:"alone_metrics"`
+	AloneMetrics map[string]bool `json:"alone_metrics" example:"t1:true"`
 	// Datetime when the trigger was created
-	CreatedAt *time.Time `json:"created_at"`
+	CreatedAt *time.Time `json:"created_at" extensions:"x-nullable"`
 	// Datetime  when the trigger was updated
-	UpdatedAt *time.Time `json:"updated_at"`
+	UpdatedAt *time.Time `json:"updated_at" extensions:"x-nullable"`
 	// Username who created trigger
 	CreatedBy string `json:"created_by"`
 	// Username who updated trigger
@@ -99,7 +103,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Schedule:       model.Schedule,
 		Expression:     &model.Expression,
 		Patterns:       model.Patterns,
-		IsRemote:       model.IsRemote,
+		TriggerSource:  model.TriggerSource,
 		MuteNewMetrics: model.MuteNewMetrics,
 		AloneMetrics:   model.AloneMetrics,
 		UpdatedBy:      model.UpdatedBy,
@@ -122,7 +126,8 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Schedule:       trigger.Schedule,
 		Expression:     moira.UseString(trigger.Expression),
 		Patterns:       trigger.Patterns,
-		IsRemote:       trigger.IsRemote,
+		IsRemote:       trigger.TriggerSource == moira.GraphiteRemote,
+		TriggerSource:  trigger.TriggerSource,
 		MuteNewMetrics: trigger.MuteNewMetrics,
 		AloneMetrics:   trigger.AloneMetrics,
 		CreatedAt:      getDateTime(trigger.CreatedAt),
@@ -172,8 +177,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		Expression:              &trigger.Expression,
 	}
 
+	trigger.TriggerSource = trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
+
 	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
-	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.IsRemote)
+	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.TriggerSource)
 	if err != nil {
 		return err
 	}
@@ -216,10 +223,19 @@ func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) e
 	maximumAllowedTTL := metricsSource.GetMetricsTTLSeconds()
 
 	if trigger.TTL > maximumAllowedTTL {
-		triggerType := "local"
-		if trigger.IsRemote {
-			triggerType = "remote"
+		var triggerType string
+
+		switch trigger.TriggerSource {
+		case moira.GraphiteLocal:
+			triggerType = "graphite local"
+
+		case moira.GraphiteRemote:
+			triggerType = "graphite remote"
+
+		case moira.PrometheusRemote:
+			triggerType = "prometheus remote"
 		}
+
 		return fmt.Errorf("TTL for %s trigger can't be more than %d seconds", triggerType, maximumAllowedTTL)
 	}
 	return nil
@@ -366,7 +382,7 @@ type TriggerCheckResponse struct {
 
 type TriggerCheck struct {
 	*moira.CheckData
-	TriggerID string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id" example:"trigger_id"`
 }
 
 func (*TriggerCheck) Render(http.ResponseWriter, *http.Request) error {
@@ -380,7 +396,7 @@ func (*MetricsMaintenance) Bind(*http.Request) error {
 }
 
 type TriggerMaintenance struct {
-	Trigger *int64           `json:"trigger"`
+	Trigger *int64           `json:"trigger" example:"1594225165" format:"int64" extensions:"x-nullable"`
 	Metrics map[string]int64 `json:"metrics"`
 }
 
@@ -389,7 +405,7 @@ func (*TriggerMaintenance) Bind(*http.Request) error {
 }
 
 type ThrottlingResponse struct {
-	Throttling int64 `json:"throttling"`
+	Throttling int64 `json:"throttling" example:"0" format:"int64"`
 }
 
 func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
@@ -397,8 +413,8 @@ func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
 }
 
 type SaveTriggerResponse struct {
-	ID          string               `json:"id"`
-	Message     string               `json:"message"`
+	ID          string               `json:"id" example:"trigger_id"`
+	Message     string               `json:"message" example:"trigger created"`
 	CheckResult TriggerCheckResponse `json:"checkResult,omitempty"`
 }
 
@@ -426,7 +442,7 @@ type TriggerDump struct {
 }
 
 type TriggersSearchResultDeleteResponse struct {
-	PagerID string `json:"pager_id"`
+	PagerID string `json:"pager_id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 }
 
 func (TriggersSearchResultDeleteResponse) Render(http.ResponseWriter, *http.Request) error {

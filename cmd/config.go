@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira/image_store/s3"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"
 	"github.com/xiam/to"
 	"gopkg.in/yaml.v2"
@@ -47,19 +48,34 @@ type RedisConfig struct {
 }
 
 // GetSettings returns redis config parsed from moira config files
-func (config *RedisConfig) GetSettings() redis.Config {
-	return redis.Config{
-		MasterName:       config.MasterName,
-		Addrs:            strings.Split(config.Addrs, ","),
-		SentinelPassword: config.SentinelPassword,
-		SentinelUsername: config.SentinelUsername,
-		Username:         config.Username,
-		Password:         config.Password,
-		MaxRetries:       config.MaxRetries,
-		MetricsTTL:       to.Duration(config.MetricsTTL),
-		DialTimeout:      to.Duration(config.DialTimeout),
-		ReadTimeout:      to.Duration(config.ReadTimeout),
-		WriteTimeout:     to.Duration(config.WriteTimeout),
+func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
+	return redis.DatabaseConfig{
+		MasterName:   config.MasterName,
+		Addrs:        strings.Split(config.Addrs, ","),
+		Username:     config.Username,
+		Password:     config.Password,
+		MaxRetries:   config.MaxRetries,
+		MetricsTTL:   to.Duration(config.MetricsTTL),
+		DialTimeout:  to.Duration(config.DialTimeout),
+		ReadTimeout:  to.Duration(config.ReadTimeout),
+		WriteTimeout: to.Duration(config.WriteTimeout),
+	}
+}
+
+// NotificationHistoryConfig is the config which coordinates interaction with notification statistics
+// e.g. how much time should we store it, or how many history items can we request from database
+type NotificationHistoryConfig struct {
+	// Time which moira should store contacts and theirs events history
+	NotificationHistoryTTL string `yaml:"ttl"`
+	// Max count of events which moira may send as response of contact and its events history
+	NotificationHistoryQueryLimit int `yaml:"query_limit"`
+}
+
+// GetSettings returns notification history storage policy configuration
+func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.NotificationHistoryConfig {
+	return redis.NotificationHistoryConfig{
+		NotificationHistoryTTL:        to.Duration(notificationHistoryConfig.NotificationHistoryTTL),
+		NotificationHistoryQueryLimit: notificationHistoryConfig.NotificationHistoryQueryLimit,
 	}
 }
 
@@ -127,11 +143,6 @@ type RemoteConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-// ImageStoreConfig defines the configuration for all the image stores to be initialized by InitImageStores
-type ImageStoreConfig struct {
-	S3 s3.Config `yaml:"s3"`
-}
-
 // GetRemoteSourceSettings returns remote config parsed from moira config files
 func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 	return &remoteSource.Config{
@@ -143,6 +154,48 @@ func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 		Password:      config.Password,
 		Enabled:       config.Enabled,
 	}
+}
+
+type PrometheusConfig struct {
+	// Url of prometheus API
+	URL string `yaml:"url"`
+	// Min period to perform triggers re-check
+	CheckInterval string `yaml:"check_interval"`
+	// Moira won't fetch metrics older than this value from prometheus remote storage.
+	// Large values will lead to OOM problems in checker.
+	MetricsTTL string `yaml:"metrics_ttl"`
+	// Timeout for prometheus api requests
+	Timeout string `yaml:"timeout"`
+	// Number of retries for prometheus api requests
+	Retries int `yaml:"retries"`
+	// Timeout between retries for prometheus api requests
+	RetryTimeout string `yaml:"retry_timeout"`
+	// Username for basic auth
+	User string `yaml:"user"`
+	// Password for basic auth
+	Password string `yaml:"password"`
+	// If true, prometheus remote worker will be enabled.
+	Enabled bool `yaml:"enabled"`
+}
+
+// GetRemoteSourceSettings returns remote config parsed from moira config files
+func (config *PrometheusConfig) GetPrometheusSourceSettings() *prometheus.Config {
+	return &prometheus.Config{
+		Enabled:        config.Enabled,
+		URL:            config.URL,
+		CheckInterval:  to.Duration(config.CheckInterval),
+		MetricsTTL:     to.Duration(config.MetricsTTL),
+		User:           config.User,
+		Password:       config.Password,
+		RequestTimeout: to.Duration(config.Timeout),
+		Retries:        config.Retries,
+		RetryTimeout:   to.Duration(config.RetryTimeout),
+	}
+}
+
+// ImageStoreConfig defines the configuration for all the image stores to be initialized by InitImageStores
+type ImageStoreConfig struct {
+	S3 s3.Config `yaml:"s3"`
 }
 
 // ReadConfig parses config file by the given path into Moira-used type

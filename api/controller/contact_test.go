@@ -59,6 +59,52 @@ func TestGetAllContacts(t *testing.T) {
 	})
 }
 
+func TestGetContactById(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	Convey("Get contact by id should be success", t, func() {
+		contact := moira.ContactData{
+			ID:    uuid.Must(uuid.NewV4()).String(),
+			Type:  "slack",
+			User:  "awesome_moira_user",
+			Value: "awesome_moira_user@gmail.com",
+		}
+
+		dataBase.EXPECT().GetContact(contact.ID).Return(contact, nil)
+		actual, err := GetContactById(dataBase, contact.ID)
+		So(err, ShouldBeNil)
+		So(actual,
+			ShouldResemble,
+			&dto.Contact{
+				ID:    contact.ID,
+				Type:  contact.Type,
+				User:  contact.User,
+				Value: contact.Value,
+			})
+	})
+
+	Convey("Get contact with invalid or unexisting guid id should be empty json", t, func() {
+		const invalidId = "invalidID"
+		dataBase.EXPECT().GetContact(invalidId).Return(moira.ContactData{}, nil)
+		actual, err := GetContactById(dataBase, invalidId)
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, &dto.Contact{})
+	})
+
+	Convey("Error to fetch contact from db should rise api error", t, func() {
+		const contactID = "no-matter-what-id-is-there"
+		emptyContact := moira.ContactData{}
+		dbError := fmt.Errorf("some db internal error here")
+
+		dataBase.EXPECT().GetContact(contactID).Return(emptyContact, dbError)
+		contact, err := GetContactById(dataBase, contactID)
+		So(err, ShouldResemble, api.ErrorInternalServer(dbError))
+		So(contact, ShouldBeNil)
+	})
+}
+
 func TestCreateContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)

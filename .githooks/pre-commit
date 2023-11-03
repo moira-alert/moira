@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Check if any of the specified files are staged for commit
+if git diff --name-only --cached | grep -E 'api/'; then
+  echo "Format swaggo annotations (swag fmt)"
+  swag fmt
+fi
+
+make lint

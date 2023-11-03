@@ -28,6 +28,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
+		router.Get("/unused", getUnusedTriggers)
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
@@ -38,6 +39,16 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 	}
 }
 
+// nolint: gofmt,goimports
+//
+//	@summary	Get all triggers
+//	@id			get-all-triggers
+//	@tags		trigger
+//	@produce	json
+//	@success	200	{object}	dto.TriggersList				"Fetched all triggers"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
 	if errorResponse != nil {
@@ -51,7 +62,45 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// createTrigger handler creates moira.Trigger.
+// nolint: gofmt,goimports
+//
+//	@summary	Get unused triggers
+//	@id			get-unused-triggers
+//	@tags		trigger
+//	@produce	json
+//	@success	200	{object}	dto.TriggersList				"Fetched unused triggers"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger/unused [get]
+func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
+	triggersList, errorResponse := controller.GetUnusedTriggerIDs(database)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, triggersList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+// nolint: gofmt,goimports
+// createTrigger handler creates moira.Trigger
+//
+//	@summary	Create a new trigger
+//	@id			create-trigger
+//	@tags		trigger
+//	@accept		json
+//	@produce	json
+//	@param		validate	query		bool									false	"For validating targets"
+//	@param		trigger		body		dto.Trigger								true	"Trigger data"
+//	@success	200			{object}	dto.SaveTriggerResponse					"Trigger created successfully"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	422			{object}	api.ErrorRenderExample					"Render error"
+//	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
+//	@router		/trigger [put]
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
 	if err != nil {
@@ -61,7 +110,12 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 
 	var problems []dto.TreeOfProblems
 	if needValidate(request) {
-		problems = validateTargets(request, trigger)
+		problems, err = validateTargets(request, trigger)
+		if err != nil {
+			render.Render(writer, request, err) //nolint
+			return
+		}
+
 		if problems != nil && dto.DoesAnyTreeHaveError(problems) {
 			writeErrorSaveResponse(writer, request, problems)
 			return
@@ -125,14 +179,33 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 // getMetricTTLByTrigger gets metric ttl duration time from request context for local or remote trigger.
 func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Duration {
 	var ttl time.Duration
-	if trigger.IsRemote {
-		ttl = middleware.GetRemoteMetricTTL(request)
-	} else {
+
+	switch trigger.TriggerSource {
+	case moira.GraphiteLocal:
 		ttl = middleware.GetLocalMetricTTL(request)
+
+	case moira.GraphiteRemote:
+		ttl = middleware.GetRemoteMetricTTL(request)
+
+	case moira.PrometheusRemote:
+		ttl = middleware.GetPrometheusMetricTTL(request)
 	}
+
 	return ttl
 }
 
+// nolint: gofmt,goimports
+//
+//	@summary	Validates trigger target
+//	@id			trigger-check
+//	@tags		trigger
+//	@accept		json
+//	@produce	json
+//	@param		trigger	body		dto.Trigger						true	"Trigger data"
+//	@success	200		{object}	dto.TriggerCheckResponse		"Validation is done, see response body for validation result"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger/check [put]
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	response := dto.TriggerCheckResponse{}
@@ -151,25 +224,56 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	ttl := getMetricTTLByTrigger(request, trigger)
 
 	if len(trigger.Targets) > 0 {
-		response.Targets = dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+		var err error
+		response.Targets, err = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
+
+		if err != nil {
+			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+			return
+		}
 	}
 
 	render.JSON(writer, request, response)
 }
 
+// nolint: gofmt,goimports
+//
+//	@summary		Search triggers. Replaces the deprecated `page` path
+//	@description	You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on
+//	@description	For example, `/api/trigger/search?tags[0]=test&tags[1]=test1`
+//	@id				search-triggers
+//	@tags			trigger
+//	@produce		json
+//	@param			onlyProblems	query		boolean							false	"Only include problems"	default(false)
+//	@param			text			query		string							false	"Search text"			default(cpu)
+//	@param			p				query		integer							false	"Page number"			default(0)
+//	@param			size			query		integer							false	"Page size"				default(10)
+//	@param			createPager		query		boolean							false	"Create pager"			default(false)
+//	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param			createdBy		query		string							false	"Created By"			default(moira.team)
+//	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
+//	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure		422				{object}	api.ErrorRenderExample			"Render error"
+//	@failure		500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router			/trigger/search [get]
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
-	onlyErrors := getOnlyProblemsFlag(request)
-	filterTags := getRequestTags(request)
-	searchString := getSearchRequestString(request)
 
-	page := middleware.GetPage(request)
-	size := middleware.GetSize(request)
+	createdBy, ok := getTriggerCreatedBy(request)
+	searchOptions := moira.SearchOptions{
+		Page:                  middleware.GetPage(request),
+		Size:                  middleware.GetSize(request),
+		OnlyProblems:          getOnlyProblemsFlag(request),
+		Tags:                  getRequestTags(request),
+		SearchString:          getSearchRequestString(request),
+		CreatedBy:             createdBy,
+		NeedSearchByCreatedBy: ok,
+		CreatePager:           middleware.GetCreatePager(request),
+		PagerID:               middleware.GetPagerID(request),
+	}
 
-	createPager := middleware.GetCreatePager(request)
-	pagerID := middleware.GetPagerID(request)
-
-	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, page, size, onlyErrors, filterTags, searchString, createPager, pagerID)
+	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
@@ -181,6 +285,18 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// nolint: gofmt,goimports
+//
+//	@summary	Delete triggers pager
+//	@id			delete-pager
+//	@tags		trigger
+//	@produce	json
+//	@param		pagerID	query		string									false	"Pager ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200		{object}	dto.TriggersSearchResultDeleteResponse	"Successfully deleted pager"
+//	@failure	404		{object}	api.ErrorNotFoundExample				"Resource not found"
+//	@failure	422		{object}	api.ErrorRenderExample					"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@router		/trigger/search/pager [delete]
 func deletePager(writer http.ResponseWriter, request *http.Request) {
 	pagerID := middleware.GetPagerID(request)
 
@@ -217,6 +333,16 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 		return onlyProblems
 	}
 	return false
+}
+
+// Checks if the createdBy field has been set:
+// if the field has been set, searches for triggers with a specific author createdBy
+// if the field has not been set, searches for triggers with any author
+func getTriggerCreatedBy(request *http.Request) (string, bool) {
+	if createdBy, ok := request.Form["createdBy"]; ok {
+		return createdBy[0], true
+	}
+	return "", false
 }
 
 func getSearchRequestString(request *http.Request) string {
