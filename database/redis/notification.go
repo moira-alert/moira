@@ -140,9 +140,9 @@ func (connector *DbConnector) GetDelayedTimeInSeconds() int64 {
 }
 
 // filterNotificationsByDelay filters notifications into delayed and not delayed notifications
-func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, delayedTime int64) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification) {
-	delayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
-	notDelayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, delayedTime int64) (delayedNotifications []*moira.ScheduledNotification, notDelayedNotifications []*moira.ScheduledNotification) {
+	delayedNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
+	notDelayedNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
 
 	for _, notification := range notifications {
 		if notification.IsDelayed(delayedTime) {
@@ -187,9 +187,9 @@ func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moi
 }
 
 // filterNotificationsByState filters notifications based on their state to the corresponding arrays
-func (connector *DbConnector) filterNotificationsByState(notifications []*moira.ScheduledNotification) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification, error) {
-	validNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
-	toRemoveNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+func (connector *DbConnector) filterNotificationsByState(notifications []*moira.ScheduledNotification) (validNotifications []*moira.ScheduledNotification, toRemoveNotifications []*moira.ScheduledNotification, err error) {
+	validNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
+	toRemoveNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
 
 	triggerChecks, err := connector.getNotificationsTriggerChecks(notifications)
 	if err != nil {
