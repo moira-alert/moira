@@ -40,20 +40,20 @@ func TestFetchNotificationsForTest(t *testing.T) {
 	var limit int64 = 2
 	wg.Add(3)
 	go func() {
-		_, err := dataBase.FetchNotificationsForTest(&wg, now+dataBase.GetDelayedTimeInSeconds()*2, &limit, "notifier-1") //nolint
+		_, err := dataBase.FetchNotificationsForTest(&wg, now+dataBase.GetDelayedTimeInSeconds()*2, limit, "notifier-1") //nolint
 		if err != nil {
 			log.Printf("notifier-1: %v\n", err)
 		}
 	}()
 	go func() {
-		_, err := dataBase.FetchNotificationsForTest(&wg, now+dataBase.GetDelayedTimeInSeconds()*2, &limit, "notifier-2") //nolint
+		_, err := dataBase.FetchNotificationsForTest(&wg, now+dataBase.GetDelayedTimeInSeconds()*2, limit, "notifier-2") //nolint
 		if err != nil {
 			log.Printf("notifier-2: %v\n", err)
 		}
 	}()
 	// time.Sleep(100 * time.Millisecond)
 	go func() {
-		_, err := dataBase.FetchNotificationsForTest(&wg, now+dataBase.GetDelayedTimeInSeconds()*2, &limit, "notifier-3") //nolint
+		_, err := dataBase.FetchNotificationsForTest(&wg, now+dataBase.GetDelayedTimeInSeconds()*2, limit, "notifier-3") //nolint
 		if err != nil {
 			log.Printf("notifier-3: %v\n", err)
 		}
