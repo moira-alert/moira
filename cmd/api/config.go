@@ -21,7 +21,6 @@ type config struct {
 	Remote              cmd.RemoteConfig              `yaml:"remote"`
 	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
-	Notification        cmd.NotificationConfig        `yaml:"notification"`
 }
 
 type apiConfig struct {
@@ -114,12 +113,6 @@ func getDefault() config {
 		NotificationHistory: cmd.NotificationHistoryConfig{
 			NotificationHistoryTTL:        "48h",
 			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
-		},
-		Notification: cmd.NotificationConfig{
-			DelayedTime:               "1m",
-			TransactionTimeout:        "200ms",
-			TransactionMaxRetries:     10,
-			TransactionHeuristicLimit: 10000,
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",
