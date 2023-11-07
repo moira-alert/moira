@@ -145,11 +145,15 @@ func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, de
 	notDelayedNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
 
 	for _, notification := range notifications {
-		if notification.IsDelayed(delayedTime) {
-			delayedNotifications = append(delayedNotifications, notification)
+		if notification == nil {
 			continue
 		}
-		notDelayedNotifications = append(notDelayedNotifications, notification)
+
+		if notification.IsDelayed(delayedTime) {
+			delayedNotifications = append(delayedNotifications, notification)
+		} else {
+			notDelayedNotifications = append(notDelayedNotifications, notification)
+		}
 	}
 
 	return delayedNotifications, notDelayedNotifications
@@ -197,12 +201,14 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 	}
 
 	for i, notification := range notifications {
-		switch notification.GetState(triggerChecks[i]) {
-		case moira.ValidNotification:
-			validNotifications = append(validNotifications, notification)
+		if notification != nil {
+			switch notification.GetState(triggerChecks[i]) {
+			case moira.ValidNotification:
+				validNotifications = append(validNotifications, notification)
 
-		case moira.RemovedNotification:
-			toRemoveNotifications = append(toRemoveNotifications, notification)
+			case moira.RemovedNotification:
+				toRemoveNotifications = append(toRemoveNotifications, notification)
+			}
 		}
 	}
 
@@ -369,6 +375,21 @@ func getLimitedNotifications(
 	return limitedNotifications, nil
 }
 
+// Helper function for logging information on removed notifications
+func logRemovedNotifications(logger moira.Logger, removedNotifications []*moira.ScheduledNotification) {
+	removedNotificationsTriggerIDs := make([]string, 0, len(removedNotifications))
+	for _, removedNotification := range removedNotifications {
+		if removedNotification != nil {
+			removedNotificationsTriggerIDs = append(removedNotificationsTriggerIDs, removedNotification.Trigger.ID)
+		}
+	}
+
+	logger.Info().
+		Interface("removed_notifications_trigger_ids", removedNotificationsTriggerIDs).
+		Int("removed_count", len(removedNotifications)).
+		Msg("Remove notifications in transaction")
+}
+
 // fetchNotificationsDo performs fetching of notifications within a single transaction
 func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// See https://redis.io/topics/transactions
@@ -413,6 +434,8 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*mo
 				}
 				return fmt.Errorf("failed to remove notifications in transaction: %w", err)
 			}
+
+			logRemovedNotifications(connector.logger, toRemoveNotifications)
 
 			return nil
 		})
