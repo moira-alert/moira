@@ -388,6 +388,10 @@ func logRemovedNotifications(logger moira.Logger, removedNotifications []*moira.
 		}
 	}
 
+	if len(triggerIDsSet) == 0 {
+		return
+	}
+
 	triggerIDs := make([]string, 0, len(triggerIDsSet))
 	for triggerID := range triggerIDsSet {
 		triggerIDs = append(triggerIDs, triggerID)
