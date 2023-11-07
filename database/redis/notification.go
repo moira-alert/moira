@@ -475,15 +475,24 @@ func getLimitedNotifications(
 
 // Helper function for logging information on removed notifications
 func logRemovedNotifications(logger moira.Logger, removedNotifications []*moira.ScheduledNotification) {
-	removedNotificationsTriggerIDs := make([]string, 0, len(removedNotifications))
+	triggerIDsSet := make(map[string]struct{}, len(removedNotifications))
 	for _, removedNotification := range removedNotifications {
-		if removedNotification != nil {
-			removedNotificationsTriggerIDs = append(removedNotificationsTriggerIDs, removedNotification.Trigger.ID)
+		if removedNotification == nil {
+			continue
+		}
+
+		if _, ok := triggerIDsSet[removedNotification.Trigger.ID]; !ok {
+			triggerIDsSet[removedNotification.Trigger.ID] = struct{}{}
 		}
 	}
 
+	triggerIDs := make([]string, 0, len(triggerIDsSet))
+	for triggerID := range triggerIDsSet {
+		triggerIDs = append(triggerIDs, triggerID)
+	}
+
 	logger.Info().
-		Interface("removed_notifications_trigger_ids", removedNotificationsTriggerIDs).
+		Interface("notification_trigger_ids", triggerIDs).
 		Int("removed_count", len(removedNotifications)).
 		Msg("Remove notifications in transaction")
 }
