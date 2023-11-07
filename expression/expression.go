@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/antonmedv/expr"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Knetic/govaluate"
+
 	"github.com/moira-alert/moira"
 )
 
@@ -77,6 +79,45 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 	}
 }
 
+// Validate returns error if triggers of type moira.ExpressionTrigger are badly formatted otherwise nil
+func (triggerExpression *TriggerExpression) Validate() error {
+	if triggerExpression.TriggerType != moira.ExpressionTrigger {
+		return nil
+	}
+	if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
+		return ErrInvalidExpression{
+			internalError: fmt.Errorf("trigger_type set to expression, but no expression provided"),
+		}
+	}
+	expression := *triggerExpression.Expression
+	env := map[string]interface{}{
+		"ok":         moira.StateOK,
+		"error":      moira.StateERROR,
+		"warn":       moira.StateWARN,
+		"warning":    moira.StateWARN,
+		"nodata":     moira.StateNODATA,
+		"t1":         triggerExpression.MainTargetValue,
+		"prev_state": triggerExpression.PreviousState,
+	}
+	if triggerExpression.WarnValue != nil {
+		env["warn_value"] = *triggerExpression.WarnValue
+	}
+	if triggerExpression.ErrorValue != nil {
+		env["error_value"] = *triggerExpression.ErrorValue
+	}
+	for k, v := range triggerExpression.AdditionalTargetsValues {
+		env[k] = v
+	}
+	if _, err := expr.Compile(
+		strings.ToLower(expression),
+		expr.Optimize(true),
+		expr.Env(env),
+	); err != nil {
+		return ErrInvalidExpression{err}
+	}
+	return nil
+}
+
 // Evaluate gets trigger expression and evaluates it for given parameters using govaluate
 func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	expr, err := getExpression(triggerExpression)
@@ -95,27 +136,12 @@ func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	}
 }
 
-func validateUserExpression(triggerExpression *TriggerExpression, userExpression *govaluate.EvaluableExpression) (*govaluate.EvaluableExpression, error) {
-	for _, v := range userExpression.Vars() {
-		if _, err := triggerExpression.Get(v); err != nil {
-			return nil, fmt.Errorf("invalid variable value: %w", err)
-		}
-	}
-	return userExpression, nil
-}
-
 func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
 	if triggerExpression.TriggerType == moira.ExpressionTrigger {
 		if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
 			return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
-
-		userExpression, err := getUserExpression(*triggerExpression.Expression)
-		if err != nil {
-			return nil, err
-		}
-
-		return validateUserExpression(triggerExpression, userExpression)
+		return getUserExpression(*triggerExpression.Expression)
 	}
 	return getSimpleExpression(triggerExpression)
 }
