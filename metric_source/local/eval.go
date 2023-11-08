@@ -94,7 +94,7 @@ func (ctx *evalCtx) parse(target string) (parser.Expr, error) {
 }
 
 func (ctx *evalCtx) getMetricsData(database moira.Database, parsedExpr parser.Expr) (*fetchedMetrics, error) {
-	metricRequests := parsedExpr.Metrics(0, 0)
+	metricRequests := parsedExpr.Metrics()
 
 	metrics := make([]string, 0)
 	metricsMap := make(map[parser.MetricRequest][]*types.MetricData)
@@ -190,7 +190,7 @@ func (ctx *evalCtx) writeResult(exp parser.Expr, metrics *fetchedMetrics, metric
 	}
 
 	result.Metrics = append(result.Metrics, metrics.metrics...)
-	for _, mr := range exp.Metrics(0, 0) {
+	for _, mr := range exp.Metrics() {
 		result.Patterns = append(result.Patterns, mr.Metric)
 	}
 }

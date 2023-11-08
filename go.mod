@@ -15,7 +15,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
-	github.com/go-graphite/carbonapi v0.16.2-0.20231101113133-39b476ab3e6d
+	github.com/go-graphite/carbonapi v0.16.0
 	github.com/go-graphite/protocol v1.0.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redsync/redsync/v4 v4.4.4
@@ -55,6 +55,7 @@ require (
 )
 
 require (
+	bitbucket.org/tebeka/strftime v0.0.0-20140926081919-2194253a23c0 // indirect
 	github.com/JaderDias/movingmedian v0.0.0-20220813210630-d8c6b6de8835 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/RoaringBitmap/roaring v1.3.0 // indirect
@@ -191,7 +192,6 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/swaggo/swag v1.8.12 // indirect
-	github.com/tebeka/strftime v0.1.5 // indirect
 	golang.org/x/tools v0.12.0 // indirect
 )
 
