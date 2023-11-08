@@ -54,3 +54,15 @@ func (metrics *NotifierMetrics) MarkSendersOkMetrics(contactType string) {
 		metric.Mark(1)
 	}
 }
+
+// MarkSendersFailedMetrics marks metrics as 1 by contactType when notifications were unsuccessfully sent.
+func (metrics *NotifierMetrics) MarkSendersFailedMetrics(contactType string) {
+	if metric, found := metrics.SendersFailedMetrics.GetRegisteredMeter(contactType); found {
+		metric.Mark(1)
+	}
+}
+
+// MarkSendingFailed marks metrics when notifications were unsuccessfully sent.
+func (metrics *NotifierMetrics) MarkSendingFailed() {
+	metrics.SendingFailed.Mark(1)
+}
