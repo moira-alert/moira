@@ -221,7 +221,6 @@ func configureNotifier(t *testing.T) {
 	senderSettings := map[string]interface{}{
 		"type": "test",
 	}
-	notifier.sendersNameToType["test"] = "test"
 
 	sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006").Return(nil)
 
@@ -229,6 +228,7 @@ func configureNotifier(t *testing.T) {
 
 	Convey("Should return one sender", t, func() {
 		So(notifier.GetSenders(), ShouldResemble, map[string]bool{"test": true})
+		So(notifier.sendersNameToType["test"], ShouldEqual, senderSettings["type"])
 	})
 }
 
