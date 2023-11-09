@@ -11,6 +11,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const discordType = "discord"
+
 type MockDB struct {
 	moira.Database
 }
@@ -31,21 +33,27 @@ func TestInit(t *testing.T) {
 	Convey("Init tests", t, func() {
 		sender := Sender{DataBase: &MockDB{}}
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]interface{}{}, logger, nil, "")
+			sendersNameToType := make(map[string]string)
+			err := sender.Init(map[string]interface{}{}, logger, nil, "", sendersNameToType)
 			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
 			So(sender, ShouldResemble, Sender{DataBase: &MockDB{}})
 		})
 
 		Convey("Has settings", func() {
 			senderSettings := map[string]interface{}{
+				"type":      discordType,
 				"token":     "123",
 				"front_uri": "http://moira.uri",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			So(err, ShouldBeNil)
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.session.Token, ShouldResemble, "Bot 123")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
+			So(sendersNameToType[discordType], ShouldEqual, senderSettings["type"])
 		})
 	})
 }

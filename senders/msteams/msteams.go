@@ -37,6 +37,8 @@ var headers = map[string]string{
 
 // Structure that represents the MSTeams configuration in the YAML file
 type config struct {
+	Name      string `mapstructure:"name"`
+	Type      string `mapstructure:"type"`
 	FrontURI  string `mapstructure:"front_uri"`
 	MaxEvents int    `mapstructure:"max_events"`
 }
@@ -51,11 +53,17 @@ type Sender struct {
 }
 
 // Init initialises settings required for full functionality
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to msteams config: %w", err)
+	}
+
+	if cfg.Name != "" {
+		sendersNameToType[cfg.Name] = cfg.Type
+	} else {
+		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	sender.logger = logger

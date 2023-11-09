@@ -11,6 +11,8 @@ import (
 
 // Structure that represents the PagerDuty configuration in the YAML file
 type config struct {
+	Name     string `mapstructure:"name"`
+	Type     string `mapstructure:"type"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
@@ -26,11 +28,17 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures the pagerduty client
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to pagerduty config: %w", err)
+	}
+
+	if cfg.Name != "" {
+		sendersNameToType[cfg.Name] = cfg.Type
+	} else {
+		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	sender.frontURI = cfg.FrontURI

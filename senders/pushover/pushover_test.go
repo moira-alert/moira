@@ -12,28 +12,43 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const pushoverType = "pushover"
+
 func TestSender_Init(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Empty map", t, func() {
 		sender := Sender{}
-		err := sender.Init(map[string]interface{}{}, logger, nil, "")
+		sendersNameToType := make(map[string]string)
+		err := sender.Init(map[string]interface{}{}, logger, nil, "", sendersNameToType)
 		So(err, ShouldResemble, fmt.Errorf("can not read pushover api_token from config"))
 		So(sender, ShouldResemble, Sender{})
 	})
 
+	senderSettings := map[string]interface{}{
+		"type": pushoverType,
+	}
+
 	Convey("Settings has api_token", t, func() {
+		senderSettings["api_token"] = "123"
 		sender := Sender{}
-		err := sender.Init(map[string]interface{}{"api_token": "123"}, logger, nil, "")
+		sendersNameToType := make(map[string]string)
+
+		err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), logger: logger})
+		So(sendersNameToType[pushoverType], ShouldEqual, senderSettings["type"])
 	})
 
 	Convey("Settings has all data", t, func() {
+		senderSettings["front_uri"] = "321"
 		sender := Sender{}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(map[string]interface{}{"api_token": "123", "front_uri": "321"}, logger, location, "")
+		sendersNameToType := make(map[string]string)
+
+		err := sender.Init(senderSettings, logger, location, "", sendersNameToType)
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), frontURI: "321", logger: logger, location: location})
+		So(sendersNameToType[pushoverType], ShouldEqual, senderSettings["type"])
 	})
 }
 

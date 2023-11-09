@@ -21,9 +21,86 @@ import (
 const (
 	testUser = "testUser"
 	testPass = "testPass"
+
+	webhookType = "webhook"
+	webhookName = "webhook_name"
 )
 
 var logger, _ = logging.GetLogger("webhook")
+
+func TestSender_Init(t *testing.T) {
+	Convey("Test Init", t, func() {
+		Convey("Init without name", func() {
+			senderSettings := map[string]interface{}{
+				"type": webhookType,
+			}
+
+			sendersNameToType := make(map[string]string)
+			sender := Sender{}
+
+			err := sender.Init(senderSettings, logger, time.UTC, "", sendersNameToType)
+			So(err, ShouldResemble, fmt.Errorf("required name for sender type webhook"))
+		})
+
+		Convey("Test without url", func() {
+			senderSettings := map[string]interface{}{
+				"type": webhookType,
+				"name": webhookName,
+			}
+
+			sendersNameToType := make(map[string]string)
+			sender := Sender{}
+
+			err := sender.Init(senderSettings, logger, time.UTC, "", sendersNameToType)
+			So(err, ShouldResemble, fmt.Errorf("can not read url from config"))
+		})
+
+		Convey("Init with full config", func() {
+			senderSettings := map[string]interface{}{
+				"type":     webhookType,
+				"name":     webhookName,
+				"user":     "user",
+				"password": "password",
+				"url":      "url",
+			}
+
+			sendersNameToType := make(map[string]string)
+			sender := Sender{}
+
+			err := sender.Init(senderSettings, logger, time.UTC, "", sendersNameToType)
+			So(err, ShouldBeNil)
+			So(sendersNameToType[webhookName], ShouldEqual, senderSettings["type"])
+		})
+
+		Convey("Multiple Init", func() {
+			senderSettings1 := map[string]interface{}{
+				"type": webhookType,
+				"name": webhookName,
+				"url":  "url",
+			}
+
+			webhookName2 := "webhook_name_2"
+			senderSettings2 := map[string]interface{}{
+				"type": webhookType,
+				"name": webhookName2,
+				"url":  "url",
+			}
+
+			sendersNameToType := make(map[string]string)
+			sender := Sender{}
+
+			err := sender.Init(senderSettings1, logger, time.UTC, "", sendersNameToType)
+			So(err, ShouldBeNil)
+
+			err = sender.Init(senderSettings2, logger, time.UTC, "", sendersNameToType)
+			So(err, ShouldBeNil)
+
+			So(sendersNameToType[webhookName], ShouldEqual, senderSettings1["type"])
+			So(sendersNameToType[webhookName2], ShouldEqual, senderSettings2["type"])
+			So(len(sender.webhookClients), ShouldEqual, 2)
+		})
+	})
+}
 
 func TestSender_SendEvents(t *testing.T) {
 	Convey("Receive test webhook", t, func() {
@@ -52,14 +129,19 @@ func TestSender_SendEvents(t *testing.T) {
 		defer ts.Close()
 
 		senderSettings := map[string]interface{}{
-			"name":     "testWebhook",
+			"name":     webhookName,
+			"type":     webhookType,
 			"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
 			"user":     testUser,
 			"password": testPass,
 		}
+
+		sendersNameToType := make(map[string]string)
 		sender := Sender{}
-		err := sender.Init(senderSettings, logger, time.UTC, "")
+
+		err := sender.Init(senderSettings, logger, time.UTC, "", sendersNameToType)
 		So(err, ShouldBeNil)
+		So(sendersNameToType[webhookName], ShouldEqual, senderSettings["type"])
 
 		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
 		So(err, ShouldBeNil)

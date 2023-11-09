@@ -12,6 +12,8 @@ import (
 
 // Structure that represents the VictorOps configuration in the YAML file
 type config struct {
+	Name       string `mapstructure:"name"`
+	Type       string `mapstructure:"type"`
 	RoutingURL string `mapstructure:"routing_url"`
 	ImageStore string `mapstructure:"image_store"`
 	FrontURI   string `mapstructure:"front_uri"`
@@ -33,7 +35,7 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures the victorops sender
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -58,6 +60,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				String("image_store_id", sender.imageStoreID).
 				Msg("Image store specified has not been configured")
 		}
+	}
+
+	if cfg.Name != "" {
+		sendersNameToType[cfg.Name] = cfg.Type
+	} else {
+		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	sender.client = api.NewClient(sender.routingURL, nil)

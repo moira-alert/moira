@@ -17,7 +17,7 @@ var (
 	testTemplate = fmt.Sprintf("%s/%s/%s/%s/%s", testHost, moira.VariableTriggerID, moira.VariableContactType, moira.VariableContactID, moira.VariableContactValue)
 	testContact  = moira.ContactData{
 		ID:    "contactID",
-		Type:  "contactType",
+		Type:  webhookName,
 		Value: "contactValue",
 		User:  "contactUser",
 		Team:  "contactTeam",
@@ -94,7 +94,7 @@ const expectedStateChangePayload = `
     }
   ],
   "contact": {
-    "type": "contactType",
+    "type": "webhook_name",
     "value": "contactValue",
     "id": "contactID",
     "user": "contactUser",
@@ -215,7 +215,7 @@ func TestBuildRequestURL(t *testing.T) {
 
 var testContactWithURL = moira.ContactData{
 	ID:    "contactID",
-	Type:  "contactType",
+	Type:  webhookName,
 	Value: "https://test.org/moirahook",
 	User:  "contactUser",
 	Team:  "contactTeam",

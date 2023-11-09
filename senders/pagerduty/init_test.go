@@ -12,6 +12,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const pagerdutyType = "pagerduty"
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
@@ -27,37 +29,54 @@ func TestInit(t *testing.T) {
 		Convey("Has settings", func() {
 			imageStore.EXPECT().IsEnabled().Return(true)
 			senderSettings := map[string]interface{}{
+				"type":        pagerdutyType,
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			So(err, ShouldBeNil)
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
 			So(sender.imageStoreConfigured, ShouldResemble, true)
 			So(sender.imageStore, ShouldResemble, imageStore)
+			So(sendersNameToType[pagerdutyType], ShouldEqual, senderSettings["type"])
 		})
+
 		Convey("Wrong image_store name", func() {
 			senderSettings := map[string]interface{}{
+				"type":        pagerdutyType,
 				"front_uri":   "http://moira.uri",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			So(err, ShouldBeNil)
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
+			So(sendersNameToType[pagerdutyType], ShouldEqual, senderSettings["type"])
 		})
+
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
 			senderSettings := map[string]interface{}{
+				"type":        pagerdutyType,
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
 			sender := Sender{ImageStores: map[string]moira.ImageStore{
 				"s3": imageStore,
 			}}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			So(err, ShouldBeNil)
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
+			So(sendersNameToType[pagerdutyType], ShouldEqual, senderSettings["type"])
 		})
 	})
 }

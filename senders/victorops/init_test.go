@@ -14,6 +14,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const victoropsType = "victorops"
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
@@ -25,42 +27,58 @@ func TestInit(t *testing.T) {
 		sender := Sender{ImageStores: map[string]moira.ImageStore{
 			"s3": imageStore,
 		}}
+
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]interface{}{}, logger, nil, "")
+			sendersNameToType := make(map[string]string)
+			err := sender.Init(map[string]interface{}{}, logger, nil, "", sendersNameToType)
 			So(err, ShouldResemble, fmt.Errorf("cannot read the routing url from the yaml config"))
 			So(sender, ShouldResemble, Sender{
 				ImageStores: map[string]moira.ImageStore{
 					"s3": imageStore,
-				}})
+				},
+			})
 		})
 
 		Convey("Has settings", func() {
 			imageStore.EXPECT().IsEnabled().Return(true)
 			senderSettings := map[string]interface{}{
+				"type":        victoropsType,
 				"routing_url": "https://testurl.com",
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			So(err, ShouldBeNil)
 			So(sender.routingURL, ShouldResemble, "https://testurl.com")
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
 			So(sender.client, ShouldResemble, api.NewClient("https://testurl.com", nil))
+			So(sendersNameToType[victoropsType], ShouldEqual, senderSettings["type"])
 		})
+
 		Convey("Wrong image_store name", func() {
 			senderSettings := map[string]interface{}{
+				"type":        victoropsType,
 				"front_uri":   "http://moira.uri",
 				"routing_url": "https://testurl.com",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			So(err, ShouldBeNil)
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
+			So(sendersNameToType[victoropsType], ShouldEqual, senderSettings["type"])
 		})
+
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
 			senderSettings := map[string]interface{}{
+				"type":        victoropsType,
 				"front_uri":   "http://moira.uri",
 				"routing_url": "https://testurl.com",
 				"image_store": "s3",
@@ -68,9 +86,13 @@ func TestInit(t *testing.T) {
 			sender := Sender{ImageStores: map[string]moira.ImageStore{
 				"s3": imageStore,
 			}}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			So(err, ShouldBeNil)
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
+			So(sendersNameToType[victoropsType], ShouldEqual, senderSettings["type"])
 		})
 	})
 }

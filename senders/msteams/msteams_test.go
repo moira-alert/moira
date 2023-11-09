@@ -11,15 +11,20 @@ import (
 	"gopkg.in/h2non/gock.v1"
 )
 
+const msteamsType = "msteams"
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		senderSettings := map[string]interface{}{
+			"type":       msteamsType,
 			"max_events": -1,
 		}
+
 		Convey("Minimal settings", func() {
-			err := sender.Init(senderSettings, logger, nil, "")
+			sendersNameToType := make(map[string]string)
+			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
 			So(sender.maxEvents, ShouldResemble, -1)
@@ -31,9 +36,18 @@ func TestMSTeamsHttpResponse(t *testing.T) {
 	sender := Sender{}
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	location, _ := time.LoadLocation("UTC")
-	_ = sender.Init(map[string]interface{}{
+	sendersNameToType := make(map[string]string)
+	senderSettings := map[string]interface{}{
+		"type":       msteamsType,
 		"max_events": -1,
-	}, logger, location, "")
+	}
+
+	Convey("Test init", t, func() {
+		err := sender.Init(senderSettings, logger, location, "", sendersNameToType)
+		So(err, ShouldBeNil)
+		So(sendersNameToType[msteamsType], ShouldEqual, senderSettings["type"])
+	})
+
 	event := moira.NotificationEvent{
 		TriggerID: "TriggerID",
 		Values:    map[string]float64{"t1": 123},

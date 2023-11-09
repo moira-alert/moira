@@ -17,6 +17,8 @@ import (
 
 // Structure that represents the Mattermost configuration in the YAML file
 type config struct {
+	Name        string `mapstructure:"name"`
+	Type        string `mapstructure:"type"`
 	Url         string `mapstructure:"url"`
 	InsecureTLS bool   `mapstructure:"insecure_tls"`
 	APIToken    string `mapstructure:"api_token"`
@@ -34,7 +36,7 @@ type Sender struct {
 }
 
 // Init configures Sender.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string, sendersNameToType map[string]string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -44,11 +46,23 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.Url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
+
+	if cfg.APIToken == "" {
+		return fmt.Errorf("can not read Mattermost api_token from config")
+	}
+
+	if cfg.FrontURI == "" {
+		return fmt.Errorf("can not read Mattermost front_uri from config")
+	}
+
+	if cfg.Name != "" {
+		sendersNameToType[cfg.Name] = cfg.Type
+	} else {
+		sendersNameToType[cfg.Type] = cfg.Type
+	}
+
 	client := model.NewAPIv4Client(cfg.Url)
 
-	if err != nil {
-		return fmt.Errorf("can not parse insecure_tls: %v", err)
-	}
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -56,16 +70,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			},
 		},
 	}
+
 	sender.client = client
-
-	if cfg.APIToken == "" {
-		return fmt.Errorf("can not read Mattermost api_token from config")
-	}
 	sender.client.SetToken(cfg.APIToken)
-
-	if cfg.FrontURI == "" {
-		return fmt.Errorf("can not read Mattermost front_uri from config")
-	}
 	sender.frontURI = cfg.FrontURI
 	sender.location = location
 	sender.logger = logger

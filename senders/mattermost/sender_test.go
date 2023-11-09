@@ -9,6 +9,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const mattermostType = "mattermost"
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
@@ -16,58 +18,94 @@ func TestInit(t *testing.T) {
 
 		Convey("No url", func() {
 			senderSettings := map[string]interface{}{
+				"type":         mattermostType,
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
 				"insecure_tls": true,
 			}
-			err := sender.Init(senderSettings, logger, nil, "")
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Empty url", func() {
 			senderSettings := map[string]interface{}{
+				"type":         mattermostType,
 				"url":          "",
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
 				"insecure_tls": true,
 			}
-			err := sender.Init(senderSettings, logger, nil, "")
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("No api_token", func() {
-			senderSettings := map[string]interface{}{"url": "qwerty", "front_uri": "qwerty"}
-			err := sender.Init(senderSettings, logger, nil, "")
+			senderSettings := map[string]interface{}{
+				"type":      mattermostType,
+				"url":       "qwerty",
+				"front_uri": "qwerty",
+			}
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Empty api_token", func() {
-			senderSettings := map[string]interface{}{"url": "qwerty", "front_uri": "qwerty", "api_token": ""}
-			err := sender.Init(senderSettings, logger, nil, "")
+			senderSettings := map[string]interface{}{
+				"type":      mattermostType,
+				"url":       "qwerty",
+				"front_uri": "qwerty",
+				"api_token": "",
+			}
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("No front_uri", func() {
-			senderSettings := map[string]interface{}{"url": "qwerty", "api_token": "qwerty"}
-			err := sender.Init(senderSettings, logger, nil, "")
+			senderSettings := map[string]interface{}{
+				"type":      mattermostType,
+				"url":       "qwerty",
+				"api_token": "qwerty",
+			}
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Empty front_uri", func() {
-			senderSettings := map[string]interface{}{"url": "qwerty", "api_token": "qwerty", "front_uri": ""}
-			err := sender.Init(senderSettings, logger, nil, "")
+			senderSettings := map[string]interface{}{
+				"type":      mattermostType,
+				"url":       "qwerty",
+				"api_token": "qwerty",
+				"front_uri": "",
+			}
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Full config", func() {
 			senderSettings := map[string]interface{}{
+				"type":         mattermostType,
 				"url":          "qwerty",
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
 				"insecure_tls": true,
 			}
-			err := sender.Init(senderSettings, logger, nil, "")
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 			So(err, ShouldBeNil)
+			So(sendersNameToType[mattermostType], ShouldEqual, senderSettings["type"])
 		})
 	})
 }

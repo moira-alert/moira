@@ -17,19 +17,25 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const mattermostType = "mattermost"
+
 func TestSendEvents(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	sender := &Sender{}
 
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]interface{}{ // redundant, but necessary config
+			"type":         mattermostType,
 			"url":          "qwerty",
 			"api_token":    "qwerty",
 			"front_uri":    "qwerty",
 			"insecure_tls": true,
 		}
-		err := sender.Init(senderSettings, logger, nil, "")
+		sendersNameToType := make(map[string]string)
+
+		err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
 		So(err, ShouldBeNil)
+		So(sendersNameToType[mattermostType], ShouldEqual, senderSettings["type"])
 
 		Convey("When client return error, SendEvents should return error", func() {
 			ctrl := gomock.NewController(t)
@@ -79,13 +85,17 @@ func TestBuildMessage(t *testing.T) {
 
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]interface{}{
-			"url": "qwerty", "api_token": "qwerty", // redundant, but necessary config
+			"type": mattermostType,
+			"url":  "qwerty", "api_token": "qwerty", // redundant, but necessary config
 			"front_uri":    "http://moira.url",
 			"insecure_tls": true,
 		}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(senderSettings, logger, location, "")
+		sendersNameToType := make(map[string]string)
+
+		err := sender.Init(senderSettings, logger, location, "", sendersNameToType)
 		So(err, ShouldBeNil)
+		So(sendersNameToType[mattermostType], ShouldEqual, senderSettings["type"])
 
 		event := moira.NotificationEvent{
 			TriggerID: "TriggerID",

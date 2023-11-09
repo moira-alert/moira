@@ -3,6 +3,7 @@ package notifier
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/discord"
@@ -44,8 +45,19 @@ const (
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
 	for _, senderSettings := range notifier.config.Senders {
+		senderType, ok := senderSettings["type"].(string)
+		if !ok {
+			return fmt.Errorf("failed to get sender type from settings: %w", err)
+		}
+
+		if sender, ok := notifier.senders[senderType]; ok {
+			if err = notifier.RegisterSender(senderSettings, sender); err != nil {
+				return err
+			}
+		}
+
 		senderSettings["front_uri"] = notifier.config.FrontURL
-		switch senderSettings["type"] {
+		switch senderType {
 		case mailSender:
 			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
 		case pushoverSender:
@@ -79,10 +91,12 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		default:
 			return fmt.Errorf("unknown sender type [%s]", senderSettings["type"])
 		}
+
 		if err != nil {
 			return err
 		}
 	}
+
 	if notifier.config.SelfStateEnabled {
 		selfStateSettings := map[string]interface{}{"type": selfStateSender}
 		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
@@ -91,41 +105,52 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 				Msg("Failed to register selfstate sender")
 		}
 	}
+
 	return nil
 }
 
 // RegisterSender adds sender for notification type and registers metrics
 func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error {
-	var senderIdent string
 	senderType, ok := senderSettings["type"].(string)
 	if !ok {
 		return fmt.Errorf("failed to retrieve sender type from sender settings")
 	}
 
-	switch senderType {
-	case scriptSender, webhookSender:
-		name, ok := senderSettings["name"].(string)
+	if _, ok := notifier.sendersOnce[senderType]; !ok {
+		notifier.sendersOnce[senderType] = &sync.Once{}
+	}
+
+	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat, notifier.sendersNameToType)
+	if err != nil {
+		return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderType, err.Error())
+	}
+
+	notifier.sendersOnce[senderType].Do(func() {
+		eventsChannel := make(chan NotificationPackage)
+		notifier.sendersNotificationsCh[senderType] = eventsChannel
+
+		notifier.metrics.SendersOkMetrics.RegisterMeter(senderType, getGraphiteSenderIdent(senderType), "sends_ok")
+		notifier.metrics.SendersFailedMetrics.RegisterMeter(senderType, getGraphiteSenderIdent(senderType), "sends_failed")
+		notifier.metrics.SendersDroppedNotifications.RegisterMeter(senderType, getGraphiteSenderIdent(senderType), "notifications_dropped")
+		notifier.runSenders(sender, eventsChannel)
+	})
+
+	notifier.senders[senderType] = sender
+
+	var senderIdent string
+	if senderName, ok := senderSettings["name"]; ok {
+		senderIdent, ok = senderName.(string)
 		if !ok {
-			return fmt.Errorf("failed to retrieve sender name from sender settings")
+			return fmt.Errorf("failed to get sender name because it is not a string")
 		}
-		senderIdent = name
-	default:
+	} else {
 		senderIdent = senderType
 	}
 
-	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
-	if err != nil {
-		return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderIdent, err.Error())
-	}
-	eventsChannel := make(chan NotificationPackage)
-	notifier.senders[senderIdent] = eventsChannel
-	notifier.metrics.SendersOkMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_ok")
-	notifier.metrics.SendersFailedMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_failed")
-	notifier.metrics.SendersDroppedNotifications.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "notifications_dropped")
-	notifier.runSenders(sender, eventsChannel)
 	notifier.logger.Info().
 		String("sender_id", senderIdent).
 		Msg("Sender registered")
+
 	return nil
 }
 
@@ -140,10 +165,11 @@ func (notifier *StandardNotifier) runSenders(sender moira.Sender, eventsChannel 
 
 // StopSenders close all sending channels
 func (notifier *StandardNotifier) StopSenders() {
-	for _, ch := range notifier.senders {
+	for _, ch := range notifier.sendersNotificationsCh {
 		close(ch)
 	}
-	notifier.senders = make(map[string]chan NotificationPackage)
+
+	notifier.sendersNotificationsCh = make(map[string]chan NotificationPackage)
 	notifier.logger.Info().Msg("Waiting senders finish...")
 	notifier.waitGroup.Wait()
 	notifier.logger.Info().Msg("Moira Notifier Senders stopped")

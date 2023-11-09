@@ -12,6 +12,7 @@ import (
 // Structure that represents the Twilio configuration in the YAML file
 type config struct {
 	Type          string `mapstructure:"type"`
+	Name          string `mapstructure:"name"`
 	APIAsid       string `mapstructure:"api_asid"`
 	APIAuthToken  string `mapstructure:"api_authtoken"`
 	APIFromPhone  string `mapstructure:"api_fromphone"`
@@ -37,12 +38,13 @@ type twilioSender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
+
 	apiType := cfg.Type
 
 	if cfg.APIAsid == "" {
@@ -57,6 +59,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("can not read [%s] api_fromphone param from config", apiType)
 	}
 
+	if cfg.Name != "" {
+		sendersNameToType[cfg.Name] = apiType
+	} else {
+		sendersNameToType[apiType] = apiType
+	}
+
 	twilioClient := twilio_client.NewClient(cfg.APIAsid, cfg.APIAuthToken)
 
 	tSender := twilioSender{
@@ -65,6 +73,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		logger:       logger,
 		location:     location,
 	}
+
 	switch apiType {
 	case "twilio sms":
 		sender.sender = &twilioSenderSms{tSender}

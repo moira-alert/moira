@@ -10,45 +10,61 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const twilioType = "twilio"
+
 func TestInit(t *testing.T) {
 	Convey("Tests init twilio sender", t, func() {
 		sender := Sender{}
 		logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 		location, _ := time.LoadLocation("UTC")
-		settings := map[string]interface{}{}
+		settings := map[string]interface{}{
+			"type": twilioType,
+		}
+
 		Convey("no api asid", func() {
-			err := sender.Init(settings, logger, nil, "15:04")
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_sid param from config", ""))
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(settings, logger, nil, "15:04", sendersNameToType)
+			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_sid param from config", twilioType))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		settings["api_asid"] = "123"
 
 		Convey("no api authtoken", func() {
-			err := sender.Init(settings, logger, nil, "15:04")
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_authtoken param from config", ""))
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(settings, logger, nil, "15:04", sendersNameToType)
+			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_authtoken param from config", twilioType))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		settings["api_authtoken"] = "321"
 
 		Convey("no api fromphone", func() {
-			err := sender.Init(settings, logger, nil, "15:04")
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_fromphone param from config", ""))
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(settings, logger, nil, "15:04", sendersNameToType)
+			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_fromphone param from config", twilioType))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		settings["api_fromphone"] = "12345678989"
 
 		Convey("no api type", func() {
-			err := sender.Init(settings, logger, nil, "15:04")
-			So(err, ShouldResemble, fmt.Errorf("wrong twilio type: %s", ""))
+			sendersNameToType := make(map[string]string)
+
+			err := sender.Init(settings, logger, nil, "15:04", sendersNameToType)
+			So(err, ShouldResemble, fmt.Errorf("wrong twilio type: %s", twilioType))
 			So(sender, ShouldResemble, Sender{})
+			So(sendersNameToType[twilioType], ShouldEqual, settings["type"])
 		})
 
 		Convey("config sms", func() {
+			sendersNameToType := make(map[string]string)
 			settings["type"] = "twilio sms"
-			err := sender.Init(settings, logger, location, "15:04")
+
+			err := sender.Init(settings, logger, location, "15:04", sendersNameToType)
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{sender: &twilioSenderSms{
 				twilioSender{
@@ -58,21 +74,27 @@ func TestInit(t *testing.T) {
 					location:     location,
 				},
 			}})
+			So(sendersNameToType["twilio sms"], ShouldEqual, settings["type"])
 		})
 
 		Convey("config voice", func() {
 			settings["type"] = "twilio voice"
 			Convey("no voice url", func() {
-				err := sender.Init(settings, logger, location, "15:04")
+				sendersNameToType := make(map[string]string)
+
+				err := sender.Init(settings, logger, location, "15:04", sendersNameToType)
 				So(err, ShouldResemble, fmt.Errorf("can not read [%s] voiceurl param from config", "twilio voice"))
 				So(sender, ShouldResemble, Sender{})
+				So(sendersNameToType["twilio voice"], ShouldEqual, settings["type"])
 			})
 
 			Convey("has voice url", func() {
 				settings["voiceurl"] = "url here"
 				Convey("append_message == true", func() {
+					sendersNameToType := make(map[string]string)
 					settings["append_message"] = true
-					err := sender.Init(settings, logger, location, "15:04")
+
+					err := sender.Init(settings, logger, location, "15:04", sendersNameToType)
 					So(err, ShouldBeNil)
 					So(sender, ShouldResemble, Sender{sender: &twilioSenderVoice{
 						twilioSender: twilioSender{
@@ -84,11 +106,14 @@ func TestInit(t *testing.T) {
 						voiceURL:      "url here",
 						appendMessage: true,
 					}})
+					So(sendersNameToType["twilio voice"], ShouldEqual, settings["type"])
 				})
 
 				Convey("append_message is false", func() {
+					sendersNameToType := make(map[string]string)
 					settings["append_message"] = false
-					err := sender.Init(settings, logger, location, "15:04")
+
+					err := sender.Init(settings, logger, location, "15:04", sendersNameToType)
 					So(err, ShouldBeNil)
 					So(sender, ShouldResemble, Sender{sender: &twilioSenderVoice{
 						twilioSender: twilioSender{
@@ -100,6 +125,7 @@ func TestInit(t *testing.T) {
 						voiceURL:      "url here",
 						appendMessage: false,
 					}})
+					So(sendersNameToType["twilio voice"], ShouldEqual, settings["type"])
 				})
 			})
 		})

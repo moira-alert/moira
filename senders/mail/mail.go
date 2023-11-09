@@ -14,6 +14,8 @@ import (
 
 // Structure that represents the Mail configuration in the YAML file
 type config struct {
+	Name         string `mapstructure:"name"`
+	Type         string `mapstructure:"type"`
 	MailFrom     string `mapstructure:"mail_from"`
 	SMTPHello    string `mapstructure:"smtp_hello"`
 	SMTPHost     string `mapstructure:"smtp_host"`
@@ -44,8 +46,8 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat)
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
+	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat, sendersNameToType)
 	if err != nil {
 		return err
 	}
@@ -57,11 +59,17 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return err
 }
 
-func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
+	}
+
+	if cfg.Name != "" {
+		sendersNameToType[cfg.Name] = cfg.Type
+	} else {
+		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	sender.logger = logger
@@ -76,12 +84,15 @@ func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logg
 	sender.TemplateFile = cfg.TemplateFile
 	sender.location = location
 	sender.dateTimeFormat = dateTimeFormat
+
 	if sender.Username == "" {
 		sender.Username = sender.From
 	}
+
 	if sender.From == "" {
 		return fmt.Errorf("mail_from can't be empty")
 	}
+
 	return nil
 }
 
