@@ -21,6 +21,7 @@ linters-settings:
         ignored-numbers: 1,2,3,5,10,60,64,100,600,0755,0644,0666
 
 linters:
+  tests: false
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
@@ -28,8 +29,11 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
+    - decorder
+    - depguard
     - dogsled
     - errcheck
+    - errorlint
     - goconst
     - gocyclo
     - gofmt
@@ -38,9 +42,11 @@ linters:
     - gosimple
     - govet
     - ineffassign
+    - loggercheck
     - makezero
     - misspell
     - nilerr
+    - noctx
     - prealloc
     - promlinter
     - staticcheck
@@ -55,6 +61,7 @@ issues:
     - path: _test\.go
       linters:
         - gomnd
+        - errcheck
 
 run:
   timeout: 5m

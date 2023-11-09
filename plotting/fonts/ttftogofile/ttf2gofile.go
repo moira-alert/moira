@@ -43,6 +43,7 @@ func main() {
 		usage()
 		os.Exit(1)
 	}
+
 	file := os.Args[1]
 
 	fmt.Println(file[len(file)-5:])

@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -12,8 +13,7 @@ import (
 // TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 const firstTarget = "t1"
 
-//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
-
+// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 type checkDataStorageElement struct {
 	Metrics                      map[string]moira.MetricState `json:"metrics"`
 	MetricsToTargetRelation      map[string]string            `json:"metrics_to_target_relation"`
@@ -30,7 +30,7 @@ type checkDataStorageElement struct {
 }
 
 func toCheckDataStorageElement(check moira.CheckData) checkDataStorageElement {
-	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	for metricName, metricState := range check.Metrics {
 		if metricState.Value == nil {
 			if value, ok := metricState.Values[firstTarget]; ok {
@@ -39,7 +39,7 @@ func toCheckDataStorageElement(check moira.CheckData) checkDataStorageElement {
 			}
 		}
 	}
-	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	return checkDataStorageElement{
 		Metrics:                      check.Metrics,
 		MetricsToTargetRelation:      check.MetricsToTargetRelation,
@@ -57,7 +57,7 @@ func toCheckDataStorageElement(check moira.CheckData) checkDataStorageElement {
 }
 
 func (d checkDataStorageElement) toCheckData() moira.CheckData {
-	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	for metricName, metricState := range d.Metrics {
 		if metricState.Values == nil {
 			metricState.Values = make(map[string]float64)
@@ -71,7 +71,7 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 	if d.MetricsToTargetRelation == nil {
 		d.MetricsToTargetRelation = make(map[string]string)
 	}
-	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	return moira.CheckData{
 		Metrics:                      d.Metrics,
 		MetricsToTargetRelation:      d.MetricsToTargetRelation,
@@ -93,7 +93,7 @@ func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 	bytes, err := rep.Bytes()
 
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.CheckData{}, database.ErrNil
 		}
 

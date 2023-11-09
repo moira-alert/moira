@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"time"
 
@@ -167,7 +168,8 @@ func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string
 	if realtimeErr == nil {
 		return realtimeFetchResult.GetMetricsData(), nil
 	}
-	if errFailedWithPanic, ok := realtimeErr.(local.ErrEvaluateTargetFailedWithPanic); ok {
+	var errFailedWithPanic local.ErrEvaluateTargetFailedWithPanic
+	if ok := errors.Is(realtimeErr, errFailedWithPanic); ok {
 		fetchResult, err := metricsSource.Fetch(target, from, to, false)
 		if err != nil {
 			return nil, errFetchAvailableSeriesFailed{realtimeErr: errFailedWithPanic.Error(), storedErr: err.Error()}

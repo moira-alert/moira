@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	//thresholdTestValueIncrement               = float64(10)
+	// thresholdTestValueIncrement               = float64(10)
 	thresholdNegativeTestRisingWarnValue      = float64(-100)
 	thresholdNegativeTestRisingErrorValue     = float64(0)
 	thresholdNegativeTestFallingWarnValue     = thresholdNegativeTestRisingErrorValue

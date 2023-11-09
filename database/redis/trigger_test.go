@@ -850,7 +850,7 @@ var testTriggers = []moira.Trigger{
 		TriggerType:  moira.RisingTrigger,
 		TTLState:     &moira.TTLStateNODATA,
 		AloneMetrics: map[string]bool{},
-		//TODO: Test that empty TriggerSource is filled on getting vale from db
+		// TODO: Test that empty TriggerSource is filled on getting vale from db
 		TriggerSource: moira.GraphiteLocal,
 	},
 	{

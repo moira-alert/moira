@@ -60,7 +60,7 @@ func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
 	}
 	retention, err := connector.getMetricRetention(metric)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return retention, nil
 		}
 		return retention, err
@@ -83,7 +83,7 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 
 	retentionStr, err := c.Get(connector.context, metricRetentionKey(metric)).Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return 60, database.ErrNil //nolint
 		}
 		return 0, fmt.Errorf("failed GET metric retention:%s, error: %w", metric, err)
@@ -217,7 +217,7 @@ const (
 
 func (connector *DbConnector) handlePopResponse(data []string, popError error, responseChannel chan string, defaultDelay time.Duration) time.Duration {
 	if popError != nil {
-		if popError != redis.Nil {
+		if !errors.Is(popError, redis.Nil) {
 			connector.logger.Error().
 				Error(popError).
 				Msg("Failed to pop new metric events")
@@ -238,7 +238,7 @@ func (connector *DbConnector) handlePopResponse(data []string, popError error, r
 func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	c := *connector.client
 	if _, err := c.SAdd(connector.context, patternMetricsKey(pattern), metric).Result(); err != nil {
-		return fmt.Errorf("failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %v", pattern, metric, err)
+		return fmt.Errorf("failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %w", pattern, metric, err)
 	}
 	return nil
 }
@@ -249,10 +249,10 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 
 	metrics, err := c.SMembers(connector.context, patternMetricsKey(pattern)).Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]string, 0), nil
 		}
-		return nil, fmt.Errorf("failed to get pattern metrics for pattern %s, error: %v", pattern, err)
+		return nil, fmt.Errorf("failed to get pattern metrics for pattern %s, error: %w", pattern, err)
 	}
 	return metrics, nil
 }
@@ -261,7 +261,7 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 func (connector *DbConnector) RemovePattern(pattern string) error {
 	c := *connector.client
 	if _, err := c.SRem(connector.context, patternsListKey, pattern).Result(); err != nil {
-		return fmt.Errorf("failed to remove pattern: %s, error: %v", pattern, err)
+		return fmt.Errorf("failed to remove pattern: %s, error: %w", pattern, err)
 	}
 	return nil
 }
@@ -273,7 +273,7 @@ func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 		pipe.Del(connector.context, patternMetricsKey(pattern)) //nolint
 	}
 	if _, err := pipe.Exec(connector.context); err != nil {
-		return fmt.Errorf("failed to EXEC: %v", err)
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -292,7 +292,7 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	}
 	pipe.Del(connector.context, patternMetricsKey(pattern))
 	if _, err = pipe.Exec(connector.context); err != nil {
-		return fmt.Errorf("failed to EXEC: %v", err)
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -301,7 +301,7 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 	c := *connector.client
 	if _, err := c.Del(connector.context, metricRetentionKey(metric)).Result(); err != nil {
-		return fmt.Errorf("failed to remove retention, error: %v", err)
+		return fmt.Errorf("failed to remove retention, error: %w", err)
 	}
 
 	return nil
@@ -315,7 +315,7 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) (i
 	c := *connector.client
 	result, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result()
 	if err != nil {
-		return 0, fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
+		return 0, fmt.Errorf("failed to remove metrics from -inf to %v, error: %w", toTime, err)
 	}
 
 	return result, nil
@@ -335,7 +335,7 @@ func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64
 		}
 	}
 	if _, err := pipe.Exec(connector.context); err != nil {
-		return fmt.Errorf("failed to EXEC remove metrics: %v", err)
+		return fmt.Errorf("failed to EXEC remove metrics: %w", err)
 	}
 	return nil
 }
@@ -374,7 +374,7 @@ func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.
 
 		result, err := (*connector.client).Exists(connector.context, metricDataKey(metric)).Result()
 		if err != nil {
-			return fmt.Errorf("failed to check metric data existence, error: %v", err)
+			return fmt.Errorf("failed to check metric data existence, error: %w", err)
 		}
 		if isMetricExists := result == 1; !isMetricExists {
 			err = connector.RemoveMetricRetention(metric)

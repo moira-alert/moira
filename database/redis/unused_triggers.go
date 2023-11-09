@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -33,7 +34,7 @@ func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
 
 	triggerIds, err := c.SMembers(ctx, unusedTriggersKey).Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]string, 0), nil
 		}
 		return nil, fmt.Errorf("failed to get all unused triggers: %s", err.Error())

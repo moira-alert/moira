@@ -150,5 +150,5 @@ func (notifier *StandardNotifier) StopSenders() {
 }
 
 func getGraphiteSenderIdent(ident string) string {
-	return strings.Replace(ident, " ", "_", -1)
+	return strings.ReplaceAll(ident, " ", "_")
 }

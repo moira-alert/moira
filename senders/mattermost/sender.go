@@ -47,7 +47,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	client := model.NewAPIv4Client(cfg.Url)
 
 	if err != nil {
-		return fmt.Errorf("can not parse insecure_tls: %v", err)
+		return fmt.Errorf("can not parse insecure_tls: %w", err)
 	}
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{
@@ -205,7 +205,7 @@ func (sender *Sender) sendMessage(ctx context.Context, message string, contact s
 
 	sentPost, _, err := sender.client.CreatePost(ctx, &post)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+		return nil, fmt.Errorf("failed to send %s event message to Mattermost [%s]: %w", triggerID, contact, err)
 	}
 
 	return sentPost, nil

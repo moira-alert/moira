@@ -17,7 +17,7 @@ type ErrUnknownFunction struct {
 // ErrorUnknownFunction parses internal carbon-api error errUnknownFunction, gets func name and return ErrUnknownFunction error
 func ErrorUnknownFunction(err error) ErrUnknownFunction {
 	errorStr := err.Error()
-	funcName := strings.Replace(errorStr[strings.Index(errorStr, "\""):], "\"", "", -1)
+	funcName := strings.ReplaceAll(errorStr[strings.Index(errorStr, "\""):], "\"", "")
 	return ErrUnknownFunction{
 		internalError: err,
 		FuncName:      funcName,
@@ -34,7 +34,7 @@ func (err ErrUnknownFunction) Error() string {
 
 // isErrUnknownFunction checks error for carbonapi.errUnknownFunction
 func isErrUnknownFunction(err error) bool {
-	switch merry.Unwrap(err).(type) {
+	switch merry.Unwrap(err).(type) { // nolint:errorlint
 	case helper.ErrUnknownFunction:
 		return true
 	}

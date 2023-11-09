@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -21,7 +22,7 @@ func (connector *DbConnector) GetNotificationEvents(triggerID string, start int6
 	eventsData, err := reply.Events(c.ZRevRange(ctx, triggerEventsKey(triggerID), start, start+size))
 
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
 		return nil, fmt.Errorf("failed to get range for trigger events, triggerID: %s, error: %s", triggerID, err.Error())
@@ -81,7 +82,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	response := c.BRPop(ctx, time.Second, notificationEventsList)
 	err := response.Err()
 
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return event, database.ErrNil
 	}
 
@@ -91,7 +92,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 
 	event, _ = reply.BRPopToEvent(response)
 
-	if event.Values == nil { //TODO(litleleprikon): remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	if event.Values == nil { // TODO(litleleprikon): remove in moira v2.8.0. Compatibility with moira < v2.6.0
 		event.Values = make(map[string]float64)
 	}
 

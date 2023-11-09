@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -70,7 +71,7 @@ func (connector *DbConnector) getTriggersToCheck(key string, count int) ([]strin
 
 	triggerIDs, err := c.SPopN(ctx, key, int64(count)).Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]string, 0), database.ErrNil
 		}
 		return make([]string, 0), fmt.Errorf("failed to pop trigger to check: %s", err.Error())
@@ -84,7 +85,7 @@ func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error)
 
 	triggersToCheckCount, err := c.SCard(ctx, key).Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return 0, nil
 		}
 		return 0, fmt.Errorf("failed to get trigger to check count: %s", err.Error())

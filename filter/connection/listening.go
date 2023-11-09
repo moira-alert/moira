@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -60,7 +61,8 @@ func (listener *MetricsListener) Listen() chan []byte {
 			listener.listener.SetDeadline(time.Now().Add(1e9)) //nolint
 			conn, err := listener.listener.Accept()
 			if nil != err {
-				if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
+				var opErr *net.OpError
+				if ok := errors.Is(err, opErr); ok && opErr.Timeout() {
 					continue
 				}
 				listener.logger.Info().

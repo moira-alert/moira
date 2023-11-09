@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"errors"
 	"fmt"
 	"sync/atomic"
 	"time"
@@ -51,7 +52,7 @@ func (storage *PatternStorage) Refresh() error {
 	patterns := make([]string, 0)
 	for _, newPattern := range newPatterns {
 		tagSpecs, err := ParseSeriesByTag(newPattern)
-		if err == ErrNotSeriesByTag {
+		if errors.Is(err, ErrNotSeriesByTag) {
 			patterns = append(patterns, newPattern)
 		} else {
 			seriesByTagPatterns[newPattern] = tagSpecs

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"time"
 
@@ -96,7 +97,7 @@ func UpdateContact(dataBase moira.Database, contactDTO dto.Contact, contactData 
 
 // RemoveContact deletes notification contact for current user and remove contactID from all subscriptions
 func RemoveContact(database moira.Database, contactID string, userLogin string, teamID string) *api.ErrorResponse { //nolint:gocyclo
-	subscriptionIDs := []string{}
+	var subscriptionIDs []string
 	if userLogin != "" {
 		userSubscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 		if err != nil {
@@ -179,7 +180,7 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, userLogin string) (moira.ContactData, *api.ErrorResponse) {
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return moira.ContactData{}, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", contactID))
 		}
 		return moira.ContactData{}, api.ErrorInternalServer(err)
@@ -201,7 +202,7 @@ func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, u
 
 func isContactExists(dataBase moira.Database, contactID string) (bool, error) {
 	_, err := dataBase.GetContact(contactID)
-	if err == database.ErrNil {
+	if errors.Is(err, database.ErrNil) {
 		return false, nil
 	}
 	if err != nil {

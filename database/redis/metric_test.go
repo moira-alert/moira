@@ -77,7 +77,7 @@ func TestMetricsStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("You can remove remove pattern with metrics in one request", func() {
+		Convey("You can remove pattern with metrics in one request", func() {
 			err = dataBase.RemovePatternWithMetrics(pattern)
 			So(err, ShouldBeNil)
 		})

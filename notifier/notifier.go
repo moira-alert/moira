@@ -191,7 +191,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		plots, err := notifier.buildNotificationPackagePlots(pkg, plottingLog)
 		if err != nil {
 			var event logging.EventBuilder
-			switch err.(type) {
+			switch err.(type) { // nolint:errorlint
 			case plotting.ErrNoPointsToRender:
 				event = plottingLog.Debug()
 			default:
@@ -215,7 +215,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			notifier.metrics.MarkSendersOkMetrics(pkg.Contact.Type)
 			continue
 		}
-		switch e := err.(type) {
+		switch e := err.(type) { // nolint:errorlint
 		case moira.SenderBrokenContactError:
 			log.Warning().
 				Error(e).

@@ -45,7 +45,7 @@ func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limit
 	for _, plotThreshold := range plotThresholds {
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(theme, limits))
 		// TODO: uncomment to use annotations if necessary, remove otherwise
-		//thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme, limits))
+		// thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme, limits))
 	}
 	return thresholdSeriesList
 }
@@ -67,29 +67,31 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold 
 		thresholds = append(thresholds, newThreshold(
 			trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
 	}
-	//// Trigger has ERROR value and threshold can be drawn
-	//errThresholdRequied := trigger.ErrorValue != nil && limits.formsSetContaining(*trigger.ErrorValue)
-	//if errThresholdRequied {
-	//	thresholds = append(thresholds, newThreshold(
-	//		trigger.TriggerType, "ERROR", *trigger.ErrorValue, limits.highest))
-	//}
-	//// Trigger has WARN value and threshold can be drawn when:
-	//warnThresholdRequired := trigger.WarnValue != nil && limits.formsSetContaining(*trigger.WarnValue)
-	//if warnThresholdRequired {
-	//	if errThresholdRequied {
-	//		deltaLimits := math.Abs(limits.highest - limits.lowest)
-	//		deltaThresholds := math.Abs(*trigger.ErrorValue - *trigger.WarnValue)
-	//		if deltaThresholds > thresholdGapCoefficient*deltaLimits {
-	//			//// there is enough place to draw both of ERROR and WARN thresholds
-	//			thresholds = append(thresholds, newThreshold(
-	//				trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
-	//		}
-	//	} else {
-	//		//// there is no ERROR threshold required
-	//		thresholds = append(thresholds, newThreshold(
-	//			trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
-	//	}
-	//}
+	/**
+	// Trigger has ERROR value and threshold can be drawn
+	errThresholdRequied := trigger.ErrorValue != nil && limits.formsSetContaining(*trigger.ErrorValue)
+	if errThresholdRequied {
+		thresholds = append(thresholds, newThreshold(
+			trigger.TriggerType, "ERROR", *trigger.ErrorValue, limits.highest))
+	}
+	// Trigger has WARN value and threshold can be drawn when:
+	warnThresholdRequired := trigger.WarnValue != nil && limits.formsSetContaining(*trigger.WarnValue)
+	if warnThresholdRequired {
+		if errThresholdRequied {
+			deltaLimits := math.Abs(limits.highest - limits.lowest)
+			deltaThresholds := math.Abs(*trigger.ErrorValue - *trigger.WarnValue)
+			if deltaThresholds > thresholdGapCoefficient*deltaLimits {
+				//// there is enough place to draw both of ERROR and WARN thresholds
+				thresholds = append(thresholds, newThreshold(
+					trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
+			}
+		} else {
+			//// there is no ERROR threshold required
+			thresholds = append(thresholds, newThreshold(
+				trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
+		}
+	}
+	*/
 	return thresholds
 }
 
@@ -107,17 +109,19 @@ func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limit
 	return thresholdSeries
 }
 
-//// generateAnnotationSeries returns threshold annotation series
-//func (threshold *threshold) generateAnnotationSeries(theme moira.PlotTheme, limits plotLimits) chart.AnnotationSeries {
-//	annotationSeries := chart.AnnotationSeries{
-//		Annotations: []chart.Value2{
-//			{
-//				Label:  threshold.thresholdType,
-//				XValue: float64(limits.to.UnixNano()),
-//				YValue: threshold.yCoordinate,
-//				Style:  theme.GetAnnotationStyle(threshold.thresholdType),
-//			},
-//		},
-//	}
-//	return annotationSeries
-//}
+/**
+// generateAnnotationSeries returns threshold annotation series
+func (threshold *threshold) generateAnnotationSeries(theme moira.PlotTheme, limits plotLimits) chart.AnnotationSeries {
+	annotationSeries := chart.AnnotationSeries{
+		Annotations: []chart.Value2{
+			{
+				Label:  threshold.thresholdType,
+				XValue: float64(limits.to.UnixNano()),
+				YValue: threshold.yCoordinate,
+				Style:  theme.GetAnnotationStyle(threshold.thresholdType),
+			},
+		},
+	}
+	return annotationSeries
+}
+*/

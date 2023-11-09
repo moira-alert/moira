@@ -46,17 +46,17 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 
 	name, labels, err := parseNameAndLabels(metricBytes)
 	if err != nil {
-		return nil, fmt.Errorf("cannot parse metric: '%s' (%s)", input, err)
+		return nil, fmt.Errorf("cannot parse metric: '%s' (%w)", input, err)
 	}
 
 	value, err := parseFloat(valueBytes)
 	if err != nil {
-		return nil, fmt.Errorf("cannot parse value: '%s' (%s)", input, err)
+		return nil, fmt.Errorf("cannot parse value: '%s' (%w)", input, err)
 	}
 
 	timestamp, err := parseFloat(timestampBytes)
 	if err != nil {
-		return nil, fmt.Errorf("cannot parse timestamp: '%s' (%s)", input, err)
+		return nil, fmt.Errorf("cannot parse timestamp: '%s' (%w)", input, err)
 	}
 
 	parsedMetric := &ParsedMetric{

@@ -16,7 +16,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	createAlertRequest := sender.buildCreateAlertRequest(events, trigger, throttled, plots, time.Now().Unix())
 	err := sender.client.CreateAlert(contact.Value, createAlertRequest)
 	if err != nil {
-		return fmt.Errorf("error while sending alert to victorops: %s", err)
+		return fmt.Errorf("error while sending alert to victorops: %w", err)
 	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -24,7 +25,7 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 		if err == nil {
 			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("team with ID you specified already exists %s", teamID))
 		}
-		if err != nil && err != database.ErrNil {
+		if err != nil && !errors.Is(err, database.ErrNil) {
 			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot check id for team: %w", err))
 		}
 	} else { // on the other hand try to create an UUID for teamID
@@ -36,7 +37,7 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 			}
 			teamID = generatedUUID.String()
 			_, err = dataBase.GetTeam(teamID)
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				createdSuccessfully = true
 				break
 			}
@@ -71,7 +72,7 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 	team, err := dataBase.GetTeam(teamID)
 
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamModel{}, api.ErrorNotFound(fmt.Sprintf("cannot find team: %s", teamID))
 		}
 		return dto.TeamModel{}, api.ErrorInternalServer(fmt.Errorf("cannot get team from database: %w", err))
@@ -86,7 +87,7 @@ func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.E
 	teams, err := dataBase.GetUserTeams(userID)
 
 	result := []dto.TeamModel{}
-	if err != nil && err != database.ErrNil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return dto.UserTeams{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 	}
 
@@ -107,7 +108,7 @@ func GetTeamUsers(dataBase moira.Database, teamID string) (dto.TeamMembers, *api
 	users, err := dataBase.GetTeamUsers(teamID)
 
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
@@ -151,8 +152,8 @@ func addTeamsForNewUsers(dataBase moira.Database, teamID string, newUsers map[st
 		if _, ok := teamsMap[userID]; ok {
 			continue
 		}
-		fetchedUserTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
-		if err != nil && err != database.ErrNil {
+		fetchedUserTeams, err := dataBase.GetUserTeams(userID)
+		if err != nil && !errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 		}
 		fetchedUserTeams = append(fetchedUserTeams, teamID)
@@ -165,7 +166,7 @@ func addTeamsForNewUsers(dataBase moira.Database, teamID string, newUsers map[st
 func SetTeamUsers(dataBase moira.Database, teamID string, allUsers []string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
@@ -241,7 +242,7 @@ func addUserTeam(teamID string, teams []string) ([]string, error) {
 func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
@@ -253,7 +254,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 	for _, userID := range existingUsers {
 		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
 		if err != nil {
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find user teams: %s", userID))
 			}
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
@@ -268,7 +269,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 		}
 
 		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
-		if err != nil && err != redis.Nil {
+		if err != nil && !errors.Is(err, redis.Nil) {
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 		}
 
@@ -335,7 +336,7 @@ func DeleteTeam(dataBase moira.Database, teamID, userLogin string) (dto.SaveTeam
 func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
@@ -361,7 +362,7 @@ func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string)
 	for _, userID := range existingUsers {
 		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
 		if err != nil {
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find user teams: %s", userID))
 			}
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
@@ -402,7 +403,7 @@ func removeUserTeam(teams []string, teamID string) ([]string, error) {
 func CheckUserPermissionsForTeam(dataBase moira.Database, teamID, userID string) *api.ErrorResponse {
 	_, err := dataBase.GetTeam(teamID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return api.ErrorNotFound(fmt.Sprintf("team with ID '%s' does not exists", teamID))
 		}
 		return api.ErrorInternalServer(err)

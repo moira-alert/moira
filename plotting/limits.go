@@ -43,15 +43,15 @@ func resolveLimits(metricsData []metricSource.MetricData) plotLimits {
 	from, to := util.Time.StartAndEnd(allTimes...)
 	lowest, highest := util.Math.MinAndMax(allValues...)
 	if highest == lowest {
-		highest = highest + (defaultRangeDelta / 2)
-		lowest = lowest - (defaultRangeDelta / 2)
+		highest += defaultRangeDelta / 2
+		lowest -= defaultRangeDelta / 2
 	}
 	yAxisIncrement := percentsOfRange(lowest, highest, defaultYAxisRangePercent)
 	if highest > 0 {
-		highest = highest + yAxisIncrement
+		highest += yAxisIncrement
 	}
 	if lowest < 0 {
-		lowest = lowest - yAxisIncrement
+		lowest -= yAxisIncrement
 	}
 	return plotLimits{
 		from:    from,

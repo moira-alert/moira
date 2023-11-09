@@ -406,7 +406,6 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", secondState, firstState)
 			So(err, ShouldBeNil)
 			secondState.EventTimestamp = firstState.EventTimestamp
-			//secondState.SuppressedState = firstState.SuppressedState
 			So(actual, ShouldResemble, secondState)
 
 			Convey("Test state change state after suppressed", func() {
