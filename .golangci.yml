@@ -29,7 +29,6 @@ linters:
     - bidichk
     - bodyclose
     - decorder
-    - depguard
     - dogsled
     - errcheck
     - errorlint
