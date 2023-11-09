@@ -38,7 +38,7 @@ type twilioSender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -57,12 +57,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	if cfg.APIFromPhone == "" {
 		return fmt.Errorf("can not read [%s] api_fromphone param from config", apiType)
-	}
-
-	if cfg.Name != "" {
-		sendersNameToType[cfg.Name] = apiType
-	} else {
-		sendersNameToType[apiType] = apiType
 	}
 
 	twilioClient := twilio_client.NewClient(cfg.APIAsid, cfg.APIAuthToken)

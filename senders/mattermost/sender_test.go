@@ -23,9 +23,8 @@ func TestInit(t *testing.T) {
 				"front_uri":    "qwerty",
 				"insecure_tls": true,
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
@@ -37,9 +36,8 @@ func TestInit(t *testing.T) {
 				"front_uri":    "qwerty",
 				"insecure_tls": true,
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
@@ -49,9 +47,8 @@ func TestInit(t *testing.T) {
 				"url":       "qwerty",
 				"front_uri": "qwerty",
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
@@ -62,9 +59,8 @@ func TestInit(t *testing.T) {
 				"front_uri": "qwerty",
 				"api_token": "",
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
@@ -74,9 +70,8 @@ func TestInit(t *testing.T) {
 				"url":       "qwerty",
 				"api_token": "qwerty",
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
@@ -87,9 +82,8 @@ func TestInit(t *testing.T) {
 				"api_token": "qwerty",
 				"front_uri": "",
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
@@ -101,11 +95,9 @@ func TestInit(t *testing.T) {
 				"front_uri":    "qwerty",
 				"insecure_tls": true,
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldBeNil)
-			So(sendersNameToType[mattermostType], ShouldEqual, senderSettings["type"])
 		})
 	})
 }

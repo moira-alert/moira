@@ -33,7 +33,7 @@ type Sender struct {
 }
 
 // Init initializes the opsgenie sender
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -43,12 +43,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	if cfg.APIKey == "" {
 		return fmt.Errorf("cannot read the api_key from the sender settings")
-	}
-
-	if cfg.Name != "" {
-		sendersNameToType[cfg.Name] = cfg.Type
-	} else {
-		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	sender.apiKey = cfg.APIKey

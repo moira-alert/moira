@@ -20,8 +20,7 @@ func TestInit(t *testing.T) {
 		sender := Sender{}
 		senderSettings := map[string]interface{}{}
 		Convey("Empty map", func() {
-			sendersNameToType := make(map[string]string)
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("can not read slack api_token from config"))
 			So(sender, ShouldResemble, Sender{})
 		})
@@ -32,35 +31,31 @@ func TestInit(t *testing.T) {
 			client := slack_client.New("123")
 
 			Convey("use_emoji not set", func() {
-				sendersNameToType := make(map[string]string)
-				err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
 				So(sender, ShouldResemble, Sender{logger: logger, client: client})
-				So(sendersNameToType[slackType], ShouldEqual, senderSettings["type"])
 			})
 
 			Convey("use_emoji set to false", func() {
-				sendersNameToType := make(map[string]string)
 				senderSettings["use_emoji"] = false
-				err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+
+				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
 				So(sender, ShouldResemble, Sender{logger: logger, client: client})
-				So(sendersNameToType[slackType], ShouldEqual, senderSettings["type"])
 			})
 
 			Convey("use_emoji set to true", func() {
-				sendersNameToType := make(map[string]string)
 				senderSettings["use_emoji"] = true
-				err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+
+				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
 				So(sender, ShouldResemble, Sender{logger: logger, useEmoji: true, client: client})
-				So(sendersNameToType[slackType], ShouldEqual, senderSettings["type"])
 			})
 
 			Convey("use_emoji set to something wrong", func() {
-				sendersNameToType := make(map[string]string)
 				senderSettings["use_emoji"] = 123
-				err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+
+				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldNotBeNil)
 			})
 		})

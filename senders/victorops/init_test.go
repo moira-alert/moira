@@ -29,8 +29,7 @@ func TestInit(t *testing.T) {
 		}}
 
 		Convey("Empty map", func() {
-			sendersNameToType := make(map[string]string)
-			err := sender.Init(map[string]interface{}{}, logger, nil, "", sendersNameToType)
+			err := sender.Init(map[string]interface{}{}, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("cannot read the routing url from the yaml config"))
 			So(sender, ShouldResemble, Sender{
 				ImageStores: map[string]moira.ImageStore{
@@ -47,16 +46,14 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			err := sender.Init(senderSettings, logger, location, "15:04")
 			So(err, ShouldBeNil)
 			So(sender.routingURL, ShouldResemble, "https://testurl.com")
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
 			So(sender.client, ShouldResemble, api.NewClient("https://testurl.com", nil))
-			So(sendersNameToType[victoropsType], ShouldEqual, senderSettings["type"])
 		})
 
 		Convey("Wrong image_store name", func() {
@@ -66,13 +63,11 @@ func TestInit(t *testing.T) {
 				"routing_url": "https://testurl.com",
 				"image_store": "s4",
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			err := sender.Init(senderSettings, logger, location, "15:04")
 			So(err, ShouldBeNil)
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
-			So(sendersNameToType[victoropsType], ShouldEqual, senderSettings["type"])
 		})
 
 		Convey("image store not configured", func() {
@@ -86,13 +81,11 @@ func TestInit(t *testing.T) {
 			sender := Sender{ImageStores: map[string]moira.ImageStore{
 				"s3": imageStore,
 			}}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			err := sender.Init(senderSettings, logger, location, "15:04")
 			So(err, ShouldBeNil)
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
-			So(sendersNameToType[victoropsType], ShouldEqual, senderSettings["type"])
 		})
 	})
 }

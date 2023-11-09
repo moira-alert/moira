@@ -120,7 +120,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 		notifier.sendersOnce[senderType] = &sync.Once{}
 	}
 
-	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat, notifier.sendersNameToType)
+	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 	if err != nil {
 		return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderType, err.Error())
 	}
@@ -146,6 +146,8 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	} else {
 		senderIdent = senderType
 	}
+
+	notifier.sendersNameToType[senderIdent] = senderType
 
 	notifier.logger.Info().
 		String("sender_id", senderIdent).

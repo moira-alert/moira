@@ -34,11 +34,9 @@ func TestSender_Init(t *testing.T) {
 			senderSettings := map[string]interface{}{
 				"type": webhookType,
 			}
-
-			sendersNameToType := make(map[string]string)
 			sender := Sender{}
 
-			err := sender.Init(senderSettings, logger, time.UTC, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, time.UTC, "")
 			So(err, ShouldResemble, fmt.Errorf("required name for sender type webhook"))
 		})
 
@@ -47,11 +45,9 @@ func TestSender_Init(t *testing.T) {
 				"type": webhookType,
 				"name": webhookName,
 			}
-
-			sendersNameToType := make(map[string]string)
 			sender := Sender{}
 
-			err := sender.Init(senderSettings, logger, time.UTC, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, time.UTC, "")
 			So(err, ShouldResemble, fmt.Errorf("can not read url from config"))
 		})
 
@@ -63,13 +59,10 @@ func TestSender_Init(t *testing.T) {
 				"password": "password",
 				"url":      "url",
 			}
-
-			sendersNameToType := make(map[string]string)
 			sender := Sender{}
 
-			err := sender.Init(senderSettings, logger, time.UTC, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, time.UTC, "")
 			So(err, ShouldBeNil)
-			So(sendersNameToType[webhookName], ShouldEqual, senderSettings["type"])
 		})
 
 		Convey("Multiple Init", func() {
@@ -86,17 +79,14 @@ func TestSender_Init(t *testing.T) {
 				"url":  "url",
 			}
 
-			sendersNameToType := make(map[string]string)
 			sender := Sender{}
 
-			err := sender.Init(senderSettings1, logger, time.UTC, "", sendersNameToType)
+			err := sender.Init(senderSettings1, logger, time.UTC, "")
 			So(err, ShouldBeNil)
 
-			err = sender.Init(senderSettings2, logger, time.UTC, "", sendersNameToType)
+			err = sender.Init(senderSettings2, logger, time.UTC, "")
 			So(err, ShouldBeNil)
 
-			So(sendersNameToType[webhookName], ShouldEqual, senderSettings1["type"])
-			So(sendersNameToType[webhookName2], ShouldEqual, senderSettings2["type"])
 			So(len(sender.webhookClients), ShouldEqual, 2)
 		})
 	})
@@ -136,12 +126,10 @@ func TestSender_SendEvents(t *testing.T) {
 			"password": testPass,
 		}
 
-		sendersNameToType := make(map[string]string)
 		sender := Sender{}
 
-		err := sender.Init(senderSettings, logger, time.UTC, "", sendersNameToType)
+		err := sender.Init(senderSettings, logger, time.UTC, "")
 		So(err, ShouldBeNil)
-		So(sendersNameToType[webhookName], ShouldEqual, senderSettings["type"])
 
 		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
 		So(err, ShouldBeNil)

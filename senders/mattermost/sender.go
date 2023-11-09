@@ -36,7 +36,7 @@ type Sender struct {
 }
 
 // Init configures Sender.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string, sendersNameToType map[string]string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -53,12 +53,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	if cfg.FrontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
-	}
-
-	if cfg.Name != "" {
-		sendersNameToType[cfg.Name] = cfg.Type
-	} else {
-		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	client := model.NewAPIv4Client(cfg.Url)

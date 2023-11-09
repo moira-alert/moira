@@ -33,8 +33,7 @@ func TestInit(t *testing.T) {
 	Convey("Init tests", t, func() {
 		sender := Sender{DataBase: &MockDB{}}
 		Convey("Empty map", func() {
-			sendersNameToType := make(map[string]string)
-			err := sender.Init(map[string]interface{}{}, logger, nil, "", sendersNameToType)
+			err := sender.Init(map[string]interface{}{}, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
 			So(sender, ShouldResemble, Sender{DataBase: &MockDB{}})
 		})
@@ -45,15 +44,13 @@ func TestInit(t *testing.T) {
 				"token":     "123",
 				"front_uri": "http://moira.uri",
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(senderSettings, logger, location, "15:04", sendersNameToType)
+			err := sender.Init(senderSettings, logger, location, "15:04")
 			So(err, ShouldBeNil)
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.session.Token, ShouldResemble, "Bot 123")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
-			So(sendersNameToType[discordType], ShouldEqual, senderSettings["type"])
 		})
 	})
 }

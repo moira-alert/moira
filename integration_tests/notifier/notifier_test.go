@@ -98,8 +98,7 @@ func TestNotifier(t *testing.T) {
 	)
 
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
-	sendersNameToType := make(map[string]string)
-	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat, sendersNameToType).Return(nil)
+	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 	sender.EXPECT().
 		SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).
 		Return(nil).

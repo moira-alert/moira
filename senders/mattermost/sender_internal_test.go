@@ -31,11 +31,9 @@ func TestSendEvents(t *testing.T) {
 			"front_uri":    "qwerty",
 			"insecure_tls": true,
 		}
-		sendersNameToType := make(map[string]string)
 
-		err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+		err := sender.Init(senderSettings, logger, nil, "")
 		So(err, ShouldBeNil)
-		So(sendersNameToType[mattermostType], ShouldEqual, senderSettings["type"])
 
 		Convey("When client return error, SendEvents should return error", func() {
 			ctrl := gomock.NewController(t)
@@ -91,11 +89,9 @@ func TestBuildMessage(t *testing.T) {
 			"insecure_tls": true,
 		}
 		location, _ := time.LoadLocation("UTC")
-		sendersNameToType := make(map[string]string)
 
-		err := sender.Init(senderSettings, logger, location, "", sendersNameToType)
+		err := sender.Init(senderSettings, logger, location, "")
 		So(err, ShouldBeNil)
-		So(sendersNameToType[mattermostType], ShouldEqual, senderSettings["type"])
 
 		event := moira.NotificationEvent{
 			TriggerID: "TriggerID",

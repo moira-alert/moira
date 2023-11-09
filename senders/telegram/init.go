@@ -61,7 +61,7 @@ func removeTokenFromError(err error, bot *telebot.Bot) error {
 }
 
 // Init loads yaml config, configures and starts telegram bot
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -70,12 +70,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
-	}
-
-	if cfg.Name != "" {
-		sendersNameToType[cfg.Name] = cfg.Type
-	} else {
-		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	sender.apiToken = cfg.APIToken
@@ -97,6 +91,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				Msg("Error handling incoming message: %s")
 		}
 	})
+
 	go sender.runTelebot()
 
 	return nil

@@ -223,7 +223,7 @@ func configureNotifier(t *testing.T) {
 	}
 	notifier.sendersNameToType["test"] = "test"
 
-	sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006", notifier.sendersNameToType).Return(nil)
+	sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006").Return(nil)
 
 	notifier.RegisterSender(senderSettings, sender) //nolint
 

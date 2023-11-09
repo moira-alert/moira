@@ -46,8 +46,8 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
-	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat, sendersNameToType)
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat)
 	if err != nil {
 		return err
 	}
@@ -59,17 +59,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return err
 }
 
-func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
+func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
-	}
-
-	if cfg.Name != "" {
-		sendersNameToType[cfg.Name] = cfg.Type
-	} else {
-		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	sender.logger = logger

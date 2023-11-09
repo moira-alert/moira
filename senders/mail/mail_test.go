@@ -12,9 +12,7 @@ const mailType = "mail"
 func TestFillSettings(t *testing.T) {
 	Convey("Empty map", t, func() {
 		sender := Sender{}
-		sendersNameToType := make(map[string]string)
-
-		err := sender.fillSettings(map[string]interface{}{}, nil, nil, "", sendersNameToType)
+		err := sender.fillSettings(map[string]interface{}{}, nil, nil, "")
 		So(err, ShouldResemble, fmt.Errorf("mail_from can't be empty"))
 		So(sender, ShouldResemble, Sender{})
 	})
@@ -27,22 +25,16 @@ func TestFillSettings(t *testing.T) {
 		}
 
 		Convey("No username", func() {
-			sendersNameToType := make(map[string]string)
-
-			err := sender.fillSettings(settings, nil, nil, "", sendersNameToType)
+			err := sender.fillSettings(settings, nil, nil, "")
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{From: "123", Username: "123"})
-			So(sendersNameToType[mailType], ShouldEqual, settings["type"])
 		})
 
 		Convey("Has username", func() {
 			settings["smtp_user"] = "user"
-			sendersNameToType := make(map[string]string)
-
-			err := sender.fillSettings(settings, nil, nil, "", sendersNameToType)
+			err := sender.fillSettings(settings, nil, nil, "")
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{From: "123", Username: "user"})
-			So(sendersNameToType[mailType], ShouldEqual, settings["type"])
 		})
 	})
 }

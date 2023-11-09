@@ -36,7 +36,7 @@ type webhookClient struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -50,8 +50,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.URL == "" {
 		return fmt.Errorf("can not read url from config")
 	}
-
-	sendersNameToType[cfg.Name] = cfg.Type
 
 	var timeout int
 	if cfg.Timeout != 0 {

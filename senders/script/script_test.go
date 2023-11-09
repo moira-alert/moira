@@ -54,9 +54,7 @@ func TestInit(t *testing.T) {
 		sender := Sender{}
 		settings := map[string]interface{}{}
 		Convey("Empty map", func() {
-			sendersNameToType := make(map[string]string)
-
-			err := sender.Init(settings, logger, nil, "", sendersNameToType)
+			err := sender.Init(settings, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))
 			So(sender, ShouldResemble, Sender{})
 		})
@@ -65,29 +63,23 @@ func TestInit(t *testing.T) {
 		settings["name"] = scriptName
 
 		Convey("Empty exec", func() {
-			sendersNameToType := make(map[string]string)
-
-			err := sender.Init(settings, logger, nil, "", sendersNameToType)
+			err := sender.Init(settings, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("file  not found"))
 			So(sender, ShouldResemble, Sender{})
-			So(sendersNameToType[scriptName], ShouldEqual, settings["type"])
 		})
 
 		Convey("Exec with not exists file", func() {
-			sendersNameToType := make(map[string]string)
 			settings["exec"] = "./test_file1"
 
-			err := sender.Init(settings, logger, nil, "", sendersNameToType)
+			err := sender.Init(settings, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("file ./test_file1 not found"))
 			So(sender, ShouldResemble, Sender{})
-			So(sendersNameToType[scriptName], ShouldEqual, settings["type"])
 		})
 
 		Convey("Exec with exists file", func() {
-			sendersNameToType := make(map[string]string)
 			settings["exec"] = "script.go"
 
-			err := sender.Init(settings, logger, nil, "", sendersNameToType)
+			err := sender.Init(settings, logger, nil, "")
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{
 				scriptSenders: map[string]scriptSender{
@@ -98,7 +90,6 @@ func TestInit(t *testing.T) {
 				},
 				logger: logger,
 			})
-			So(sendersNameToType[scriptName], ShouldEqual, settings["type"])
 		})
 
 		Convey("Test with multiple scripts", func() {
@@ -108,16 +99,13 @@ func TestInit(t *testing.T) {
 				"name": "script_name_2",
 				"exec": "script.go",
 			}
-			sendersNameToType := make(map[string]string)
 
-			err := sender.Init(settings, logger, nil, "", sendersNameToType)
+			err := sender.Init(settings, logger, nil, "")
 			So(err, ShouldBeNil)
 
-			err = sender.Init(settings2, logger, nil, "", sendersNameToType)
+			err = sender.Init(settings2, logger, nil, "")
 			So(err, ShouldBeNil)
 
-			So(sendersNameToType[scriptName], ShouldEqual, settings["type"])
-			So(sendersNameToType["script_name_2"], ShouldEqual, settings["type"])
 			So(len(sender.scriptSenders), ShouldEqual, 2)
 		})
 	})

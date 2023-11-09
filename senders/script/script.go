@@ -41,7 +41,7 @@ type scriptNotification struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -51,8 +51,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.Name == "" {
 		return fmt.Errorf("required name for sender type script")
 	}
-
-	sendersNameToType[cfg.Name] = cfg.Type
 
 	_, _, err = parseExec(cfg.Exec)
 	if err != nil {

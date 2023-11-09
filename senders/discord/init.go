@@ -36,7 +36,7 @@ type Sender struct {
 }
 
 // Init reads the yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, sendersNameToType map[string]string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -45,12 +45,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	if cfg.Token == "" {
 		return fmt.Errorf("cannot read the discord token from the config")
-	}
-
-	if cfg.Name != "" {
-		sendersNameToType[cfg.Name] = cfg.Type
-	} else {
-		sendersNameToType[cfg.Type] = cfg.Type
 	}
 
 	sender.session, err = discordgo.New("Bot " + cfg.Token)

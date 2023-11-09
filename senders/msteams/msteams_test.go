@@ -23,8 +23,7 @@ func TestInit(t *testing.T) {
 		}
 
 		Convey("Minimal settings", func() {
-			sendersNameToType := make(map[string]string)
-			err := sender.Init(senderSettings, logger, nil, "", sendersNameToType)
+			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
 			So(sender.maxEvents, ShouldResemble, -1)
@@ -36,16 +35,14 @@ func TestMSTeamsHttpResponse(t *testing.T) {
 	sender := Sender{}
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	location, _ := time.LoadLocation("UTC")
-	sendersNameToType := make(map[string]string)
 	senderSettings := map[string]interface{}{
 		"type":       msteamsType,
 		"max_events": -1,
 	}
 
 	Convey("Test init", t, func() {
-		err := sender.Init(senderSettings, logger, location, "", sendersNameToType)
+		err := sender.Init(senderSettings, logger, location, "")
 		So(err, ShouldBeNil)
-		So(sendersNameToType[msteamsType], ShouldEqual, senderSettings["type"])
 	})
 
 	event := moira.NotificationEvent{
