@@ -443,6 +443,7 @@ github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kd
 github.com/antonmedv/expr v1.12.7 h1:jfV/l/+dHWAadLwAtESXNxXdfbK9bE4+FNMHYCMntwk=
 github.com/antonmedv/expr v1.12.7/go.mod h1:FPC8iWArxls7axbVLsW+kpg1mz29A1b2M6jt+hZfDkU=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
+github.com/aws/aws-sdk-go v1.44.219/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go v1.44.293 h1:oBPrQqsyMYe61Sl/xKVvQFflXjPwYH11aKi8QR3Nhts=
 github.com/aws/aws-sdk-go v1.44.293/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df h1:GSoSVRLoBaFpOOds6QyY1L8AX7uoY+Ln3BHc22W40X0=
@@ -872,6 +873,7 @@ github.com/mattermost/ldap v0.0.0-20201202150706-ee0e6284187d h1:/RJ/UV7M5c7L2TQ
 github.com/mattermost/ldap v0.0.0-20201202150706-ee0e6284187d/go.mod h1:HLbgMEI5K131jpxGazJ97AxfPDt31osq36YS1oxFQPQ=
 github.com/mattermost/logr/v2 v2.0.18 h1:qiznuwwKckZJoGtBYc4Y9FAY97/oQwV1Pq9oO5qP5nk=
 github.com/mattermost/logr/v2 v2.0.18/go.mod h1:1dm/YhTpozsqANXxo5Pi5zYLBsal2xY0pX+JZNbzYJY=
+github.com/mattermost/mattermost-server/v6 v6.0.0-20230405170428-2a75f997ee6c/go.mod h1:o61MGMh7We01wGr1ydGDA5mmNpjTzaBVWUAlezsgx50=
 github.com/mattermost/mattermost/server/public v0.0.9 h1:Qsktgxx5dc8xVAUHP5MbSLi6Cf82iB/83r6S9bluHto=
 github.com/mattermost/mattermost/server/public v0.0.9/go.mod h1:sgXQrYzs+IJy51mB8E8OBljagk2u3YwQRoYlBH5goiw=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
