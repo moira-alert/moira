@@ -25,10 +25,11 @@ var (
 	location       = &time.Location{}
 	dateTimeFormat = "15:04 02.01.2006"
 	defaultConfig  = notifier.Config{
-		SendingTimeout:   time.Millisecond * 10,
-		ResendingTimeout: time.Hour * 24,
-		Location:         location,
-		DateTimeFormat:   dateTimeFormat,
+		SendingTimeout:            time.Millisecond * 10,
+		ResendingTimeout:          time.Hour * 24,
+		Location:                  location,
+		DateTimeFormat:            dateTimeFormat,
+		MaxParallelSendsPerSender: 16,
 	}
 )
 
@@ -173,9 +174,9 @@ func TestTimeout(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
 		fmt.Print("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
-	}).Times(standardNotifier.GetParallelSendsPerSender())
+	}).Times(standardNotifier.GetMaxParallelSendsPerSender())
 
-	for i := 0; i < standardNotifier.GetParallelSendsPerSender(); i++ {
+	for i := 0; i < standardNotifier.GetMaxParallelSendsPerSender(); i++ {
 		standardNotifier.Send(&pkg, &wg)
 		wg.Wait()
 	}

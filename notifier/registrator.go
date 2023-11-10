@@ -157,15 +157,13 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	return nil
 }
 
-const maxParallelSendsPerSender = 16
-
 // GetParallelSendsPerSender returns the maximum number of running goroutines for each sentinel
-func (notifier *StandardNotifier) GetParallelSendsPerSender() int {
-	return maxParallelSendsPerSender
+func (notifier *StandardNotifier) GetMaxParallelSendsPerSender() int {
+	return notifier.config.MaxParallelSendsPerSender
 }
 
 func (notifier *StandardNotifier) runSenders(sender moira.Sender, eventsChannel chan NotificationPackage) {
-	for i := 0; i < maxParallelSendsPerSender; i++ {
+	for i := 0; i < notifier.GetMaxParallelSendsPerSender(); i++ {
 		notifier.waitGroup.Add(1)
 		go notifier.runSender(sender, eventsChannel)
 	}
