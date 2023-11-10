@@ -363,6 +363,29 @@ func TestLocalSourceFetch(t *testing.T) {
 		})
 	})
 
+	// for update carbonapi to v0.16.2, check for nil pointers usage in carbonapi config
+	Convey("Test success evaluate target with movingAverage(1)", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("super.puper.pattern | movingAverage(1) | aliasByNode(5, 7)", from, until, true)
+
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "super.puper.metric",
+				StartTime: retentionFrom,
+				StopTime:  retentionUntil,
+				StepTime:  retention,
+				Values:    []float64{0, 1, 2, 3, 4},
+			}},
+			Metrics:  []string{metric},
+			Patterns: []string{pattern1},
+		})
+	})
+
 	Convey("Test success evaluate target with aliasByTags('name')", t, func() {
 		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric}, nil)
 		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
