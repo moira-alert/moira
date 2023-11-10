@@ -47,7 +47,7 @@ func TestGetTriggerChecksWithRetries(t *testing.T) {
 		dataBase.EXPECT().GetTriggerChecks(randomBatch).Return(nil, expectedError).Times(3)
 		actualData, actualError := index.getTriggerChecksWithRetries(randomBatch)
 		So(actualData, ShouldBeEmpty)
-		So(actualError, ShouldResemble, fmt.Errorf("cannot get trigger checks from DB after 3 tries, last error: %w", expectedError))
+		So(actualError.Error(), ShouldResemble, fmt.Sprintf("cannot get trigger checks from DB after 3 tries, last error: %v", expectedError))
 	})
 }
 

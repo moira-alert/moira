@@ -62,7 +62,7 @@ func (listener *MetricsListener) Listen() chan []byte {
 			conn, err := listener.listener.Accept()
 			if nil != err {
 				var opErr *net.OpError
-				if ok := errors.Is(err, opErr); ok && opErr.Timeout() {
+				if ok := errors.As(err, &opErr); ok && opErr.Timeout() {
 					continue
 				}
 				listener.logger.Info().

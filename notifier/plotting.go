@@ -169,7 +169,7 @@ func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string
 		return realtimeFetchResult.GetMetricsData(), nil
 	}
 	var errFailedWithPanic local.ErrEvaluateTargetFailedWithPanic
-	if ok := errors.Is(realtimeErr, errFailedWithPanic); ok {
+	if ok := errors.As(realtimeErr, &errFailedWithPanic); ok {
 		fetchResult, err := metricsSource.Fetch(target, from, to, false)
 		if err != nil {
 			return nil, errFetchAvailableSeriesFailed{realtimeErr: errFailedWithPanic.Error(), storedErr: err.Error()}

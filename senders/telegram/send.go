@@ -2,9 +2,10 @@ package telegram
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strings"
+
+	"errors"
 
 	"gopkg.in/tucnak/telebot.v2"
 
@@ -147,8 +148,9 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 	if err == nil {
 		return nil
 	}
+
 	var e *telebot.APIError
-	if ok := errors.Is(err, e); ok {
+	if ok := errors.As(err, &e); ok {
 		logger.Debug().
 			Int("code", e.Code).
 			String("msg", e.Message).

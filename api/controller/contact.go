@@ -97,7 +97,7 @@ func UpdateContact(dataBase moira.Database, contactDTO dto.Contact, contactData 
 
 // RemoveContact deletes notification contact for current user and remove contactID from all subscriptions
 func RemoveContact(database moira.Database, contactID string, userLogin string, teamID string) *api.ErrorResponse { //nolint:gocyclo
-	var subscriptionIDs []string
+	subscriptionIDs := make([]string, 0)
 	if userLogin != "" {
 		userSubscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 		if err != nil {
