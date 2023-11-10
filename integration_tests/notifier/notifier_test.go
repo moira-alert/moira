@@ -87,6 +87,7 @@ func TestNotifier(t *testing.T) {
 	database.PushNotificationEvent(&event, true) //nolint
 
 	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil, nil)
+	scheduler := notifier.NewScheduler(database, logger, notifierMetrics)
 
 	notifierInstance := notifier.NewNotifier(
 		database,
@@ -95,6 +96,7 @@ func TestNotifier(t *testing.T) {
 		notifierMetrics,
 		metricsSourceProvider,
 		map[string]moira.ImageStore{},
+		scheduler,
 	)
 
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
@@ -113,7 +115,7 @@ func TestNotifier(t *testing.T) {
 		Database:  database,
 		Logger:    logger,
 		Metrics:   notifierMetrics,
-		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
+		Scheduler: scheduler,
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{

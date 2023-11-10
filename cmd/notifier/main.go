@@ -103,6 +103,7 @@ func main() {
 	notifierConfig := config.Notifier.getSettings(logger)
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+	scheduler := notifier.NewScheduler(database, logger, notifierMetrics)
 	sender := notifier.NewNotifier(
 		database,
 		logger,
@@ -110,6 +111,7 @@ func main() {
 		notifierMetrics,
 		metricSourceProvider,
 		imageStoreMap,
+		scheduler,
 	)
 
 	// Register moira senders

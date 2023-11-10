@@ -88,13 +88,21 @@ type StandardNotifier struct {
 }
 
 // NewNotifier is initializer for StandardNotifier
-func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore) *StandardNotifier {
+func NewNotifier(
+	database moira.Database,
+	logger moira.Logger,
+	config Config,
+	metrics *metrics.NotifierMetrics,
+	metricSourceProvider *metricSource.SourceProvider,
+	imageStoreMap map[string]moira.ImageStore,
+	scheduler Scheduler,
+) *StandardNotifier {
 	return &StandardNotifier{
 		senders:                make(map[string]moira.Sender),
 		sendersNotificationsCh: make(map[string]chan NotificationPackage),
 		logger:                 logger,
 		database:               database,
-		scheduler:              NewScheduler(database, logger, metrics),
+		scheduler:              scheduler,
 		config:                 config,
 		metrics:                metrics,
 		metricSourceProvider:   metricSourceProvider,
@@ -148,6 +156,11 @@ func (notifier *StandardNotifier) GetSenders() map[string]bool {
 // GetReadBatchSize returns amount of messages notifier reads from Redis per iteration
 func (notifier *StandardNotifier) GetReadBatchSize() int64 {
 	return notifier.config.ReadBatchSize
+}
+
+// GetSendersTypeByName returns the type of the sender by its name
+func (notifier *StandardNotifier) GetSendersTypeByName(name string) string {
+	return notifier.sendersNameToType[name]
 }
 
 func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string) {

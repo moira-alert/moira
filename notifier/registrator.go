@@ -45,9 +45,11 @@ const (
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
 	for _, senderSettings := range notifier.config.Senders {
+		senderSettings["front_uri"] = notifier.config.FrontURL
+
 		senderType, ok := senderSettings["type"].(string)
 		if !ok {
-			return fmt.Errorf("failed to get sender type from settings: %w", err)
+			return fmt.Errorf("failed to get sender type from settings")
 		}
 
 		if sender, ok := notifier.senders[senderType]; ok {
@@ -56,7 +58,6 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			}
 		}
 
-		senderSettings["front_uri"] = notifier.config.FrontURL
 		switch senderType {
 		case mailSender:
 			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
@@ -157,6 +158,11 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 }
 
 const maxParallelSendsPerSender = 16
+
+// GetParallelSendsPerSender returns the maximum number of running goroutines for each sentinel
+func (notifier *StandardNotifier) GetParallelSendsPerSender() int {
+	return maxParallelSendsPerSender
+}
 
 func (notifier *StandardNotifier) runSenders(sender moira.Sender, eventsChannel chan NotificationPackage) {
 	for i := 0; i < maxParallelSendsPerSender; i++ {
