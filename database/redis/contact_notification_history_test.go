@@ -46,7 +46,6 @@ var inputScheduledNotification = moira.ScheduledNotification{
 	Throttled: false,
 	SendFail:  1,
 	Timestamp: time.Now().Unix(),
-	CreatedAt: time.Now().Unix(),
 }
 
 var eventsShouldBeInDb = []*moira.NotificationEventHistoryItem{

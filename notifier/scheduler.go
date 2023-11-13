@@ -59,14 +59,12 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 		Throttled: throttled,
 		SendFail:  sendFail,
 		Timestamp: next.Unix(),
-		CreatedAt: now.Unix(),
 		Plotting:  plotting,
 	}
 
 	logger.Debug().
 		String("notification_timestamp", next.Format("2006/01/02 15:04:05")).
 		Int64("notification_timestamp_unix", next.Unix()).
-		Int64("notification_created_at_unix", now.Unix()).
 		Msg("Scheduled notification")
 	return notification
 }
