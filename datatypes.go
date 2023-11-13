@@ -245,6 +245,14 @@ type ScheduledNotification struct {
 	CreatedAt int64             `json:"created_at" example:"1594471900" format:"int64"`
 }
 
+type scheduledNotificationState int
+
+const (
+	IgnoredNotification scheduledNotificationState = iota
+	ValidNotification
+	RemovedNotification
+)
+
 // Less is needed for the ScheduledNotification to match the Comparable interface
 func (notification *ScheduledNotification) Less(other Comparable) (bool, error) {
 	otherNotification, ok := other.(*ScheduledNotification)
@@ -253,6 +261,30 @@ func (notification *ScheduledNotification) Less(other Comparable) (bool, error) 
 	}
 
 	return notification.Timestamp < otherNotification.Timestamp, nil
+}
+
+// IsDelayed checks if the notification is delayed, the difference between the send time and the create time
+// is greater than the delayedTime
+func (notification *ScheduledNotification) IsDelayed(delayedTime int64) bool {
+	return notification.CreatedAt != 0 && notification.Timestamp-notification.CreatedAt > delayedTime
+}
+
+/*
+GetState checks:
+  - If the trigger for which the notification was generated has been deleted, returns Removed state
+  - If the metric is on Maintenance, returns Ignored state
+  - If the trigger is on Maintenance, returns Ignored state
+
+Otherwise returns Valid state
+*/
+func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) scheduledNotificationState {
+	if triggerCheck == nil {
+		return RemovedNotification
+	}
+	if !triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) && !triggerCheck.IsTriggerOnMaintenance() {
+		return ValidNotification
+	}
+	return IgnoredNotification
 }
 
 // MatchedMetric represents parsed and matched metric data
@@ -381,7 +413,7 @@ type CheckData struct {
 	State                   State             `json:"state" example:"OK"`
 	Maintenance             int64             `json:"maintenance,omitempty" example:"0" format:"int64"`
 	MaintenanceInfo         MaintenanceInfo   `json:"maintenance_info"`
-	// Timestamp - time, which means when the checker last checked this trigger, updated every checkInterval seconds
+	// Timestamp - time, which means when the checker last checked this trigger, this value stops updating if the trigger does not receive metrics
 	Timestamp      int64 `json:"timestamp,omitempty" example:"1590741916" format:"int64"`
 	EventTimestamp int64 `json:"event_timestamp,omitempty" example:"1590741878" format:"int64"`
 	// LastSuccessfulCheckTimestamp - time of the last check of the trigger, during which there were no errors
@@ -399,6 +431,25 @@ func (checkData CheckData) RemoveMetricState(metricName string) {
 // RemoveMetricsToTargetRelation is a function that sets an empty map to MetricsToTargetRelation.
 func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 	checkData.MetricsToTargetRelation = make(map[string]string)
+}
+
+// IsTriggerOnMaintenance checks if the trigger is on Maintenance
+func (checkData *CheckData) IsTriggerOnMaintenance() bool {
+	return time.Now().Unix() <= checkData.Maintenance
+}
+
+// IsMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
+func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
+	if checkData.Metrics == nil {
+		return false
+	}
+
+	metricState, ok := checkData.Metrics[metric]
+	if !ok {
+		return false
+	}
+
+	return time.Now().Unix() <= metricState.Maintenance
 }
 
 // MetricState represents metric state data for given timestamp
