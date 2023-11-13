@@ -21,7 +21,6 @@ type config struct {
 	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
 	ImageStores         cmd.ImageStoreConfig          `yaml:"image_store"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
-	Notification        cmd.NotificationConfig        `yaml:"notification"`
 }
 
 type entityLogConfig struct {
@@ -93,12 +92,6 @@ func getDefault() config {
 		NotificationHistory: cmd.NotificationHistoryConfig{
 			NotificationHistoryTTL:        "48h",
 			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
-		},
-		Notification: cmd.NotificationConfig{
-			DelayedTime:               "1m",
-			TransactionTimeout:        "200ms",
-			TransactionMaxRetries:     10,
-			TransactionHeuristicLimit: 10000,
 		},
 		Notifier: notifierConfig{
 			SenderTimeout:    "10s",

@@ -61,7 +61,6 @@ func TestThrottling(t *testing.T) {
 		Throttled: false,
 		Timestamp: now.Unix(),
 		SendFail:  0,
-		CreatedAt: now.Unix(),
 	}
 
 	Convey("Test sendFail more than 0, and no throttling, should send message in one minute", t, func() {

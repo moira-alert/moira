@@ -46,11 +46,9 @@ type DbConnector struct {
 	source               DBSource
 	clock                moira.Clock
 	notificationHistory  NotificationHistoryConfig
-	// Notifier configuration in redis
-	notification NotificationConfig
 }
 
-func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {
+func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, source DBSource) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:       config.MasterName,
 		Addrs:            config.Addrs,
@@ -80,9 +78,7 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		source:               source,
 		clock:                clock.NewSystemClock(),
 		notificationHistory:  nh,
-		notification:         n,
 	}
-
 	return &connector
 }
 
@@ -94,14 +90,7 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 		NotificationHistoryConfig{
 			NotificationHistoryTTL:        time.Hour * 48,
 			NotificationHistoryQueryLimit: 1000,
-		},
-		NotificationConfig{
-			DelayedTime:               time.Minute,
-			TransactionTimeout:        200 * time.Millisecond,
-			TransactionMaxRetries:     10,
-			TransactionHeuristicLimit: 10000,
-		},
-		testSource)
+		}, testSource)
 }
 
 // NewTestDatabaseWithIncorrectConfig use it only for tests
@@ -111,12 +100,6 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 		NotificationHistoryConfig{
 			NotificationHistoryTTL:        time.Hour * 48,
 			NotificationHistoryQueryLimit: 1000,
-		},
-		NotificationConfig{
-			DelayedTime:               time.Minute,
-			TransactionTimeout:        200 * time.Millisecond,
-			TransactionMaxRetries:     10,
-			TransactionHeuristicLimit: 10000,
 		},
 		testSource)
 }

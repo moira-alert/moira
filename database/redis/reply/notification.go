@@ -18,7 +18,6 @@ type scheduledNotificationStorageElement struct {
 	Throttled bool                    `json:"throttled"`
 	SendFail  int                     `json:"send_fail"`
 	Timestamp int64                   `json:"timestamp"`
-	CreatedAt int64                   `json:"created_at"`
 }
 
 func toScheduledNotificationStorageElement(notification moira.ScheduledNotification) scheduledNotificationStorageElement {
@@ -30,7 +29,6 @@ func toScheduledNotificationStorageElement(notification moira.ScheduledNotificat
 		Throttled: notification.Throttled,
 		SendFail:  notification.SendFail,
 		Timestamp: notification.Timestamp,
-		CreatedAt: notification.CreatedAt,
 	}
 }
 
@@ -43,7 +41,6 @@ func (n scheduledNotificationStorageElement) toScheduledNotification() moira.Sch
 		Throttled: n.Throttled,
 		SendFail:  n.SendFail,
 		Timestamp: n.Timestamp,
-		CreatedAt: n.CreatedAt,
 	}
 }
 
