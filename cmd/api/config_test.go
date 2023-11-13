@@ -23,9 +23,10 @@ func Test_apiConfig_getSettings(t *testing.T) {
 			Listen:                  "0000",
 			GraphiteLocalMetricTTL:  time.Hour,
 			GraphiteRemoteMetricTTL: 24 * time.Hour,
+			Flags:                   api.FeatureFlags{IsReadonlyEnabled: true},
 		}
 
-		result := apiConf.getSettings("1h", "24h")
+		result := apiConf.getSettings("1h", "24h", api.FeatureFlags{IsReadonlyEnabled: true})
 		So(result, ShouldResemble, expectedResult)
 	})
 }
