@@ -245,6 +245,16 @@ type ScheduledNotification struct {
 	CreatedAt int64             `json:"created_at" example:"1594471900" format:"int64"`
 }
 
+// Less is needed for the ScheduledNotification to match the Comparable interface
+func (notification *ScheduledNotification) Less(other Comparable) (bool, error) {
+	otherNotification, ok := other.(*ScheduledNotification)
+	if !ok {
+		return false, fmt.Errorf("cannot to compare ScheduledNotification with different type")
+	}
+
+	return notification.Timestamp < otherNotification.Timestamp, nil
+}
+
 // MatchedMetric represents parsed and matched metric data
 type MatchedMetric struct {
 	Metric             string
