@@ -130,6 +130,10 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 
 	for _, notification := range notifications {
 		notificationString, err := reply.GetNotificationBytes(*notification)
+		connector.logger.Debug().
+			String("notification_string", string(notificationString)).
+			Msg("Get notification string")
+
 		if err != nil {
 			return 0, err
 		}
@@ -709,6 +713,10 @@ func (connector *DbConnector) fetchNotificationsDoForTest(to int64, limit int64,
 // AddNotification store notification at given timestamp
 func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotification) error {
 	bytes, err := reply.GetNotificationBytes(*notification)
+	connector.logger.Debug().
+		String("notification_string", string(bytes)).
+		Msg("Get notification string")
+
 	if err != nil {
 		return err
 	}
@@ -734,6 +742,9 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 		if err != nil {
 			return err
 		}
+		connector.logger.Debug().
+			String("notification_string", string(bytes)).
+			Msg("Get notification string")
 
 		z := &redis.Z{Score: float64(timestamp), Member: bytes}
 		pipe.ZAdd(ctx, notifierNotificationsKey, z)
