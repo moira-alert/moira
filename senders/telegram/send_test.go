@@ -17,7 +17,10 @@ import (
 
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := Sender{location: location, frontURI: "http://moira.url"}
+	client := telegramClient{
+		location: location,
+		frontURI: "http://moira.url",
+	}
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
@@ -36,7 +39,7 @@ func TestBuildMessage(t *testing.T) {
 		}
 
 		Convey("Print moira message with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
@@ -47,7 +50,7 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with empty triggerID, but with trigger Name", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false, messageMaxCharacters)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false, messageMaxCharacters)
 			expected := `💣NODATA Name  (1)
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)`
@@ -55,7 +58,7 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with empty trigger", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false, messageMaxCharacters)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false, messageMaxCharacters)
 			expected := `💣NODATA   (1)
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)`
@@ -67,7 +70,7 @@ http://moira.url/trigger/TriggerID
 			trigger.ID = ""
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.`
@@ -75,7 +78,7 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true, messageMaxCharacters)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, trigger, true, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
@@ -91,7 +94,7 @@ Please, fix your system or tune this trigger to generate less events.`
 			for i := 0; i < 18; i++ {
 				events = append(events, event)
 			}
-			actual := sender.buildMessage(events, trigger, false, albumCaptionMaxCharacters)
+			actual := client.buildMessage(events, trigger, false, albumCaptionMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (18)
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
@@ -120,11 +123,15 @@ func TestGetChatUID(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	sender := Sender{location: location, frontURI: "http://moira.url", DataBase: dataBase}
+	client := telegramClient{
+		location: location,
+		frontURI: "http://moira.url",
+		database: dataBase,
+	}
 
 	Convey("Get Telegram chat's UID", t, func() {
 		Convey("For private channel with % prefix should return with -100 prefix", func() {
-			actual, err := sender.getChatUID("%1494975744")
+			actual, err := client.getChatUID("%1494975744")
 			expected := "-1001494975744"
 			So(actual, ShouldResemble, expected)
 			So(err, ShouldBeNil)
@@ -132,7 +139,7 @@ func TestGetChatUID(t *testing.T) {
 
 		Convey("For public channel with # prefix should return with @ prefix", func() {
 			dataBase.EXPECT().GetIDByUsername(messenger, "#MyPublicChannel").Return("@MyPublicChannel", nil)
-			actual, err := sender.getChatUID("#MyPublicChannel")
+			actual, err := client.getChatUID("#MyPublicChannel")
 			expected := "@MyPublicChannel"
 			So(actual, ShouldResemble, expected)
 			So(err, ShouldBeNil)
@@ -140,7 +147,7 @@ func TestGetChatUID(t *testing.T) {
 
 		Convey("If no UID exists in database for this username", func() {
 			dataBase.EXPECT().GetIDByUsername(messenger, "@durov").Return("", database.ErrNil)
-			actual, err := sender.getChatUID("@durov")
+			actual, err := client.getChatUID("@durov")
 			So(err, ShouldResemble, fmt.Errorf("failed to get username uuid: nil returned"))
 			So(actual, ShouldBeEmpty)
 		})

@@ -13,6 +13,7 @@ import (
 // Structure that represents the Webhook configuration in the YAML file
 type config struct {
 	Name     string `mapstructure:"name"`
+	Type     string `mapstructure:"type"`
 	URL      string `mapstructure:"url"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
@@ -21,18 +22,23 @@ type config struct {
 
 // Sender implements moira sender interface via webhook
 type Sender struct {
+	webhookClients map[string]*webhookClient
+	log            moira.Logger
+}
+
+// webhookClient stores data for the webhook client
+type webhookClient struct {
+	client   *http.Client
 	url      string
 	user     string
 	password string
 	headers  map[string]string
-	client   *http.Client
-	log      moira.Logger
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
+func (sender *Sender) Init(opts moira.InitOptions) error {
 	var cfg config
-	err := mapstructure.Decode(senderSettings, &cfg)
+	err := mapstructure.Decode(opts.SenderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to webhook config: %w", err)
 	}
@@ -41,16 +47,8 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("required name for sender type webhook")
 	}
 
-	sender.url = cfg.URL
-	if sender.url == "" {
+	if cfg.URL == "" {
 		return fmt.Errorf("can not read url from config")
-	}
-
-	sender.user, sender.password = cfg.User, cfg.Password
-
-	sender.headers = map[string]string{
-		"User-Agent":   "Moira",
-		"Content-Type": "application/json",
 	}
 
 	var timeout int
@@ -60,16 +58,37 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		timeout = 30
 	}
 
-	sender.log = logger
-	sender.client = &http.Client{
-		Timeout:   time.Duration(timeout) * time.Second,
-		Transport: &http.Transport{DisableKeepAlives: true},
+	client := &webhookClient{
+		url:      cfg.URL,
+		user:     cfg.User,
+		password: cfg.Password,
+		headers: map[string]string{
+			"User-Agent":   "Moira",
+			"Content-Type": "application/json",
+		},
+		client: &http.Client{
+			Timeout:   time.Duration(timeout) * time.Second,
+			Transport: &http.Transport{DisableKeepAlives: true},
+		},
 	}
+
+	if sender.webhookClients == nil {
+		sender.webhookClients = make(map[string]*webhookClient)
+	}
+
+	sender.webhookClients[cfg.Name] = client
+	sender.log = opts.Logger
+
 	return nil
 }
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	webhookClient, ok := sender.webhookClients[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
+	}
+
 	request, err := sender.buildRequest(events, contact, trigger, plots, throttled)
 	if request != nil {
 		defer request.Body.Close()
@@ -79,7 +98,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("failed to build request: %s", err.Error())
 	}
 
-	response, err := sender.client.Do(request)
+	response, err := webhookClient.client.Do(request)
 	if response != nil {
 		defer response.Body.Close()
 	}

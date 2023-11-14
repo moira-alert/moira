@@ -37,12 +37,18 @@ var headers = map[string]string{
 
 // Structure that represents the MSTeams configuration in the YAML file
 type config struct {
+	Name      string `mapstructure:"name"`
+	Type      string `mapstructure:"type"`
 	FrontURI  string `mapstructure:"front_uri"`
 	MaxEvents int    `mapstructure:"max_events"`
 }
 
 // Sender implements moira sender interface via MS Teams
 type Sender struct {
+	clients map[string]*msteamsClient
+}
+
+type msteamsClient struct {
 	frontURI  string
 	maxEvents int
 	logger    moira.Logger
@@ -51,37 +57,58 @@ type Sender struct {
 }
 
 // Init initialises settings required for full functionality
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
+func (sender *Sender) Init(opts moira.InitOptions) error {
 	var cfg config
-	err := mapstructure.Decode(senderSettings, &cfg)
+	err := mapstructure.Decode(opts.SenderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to msteams config: %w", err)
 	}
 
-	sender.logger = logger
-	sender.location = location
-	sender.frontURI = cfg.FrontURI
-	sender.maxEvents = cfg.MaxEvents
-	sender.client = &http.Client{
-		Timeout: time.Duration(30) * time.Second, //nolint
+	client := &msteamsClient{
+		logger:    opts.Logger,
+		location:  opts.Location,
+		frontURI:  cfg.FrontURI,
+		maxEvents: cfg.MaxEvents,
+		client: &http.Client{
+			Timeout: time.Duration(30) * time.Second, //nolint
+		},
 	}
+
+	if sender.clients == nil {
+		sender.clients = make(map[string]*msteamsClient)
+	}
+
+	var senderIdent string
+	if cfg.Name != "" {
+		senderIdent = cfg.Name
+	} else {
+		senderIdent = cfg.Type
+	}
+
+	sender.clients[senderIdent] = client
+
 	return nil
 }
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	err := sender.isValidWebhookURL(contact.Value)
+	msteamsClient, ok := sender.clients[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
+	}
+
+	err := msteamsClient.isValidWebhookURL(contact.Value)
 	if err != nil {
 		return err
 	}
 
-	request, err := sender.buildRequest(events, contact, trigger, throttled)
+	request, err := msteamsClient.buildRequest(events, contact, trigger, throttled)
 
 	if err != nil {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
-	response, err := sender.client.Do(request)
+	response, err := msteamsClient.client.Do(request)
 
 	if err != nil {
 		return fmt.Errorf("failed to perform request: %w", err)
@@ -107,13 +134,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
-	title, uri := sender.buildTitleAndURI(events, trigger, throttled)
+func (client *msteamsClient) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
+	title, uri := client.buildTitleAndURI(events, trigger, throttled)
 	var triggerDescription string
 	if trigger.Desc != "" {
 		triggerDescription = string(blackfriday.Run([]byte(trigger.Desc)))
 	}
-	facts := sender.buildEventsFacts(events, sender.maxEvents, throttled)
+	facts := client.buildEventsFacts(events, client.maxEvents, throttled)
 	var actions []Action
 	if uri != "" {
 		actions = append(actions, Action{
@@ -147,8 +174,8 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	}
 }
 
-func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (*http.Request, error) {
-	messageCard := sender.buildMessage(events, trigger, throttled)
+func (client *msteamsClient) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (*http.Request, error) {
+	messageCard := client.buildMessage(events, trigger, throttled)
 	requestURL := contact.Value
 	requestBody, err := json.Marshal(messageCard)
 	if err != nil {
@@ -163,7 +190,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	for k, v := range headers {
 		request.Header.Set(k, v)
 	}
-	sender.logger.Debug().
+	client.logger.Debug().
 		String("payload", string(requestBody)).
 		String("endpoint", request.URL.String()).
 		Msg("Created payload for teams endpoint")
@@ -171,7 +198,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	return request, nil
 }
 
-func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) (string, string) {
+func (client *msteamsClient) buildTitleAndURI(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) (string, string) {
 	state := events.GetCurrentState(throttled)
 
 	title := string(state)
@@ -184,15 +211,15 @@ func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger 
 	if tags != "" {
 		title = fmt.Sprintf("%s %s", title, tags)
 	}
-	triggerURI := trigger.GetTriggerURI(sender.frontURI)
+	triggerURI := trigger.GetTriggerURI(client.frontURI)
 
 	return title, triggerURI
 }
 
 // buildEventsFacts builds Facts from moira events
 // if n is negative buildEventsFacts does not limit the Facts array
-func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvents int, throttled bool) []Fact {
-	var facts []Fact //nolint
+func (client *msteamsClient) buildEventsFacts(events moira.NotificationEvents, maxEvents int, throttled bool) []Fact {
+	facts := make([]Fact, 0)
 
 	eventsPrinted := 0
 	for _, event := range events {
@@ -200,8 +227,9 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
+
 		facts = append(facts, Fact{
-			Name:  event.FormatTimestamp(sender.location, moira.DefaultTimeFormat),
+			Name:  event.FormatTimestamp(client.location, moira.DefaultTimeFormat),
 			Value: "```" + line + "```",
 		})
 
@@ -212,16 +240,18 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 			})
 			break
 		}
+
 		eventsPrinted++
 	}
 
 	if throttled {
 		facts = append(facts, throttleWarningFact)
 	}
+
 	return facts
 }
 
-func (sender *Sender) isValidWebhookURL(webhookURL string) error {
+func (client *msteamsClient) isValidWebhookURL(webhookURL string) error {
 	// basic URL check
 	_, err := url.Parse(webhookURL)
 	if err != nil {

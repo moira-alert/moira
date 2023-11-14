@@ -10,28 +10,110 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 const (
 	testUser = "testUser"
 	testPass = "testPass"
+
+	webhookType = "webhook"
+	webhookName = "webhook_name"
 )
 
 var logger, _ = logging.GetLogger("webhook")
 
-func TestSender_SendEvents(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	defer mockCtrl.Finish()
+func TestSender_Init(t *testing.T) {
+	Convey("Test Init", t, func() {
+		Convey("Init without name", func() {
+			senderSettings := map[string]interface{}{
+				"type": webhookType,
+			}
+			sender := Sender{}
 
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldResemble, fmt.Errorf("required name for sender type webhook"))
+		})
+
+		Convey("Test without url", func() {
+			senderSettings := map[string]interface{}{
+				"type": webhookType,
+				"name": webhookName,
+			}
+			sender := Sender{}
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldResemble, fmt.Errorf("can not read url from config"))
+		})
+
+		Convey("Init with full config", func() {
+			senderSettings := map[string]interface{}{
+				"type":     webhookType,
+				"name":     webhookName,
+				"user":     "user",
+				"password": "password",
+				"url":      "url",
+			}
+			sender := Sender{}
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Multiple Init", func() {
+			senderSettings1 := map[string]interface{}{
+				"type": webhookType,
+				"name": webhookName,
+				"url":  "url",
+			}
+
+			webhookName2 := "webhook_name_2"
+			senderSettings2 := map[string]interface{}{
+				"type": webhookType,
+				"name": webhookName2,
+				"url":  "url",
+			}
+
+			sender := Sender{}
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings1,
+				Logger:         logger,
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			opts.SenderSettings = senderSettings2
+
+			err = sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			So(len(sender.webhookClients), ShouldEqual, 2)
+		})
+	})
+}
+
+func TestSender_SendEvents(t *testing.T) {
 	Convey("Receive test webhook", t, func() {
 		ts := httptest.NewServer(
 			http.HandlerFunc(
@@ -58,13 +140,20 @@ func TestSender_SendEvents(t *testing.T) {
 		defer ts.Close()
 
 		senderSettings := map[string]interface{}{
-			"name":     "testWebhook",
+			"name":     webhookName,
+			"type":     webhookType,
 			"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
 			"user":     testUser,
 			"password": testPass,
 		}
+
+		opts := moira.InitOptions{
+			SenderSettings: senderSettings,
+			Logger:         logger,
+		}
+
 		sender := Sender{}
-		err := sender.Init(senderSettings, logger, time.UTC, "", dataBase)
+		err := sender.Init(opts)
 		So(err, ShouldBeNil)
 
 		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)

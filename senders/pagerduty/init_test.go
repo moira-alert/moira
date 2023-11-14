@@ -12,6 +12,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const pagerdutyType = "pagerduty"
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
@@ -22,46 +24,90 @@ func TestInit(t *testing.T) {
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	Convey("Init tests", t, func() {
-		sender := Sender{ImageStores: map[string]moira.ImageStore{
-			"s3": imageStore,
-		}}
+		sender := Sender{}
 
 		Convey("Has settings", func() {
 			imageStore.EXPECT().IsEnabled().Return(true)
 			senderSettings := map[string]interface{}{
+				"type":        pagerdutyType,
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
-			So(sender.frontURI, ShouldResemble, "http://moira.uri")
-			So(sender.logger, ShouldResemble, logger)
-			So(sender.location, ShouldResemble, location)
-			So(sender.imageStoreConfigured, ShouldResemble, true)
-			So(sender.imageStore, ShouldResemble, imageStore)
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+				Location:       location,
+				Database:       dataBase,
+				ImageStores: map[string]moira.ImageStore{
+					"s3": imageStore,
+				},
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			client := sender.clients[pagerdutyType]
+			So(client, ShouldNotBeNil)
+			So(client.frontURI, ShouldResemble, "http://moira.uri")
+			So(client.logger, ShouldResemble, logger)
+			So(client.location, ShouldResemble, location)
+			So(client.imageStoreConfigured, ShouldResemble, true)
+			So(client.imageStore, ShouldResemble, imageStore)
 		})
 
 		Convey("Wrong image_store name", func() {
 			senderSettings := map[string]interface{}{
+				"type":        pagerdutyType,
 				"front_uri":   "http://moira.uri",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
-			So(sender.imageStoreConfigured, ShouldResemble, false)
-			So(sender.imageStore, ShouldResemble, nil)
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+				Location:       location,
+				Database:       dataBase,
+				ImageStores: map[string]moira.ImageStore{
+					"s3": imageStore,
+				},
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			client := sender.clients[pagerdutyType]
+			So(client, ShouldNotBeNil)
+			So(client.frontURI, ShouldResemble, "http://moira.uri")
+			So(client.imageStoreConfigured, ShouldResemble, false)
+			So(client.imageStore, ShouldResemble, nil)
 		})
 
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
 			senderSettings := map[string]interface{}{
+				"type":        pagerdutyType,
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender := Sender{ImageStores: map[string]moira.ImageStore{
-				"s3": imageStore,
-			}}
-			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
-			So(sender.imageStoreConfigured, ShouldResemble, false)
-			So(sender.imageStore, ShouldResemble, nil)
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+				Location:       location,
+				Database:       dataBase,
+				ImageStores: map[string]moira.ImageStore{
+					"s3": imageStore,
+				},
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			client := sender.clients[pagerdutyType]
+			So(client, ShouldNotBeNil)
+			So(client.imageStoreConfigured, ShouldResemble, false)
+			So(client.imageStore, ShouldResemble, nil)
 		})
 	})
 }

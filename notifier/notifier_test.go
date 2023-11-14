@@ -1,4 +1,4 @@
-package notifier
+package notifier_test
 
 import (
 	"fmt"
@@ -16,20 +16,30 @@ import (
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
+	"github.com/moira-alert/moira/notifier"
 )
 
 var (
-	plots    [][]byte
-	shutdown = make(chan struct{})
+	plots          [][]byte
+	shutdown       = make(chan struct{})
+	location       = &time.Location{}
+	dateTimeFormat = "15:04 02.01.2006"
+	defaultConfig  = notifier.Config{
+		SendingTimeout:            time.Millisecond * 10,
+		ResendingTimeout:          time.Hour * 24,
+		Location:                  location,
+		DateTimeFormat:            dateTimeFormat,
+		MaxParallelSendsPerSender: 16,
+	}
 )
 
 var (
-	mockCtrl  *gomock.Controller
-	sender    *mock_moira_alert.MockSender
-	notif     *StandardNotifier
-	scheduler *mock_scheduler.MockScheduler
-	dataBase  *mock_moira_alert.MockDatabase
-	logger    moira.Logger
+	mockCtrl         *gomock.Controller
+	sender           *mock_moira_alert.MockSender
+	standardNotifier *notifier.StandardNotifier
+	scheduler        *mock_scheduler.MockScheduler
+	dataBase         *mock_moira_alert.MockDatabase
+	logger           moira.Logger
 )
 
 func TestGetMetricNames(t *testing.T) {
@@ -39,8 +49,9 @@ func TestGetMetricNames(t *testing.T) {
 			actual := notificationsPackage.GetMetricNames()
 			So(actual, ShouldResemble, expected)
 		})
+
 		Convey("Test package with no trigger events", func() {
-			pkg := NotificationPackage{}
+			pkg := notifier.NotificationPackage{}
 			for _, event := range notificationsPackage.Events {
 				if event.IsTriggerEvent {
 					event.IsTriggerEvent = false
@@ -52,8 +63,9 @@ func TestGetMetricNames(t *testing.T) {
 			So(actual, ShouldResemble, expected)
 		})
 	})
+
 	Convey("Test empty notification package", t, func() {
-		emptyNotificationPackage := NotificationPackage{}
+		emptyNotificationPackage := notifier.NotificationPackage{}
 		actual := emptyNotificationPackage.GetMetricNames()
 		So(actual, ShouldHaveLength, 0)
 	})
@@ -66,20 +78,21 @@ func TestGetWindow(t *testing.T) {
 		So(from, ShouldEqual, 11)
 		So(to, ShouldEqual, 179)
 	})
+
 	Convey("Test empty notification package", t, func() {
-		emptyNotificationPackage := NotificationPackage{}
+		emptyNotificationPackage := notifier.NotificationPackage{}
 		_, _, err := emptyNotificationPackage.GetWindow()
 		So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
 	})
 }
 
 func TestUnknownContactType(t *testing.T) {
-	configureNotifier(t)
+	configureNotifier(t, defaultConfig)
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
-	pkg := NotificationPackage{
+	pkg := notifier.NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "unknown contact",
@@ -90,29 +103,30 @@ func TestUnknownContactType(t *testing.T) {
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
-	notif.Send(&pkg, &wg)
+	standardNotifier.Send(&pkg, &wg)
 	wg.Wait()
 }
 
 func TestFailSendEvent(t *testing.T) {
-	configureNotifier(t)
+	configureNotifier(t, defaultConfig)
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
-	pkg := NotificationPackage{
+	pkg := notifier.NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "test",
 		},
 	}
+
 	notification := moira.ScheduledNotification{}
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
-	notif.Send(&pkg, &wg)
+	standardNotifier.Send(&pkg, &wg)
 	wg.Wait()
 	time.Sleep(time.Second * 2)
 }
@@ -122,12 +136,12 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 		t.Skip("skipping test in short mode.")
 	}
 
-	configureNotifier(t)
+	configureNotifier(t, defaultConfig)
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
-	pkg := NotificationPackage{
+	pkg := notifier.NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "test",
@@ -137,20 +151,20 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 		Return(moira.NewSenderBrokenContactError(fmt.Errorf("some sender reason")))
 
 	var wg sync.WaitGroup
-	notif.Send(&pkg, &wg)
+	standardNotifier.Send(&pkg, &wg)
 	wg.Wait()
 	time.Sleep(time.Second * 2)
 }
 
 func TestTimeout(t *testing.T) {
-	configureNotifier(t)
+	configureNotifier(t, defaultConfig)
 	var wg sync.WaitGroup
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	// Configure events with long sending time
-	pkg := NotificationPackage{
+	pkg := notifier.NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "test",
@@ -160,16 +174,16 @@ func TestTimeout(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
 		fmt.Print("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
-	}).Times(maxParallelSendsPerSender)
+	}).Times(standardNotifier.GetMaxParallelSendsPerSender())
 
-	for i := 0; i < maxParallelSendsPerSender; i++ {
-		notif.Send(&pkg, &wg)
+	for i := 0; i < standardNotifier.GetMaxParallelSendsPerSender(); i++ {
+		standardNotifier.Send(&pkg, &wg)
 		wg.Wait()
 	}
 
 	// Configure timeouted event
 	notification := moira.ScheduledNotification{}
-	pkg2 := NotificationPackage{
+	pkg2 := notifier.NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type:  "test",
@@ -180,7 +194,7 @@ func TestTimeout(t *testing.T) {
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg.Plotting, pkg2.Throttled, pkg2.FailCount+1, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
-	notif.Send(&pkg2, &wg)
+	standardNotifier.Send(&pkg2, &wg)
 	wg.Wait()
 	waitTestEnd()
 }
@@ -195,16 +209,8 @@ func waitTestEnd() {
 	}
 }
 
-func configureNotifier(t *testing.T) {
+func configureNotifier(t *testing.T, config notifier.Config) {
 	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
-	var location, _ = time.LoadLocation("UTC")
-	dateTimeFormat := "15:04 02.01.2006"
-	config := Config{
-		SendingTimeout:   time.Millisecond * 10,
-		ResendingTimeout: time.Hour * 24,
-		Location:         location,
-		DateTimeFormat:   dateTimeFormat,
-	}
 
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -213,24 +219,34 @@ func configureNotifier(t *testing.T) {
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
 	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(dataBase), nil, nil)
 
-	notif = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
-	notif.scheduler = scheduler
+	standardNotifier = notifier.NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{}, scheduler)
 	senderSettings := map[string]interface{}{
 		"type": "test",
 	}
 
-	sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006", dataBase).Return(nil)
+	opts := moira.InitOptions{
+		SenderSettings: senderSettings,
+		Logger:         logger,
+		Location:       location,
+		DateTimeFormat: dateTimeFormat,
+		Database:       dataBase,
+		ImageStores:    map[string]moira.ImageStore{},
+	}
 
-	notif.RegisterSender(senderSettings, sender) //nolint
+	sender.EXPECT().Init(opts).Return(nil)
+
+	err := standardNotifier.RegisterSender(senderSettings, sender)
 
 	Convey("Should return one sender", t, func() {
-		So(notif.GetSenders(), ShouldResemble, map[string]bool{"test": true})
+		So(err, ShouldBeNil)
+		So(standardNotifier.GetSenders(), ShouldResemble, map[string]bool{"test": true})
+		So(standardNotifier.GetSendersTypeByName("test"), ShouldEqual, senderSettings["type"])
 	})
 }
 
 func afterTest() {
 	mockCtrl.Finish()
-	notif.StopSenders()
+	standardNotifier.StopSenders()
 }
 
 var subID = "SubscriptionID-000000000000001"
@@ -243,7 +259,7 @@ var event = moira.NotificationEvent{
 	SubscriptionID: &subID,
 }
 
-var notificationsPackage = NotificationPackage{
+var notificationsPackage = notifier.NotificationPackage{
 	Events: []moira.NotificationEvent{
 		{Metric: "metricName1", Timestamp: 15, IsTriggerEvent: false},
 		{Metric: "metricName2", Timestamp: 11, IsTriggerEvent: false},

@@ -39,11 +39,16 @@ type triggerData struct {
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	message := sender.makeMessage(events, contact, trigger, plots, throttled)
-	return sender.dialAndSend(message)
+	client, ok := sender.clients[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
+	}
+
+	message := client.makeMessage(events, contact, trigger, plots, throttled)
+	return client.dialAndSend(message)
 }
 
-func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *gomail.Message {
+func (client *mailClient) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *gomail.Message {
 	state := events.GetCurrentState(throttled)
 
 	tags := trigger.GetTags()
@@ -51,7 +56,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	subject := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, tags, len(events))
 
 	templateData := triggerData{
-		Link:         trigger.GetTriggerURI(sender.FrontURI),
+		Link:         trigger.GetTriggerURI(client.FrontURI),
 		Description:  formatDescription(trigger.Desc),
 		Throttled:    throttled,
 		TriggerName:  trigger.Name,
@@ -63,18 +68,18 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	for _, event := range events {
 		templateData.Items = append(templateData.Items, &templateRow{
 			Metric:     event.Metric,
-			Timestamp:  event.FormatTimestamp(sender.location, sender.dateTimeFormat),
+			Timestamp:  event.FormatTimestamp(client.location, client.dateTimeFormat),
 			Oldstate:   event.OldState,
 			State:      event.State,
 			Values:     event.GetMetricsValues(moira.DefaultNotificationSettings),
 			WarnValue:  strconv.FormatFloat(trigger.WarnValue, 'f', -1, 64),
 			ErrorValue: strconv.FormatFloat(trigger.ErrorValue, 'f', -1, 64),
-			Message:    event.CreateMessage(sender.location),
+			Message:    event.CreateMessage(client.location),
 		})
 	}
 
 	m := gomail.NewMessage()
-	m.SetHeader("From", sender.From)
+	m.SetHeader("From", client.From)
 	m.SetHeader("To", contact.Value)
 	m.SetHeader("Subject", subject)
 
@@ -90,7 +95,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	}
 
 	m.AddAlternativeWriter("text/html", func(w io.Writer) error {
-		return sender.Template.ExecuteTemplate(w, sender.TemplateName, templateData)
+		return client.Template.ExecuteTemplate(w, client.TemplateName, templateData)
 	})
 
 	return m
@@ -102,21 +107,24 @@ func formatDescription(desc string) template.HTML {
 	return template.HTML(htmlDescWithbr)
 }
 
-func (sender *Sender) dialAndSend(message *gomail.Message) error {
+func (client *mailClient) dialAndSend(message *gomail.Message) error {
 	d := gomail.Dialer{
-		Host:      sender.SMTPHost,
-		Port:      int(sender.SMTPPort),
-		LocalName: sender.SMTPHello,
+		Host:      client.SMTPHost,
+		Port:      int(client.SMTPPort),
+		LocalName: client.SMTPHello,
 		TLSConfig: &tls.Config{
-			InsecureSkipVerify: sender.InsecureTLS,
-			ServerName:         sender.SMTPHost,
+			InsecureSkipVerify: client.InsecureTLS,
+			ServerName:         client.SMTPHost,
 		},
 	}
-	if sender.Password != "" {
-		d.Auth = smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPHost)
+
+	if client.Password != "" {
+		d.Auth = smtp.PlainAuth("", client.Username, client.Password, client.SMTPHost)
 	}
+
 	if err := d.DialAndSend(message); err != nil {
 		return err
 	}
+
 	return nil
 }

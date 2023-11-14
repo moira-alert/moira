@@ -39,6 +39,7 @@ notifier:
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"
+  max_parallel_sends_per_sender: 16
 notification_history:
   ttl: 48h
   query_limit: 10000

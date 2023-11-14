@@ -17,20 +17,26 @@ const summaryMaxChars = 1024
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	event := sender.buildEvent(events, contact, trigger, plots, throttled)
+	client, ok := sender.clients[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
+	}
+
+	event := client.buildEvent(events, contact, trigger, plots, throttled)
 	_, err := pagerduty.ManageEventWithContext(context.Background(), event)
 	if err != nil {
 		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %s. ", contact.Value, err)
 	}
+
 	return nil
 }
 
-func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) pagerduty.V2Event {
-	summary := sender.buildSummary(events, trigger, throttled)
+func (client *pagerdutyClient) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) pagerduty.V2Event {
+	summary := client.buildSummary(events, trigger, throttled)
 	details := make(map[string]interface{})
 
 	details["Trigger Name"] = trigger.Name
-	triggerURI := trigger.GetTriggerURI(sender.frontURI)
+	triggerURI := trigger.GetTriggerURI(client.frontURI)
 	if triggerURI != "" {
 		details["Trigger URI"] = triggerURI
 	}
@@ -42,8 +48,8 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	var eventList string
 
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
-		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(client.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
+		if msg := event.CreateMessage(client.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
 		eventList += line
@@ -56,7 +62,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 
 	payload := &pagerduty.V2Payload{
 		Summary:   summary,
-		Severity:  sender.getSeverity(events),
+		Severity:  client.getSeverity(events),
 		Source:    "moira",
 		Timestamp: time.Unix(events[len(events)-1].Timestamp, 0).UTC().Format(time.RFC3339),
 		Details:   details,
@@ -68,11 +74,11 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Payload:    payload,
 	}
 
-	if len(plots) > 0 && sender.imageStoreConfigured {
+	if len(plots) > 0 && client.imageStoreConfigured {
 		for i, plot := range plots {
-			imageLink, err := sender.imageStore.StoreImage(plot)
+			imageLink, err := client.imageStore.StoreImage(plot)
 			if err != nil {
-				sender.logger.Warning().
+				client.logger.Warning().
 					Error(err).
 					Msg("could not store the plot image in the image store")
 			} else {
@@ -88,20 +94,22 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	return event
 }
 
-func (sender *Sender) getSeverity(events moira.NotificationEvents) string {
+func (client *pagerdutyClient) getSeverity(events moira.NotificationEvents) string {
 	severity := "info"
 	for _, event := range events {
 		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
 			severity = "error"
 		}
+
 		if severity != "error" && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
 			severity = "warning"
 		}
 	}
+
 	return severity
 }
 
-func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+func (client *pagerdutyClient) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var summary bytes.Buffer
 	state := events.GetCurrentState(throttled)
 
@@ -114,10 +122,12 @@ func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moir
 		summary.WriteString(" ")
 		summary.WriteString(tags)
 	}
+
 	if len(summary.String()) > summaryMaxChars {
 		summaryStr := summary.String()[:1000]
 		summaryStr += "..."
 		return summaryStr
 	}
+
 	return summary.String()
 }

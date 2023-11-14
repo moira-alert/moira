@@ -32,24 +32,31 @@ var characterLimits = map[messageType]int{
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	client, ok := sender.clients[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
+	}
+
 	msgType := getMessageType(plots)
-	message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
-	sender.logger.Debug().
+	message := client.buildMessage(events, trigger, throttled, characterLimits[msgType])
+	client.logger.Debug().
 		String("chat_id", contact.Value).
 		String("message", message).
 		Msg("Calling telegram api")
 
-	chat, err := sender.getChat(contact.Value)
+	chat, err := client.getChat(contact.Value)
 	if err != nil {
-		return checkBrokenContactError(sender.logger, err)
+		return checkBrokenContactError(client.logger, err)
 	}
-	if err := sender.talk(chat, message, plots, msgType); err != nil {
-		return checkBrokenContactError(sender.logger, err)
+
+	if err := client.talk(chat, message, plots, msgType); err != nil {
+		return checkBrokenContactError(client.logger, err)
 	}
+
 	return nil
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
+func (client *telegramClient) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
 	var buffer bytes.Buffer
 	state := events.GetCurrentState(throttled)
 	tags := trigger.GetTags()
@@ -63,15 +70,17 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	messageLimitReached := false
 
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
-		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(client.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
+		if msg := event.CreateMessage(client.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
+
 		lineCharsCount := len([]rune(line))
 		if messageCharsCount+lineCharsCount > maxChars-additionalInfoCharactersCount {
 			messageLimitReached = true
 			break
 		}
+
 		buffer.WriteString(line)
 		messageCharsCount += lineCharsCount
 		printEventsCount++
@@ -80,7 +89,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if messageLimitReached {
 		buffer.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-printEventsCount))
 	}
-	url := trigger.GetTriggerURI(sender.frontURI)
+	url := trigger.GetTriggerURI(client.frontURI)
 	if url != "" {
 		buffer.WriteString(fmt.Sprintf("\n\n%s\n", url))
 	}
@@ -88,56 +97,62 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if throttled {
 		buffer.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
 	}
+
 	return buffer.String()
 }
 
-func (sender *Sender) getChatUID(username string) (string, error) {
+func (client *telegramClient) getChatUID(username string) (string, error) {
 	var uid string
 	if strings.HasPrefix(username, "%") {
 		uid = "-100" + username[1:]
 	} else {
 		var err error
-		uid, err = sender.DataBase.GetIDByUsername(messenger, username)
+		uid, err = client.database.GetIDByUsername(messenger, username)
 		if err != nil {
 			return "", fmt.Errorf("failed to get username uuid: %s", err.Error())
 		}
 	}
+
 	return uid, nil
 }
 
-func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
-	uid, err := sender.getChatUID(username)
+func (client *telegramClient) getChat(username string) (*telebot.Chat, error) {
+	uid, err := client.getChatUID(username)
 	if err != nil {
 		return nil, err
 	}
-	chat, err := sender.bot.ChatByID(uid)
+
+	chat, err := client.bot.ChatByID(uid)
 	if err != nil {
-		err = removeTokenFromError(err, sender.bot)
+		err = removeTokenFromError(err, client.bot)
 		return nil, fmt.Errorf("can't find recipient %s: %s", uid, err.Error())
 	}
+
 	return chat, nil
 }
 
 // talk processes one talk
-func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, messageType messageType) error {
+func (client *telegramClient) talk(chat *telebot.Chat, message string, plots [][]byte, messageType messageType) error {
 	if messageType == Album {
-		sender.logger.Debug().Msg("talk as album")
-		return sender.sendAsAlbum(chat, plots, message)
+		client.logger.Debug().Msg("talk as album")
+		return client.sendAsAlbum(chat, plots, message)
 	}
-	sender.logger.Debug().Msg("talk as send message")
-	return sender.sendAsMessage(chat, message)
+
+	client.logger.Debug().Msg("talk as send message")
+	return client.sendAsMessage(chat, message)
 }
 
-func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
-	_, err := sender.bot.Send(chat, message)
+func (client *telegramClient) sendAsMessage(chat *telebot.Chat, message string) error {
+	_, err := client.bot.Send(chat, message)
 	if err != nil {
-		err = removeTokenFromError(err, sender.bot)
-		sender.logger.Debug().
+		err = removeTokenFromError(err, client.bot)
+		client.logger.Debug().
 			String("message", message).
 			Int64("chat_id", chat.ID).
 			Error(err).
 			Msg("Can't send event message to telegram")
 	}
+
 	return err
 }
 
@@ -146,6 +161,7 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 	if err == nil {
 		return nil
 	}
+
 	if e, ok := err.(*telebot.APIError); ok {
 		logger.Debug().
 			Int("code", e.Code).
@@ -157,12 +173,14 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 			return moira.NewSenderBrokenContactError(err)
 		}
 	}
+
 	if strings.HasPrefix(err.Error(), "failed to get username uuid") {
 		logger.Debug().
 			Error(err).
 			Msg("It's error from getChat()")
 		return moira.NewSenderBrokenContactError(err)
 	}
+
 	return err
 }
 
@@ -170,17 +188,20 @@ func isBrokenContactAPIError(err *telebot.APIError) bool {
 	if err.Code == telebot.ErrUnauthorized.Code {
 		return true
 	}
+
 	if err.Code == telebot.ErrNoRightsToSendPhoto.Code &&
 		(err.Description == telebot.ErrNoRightsToSendPhoto.Description ||
 			err.Description == telebot.ErrChatNotFound.Description ||
 			err.Description == telebot.ErrNoRightsToSend.Description) {
 		return true
 	}
+
 	if err.Code == telebot.ErrBotKickedFromGroup.Code &&
 		(err.Description == telebot.ErrBotKickedFromGroup.Description ||
 			err.Description == telebot.ErrBotKickedFromSuperGroup.Description) {
 		return true
 	}
+
 	return false
 }
 
@@ -191,20 +212,22 @@ func prepareAlbum(plots [][]byte, caption string) telebot.Album {
 		album = append(album, photo)
 		caption = "" // Caption should be defined only for first photo
 	}
+
 	return album
 }
 
-func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption string) error {
+func (client *telegramClient) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption string) error {
 	album := prepareAlbum(plots, caption)
 
-	_, err := sender.bot.SendAlbum(chat, album)
+	_, err := client.bot.SendAlbum(chat, album)
 	if err != nil {
-		err = removeTokenFromError(err, sender.bot)
-		sender.logger.Debug().
+		err = removeTokenFromError(err, client.bot)
+		client.logger.Debug().
 			Int64("chat_id", chat.ID).
 			Error(err).
 			Msg("Can't send event plots to telegram chat")
 	}
+
 	return err
 }
 

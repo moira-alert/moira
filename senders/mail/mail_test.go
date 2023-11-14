@@ -7,27 +7,43 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const mailType = "mail"
+
 func TestFillSettings(t *testing.T) {
 	Convey("Empty map", t, func() {
-		sender := Sender{}
-		err := sender.fillSettings(map[string]interface{}{}, nil, nil, "")
+		client := mailClient{}
+		senderIdent, err := client.fillSettings(map[string]interface{}{}, nil, nil, "")
 		So(err, ShouldResemble, fmt.Errorf("mail_from can't be empty"))
-		So(sender, ShouldResemble, Sender{})
+		So(client, ShouldResemble, mailClient{})
+		So(senderIdent, ShouldEqual, "")
 	})
 
 	Convey("Has From", t, func() {
-		sender := Sender{}
-		settings := map[string]interface{}{"mail_from": "123"}
+		client := mailClient{}
+		settings := map[string]interface{}{
+			"type":      mailType,
+			"mail_from": "123",
+		}
+
 		Convey("No username", func() {
-			err := sender.fillSettings(settings, nil, nil, "")
+			senderIdent, err := client.fillSettings(settings, nil, nil, "")
 			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{From: "123", Username: "123"})
+			So(client, ShouldResemble, mailClient{
+				From:     "123",
+				Username: "123",
+			})
+			So(senderIdent, ShouldEqual, settings["type"])
 		})
+
 		Convey("Has username", func() {
 			settings["smtp_user"] = "user"
-			err := sender.fillSettings(settings, nil, nil, "")
+			senderIdent, err := client.fillSettings(settings, nil, nil, "")
 			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{From: "123", Username: "user"})
+			So(client, ShouldResemble, mailClient{
+				From:     "123",
+				Username: "user",
+			})
+			So(senderIdent, ShouldEqual, settings["type"])
 		})
 	})
 }

@@ -19,31 +19,38 @@ const (
 
 // SendEvents sends the events as an alert to opsgenie
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	createAlertRequest := sender.makeCreateAlertRequest(events, contact, trigger, plots, throttled)
-	_, err := sender.client.Create(context.Background(), createAlertRequest)
+	opsgenieClient, ok := sender.clients[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
+	}
+
+	createAlertRequest := opsgenieClient.makeCreateAlertRequest(events, contact, trigger, plots, throttled)
+
+	_, err := opsgenieClient.client.Create(context.Background(), createAlertRequest)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to opsgenie: %s", trigger.ID, err.Error())
 	}
+
 	return nil
 }
 
-func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *alert.CreateAlertRequest {
+func (client *opsgenieClient) makeCreateAlertRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *alert.CreateAlertRequest {
 	createAlertRequest := &alert.CreateAlertRequest{
-		Message:     sender.buildTitle(events, trigger, throttled),
-		Description: sender.buildMessage(events, throttled, trigger),
+		Message:     client.buildTitle(events, trigger, throttled),
+		Description: client.buildMessage(events, throttled, trigger),
 		Alias:       trigger.ID,
 		Responders: []alert.Responder{
 			{Type: alert.EscalationResponder, Name: contact.Value},
 		},
 		Tags:     trigger.Tags,
 		Source:   "Moira",
-		Priority: sender.getMessagePriority(events),
+		Priority: client.getMessagePriority(events),
 	}
 
-	if len(plots) > 0 && sender.imageStoreConfigured {
-		imageLink, err := sender.imageStore.StoreImage(plots[0])
+	if len(plots) > 0 && client.imageStoreConfigured {
+		imageLink, err := client.imageStore.StoreImage(plots[0])
 		if err != nil {
-			sender.logger.Warning().
+			client.logger.Warning().
 				Error(err).
 				Msg("Could not store the plot image in the image store")
 		} else {
@@ -56,7 +63,7 @@ func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, co
 	return createAlertRequest
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool, trigger moira.TriggerData) string {
+func (client *opsgenieClient) buildMessage(events moira.NotificationEvents, throttled bool, trigger moira.TriggerData) string {
 	var message strings.Builder
 
 	desc := trigger.Desc
@@ -64,7 +71,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 	htmlDescLen := len([]rune(htmlDesc))
 	charsForHTMLTags := htmlDescLen - len([]rune(desc))
 
-	eventsString := sender.buildEventsString(events, -1, throttled)
+	eventsString := client.buildEventsString(events, -1, throttled)
 	eventsStringLen := len([]rune(eventsString))
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(msgLimit, htmlDescLen, eventsStringLen)
@@ -73,8 +80,9 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 		desc = desc[:descNewLen-charsForHTMLTags] + "...\n"
 		htmlDesc = string(blackfriday.Run([]byte(desc)))
 	}
+
 	if eventsNewLen != eventsStringLen {
-		eventsString = sender.buildEventsString(events, eventsNewLen, throttled)
+		eventsString = client.buildEventsString(events, eventsNewLen, throttled)
 	}
 
 	message.WriteString(htmlDesc)
@@ -84,7 +92,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
 // if n is negative buildEventsString does not limit the events string
-func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
+func (client *opsgenieClient) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."
 	if throttled {
@@ -96,8 +104,8 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
-		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
+		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(client.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
+		if msg := event.CreateMessage(client.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s\n", msg)
 		} else {
 			line += "\n"
@@ -124,7 +132,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+func (client *opsgenieClient) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	state := events.GetCurrentState(throttled)
 	title := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, trigger.GetTags(), len(events))
 	tags := 1
@@ -141,15 +149,17 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 	return title
 }
 
-func (sender *Sender) getMessagePriority(events moira.NotificationEvents) alert.Priority {
+func (client *opsgenieClient) getMessagePriority(events moira.NotificationEvents) alert.Priority {
 	priority := alert.P5
 	for _, event := range events {
 		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
 			priority = alert.P1
 		}
+
 		if priority != alert.P1 && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
 			priority = alert.P3
 		}
 	}
+
 	return priority
 }

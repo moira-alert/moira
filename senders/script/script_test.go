@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const testDir = "/tmp"
+const (
+	testDir    = "/tmp"
+	scriptType = "script"
+	scriptName = "script_name"
+)
 
 var (
 	testTrigger = moira.TriggerData{ID: "triggerID"}
@@ -48,38 +50,77 @@ var execStringTestCases = []execStringTestCase{
 
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
-	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	defer mockCtrl.Finish()
 
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		settings := map[string]interface{}{}
+		opts := moira.InitOptions{
+			SenderSettings: settings,
+			Logger:         logger,
+		}
+
 		Convey("Empty map", func() {
-			err := sender.Init(settings, logger, nil, "", dataBase)
+			err := sender.Init(opts)
 			So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))
 			So(sender, ShouldResemble, Sender{})
 		})
 
-		settings["name"] = "script_name"
+		settings["type"] = scriptType
+		settings["name"] = scriptName
+
 		Convey("Empty exec", func() {
-			err := sender.Init(settings, logger, nil, "", dataBase)
+			opts.SenderSettings = settings
+
+			err := sender.Init(opts)
 			So(err, ShouldResemble, fmt.Errorf("file  not found"))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		Convey("Exec with not exists file", func() {
 			settings["exec"] = "./test_file1"
-			err := sender.Init(settings, logger, nil, "", dataBase)
+			opts.SenderSettings = settings
+
+			err := sender.Init(opts)
 			So(err, ShouldResemble, fmt.Errorf("file ./test_file1 not found"))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		Convey("Exec with exists file", func() {
 			settings["exec"] = "script.go"
-			err := sender.Init(settings, logger, nil, "", dataBase)
+			opts.SenderSettings = settings
+
+			err := sender.Init(opts)
 			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{exec: "script.go", logger: logger})
+			So(sender, ShouldResemble, Sender{
+				scriptSenders: map[string]scriptSender{
+					scriptName: {
+						exec:   "script.go",
+						logger: logger,
+					},
+				},
+				logger: logger,
+			})
+		})
+
+		Convey("Test with multiple scripts", func() {
+			settings["exec"] = "script.go"
+			settings2 := map[string]interface{}{
+				"type": scriptType,
+				"name": "script_name_2",
+				"exec": "script.go",
+			}
+
+			opts.SenderSettings = settings
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			opts.SenderSettings = settings2
+
+			err = sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			So(len(sender.scriptSenders), ShouldEqual, 2)
 		})
 	})
 }
@@ -87,7 +128,11 @@ func TestInit(t *testing.T) {
 func TestBuildCommandData(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Test send events", t, func() {
-		sender := Sender{exec: "script.go first second", logger: logger}
+		sender := scriptSender{
+			exec:   "script.go first second",
+			logger: logger,
+		}
+
 		scriptFile, args, scriptBody, err := sender.buildCommandData(
 			[]moira.NotificationEvent{{Metric: "New metric"}},
 			moira.ContactData{ID: "ContactID"},
@@ -101,7 +146,11 @@ func TestBuildCommandData(t *testing.T) {
 	})
 
 	Convey("Test file not found", t, func() {
-		sender := Sender{exec: "script1.go first second", logger: logger}
+		sender := scriptSender{
+			exec:   "script1.go first second",
+			logger: logger,
+		}
+
 		scriptFile, args, scriptBody, err := sender.buildCommandData([]moira.NotificationEvent{{Metric: "New metric"}}, moira.ContactData{ID: "ContactID"}, moira.TriggerData{ID: "TriggerID"}, true)
 		So(scriptFile, ShouldResemble, "script1.go")
 		So(args, ShouldResemble, []string{"first", "second"})

@@ -12,6 +12,8 @@ import (
 
 // Structure that represents the VictorOps configuration in the YAML file
 type config struct {
+	Name       string `mapstructure:"name"`
+	Type       string `mapstructure:"type"`
 	RoutingURL string `mapstructure:"routing_url"`
 	ImageStore string `mapstructure:"image_store"`
 	FrontURI   string `mapstructure:"front_uri"`
@@ -19,8 +21,12 @@ type config struct {
 
 // Sender implements moira sender interface for victorops
 type Sender struct {
-	DataBase             moira.Database
-	ImageStores          map[string]moira.ImageStore
+	clients map[string]*victoropsClient
+}
+
+type victoropsClient struct {
+	database             moira.Database
+	imageStores          map[string]moira.ImageStore
 	imageStoreID         string
 	imageStore           moira.ImageStore
 	imageStoreConfigured bool
@@ -33,38 +39,54 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures the victorops sender
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
+func (sender *Sender) Init(opts moira.InitOptions) error {
 	var cfg config
-	err := mapstructure.Decode(senderSettings, &cfg)
+	err := mapstructure.Decode(opts.SenderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to victorops config: %w", err)
 	}
 
-	sender.routingURL = cfg.RoutingURL
-	if sender.routingURL == "" {
+	if cfg.RoutingURL == "" {
 		return fmt.Errorf("cannot read the routing url from the yaml config")
 	}
 
-	sender.imageStoreID = cfg.ImageStore
-	if sender.imageStoreID == "" {
-		logger.Warning().Msg("Cannot read image_store from the config, will not be able to attach plot images to events")
+	client := &victoropsClient{
+		routingURL:   cfg.RoutingURL,
+		imageStoreID: cfg.ImageStore,
+		client:       api.NewClient(cfg.RoutingURL, nil),
+		frontURI:     cfg.FrontURI,
+		logger:       opts.Logger,
+		location:     opts.Location,
+		database:     opts.Database,
+		imageStores:  opts.ImageStores,
+	}
+
+	if client.imageStoreID == "" {
+		client.logger.Warning().Msg("Cannot read image_store from the config, will not be able to attach plot images to events")
 	} else {
-		imageStore, ok := sender.ImageStores[sender.imageStoreID]
+		imageStore, ok := client.imageStores[client.imageStoreID]
 		if ok && imageStore.IsEnabled() {
-			sender.imageStore = imageStore
-			sender.imageStoreConfigured = true
+			client.imageStore = imageStore
+			client.imageStoreConfigured = true
 		} else {
-			logger.Warning().
-				String("image_store_id", sender.imageStoreID).
+			client.logger.Warning().
+				String("image_store_id", client.imageStoreID).
 				Msg("Image store specified has not been configured")
 		}
 	}
 
-	sender.client = api.NewClient(sender.routingURL, nil)
+	var senderIdent string
+	if cfg.Name != "" {
+		senderIdent = cfg.Name
+	} else {
+		senderIdent = cfg.Type
+	}
 
-	sender.frontURI = cfg.FrontURI
-	sender.logger = logger
-	sender.location = location
+	if sender.clients == nil {
+		sender.clients = make(map[string]*victoropsClient)
+	}
+
+	sender.clients[senderIdent] = client
 
 	return nil
 }

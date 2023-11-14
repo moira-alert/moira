@@ -728,3 +728,12 @@ func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance in
 	}
 	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
 }
+
+type InitOptions struct {
+	SenderSettings interface{}
+	Logger         Logger
+	Location       *time.Location
+	DateTimeFormat string
+	Database       Database
+	ImageStores    map[string]ImageStore
+}

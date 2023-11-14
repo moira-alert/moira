@@ -27,11 +27,12 @@ var location, _ = time.LoadLocation("UTC")
 var dateTimeFormat = "15:04 02.01.2006"
 
 var notifierConfig = notifier.Config{
-	SendingTimeout:   time.Millisecond * 10,
-	ResendingTimeout: time.Hour * 24,
-	Location:         location,
-	DateTimeFormat:   dateTimeFormat,
-	ReadBatchSize:    notifier.NotificationsLimitUnlimited,
+	SendingTimeout:            time.Millisecond * 10,
+	ResendingTimeout:          time.Hour * 24,
+	Location:                  location,
+	DateTimeFormat:            dateTimeFormat,
+	ReadBatchSize:             notifier.NotificationsLimitUnlimited,
+	MaxParallelSendsPerSender: 16,
 }
 
 var shutdown = make(chan struct{})
@@ -87,6 +88,7 @@ func TestNotifier(t *testing.T) {
 	database.PushNotificationEvent(&event, true) //nolint
 
 	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil, nil)
+	scheduler := notifier.NewScheduler(database, logger, notifierMetrics)
 
 	notifierInstance := notifier.NewNotifier(
 		database,
@@ -95,10 +97,20 @@ func TestNotifier(t *testing.T) {
 		notifierMetrics,
 		metricsSourceProvider,
 		map[string]moira.ImageStore{},
+		scheduler,
 	)
 
+	opts := moira.InitOptions{
+		SenderSettings: senderSettings,
+		Logger:         logger,
+		Location:       location,
+		DateTimeFormat: dateTimeFormat,
+		Database:       database,
+		ImageStores:    map[string]moira.ImageStore{},
+	}
+
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
-	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat, database).Return(nil)
+	sender.EXPECT().Init(opts).Return(nil)
 	sender.EXPECT().
 		SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).
 		Return(nil).
@@ -113,7 +125,7 @@ func TestNotifier(t *testing.T) {
 		Database:  database,
 		Logger:    logger,
 		Metrics:   notifierMetrics,
-		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
+		Scheduler: scheduler,
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{

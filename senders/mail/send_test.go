@@ -36,7 +36,7 @@ some other text _italics text_`,
 	location, _ := time.LoadLocation("UTC")
 	templateName := "mail"
 
-	sender := Sender{
+	sender := mailClient{
 		FrontURI:     "http://localhost",
 		From:         "test@notifier",
 		SMTPHost:     "localhost",
@@ -58,7 +58,6 @@ some other text _italics text_`,
 		So(messageStr.String(), ShouldContainSubstring, "http://localhost/trigger/triggerID-0000000000001")
 		So(messageStr.String(), ShouldContainSubstring, "<em>italics text</em>")
 		So(messageStr.String(), ShouldContainSubstring, "<strong>bold text</strong>")
-		//fmt.Println(messageStr.String())
 	})
 }
 
@@ -95,7 +94,7 @@ func TestEmptyTriggerID(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	templateName := "mail"
 
-	sender := Sender{
+	sender := mailClient{
 		FrontURI:     "http://localhost",
 		From:         "test@notifier",
 		SMTPHost:     "localhost",

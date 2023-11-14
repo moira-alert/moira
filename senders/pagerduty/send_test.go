@@ -14,7 +14,11 @@ import (
 
 func TestBuildEvent(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := Sender{location: location, frontURI: "http://moira.url"}
+	client := pagerdutyClient{
+		location: location,
+		frontURI: "http://moira.url",
+	}
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
@@ -39,6 +43,7 @@ func TestBuildEvent(t *testing.T) {
 		contact := moira.ContactData{
 			Value: "mock routing key",
 		}
+
 		baseExpected := pagerduty.V2Event{
 			RoutingKey: contact.Value,
 			Action:     "trigger",
@@ -56,7 +61,7 @@ func TestBuildEvent(t *testing.T) {
 		}
 
 		Convey("Build pagerduty event with one moira event", func() {
-			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{}, false)
+			actual := client.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{}, false)
 			expected := baseExpected
 			details := map[string]interface{}{
 				"Events":       "\n02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)",
@@ -71,9 +76,10 @@ func TestBuildEvent(t *testing.T) {
 		Convey("Build pagerduty event with one moira event and plots", func() {
 			Convey("One plot", func() {
 				imageStore.EXPECT().StoreImage([]byte("test")).Return("test", nil)
-				sender.imageStore = imageStore
-				sender.imageStoreConfigured = true
-				actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{[]byte("test")}, false)
+				client.imageStore = imageStore
+				client.imageStoreConfigured = true
+				actual := client.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{[]byte("test")}, false)
+
 				expected := baseExpected
 				details := map[string]interface{}{
 					"Events":       "\n02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)",
@@ -88,6 +94,7 @@ func TestBuildEvent(t *testing.T) {
 						"alt": "Plot-0",
 					},
 				}
+
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -95,15 +102,16 @@ func TestBuildEvent(t *testing.T) {
 				imageStore.EXPECT().StoreImage([]byte("plot0")).Return("plot0", nil)
 				imageStore.EXPECT().StoreImage([]byte("plot1")).Return("plot1", nil)
 				imageStore.EXPECT().StoreImage([]byte("plot2")).Return("plot2", nil)
-				sender.imageStore = imageStore
-				sender.imageStoreConfigured = true
-				actual := sender.buildEvent(
+				client.imageStore = imageStore
+				client.imageStoreConfigured = true
+				actual := client.buildEvent(
 					moira.NotificationEvents{event},
 					contact,
 					trigger,
 					[][]byte{[]byte("plot0"), []byte("plot1"), []byte("plot2")},
 					false,
 				)
+
 				expected := baseExpected
 				details := map[string]interface{}{
 					"Events":       "\n02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)",
@@ -126,12 +134,14 @@ func TestBuildEvent(t *testing.T) {
 						"alt": "Plot-2",
 					},
 				}
+
 				So(actual, ShouldResemble, expected)
 			})
 		})
 
 		Convey("Build pagerduty event with one event and throttled", func() {
-			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{}, true)
+			actual := client.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{}, true)
+
 			expected := baseExpected
 			details := map[string]interface{}{
 				"Events":       "\n02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)",
@@ -141,6 +151,7 @@ func TestBuildEvent(t *testing.T) {
 				"Trigger Name": "Trigger Name",
 			}
 			expected.Payload.Details = details
+
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -149,7 +160,8 @@ func TestBuildEvent(t *testing.T) {
 			for i := 0; i < 10; i++ {
 				events = append(events, event)
 			}
-			actual := sender.buildEvent(events, contact, trigger, [][]byte{}, true)
+			actual := client.buildEvent(events, contact, trigger, [][]byte{}, true)
+
 			expected := baseExpected
 			details := map[string]interface{}{
 				"Events": `
@@ -169,6 +181,7 @@ func TestBuildEvent(t *testing.T) {
 				"Trigger Name": "Trigger Name",
 			}
 			expected.Payload.Details = details
+
 			So(actual, ShouldResemble, expected)
 		})
 	})

@@ -54,6 +54,8 @@ type notifierConfig struct {
 	MaxFailAttemptToSendAvailable int `yaml:"max_fail_attempt_to_send_available"`
 	// Specify log level by entities
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
+	// Sets the maximum number of sends per sender
+	MaxParallelSendsPerSender int `yaml:"max_parallel_sends_per_sender"`
 }
 
 type selfStateConfig struct {
@@ -107,6 +109,7 @@ func getDefault() config {
 			Timezone:                      "UTC",
 			ReadBatchSize:                 int(notifier.NotificationsLimitUnlimited),
 			MaxFailAttemptToSendAvailable: 3,
+			MaxParallelSendsPerSender:     16,
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8093",
@@ -201,6 +204,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		MaxFailAttemptToSendAvailable: config.MaxFailAttemptToSendAvailable,
 		LogContactsToLevel:            contacts,
 		LogSubscriptionsToLevel:       subscriptions,
+		MaxParallelSendsPerSender:     config.MaxParallelSendsPerSender,
 	}
 }
 

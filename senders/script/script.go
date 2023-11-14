@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
@@ -15,12 +14,19 @@ import (
 
 // Structure that represents the Script configuration in the YAML file
 type config struct {
+	Type string `mapstructure:"type"`
 	Name string `mapstructure:"name"`
 	Exec string `mapstructure:"exec"`
 }
 
 // Sender implements moira sender interface via script execution
 type Sender struct {
+	scriptSenders map[string]scriptSender
+	logger        moira.Logger
+}
+
+// scriptSender saves data for the script's sender
+type scriptSender struct {
 	exec   string
 	logger moira.Logger
 }
@@ -34,9 +40,9 @@ type scriptNotification struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
+func (sender *Sender) Init(opts moira.InitOptions) error {
 	var cfg config
-	err := mapstructure.Decode(senderSettings, &cfg)
+	err := mapstructure.Decode(opts.SenderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
 	}
@@ -44,22 +50,41 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.Name == "" {
 		return fmt.Errorf("required name for sender type script")
 	}
+
 	_, _, err = parseExec(cfg.Exec)
 	if err != nil {
 		return err
 	}
-	sender.exec = cfg.Exec
-	sender.logger = logger
+
+	script := scriptSender{
+		exec:   cfg.Exec,
+		logger: opts.Logger,
+	}
+
+	if sender.scriptSenders == nil {
+		sender.scriptSenders = make(map[string]scriptSender)
+	}
+
+	sender.scriptSenders[cfg.Name] = script
+	sender.logger = opts.Logger
+
 	return nil
 }
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	scriptFile, args, scriptBody, err := sender.buildCommandData(events, contact, trigger, throttled)
+	script, ok := sender.scriptSenders[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s sender", contact.Type)
+	}
+
+	scriptFile, args, scriptBody, err := script.buildCommandData(events, contact, trigger, throttled)
 	if err != nil {
 		return err
 	}
+
 	command := exec.Command(scriptFile, args...)
+
 	var scriptOutput bytes.Buffer
 	command.Stdin = bytes.NewReader(scriptBody)
 	command.Stdout = &scriptOutput
@@ -73,33 +98,38 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		Msg("Finished executing script")
 
 	if err != nil {
-		return fmt.Errorf("failed exec [%s] Error [%s] Output: [%s]", sender.exec, err.Error(), scriptOutput.String())
+		return fmt.Errorf("failed exec [%s] Error [%w] Output: [%s]", script.exec, err, scriptOutput.String())
 	}
+
 	return nil
 }
 
-func (sender *Sender) buildCommandData(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (scriptFile string, args []string, scriptBody []byte, err error) {
+func (s *scriptSender) buildCommandData(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (scriptFile string, args []string, scriptBody []byte, err error) {
 	// TODO: Remove moira.VariableTriggerName from buildExecString in 2.6
-	if strings.Contains(sender.exec, moira.VariableTriggerName) {
-		sender.logger.Warning().
+	if strings.Contains(s.exec, moira.VariableTriggerName) {
+		s.logger.Warning().
 			String("variable_name", moira.VariableTriggerName).
 			Msg("Variable is deprecated and will be removed in 2.6 release")
 	}
-	execString := buildExecString(sender.exec, trigger, contact)
+
+	execString := buildExecString(s.exec, trigger, contact)
 	scriptFile, args, err = parseExec(execString)
 	if err != nil {
 		return scriptFile, args[1:], []byte{}, err
 	}
+
 	scriptMessage := &scriptNotification{
 		Events:    events,
 		Trigger:   trigger,
 		Contact:   contact,
 		Throttled: throttled,
 	}
+
 	scriptJSON, err := json.MarshalIndent(scriptMessage, "", "\t")
 	if err != nil {
 		return scriptFile, args[1:], scriptJSON, fmt.Errorf("failed marshal json: %s", err.Error())
 	}
+
 	return scriptFile, args[1:], scriptJSON, nil
 }
 
@@ -110,9 +140,11 @@ func parseExec(execString string) (scriptFile string, args []string, err error) 
 	if err != nil {
 		return scriptFile, args, fmt.Errorf("file %s not found", scriptFile)
 	}
+
 	if !infoFile.Mode().IsRegular() {
 		return scriptFile, args, fmt.Errorf("%s not file", scriptFile)
 	}
+
 	return scriptFile, args, nil
 }
 
@@ -124,8 +156,10 @@ func buildExecString(template string, trigger moira.TriggerData, contact moira.C
 		moira.VariableTriggerID:    trigger.ID,
 		moira.VariableTriggerName:  trigger.Name,
 	}
+
 	for k, v := range templateVariables {
 		template = strings.Replace(template, k, v, -1)
 	}
+
 	return template
 }

@@ -73,38 +73,59 @@ type Notifier interface {
 
 // StandardNotifier represent notification functionality
 type StandardNotifier struct {
-	waitGroup            sync.WaitGroup
-	senders              map[string]chan NotificationPackage
-	logger               moira.Logger
-	database             moira.Database
-	scheduler            Scheduler
-	config               Config
-	metrics              *metrics.NotifierMetrics
-	metricSourceProvider *metricSource.SourceProvider
-	imageStores          map[string]moira.ImageStore
+	waitGroup              sync.WaitGroup
+	senders                map[string]moira.Sender
+	sendersNotificationsCh map[string]chan NotificationPackage
+	logger                 moira.Logger
+	database               moira.Database
+	scheduler              Scheduler
+	config                 Config
+	metrics                *metrics.NotifierMetrics
+	metricSourceProvider   *metricSource.SourceProvider
+	imageStores            map[string]moira.ImageStore
+	sendersNameToType      map[string]string
+	sendersOnce            map[string]*sync.Once
 }
 
 // NewNotifier is initializer for StandardNotifier
-func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore) *StandardNotifier {
+func NewNotifier(
+	database moira.Database,
+	logger moira.Logger,
+	config Config,
+	metrics *metrics.NotifierMetrics,
+	metricSourceProvider *metricSource.SourceProvider,
+	imageStoreMap map[string]moira.ImageStore,
+	scheduler Scheduler,
+) *StandardNotifier {
 	return &StandardNotifier{
-		senders:              make(map[string]chan NotificationPackage),
-		logger:               logger,
-		database:             database,
-		scheduler:            NewScheduler(database, logger, metrics),
-		config:               config,
-		metrics:              metrics,
-		metricSourceProvider: metricSourceProvider,
-		imageStores:          imageStoreMap,
+		senders:                make(map[string]moira.Sender),
+		sendersNotificationsCh: make(map[string]chan NotificationPackage),
+		logger:                 logger,
+		database:               database,
+		scheduler:              scheduler,
+		config:                 config,
+		metrics:                metrics,
+		metricSourceProvider:   metricSourceProvider,
+		imageStores:            imageStoreMap,
+		sendersNameToType:      make(map[string]string),
+		sendersOnce:            make(map[string]*sync.Once),
 	}
 }
 
 // Send is realization of StandardNotifier Send functionality
 func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup) {
-	ch, found := notifier.senders[pkg.Contact.Type]
-	if !found {
+	senderType, ok := notifier.sendersNameToType[pkg.Contact.Type]
+	if !ok {
 		notifier.resend(pkg, fmt.Sprintf("Unknown contact type '%s' [%s]", pkg.Contact.Type, pkg))
 		return
 	}
+
+	ch, found := notifier.sendersNotificationsCh[senderType]
+	if !found {
+		notifier.resend(pkg, fmt.Sprintf("failed to get notification channel from '%s' [%s]", senderType, pkg))
+		return
+	}
+
 	waitGroup.Add(1)
 	go func(pkg *NotificationPackage) {
 		defer waitGroup.Done()
@@ -137,11 +158,17 @@ func (notifier *StandardNotifier) GetReadBatchSize() int64 {
 	return notifier.config.ReadBatchSize
 }
 
+// GetSendersTypeByName returns the type of the sender by its name
+func (notifier *StandardNotifier) GetSendersTypeByName(name string) string {
+	return notifier.sendersNameToType[name]
+}
+
 func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string) {
 	if pkg.DontResend {
 		notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
 		return
 	}
+
 	notifier.metrics.SendingFailed.Mark(1)
 	if metric, found := notifier.metrics.SendersFailedMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
 		metric.Mark(1)
@@ -149,7 +176,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 
 	logger := getLogWithPackageContext(&notifier.logger, pkg, &notifier.config)
 	logger.Warning().
-		Int("number_of_retires", pkg.FailCount).
+		Int("number_of_retries", pkg.FailCount).
 		String("reason", reason).
 		Msg("Can't send message. Retry again in 1 min")
 
@@ -212,6 +239,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			notifier.metrics.MarkSendersOkMetrics(pkg.Contact.Type)
 			continue
 		}
+
 		switch e := err.(type) {
 		case moira.SenderBrokenContactError:
 			log.Warning().

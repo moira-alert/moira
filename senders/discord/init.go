@@ -40,9 +40,9 @@ type discordClient struct {
 }
 
 // Init reads the yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, database moira.Database) error {
+func (sender *Sender) Init(opts moira.InitOptions) error {
 	var cfg config
-	err := mapstructure.Decode(senderSettings, &cfg)
+	err := mapstructure.Decode(opts.SenderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to discord config: %w", err)
 	}
@@ -58,10 +58,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	client := &discordClient{
 		session:  session,
-		logger:   logger,
+		logger:   opts.Logger,
 		frontURI: cfg.FrontURI,
-		location: location,
-		dataBase: database,
+		location: opts.Location,
+		dataBase: opts.Database,
 	}
 
 	handleMsg := func(s *discordgo.Session, m *discordgo.MessageCreate) {

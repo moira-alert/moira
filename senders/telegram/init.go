@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	telegramLockName = "moira-telegram-users:moira-bot-host"
+	telegramLockName = "moira-telegram-users:moira-bot-host:"
 	workerName       = "Telebot"
 	messenger        = "telegram"
 	telegramLockTTL  = 30 * time.Second
@@ -33,13 +33,19 @@ var (
 
 // Structure that represents the Telegram configuration in the YAML file
 type config struct {
+	Name     string `mapstructure:"name"`
+	Type     string `mapstructure:"type"`
 	APIToken string `mapstructure:"api_token"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
 // Sender implements moira sender interface via telegram
 type Sender struct {
-	DataBase moira.Database
+	clients map[string]*telegramClient
+}
+
+type telegramClient struct {
+	database moira.Database
 	logger   moira.Logger
 	apiToken string
 	frontURI string
@@ -52,16 +58,18 @@ func removeTokenFromError(err error, bot *telebot.Bot) error {
 	if bot != nil {
 		url = bot.URL
 	}
+
 	if err != nil && strings.Contains(err.Error(), url) {
 		return errors.New(moira.ReplaceSubstring(err.Error(), "/bot", "/", hidden))
 	}
+
 	return err
 }
 
 // Init loads yaml config, configures and starts telegram bot
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
+func (sender *Sender) Init(opts moira.InitOptions) error {
 	var cfg config
-	err := mapstructure.Decode(senderSettings, &cfg)
+	err := mapstructure.Decode(opts.SenderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
 	}
@@ -69,43 +77,64 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
-	sender.apiToken = cfg.APIToken
-	sender.frontURI = cfg.FrontURI
-	sender.logger = logger
-	sender.location = location
-	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  sender.apiToken,
+
+	bot, err := telebot.NewBot(telebot.Settings{
+		Token:  cfg.APIToken,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
-		return removeTokenFromError(err, sender.bot)
+		return removeTokenFromError(err, bot)
 	}
 
-	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
-		if err = sender.handleMessage(message); err != nil {
-			sender.logger.Error().
+	client := &telegramClient{
+		apiToken: cfg.APIToken,
+		frontURI: cfg.FrontURI,
+		logger:   opts.Logger,
+		location: opts.Location,
+		bot:      bot,
+		database: opts.Database,
+	}
+
+	client.bot.Handle(telebot.OnText, func(message *telebot.Message) {
+		if err = client.handleMessage(message); err != nil {
+			client.logger.Error().
 				Error(err).
 				Msg("Error handling incoming message: %s")
 		}
 	})
-	go sender.runTelebot()
+
+	var senderIdent string
+	if cfg.Name != "" {
+		senderIdent = cfg.Name
+	} else {
+		senderIdent = cfg.Type
+	}
+
+	go client.runTelebot(senderIdent)
+
+	if sender.clients == nil {
+		sender.clients = make(map[string]*telegramClient)
+	}
+
+	sender.clients[senderIdent] = client
+
 	return nil
 }
 
 // runTelebot starts telegram bot and manages bot subscriptions
 // to make sure there is always only one working Poller
-func (sender *Sender) runTelebot() {
+func (client *telegramClient) runTelebot(senderIdent string) {
 	workerAction := func(stop <-chan struct{}) error {
-		sender.bot.Start()
+		client.bot.Start()
 		<-stop
-		sender.bot.Stop()
+		client.bot.Stop()
 		return nil
 	}
 
 	worker.NewWorker(
 		workerName,
-		sender.logger,
-		sender.DataBase.NewLock(telegramLockName, telegramLockTTL),
+		client.logger,
+		client.database.NewLock(telegramLockName+senderIdent, telegramLockTTL),
 		workerAction,
 	).Run(nil)
 }

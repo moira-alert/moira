@@ -14,6 +14,8 @@ import (
 
 // Structure that represents the Mail configuration in the YAML file
 type config struct {
+	Name         string `mapstructure:"name"`
+	Type         string `mapstructure:"type"`
 	MailFrom     string `mapstructure:"mail_from"`
 	SMTPHello    string `mapstructure:"smtp_hello"`
 	SMTPHost     string `mapstructure:"smtp_host"`
@@ -27,6 +29,10 @@ type config struct {
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
+	clients map[string]*mailClient
+}
+
+type mailClient struct {
 	From           string
 	SMTPHello      string
 	SMTPHost       string
@@ -37,52 +43,72 @@ type Sender struct {
 	Username       string
 	TemplateFile   string
 	TemplateName   string
-	logger         moira.Logger
 	Template       *template.Template
 	location       *time.Location
 	dateTimeFormat string
+	logger         moira.Logger
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
-	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat)
+func (sender *Sender) Init(opts moira.InitOptions) error {
+	client := &mailClient{}
+	senderIdent, err := client.fillSettings(opts.SenderSettings, opts.Logger, opts.Location, opts.DateTimeFormat)
 	if err != nil {
 		return err
 	}
-	sender.TemplateName, sender.Template, err = parseTemplate(sender.TemplateFile)
+
+	client.TemplateName, client.Template, err = parseTemplate(client.TemplateFile)
 	if err != nil {
 		return err
 	}
-	err = sender.tryDial()
+
+	err = client.tryDial()
+
+	if sender.clients == nil {
+		sender.clients = make(map[string]*mailClient)
+	}
+
+	sender.clients[senderIdent] = client
+
 	return err
 }
 
-func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (client *mailClient) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) (string, error) {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
-		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
+		return "", fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
 
-	sender.logger = logger
-	sender.From = cfg.MailFrom
-	sender.SMTPHello = cfg.SMTPHello
-	sender.SMTPHost = cfg.SMTPHost
-	sender.SMTPPort = cfg.SMTPPort
-	sender.InsecureTLS = cfg.InsecureTLS
-	sender.FrontURI = cfg.FrontURI
-	sender.Password = cfg.SMTPPass
-	sender.Username = cfg.SMTPUser
-	sender.TemplateFile = cfg.TemplateFile
-	sender.location = location
-	sender.dateTimeFormat = dateTimeFormat
-	if sender.Username == "" {
-		sender.Username = sender.From
+	client.logger = logger
+	client.From = cfg.MailFrom
+	client.SMTPHello = cfg.SMTPHello
+	client.SMTPHost = cfg.SMTPHost
+	client.SMTPPort = cfg.SMTPPort
+	client.InsecureTLS = cfg.InsecureTLS
+	client.FrontURI = cfg.FrontURI
+	client.Password = cfg.SMTPPass
+	client.Username = cfg.SMTPUser
+	client.TemplateFile = cfg.TemplateFile
+	client.location = location
+	client.dateTimeFormat = dateTimeFormat
+
+	if client.Username == "" {
+		client.Username = client.From
 	}
-	if sender.From == "" {
-		return fmt.Errorf("mail_from can't be empty")
+
+	if client.From == "" {
+		return "", fmt.Errorf("mail_from can't be empty")
 	}
-	return nil
+
+	var senderIdent string
+	if cfg.Name != "" {
+		senderIdent = cfg.Name
+	} else {
+		senderIdent = cfg.Type
+	}
+
+	return senderIdent, nil
 }
 
 func parseTemplate(templateFilePath string) (name string, parsedTemplate *template.Template, err error) {
@@ -91,37 +117,44 @@ func parseTemplate(templateFilePath string) (name string, parsedTemplate *templa
 		parsedTemplate, err = template.New(templateName).Parse(defaultTemplate)
 		return templateName, parsedTemplate, err
 	}
+
 	templateName := filepath.Base(templateFilePath)
 	parsedTemplate, err = template.New(templateName).Funcs(template.FuncMap{
 		"htmlSafe": func(html string) template.HTML {
 			return template.HTML(html)
 		},
 	}).ParseFiles(templateFilePath)
+
 	return templateName, parsedTemplate, err
 }
 
-func (sender *Sender) tryDial() error {
-	t, err := smtp.Dial(fmt.Sprintf("%s:%d", sender.SMTPHost, sender.SMTPPort))
+func (client *mailClient) tryDial() error {
+	t, err := smtp.Dial(fmt.Sprintf("%s:%d", client.SMTPHost, client.SMTPPort))
 	if err != nil {
 		return err
 	}
 	defer t.Close()
-	if sender.SMTPHello != "" {
-		if err := t.Hello(sender.SMTPHello); err != nil {
+
+	if client.SMTPHello != "" {
+		if err := t.Hello(client.SMTPHello); err != nil {
 			return err
 		}
 	}
-	if sender.Password != "" {
+
+	if client.Password != "" {
 		tlsConfig := &tls.Config{
-			InsecureSkipVerify: sender.InsecureTLS,
-			ServerName:         sender.SMTPHost,
+			InsecureSkipVerify: client.InsecureTLS,
+			ServerName:         client.SMTPHost,
 		}
+
 		if err := t.StartTLS(tlsConfig); err != nil {
 			return err
 		}
-		if err := t.Auth(smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPHost)); err != nil {
+
+		if err := t.Auth(smtp.PlainAuth("", client.Username, client.Password, client.SMTPHost)); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

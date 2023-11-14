@@ -12,6 +12,7 @@ import (
 // Structure that represents the Twilio configuration in the YAML file
 type config struct {
 	Type          string `mapstructure:"type"`
+	Name          string `mapstructure:"name"`
 	APIAsid       string `mapstructure:"api_asid"`
 	APIAuthToken  string `mapstructure:"api_authtoken"`
 	APIFromPhone  string `mapstructure:"api_fromphone"`
@@ -37,12 +38,13 @@ type twilioSender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
+func (sender *Sender) Init(opts moira.InitOptions) error {
 	var cfg config
-	err := mapstructure.Decode(senderSettings, &cfg)
+	err := mapstructure.Decode(opts.SenderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
+
 	apiType := cfg.Type
 
 	if cfg.APIAsid == "" {
@@ -62,9 +64,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	tSender := twilioSender{
 		client:       twilioClient,
 		APIFromPhone: cfg.APIFromPhone,
-		logger:       logger,
-		location:     location,
+		logger:       opts.Logger,
+		location:     opts.Location,
 	}
+
 	switch apiType {
 	case "twilio sms":
 		sender.sender = &twilioSenderSms{tSender}

@@ -3,6 +3,7 @@ package webhook
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,26 +12,36 @@ import (
 )
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
-	if sender.url == moira.VariableContactValue {
+	webhookClient, ok := sender.webhookClients[contact.Type]
+	if !ok {
+		return nil, fmt.Errorf("failed to build request because there is not %s client", contact.Type)
+	}
+
+	if webhookClient.url == moira.VariableContactValue {
 		sender.log.Warning().
-			String("potentially_dangerous_url", sender.url).
+			String("potentially_dangerous_url", webhookClient.url).
 			Msg("Found potentially dangerous url template, api contact validation is advised")
 	}
-	requestURL := buildRequestURL(sender.url, trigger, contact)
+
+	requestURL := buildRequestURL(webhookClient.url, trigger, contact)
 	requestBody, err := buildRequestBody(events, contact, trigger, plots, throttled)
 	if err != nil {
 		return nil, err
 	}
+
 	request, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return request, err
 	}
-	if sender.user != "" && sender.password != "" {
-		request.SetBasicAuth(sender.user, sender.password)
+
+	if webhookClient.user != "" && webhookClient.password != "" {
+		request.SetBasicAuth(webhookClient.user, webhookClient.password)
 	}
-	for k, v := range sender.headers {
+
+	for k, v := range webhookClient.headers {
 		request.Header.Set(k, v)
 	}
+
 	sender.log.Debug().
 		String("method", request.Method).
 		String("url", request.URL.String()).

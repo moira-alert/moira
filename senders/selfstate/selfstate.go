@@ -2,7 +2,6 @@ package selfstate
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/moira-alert/moira"
 )
@@ -14,8 +13,8 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
-	sender.logger = logger
+func (sender *Sender) Init(opts moira.InitOptions) error {
+	sender.logger = opts.Logger
 	return nil
 }
 

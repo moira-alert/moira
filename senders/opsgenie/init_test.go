@@ -13,6 +13,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const opsgenieType = "opsgenie"
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
@@ -20,60 +22,104 @@ func TestInit(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Init tests", t, func() {
-		sender := Sender{ImageStores: map[string]moira.ImageStore{
-			"s3": imageStore,
-		}}
+		sender := Sender{}
 
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]interface{}{}, logger, nil, "", dataBase)
-			So(err, ShouldResemble, fmt.Errorf("cannot read the api_key from the sender settings"))
-			So(sender, ShouldResemble, Sender{
+			opts := moira.InitOptions{
+				SenderSettings: map[string]interface{}{},
+				Logger:         logger,
+				Location:       nil,
 				ImageStores: map[string]moira.ImageStore{
 					"s3": imageStore,
-				}})
+				},
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldResemble, fmt.Errorf("cannot read the api_key from the sender settings"))
 		})
 
 		Convey("Has settings", func() {
 			imageStore.EXPECT().IsEnabled().Return(true)
 			senderSettings := map[string]interface{}{
+				"type":        opsgenieType,
 				"api_key":     "testkey",
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
-			So(sender.apiKey, ShouldResemble, "testkey")
-			So(sender.frontURI, ShouldResemble, "http://moira.uri")
-			So(sender.logger, ShouldResemble, logger)
-			So(sender.location, ShouldResemble, location)
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+				Location:       location,
+				ImageStores: map[string]moira.ImageStore{
+					"s3": imageStore,
+				},
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			client := sender.clients[opsgenieType]
+			So(client, ShouldNotBeNil)
+			So(client.apiKey, ShouldResemble, "testkey")
+			So(client.frontURI, ShouldResemble, "http://moira.uri")
+			So(client.logger, ShouldResemble, logger)
+			So(client.location, ShouldResemble, location)
 		})
 
 		Convey("Wrong image_store name", func() {
 			senderSettings := map[string]interface{}{
+				"type":        opsgenieType,
 				"front_uri":   "http://moira.uri",
 				"api_key":     "testkey",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
-			So(sender.imageStoreConfigured, ShouldResemble, false)
-			So(sender.imageStore, ShouldResemble, nil)
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+				Location:       location,
+				ImageStores: map[string]moira.ImageStore{
+					"s3": imageStore,
+				},
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			client := sender.clients[opsgenieType]
+			So(client, ShouldNotBeNil)
+			So(client.imageStoreConfigured, ShouldResemble, false)
+			So(client.imageStore, ShouldResemble, nil)
 		})
 
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
 			senderSettings := map[string]interface{}{
+				"type":        opsgenieType,
 				"api_key":     "testkey",
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender := Sender{ImageStores: map[string]moira.ImageStore{
-				"s3": imageStore,
-			}}
-			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
-			So(sender.imageStoreConfigured, ShouldResemble, false)
-			So(sender.imageStore, ShouldResemble, nil)
+
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+				Location:       location,
+				ImageStores: map[string]moira.ImageStore{
+					"s3": imageStore,
+				},
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
+
+			client := sender.clients[opsgenieType]
+			So(client, ShouldNotBeNil)
+			So(client.imageStoreConfigured, ShouldResemble, false)
+			So(client.imageStore, ShouldResemble, nil)
 		})
 	})
 }

@@ -5,45 +5,67 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/h2non/gock.v1"
 )
 
+const msteamsType = "msteams"
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
-	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	defer mockCtrl.Finish()
 
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		senderSettings := map[string]interface{}{
+			"type":       msteamsType,
 			"max_events": -1,
 		}
+
 		Convey("Minimal settings", func() {
-			err := sender.Init(senderSettings, logger, nil, "", dataBase)
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+				Location:       nil,
+			}
+
+			err := sender.Init(opts)
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
-			So(sender.maxEvents, ShouldResemble, -1)
+			So(sender.clients, ShouldNotBeNil)
+
+			client := sender.clients[msteamsType]
+			So(client, ShouldNotBeNil)
+			So(client.maxEvents, ShouldResemble, -1)
 		})
 	})
 }
 
 func TestMSTeamsHttpResponse(t *testing.T) {
-	sender := Sender{}
+	sender := Sender{
+		clients: map[string]*msteamsClient{
+			msteamsType: {},
+		},
+	}
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	location, _ := time.LoadLocation("UTC")
-	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	defer mockCtrl.Finish()
 
-	_ = sender.Init(map[string]interface{}{
+	senderSettings := map[string]interface{}{
+		"type":       msteamsType,
 		"max_events": -1,
-	}, logger, location, "", dataBase)
+	}
+
+	Convey("Test init", t, func() {
+		opts := moira.InitOptions{
+			SenderSettings: senderSettings,
+			Logger:         logger,
+			Location:       location,
+		}
+
+		err := sender.Init(opts)
+		So(err, ShouldBeNil)
+	})
 
 	event := moira.NotificationEvent{
 		TriggerID: "TriggerID",
@@ -72,7 +94,12 @@ some other text _italic text_`,
 				Post("/").
 				Reply(http.StatusOK).
 				BodyString("1")
-			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
+
+			contact := moira.ContactData{
+				Value: "https://outlook.office.com/webhook/foo",
+				Type:  msteamsType,
+			}
+
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err, ShouldResemble, nil)
 			So(gock.IsDone(), ShouldBeTrue)
@@ -83,7 +110,12 @@ some other text _italic text_`,
 				Post("/").
 				Reply(http.StatusOK).
 				BodyString("Some error")
-			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
+
+			contact := moira.ContactData{
+				Value: "https://outlook.office.com/webhook/foo",
+				Type:  msteamsType,
+			}
+
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err.Error(), ShouldResemble, "teams endpoint responded with an error: Some error")
 			So(gock.IsDone(), ShouldBeTrue)
@@ -94,7 +126,12 @@ some other text _italic text_`,
 				Post("/").
 				Reply(http.StatusInternalServerError).
 				BodyString("Some error")
-			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
+
+			contact := moira.ContactData{
+				Value: "https://outlook.office.com/webhook/foo",
+				Type:  msteamsType,
+			}
+
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err.Error(), ShouldResemble, "server responded with a non 2xx code: 500")
 			So(gock.IsDone(), ShouldBeTrue)
@@ -104,14 +141,18 @@ some other text _italic text_`,
 
 func TestValidWebhook(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := Sender{location: location, frontURI: "http://moira.url"}
+	client := msteamsClient{
+		location: location,
+		frontURI: "http://moira.url",
+	}
+
 	Convey("MS Teams Webhook validity", t, func() {
 		Convey("https://outlook.office.com/webhook/foo is valid", func() {
-			err := sender.isValidWebhookURL("https://outlook.office.com/webhook/foo")
+			err := client.isValidWebhookURL("https://outlook.office.com/webhook/foo")
 			So(err, ShouldResemble, nil)
 		})
 		Convey("https://moira.url is invalid", func() {
-			err := sender.isValidWebhookURL("https://moira.url")
+			err := client.isValidWebhookURL("https://moira.url")
 			So(err, ShouldNotResemble, nil)
 		})
 	})
@@ -119,7 +160,11 @@ func TestValidWebhook(t *testing.T) {
 
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := Sender{location: location, maxEvents: -1, frontURI: "http://moira.url"}
+	client := msteamsClient{
+		location:  location,
+		maxEvents: -1,
+		frontURI:  "http://moira.url",
+	}
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
@@ -144,7 +189,7 @@ some other text _italic text_`,
 
 		Convey("Card uses the correct colour for subject state", func() {
 			Convey("State is Red for Error", func() {
-				actual := sender.buildMessage([]moira.NotificationEvent{{
+				actual := client.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
 					Values:    map[string]float64{"t1": 123},
 					Timestamp: 150000000,
@@ -153,6 +198,7 @@ some other text _italic text_`,
 					State:     moira.StateERROR,
 					Message:   nil,
 				}}, moira.TriggerData{Name: "Name"}, false)
+
 				expected := MessageCard{
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
@@ -172,10 +218,12 @@ some other text _italic text_`,
 						},
 					},
 				}
+
 				So(actual, ShouldResemble, expected)
 			})
+
 			Convey("State is Orange for Warning", func() {
-				actual := sender.buildMessage([]moira.NotificationEvent{{
+				actual := client.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
 					Values:    map[string]float64{"t1": 123},
 					Timestamp: 150000000,
@@ -184,6 +232,7 @@ some other text _italic text_`,
 					State:     moira.StateWARN,
 					Message:   nil,
 				}}, moira.TriggerData{Name: "Name"}, false)
+
 				expected := MessageCard{
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
@@ -203,10 +252,12 @@ some other text _italic text_`,
 						},
 					},
 				}
+
 				So(actual, ShouldResemble, expected)
 			})
+
 			Convey("State is Green for OK", func() {
-				actual := sender.buildMessage([]moira.NotificationEvent{{
+				actual := client.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
 					Values:    map[string]float64{"t1": 123},
 					Timestamp: 150000000,
@@ -215,6 +266,7 @@ some other text _italic text_`,
 					State:     moira.StateOK,
 					Message:   nil,
 				}}, moira.TriggerData{Name: "Name"}, false)
+
 				expected := MessageCard{
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
@@ -234,10 +286,12 @@ some other text _italic text_`,
 						},
 					},
 				}
+
 				So(actual, ShouldResemble, expected)
 			})
+
 			Convey("State is Black for NODATA", func() {
-				actual := sender.buildMessage([]moira.NotificationEvent{{
+				actual := client.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
 					Values:    map[string]float64{"t1": 123},
 					Timestamp: 150000000,
@@ -246,6 +300,7 @@ some other text _italic text_`,
 					State:     moira.StateNODATA,
 					Message:   nil,
 				}}, moira.TriggerData{Name: "Name"}, false)
+
 				expected := MessageCard{
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
@@ -265,12 +320,13 @@ some other text _italic text_`,
 						},
 					},
 				}
+
 				So(actual, ShouldResemble, expected)
 			})
 		})
 
 		Convey("Create MessageCard with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := MessageCard{
 				Context:     "http://schema.org/extensions",
 				MessageType: "MessageCard",
@@ -302,6 +358,7 @@ some other text _italic text_`,
 					},
 				},
 			}
+
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -325,7 +382,8 @@ some other text _italic text_`,
 					},
 				},
 			}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
+
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -365,7 +423,8 @@ some other text _italic text_`,
 					},
 				},
 			}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, trigger, true)
+
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -421,7 +480,8 @@ some other text _italic text_`,
 					},
 				},
 			}
-			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
+			actual := client.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
+
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -445,7 +505,8 @@ some other text _italic text_`,
 					},
 				},
 			}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
+
 			So(actual, ShouldResemble, expected)
 		})
 	})

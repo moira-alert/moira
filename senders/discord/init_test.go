@@ -38,7 +38,14 @@ func TestInit(t *testing.T) {
 		sender := Sender{}
 
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]interface{}{}, logger, nil, "", database)
+			ops := moira.InitOptions{
+				SenderSettings: map[string]interface{}{},
+				Logger:         logger,
+				Location:       nil,
+				Database:       database,
+			}
+
+			err := sender.Init(ops)
 			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
 			So(sender, ShouldResemble, Sender{})
 		})
@@ -50,7 +57,15 @@ func TestInit(t *testing.T) {
 				"front_uri": "http://moira.uri",
 			}
 
-			sender.Init(senderSettings, logger, location, "15:04", database) //nolint
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings,
+				Logger:         logger,
+				Location:       location,
+				Database:       database,
+			}
+
+			err := sender.Init(opts)
+			So(err, ShouldBeNil)
 			So(sender.clients, ShouldHaveLength, 1)
 			client := sender.clients[discordType]
 
@@ -68,7 +83,14 @@ func TestInit(t *testing.T) {
 				"front_uri": "http://moira.uri",
 			}
 
-			err := sender.Init(senderSettings1, logger, location, "15:04", database)
+			opts := moira.InitOptions{
+				SenderSettings: senderSettings1,
+				Logger:         logger,
+				Location:       location,
+				Database:       database,
+			}
+
+			err := sender.Init(opts)
 			So(err, ShouldBeNil)
 			So(sender.clients, ShouldHaveLength, 1)
 
@@ -85,7 +107,9 @@ func TestInit(t *testing.T) {
 				"front_uri": "http://moira.uri",
 			}
 
-			err = sender.Init(senderSettings2, logger, location, "15:04", database)
+			opts.SenderSettings = senderSettings2
+
+			err = sender.Init(opts)
 			So(err, ShouldBeNil)
 
 			So(sender.clients, ShouldHaveLength, 2)

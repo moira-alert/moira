@@ -13,46 +13,48 @@ import (
 )
 
 func TestGetPushoverPriority(t *testing.T) {
-	sender := Sender{}
+	client := opsgenieClient{}
 	Convey("All events has OK state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateOK}, {State: moira.StateOK}})
+		priority := client.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateOK}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, alert.P5)
 	})
 
 	Convey("One of events has WARN state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateWARN}, {State: moira.StateOK}})
+		priority := client.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateWARN}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, alert.P3)
 	})
 
 	Convey("One of events has NODATA state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateNODATA}, {State: moira.StateOK}})
+		priority := client.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateNODATA}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, alert.P3)
 	})
 
 	Convey("One of events has ERROR state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateERROR}, {State: moira.StateOK}})
+		priority := client.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateERROR}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, alert.P1)
 	})
 
 	Convey("One of events has EXCEPTION state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateEXCEPTION}, {State: moira.StateOK}})
+		priority := client.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateEXCEPTION}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, alert.P1)
 	})
 
 	Convey("Events has WARN and ERROR states", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateWARN}, {State: moira.StateERROR}})
+		priority := client.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateWARN}, {State: moira.StateERROR}})
 		So(priority, ShouldResemble, alert.P1)
 	})
 
 	Convey("Events has ERROR and WARN states", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateERROR}, {State: moira.StateWARN}})
+		priority := client.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateERROR}, {State: moira.StateWARN}})
 		So(priority, ShouldResemble, alert.P1)
 	})
 }
 
 func TestBuildMoiraMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := Sender{location: location}
+	client := opsgenieClient{
+		location: location,
+	}
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
@@ -69,13 +71,13 @@ func TestBuildMoiraMessage(t *testing.T) {
 		}
 
 		Convey("Print moira message with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
+			actual := client.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
 			expected := "02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and desc", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, trigger)
+			actual := client.buildMessage([]moira.NotificationEvent{event}, false, trigger)
 			expected := "<h2>header</h2>\n\n<p><strong>bold text</strong> <em>italics</em>\n<code>code</code></p>\n" + "02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
@@ -83,13 +85,13 @@ func TestBuildMoiraMessage(t *testing.T) {
 		Convey("Print moira message with one event and message", func() {
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
+			actual := client.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
 			expected := "02:40 (GMT+00:00): Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, true, moira.TriggerData{})
+			actual := client.buildMessage([]moira.NotificationEvent{event}, true, moira.TriggerData{})
 			expected := `02:40 (GMT+00:00): Metric = 123 (OK to NODATA)
 
 Please, fix your system or tune this trigger to generate less events.`
@@ -99,24 +101,24 @@ Please, fix your system or tune this trigger to generate less events.`
 }
 
 func TestBuildTitle(t *testing.T) {
-	sender := Sender{}
+	client := opsgenieClient{}
 	Convey("Build title with three events with max ERROR state and two tags without throttling", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, false)
+		title := client.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, false)
 		So(title, ShouldResemble, "ERROR Name [tag1][tag2] (4)")
 	})
 
 	Convey("Build title with three events with last OK state and two tags when throttling", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, true)
+		title := client.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, true)
 		So(title, ShouldResemble, "OK Name [tag1][tag2] (4)")
 	})
 
 	Convey("Build title with three events with max ERROR state empty trigger without throttling", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{}, false)
+		title := client.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{}, false)
 		So(title, ShouldResemble, "ERROR   (4)")
 	})
 
 	Convey("Build title with three events with last OK state empty trigger when throttling", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{}, true)
+		title := client.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{}, true)
 		So(title, ShouldResemble, "OK   (4)")
 	})
 
@@ -127,12 +129,12 @@ func TestBuildTitle(t *testing.T) {
 		}
 
 		Convey("without throttling", func() {
-			title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"}, false)
+			title := client.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"}, false)
 			So(title, ShouldResemble, "ERROR Name [tag1][tag2][tag3].... (4)")
 		})
 
 		Convey("when throttling", func() {
-			title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"}, true)
+			title := client.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"}, true)
 			So(title, ShouldResemble, "OK Name [tag1][tag2][tag3].... (4)")
 		})
 	})
@@ -145,7 +147,7 @@ func TestMakeCreateAlertRequest(t *testing.T) {
 	defer mockCtrl.Finish()
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
-	sender := Sender{
+	client := opsgenieClient{
 		frontURI:             "https://my-moira.com",
 		location:             location,
 		logger:               logger,
@@ -153,38 +155,44 @@ func TestMakeCreateAlertRequest(t *testing.T) {
 		imageStore:           imageStore,
 	}
 	imageStore.EXPECT().StoreImage([]byte(`test`)).Return("testlink", nil)
+
 	Convey("Build CreateAlertRequest", t, func() {
-		event := []moira.NotificationEvent{{
-			Values:    map[string]float64{"t1": 123},
-			Timestamp: 150000000,
-			Metric:    "Metric",
-			OldState:  moira.StateOK,
-			State:     moira.StateERROR,
-		},
+		event := []moira.NotificationEvent{
+			{
+				Values:    map[string]float64{"t1": 123},
+				Timestamp: 150000000,
+				Metric:    "Metric",
+				OldState:  moira.StateOK,
+				State:     moira.StateERROR,
+			},
 		}
+
 		trigger := moira.TriggerData{
 			ID:   "SomeID",
 			Name: "TriggerName",
 			Tags: []string{"tag1", "tag2"},
 		}
+
 		contact := moira.ContactData{
 			Value: "123",
 		}
-		actual := sender.makeCreateAlertRequest(event, contact, trigger, [][]byte{[]byte(`test`)}, false)
+
+		actual := client.makeCreateAlertRequest(event, contact, trigger, [][]byte{[]byte(`test`)}, false)
 		expected := &alert.CreateAlertRequest{
-			Message:     sender.buildTitle(event, trigger, false),
-			Description: sender.buildMessage(event, false, trigger),
+			Message:     client.buildTitle(event, trigger, false),
+			Description: client.buildMessage(event, false, trigger),
 			Alias:       "SomeID",
 			Responders: []alert.Responder{
 				{Type: alert.EscalationResponder, Name: contact.Value},
 			},
 			Tags:     trigger.Tags,
 			Source:   "Moira",
-			Priority: sender.getMessagePriority(event),
+			Priority: client.getMessagePriority(event),
 			Details: map[string]string{
 				"image_url": "testlink",
 			},
 		}
+
 		So(actual, ShouldResemble, expected)
 	})
 }

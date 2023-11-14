@@ -11,11 +11,17 @@ import (
 
 // Structure that represents the PagerDuty configuration in the YAML file
 type config struct {
+	Name     string `mapstructure:"name"`
+	Type     string `mapstructure:"type"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
 // Sender implements moira sender interface for pagerduty
 type Sender struct {
+	clients map[string]*pagerdutyClient
+}
+
+type pagerdutyClient struct {
 	ImageStores          map[string]moira.ImageStore
 	imageStoreID         string
 	imageStore           moira.ImageStore
@@ -26,19 +32,37 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures the pagerduty client
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, _ moira.Database) error {
+func (sender *Sender) Init(opts moira.InitOptions) error {
 	var cfg config
-	err := mapstructure.Decode(senderSettings, &cfg)
+	err := mapstructure.Decode(opts.SenderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to pagerduty config: %w", err)
 	}
 
-	sender.frontURI = cfg.FrontURI
+	imageStoreID, imageStore, imageStoreConfigured :=
+		senders.ReadImageStoreConfig(opts.SenderSettings, opts.ImageStores, opts.Logger)
 
-	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
-		senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
+	client := &pagerdutyClient{
+		frontURI:             cfg.FrontURI,
+		imageStoreID:         imageStoreID,
+		imageStore:           imageStore,
+		imageStoreConfigured: imageStoreConfigured,
+		logger:               opts.Logger,
+		location:             opts.Location,
+	}
 
-	sender.logger = logger
-	sender.location = location
+	var senderIdent string
+	if cfg.Name != "" {
+		senderIdent = cfg.Name
+	} else {
+		senderIdent = cfg.Type
+	}
+
+	if sender.clients == nil {
+		sender.clients = make(map[string]*pagerdutyClient)
+	}
+
+	sender.clients[senderIdent] = client
+
 	return nil
 }

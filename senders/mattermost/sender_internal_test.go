@@ -13,35 +13,47 @@ import (
 
 	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock "github.com/moira-alert/moira/mock/notifier/mattermost"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const mattermostType = "mattermost"
+
 func TestSendEvents(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
-	sender := &Sender{}
-	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	defer mockCtrl.Finish()
+	sender := &Sender{
+		clients: map[string]*mattermostClient{
+			mattermostType: {},
+		},
+	}
 
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]interface{}{ // redundant, but necessary config
+			"type":         mattermostType,
 			"url":          "qwerty",
 			"api_token":    "qwerty",
 			"front_uri":    "qwerty",
 			"insecure_tls": true,
 		}
-		err := sender.Init(senderSettings, logger, nil, "", dataBase)
+
+		opts := moira.InitOptions{
+			SenderSettings: senderSettings,
+			Logger:         logger,
+			Location:       nil,
+		}
+
+		err := sender.Init(opts)
 		So(err, ShouldBeNil)
 
 		Convey("When client return error, SendEvents should return error", func() {
 			ctrl := gomock.NewController(t)
 			client := mock.NewMockClient(ctrl)
 			client.EXPECT().CreatePost(context.Background(), gomock.Any()).Return(nil, nil, errors.New(""))
-			sender.client = client
+			mattermostClient := sender.clients[mattermostType]
+			mattermostClient.client = client
+			sender.clients[mattermostType] = mattermostClient
 
-			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
+			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{Type: mattermostType}, moira.TriggerData{}, make([][]byte, 0), false
 			err = sender.SendEvents(events, contact, trigger, plots, throttled)
 			So(err, ShouldNotBeNil)
 		})
@@ -50,9 +62,11 @@ func TestSendEvents(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			client := mock.NewMockClient(ctrl)
 			client.EXPECT().CreatePost(context.Background(), gomock.Any()).Return(&model.Post{Id: "postID"}, nil, nil)
-			sender.client = client
+			mattermostClient := sender.clients[mattermostType]
+			mattermostClient.client = client
+			sender.clients[mattermostType] = mattermostClient
 
-			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
+			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{Type: mattermostType}, moira.TriggerData{}, make([][]byte, 0), false
 			err = sender.SendEvents(events, contact, trigger, plots, throttled)
 			So(err, ShouldBeNil)
 		})
@@ -65,12 +79,15 @@ func TestSendEvents(t *testing.T) {
 				Return(
 					&model.FileUploadResponse{
 						FileInfos: []*model.FileInfo{{Id: "fileID"}},
-					}, nil, nil)
-			sender.client = client
+					}, nil, nil,
+				)
+			mattermostClient := sender.clients[mattermostType]
+			mattermostClient.client = client
+			sender.clients[mattermostType] = mattermostClient
 
 			plots := make([][]byte, 0)
 			plots = append(plots, []byte("my_awesome_plot"))
-			events, contact, trigger, throttled := moira.NotificationEvents{}, moira.ContactData{Value: "contactDataID"}, moira.TriggerData{ID: "triggerID"}, false
+			events, contact, trigger, throttled := moira.NotificationEvents{}, moira.ContactData{Type: mattermostType, Value: "contactDataID"}, moira.TriggerData{ID: "triggerID"}, false
 			err = sender.SendEvents(events, contact, trigger, plots, throttled)
 			So(err, ShouldBeNil)
 		})
@@ -80,19 +97,27 @@ func TestSendEvents(t *testing.T) {
 func TestBuildMessage(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	sender := &Sender{}
-	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	defer mockCtrl.Finish()
 
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]interface{}{
-			"url": "qwerty", "api_token": "qwerty", // redundant, but necessary config
+			"type":         mattermostType,
+			"url":          "qwerty",
+			"api_token":    "qwerty", // redundant, but necessary config
 			"front_uri":    "http://moira.url",
 			"insecure_tls": true,
 		}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(senderSettings, logger, location, "", dataBase)
+
+		opts := moira.InitOptions{
+			SenderSettings: senderSettings,
+			Logger:         logger,
+			Location:       location,
+		}
+
+		err := sender.Init(opts)
 		So(err, ShouldBeNil)
+
+		mattermostClient := sender.clients[mattermostType]
 
 		event := moira.NotificationEvent{
 			TriggerID: "TriggerID",
@@ -113,7 +138,7 @@ func TestBuildMessage(t *testing.T) {
 
 		Convey("Message with one event", func() {
 			events, throttled := moira.NotificationEvents{event}, false
-			msg := sender.buildMessage(events, trigger, throttled)
+			msg := mattermostClient.buildMessage(events, trigger, throttled)
 
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
@@ -124,7 +149,7 @@ func TestBuildMessage(t *testing.T) {
 
 		Convey("Message with one event and throttled", func() {
 			events, throttled := moira.NotificationEvents{event}, true
-			msg := sender.buildMessage(events, trigger, throttled)
+			msg := mattermostClient.buildMessage(events, trigger, throttled)
 
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
@@ -135,7 +160,7 @@ func TestBuildMessage(t *testing.T) {
 		})
 
 		Convey("Moira message with 3 events", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event}, trigger, false)
+			actual := mattermostClient.buildMessage([]moira.NotificationEvent{event, event, event}, trigger, false)
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
 				"```\n" +
@@ -170,7 +195,7 @@ func TestBuildMessage(t *testing.T) {
 					events = append(events, event)
 				}
 
-				actual := sender.buildMessage(events, moira.TriggerData{Desc: longDesc}, false)
+				actual := mattermostClient.buildMessage(events, moira.TriggerData{Desc: longDesc}, false)
 				expected := "**NODATA**\n" +
 					strings.Repeat("a", 2100) + "\n" +
 					"```\n" +
@@ -181,7 +206,7 @@ func TestBuildMessage(t *testing.T) {
 
 			Convey("Many events. eventString > msgLimit/2", func() {
 				desc := strings.Repeat("a", lessThanHalf)
-				actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: desc}, false)
+				actual := mattermostClient.buildMessage(longEvents, moira.TriggerData{Desc: desc}, false)
 				expected := "**NODATA**\n" +
 					desc + "\n" +
 					"```\n" +
@@ -191,7 +216,7 @@ func TestBuildMessage(t *testing.T) {
 			})
 
 			Convey("Long description and many events. both desc and events > msgLimit/2", func() {
-				actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: longDesc}, false)
+				actual := mattermostClient.buildMessage(longEvents, moira.TriggerData{Desc: longDesc}, false)
 				expected := "**NODATA**\n" +
 					strings.Repeat("a", 1984) + "...\n" +
 					"```\n" +
