@@ -50,7 +50,6 @@ func TestMSTeamsHttpResponse(t *testing.T) {
 	}
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	location, _ := time.LoadLocation("UTC")
-
 	senderSettings := map[string]interface{}{
 		"type":       msteamsType,
 		"max_events": -1,
