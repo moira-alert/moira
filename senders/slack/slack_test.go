@@ -6,19 +6,25 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	slack_client "github.com/slack-go/slack"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		senderSettings := map[string]interface{}{}
 		Convey("Empty map", func() {
-			err := sender.Init(senderSettings, logger, nil, "")
+			err := sender.Init(senderSettings, logger, nil, "", dataBase)
 			So(err, ShouldResemble, fmt.Errorf("can not read slack api_token from config"))
 			So(sender, ShouldResemble, Sender{})
 		})
@@ -28,28 +34,28 @@ func TestInit(t *testing.T) {
 			client := slack_client.New("123")
 
 			Convey("use_emoji not set", func() {
-				err := sender.Init(senderSettings, logger, nil, "")
+				err := sender.Init(senderSettings, logger, nil, "", dataBase)
 				So(err, ShouldBeNil)
 				So(sender, ShouldResemble, Sender{logger: logger, client: client})
 			})
 
 			Convey("use_emoji set to false", func() {
 				senderSettings["use_emoji"] = false
-				err := sender.Init(senderSettings, logger, nil, "")
+				err := sender.Init(senderSettings, logger, nil, "", dataBase)
 				So(err, ShouldBeNil)
 				So(sender, ShouldResemble, Sender{logger: logger, client: client})
 			})
 
 			Convey("use_emoji set to true", func() {
 				senderSettings["use_emoji"] = true
-				err := sender.Init(senderSettings, logger, nil, "")
+				err := sender.Init(senderSettings, logger, nil, "", dataBase)
 				So(err, ShouldBeNil)
 				So(sender, ShouldResemble, Sender{logger: logger, useEmoji: true, client: client})
 			})
 
 			Convey("use_emoji set to something wrong", func() {
 				senderSettings["use_emoji"] = 123
-				err := sender.Init(senderSettings, logger, nil, "")
+				err := sender.Init(senderSettings, logger, nil, "", dataBase)
 				So(err, ShouldNotBeNil)
 			})
 		})

@@ -12,9 +12,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -26,6 +28,10 @@ const (
 var logger, _ = logging.GetLogger("webhook")
 
 func TestSender_SendEvents(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
 	Convey("Receive test webhook", t, func() {
 		ts := httptest.NewServer(
 			http.HandlerFunc(
@@ -58,7 +64,7 @@ func TestSender_SendEvents(t *testing.T) {
 			"password": testPass,
 		}
 		sender := Sender{}
-		err := sender.Init(senderSettings, logger, time.UTC, "")
+		err := sender.Init(senderSettings, logger, time.UTC, "", dataBase)
 		So(err, ShouldBeNil)
 
 		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)

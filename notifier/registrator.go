@@ -41,7 +41,7 @@ const (
 )
 
 // RegisterSenders watch on senders config and register all configured senders
-func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
+func (notifier *StandardNotifier) RegisterSenders() error { //nolint
 	var err error
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
@@ -53,11 +53,11 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		case scriptSender:
 			err = notifier.RegisterSender(senderSettings, &script.Sender{})
 		case discordSender:
-			err = notifier.RegisterSender(senderSettings, &discord.Sender{DataBase: connector})
+			err = notifier.RegisterSender(senderSettings, &discord.Sender{})
 		case slackSender:
 			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case telegramSender:
-			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
+			err = notifier.RegisterSender(senderSettings, &telegram.Sender{})
 		case msTeamsSender:
 			err = notifier.RegisterSender(senderSettings, &msteams.Sender{})
 		case pagerdutySender:
@@ -85,7 +85,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 	}
 	if notifier.config.SelfStateEnabled {
 		selfStateSettings := map[string]interface{}{"type": selfStateSender}
-		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
+		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{}); err != nil {
 			notifier.logger.Warning().
 				Error(err).
 				Msg("Failed to register selfstate sender")
@@ -113,7 +113,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 		senderIdent = senderType
 	}
 
-	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
+	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat, notifier.database)
 	if err != nil {
 		return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderIdent, err.Error())
 	}

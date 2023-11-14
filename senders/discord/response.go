@@ -6,9 +6,9 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func (sender *Sender) getResponse(m *discordgo.MessageCreate, channel *discordgo.Channel) (string, error) {
+func (client *discordClient) getResponse(m *discordgo.MessageCreate, channel *discordgo.Channel) (string, error) {
 	// Ignore all messages created by the bot itself
-	if m.Author.ID == sender.botUserID {
+	if m.Author.ID == client.botUserID {
 		return "", nil
 	}
 
@@ -16,14 +16,14 @@ func (sender *Sender) getResponse(m *discordgo.MessageCreate, channel *discordgo
 	if m.Content == "!start" { //nolint
 		switch channel.Type {
 		case discordgo.ChannelTypeDM:
-			err := sender.DataBase.SetUsernameID(messenger, "@"+m.Author.Username, channel.ID)
+			err := client.dataBase.SetUsernameID(messenger, "@"+m.Author.Username, channel.ID)
 			if err != nil {
 				return "", fmt.Errorf("error while setting the channel ID for user: %s", err)
 			}
 			msg := fmt.Sprintf("Okay, %s, your id is %s", m.Author.Username, channel.ID)
 			return msg, nil
 		case discordgo.ChannelTypeGuildText:
-			err := sender.DataBase.SetUsernameID(messenger, channel.Name, channel.ID)
+			err := client.dataBase.SetUsernameID(messenger, channel.Name, channel.ID)
 			if err != nil {
 				return "", fmt.Errorf("error while setting the channel ID for text channel: %s", err)
 			}

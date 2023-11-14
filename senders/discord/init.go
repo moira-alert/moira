@@ -12,29 +12,35 @@ import (
 
 const (
 	messenger       = "discord"
-	discordLockName = "moira-discord-users:moira-bot-host"
+	discordLockName = "moira-discord-users:moira-bot-host:"
 	discordLockTTL  = 30 * time.Second
 	workerName      = "DiscordBot"
 )
 
 // Structure that represents the Discord configuration in the YAML file
 type config struct {
+	Type     string `mapsctructure:"type"`
+	Name     string `mapstructure:"name"`
 	Token    string `mapstructure:"token"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
 // Sender implements moira sender interface for discord
 type Sender struct {
-	DataBase  moira.Database
-	logger    moira.Logger
-	location  *time.Location
-	session   *discordgo.Session
+	clients map[string]*discordClient
+}
+
+type discordClient struct {
 	frontURI  string
 	botUserID string
+	dataBase  moira.Database
+	location  *time.Location
+	session   *discordgo.Session
+	logger    moira.Logger
 }
 
 // Init reads the yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, database moira.Database) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -44,55 +50,75 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.Token == "" {
 		return fmt.Errorf("cannot read the discord token from the config")
 	}
-	sender.session, err = discordgo.New("Bot " + cfg.Token)
+
+	session, err := discordgo.New("Bot " + cfg.Token)
 	if err != nil {
 		return fmt.Errorf("error creating discord session: %s", err)
 	}
-	sender.logger = logger
-	sender.frontURI = cfg.FrontURI
-	sender.location = location
+
+	client := &discordClient{
+		session:  session,
+		logger:   logger,
+		frontURI: cfg.FrontURI,
+		location: location,
+		dataBase: database,
+	}
 
 	handleMsg := func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		channel, err := s.Channel(m.ChannelID)
 		if err != nil {
-			sender.logger.Error().
+			client.logger.Error().
 				Error(err).
 				Msg("error while getting the channel details")
 		}
 
-		msg, err := sender.getResponse(m, channel)
+		msg, err := client.getResponse(m, channel)
 		if err != nil {
-			sender.logger.Error().
+			client.logger.Error().
 				Error(err).
 				Msg("failed to handle incoming message")
 		}
 		s.ChannelMessageSend(m.ChannelID, msg) //nolint
 	}
-	sender.session.AddHandler(handleMsg)
+	session.AddHandler(handleMsg)
 
-	go sender.runBot()
+	if sender.clients == nil {
+		sender.clients = make(map[string]*discordClient)
+	}
+
+	var senderIdent string
+	if cfg.Name != "" {
+		senderIdent = cfg.Name
+	} else {
+		senderIdent = cfg.Type
+	}
+
+	sender.clients[senderIdent] = client
+
+	go client.runBot(senderIdent)
+
 	return nil
 }
 
-func (sender *Sender) runBot() {
+func (client *discordClient) runBot(senderIdent string) {
 	workerAction := func(stop <-chan struct{}) error {
-		err := sender.session.Open()
+		err := client.session.Open()
 		if err != nil {
-			sender.logger.Error().
+			client.logger.Error().
 				Error(err).
 				Msg("error creating a connection to discord")
 			return nil
 		}
-		sender.botUserID = sender.session.State.User.ID
-		defer sender.session.Close()
+		client.botUserID = client.session.State.User.ID
+		defer client.session.Close()
 		<-stop
 		return nil
 	}
 
 	worker.NewWorker(
 		workerName,
-		sender.logger,
-		sender.DataBase.NewLock(discordLockName, discordLockTTL),
+		client.logger,
+		client.dataBase.NewLock(discordLockName+senderIdent, discordLockTTL),
 		workerAction,
 	).Run(nil)
 }

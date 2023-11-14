@@ -18,7 +18,9 @@ func TestInit(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Init tests", t, func() {
 		sender := Sender{ImageStores: map[string]moira.ImageStore{
@@ -26,7 +28,7 @@ func TestInit(t *testing.T) {
 		}}
 
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]interface{}{}, logger, nil, "")
+			err := sender.Init(map[string]interface{}{}, logger, nil, "", dataBase)
 			So(err, ShouldResemble, fmt.Errorf("cannot read the api_key from the sender settings"))
 			So(sender, ShouldResemble, Sender{
 				ImageStores: map[string]moira.ImageStore{
@@ -41,7 +43,7 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.apiKey, ShouldResemble, "testkey")
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
@@ -54,7 +56,7 @@ func TestInit(t *testing.T) {
 				"api_key":     "testkey",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})
@@ -69,7 +71,7 @@ func TestInit(t *testing.T) {
 			sender := Sender{ImageStores: map[string]moira.ImageStore{
 				"s3": imageStore,
 			}}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})

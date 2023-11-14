@@ -113,7 +113,7 @@ func main() {
 	)
 
 	// Register moira senders
-	if err := sender.RegisterSenders(database); err != nil {
+	if err := sender.RegisterSenders(); err != nil {
 		logger.Fatal().
 			Error(err).
 			Msg("Can not configure senders")

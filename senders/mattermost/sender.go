@@ -34,7 +34,7 @@ type Sender struct {
 }
 
 // Init configures Sender.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string, _ moira.Database) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {

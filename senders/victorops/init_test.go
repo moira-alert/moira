@@ -19,6 +19,8 @@ func TestInit(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	Convey("Init tests", t, func() {
@@ -26,7 +28,7 @@ func TestInit(t *testing.T) {
 			"s3": imageStore,
 		}}
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]interface{}{}, logger, nil, "")
+			err := sender.Init(map[string]interface{}{}, logger, nil, "", dataBase)
 			So(err, ShouldResemble, fmt.Errorf("cannot read the routing url from the yaml config"))
 			So(sender, ShouldResemble, Sender{
 				ImageStores: map[string]moira.ImageStore{
@@ -41,7 +43,7 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.routingURL, ShouldResemble, "https://testurl.com")
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
@@ -54,7 +56,7 @@ func TestInit(t *testing.T) {
 				"routing_url": "https://testurl.com",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})
@@ -68,7 +70,7 @@ func TestInit(t *testing.T) {
 			sender := Sender{ImageStores: map[string]moira.ImageStore{
 				"s3": imageStore,
 			}}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})

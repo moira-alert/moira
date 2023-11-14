@@ -32,7 +32,7 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string, database moira.Database) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -47,6 +47,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI
 	sender.location = location
+
 	return nil
 }
 

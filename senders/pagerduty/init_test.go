@@ -17,6 +17,8 @@ func TestInit(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	Convey("Init tests", t, func() {
@@ -30,22 +32,24 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
 			So(sender.imageStoreConfigured, ShouldResemble, true)
 			So(sender.imageStore, ShouldResemble, imageStore)
 		})
+
 		Convey("Wrong image_store name", func() {
 			senderSettings := map[string]interface{}{
 				"front_uri":   "http://moira.uri",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})
+
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
 			senderSettings := map[string]interface{}{
@@ -55,7 +59,7 @@ func TestInit(t *testing.T) {
 			sender := Sender{ImageStores: map[string]moira.ImageStore{
 				"s3": imageStore,
 			}}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender.Init(senderSettings, logger, location, "15:04", dataBase) //nolint
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})

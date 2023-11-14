@@ -13,6 +13,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock "github.com/moira-alert/moira/mock/notifier/mattermost"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -20,6 +21,9 @@ import (
 func TestSendEvents(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	sender := &Sender{}
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
 
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]interface{}{ // redundant, but necessary config
@@ -28,7 +32,7 @@ func TestSendEvents(t *testing.T) {
 			"front_uri":    "qwerty",
 			"insecure_tls": true,
 		}
-		err := sender.Init(senderSettings, logger, nil, "")
+		err := sender.Init(senderSettings, logger, nil, "", dataBase)
 		So(err, ShouldBeNil)
 
 		Convey("When client return error, SendEvents should return error", func() {
@@ -76,6 +80,9 @@ func TestSendEvents(t *testing.T) {
 func TestBuildMessage(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	sender := &Sender{}
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
 
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]interface{}{
@@ -84,7 +91,7 @@ func TestBuildMessage(t *testing.T) {
 			"insecure_tls": true,
 		}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(senderSettings, logger, location, "")
+		err := sender.Init(senderSettings, logger, location, "", dataBase)
 		So(err, ShouldBeNil)
 
 		event := moira.NotificationEvent{

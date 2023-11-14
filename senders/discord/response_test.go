@@ -24,11 +24,14 @@ func TestGetResponseMessage(t *testing.T) {
 	channel := &discordgo.Channel{}
 
 	Convey("getResponse tests", t, func() {
-		sender := Sender{DataBase: dataBase, botUserID: "123"}
+		client := &discordClient{
+			botUserID: "123",
+			dataBase:  dataBase,
+		}
 
 		Convey("Message from self", func() {
-			message.Author.ID = sender.botUserID
-			response, err := sender.getResponse(message, channel)
+			message.Author.ID = client.botUserID
+			response, err := client.getResponse(message, channel)
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, "")
 		})
@@ -36,7 +39,7 @@ func TestGetResponseMessage(t *testing.T) {
 		Convey("Message is not !start", func() {
 			message.Author.ID = "456" //nolint
 			message.Content = "not !start"
-			response, err := sender.getResponse(message, channel)
+			response, err := client.getResponse(message, channel)
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, "")
 		})
@@ -47,7 +50,7 @@ func TestGetResponseMessage(t *testing.T) {
 			channel.ID = "456"
 			message.Content = "!start"
 			message.Author.Username = "User"
-			response, err := sender.getResponse(message, channel)
+			response, err := client.getResponse(message, channel)
 			So(err, ShouldBeNil)
 			msg := fmt.Sprintf("Okay, %s, your id is %s", message.Author.Username, channel.ID)
 			So(response, ShouldResemble, msg)
@@ -59,7 +62,7 @@ func TestGetResponseMessage(t *testing.T) {
 			channel.ID = "456"
 			channel.Name = "testchan"
 			message.Content = "!start"
-			response, err := sender.getResponse(message, channel)
+			response, err := client.getResponse(message, channel)
 			So(err, ShouldBeNil)
 			msg := fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", channel.Name)
 			So(response, ShouldResemble, msg)
@@ -67,7 +70,7 @@ func TestGetResponseMessage(t *testing.T) {
 
 		Convey("unsupported channel", func() {
 			channel.Type = discordgo.ChannelTypeGuildVoice
-			response, err := sender.getResponse(message, channel)
+			response, err := client.getResponse(message, channel)
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, "Unsupported channel type")
 		})

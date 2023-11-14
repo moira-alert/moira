@@ -6,24 +6,30 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	pushover_client "github.com/gregdel/pushover"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSender_Init(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
 	Convey("Empty map", t, func() {
 		sender := Sender{}
-		err := sender.Init(map[string]interface{}{}, logger, nil, "")
+		err := sender.Init(map[string]interface{}{}, logger, nil, "", dataBase)
 		So(err, ShouldResemble, fmt.Errorf("can not read pushover api_token from config"))
 		So(sender, ShouldResemble, Sender{})
 	})
 
 	Convey("Settings has api_token", t, func() {
 		sender := Sender{}
-		err := sender.Init(map[string]interface{}{"api_token": "123"}, logger, nil, "")
+		err := sender.Init(map[string]interface{}{"api_token": "123"}, logger, nil, "", dataBase)
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), logger: logger})
 	})
@@ -31,7 +37,7 @@ func TestSender_Init(t *testing.T) {
 	Convey("Settings has all data", t, func() {
 		sender := Sender{}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(map[string]interface{}{"api_token": "123", "front_uri": "321"}, logger, location, "")
+		err := sender.Init(map[string]interface{}{"api_token": "123", "front_uri": "321"}, logger, location, "", dataBase)
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), frontURI: "321", logger: logger, location: location})
 	})

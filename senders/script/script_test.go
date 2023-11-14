@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -46,32 +48,36 @@ var execStringTestCases = []execStringTestCase{
 
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		settings := map[string]interface{}{}
 		Convey("Empty map", func() {
-			err := sender.Init(settings, logger, nil, "")
+			err := sender.Init(settings, logger, nil, "", dataBase)
 			So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		settings["name"] = "script_name"
 		Convey("Empty exec", func() {
-			err := sender.Init(settings, logger, nil, "")
+			err := sender.Init(settings, logger, nil, "", dataBase)
 			So(err, ShouldResemble, fmt.Errorf("file  not found"))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		Convey("Exec with not exists file", func() {
 			settings["exec"] = "./test_file1"
-			err := sender.Init(settings, logger, nil, "")
+			err := sender.Init(settings, logger, nil, "", dataBase)
 			So(err, ShouldResemble, fmt.Errorf("file ./test_file1 not found"))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		Convey("Exec with exists file", func() {
 			settings["exec"] = "script.go"
-			err := sender.Init(settings, logger, nil, "")
+			err := sender.Init(settings, logger, nil, "", dataBase)
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{exec: "script.go", logger: logger})
 		})

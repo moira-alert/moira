@@ -5,21 +5,27 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/h2non/gock.v1"
 )
 
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		senderSettings := map[string]interface{}{
 			"max_events": -1,
 		}
 		Convey("Minimal settings", func() {
-			err := sender.Init(senderSettings, logger, nil, "")
+			err := sender.Init(senderSettings, logger, nil, "", dataBase)
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
 			So(sender.maxEvents, ShouldResemble, -1)
@@ -31,9 +37,14 @@ func TestMSTeamsHttpResponse(t *testing.T) {
 	sender := Sender{}
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	location, _ := time.LoadLocation("UTC")
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
 	_ = sender.Init(map[string]interface{}{
 		"max_events": -1,
-	}, logger, location, "")
+	}, logger, location, "", dataBase)
+
 	event := moira.NotificationEvent{
 		TriggerID: "TriggerID",
 		Values:    map[string]float64{"t1": 123},

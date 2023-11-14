@@ -22,40 +22,49 @@ var (
 
 // SendEvents implements pushover build and send message functionality
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	client, ok := sender.clients[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
+	}
+
 	data := &discordgo.MessageSend{}
-	data.Content = sender.buildMessage(events, trigger, throttled)
+	data.Content = client.buildMessage(events, trigger, throttled)
 	if len(plots) > 0 {
-		data.File = sender.buildPlot(plots[0])
+		data.File = client.buildPlot(plots[0])
 		data.Embed = &discordgo.MessageEmbed{
 			Image: &discordgo.MessageEmbedImage{
 				URL: "attachment://Plot.jpg",
 			},
 		}
 	}
-	sender.logger.Debug().
+
+	client.logger.Debug().
 		String("message", data.Content).
 		Msg("Calling discord with message")
 
-	channelID, err := sender.getChannelID(contact.Value)
+	channelID, err := client.getChannelID(contact.Value)
 	if err != nil {
 		return fmt.Errorf("failed to get the channel ID: %s", err)
 	}
-	_, err = sender.session.ChannelMessageSendComplex(channelID, data)
+
+	_, err = client.session.ChannelMessageSendComplex(channelID, data)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to discord bot : %s", trigger.ID, err.Error())
 	}
+
 	return nil
 }
 
-func (sender *Sender) getChannelID(username string) (string, error) {
-	chid, err := sender.DataBase.GetIDByUsername(messenger, username)
+func (client *discordClient) getChannelID(username string) (string, error) {
+	chid, err := client.dataBase.GetIDByUsername(messenger, username)
 	if err != nil {
 		return "", fmt.Errorf("failed to get channel ID: %s", err.Error())
 	}
+
 	return chid, nil
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+func (client *discordClient) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var buffer strings.Builder
 
 	state := events.GetCurrentState(throttled)
@@ -64,10 +73,10 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	title := fmt.Sprintf("%s %s %s (%d)\n", state, trigger.Name, tags, len(events))
 	titleLen := len([]rune(title))
 
-	desc := sender.buildDescription(trigger)
+	desc := client.buildDescription(trigger)
 	descLen := len([]rune(desc))
 
-	eventsString := sender.buildEventsString(events, -1, throttled, trigger)
+	eventsString := client.buildEventsString(events, -1, throttled, trigger)
 	eventsStringLen := len([]rune(eventsString))
 
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
@@ -77,8 +86,9 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if descLen != descNewLen {
 		desc = desc[:descNewLen] + "...\n"
 	}
+
 	if eventsNewLen != eventsStringLen {
-		eventsString = sender.buildEventsString(events, eventsNewLen, throttled, trigger)
+		eventsString = client.buildEventsString(events, eventsNewLen, throttled, trigger)
 	}
 
 	buffer.WriteString(title)
@@ -87,19 +97,20 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	return buffer.String()
 }
 
-func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
+func (client *discordClient) buildDescription(trigger moira.TriggerData) string {
 	desc := trigger.Desc
 	if trigger.Desc != "" {
 		// Replace MD headers (## header text) with **header text** that telegram supports
 		desc = mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")
 		desc += "\n"
 	}
+
 	return desc
 }
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
 // if n is negative buildEventsString does not limit the events string
-func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool, trigger moira.TriggerData) string {
+func (client *discordClient) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool, trigger moira.TriggerData) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."
 	if throttled {
@@ -107,7 +118,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	}
 
 	var urlString string
-	url := trigger.GetTriggerURI(sender.frontURI)
+	url := trigger.GetTriggerURI(client.frontURI)
 	if url != "" {
 		urlString = fmt.Sprintf("\n\n%s\n", url)
 	}
@@ -118,8 +129,8 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
-		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(client.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
+		if msg := event.CreateMessage(client.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
 		tailString = fmt.Sprintf("\n\n...and %d more events.", len(events)-eventsPrinted)
@@ -136,9 +147,11 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	if eventsLenLimitReached {
 		eventsString += tailString
 	}
+
 	if url != "" {
 		eventsString += urlString
 	}
+
 	if throttled {
 		eventsString += throttleMsg
 	}
@@ -146,7 +159,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) buildPlot(plot []byte) *discordgo.File {
+func (client *discordClient) buildPlot(plot []byte) *discordgo.File {
 	return &discordgo.File{
 		Name:        "Plot.jpg",
 		ContentType: http.DetectContentType(plot),
