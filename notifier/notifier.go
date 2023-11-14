@@ -149,7 +149,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 
 	logger := getLogWithPackageContext(&notifier.logger, pkg, &notifier.config)
 	logger.Warning().
-		Int("number_of_retires", pkg.FailCount).
+		Int("number_of_retries", pkg.FailCount).
 		String("reason", reason).
 		Msg("Can't send message. Retry again in 1 min")
 
