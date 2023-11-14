@@ -38,7 +38,6 @@ func NewHandler(
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(moiramiddle.UserContext)
 	router.Use(moiramiddle.RequestLogger(log))
-	router.Use(moiramiddle.ReadOnlyMiddleware(config))
 	router.Use(middleware.NoCache)
 
 	router.NotFound(notFoundHandler)
@@ -93,23 +92,30 @@ func NewHandler(
 	//	@tag.description	APIs for interacting with Moira users
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
-		router.Get("/config", getWebConfig(webConfigContent))
-		router.Route("/user", user)
-		router.With(moiramiddle.Triggers(config.GraphiteLocalMetricTTL, config.GraphiteRemoteMetricTTL, config.PrometheusRemoteMetricTTL)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
-		router.Route("/tag", tag)
-		router.Route("/pattern", pattern)
-		router.Route("/event", event)
-		router.Route("/subscription", subscription)
-		router.Route("/notification", notification)
 		router.Route("/health", health)
-		router.Route("/teams", teams)
-		router.Route("/contact", func(router chi.Router) {
-			contact(router)
-			contactEvents(router)
+		router.Route("/", func(router chi.Router) {
+			router.Use(moiramiddle.ReadOnlyMiddleware(config))
+			router.Get("/config", getWebConfig(webConfigContent))
+			router.Route("/user", user)
+			router.With(moiramiddle.Triggers(
+				config.GraphiteLocalMetricTTL,
+				config.GraphiteRemoteMetricTTL,
+				config.PrometheusRemoteMetricTTL,
+			)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
+			router.Route("/tag", tag)
+			router.Route("/pattern", pattern)
+			router.Route("/event", event)
+			router.Route("/subscription", subscription)
+			router.Route("/notification", notification)
+			router.Route("/teams", teams)
+			router.Route("/contact", func(router chi.Router) {
+				contact(router)
+				contactEvents(router)
+			})
+			router.Get("/swagger/*", httpSwagger.Handler(
+				httpSwagger.URL("/api/swagger/doc.json"),
+			))
 		})
-		router.Get("/swagger/*", httpSwagger.Handler(
-			httpSwagger.URL("/api/swagger/doc.json"),
-		))
 	})
 
 	if config.EnableCORS {
