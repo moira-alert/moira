@@ -130,6 +130,13 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 		total += intVal
 	}
 
+	if int(total) != len(notifications) {
+		connector.logger.Warning().
+			Int("need_to_delete", len(notifications)).
+			Int("deleted", int(total)).
+			Msg("Number of deletions does not match the number of notifications to be deleted")
+	}
+
 	return total, nil
 }
 

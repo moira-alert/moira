@@ -242,7 +242,7 @@ type ScheduledNotification struct {
 	Throttled bool              `json:"throttled" example:"false"`
 	SendFail  int               `json:"send_fail" example:"0"`
 	Timestamp int64             `json:"timestamp" example:"1594471927" format:"int64"`
-	CreatedAt int64             `json:"created_at" example:"1594471900" format:"int64"`
+	CreatedAt int64             `json:"created_at,omitempty" example:"1594471900" format:"int64"`
 }
 
 type scheduledNotificationState int
