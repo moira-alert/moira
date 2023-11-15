@@ -48,6 +48,11 @@ func TestReadonlyModeMiddleware(t *testing.T) {
 
 			So(actual, ShouldEqual, http.StatusForbidden)
 		})
+		Convey("Performing delete request", func() {
+			actual := PerformRequestWithReadonlyModeMiddleware(config, http.MethodDelete)
+
+			So(actual, ShouldEqual, http.StatusForbidden)
+		})
 	})
 }
 

@@ -22,5 +22,8 @@ func ReadOnlyMiddleware(config *api.Config) func(next http.Handler) http.Handler
 }
 
 func isMutatingMethod(method string) bool {
-	return method == http.MethodPut || method == http.MethodPost || method == http.MethodPatch
+	return method == http.MethodPut ||
+		method == http.MethodPost ||
+		method == http.MethodPatch ||
+		method == http.MethodDelete
 }
