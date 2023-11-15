@@ -23,7 +23,7 @@ var (
 	GoVersion    = "unknown"
 )
 
-var moiraValidVersions = []string{"2.3", "2.6", "2.7"}
+var moiraValidVersions = []string{"2.3", "2.6", "2.7", "2.8", "2.9"}
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/cli.yml", "Path to configuration file")
@@ -72,31 +72,38 @@ var (
 )
 
 func main() { //nolint
-	confCleanup, logger, dataBase := initApp()
+	confCleanup, logger, database := initApp()
 
 	if *update {
 		fromVersion := checkValidVersion(logger, updateFromVersion, true)
 		switch fromVersion {
 		case "2.3":
-			err := updateFrom23(logger, dataBase)
+			err := updateFrom23(logger, database)
 			if err != nil {
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update from version 2.3")
 			}
 		case "2.6":
-			err := updateFrom26(logger, dataBase)
+			err := updateFrom26(logger, database)
 			if err != nil {
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update from version 2.6")
 			}
 		case "2.7":
-			err := updateFrom27(logger, dataBase)
+			err := updateFrom27(logger, database)
 			if err != nil {
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update from version 2.7")
+			}
+		case "2.9":
+			err := updateFrom29(logger, database)
+			if err != nil {
+				logger.Fatal().
+					Error(err).
+					Msg("Fail to update from version 2.9")
 			}
 		}
 	}
@@ -105,31 +112,38 @@ func main() { //nolint
 		toVersion := checkValidVersion(logger, downgradeToVersion, false)
 		switch toVersion {
 		case "2.3":
-			err := downgradeTo23(logger, dataBase)
+			err := downgradeTo23(logger, database)
 			if err != nil {
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update to version 2.3")
 			}
 		case "2.6":
-			err := downgradeTo26(logger, dataBase)
+			err := downgradeTo26(logger, database)
 			if err != nil {
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update to version 2.6")
 			}
 		case "2.7":
-			err := downgradeTo27(logger, dataBase)
+			err := downgradeTo27(logger, database)
 			if err != nil {
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update to version 2.7")
 			}
+		case "2.9":
+			err := downgradeTo29(logger, database)
+			if err != nil {
+				logger.Fatal().
+					Error(err).
+					Msg("Fail to update to version 2.9")
+			}
 		}
 	}
 
 	if *plotting {
-		if err := enablePlottingInAllSubscriptions(logger, dataBase); err != nil {
+		if err := enablePlottingInAllSubscriptions(logger, database); err != nil {
 			logger.Error().
 				Error(err).
 				Msg("Failed to enable images in all notifications")
@@ -137,7 +151,7 @@ func main() { //nolint
 	}
 
 	if *fromUser != "" || *toUser != "" {
-		if err := transferUserSubscriptionsAndContacts(dataBase, *fromUser, *toUser); err != nil {
+		if err := transferUserSubscriptionsAndContacts(database, *fromUser, *toUser); err != nil {
 			logger.Error().
 				Error(err).
 				Msg("Failed to transfer user subscriptions and contacts")
@@ -145,7 +159,7 @@ func main() { //nolint
 	}
 
 	if *userDel != "" {
-		if err := deleteUser(dataBase, *userDel); err != nil {
+		if err := deleteUser(database, *userDel); err != nil {
 			logger.Error().
 				Error(err).
 				Msg("Failed to delete user")
@@ -158,7 +172,7 @@ func main() { //nolint
 			String("prefix", *removeMetricsByPrefix).
 			Msg("Removing metrics by prefix started")
 
-		if err := handleRemoveMetricsByPrefix(dataBase, *removeMetricsByPrefix); err != nil {
+		if err := handleRemoveMetricsByPrefix(database, *removeMetricsByPrefix); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to remove metrics by prefix")
@@ -171,7 +185,7 @@ func main() { //nolint
 	if *removeAllMetrics {
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
 		log.Info().Msg("Removing all metrics started")
-		if err := handleRemoveAllMetrics(dataBase); err != nil {
+		if err := handleRemoveAllMetrics(database); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to remove all metrics")
@@ -181,7 +195,7 @@ func main() { //nolint
 
 	if *removeTriggersStartWith != "" {
 		log := logger.String(moira.LogFieldNameContext, "remove-triggers-start-with")
-		if err := handleRemoveTriggersStartWith(logger, dataBase, *removeTriggersStartWith); err != nil {
+		if err := handleRemoveTriggersStartWith(logger, database, *removeTriggersStartWith); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to remove triggers by prefix")
@@ -190,7 +204,7 @@ func main() { //nolint
 
 	if *removeUnusedTriggersStartWith != "" {
 		log := logger.String(moira.LogFieldNameContext, "remove-unused-triggers-start-with")
-		if err := handleRemoveUnusedTriggersStartWith(logger, dataBase, *removeUnusedTriggersStartWith); err != nil {
+		if err := handleRemoveUnusedTriggersStartWith(logger, database, *removeUnusedTriggersStartWith); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to remove unused triggers by prefix")
@@ -204,7 +218,7 @@ func main() { //nolint
 			Interface("user_whitelist", confCleanup.Whitelist).
 			Msg("Cleanup started")
 
-		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
+		if err := handleCleanup(logger, database, confCleanup); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to cleanup")
@@ -216,7 +230,7 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup-metrics")
 
 		log.Info().Msg("Cleanup of outdated metrics started")
-		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
+		err := handleCleanUpOutdatedMetrics(confCleanup, database)
 		if err != nil {
 			log.Error().
 				Error(err).
@@ -228,7 +242,7 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup-last-checks")
 
 		log.Info().Msg("Cleanup abandoned triggers last checks started")
-		err := handleCleanUpAbandonedTriggerLastCheck(dataBase)
+		err := handleCleanUpAbandonedTriggerLastCheck(database)
 		if err != nil {
 			log.Error().
 				Error(err).
@@ -240,7 +254,7 @@ func main() { //nolint
 	if *cleanupTags {
 		log := logger.String(moira.LogFieldNameContext, "cleanup-tags")
 		log.Info().Msg("Cleanup abandoned tags started")
-		count, err := handleCleanUpAbandonedTags(dataBase)
+		count, err := handleCleanUpAbandonedTags(database)
 		if err != nil {
 			log.Error().
 				Error(err).
@@ -255,7 +269,7 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup-retentions")
 
 		log.Info().Msg("Cleanup of abandoned retentions started")
-		err := handleCleanUpAbandonedRetentions(dataBase)
+		err := handleCleanUpAbandonedRetentions(database)
 		if err != nil {
 			log.Error().
 				Error(err).
@@ -283,19 +297,19 @@ func main() { //nolint
 		}
 
 		logger.Info().Msg(GetDumpBriefInfo(dump))
-		if err := support.HandlePushTrigger(logger, dataBase, &dump.Trigger); err != nil {
+		if err := support.HandlePushTrigger(logger, database, &dump.Trigger); err != nil {
 			logger.Fatal().
 				Error(err).
 				Msg("Failed to handle push trigger")
 		}
-		if err := support.HandlePushTriggerMetrics(logger, dataBase, dump.Trigger.ID, dump.Metrics); err != nil {
+		if err := support.HandlePushTriggerMetrics(logger, database, dump.Trigger.ID, dump.Metrics); err != nil {
 			logger.Fatal().
 				Error(err).
 				Msg("Failed to handle push trigger metrics")
 		}
 		if err := support.HandlePushTriggerLastCheck(
 			logger,
-			dataBase,
+			database,
 			dump.Trigger.ID,
 			&dump.LastCheck,
 			dump.Trigger.TriggerSource,
@@ -345,8 +359,8 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	dataBase := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.Cli)
-	return config.Cleanup, logger, dataBase
+	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.Cli)
+	return config.Cleanup, logger, database
 }
 
 func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate bool) string {
