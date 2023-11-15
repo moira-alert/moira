@@ -443,6 +443,7 @@ func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (b
 }
 
 var triggersListKey = "{moira-triggers-list}:moira-triggers-list"
+var localTriggersListKey = "{moira-triggers-list}:moira-local-triggers-list"
 var remoteTriggersListKey = "{moira-triggers-list}:moira-remote-triggers-list"
 var prometheusTriggersListKey = "{moira-triggers-list}:moira-prometheus-triggers-list"
 
