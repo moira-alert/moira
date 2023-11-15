@@ -17,7 +17,7 @@ func TestNewDatabase(t *testing.T) {
 		So(database, ShouldNotBeEmpty)
 		So(database.source, ShouldEqual, "test")
 		So(database.logger, ShouldEqual, logger)
-		So(database.context, ShouldEqual, context.Background())
+		So(database.context, ShouldResemble, context.Background())
 
 		database.Flush()
 		defer database.Flush()
