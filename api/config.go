@@ -9,6 +9,7 @@ type Config struct {
 	GraphiteLocalMetricTTL    time.Duration
 	GraphiteRemoteMetricTTL   time.Duration
 	PrometheusRemoteMetricTTL time.Duration
+	Flags                     FeatureFlags
 }
 
 // WebConfig is container for web ui configuration parameters.
@@ -33,4 +34,5 @@ type FeatureFlags struct {
 	IsPlottingDefaultOn              bool `json:"isPlottingDefaultOn"`
 	IsPlottingAvailable              bool `json:"isPlottingAvailable"`
 	IsSubscriptionToAllTagsAvailable bool `json:"isSubscriptionToAllTagsAvailable"`
+	IsReadonlyEnabled                bool `json:"isReadonlyEnabled"`
 }
