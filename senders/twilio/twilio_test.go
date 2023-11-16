@@ -11,16 +11,12 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const twilioType = "twilio"
-
 func TestInit(t *testing.T) {
 	Convey("Tests init twilio sender", t, func() {
 		sender := Sender{}
 		logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 		location, _ := time.LoadLocation("UTC")
-		settings := map[string]interface{}{
-			"type": twilioType,
-		}
+		settings := map[string]interface{}{}
 
 		opts := moira.InitOptions{
 			SenderSettings: settings,
@@ -30,7 +26,7 @@ func TestInit(t *testing.T) {
 
 		Convey("no api asid", func() {
 			err := sender.Init(opts)
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_sid param from config", twilioType))
+			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_sid param from config", ""))
 			So(sender, ShouldResemble, Sender{})
 		})
 
@@ -39,7 +35,7 @@ func TestInit(t *testing.T) {
 		Convey("no api authtoken", func() {
 			opts.SenderSettings = settings
 			err := sender.Init(opts)
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_authtoken param from config", twilioType))
+			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_authtoken param from config", ""))
 			So(sender, ShouldResemble, Sender{})
 		})
 
@@ -48,7 +44,7 @@ func TestInit(t *testing.T) {
 		Convey("no api fromphone", func() {
 			opts.SenderSettings = settings
 			err := sender.Init(opts)
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_fromphone param from config", twilioType))
+			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_fromphone param from config", ""))
 			So(sender, ShouldResemble, Sender{})
 		})
 
@@ -57,7 +53,7 @@ func TestInit(t *testing.T) {
 		Convey("no api type", func() {
 			opts.SenderSettings = settings
 			err := sender.Init(opts)
-			So(err, ShouldResemble, fmt.Errorf("wrong twilio type: %s", twilioType))
+			So(err, ShouldResemble, fmt.Errorf("wrong twilio type: %s", ""))
 			So(sender, ShouldResemble, Sender{})
 		})
 
@@ -66,14 +62,59 @@ func TestInit(t *testing.T) {
 			opts.SenderSettings = settings
 			err := sender.Init(opts)
 			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{sender: &twilioSenderSms{
-				twilioSender{
-					client:       twilio_client.NewClient("123", "321"),
-					APIFromPhone: "12345678989",
-					logger:       logger,
-					location:     location,
+			So(sender, ShouldResemble, Sender{
+				clients: map[string]sendEventsTwilio{
+					"twilio sms": &twilioSenderSms{
+						twilioSender{
+							client:       twilio_client.NewClient("123", "321"),
+							APIFromPhone: "12345678989",
+							logger:       logger,
+							location:     location,
+						},
+					},
 				},
-			}})
+			})
+
+			Convey("Multiple twilio sms senders", func() {
+				settings["name"] = "twilio sms name"
+				opts.SenderSettings = settings
+				err := sender.Init(opts)
+				So(err, ShouldBeNil)
+
+				client := sender.clients["twilio sms name"]
+				So(client, ShouldNotBeNil)
+				So(client, ShouldResemble, &twilioSenderSms{
+					twilioSender{
+						client:       twilio_client.NewClient("123", "321"),
+						APIFromPhone: "12345678989",
+						logger:       logger,
+						location:     location,
+					},
+				})
+
+				settings2 := map[string]interface{}{
+					"type":          "twilio sms",
+					"name":          "twilio sms name 2",
+					"api_authtoken": "321",
+					"api_fromphone": "123",
+					"api_asid":      "123",
+				}
+
+				opts.SenderSettings = settings2
+				err = sender.Init(opts)
+				So(err, ShouldBeNil)
+
+				client = sender.clients["twilio sms name 2"]
+				So(client, ShouldNotBeNil)
+				So(client, ShouldResemble, &twilioSenderSms{
+					twilioSender{
+						client:       twilio_client.NewClient("123", "321"),
+						APIFromPhone: "123",
+						logger:       logger,
+						location:     location,
+					},
+				})
+			})
 		})
 
 		Convey("config voice", func() {
@@ -93,16 +134,20 @@ func TestInit(t *testing.T) {
 					opts.SenderSettings = settings
 					err := sender.Init(opts)
 					So(err, ShouldBeNil)
-					So(sender, ShouldResemble, Sender{sender: &twilioSenderVoice{
-						twilioSender: twilioSender{
-							client:       twilio_client.NewClient("123", "321"),
-							APIFromPhone: "12345678989",
-							logger:       logger,
-							location:     location,
+					So(sender, ShouldResemble, Sender{
+						clients: map[string]sendEventsTwilio{
+							"twilio voice": &twilioSenderVoice{
+								twilioSender: twilioSender{
+									client:       twilio_client.NewClient("123", "321"),
+									APIFromPhone: "12345678989",
+									logger:       logger,
+									location:     location,
+								},
+								voiceURL:      "url here",
+								appendMessage: true,
+							},
 						},
-						voiceURL:      "url here",
-						appendMessage: true,
-					}})
+					})
 				})
 
 				Convey("append_message is false", func() {
@@ -110,7 +155,31 @@ func TestInit(t *testing.T) {
 					opts.SenderSettings = settings
 					err := sender.Init(opts)
 					So(err, ShouldBeNil)
-					So(sender, ShouldResemble, Sender{sender: &twilioSenderVoice{
+					So(sender, ShouldResemble, Sender{
+						clients: map[string]sendEventsTwilio{
+							"twilio voice": &twilioSenderVoice{
+								twilioSender: twilioSender{
+									client:       twilio_client.NewClient("123", "321"),
+									APIFromPhone: "12345678989",
+									logger:       logger,
+									location:     location,
+								},
+								voiceURL:      "url here",
+								appendMessage: false,
+							},
+						},
+					})
+				})
+
+				Convey("Multiple twilio voice senders", func() {
+					settings["name"] = "twilio voice name"
+					opts.SenderSettings = settings
+					err := sender.Init(opts)
+					So(err, ShouldBeNil)
+
+					client := sender.clients["twilio voice name"]
+					So(client, ShouldNotBeNil)
+					So(client, ShouldResemble, &twilioSenderVoice{
 						twilioSender: twilioSender{
 							client:       twilio_client.NewClient("123", "321"),
 							APIFromPhone: "12345678989",
@@ -119,7 +188,34 @@ func TestInit(t *testing.T) {
 						},
 						voiceURL:      "url here",
 						appendMessage: false,
-					}})
+					})
+
+					settings2 := map[string]interface{}{
+						"type":           "twilio voice",
+						"name":           "twilio voice name 2",
+						"append_message": false,
+						"voiceurl":       "url",
+						"api_authtoken":  "321",
+						"api_fromphone":  "123",
+						"api_asid":       "123",
+					}
+
+					opts.SenderSettings = settings2
+					err = sender.Init(opts)
+					So(err, ShouldBeNil)
+
+					client = sender.clients["twilio voice name 2"]
+					So(client, ShouldNotBeNil)
+					So(client, ShouldResemble, &twilioSenderVoice{
+						twilioSender: twilioSender{
+							client:       twilio_client.NewClient("123", "321"),
+							APIFromPhone: "123",
+							logger:       logger,
+							location:     location,
+						},
+						voiceURL:      "url",
+						appendMessage: false,
+					})
 				})
 			})
 		})

@@ -23,7 +23,7 @@ type config struct {
 
 // Sender implements moira sender interface via twilio
 type Sender struct {
-	sender sendEventsTwilio
+	clients map[string]sendEventsTwilio
 }
 
 type sendEventsTwilio interface {
@@ -68,9 +68,11 @@ func (sender *Sender) Init(opts moira.InitOptions) error {
 		location:     opts.Location,
 	}
 
+	var twilioSender sendEventsTwilio
+
 	switch apiType {
 	case "twilio sms":
-		sender.sender = &twilioSenderSms{tSender}
+		twilioSender = &twilioSenderSms{tSender}
 
 	case "twilio voice":
 		appendMessage := cfg.AppendMessage || cfg.TwimletsEcho
@@ -79,7 +81,7 @@ func (sender *Sender) Init(opts moira.InitOptions) error {
 			return fmt.Errorf("can not read [%s] voiceurl param from config", apiType)
 		}
 
-		sender.sender = &twilioSenderVoice{
+		twilioSender = &twilioSenderVoice{
 			twilioSender:  tSender,
 			voiceURL:      cfg.VoiceURL,
 			twimletsEcho:  cfg.TwimletsEcho,
@@ -90,10 +92,28 @@ func (sender *Sender) Init(opts moira.InitOptions) error {
 		return fmt.Errorf("wrong twilio type: %s", apiType)
 	}
 
+	var senderIdent string
+	if cfg.Name != "" {
+		senderIdent = cfg.Name
+	} else {
+		senderIdent = cfg.Type
+	}
+
+	if sender.clients == nil {
+		sender.clients = make(map[string]sendEventsTwilio)
+	}
+
+	sender.clients[senderIdent] = twilioSender
+
 	return nil
 }
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	return sender.sender.SendEvents(events, contact, trigger, plots, throttled)
+	twilioClient, ok := sender.clients[contact.Type]
+	if !ok {
+		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
+	}
+
+	return twilioClient.SendEvents(events, contact, trigger, plots, throttled)
 }
