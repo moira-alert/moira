@@ -1,4 +1,4 @@
-package notifier_test
+package notifier
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/notifier"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -40,7 +39,7 @@ func TestRegisterSender(t *testing.T) {
 
 			err := standardNotifier.RegisterSender(senderSettings, sender)
 			So(err, ShouldBeNil)
-			So(standardNotifier.GetSendersTypeByName("test"), ShouldEqual, senderSettings["type"])
+			So(standardNotifier.sendersNameToType["test"], ShouldEqual, senderSettings["type"])
 		})
 
 		Convey("With multiple senders one type", func() {
@@ -63,7 +62,7 @@ func TestRegisterSender(t *testing.T) {
 
 				err := standardNotifier.RegisterSender(senderSettings, sender)
 				So(err, ShouldBeNil)
-				So(standardNotifier.GetSendersTypeByName("test_name"), ShouldEqual, senderSettings["type"])
+				So(standardNotifier.sendersNameToType["test_name"], ShouldEqual, senderSettings["type"])
 			})
 
 			senderSettings["name"] = "test_name_2"
@@ -74,14 +73,14 @@ func TestRegisterSender(t *testing.T) {
 
 				err := standardNotifier.RegisterSender(senderSettings, sender)
 				So(err, ShouldBeNil)
-				So(standardNotifier.GetSendersTypeByName("test_name_2"), ShouldEqual, senderSettings["type"])
+				So(standardNotifier.sendersNameToType["test_name_2"], ShouldEqual, senderSettings["type"])
 			})
 		})
 	})
 }
 
 func TestRegisterSendersWithoutType(t *testing.T) {
-	config := notifier.Config{
+	config := Config{
 		SendingTimeout:   time.Millisecond * 10,
 		ResendingTimeout: time.Hour * 24,
 		Location:         location,

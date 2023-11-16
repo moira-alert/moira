@@ -158,11 +158,6 @@ func (notifier *StandardNotifier) GetReadBatchSize() int64 {
 	return notifier.config.ReadBatchSize
 }
 
-// GetSendersTypeByName returns the type of the sender by its name
-func (notifier *StandardNotifier) GetSendersTypeByName(name string) string {
-	return notifier.sendersNameToType[name]
-}
-
 func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string) {
 	if pkg.DontResend {
 		notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)

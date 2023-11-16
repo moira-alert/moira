@@ -23,7 +23,7 @@ type config struct {
 // Sender implements moira sender interface via webhook
 type Sender struct {
 	webhookClients map[string]*webhookClient
-	log            moira.Logger
+	logger         moira.Logger
 }
 
 // webhookClient stores data for the webhook client
@@ -33,6 +33,7 @@ type webhookClient struct {
 	user     string
 	password string
 	headers  map[string]string
+	logger   moira.Logger
 }
 
 // Init read yaml config
@@ -70,6 +71,7 @@ func (sender *Sender) Init(opts moira.InitOptions) error {
 			Timeout:   time.Duration(timeout) * time.Second,
 			Transport: &http.Transport{DisableKeepAlives: true},
 		},
+		logger: opts.Logger,
 	}
 
 	if sender.webhookClients == nil {
@@ -77,7 +79,7 @@ func (sender *Sender) Init(opts moira.InitOptions) error {
 	}
 
 	sender.webhookClients[cfg.Name] = client
-	sender.log = opts.Logger
+	sender.logger = opts.Logger
 
 	return nil
 }
@@ -89,7 +91,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("failed to send events because there is not %s client", contact.Type)
 	}
 
-	request, err := sender.buildRequest(events, contact, trigger, plots, throttled)
+	request, err := webhookClient.buildRequest(events, contact, trigger, plots, throttled)
 	if request != nil {
 		defer request.Body.Close()
 	}
@@ -115,6 +117,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		} else {
 			serverResponse = string(responseBody)
 		}
+
 		return fmt.Errorf("invalid status code: %d, server response: %s", response.StatusCode, serverResponse)
 	}
 

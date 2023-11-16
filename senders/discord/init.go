@@ -19,8 +19,8 @@ const (
 
 // Structure that represents the Discord configuration in the YAML file
 type config struct {
-	Type     string `mapsctructure:"type"`
 	Name     string `mapstructure:"name"`
+	Type     string `mapstructure:"type"`
 	Token    string `mapstructure:"token"`
 	FrontURI string `mapstructure:"front_uri"`
 }

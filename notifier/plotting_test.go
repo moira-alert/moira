@@ -61,7 +61,7 @@ func generateTestMetricsData() map[string][]metricSource.MetricData {
 
 func TestResolveMetricsWindow(t *testing.T) {
 	testLaunchTime := time.Now().UTC()
-	logger, _ := logging.GetLogger("Notifier")
+	logger, _ = logging.GetLogger("Notifier")
 	emptyEventsPackage := NotificationPackage{}
 	triggerJustCreatedEvents := NotificationPackage{
 		Events: []moira.NotificationEvent{
@@ -248,7 +248,7 @@ func TestBuildTriggerPlots(t *testing.T) {
 	Convey("Run buildTriggerPlots", t, func() {
 		triggerID := uuid.Must(uuid.NewV4()).String()
 		trigger := moira.Trigger{ID: triggerID}
-		location, _ := time.LoadLocation("UTC")
+		location, _ = time.LoadLocation("UTC")
 		plotTemplate, _ := plotting.GetPlotTemplate("", location)
 
 		Convey("without errors", func() {
