@@ -57,7 +57,7 @@ func createKeyForLocalTriggers(ctx context.Context, logger moira.Logger, databas
 			return err
 		}
 	default:
-		return MakeUnknownDBError(database)
+		return makeUnknownDBError(database)
 	}
 
 	logger.Info().Msg("Successfully finished createKeyForLocalTriggers")
@@ -77,7 +77,7 @@ func revertCreateKeyForLocalTriggers(ctx context.Context, logger moira.Logger, d
 			return err
 		}
 	default:
-		return MakeUnknownDBError(database)
+		return makeUnknownDBError(database)
 	}
 
 	logger.Info().Msg("Successfully finished revertCreateKeyForLocalTriggers")

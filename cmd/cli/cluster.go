@@ -33,7 +33,7 @@ func renameKey(database moira.Database, oldValue, newValue string) error {
 			return err
 		}
 	default:
-		return MakeUnknownDBError(database)
+		return makeUnknownDBError(database)
 	}
 
 	return nil
@@ -54,7 +54,7 @@ func changeKeysPrefix(database moira.Database, oldPrefix string, newPrefix strin
 			return err
 		}
 	default:
-		return MakeUnknownDBError(database)
+		return makeUnknownDBError(database)
 	}
 
 	return nil
