@@ -52,7 +52,7 @@ func GetNotificationBytes(notification moira.ScheduledNotification) ([]byte, err
 	notificationSE := toScheduledNotificationStorageElement(notification)
 	bytes, err := json.Marshal(notificationSE)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal notification: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal notification: %w", err)
 	}
 	return bytes, nil
 }
@@ -63,13 +63,15 @@ func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification
 		if err == redis.Nil {
 			return moira.ScheduledNotification{}, database.ErrNil
 		}
-		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %s", err.Error())
+		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %w", err)
 	}
+
 	notificationSE := scheduledNotificationStorageElement{}
 	err = json.Unmarshal(bytes, &notificationSE)
 	if err != nil {
-		return moira.ScheduledNotification{}, fmt.Errorf("failed to parse notification json %s: %s", string(bytes), err.Error())
+		return moira.ScheduledNotification{}, fmt.Errorf("failed to parse notification json %s: %w", string(bytes), err)
 	}
+
 	return notificationSE.toScheduledNotification(), nil
 }
 
@@ -81,7 +83,7 @@ func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotificat
 
 	data, err := responses.Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read ScheduledNotifications: %s", err.Error())
+		return nil, fmt.Errorf("failed to read ScheduledNotifications: %w", err)
 	}
 
 	notifications := make([]*moira.ScheduledNotification, len(data))
@@ -95,5 +97,6 @@ func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotificat
 			notifications[i] = &notification
 		}
 	}
+
 	return notifications, nil
 }

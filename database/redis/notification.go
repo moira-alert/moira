@@ -450,11 +450,17 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*mo
 		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
 			// someone has changed notifierNotificationsKey while we do our job
 			// and transaction fail (no notifications were deleted) :(
-			if _, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications); err != nil {
+			var deleted int64
+			deleted, err = connector.removeNotifications(ctx, pipe, toRemoveNotifications)
+			if err != nil {
 				if errors.Is(err, redis.TxFailedErr) {
 					return &transactionError{}
 				}
 				return fmt.Errorf("failed to remove notifications in transaction: %w", err)
+			}
+
+			if int(deleted) != len(toRemoveNotifications) {
+				return fmt.Errorf("number of deletions: %d does not match the number of notifications to be deleted: %d", int(deleted), len(toRemoveNotifications))
 			}
 
 			return nil
