@@ -51,9 +51,9 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		if !ok {
 			return fmt.Errorf("failed to get sender type from settings")
 		}
-		notifier.logger.Debug().
-			String("sender_type", senderType).
-			Msg("Get sender settings")
+		// notifier.logger.Debug().
+		// 	String("sender_type", senderType).
+		// 	Msg("Get sender settings")
 
 		// if a sender of this type already exists, do not create it again
 		if sender, ok := notifier.senders[senderType]; ok {
@@ -63,9 +63,9 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			continue
 		}
 
-		notifier.logger.Debug().
-			String("sender_type", senderType).
-			Msg("Init sender settings")
+		// notifier.logger.Debug().
+		// 	String("sender_type", senderType).
+		// 	Msg("Init sender settings")
 
 		switch senderType {
 		case mailSender:
