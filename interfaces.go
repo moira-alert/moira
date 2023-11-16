@@ -201,7 +201,7 @@ type Logger interface {
 type Sender interface {
 	// TODO refactor: https://github.com/moira-alert/moira/issues/794
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot [][]byte, throttled bool) error
-	Init(params InitOptions) error
+	Init(opts InitOptions) error
 }
 
 // ImageStore is the interface for image storage providers
