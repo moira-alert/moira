@@ -21,7 +21,7 @@ import (
 var (
 	plots          [][]byte
 	shutdown       = make(chan struct{})
-	location       = &time.Location{}
+	location, _    = time.LoadLocation("UTC")
 	dateTimeFormat = "15:04 02.01.2006"
 	defaultConfig  = Config{
 		SendingTimeout:            time.Millisecond * 10,
@@ -223,7 +223,7 @@ func configureNotifier(t *testing.T, config Config) {
 		"type": "test",
 	}
 
-	sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006").Return(nil)
+	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
 	err := standardNotifier.RegisterSender(senderSettings, sender)
 

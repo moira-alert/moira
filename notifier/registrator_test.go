@@ -25,7 +25,7 @@ func TestRegisterSender(t *testing.T) {
 				"type": "test",
 			}
 
-			sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006").Return(nil)
+			sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
 			err := standardNotifier.RegisterSender(senderSettings, sender)
 			So(err, ShouldBeNil)
@@ -39,7 +39,7 @@ func TestRegisterSender(t *testing.T) {
 			}
 
 			Convey("With first sender", func() {
-				sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006").Return(nil)
+				sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
 				err := standardNotifier.RegisterSender(senderSettings, sender)
 				So(err, ShouldBeNil)
@@ -49,7 +49,7 @@ func TestRegisterSender(t *testing.T) {
 			senderSettings["name"] = "test_name_2"
 
 			Convey("With second sender", func() {
-				sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006").Return(nil)
+				sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
 				err := standardNotifier.RegisterSender(senderSettings, sender)
 				So(err, ShouldBeNil)
