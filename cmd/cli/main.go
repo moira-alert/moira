@@ -373,6 +373,7 @@ func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate 
 		logger.Fatal().
 			String("valid_version", strings.Join(moiraValidVersions, ", ")).
 			String("flag", validFlag).
+			String("your_version", *updateFromVersion).
 			Msg("You must set valid flag")
 	}
 	return moira.UseString(updateFromVersion)
