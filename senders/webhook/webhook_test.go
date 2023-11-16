@@ -84,8 +84,38 @@ func TestSender_Init(t *testing.T) {
 			err := sender.Init(senderSettings1, logger, time.UTC, "")
 			So(err, ShouldBeNil)
 
+			client := sender.webhookClients[webhookName]
+			So(client, ShouldNotBeNil)
+			So(client, ShouldResemble, &webhookClient{
+				url: "url",
+				headers: map[string]string{
+					"User-Agent":   "Moira",
+					"Content-Type": "application/json",
+				},
+				client: &http.Client{
+					Timeout:   time.Duration(30) * time.Second,
+					Transport: &http.Transport{DisableKeepAlives: true},
+				},
+				logger: logger,
+			})
+
 			err = sender.Init(senderSettings2, logger, time.UTC, "")
 			So(err, ShouldBeNil)
+
+			client = sender.webhookClients[webhookName2]
+			So(client, ShouldNotBeNil)
+			So(client, ShouldResemble, &webhookClient{
+				url: "url",
+				headers: map[string]string{
+					"User-Agent":   "Moira",
+					"Content-Type": "application/json",
+				},
+				client: &http.Client{
+					Timeout:   time.Duration(30) * time.Second,
+					Transport: &http.Transport{DisableKeepAlives: true},
+				},
+				logger: logger,
+			})
 
 			So(len(sender.webhookClients), ShouldEqual, 2)
 		})
@@ -126,7 +156,11 @@ func TestSender_SendEvents(t *testing.T) {
 			"password": testPass,
 		}
 
-		sender := Sender{}
+		sender := Sender{
+			webhookClients: map[string]*webhookClient{
+				webhookName: {},
+			},
+		}
 
 		err := sender.Init(senderSettings, logger, time.UTC, "")
 		So(err, ShouldBeNil)
@@ -142,6 +176,7 @@ func testRequestURL(r *http.Request) (int, error) {
 	if actualPath != expectedPath {
 		return http.StatusBadRequest, fmt.Errorf("invalid url path: %s\nexpected: %s", actualPath, expectedPath)
 	}
+
 	return http.StatusCreated, nil
 }
 
@@ -150,17 +185,20 @@ func testRequestHeaders(r *http.Request) (int, error) {
 		"User-Agent":   "Moira",
 		"Content-Type": "application/json",
 	}
+
 	for headerName, headerValue := range expectedHeaders {
 		actualHeaderValue := r.Header.Get(headerName)
 		if actualHeaderValue != headerValue {
 			return http.StatusBadRequest, fmt.Errorf("invalid header value: %s\nexpected: %s", actualHeaderValue, headerValue)
 		}
 	}
+
 	authHeader := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	authPayload, err := base64.StdEncoding.DecodeString(authHeader[1])
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
+
 	authPair := strings.SplitN(string(authPayload), ":", 2)
 	actualUser, actualPass := authPair[0], authPair[1]
 	if actualUser != testUser || actualPass != testPass {
@@ -168,6 +206,7 @@ func testRequestHeaders(r *http.Request) (int, error) {
 		expectedCred := fmt.Sprintf("user: %s, pass: %s", testUser, testPass)
 		return http.StatusBadRequest, fmt.Errorf("invalid credentials: %s\nexpected: %s", actualCred, expectedCred)
 	}
+
 	return http.StatusCreated, nil
 }
 
@@ -177,14 +216,17 @@ func testRequestBody(r *http.Request) (int, error) {
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
+
 	actualJSON, err := getLastLine(requestBodyBuff.String())
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
+
 	actualJSON, expectedJSON := prepareStrings(actualJSON, expectedStateChangePayload)
 	if actualJSON != expectedJSON {
 		return http.StatusBadRequest, fmt.Errorf("invalid json body: %s\nexpected: %s", actualJSON, expectedJSON)
 	}
+
 	return http.StatusCreated, nil
 }
 
@@ -195,8 +237,10 @@ func getLastLine(longString string) (string, error) {
 	for s.Scan() {
 		lastLine = s.Text()
 	}
+
 	if err := s.Err(); err != nil {
 		return "", err
 	}
+
 	return lastLine, nil
 }

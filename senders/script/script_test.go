@@ -103,8 +103,20 @@ func TestInit(t *testing.T) {
 			err := sender.Init(settings, logger, nil, "")
 			So(err, ShouldBeNil)
 
+			script1 := sender.scriptSenders[scriptName]
+			So(script1, ShouldResemble, scriptSender{
+				exec:   "script.go",
+				logger: logger,
+			})
+
 			err = sender.Init(settings2, logger, nil, "")
 			So(err, ShouldBeNil)
+
+			script2 := sender.scriptSenders["script_name_2"]
+			So(script2, ShouldResemble, scriptSender{
+				exec:   "script.go",
+				logger: logger,
+			})
 
 			So(len(sender.scriptSenders), ShouldEqual, 2)
 		})
