@@ -242,7 +242,7 @@ func testRounding(baseTimestamp, retention int64) {
 }
 
 func TestReplaceSubstring(t *testing.T) {
-	Convey("test replace substring", t, func() {
+	Convey("Test replace substring", t, func() {
 		Convey("replacement string in the middle", func() {
 			So(ReplaceSubstring("telebot: Post https://api.telegram.org/botXXX/getMe", "/bot", "/", "[DELETED]"), ShouldResemble, "telebot: Post https://api.telegram.org/bot[DELETED]/getMe")
 		})
@@ -261,6 +261,81 @@ func TestReplaceSubstring(t *testing.T) {
 
 		Convey("there is the beginning of replacement string, but no end", func() {
 			So(ReplaceSubstring("https://api.telegram.org/botXXX error", "/bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/botXXX error")
+		})
+	})
+}
+
+type myInt int
+
+func (m myInt) Less(other Comparable) (bool, error) {
+	otherInt := other.(myInt)
+	return m < otherInt, nil
+}
+
+type myTest struct {
+	value int
+}
+
+func (test myTest) Less(other Comparable) (bool, error) {
+	otherTest := other.(myTest)
+	return test.value < otherTest.value, nil
+}
+
+func TestMergeToSorted(t *testing.T) {
+	Convey("Test MergeToSorted function", t, func() {
+		Convey("Test with two nil arrays", func() {
+			merged, err := MergeToSorted[myInt](nil, nil)
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{})
+		})
+
+		Convey("Test with one nil array", func() {
+			merged, err := MergeToSorted[myInt](nil, []myInt{1, 2, 3})
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{1, 2, 3})
+		})
+
+		Convey("Test with two arrays", func() {
+			merged, err := MergeToSorted[myInt]([]myInt{4, 5}, []myInt{1, 2, 3})
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{1, 2, 3, 4, 5})
+		})
+
+		Convey("Test with empty array", func() {
+			merged, err := MergeToSorted[myInt]([]myInt{-4, 5}, []myInt{})
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{-4, 5})
+		})
+
+		Convey("Test with sorted values but mixed up", func() {
+			merged, err := MergeToSorted[myInt]([]myInt{1, 9, 10}, []myInt{4, 8, 12})
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{1, 4, 8, 9, 10, 12})
+		})
+
+		Convey("Test with structure type", func() {
+			arr1 := []myTest{
+				{
+					value: 1,
+				},
+				{
+					value: 2,
+				},
+			}
+
+			arr2 := []myTest{
+				{
+					value: -2,
+				},
+				{
+					value: -1,
+				},
+			}
+
+			expected := append(arr2, arr1...)
+			merged, err := MergeToSorted[myTest](arr1, arr2)
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, expected)
 		})
 	})
 }
