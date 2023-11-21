@@ -97,7 +97,7 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 		},
 		NotificationConfig{
 			DelayedTime:               time.Minute,
-			TransactionTimeout:        200 * time.Millisecond,
+			TransactionTimeout:        100 * time.Millisecond,
 			TransactionMaxRetries:     10,
 			TransactionHeuristicLimit: 10000,
 		},
@@ -114,7 +114,7 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 		},
 		NotificationConfig{
 			DelayedTime:               time.Minute,
-			TransactionTimeout:        200 * time.Millisecond,
+			TransactionTimeout:        100 * time.Millisecond,
 			TransactionMaxRetries:     10,
 			TransactionHeuristicLimit: 10000,
 		},
