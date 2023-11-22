@@ -50,6 +50,7 @@ func TestEvent(t *testing.T) {
 			},
 			SendFail:  0,
 			Timestamp: time.Now().Unix(),
+			CreatedAt: time.Now().Unix(),
 			Throttled: false,
 			Contact:   contact,
 		}
@@ -88,6 +89,7 @@ func TestEvent(t *testing.T) {
 			},
 			SendFail:  0,
 			Timestamp: now.Unix(),
+			CreatedAt: now.Unix(),
 			Throttled: false,
 			Contact:   contact,
 		}

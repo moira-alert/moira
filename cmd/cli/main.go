@@ -359,8 +359,8 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.Cli)
-	return config.Cleanup, logger, database
+	dataBase := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Cli)
+	return config.Cleanup, logger, dataBase
 }
 
 func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate bool) string {

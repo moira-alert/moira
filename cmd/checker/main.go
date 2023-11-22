@@ -83,7 +83,7 @@ func main() {
 	logger.Info().Msg("Debug: checker started")
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.Checker)
+	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Checker)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
