@@ -43,21 +43,16 @@ func createKeyForLocalTriggers(ctx context.Context, logger moira.Logger, databas
 
 	switch d := database.(type) {
 	case *redis.DbConnector:
-		pipe := d.Client().TxPipeline()
+		client := d.Client()
 
-		localTriggerIds, err := pipe.SDiff(ctx, triggersListKey, remoteTriggersListKey, prometheusTriggersListKey).Result()
+		localTriggerIds, err := client.SDiff(ctx, triggersListKey, remoteTriggersListKey, prometheusTriggersListKey).Result()
 		if err != nil {
 			return err
 		}
 
 		logger.Info().Msg("Finish getting local trigger IDs")
 
-		_, err = pipe.SAdd(ctx, localTriggersListKey, localTriggerIds).Result()
-		if err != nil {
-			return err
-		}
-
-		_, err = pipe.Exec(ctx)
+		_, err = client.SAdd(ctx, localTriggersListKey, localTriggerIds).Result()
 		if err != nil {
 			return err
 		}
@@ -75,14 +70,9 @@ func revertCreateKeyForLocalTriggers(ctx context.Context, logger moira.Logger, d
 
 	switch d := database.(type) {
 	case *redis.DbConnector:
-		pipe := d.Client().TxPipeline()
+		client := d.Client()
 
-		_, err := pipe.Del(ctx, localTriggersListKey).Result()
-		if err != nil {
-			return err
-		}
-
-		_, err = pipe.Exec(ctx)
+		err := client.Del(ctx, localTriggersListKey).Err()
 		if err != nil {
 			return err
 		}
