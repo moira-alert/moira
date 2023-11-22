@@ -56,6 +56,11 @@ func createKeyForLocalTriggers(ctx context.Context, logger moira.Logger, databas
 		if err != nil {
 			return err
 		}
+
+		_, err = pipe.Exec(ctx)
+		if err != nil {
+			return err
+		}
 	default:
 		return makeUnknownDBError(database)
 	}
@@ -73,6 +78,11 @@ func revertCreateKeyForLocalTriggers(ctx context.Context, logger moira.Logger, d
 		pipe := d.Client().TxPipeline()
 
 		_, err := pipe.Del(ctx, localTriggersListKey).Result()
+		if err != nil {
+			return err
+		}
+
+		_, err = pipe.Exec(ctx)
 		if err != nil {
 			return err
 		}
