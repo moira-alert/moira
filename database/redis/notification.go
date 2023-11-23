@@ -123,6 +123,13 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 		total += intVal
 	}
 
+	if int(total) != len(notifications) {
+		connector.logger.Warning().
+			Int("need_to_delete", len(notifications)).
+			Int("deleted", int(total)).
+			Msg("Number of deletions does not match the number of notifications to be deleted")
+	}
+
 	return total, nil
 }
 
@@ -143,11 +150,15 @@ func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, de
 	notDelayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
 
 	for _, notification := range notifications {
-		if notification.IsDelayed(delayedTime) {
-			delayedNotifications = append(delayedNotifications, notification)
+		if notification == nil {
 			continue
 		}
-		notDelayedNotifications = append(notDelayedNotifications, notification)
+
+		if notification.IsDelayed(delayedTime) {
+			delayedNotifications = append(delayedNotifications, notification)
+		} else {
+			notDelayedNotifications = append(notDelayedNotifications, notification)
+		}
 	}
 
 	return delayedNotifications, notDelayedNotifications
@@ -176,9 +187,9 @@ func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moi
 		checkDataMap[triggerID] = triggersLastCheck[i]
 	}
 
-	result := make([]*moira.CheckData, len(notifications))
-	for i, notification := range notifications {
-		result[i] = checkDataMap[notification.Trigger.ID]
+	result := make([]*moira.CheckData, 0, len(notifications))
+	for _, notification := range notifications {
+		result = append(result, checkDataMap[notification.Trigger.ID])
 	}
 
 	return result, nil
@@ -192,6 +203,7 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 ) {
 	validNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
 	toResaveNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
+	toRemoveNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
 
 	triggerChecks, err := connector.getNotificationsTriggerChecks(notifications)
 	if err != nil {
@@ -206,10 +218,43 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 		case moira.ResavedNotification:
 			notification.Timestamp += connector.GetResaveTimeInSeconds()
 			toResaveNotifications = append(toResaveNotifications, notification)
+
+		case moira.RemovedNotification:
+			toRemoveNotifications = append(toRemoveNotifications, notification)
 		}
 	}
 
+	logToRemoveNotifications(connector.logger, toRemoveNotifications)
+
 	return validNotifications, toResaveNotifications, nil
+}
+
+// Helper function for logging information on to remove notifications
+func logToRemoveNotifications(logger moira.Logger, toRemoveNotifications []*moira.ScheduledNotification) {
+	if len(toRemoveNotifications) == 0 {
+		return
+	}
+
+	triggerIDsSet := make(map[string]struct{}, len(toRemoveNotifications))
+	for _, removedNotification := range toRemoveNotifications {
+		if removedNotification == nil {
+			continue
+		}
+
+		if _, ok := triggerIDsSet[removedNotification.Trigger.ID]; !ok {
+			triggerIDsSet[removedNotification.Trigger.ID] = struct{}{}
+		}
+	}
+
+	triggerIDs := make([]string, 0, len(triggerIDsSet))
+	for triggerID := range triggerIDsSet {
+		triggerIDs = append(triggerIDs, triggerID)
+	}
+
+	logger.Info().
+		Interface("notification_trigger_ids", triggerIDs).
+		Int("to_remove_count", len(toRemoveNotifications)).
+		Msg("To remove notifications")
 }
 
 /*
@@ -255,7 +300,7 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 
 	// No limit
 	if limit == notifier.NotificationsLimitUnlimited {
-		return connector.fetchNotifications(to, nil)
+		return connector.fetchNotifications(to, notifier.NotificationsLimitUnlimited)
 	}
 
 	count, err := connector.notificationsCount(to)
@@ -265,10 +310,10 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 
 	// Hope count will be not greater then limit when we call fetchNotificationsNoLimit
 	if limit > connector.notification.TransactionHeuristicLimit && count < limit/2 {
-		return connector.fetchNotifications(to, nil)
+		return connector.fetchNotifications(to, notifier.NotificationsLimitUnlimited)
 	}
 
-	return connector.fetchNotifications(to, &limit)
+	return connector.fetchNotifications(to, limit)
 }
 
 func (connector *DbConnector) notificationsCount(to int64) (int64, error) {
@@ -285,7 +330,7 @@ func (connector *DbConnector) notificationsCount(to int64) (int64, error) {
 }
 
 // fetchNotificationsWithLimit reads and drops notifications from DB with limit
-func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
+func (connector *DbConnector) fetchNotifications(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// fetchNotificationsDo uses WATCH, so transaction may fail and will retry it
 	// see https://redis.io/topics/transactions
 
@@ -312,10 +357,10 @@ func (connector *DbConnector) fetchNotifications(to int64, limit *int64) ([]*moi
 
 // getNotificationsInTxWithLimit receives notifications from the database by a certain time
 // sorted by timestamp in one transaction with or without limit, depending on whether limit is nil
-func getNotificationsInTxWithLimit(ctx context.Context, tx *redis.Tx, to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
+func getNotificationsInTxWithLimit(ctx context.Context, tx *redis.Tx, to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	var rng *redis.ZRangeBy
-	if limit != nil {
-		rng = &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10), Offset: 0, Count: *limit}
+	if limit != notifier.NotificationsLimitUnlimited {
+		rng = &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10), Offset: 0, Count: limit}
 	} else {
 		rng = &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10)}
 	}
@@ -344,7 +389,7 @@ This is to ensure that notifications with the same timestamp are always clumped 
 func getLimitedNotifications(
 	ctx context.Context,
 	tx *redis.Tx,
-	limit *int64,
+	limit int64,
 	notifications []*moira.ScheduledNotification,
 ) ([]*moira.ScheduledNotification, error) {
 	if len(notifications) == 0 {
@@ -353,7 +398,7 @@ func getLimitedNotifications(
 
 	limitedNotifications := notifications
 
-	if limit != nil {
+	if limit != notifier.NotificationsLimitUnlimited {
 		limitedNotifications = limitNotifications(notifications)
 		lastTs := limitedNotifications[len(limitedNotifications)-1].Timestamp
 
@@ -361,7 +406,7 @@ func getLimitedNotifications(
 			// this means that all notifications have same timestamp,
 			// we hope that all notifications with same timestamp should fit our memory
 			var err error
-			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, nil)
+			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, notifier.NotificationsLimitUnlimited)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get notification without limit in transaction: %w", err)
 			}
@@ -372,7 +417,7 @@ func getLimitedNotifications(
 }
 
 // fetchNotificationsDo performs fetching of notifications within a single transaction
-func (connector *DbConnector) fetchNotificationsDo(to int64, limit *int64) ([]*moira.ScheduledNotification, error) {
+func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// See https://redis.io/topics/transactions
 
 	ctx := connector.context

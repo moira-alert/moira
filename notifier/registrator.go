@@ -112,6 +112,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	default:
 		senderIdent = senderType
 	}
+
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 	if err != nil {
 		return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderIdent, err.Error())
@@ -120,6 +121,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	notifier.senders[senderIdent] = eventsChannel
 	notifier.metrics.SendersOkMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_ok")
 	notifier.metrics.SendersFailedMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_failed")
+	notifier.metrics.SendersDroppedNotifications.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "notifications_dropped")
 	notifier.runSenders(sender, eventsChannel)
 	notifier.logger.Info().
 		String("sender_id", senderIdent).
