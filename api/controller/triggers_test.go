@@ -145,6 +145,76 @@ func TestGetAllTriggers(t *testing.T) {
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
 	})
+
+	Convey("Has triggers with metrics which DeletedButKept is true", t, func() {
+		triggerIDs := []string{"1", "2", "3"}
+		triggers := []*moira.TriggerCheck{
+			{
+				Throttling: 1,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test1": {
+							DeletedButKept: true,
+						},
+					},
+				},
+			},
+			{
+				Throttling: 2,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test2": {
+							DeletedButKept: false,
+						},
+					},
+				},
+			},
+			{
+				Throttling: 3,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test3": {
+							DeletedButKept: true,
+						},
+					},
+				},
+			},
+		}
+
+		expected := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{
+					Throttling: 1,
+					LastCheck: moira.CheckData{
+						Metrics: make(map[string]moira.MetricState),
+					},
+				},
+				{
+					Throttling: 2,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test2": {
+								DeletedButKept: false,
+							},
+						},
+					},
+				},
+				{
+					Throttling: 3,
+					LastCheck: moira.CheckData{
+						Metrics: make(map[string]moira.MetricState),
+					},
+				},
+			},
+		}
+
+		mockDatabase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
+		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
+
+		actual, err := GetAllTriggers(mockDatabase)
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+	})
 }
 
 func TestSearchTriggers(t *testing.T) {
@@ -161,6 +231,7 @@ func TestSearchTriggers(t *testing.T) {
 			Value: value,
 		})
 	}
+
 	triggerSearchResults := make([]*moira.SearchResult, 0)
 	for _, triggerCheck := range triggerChecks {
 		triggerSearchResults = append(triggerSearchResults, &moira.SearchResult{
@@ -168,6 +239,7 @@ func TestSearchTriggers(t *testing.T) {
 			Highlights: testHighlights,
 		})
 	}
+
 	triggerIDs := make([]string, len(triggerChecks))
 	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
 	for i, trigger := range triggerChecks {
@@ -190,6 +262,84 @@ func TestSearchTriggers(t *testing.T) {
 	}
 
 	Convey("No tags, no text, onlyErrors = false, ", t, func() {
+		Convey("With triggers which have metrics on Maintenance", func() {
+			triggers := []*moira.TriggerCheck{
+				{
+					Throttling: 1,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test1": {
+								DeletedButKept: true,
+							},
+						},
+					},
+				},
+				{
+					Throttling: 2,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test2": {},
+						},
+					},
+				},
+				{
+					Throttling: 3,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test3": {
+								DeletedButKept: true,
+							},
+						},
+					},
+				},
+			}
+
+			mockIndex.EXPECT().SearchTriggers(searchOptions).Return([]*moira.SearchResult{
+				{
+					ObjectID: "1",
+				},
+				{
+					ObjectID: "2",
+				},
+				{
+					ObjectID: "3",
+				},
+			}, exp, nil)
+			mockDatabase.EXPECT().GetTriggerChecks([]string{"1", "2", "3"}).Return(triggers, nil)
+			list, err := SearchTriggers(mockDatabase, mockIndex, searchOptions)
+			So(err, ShouldBeNil)
+			So(list, ShouldResemble, &dto.TriggersList{
+				List: []moira.TriggerCheck{
+					{
+						Throttling: 1,
+						LastCheck: moira.CheckData{
+							Metrics: map[string]moira.MetricState{},
+						},
+						Highlights: map[string]string{},
+					},
+					{
+						Throttling: 2,
+						LastCheck: moira.CheckData{
+							Metrics: map[string]moira.MetricState{
+								"test2": {},
+							},
+						},
+						Highlights: map[string]string{},
+					},
+					{
+						Throttling: 3,
+						LastCheck: moira.CheckData{
+							Metrics: map[string]moira.MetricState{},
+						},
+						Highlights: map[string]string{},
+					},
+				},
+				Total: &exp,
+				Page:  &searchOptions.Page,
+				Size:  &searchOptions.Size,
+			})
+		})
+
 		Convey("Page is bigger than triggers number", func() {
 			mockIndex.EXPECT().SearchTriggers(searchOptions).Return(triggerSearchResults, exp, nil)
 			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
@@ -471,6 +621,7 @@ func TestSearchTriggers(t *testing.T) {
 				Pager: &searchOptions.PagerID,
 			})
 		})
+
 		Convey("Use pager", func() {
 			searchOptions.PagerID = "TestPagerID"
 			searchOptions.Page = 0
@@ -491,6 +642,7 @@ func TestSearchTriggers(t *testing.T) {
 				Pager: &searchOptions.PagerID,
 			})
 		})
+
 		Convey("Use pager and page size higher than amount of search results", func() {
 			searchOptions.PagerID = "TestPagerID"
 			var exp int64 = 2
@@ -967,5 +1119,75 @@ func TestGetUnusedTriggerIDs(t *testing.T) {
 		list, err := GetUnusedTriggerIDs(mockDatabase)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
+	})
+
+	Convey("Has triggers with metrics which DeletedButKept is true", t, func() {
+		triggerIDs := []string{"1", "2", "3"}
+		triggers := []*moira.TriggerCheck{
+			{
+				Throttling: 1,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test1": {
+							DeletedButKept: true,
+						},
+					},
+				},
+			},
+			{
+				Throttling: 2,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test2": {
+							DeletedButKept: false,
+						},
+					},
+				},
+			},
+			{
+				Throttling: 3,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test3": {
+							DeletedButKept: true,
+						},
+					},
+				},
+			},
+		}
+
+		expected := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{
+					Throttling: 1,
+					LastCheck: moira.CheckData{
+						Metrics: make(map[string]moira.MetricState),
+					},
+				},
+				{
+					Throttling: 2,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test2": {
+								DeletedButKept: false,
+							},
+						},
+					},
+				},
+				{
+					Throttling: 3,
+					LastCheck: moira.CheckData{
+						Metrics: make(map[string]moira.MetricState),
+					},
+				},
+			},
+		}
+
+		mockDatabase.EXPECT().GetUnusedTriggerIDs().Return(triggerIDs, nil)
+		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
+
+		actual, err := GetUnusedTriggerIDs(mockDatabase)
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
 	})
 }
