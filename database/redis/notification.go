@@ -145,9 +145,12 @@ func (connector *DbConnector) GetResaveTimeInSeconds() int64 {
 }
 
 // filterNotificationsByDelay filters notifications into delayed and not delayed notifications
-func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, delayedTime int64) ([]*moira.ScheduledNotification, []*moira.ScheduledNotification) {
-	delayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
-	notDelayedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, delayedTime int64) (
+	delayedNotifications []*moira.ScheduledNotification,
+	notDelayedNotifications []*moira.ScheduledNotification,
+) {
+	delayedNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
+	notDelayedNotifications = make([]*moira.ScheduledNotification, 0, len(notifications))
 
 	for _, notification := range notifications {
 		if notification == nil {
