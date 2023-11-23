@@ -45,7 +45,7 @@ notification_history:
   query_limit: 10000
 notification:
   delayed_time: 1m
-  transaction_timeout: 200ms
+  transaction_timeout: 100ms
   transaction_max_retries: 10
   transaction_heuristic_limit: 10000
 log:

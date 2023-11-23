@@ -98,7 +98,7 @@ func getDefault() config {
 		},
 		Notification: cmd.NotificationConfig{
 			DelayedTime:               "1m",
-			TransactionTimeout:        "200ms",
+			TransactionTimeout:        "100ms",
 			TransactionMaxRetries:     10,
 			TransactionHeuristicLimit: 10000,
 		},

@@ -105,7 +105,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	c := *connector.client
 	ctx := connector.context
 
-	rand.New(rand.NewSource(time.Now().Unix()))
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	pipe := c.TxPipeline()
 
 	for _, metric := range metrics {
