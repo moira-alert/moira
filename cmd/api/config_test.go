@@ -23,9 +23,10 @@ func Test_apiConfig_getSettings(t *testing.T) {
 			Listen:                  "0000",
 			GraphiteLocalMetricTTL:  time.Hour,
 			GraphiteRemoteMetricTTL: 24 * time.Hour,
+			Flags:                   api.FeatureFlags{IsReadonlyEnabled: true},
 		}
 
-		result := apiConf.getSettings("1h", "24h")
+		result := apiConf.getSettings("1h", "24h", api.FeatureFlags{IsReadonlyEnabled: true})
 		So(result, ShouldResemble, expectedResult)
 	})
 }
@@ -115,7 +116,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 
 		result, err := wC.getSettings(true)
 		So(err, ShouldBeEmpty)
-		So(string(result), ShouldResemble, "{\"remoteAllowed\":true,\"contacts\":[],\"featureFlags\":{\"isPlottingDefaultOn\":false,\"isPlottingAvailable\":false,\"isSubscriptionToAllTagsAvailable\":false}}")
+		So(string(result), ShouldResemble, `{"remoteAllowed":true,"contacts":[],"featureFlags":{"isPlottingDefaultOn":false,"isPlottingAvailable":false,"isSubscriptionToAllTagsAvailable":false,"isReadonlyEnabled":false}}`)
 	})
 
 	Convey("Default config, fill it", t, func() {
@@ -123,7 +124,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 
 		result, err := config.Web.getSettings(true)
 		So(err, ShouldBeEmpty)
-		So(string(result), ShouldResemble, "{\"remoteAllowed\":true,\"contacts\":[],\"featureFlags\":{\"isPlottingDefaultOn\":true,\"isPlottingAvailable\":true,\"isSubscriptionToAllTagsAvailable\":true}}")
+		So(string(result), ShouldResemble, `{"remoteAllowed":true,"contacts":[],"featureFlags":{"isPlottingDefaultOn":true,"isPlottingAvailable":true,"isSubscriptionToAllTagsAvailable":true,"isReadonlyEnabled":false}}`)
 	})
 
 	Convey("Not empty config, fill it", t, func() {
@@ -148,6 +149,6 @@ func Test_webConfig_getSettings(t *testing.T) {
 
 		result, err := wC.getSettings(true)
 		So(err, ShouldBeEmpty)
-		So(string(result), ShouldResemble, "{\"supportEmail\":\"lalal@mail.la\",\"remoteAllowed\":true,\"contacts\":[{\"type\":\"slack\",\"label\":\"label\",\"validation\":\"t(\\\\d+)\",\"help\":\"help\"}],\"featureFlags\":{\"isPlottingDefaultOn\":true,\"isPlottingAvailable\":false,\"isSubscriptionToAllTagsAvailable\":true}}")
+		So(string(result), ShouldResemble, `{"supportEmail":"lalal@mail.la","remoteAllowed":true,"contacts":[{"type":"slack","label":"label","validation":"t(\\d+)","help":"help"}],"featureFlags":{"isPlottingDefaultOn":true,"isPlottingAvailable":false,"isSubscriptionToAllTagsAvailable":true,"isReadonlyEnabled":false}}`)
 	})
 }

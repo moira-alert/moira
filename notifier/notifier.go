@@ -160,6 +160,7 @@ func (notifier *StandardNotifier) GetReadBatchSize() int64 {
 
 func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string) {
 	if pkg.DontResend {
+		notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
 		return
 	}
 
@@ -250,7 +251,6 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				log.Warning().
 					Error(err).
 					Msg("Cannot send notification")
-				notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
 			}
 
 			notifier.resend(&pkg, err.Error())

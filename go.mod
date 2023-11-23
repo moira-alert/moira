@@ -26,7 +26,7 @@ require (
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
 	github.com/gregdel/pushover v1.1.0
 	github.com/karriereat/blackfriday-slack v0.1.0
-	github.com/moira-alert/go-chart v0.0.0-20230220064910-812fb2829b9b
+	github.com/moira-alert/go-chart v0.0.0-20231107064049-444c44a558ef
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.13
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.14.0
@@ -144,7 +144,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.16.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/stretchr/testify v1.8.4
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
@@ -158,7 +158,7 @@ require (
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20200924195034-c827fd4f18b9 // indirect
-	golang.org/x/image v0.8.0 // indirect
+	golang.org/x/image v0.13.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
