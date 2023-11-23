@@ -21,7 +21,6 @@ type config struct {
 	Remote              cmd.RemoteConfig              `yaml:"remote"`
 	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
-	Notification        cmd.NotificationConfig        `yaml:"notification"`
 }
 
 type apiConfig struct {
