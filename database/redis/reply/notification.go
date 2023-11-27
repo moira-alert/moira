@@ -18,6 +18,7 @@ type scheduledNotificationStorageElement struct {
 	Throttled bool                    `json:"throttled"`
 	SendFail  int                     `json:"send_fail"`
 	Timestamp int64                   `json:"timestamp"`
+	CreatedAt int64                   `json:"created_at,omitempty"`
 }
 
 func toScheduledNotificationStorageElement(notification moira.ScheduledNotification) scheduledNotificationStorageElement {
@@ -29,6 +30,7 @@ func toScheduledNotificationStorageElement(notification moira.ScheduledNotificat
 		Throttled: notification.Throttled,
 		SendFail:  notification.SendFail,
 		Timestamp: notification.Timestamp,
+		CreatedAt: notification.CreatedAt,
 	}
 }
 
@@ -41,6 +43,7 @@ func (n scheduledNotificationStorageElement) toScheduledNotification() moira.Sch
 		Throttled: n.Throttled,
 		SendFail:  n.SendFail,
 		Timestamp: n.Timestamp,
+		CreatedAt: n.CreatedAt,
 	}
 }
 
@@ -49,7 +52,7 @@ func GetNotificationBytes(notification moira.ScheduledNotification) ([]byte, err
 	notificationSE := toScheduledNotificationStorageElement(notification)
 	bytes, err := json.Marshal(notificationSE)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal notification: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal notification: %w", err)
 	}
 	return bytes, nil
 }
@@ -60,13 +63,15 @@ func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification
 		if err == redis.Nil {
 			return moira.ScheduledNotification{}, database.ErrNil
 		}
-		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %s", err.Error())
+		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %w", err)
 	}
+
 	notificationSE := scheduledNotificationStorageElement{}
 	err = json.Unmarshal(bytes, &notificationSE)
 	if err != nil {
-		return moira.ScheduledNotification{}, fmt.Errorf("failed to parse notification json %s: %s", string(bytes), err.Error())
+		return moira.ScheduledNotification{}, fmt.Errorf("failed to parse notification json %s: %w", string(bytes), err)
 	}
+
 	return notificationSE.toScheduledNotification(), nil
 }
 
@@ -78,7 +83,7 @@ func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotificat
 
 	data, err := responses.Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read ScheduledNotifications: %s", err.Error())
+		return nil, fmt.Errorf("failed to read ScheduledNotifications: %w", err)
 	}
 
 	notifications := make([]*moira.ScheduledNotification, len(data))
@@ -92,5 +97,6 @@ func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotificat
 			notifications[i] = &notification
 		}
 	}
+
 	return notifications, nil
 }
