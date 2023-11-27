@@ -112,18 +112,6 @@ func GetTriggerThrottling(database moira.Database, triggerID string) (*dto.Throt
 	return &dto.ThrottlingResponse{Throttling: throttlingUnix}, nil
 }
 
-// Need to not show the user metrics that should have been deleted due to ttlState = Del,
-// but remained in the database because their Maintenance did not expire
-func getAliveMetrics(metrics map[string]moira.MetricState) map[string]moira.MetricState {
-	aliveMetrics := make(map[string]moira.MetricState, len(metrics))
-	for metricName, metricState := range metrics {
-		if !metricState.DeletedButKept {
-			aliveMetrics[metricName] = metricState
-		}
-	}
-	return aliveMetrics
-}
-
 // GetTriggerLastCheck gets trigger last check data
 func GetTriggerLastCheck(dataBase moira.Database, triggerID string) (*dto.TriggerCheck, *api.ErrorResponse) {
 	lastCheck := &moira.CheckData{}
@@ -137,8 +125,8 @@ func GetTriggerLastCheck(dataBase moira.Database, triggerID string) (*dto.Trigge
 		lastCheck = nil
 	}
 
-	if lastCheck != nil && len(lastCheck.Metrics) != 0 {
-		lastCheck.Metrics = getAliveMetrics(lastCheck.Metrics)
+	if lastCheck != nil {
+		lastCheck.RemoveDeadMetrics()
 	}
 
 	triggerCheck := dto.TriggerCheck{

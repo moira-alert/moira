@@ -138,9 +138,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 	for triggerCheckInd := range triggerChecks {
 		triggerCheck := triggerChecks[triggerCheckInd]
 		if triggerCheck != nil {
-			if len(triggerCheck.LastCheck.Metrics) != 0 {
-				triggerCheck.LastCheck.Metrics = getAliveMetrics(triggerCheck.LastCheck.Metrics)
-			}
+			triggerCheck.LastCheck.RemoveDeadMetrics()
 
 			highlights := make(map[string]string)
 			for _, highlight := range searchResults[triggerCheckInd].Highlights {
@@ -196,9 +194,7 @@ func getTriggerChecks(database moira.Database, triggerIDs []string) ([]moira.Tri
 	list := make([]moira.TriggerCheck, 0, len(triggerChecks))
 	for _, triggerCheck := range triggerChecks {
 		if triggerCheck != nil {
-			if len(triggerCheck.LastCheck.Metrics) != 0 {
-				triggerCheck.LastCheck.Metrics = getAliveMetrics(triggerCheck.LastCheck.Metrics)
-			}
+			triggerCheck.LastCheck.RemoveDeadMetrics()
 			list = append(list, *triggerCheck)
 		}
 	}
