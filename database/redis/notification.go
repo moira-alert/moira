@@ -135,12 +135,12 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 
 // GetDelayedTimeInSeconds returns the time, if the difference between notification
 // creation and sending time is greater than this time, the notification will be considered delayed
-func (connector *DbConnector) GetDelayedTimeInSeconds() int64 {
+func (connector *DbConnector) getDelayedTimeInSeconds() int64 {
 	return int64(connector.notification.DelayedTime.Seconds())
 }
 
 // GetResaveTimeInSeconds returns the time to reschedule notifications to the future in seconds
-func (connector *DbConnector) GetResaveTimeInSeconds() int64 {
+func (connector *DbConnector) getResaveTimeInSeconds() int64 {
 	return int64(connector.notification.ResaveTime.Seconds())
 }
 
@@ -219,7 +219,7 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 			validNotifications = append(validNotifications, notification)
 
 		case moira.ResavedNotification:
-			notification.Timestamp += connector.GetResaveTimeInSeconds()
+			notification.Timestamp += connector.getResaveTimeInSeconds()
 			toResaveNotifications = append(toResaveNotifications, notification)
 
 		case moira.RemovedNotification:
@@ -276,7 +276,7 @@ func (connector *DbConnector) handleNotifications(notifications []*moira.Schedul
 		return notifications, nil, nil
 	}
 
-	delayedNotifications, notDelayedNotifications := filterNotificationsByDelay(notifications, connector.GetDelayedTimeInSeconds())
+	delayedNotifications, notDelayedNotifications := filterNotificationsByDelay(notifications, connector.getDelayedTimeInSeconds())
 
 	if len(delayedNotifications) == 0 {
 		return notDelayedNotifications, nil, nil
@@ -520,7 +520,6 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 	return nil
 }
 
-// saveNotifications save notifications with the passed pipe and context
 func (connector *DbConnector) saveNotifications(ctx context.Context, pipe redis.Pipeliner, notifications []*moira.ScheduledNotification) error {
 	for _, notification := range notifications {
 		bytes, err := reply.GetNotificationBytes(*notification)
