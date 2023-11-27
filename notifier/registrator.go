@@ -52,7 +52,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			return fmt.Errorf("failed to get sender type from settings")
 		}
 
-		// if a sender of this type already exists, do not create it again
+		// If a sender of this type already exists, do not create it again
 		if sender, ok := notifier.senders[senderType]; ok {
 			if err = notifier.RegisterSender(senderSettings, sender); err != nil {
 				return err
