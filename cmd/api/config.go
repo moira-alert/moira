@@ -21,7 +21,6 @@ type config struct {
 	Remote              cmd.RemoteConfig              `yaml:"remote"`
 	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
-	Notification        cmd.NotificationConfig        `yaml:"notification"`
 }
 
 type apiConfig struct {
@@ -60,14 +59,19 @@ type featureFlags struct {
 	IsPlottingDefaultOn              bool `yaml:"is_plotting_default_on"`
 	IsPlottingAvailable              bool `yaml:"is_plotting_available"`
 	IsSubscriptionToAllTagsAvailable bool `yaml:"is_subscription_to_all_tags_available"`
+	IsReadonlyEnabled                bool `yaml:"is_readonly_enabled"`
 }
 
-func (config *apiConfig) getSettings(localMetricTTL, remoteMetricTTL string) *api.Config {
+func (config *apiConfig) getSettings(
+	localMetricTTL, remoteMetricTTL string,
+	flags api.FeatureFlags,
+) *api.Config {
 	return &api.Config{
 		EnableCORS:              config.EnableCORS,
 		Listen:                  config.Listen,
 		GraphiteLocalMetricTTL:  to.Duration(localMetricTTL),
 		GraphiteRemoteMetricTTL: to.Duration(remoteMetricTTL),
+		Flags:                   flags,
 	}
 }
 
@@ -100,6 +104,7 @@ func (config *webConfig) getFeatureFlags() api.FeatureFlags {
 		IsPlottingDefaultOn:              config.FeatureFlags.IsPlottingDefaultOn,
 		IsPlottingAvailable:              config.FeatureFlags.IsPlottingAvailable,
 		IsSubscriptionToAllTagsAvailable: config.FeatureFlags.IsSubscriptionToAllTagsAvailable,
+		IsReadonlyEnabled:                config.FeatureFlags.IsReadonlyEnabled,
 	}
 }
 
@@ -114,13 +119,6 @@ func getDefault() config {
 		NotificationHistory: cmd.NotificationHistoryConfig{
 			NotificationHistoryTTL:        "48h",
 			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
-		},
-		Notification: cmd.NotificationConfig{
-			DelayedTime:               "1m",
-			TransactionTimeout:        "200ms",
-			TransactionMaxRetries:     10,
-			TransactionHeuristicLimit: 10000,
-			ResaveTime:                "30s",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",

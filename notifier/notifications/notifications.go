@@ -8,6 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
 )
 
@@ -18,7 +19,17 @@ type FetchNotificationsWorker struct {
 	Logger   moira.Logger
 	Database moira.Database
 	Notifier notifier.Notifier
+	Metrics  *metrics.NotifierMetrics
 	tomb     tomb.Tomb
+}
+
+func (worker *FetchNotificationsWorker) updateFetchNotificationsMetric(fetchNotificationsStartTime time.Time) {
+	if worker.Metrics == nil {
+		worker.Logger.Warning().Msg("Cannot update fetch notifications metric because Metrics is nil")
+		return
+	}
+
+	worker.Metrics.UpdateFetchNotificationsDurationMs(fetchNotificationsStartTime)
 }
 
 // Start is a cycle that fetches scheduled notifications from database
@@ -64,14 +75,18 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	if err != nil {
 		return notifierInBadStateError("can't get current notifier state")
 	}
+
 	if state != moira.SelfStateOK {
 		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
 	}
-	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
 
+	fetchNotificationsStartTime := time.Now()
+	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
 	if err != nil {
 		return err
 	}
+	worker.updateFetchNotificationsMetric(fetchNotificationsStartTime)
+
 	notificationPackages := make(map[string]*notifier.NotificationPackage)
 	for _, notification := range notifications {
 		packageKey := fmt.Sprintf("%s:%s:%s", notification.Contact.Type, notification.Contact.Value, notification.Event.TriggerID)

@@ -61,7 +61,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	apiConfig := applicationConfig.API.getSettings(applicationConfig.Redis.MetricsTTL, applicationConfig.Remote.MetricsTTL)
+	apiConfig := applicationConfig.API.getSettings(
+		applicationConfig.Redis.MetricsTTL,
+		applicationConfig.Remote.MetricsTTL,
+		applicationConfig.Web.getFeatureFlags(),
+	)
 
 	logger, err := logging.ConfigureLog(applicationConfig.Logger.LogFile, applicationConfig.Logger.LogLevel, serviceName, applicationConfig.Logger.LogPrettyFormat)
 
@@ -83,8 +87,7 @@ func main() {
 
 	databaseSettings := applicationConfig.Redis.GetSettings()
 	notificationHistorySettings := applicationConfig.NotificationHistory.GetSettings()
-	notificationSettings := applicationConfig.Notification.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.API)
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.NotificationConfig{}, redis.API)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
@@ -138,14 +141,22 @@ func main() {
 		prometheusSource,
 	)
 
-	webConfigContent, err := applicationConfig.Web.getSettings(remoteConfig.Enabled)
+	webConfigContent, err := applicationConfig.Web.getSettings(remoteConfig.Enabled || prometheusConfig.Enabled)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
 			Msg("Failed to get web applicationConfig content ")
 	}
 
-	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, webConfigContent)
+	httpHandler := handler.NewHandler(
+		database,
+		logger,
+		searchIndex,
+		apiConfig,
+		metricSourceProvider,
+		webConfigContent,
+	)
+
 	server := &http.Server{
 		Handler: httpHandler,
 	}

@@ -50,15 +50,10 @@ web:
     is_plotting_available: true
     is_plotting_default_on: true
     is_subscription_to_all_tags_available: true
+    is_readonly_enabled: true
 notification_history:
   ttl: 48h
   query_limit: 10000
-notification:
-  delayed_time: 1m
-  transaction_timeout: 200ms
-  transaction_max_retries: 10
-  transaction_heuristic_limit: 10000
-  resave_time: 30s
 log:
   log_file: stdout
   log_level: debug

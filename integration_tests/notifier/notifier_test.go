@@ -119,6 +119,7 @@ func TestNotifier(t *testing.T) {
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
 		Database: database,
 		Logger:   logger,
+		Metrics:  notifierMetrics,
 		Notifier: notifierInstance,
 	}
 
