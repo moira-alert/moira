@@ -423,6 +423,16 @@ type CheckData struct {
 	Message                      string `json:"msg,omitempty"`
 }
 
+// Need to not show the user metrics that should have been deleted due to ttlState = Del,
+// but remained in the database because their Maintenance did not expire
+func (checkData *CheckData) RemoveDeadMetrics() {
+	for metricName, metricState := range checkData.Metrics {
+		if metricState.DeletedButKept {
+			delete(checkData.Metrics, metricName)
+		}
+	}
+}
+
 // RemoveMetricState is a function that removes MetricState from map of states.
 func (checkData CheckData) RemoveMetricState(metricName string) {
 	delete(checkData.Metrics, metricName)

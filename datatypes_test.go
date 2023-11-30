@@ -367,6 +367,76 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 	})
 }
 
+func TestCheckData_RemoveDeadMetrics(t *testing.T) {
+	Convey("Test RemoveDeadMetrics", t, func() {
+		Convey("Test with nil map of metrics", func() {
+			checkData := CheckData{
+				Metrics: nil,
+			}
+			checkData.RemoveDeadMetrics()
+
+			var expected map[string]MetricState
+			So(checkData.Metrics, ShouldResemble, expected)
+		})
+
+		Convey("Test with empty map of metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{})
+		})
+
+		Convey("Test with all alive metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {},
+					"test2": {},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{
+				"test1": {},
+				"test2": {},
+			})
+		})
+
+		Convey("Test with all dead metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						DeletedButKept: true,
+					},
+					"test2": {
+						DeletedButKept: true,
+					},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{})
+		})
+
+		Convey("Test with alive and dead metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						DeletedButKept: true,
+					},
+					"test2": {},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{
+				"test2": {},
+			})
+		})
+	})
+}
+
 func TestMetricState_GetCheckPoint(t *testing.T) {
 	Convey("Get check point", t, func() {
 		metricState := MetricState{Timestamp: 800, EventTimestamp: 700}
