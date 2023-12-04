@@ -139,11 +139,6 @@ func (connector *DbConnector) getDelayedTimeInSeconds() int64 {
 	return int64(connector.notification.DelayedTime.Seconds())
 }
 
-// GetResaveTimeInSeconds returns the time to reschedule notifications to the future in seconds
-func (connector *DbConnector) getResaveTimeInSeconds() int64 {
-	return int64(connector.notification.ResaveTime.Seconds())
-}
-
 // filterNotificationsByDelay filters notifications into delayed and not delayed notifications
 func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, delayedTime int64) (
 	delayedNotifications []*moira.ScheduledNotification,
@@ -219,7 +214,7 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 			validNotifications = append(validNotifications, notification)
 
 		case moira.ResavedNotification:
-			notification.Timestamp += connector.getResaveTimeInSeconds()
+			notification.Timestamp = int64(time.Now().Add(connector.notification.ResaveTime).Second())
 			toResaveNotifications = append(toResaveNotifications, notification)
 
 		case moira.RemovedNotification:
