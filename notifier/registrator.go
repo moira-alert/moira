@@ -114,7 +114,6 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		}
 
 		senders[senderType] = sender
-		notifier.handleSender(senderType, sender)
 	}
 
 	if notifier.config.SelfStateEnabled {
@@ -125,7 +124,6 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 				Error(err).
 				Msg("Failed to register selfstate sender")
 		}
-		notifier.handleSender(selfStateSender, sender)
 	}
 
 	return nil
@@ -154,6 +152,10 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	}
 
 	notifier.sendersNameToType[senderIdent] = senderType
+
+	if !notifier.GetSenders()[senderType] {
+		notifier.handleSender(senderType, sender)
+	}
 
 	notifier.logger.Info().
 		String("sender_id", senderIdent).

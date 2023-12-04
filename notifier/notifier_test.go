@@ -227,7 +227,7 @@ func configureNotifier(t *testing.T, config Config) {
 	senderSettings := map[string]interface{}{
 		"type": "test",
 	}
-	standardNotifier.handleSender("test", sender)
+	// standardNotifier.handleSender("test", sender)
 
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
