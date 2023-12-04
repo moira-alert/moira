@@ -25,6 +25,12 @@ notifier:
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"
+  max_parallel_sends_per_sender: 16
+notification:
+  delayed_time: 1m
+  transaction_timeout: 100ms
+  transaction_max_retries: 10
+  transaction_heuristic_limit: 10000
 log:
   log_file: stdout
   log_level: info
