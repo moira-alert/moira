@@ -46,13 +46,6 @@ func (notifier *StandardNotifier) registerMetrics(senderType string) {
 	notifier.metrics.SendersDroppedNotifications.RegisterMeter(senderType, getGraphiteSenderIdent(senderType), "notifications_dropped")
 }
 
-func (notifier *StandardNotifier) handleSender(senderType string, sender moira.Sender) {
-	eventsChannel := make(chan NotificationPackage)
-	notifier.sendersNotificationsCh[senderType] = eventsChannel
-	notifier.registerMetrics(senderType)
-	notifier.runSenders(sender, eventsChannel)
-}
-
 // RegisterSenders watch on senders config and register all configured senders
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
@@ -154,7 +147,10 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	notifier.sendersNameToType[senderIdent] = senderType
 
 	if !notifier.GetSenders()[senderType] {
-		notifier.handleSender(senderType, sender)
+		eventsChannel := make(chan NotificationPackage)
+		notifier.sendersNotificationsCh[senderType] = eventsChannel
+		notifier.registerMetrics(senderType)
+		notifier.runSenders(sender, eventsChannel)
 	}
 
 	notifier.logger.Info().
