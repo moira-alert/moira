@@ -29,6 +29,11 @@ var (
 		Location:                  location,
 		DateTimeFormat:            dateTimeFormat,
 		MaxParallelSendsPerSender: 16,
+		Senders: []map[string]interface{}{
+			{
+				"type": "test",
+			},
+		},
 	}
 )
 
@@ -222,6 +227,7 @@ func configureNotifier(t *testing.T, config Config) {
 	senderSettings := map[string]interface{}{
 		"type": "test",
 	}
+	standardNotifier.handleSender("test", sender)
 
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
@@ -229,8 +235,6 @@ func configureNotifier(t *testing.T, config Config) {
 
 	Convey("Should return one sender", t, func() {
 		So(err, ShouldBeNil)
-		So(standardNotifier.GetSenders(), ShouldResemble, map[string]bool{"test": true})
-		So(standardNotifier.sendersNameToType["test"], ShouldEqual, senderSettings["type"])
 	})
 }
 

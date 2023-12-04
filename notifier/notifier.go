@@ -74,7 +74,6 @@ type Notifier interface {
 // StandardNotifier represent notification functionality
 type StandardNotifier struct {
 	waitGroup              sync.WaitGroup
-	senders                map[string]moira.Sender
 	sendersNotificationsCh map[string]chan NotificationPackage
 	logger                 moira.Logger
 	database               moira.Database
@@ -84,7 +83,6 @@ type StandardNotifier struct {
 	metricSourceProvider   *metricSource.SourceProvider
 	imageStores            map[string]moira.ImageStore
 	sendersNameToType      map[string]string
-	sendersOnce            map[string]*sync.Once
 }
 
 // NewNotifier is initializer for StandardNotifier
@@ -98,7 +96,6 @@ func NewNotifier(
 	scheduler Scheduler,
 ) *StandardNotifier {
 	return &StandardNotifier{
-		senders:                make(map[string]moira.Sender),
 		sendersNotificationsCh: make(map[string]chan NotificationPackage),
 		logger:                 logger,
 		database:               database,
@@ -108,7 +105,6 @@ func NewNotifier(
 		metricSourceProvider:   metricSourceProvider,
 		imageStores:            imageStoreMap,
 		sendersNameToType:      make(map[string]string),
-		sendersOnce:            make(map[string]*sync.Once),
 	}
 }
 
@@ -147,7 +143,7 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 // GetSenders get hash of registered notifier senders
 func (notifier *StandardNotifier) GetSenders() map[string]bool {
 	hash := make(map[string]bool)
-	for key := range notifier.senders {
+	for key := range notifier.sendersNotificationsCh {
 		hash[key] = true
 	}
 	return hash
