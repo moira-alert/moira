@@ -365,7 +365,12 @@ func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) er
 	}
 
 	templatingEvents := moira.NotificationEventsToTemplatingEvents(events)
-	description, err := templating.Populate(trigger.Name, *trigger.Desc, templatingEvents)
+	description, err := templating.Populate(templating.TemplateSettings{
+		ID:     trigger.ID,
+		Name:   trigger.Name,
+		Desc:   *trigger.Desc,
+		Events: templatingEvents,
+	})
 	if err != nil {
 		return fmt.Errorf("you have an error in your Go template: %v", err)
 	}

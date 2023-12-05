@@ -15,6 +15,7 @@ type config struct {
 	Name     string `mapstructure:"name"`
 	Type     string `mapstructure:"type"`
 	URL      string `mapstructure:"url"`
+	Body     string `mapstructure:"body"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
 	Timeout  int    `mapstructure:"timeout"`
@@ -30,6 +31,7 @@ type Sender struct {
 type webhookClient struct {
 	client   *http.Client
 	url      string
+	body     string
 	user     string
 	password string
 	headers  map[string]string
@@ -63,6 +65,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		url:      cfg.URL,
 		user:     cfg.User,
 		password: cfg.Password,
+		body:     cfg.Body,
 		headers: map[string]string{
 			"User-Agent":   "Moira",
 			"Content-Type": "application/json",

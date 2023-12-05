@@ -12,9 +12,26 @@ import (
 
 const eventTimeFormat = "2006-01-02 15:04:05"
 
+type TemplateSettings struct {
+	ID      string
+	Desc    string
+	Name    string
+	Events  []Event
+	Contact ContactInfo
+}
+
 type notification struct {
+	ID      string
 	Trigger trigger
 	Events  []Event
+	Contact ContactInfo
+}
+
+type ContactInfo struct {
+	Type  string
+	Value string
+	User  string
+	Team  string
 }
 
 type Event struct {
@@ -252,31 +269,33 @@ var sprigFuncMap = filterKeys(sprig.FuncMap(), []string{
 	"regexQuoteMeta",
 })
 
-func Populate(name, description string, events []Event) (desc string, err error) {
+func Populate(settings TemplateSettings) (desc string, err error) {
 	defer func() {
 		if errRecover := recover(); errRecover != nil {
-			desc = description
+			desc = settings.Desc
 			err = fmt.Errorf("PANIC in populate: %v, Trigger name: %s, desc: %s, events:%#v",
-				err, name, description, events)
+				err, settings.Name, settings.Desc, settings.Events)
 		}
 	}()
 
 	buffer := bytes.Buffer{}
 
 	dataToExecute := notification{
-		Trigger: trigger{Name: name},
-		Events:  events,
+		ID:      settings.ID,
+		Trigger: trigger{Name: settings.Name},
+		Events:  settings.Events,
+		Contact: settings.Contact,
 	}
 
 	triggerTemplate := template.New("populate-description").Funcs(sprigFuncMap).Funcs(funcMap)
-	triggerTemplate, err = triggerTemplate.Parse(description)
+	triggerTemplate, err = triggerTemplate.Parse(settings.Desc)
 	if err != nil {
-		return description, err
+		return settings.Desc, err
 	}
 
 	err = triggerTemplate.Execute(&buffer, dataToExecute)
 	if err != nil {
-		return description, err
+		return settings.Desc, err
 	}
 
 	return strings.TrimSpace(buffer.String()), nil

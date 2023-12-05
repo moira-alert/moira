@@ -285,6 +285,26 @@ func TestTriggerData_GetTags(t *testing.T) {
 	})
 }
 
+func TestContactData_ToTemplatingContactInfo(t *testing.T) {
+	Convey("Test ToTemplatingContactInfo", t, func() {
+		Convey("Successfully get contact info", func() {
+			contactData := ContactData{
+				ID:    "test id",
+				Type:  "test type",
+				Value: "test value",
+				User:  "test user",
+				Team:  "test team",
+			}
+
+			contactInfo := contactData.ToTemplatingContactInfo()
+			So(contactInfo.Type, ShouldResemble, contactData.Type)
+			So(contactInfo.Value, ShouldResemble, contactData.Value)
+			So(contactInfo.User, ShouldResemble, contactData.User)
+			So(contactInfo.Team, ShouldResemble, contactData.Team)
+		})
+	})
+}
+
 func TestScheduledNotification_GetKey(t *testing.T) {
 	Convey("Get key", t, func() {
 		notification := ScheduledNotification{

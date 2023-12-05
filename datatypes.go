@@ -130,7 +130,11 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 type NotificationEvents []NotificationEvent
 
 func (trigger *TriggerData) PopulatedDescription(events NotificationEvents) error {
-	description, err := templating.Populate(trigger.Name, trigger.Desc, NotificationEventsToTemplatingEvents(events))
+	description, err := templating.Populate(templating.TemplateSettings{
+		Name:   trigger.Name,
+		Desc:   trigger.Desc,
+		Events: NotificationEventsToTemplatingEvents(events),
+	})
 	if err != nil {
 		description = "Your description is using the wrong template. Since we were unable to populate your template with " +
 			"data, we return it so you can parse it.\n\n" + trigger.Desc
@@ -195,6 +199,15 @@ type ContactData struct {
 	ID    string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User  string `json:"user" example:""`
 	Team  string `json:"team"`
+}
+
+func (contact *ContactData) ToTemplatingContactInfo() templating.ContactInfo {
+	return templating.ContactInfo{
+		Type:  contact.Type,
+		Value: contact.Value,
+		User:  contact.User,
+		Team:  contact.Team,
+	}
 }
 
 // SubscriptionData represents user subscription

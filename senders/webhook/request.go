@@ -3,11 +3,14 @@ package webhook
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/templating"
 )
 
 func (client *webhookClient) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
@@ -18,7 +21,8 @@ func (client *webhookClient) buildRequest(events moira.NotificationEvents, conta
 	}
 
 	requestURL := buildRequestURL(client.url, trigger, contact)
-	requestBody, err := buildRequestBody(events, contact, trigger, plots, throttled)
+
+	requestBody, err := buildRequestBody(client.body, events, contact, trigger, plots, throttled)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +49,13 @@ func (client *webhookClient) buildRequest(events moira.NotificationEvents, conta
 	return request, nil
 }
 
-func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) ([]byte, error) {
+func buildDefaultRequestBody(
+	events moira.NotificationEvents,
+	contact moira.ContactData,
+	trigger moira.TriggerData,
+	plots [][]byte,
+	throttled bool,
+) ([]byte, error) {
 	encodedFirstPlot := ""
 	encodedPlots := make([]string, 0, len(plots))
 	for i, plot := range plots {
@@ -74,6 +84,46 @@ func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData
 	return json.Marshal(requestPayload)
 }
 
+func buildRequestBody(
+	template string,
+	events moira.NotificationEvents,
+	contact moira.ContactData,
+	trigger moira.TriggerData,
+	plots [][]byte,
+	throttled bool,
+) ([]byte, error) {
+	var requestBody []byte
+
+	if template != "" {
+		id, err := uuid.NewV4()
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate new id: %w", err)
+		}
+
+		populatedBody, err := templating.Populate(templating.TemplateSettings{
+			ID:      id.String(),
+			Desc:    template,
+			Name:    trigger.Name,
+			Events:  moira.NotificationEventsToTemplatingEvents(events),
+			Contact: contact.ToTemplatingContactInfo(),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to populate template body: %w", err)
+		}
+
+		requestBody = []byte(populatedBody)
+	} else {
+		defaultBody, err := buildDefaultRequestBody(events, contact, trigger, plots, throttled)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build default request body: %w", err)
+		}
+
+		requestBody = defaultBody
+	}
+
+	return requestBody, nil
+}
+
 func buildRequestURL(template string, trigger moira.TriggerData, contact moira.ContactData) string {
 	templateVariables := map[string]string{
 		moira.VariableContactID:    contact.ID,
@@ -81,7 +131,6 @@ func buildRequestURL(template string, trigger moira.TriggerData, contact moira.C
 		moira.VariableContactType:  contact.Type,
 		moira.VariableTriggerID:    trigger.ID,
 	}
-
 	for k, v := range templateVariables {
 		value := url.PathEscape(v)
 		if k == moira.VariableContactValue &&
@@ -90,6 +139,5 @@ func buildRequestURL(template string, trigger moira.TriggerData, contact moira.C
 		}
 		template = strings.Replace(template, k, value, -1)
 	}
-
 	return template
 }

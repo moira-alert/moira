@@ -183,17 +183,54 @@ var requestURLTestCases = []requestURLTestCase{
 }
 
 func TestBuildRequestBody(t *testing.T) {
-	Convey("Payload should be valid", t, func() {
-		Convey("Trigger state change", func() {
+	Convey("Test build request body", t, func() {
+		Convey("Test with empty body", func() {
 			events, contact, trigger, plot, throttled := testEvents, testContact, testTrigger, testPlot, testThrottled
-			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
+			requestBody, err := buildRequestBody("", events, contact, trigger, plot, throttled)
+
 			actual, expected := prepareStrings(string(requestBody), expectedStateChangePayload)
 			So(actual, ShouldEqual, expected)
 			So(err, ShouldBeNil)
 		})
+
+		Convey("Test with template body", func() {
+			template :=
+				`
+TriggerName: {{ .Trigger.Name }}
+Contact Value: {{ .Contact.Value }}
+`
+			contact := moira.ContactData{
+				Value: "test contact",
+			}
+			trigger := moira.TriggerData{
+				Name: "test trigger",
+			}
+			expected :=
+				`TriggerName: test trigger
+Contact Value: test contact`
+
+			events, plot, throttled := testEvents, testPlot, testThrottled
+			requestBody, err := buildRequestBody(template, events, contact, trigger, plot, throttled)
+
+			So(string(requestBody), ShouldEqual, expected)
+			So(err, ShouldBeNil)
+		})
+	})
+}
+
+func TestBuildDefaultRequestBody(t *testing.T) {
+	Convey("Payload should be valid", t, func() {
+		Convey("Trigger state change", func() {
+			events, contact, trigger, plot, throttled := testEvents, testContact, testTrigger, testPlot, testThrottled
+			requestBody, err := buildDefaultRequestBody(events, contact, trigger, plot, throttled)
+			actual, expected := prepareStrings(string(requestBody), expectedStateChangePayload)
+			So(actual, ShouldEqual, expected)
+			So(err, ShouldBeNil)
+		})
+
 		Convey("Empty notification", func() {
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
-			requestBody, err := buildRequestBody(events, contact, trigger, plots, throttled)
+			requestBody, err := buildDefaultRequestBody(events, contact, trigger, plots, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedEmptyPayload)
 			So(actual, ShouldEqual, expected)
 			So(actual, ShouldNotContainSubstring, "null")
