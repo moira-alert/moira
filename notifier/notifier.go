@@ -102,7 +102,7 @@ func NewNotifier(database moira.Database, logger moira.Logger, config Config, me
 func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup) {
 	ch, found := notifier.senders[pkg.Contact.Type]
 	if !found {
-		notifier.resend(pkg, fmt.Sprintf("Unknown contact type '%s' [%s]", pkg.Contact.Type, pkg))
+		notifier.reschedule(pkg, fmt.Sprintf("Unknown contact type '%s' [%s]", pkg.Contact.Type, pkg))
 		return
 	}
 	waitGroup.Add(1)
@@ -117,7 +117,7 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 		case ch <- *pkg:
 			break
 		case <-time.After(notifier.config.SendingTimeout):
-			notifier.resend(pkg, fmt.Sprintf("Timeout sending %s", pkg))
+			notifier.reschedule(pkg, fmt.Sprintf("Timeout sending %s", pkg))
 			break
 		}
 	}(pkg)
@@ -137,36 +137,39 @@ func (notifier *StandardNotifier) GetReadBatchSize() int64 {
 	return notifier.config.ReadBatchSize
 }
 
-func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string) {
+func (notifier *StandardNotifier) reschedule(pkg *NotificationPackage, reason string) {
 	if pkg.DontResend {
 		notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
 		return
 	}
-	notifier.metrics.SendingFailed.Mark(1)
-	if metric, found := notifier.metrics.SendersFailedMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
-		metric.Mark(1)
-	}
+
+	notifier.metrics.MarkSendingFailed()
+	notifier.metrics.MarkSendersFailedMetrics(pkg.Contact.Type)
 
 	logger := getLogWithPackageContext(&notifier.logger, pkg, &notifier.config)
+
+	if notifier.needToStop(pkg.FailCount) {
+		notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
+		logger.Error().
+			Msg("Stop resending. Notification interval is timed out")
+		return
+	}
+
 	logger.Warning().
 		Int("number_of_retries", pkg.FailCount).
 		String("reason", reason).
 		Msg("Can't send message. Retry again in 1 min")
 
-	if time.Duration(pkg.FailCount)*time.Minute > notifier.config.ResendingTimeout {
-		logger.Error().Msg("Stop resending. Notification interval is timed out")
-	} else {
-		for _, event := range pkg.Events {
-			subID := moira.UseString(event.SubscriptionID)
-			eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, subID)
-			SetLogLevelByConfig(notifier.config.LogSubscriptionsToLevel, subID, &eventLogger)
-			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
-				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
-			if err := notifier.database.AddNotification(notification); err != nil {
-				eventLogger.Error().
-					Error(err).
-					Msg("Failed to save scheduled notification")
-			}
+	for _, event := range pkg.Events {
+		subID := moira.UseString(event.SubscriptionID)
+		eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, subID)
+		SetLogLevelByConfig(notifier.config.LogSubscriptionsToLevel, subID, &eventLogger)
+		notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
+			pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
+		if err := notifier.database.AddNotification(notification); err != nil {
+			eventLogger.Error().
+				Error(err).
+				Msg("Failed to save scheduled notification")
 		}
 	}
 }
@@ -230,7 +233,11 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 					Msg("Cannot send notification")
 			}
 
-			notifier.resend(&pkg, err.Error())
+			notifier.reschedule(&pkg, err.Error())
 		}
 	}
+}
+
+func (notifier *StandardNotifier) needToStop(failCount int) bool {
+	return time.Duration(failCount)*time.Minute > notifier.config.ResendingTimeout
 }
