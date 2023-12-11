@@ -1,6 +1,8 @@
 package main
 
 import (
+	"runtime"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
@@ -47,6 +49,15 @@ type checkerConfig struct {
 	MetricEventPopDelay string `yaml:"metric_event_pop_delay"`
 }
 
+func handleParallelChecks(parallelChecks *int) bool {
+	if parallelChecks != nil && *parallelChecks == 0 {
+		*parallelChecks = runtime.NumCPU()
+		return true
+	}
+
+	return false
+}
+
 func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 	logTriggersToLevel := make(map[string]string)
 	for _, v := range config.SetLogLevel.TriggersToLevel {
@@ -55,6 +66,18 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 	logger.Info().
 		Int("number_of_triggers", len(logTriggersToLevel)).
 		Msg("Found dynamic log rules in config for some triggers")
+
+	if handleParallelChecks(&config.MaxParallelChecks) {
+		logger.Info().
+			Int("number_of_cpu", config.MaxParallelChecks).
+			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
+	}
+
+	if handleParallelChecks(&config.MaxParallelRemoteChecks) {
+		logger.Info().
+			Int("number_of_cpu", config.MaxParallelRemoteChecks).
+			Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
+	}
 
 	return &checker.Config{
 		CheckInterval:               to.Duration(config.CheckInterval),
