@@ -29,7 +29,6 @@ func TestRegisterSender(t *testing.T) {
 
 			err := standardNotifier.RegisterSender(senderSettings, sender)
 			So(err, ShouldBeNil)
-			So(standardNotifier.sendersNameToType["test"], ShouldEqual, senderSettings["type"])
 		})
 
 		Convey("With multiple senders one type", func() {
@@ -43,7 +42,6 @@ func TestRegisterSender(t *testing.T) {
 
 				err := standardNotifier.RegisterSender(senderSettings, sender)
 				So(err, ShouldBeNil)
-				So(standardNotifier.sendersNameToType["test_name"], ShouldEqual, senderSettings["type"])
 			})
 
 			senderSettings["name"] = "test_name_2"
@@ -53,7 +51,6 @@ func TestRegisterSender(t *testing.T) {
 
 				err := standardNotifier.RegisterSender(senderSettings, sender)
 				So(err, ShouldBeNil)
-				So(standardNotifier.sendersNameToType["test_name_2"], ShouldEqual, senderSettings["type"])
 			})
 		})
 	})

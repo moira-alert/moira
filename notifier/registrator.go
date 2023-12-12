@@ -144,11 +144,9 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 		senderIdent = senderType
 	}
 
-	notifier.sendersNameToType[senderIdent] = senderType
-
 	if !notifier.GetSenders()[senderType] {
 		eventsChannel := make(chan NotificationPackage)
-		notifier.sendersNotificationsCh[senderType] = eventsChannel
+		notifier.sendersChannel[senderType] = eventsChannel
 		notifier.registerMetrics(senderType)
 		notifier.runSenders(sender, eventsChannel)
 	}
@@ -174,11 +172,11 @@ func (notifier *StandardNotifier) runSenders(sender moira.Sender, eventsChannel 
 
 // StopSenders close all sending channels
 func (notifier *StandardNotifier) StopSenders() {
-	for _, ch := range notifier.sendersNotificationsCh {
+	for _, ch := range notifier.sendersChannel {
 		close(ch)
 	}
 
-	notifier.sendersNotificationsCh = make(map[string]chan NotificationPackage)
+	notifier.sendersChannel = make(map[string]chan NotificationPackage)
 	notifier.logger.Info().Msg("Waiting senders finish...")
 	notifier.waitGroup.Wait()
 	notifier.logger.Info().Msg("Moira Notifier Senders stopped")

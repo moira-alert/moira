@@ -71,18 +71,19 @@ type Notifier interface {
 	GetReadBatchSize() int64
 }
 
+type SendersNotificationChannel map[string]chan NotificationPackage
+
 // StandardNotifier represent notification functionality
 type StandardNotifier struct {
-	waitGroup              sync.WaitGroup
-	sendersNotificationsCh map[string]chan NotificationPackage
-	logger                 moira.Logger
-	database               moira.Database
-	scheduler              Scheduler
-	config                 Config
-	metrics                *metrics.NotifierMetrics
-	metricSourceProvider   *metricSource.SourceProvider
-	imageStores            map[string]moira.ImageStore
-	sendersNameToType      map[string]string
+	waitGroup            sync.WaitGroup
+	sendersChannel       SendersNotificationChannel
+	logger               moira.Logger
+	database             moira.Database
+	scheduler            Scheduler
+	config               Config
+	metrics              *metrics.NotifierMetrics
+	metricSourceProvider *metricSource.SourceProvider
+	imageStores          map[string]moira.ImageStore
 }
 
 // NewNotifier is initializer for StandardNotifier
@@ -96,29 +97,22 @@ func NewNotifier(
 	scheduler Scheduler,
 ) *StandardNotifier {
 	return &StandardNotifier{
-		sendersNotificationsCh: make(map[string]chan NotificationPackage),
-		logger:                 logger,
-		database:               database,
-		scheduler:              scheduler,
-		config:                 config,
-		metrics:                metrics,
-		metricSourceProvider:   metricSourceProvider,
-		imageStores:            imageStoreMap,
-		sendersNameToType:      make(map[string]string),
+		sendersChannel:       make(SendersNotificationChannel),
+		logger:               logger,
+		database:             database,
+		scheduler:            scheduler,
+		config:               config,
+		metrics:              metrics,
+		metricSourceProvider: metricSourceProvider,
+		imageStores:          imageStoreMap,
 	}
 }
 
 // Send is realization of StandardNotifier Send functionality
 func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup) {
-	senderType, ok := notifier.sendersNameToType[pkg.Contact.Type]
-	if !ok {
-		notifier.resend(pkg, fmt.Sprintf("Unknown contact type '%s' [%s]", pkg.Contact.Type, pkg))
-		return
-	}
-
-	ch, found := notifier.sendersNotificationsCh[senderType]
+	ch, found := notifier.sendersChannel[pkg.Contact.Type]
 	if !found {
-		notifier.resend(pkg, fmt.Sprintf("failed to get notification channel from '%s' [%s]", senderType, pkg))
+		notifier.resend(pkg, fmt.Sprintf("Unknown contact type '%s' [%s]", pkg.Contact.Type, pkg))
 		return
 	}
 
@@ -143,7 +137,7 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 // GetSenders get hash of registered notifier senders
 func (notifier *StandardNotifier) GetSenders() map[string]bool {
 	hash := make(map[string]bool)
-	for key := range notifier.sendersNotificationsCh {
+	for key := range notifier.sendersChannel {
 		hash[key] = true
 	}
 	return hash

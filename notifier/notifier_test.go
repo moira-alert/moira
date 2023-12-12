@@ -234,7 +234,6 @@ func configureNotifier(t *testing.T, config Config) {
 
 	Convey("Should return one sender", t, func() {
 		So(err, ShouldBeNil)
-		So(standardNotifier.sendersNameToType["test"], ShouldResemble, senderSettings["type"])
 		So(standardNotifier.GetSenders(), ShouldResemble, map[string]bool{"test": true})
 	})
 }
