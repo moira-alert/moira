@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
@@ -28,7 +29,8 @@ func TestReadonlyMode(t *testing.T) {
 		logger, _ := zerolog_adapter.GetLogger("Test")
 		config := &api.Config{Flags: api.FeatureFlags{IsReadonlyEnabled: true}}
 		expectedConfig := []byte("Expected config")
-		handler := NewHandler(mockDb, logger, nil, config, nil, expectedConfig)
+		sentryConfig := cmd.SentryConfig{}
+		handler := NewHandler(mockDb, logger, nil, config, nil, expectedConfig, sentryConfig)
 
 		Convey("Get notifier health", func() {
 			mockDb.EXPECT().GetNotifierState().Return("OK", nil).Times(1)

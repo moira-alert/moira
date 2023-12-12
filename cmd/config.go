@@ -147,6 +147,11 @@ type ProfilerConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
+type SentryConfig struct {
+	DSN               string `yaml:"dsn"`
+	AllowedHostsRegex string `yaml:"allowed_hosts_regex"`
+}
+
 // RemoteConfig is remote graphite settings structure
 type RemoteConfig struct {
 	// graphite url e.g http://graphite/render

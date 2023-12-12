@@ -17,6 +17,7 @@ type config struct {
 	Logger              cmd.LoggerConfig              `yaml:"log"`
 	API                 apiConfig                     `yaml:"api"`
 	Web                 webConfig                     `yaml:"web"`
+	Sentry              cmd.SentryConfig              `yaml:"sentry"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
 	Remote              cmd.RemoteConfig              `yaml:"remote"`
 	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`

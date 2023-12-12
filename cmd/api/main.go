@@ -155,6 +155,7 @@ func main() {
 		apiConfig,
 		metricSourceProvider,
 		webConfigContent,
+		applicationConfig.Sentry,
 	)
 
 	server := &http.Server{
