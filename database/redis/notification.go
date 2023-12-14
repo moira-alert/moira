@@ -224,7 +224,7 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 		case moira.ResavedNotification:
 			types.toRemove = append(types.toRemove, notification)
 			updatedNotification := *notification
-			updatedNotification.Timestamp = int64(time.Now().Add(connector.notification.ResaveTime).Second())
+			updatedNotification.Timestamp = time.Now().Add(connector.notification.ResaveTime).Unix()
 			types.toResave = append(types.toResave, &updatedNotification)
 
 		case moira.RemovedNotification:
