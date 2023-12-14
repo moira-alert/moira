@@ -255,7 +255,6 @@ func TestFetchNotifications(t *testing.T) {
 			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, err := database.FetchNotifications(now+database.getDelayedTimeInSeconds(), 4) //nolint
 			So(err, ShouldBeNil)
-
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
 
 			actual, total, err := database.GetNotifications(0, -1)

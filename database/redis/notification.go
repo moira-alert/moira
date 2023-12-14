@@ -211,12 +211,18 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 		toResave: make([]*moira.ScheduledNotification, 0, len(notifications)),
 	}
 
+	removedNotifications := make([]*moira.ScheduledNotification, 0, len(notifications))
+
 	triggerChecks, err := connector.getNotificationsTriggerChecks(notifications)
 	if err != nil {
 		return notificationTypes{}, fmt.Errorf("failed to get notifications trigger checks: %w", err)
 	}
 
 	for i, notification := range notifications {
+		if notification == nil {
+			continue
+		}
+
 		switch notification.GetState(triggerChecks[i]) {
 		case moira.ValidNotification:
 			types.valid = append(types.valid, notification)
@@ -229,16 +235,17 @@ func (connector *DbConnector) filterNotificationsByState(notifications []*moira.
 
 		case moira.RemovedNotification:
 			types.toRemove = append(types.toRemove, notification)
+			removedNotifications = append(removedNotifications, notification)
 		}
 	}
 
-	logToRemoveNotifications(connector.logger, types.toRemove)
+	logRemovedNotifications(connector.logger, removedNotifications)
 
 	return types, nil
 }
 
 // Helper function for logging information on to remove notifications
-func logToRemoveNotifications(logger moira.Logger, toRemoveNotifications []*moira.ScheduledNotification) {
+func logRemovedNotifications(logger moira.Logger, toRemoveNotifications []*moira.ScheduledNotification) {
 	if len(toRemoveNotifications) == 0 {
 		return
 	}
@@ -270,7 +277,7 @@ handleNotifications filters notifications into delayed and not delayed,
 then filters delayed notifications by notification state, then merges the 2 arrays
 of not delayed and valid delayed notifications into a single sorted array
 
-Returns valid notifications in sorted order by timestamp and notifications to remove
+Returns valid notifications in sorted order by timestamp, notifications to remove and to resave
 */
 func (connector *DbConnector) handleNotifications(notifications []*moira.ScheduledNotification) (notificationTypes, error) {
 	if len(notifications) == 0 {
