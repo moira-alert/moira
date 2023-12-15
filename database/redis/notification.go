@@ -287,6 +287,18 @@ func (connector *DbConnector) handleNotifications(notifications []*moira.Schedul
 		return notificationTypes{}, fmt.Errorf("failed to filter delayed notifications by state: %w", err)
 	}
 
+	connector.logger.Debug().
+		Fields(map[string]interface{}{
+			"valid":         types.valid,
+			"valid_count":   len(types.valid),
+			"removed":       types.toRemove,
+			"removed_count": len(types.toRemove),
+			"resaved":       types.toResave,
+			"resaved_count": len(types.toResave),
+		},
+		).
+		Msg("Notification types")
+
 	types.valid, err = moira.MergeToSorted[*moira.ScheduledNotification](types.valid, notDelayedNotifications)
 	if err != nil {
 		return notificationTypes{}, fmt.Errorf("failed to merge valid and not delayed notifications into sorted array: %w", err)
@@ -424,6 +436,11 @@ func getLimitedNotifications(
 // fetchNotificationsDo performs fetching of notifications within a single transaction
 func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// See https://redis.io/topics/transactions
+
+	connector.logger.Debug().
+		Int64("to", to).
+		Int64("limit", limit).
+		Msg("Fetch notifications do")
 
 	ctx := connector.context
 	c := *connector.client
