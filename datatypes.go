@@ -248,7 +248,7 @@ type ScheduledNotification struct {
 type scheduledNotificationState int
 
 const (
-	IgnoredNotification scheduledNotificationState = iota
+	ResavedNotification scheduledNotificationState = iota
 	ValidNotification
 	RemovedNotification
 )
@@ -281,10 +281,12 @@ func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) sch
 	if triggerCheck == nil {
 		return RemovedNotification
 	}
+
 	if !triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) && !triggerCheck.IsTriggerOnMaintenance() {
 		return ValidNotification
 	}
-	return IgnoredNotification
+
+	return ResavedNotification
 }
 
 // MatchedMetric represents parsed and matched metric data

@@ -309,7 +309,7 @@ func TestScheduledNotification_GetState(t *testing.T) {
 			So(state, ShouldEqual, RemovedNotification)
 		})
 
-		Convey("Get Ignored state with metric on maintenance", func() {
+		Convey("Get Resaved state with metric on maintenance", func() {
 			state := notification.GetState(&CheckData{
 				Metrics: map[string]MetricState{
 					"test": {
@@ -317,14 +317,14 @@ func TestScheduledNotification_GetState(t *testing.T) {
 					},
 				},
 			})
-			So(state, ShouldEqual, IgnoredNotification)
+			So(state, ShouldEqual, ResavedNotification)
 		})
 
-		Convey("Get Ignored state with trigger on maintenance", func() {
+		Convey("Get Resaved state with trigger on maintenance", func() {
 			state := notification.GetState(&CheckData{
 				Maintenance: time.Now().Add(time.Hour).Unix(),
 			})
-			So(state, ShouldEqual, IgnoredNotification)
+			So(state, ShouldEqual, ResavedNotification)
 		})
 
 		Convey("Get Valid state with trigger without metrics", func() {

@@ -208,7 +208,7 @@ func (connector *DbConnector) GetTriggerIDsStartWith(prefix string) ([]string, e
 	return matchedTriggers, nil
 }
 
-func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error {
+func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error { // nolint: gocyclo
 	bytes, err := reply.GetTriggerBytes(triggerID, newTrigger)
 	if err != nil {
 		return err
