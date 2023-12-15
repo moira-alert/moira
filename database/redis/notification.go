@@ -287,8 +287,6 @@ func (connector *DbConnector) handleNotifications(notifications []*moira.Schedul
 		return notificationTypes{}, fmt.Errorf("failed to filter delayed notifications by state: %w", err)
 	}
 
-	// logToRemoveNotifications(connector.logger, toRemoveNotifications)
-
 	types.valid, err = moira.MergeToSorted[*moira.ScheduledNotification](types.valid, notDelayedNotifications)
 	if err != nil {
 		return notificationTypes{}, fmt.Errorf("failed to merge valid and not delayed notifications into sorted array: %w", err)
@@ -540,9 +538,8 @@ func (connector *DbConnector) saveNotifications(ctx context.Context, pipe redis.
 		z := &redis.Z{Score: float64(notification.Timestamp), Member: bytes}
 		pipe.ZAdd(ctx, notifierNotificationsKey, z)
 	}
-	_, err := pipe.Exec(ctx)
 
-	if err != nil {
+	if _, err := pipe.Exec(ctx); err != nil {
 		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 
