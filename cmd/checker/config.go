@@ -1,6 +1,8 @@
 package main
 
 import (
+	"runtime"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
@@ -39,12 +41,23 @@ type checkerConfig struct {
 	MaxParallelChecks int `yaml:"max_parallel_checks"`
 	// Max concurrent remote checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 	MaxParallelRemoteChecks int `yaml:"max_parallel_remote_checks"`
+	// Max concurrent prometheus checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
+	MaxParallelPrometheusChecks int `yaml:"max_parallel_prometheus_checks"`
 	// Specify log level by entities
 	SetLogLevel triggersLogConfig `yaml:"set_log_level"`
 	// Metric event pop operation batch size
 	MetricEventPopBatchSize int `yaml:"metric_event_pop_batch_size"`
 	// Metric event pop operation delay
 	MetricEventPopDelay string `yaml:"metric_event_pop_delay"`
+}
+
+func handleParallelChecks(parallelChecks *int) bool {
+	if parallelChecks != nil && *parallelChecks == 0 {
+		*parallelChecks = runtime.NumCPU()
+		return true
+	}
+
+	return false
 }
 
 func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
@@ -56,6 +69,24 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 		Int("number_of_triggers", len(logTriggersToLevel)).
 		Msg("Found dynamic log rules in config for some triggers")
 
+	if handleParallelChecks(&config.MaxParallelChecks) {
+		logger.Info().
+			Int("number_of_cpu", config.MaxParallelChecks).
+			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
+	}
+
+	if handleParallelChecks(&config.MaxParallelRemoteChecks) {
+		logger.Info().
+			Int("number_of_cpu", config.MaxParallelRemoteChecks).
+			Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
+	}
+
+	if handleParallelChecks(&config.MaxParallelPrometheusChecks) {
+		logger.Info().
+			Int("number_of_cpu", config.MaxParallelPrometheusChecks).
+			Msg("MaxParallelPrometheusChecks is not configured, set it to the number of CPU")
+	}
+
 	return &checker.Config{
 		CheckInterval:               to.Duration(config.CheckInterval),
 		LazyTriggersCheckInterval:   to.Duration(config.LazyTriggersCheckInterval),
@@ -63,6 +94,7 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
 		MaxParallelLocalChecks:      config.MaxParallelChecks,
 		MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
+		MaxParallelPrometheusChecks: config.MaxParallelPrometheusChecks,
 		LogTriggersToLevel:          logTriggersToLevel,
 		MetricEventPopBatchSize:     int64(config.MetricEventPopBatchSize),
 		MetricEventPopDelay:         to.Duration(config.MetricEventPopDelay),
