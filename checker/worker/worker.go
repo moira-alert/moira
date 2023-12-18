@@ -2,7 +2,6 @@ package worker
 
 import (
 	"errors"
-	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -127,17 +126,8 @@ func (check *Checker) startCheckerWorker(w checkerWorker) error {
 		return nil
 	}
 
-	maxParallelChecks := w.MaxParallelChecks()
-	if maxParallelChecks == 0 {
-		maxParallelChecks = runtime.NumCPU()
-
-		check.Logger.Info().
-			Int("number_of_cpu", maxParallelChecks).
-			Msg("MaxParallel" + w.Name() + "Checks is not configured, set it to the number of CPU")
-	}
-
 	const maxParallelChecksMaxValue = 1024 * 8
-	if maxParallelChecks > maxParallelChecksMaxValue {
+	if w.MaxParallelChecks() > maxParallelChecksMaxValue {
 		return errors.New("MaxParallel" + w.Name() + "Checks value is too large")
 	}
 
@@ -146,10 +136,10 @@ func (check *Checker) startCheckerWorker(w checkerWorker) error {
 
 	triggerIdsToCheckChan := check.startTriggerToCheckGetter(
 		w.GetTriggersToCheck,
-		maxParallelChecks,
+		w.MaxParallelChecks(),
 	)
 
-	for i := 0; i < maxParallelChecks; i++ {
+	for i := 0; i < w.MaxParallelChecks(); i++ {
 		check.tomb.Go(func() error {
 			return check.startTriggerHandler(
 				triggerIdsToCheckChan,
