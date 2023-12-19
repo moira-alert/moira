@@ -828,7 +828,6 @@ github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7V
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
 github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88/go.mod h1:3w7q1U84EfirKl04SVQ/s7nPm1ZPhiXd34z40TNz36k=
 github.com/k0kubun/pp v2.3.0+incompatible/go.mod h1:GWse8YhT0p8pT4ir3ZgBbfZild3tgzSScAn6HmfYukg=
-github.com/karriereat/blackfriday-slack v0.1.0 h1:5v7TOdIgxFlcxykNjZZHlED2+5Xnx3rJws47hcxBWYY=
 github.com/karriereat/blackfriday-slack v0.1.0/go.mod h1:iM9iGxIpITGTuxl7benyJWiuXspkh5zLseXRKhTOu3M=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
@@ -903,6 +902,8 @@ github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lN
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9Gz0M=
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
+github.com/moira-alert/blackfriday-slack v0.1.2 h1:W6VbDlHDBxoB7X+OJ+3xZZuzMcQ0qTcblhLLnm/xQ7U=
+github.com/moira-alert/blackfriday-slack v0.1.2/go.mod h1:tYMK3laTzU1wgxeOpUPdw36KHD3eTyQNDfxtg1nXLWI=
 github.com/moira-alert/go-chart v0.0.0-20230220064910-812fb2829b9b h1:3eY3xHOj6Sh0f5Un6i9CFdqXNikLgPuGosg7+ZTpwbQ=
 github.com/moira-alert/go-chart v0.0.0-20230220064910-812fb2829b9b/go.mod h1:Ezwok1WdoXI/W7cWe5leDLYf5WrA4nUFZWtKNT3tCs8=
 github.com/moira-alert/go-chart v0.0.0-20231107064049-444c44a558ef h1:hSEQ/9B23MTYQCxx+GTRW5P1eWaqtgEMEqOxXs/YNKE=
