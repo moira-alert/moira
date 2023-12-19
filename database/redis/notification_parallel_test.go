@@ -48,7 +48,7 @@ func TestFetchNotificationsForTest(t *testing.T) {
 	addNotifications(dataBase, []moira.ScheduledNotification{notificationOld, notification, notificationNew})
 	wg := sync.WaitGroup{}
 	var limit int64 = 2
-	wg.Add(3)
+	wg.Add(1)
 	go func() {
 		// _, err := dataBase.FetchNotificationsForTest(&wg, now+delayedTime*2, limit, "notifier-1") //nolint
 		// if err != nil {
@@ -59,28 +59,38 @@ func TestFetchNotificationsForTest(t *testing.T) {
 			log.Printf("notifier-1: %v\n", err)
 		}
 	}()
-	go func() {
-		// _, err := dataBase.FetchNotificationsForTest(&wg, now+delayedTime*2, limit, "notifier-2") //nolint
-		// if err != nil {
-		// 	log.Printf("notifier-2: %v\n", err)
-		// }
-		defer wg.Done()
-		if _, err := dataBase.FetchNotifications(now+delayedTime*2, limit); err != nil {
-			log.Printf("notifier-2: %v\n", err)
-		}
-	}()
-	// time.Sleep(100 * time.Millisecond)
-	go func() {
-		// _, err := dataBase.FetchNotificationsForTest(&wg, now+delayedTime*2, limit, "notifier-3") //nolint
-		// if err != nil {
-		// 	log.Printf("notifier-3: %v\n", err)
-		// }
-		defer wg.Done()
-		if _, err := dataBase.FetchNotifications(now+delayedTime*2, limit); err != nil {
-			log.Printf("notifier-3: %v\n", err)
-		}
-	}()
+	// go func() {
+	// 	// _, err := dataBase.FetchNotificationsForTest(&wg, now+delayedTime*2, limit, "notifier-2") //nolint
+	// 	// if err != nil {
+	// 	// 	log.Printf("notifier-2: %v\n", err)
+	// 	// }
+	// 	defer wg.Done()
+	// 	if _, err := dataBase.FetchNotifications(now+delayedTime*2, limit); err != nil {
+	// 		log.Printf("notifier-2: %v\n", err)
+	// 	}
+	// }()
+	// // time.Sleep(100 * time.Millisecond)
+	// go func() {
+	// 	// _, err := dataBase.FetchNotificationsForTest(&wg, now+delayedTime*2, limit, "notifier-3") //nolint
+	// 	// if err != nil {
+	// 	// 	log.Printf("notifier-3: %v\n", err)
+	// 	// }
+	// 	defer wg.Done()
+	// 	if _, err := dataBase.FetchNotifications(now+delayedTime*2, limit); err != nil {
+	// 		log.Printf("notifier-3: %v\n", err)
+	// 	}
+	// }()
 	wg.Wait()
+
+	notifications, count, err := dataBase.GetNotifications(0, -1)
+	if err != nil {
+		log.Println("error: ", err)
+	}
+
+	log.Println("count: ", count)
+	for _, notification := range notifications {
+		log.Println(notification)
+	}
 
 	assert.True(t, false)
 }
