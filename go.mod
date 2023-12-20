@@ -25,7 +25,6 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
 	github.com/gregdel/pushover v1.1.0
-	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/moira-alert/go-chart v0.0.0-20231107064049-444c44a558ef
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.13
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -51,6 +50,7 @@ require github.com/prometheus/common v0.37.0
 require (
 	github.com/mattermost/mattermost/server/public v0.0.9
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/moira-alert/blackfriday-slack v0.1.2
 	github.com/swaggo/http-swagger v1.3.4
 )
 
