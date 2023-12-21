@@ -526,24 +526,6 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 	return nil
 }
 
-func (connector *DbConnector) saveNotifications(ctx context.Context, pipe redis.Pipeliner, notifications []*moira.ScheduledNotification) error {
-	for _, notification := range notifications {
-		bytes, err := reply.GetNotificationBytes(*notification)
-		if err != nil {
-			return err
-		}
-
-		z := &redis.Z{Score: float64(notification.Timestamp), Member: bytes}
-		pipe.ZAdd(ctx, notifierNotificationsKey, z)
-	}
-
-	if _, err := pipe.Exec(ctx); err != nil {
-		return fmt.Errorf("failed to EXEC: %w", err)
-	}
-
-	return nil
-}
-
 func (connector *DbConnector) resaveNotifications(
 	ctx context.Context,
 	pipe redis.Pipeliner,
