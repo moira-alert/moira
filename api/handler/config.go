@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"regexp"
 
@@ -67,6 +68,7 @@ func getSentryConfig(sentryConfig cmd.SentryConfig) http.HandlerFunc {
 			render.Render(writer, request, api.ErrorForbidden("Not allowed")) //nolint
 			return
 		}
+		log.Println("host", request.Host)
 
 		config := dto.SentryConfig{
 			DSN: sentryConfig.DSN,
