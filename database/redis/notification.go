@@ -280,16 +280,17 @@ func (connector *DbConnector) handleNotifications(notifications []*moira.Schedul
 	}
 
 	connector.logger.Debug().
-		Fields(map[string]interface{}{
-			"valid":             types.Valid,
-			"valid_count":       len(types.Valid),
-			"removed":           types.ToRemove,
-			"removed_count":     len(types.ToRemove),
-			"resaved_old":       types.ToResaveOld,
-			"resaved_old_count": len(types.ToResaveOld),
-			"resaved_new":       types.ToResaveNew,
-			"resaved_new_count": len(types.ToResaveNew),
-		},
+		Fields(
+			map[string]interface{}{
+				"valid":             types.Valid,
+				"valid_count":       len(types.Valid),
+				"removed":           types.ToRemove,
+				"removed_count":     len(types.ToRemove),
+				"resaved_old":       types.ToResaveOld,
+				"resaved_old_count": len(types.ToResaveOld),
+				"resaved_new":       types.ToResaveNew,
+				"resaved_new_count": len(types.ToResaveNew),
+			},
 		).
 		Msg("Notification types")
 
