@@ -1,9 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/moira-alert/moira/notifier"
 
 	"github.com/xiam/to"
@@ -17,7 +14,6 @@ type config struct {
 	Logger              cmd.LoggerConfig              `yaml:"log"`
 	API                 apiConfig                     `yaml:"api"`
 	Web                 webConfig                     `yaml:"web"`
-	Sentry              cmd.SentryConfig              `yaml:"sentry"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
 	Remote              cmd.RemoteConfig              `yaml:"remote"`
 	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
@@ -31,15 +27,27 @@ type apiConfig struct {
 	EnableCORS bool `yaml:"enable_cors"`
 }
 
+type sentryConfig struct {
+	DSN string `yaml:"dsn"`
+}
+
+func (config *sentryConfig) getSettings() api.Sentry {
+	return api.Sentry{
+		DSN: config.DSN,
+	}
+}
+
 type webConfig struct {
-	// Moira administrator email address.
+	// Moira administrator email address
 	SupportEmail string `yaml:"supportEmail"`
 	// If true, users will be able to choose Graphite as trigger metrics data source
 	RemoteAllowed bool
 	// List of enabled contact types
 	Contacts []webContact `yaml:"contacts"`
-	// struct to manage feature flags.
+	// Struct to manage feature flags
 	FeatureFlags featureFlags `yaml:"feature_flags"`
+	// Returns the sentry configuration for the frontend
+	Sentry sentryConfig `yaml:"sentry"`
 }
 
 type webContact struct {
@@ -76,7 +84,7 @@ func (config *apiConfig) getSettings(
 	}
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool) ([]byte, error) {
+func (config *webConfig) getSettings(isRemoteEnabled bool) *api.WebConfig {
 	webContacts := make([]api.WebContact, 0, len(config.Contacts))
 	for _, configContact := range config.Contacts {
 		contact := api.WebContact{
@@ -88,16 +96,14 @@ func (config *webConfig) getSettings(isRemoteEnabled bool) ([]byte, error) {
 		}
 		webContacts = append(webContacts, contact)
 	}
-	configContent, err := json.Marshal(api.WebConfig{
+
+	return &api.WebConfig{
 		SupportEmail:  config.SupportEmail,
 		RemoteAllowed: isRemoteEnabled,
 		Contacts:      webContacts,
 		FeatureFlags:  config.getFeatureFlags(),
-	})
-	if err != nil {
-		return make([]byte, 0), fmt.Errorf("failed to parse web config: %s", err.Error())
+		Sentry:        config.Sentry.getSettings(),
 	}
-	return configContent, nil
 }
 
 func (config *webConfig) getFeatureFlags() api.FeatureFlags {

@@ -141,12 +141,7 @@ func main() {
 		prometheusSource,
 	)
 
-	webConfigContent, err := applicationConfig.Web.getSettings(remoteConfig.Enabled || prometheusConfig.Enabled)
-	if err != nil {
-		logger.Fatal().
-			Error(err).
-			Msg("Failed to get web applicationConfig content ")
-	}
+	webConfig := applicationConfig.Web.getSettings(remoteConfig.Enabled || prometheusConfig.Enabled)
 
 	httpHandler := handler.NewHandler(
 		database,
@@ -154,8 +149,7 @@ func main() {
 		searchIndex,
 		apiConfig,
 		metricSourceProvider,
-		webConfigContent,
-		applicationConfig.Sentry,
+		webConfig,
 	)
 
 	server := &http.Server{
