@@ -544,17 +544,19 @@ func TestFilterNotificationsByState(t *testing.T) {
 		Convey("With empty notifications", func() {
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.toResave, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
 		})
 
 		Convey("With all valid notifications", func() {
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.toResave, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
 		})
 
 		Convey("With removed check data", func() {
@@ -565,9 +567,10 @@ func TestFilterNotificationsByState(t *testing.T) {
 
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{notificationNew})
-			So(types.toResave, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationNew})
+			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
 		})
 
 		Convey("With metric on maintenance", func() {
@@ -576,10 +579,12 @@ func TestFilterNotificationsByState(t *testing.T) {
 
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notification, notificationNew})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld})
-			So(len(types.toResave), ShouldResemble, 1)
-			So(types.toResave[0].SendFail, ShouldResemble, notificationOld.SendFail)
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notification, notificationNew})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{})
+			So(len(types.ToResaveOld), ShouldResemble, 1)
+			So(types.ToResaveOld[0], ShouldResemble, notificationOld)
+			So(len(types.ToResaveNew), ShouldResemble, 1)
+			So(types.ToResaveNew[0].SendFail, ShouldResemble, notificationOld.SendFail)
 		})
 
 		Convey("With trigger on maintenance", func() {
@@ -592,10 +597,12 @@ func TestFilterNotificationsByState(t *testing.T) {
 
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{notificationNew})
-			So(len(types.toResave), ShouldResemble, 1)
-			So(types.toResave[0].SendFail, ShouldResemble, notificationNew.SendFail)
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{})
+			So(len(types.ToResaveOld), ShouldResemble, 1)
+			So(types.ToResaveOld[0], ShouldResemble, notificationNew)
+			So(len(types.ToResaveNew), ShouldResemble, 1)
+			So(types.ToResaveNew[0].SendFail, ShouldResemble, notificationNew.SendFail)
 		})
 	})
 }
@@ -678,18 +685,20 @@ func TestHandleNotifications(t *testing.T) {
 		Convey("Without delayed notifications", func() {
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
 			var toResaveNotificationsExpected []*moira.ScheduledNotification
-			So(types.toResave, ShouldResemble, toResaveNotificationsExpected)
+			So(types.ToResaveOld, ShouldResemble, toResaveNotificationsExpected)
+			So(types.ToResaveNew, ShouldResemble, toResaveNotificationsExpected)
 		})
 
 		Convey("With both delayed and not delayed valid notifications", func() {
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
-			So(types.toResave, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
+			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
 		})
 
 		Convey("With both delayed and not delayed notifications and removed check data", func() {
@@ -700,9 +709,10 @@ func TestHandleNotifications(t *testing.T) {
 
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{notificationNew2, notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
-			So(types.toResave, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationNew2, notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
+			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
+			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
 		})
 
 		Convey("With both delayed and not delayed valid notifications and metric on maintenance", func() {
@@ -711,10 +721,12 @@ func TestHandleNotifications(t *testing.T) {
 
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew, notificationNew2, notificationNew3})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld2, notificationOld, notification, notificationNew, notificationNew2, notificationNew3})
-			So(len(types.toResave), ShouldResemble, 1)
-			So(types.toResave[0].SendFail, ShouldResemble, notificationOld2.SendFail)
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew, notificationNew2, notificationNew3})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew, notificationNew2, notificationNew3})
+			So(len(types.ToResaveNew), ShouldResemble, 1)
+			So(types.ToResaveNew[0].SendFail, ShouldResemble, notificationOld2.SendFail)
+			So(len(types.ToResaveOld), ShouldResemble, 1)
+			So(types.ToResaveOld[0], ShouldResemble, notificationOld2)
 		})
 
 		Convey("With both delayed and not delayed valid notifications and trigger on maintenance", func() {
@@ -727,10 +739,12 @@ func TestHandleNotifications(t *testing.T) {
 
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 			So(err, ShouldBeNil)
-			So(types.valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
-			So(types.toRemove, ShouldResemble, []*moira.ScheduledNotification{notificationNew2, notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
-			So(len(types.toResave), ShouldResemble, 1)
-			So(types.toResave[0].SendFail, ShouldResemble, notificationNew2.SendFail)
+			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
+			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
+			So(len(types.ToResaveNew), ShouldResemble, 1)
+			So(types.ToResaveNew[0].SendFail, ShouldResemble, notificationNew2.SendFail)
+			So(len(types.ToResaveOld), ShouldResemble, 1)
+			So(types.ToResaveOld[0], ShouldResemble, notificationNew2)
 		})
 	})
 }
@@ -1285,7 +1299,7 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 	})
 }
 
-func TestSaveNotifications(t *testing.T) {
+func TestResaveNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
 	database := NewTestDatabase(logger)
 	database.Flush()
@@ -1295,22 +1309,31 @@ func TestSaveNotifications(t *testing.T) {
 	ctx := database.context
 	pipe := (*client).TxPipeline()
 
-	Convey("Test saveNotifications", t, func() {
-		notification1 := &moira.ScheduledNotification{
+	Convey("Test resaveNotifications", t, func() {
+		notificationOld1 := &moira.ScheduledNotification{
 			Timestamp: 1,
-			SendFail:  1,
 		}
-		notification2 := &moira.ScheduledNotification{
+		notificationOld2 := &moira.ScheduledNotification{
 			Timestamp: 2,
-			SendFail:  2,
 		}
-		notification3 := &moira.ScheduledNotification{
+		notificationOld3 := &moira.ScheduledNotification{
 			Timestamp: 3,
 		}
 
-		Convey("Test with zero notifications", func() {
-			err := database.saveNotifications(ctx, pipe, []*moira.ScheduledNotification{})
+		notificationNew1 := &moira.ScheduledNotification{
+			Timestamp: 4,
+		}
+		notificationNew2 := &moira.ScheduledNotification{
+			Timestamp: 5,
+		}
+		notificationNew3 := &moira.ScheduledNotification{
+			Timestamp: 6,
+		}
+
+		Convey("Test resave with zero notifications", func() {
+			affected, err := database.resaveNotifications(ctx, pipe, []*moira.ScheduledNotification{}, []*moira.ScheduledNotification{})
 			So(err, ShouldBeNil)
+			So(affected, ShouldResemble, 0)
 
 			allNotifications, count, err := database.GetNotifications(0, -1)
 			So(err, ShouldBeNil)
@@ -1321,48 +1344,47 @@ func TestSaveNotifications(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("Test save notifications with empty database", func() {
-			err := database.saveNotifications(ctx, pipe, []*moira.ScheduledNotification{notification1, notification2, notification3})
+		Convey("Test resave notifications with empty database", func() {
+			affected, err := database.resaveNotifications(ctx, pipe, []*moira.ScheduledNotification{notificationOld1, notificationOld2}, []*moira.ScheduledNotification{notificationNew1, notificationNew2})
 			So(err, ShouldBeNil)
+			So(affected, ShouldResemble, 2)
 
 			allNotifications, count, err := database.GetNotifications(0, -1)
 			So(err, ShouldBeNil)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification1, notification2, notification3})
+			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notificationNew1, notificationNew2})
+			So(count, ShouldEqual, 2)
+
+			err = database.RemoveAllNotifications()
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Test resave one notification when other notifications exist in the database", func() {
+			addNotifications(database, []moira.ScheduledNotification{*notificationOld1, *notificationOld3})
+
+			affected, err := database.resaveNotifications(ctx, pipe, []*moira.ScheduledNotification{notificationOld2}, []*moira.ScheduledNotification{notificationNew2})
+			So(err, ShouldBeNil)
+			So(affected, ShouldResemble, 1)
+
+			allNotifications, count, err := database.GetNotifications(0, -1)
+			So(err, ShouldBeNil)
+			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notificationOld1, notificationOld3, notificationNew2})
 			So(count, ShouldEqual, 3)
 
 			err = database.RemoveAllNotifications()
 			So(err, ShouldBeNil)
 		})
 
-		Convey("Test save one notification when other notifications exist in the database", func() {
-			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification3})
+		Convey("Test resave all notifications", func() {
+			addNotifications(database, []moira.ScheduledNotification{*notificationOld1, *notificationOld2, *notificationOld3})
 
-			err := database.saveNotifications(ctx, pipe, []*moira.ScheduledNotification{notification2})
+			affected, err := database.resaveNotifications(ctx, pipe, []*moira.ScheduledNotification{notificationOld1, notificationOld2, notificationOld3}, []*moira.ScheduledNotification{notificationNew1, notificationNew2, notificationNew3})
 			So(err, ShouldBeNil)
+			So(affected, ShouldResemble, 6)
 
 			allNotifications, count, err := database.GetNotifications(0, -1)
 			So(err, ShouldBeNil)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification1, notification2, notification3})
+			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notificationNew1, notificationNew2, notificationNew3})
 			So(count, ShouldEqual, 3)
-
-			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
-		})
-
-		Convey("Test save one notification when there is already one with the same timestamp", func() {
-			newNotification := &moira.ScheduledNotification{
-				Timestamp: 2,
-				SendFail:  3,
-			}
-			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
-
-			err := database.saveNotifications(ctx, pipe, []*moira.ScheduledNotification{newNotification})
-			So(err, ShouldBeNil)
-
-			allNotifications, count, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			assert.ElementsMatch(t, allNotifications, []*moira.ScheduledNotification{notification1, notification2, newNotification, notification3})
-			So(count, ShouldEqual, 4)
 
 			err = database.RemoveAllNotifications()
 			So(err, ShouldBeNil)

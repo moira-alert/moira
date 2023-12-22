@@ -25,7 +25,6 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
 	github.com/gregdel/pushover v1.1.0
-	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/moira-alert/go-chart v0.0.0-20231107064049-444c44a558ef
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.13
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -51,6 +50,7 @@ require github.com/prometheus/common v0.37.0
 require (
 	github.com/mattermost/mattermost/server/public v0.0.9
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/moira-alert/blackfriday-slack v0.1.2
 	github.com/swaggo/http-swagger v1.3.4
 )
 
@@ -156,13 +156,13 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/exp v0.0.0-20200924195034-c827fd4f18b9 // indirect
 	golang.org/x/image v0.13.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gonum.org/v1/gonum v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
