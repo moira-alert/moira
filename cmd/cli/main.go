@@ -331,6 +331,7 @@ func main() { //nolint
 			if err := database.RemoveSubscription(subscriptionID); err != nil {
 				logger.Error().
 					Error(err).
+					String("subscription_id", subscriptionID).
 					Msg("Failed to remove subscription")
 			}
 		}
