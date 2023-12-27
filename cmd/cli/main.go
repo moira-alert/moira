@@ -46,6 +46,10 @@ var (
 )
 
 var (
+	removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given comma-separated subscriptions.")
+)
+
+var (
 	cleanupUsers      = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
 	cleanupLastChecks = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
 	cleanupTags       = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
@@ -320,6 +324,18 @@ func main() { //nolint
 		}
 		logger.Info().Msg("Dump was pushed")
 	}
+
+	if *removeSubscriptions != "" {
+		subscriptionIDs := strings.Split(*removeSubscriptions, ",")
+		for _, subscriptionID := range subscriptionIDs {
+			if err := database.RemoveSubscription(subscriptionID); err != nil {
+				logger.Error().
+					Error(err).
+					Msg("Failed to remove subscription")
+			}
+		}
+		logger.Info().Msg("Delition of subscriptions finished")
+	}
 }
 
 func GetDumpBriefInfo(dump *dto.TriggerDump) string {
@@ -334,7 +350,7 @@ func GetDumpBriefInfo(dump *dto.TriggerDump) string {
 func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	flag.Parse()
 	if *printVersion {
-		fmt.Println("Moira - alerting system based on graphite data")
+		fmt.Println("Moira - alerting system based on graphite or prometheus data")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
 		fmt.Println("Go Version:", GoVersion)
