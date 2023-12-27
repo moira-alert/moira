@@ -10,7 +10,6 @@ import (
 	slackdown "github.com/moira-alert/blackfriday-slack"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
-	blackfriday "github.com/russross/blackfriday/v2"
 
 	slack_client "github.com/slack-go/slack"
 )
@@ -134,7 +133,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 	desc := trigger.Desc
 	if trigger.Desc != "" {
-		desc = string(blackfriday.Run([]byte(desc), blackfriday.WithRenderer(&slackdown.Renderer{})))
+		desc = string(slackdown.Run([]byte(desc)))
 		desc += "\n"
 	}
 	return desc
