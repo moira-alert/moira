@@ -326,6 +326,7 @@ func main() { //nolint
 	}
 
 	if *removeSubscriptions != "" {
+		logger.Info().Msg("Delition of subscriptions started")
 		subscriptionIDs := strings.Split(*removeSubscriptions, ",")
 		for _, subscriptionID := range subscriptionIDs {
 			if err := database.RemoveSubscription(subscriptionID); err != nil {
