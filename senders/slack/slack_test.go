@@ -236,4 +236,23 @@ some other text italic text
 			So(actual, ShouldResemble, expected)
 		})
 	})
+
+	Convey("Build desc with lists", t, func() {
+		trigger := moira.TriggerData{
+			Desc: `
+1. a
+`,
+		}
+
+		expected := ` 1. a
+
+
+`
+
+		Convey("Expect buildDescription not to panic", func() {
+			actual := sender.buildDescription(trigger)
+
+			So(actual, ShouldEqual, expected)
+		})
+	})
 }
