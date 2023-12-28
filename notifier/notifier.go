@@ -177,7 +177,7 @@ func (notifier *StandardNotifier) reschedule(pkg *NotificationPackage, reason st
 func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan NotificationPackage) {
 	defer func() {
 		if err := recover(); err != nil {
-			notifier.logger.Warning().
+			notifier.logger.Error().
 				String(moira.LogFieldNameStackTrace, string(debug.Stack())).
 				Interface("recovered_err", err).
 				Msg("Notifier panicked")
