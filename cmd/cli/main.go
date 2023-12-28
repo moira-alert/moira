@@ -327,7 +327,7 @@ func main() { //nolint
 
 	if *removeSubscriptions != "" {
 		logger.Info().Msg("Start delition of subscriptions")
-		subscriptionIDs := strings.Split(*removeSubscriptions, " ")
+		subscriptionIDs := strings.Split(*removeSubscriptions, ";")
 
 		logger.Debug().
 			Interface("subscription_ids", subscriptionIDs).
