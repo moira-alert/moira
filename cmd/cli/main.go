@@ -328,10 +328,10 @@ func main() { //nolint
 	if *removeSubscriptions != "" {
 		logger.Info().Msg("Start delition of subscriptions")
 		subscriptionIDs := strings.Split(*removeSubscriptions, " ")
-		logger.Info().
-			String("command", *removeSubscriptions).
+
+		logger.Debug().
 			Interface("subscription_ids", subscriptionIDs).
-			Msg("Debug remove subscriptions command")
+			Msg("Remove subscription IDs")
 
 		for _, subscriptionID := range subscriptionIDs {
 			if err := database.RemoveSubscription(subscriptionID); err != nil {
@@ -341,6 +341,7 @@ func main() { //nolint
 					Msg("Failed to remove subscription")
 			}
 		}
+
 		logger.Info().Msg("Delition of subscriptions finished")
 	}
 }
