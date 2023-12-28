@@ -46,7 +46,7 @@ var (
 )
 
 var (
-	removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given space-separated subscriptions.")
+	removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given subscriptions separated by semicolons.")
 )
 
 var (
@@ -329,12 +329,12 @@ func main() { //nolint
 		logger.Info().Msg("Start delition of subscriptions")
 		subscriptionIDs := strings.Split(*removeSubscriptions, ";")
 
-		logger.Info().
+		logger.Debug().
 			Interface("subscription_ids", subscriptionIDs).
 			Msg("Remove subscription IDs")
 
 		for _, subscriptionID := range subscriptionIDs {
-			if err := database.RemoveSubscription(subscriptionID); err != nil {
+			if err := database.RemoveSubscription(strings.TrimSpace(subscriptionID)); err != nil {
 				logger.Error().
 					Error(err).
 					String("subscription_id", subscriptionID).
