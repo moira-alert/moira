@@ -46,7 +46,7 @@ var (
 )
 
 var (
-	removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given comma-separated subscriptions.")
+	removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given space-separated subscriptions.")
 )
 
 var (
