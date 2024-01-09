@@ -22,8 +22,9 @@ type FeatureFlags struct {
 	IsReadonlyEnabled                bool `json:"isReadonlyEnabled" example:"false"`
 }
 
+// Sentry - config for sentry settings
 type Sentry struct {
-	DSN string `json:"dsn" example:"https://secret@sentry.host"`
+	DSN string `json:"dsn,omitempty" example:"https://secret@sentry.host"`
 }
 
 // Config for api configuration variables.
