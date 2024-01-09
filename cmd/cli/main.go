@@ -328,6 +328,7 @@ func main() { //nolint
 	if *removeSubscriptions != "" {
 		logger.Info().Msg("Start deletion of subscriptions")
 		subscriptionIDs := strings.Split(*removeSubscriptions, ";")
+		deleted := 0
 
 		logger.Debug().
 			Interface("subscription_ids", subscriptionIDs).
@@ -339,10 +340,14 @@ func main() { //nolint
 					Error(err).
 					String("subscription_id", subscriptionID).
 					Msg("Failed to remove subscription")
+				continue
 			}
+			deleted++
 		}
 
-		logger.Info().Msg("Deletion of subscriptions finished")
+		logger.Info().
+			Int("deleted", deleted).
+			Msg("Deletion of subscriptions finished")
 	}
 }
 
