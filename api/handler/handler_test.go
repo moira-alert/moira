@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -27,8 +28,11 @@ func TestReadonlyMode(t *testing.T) {
 
 		logger, _ := zerolog_adapter.GetLogger("Test")
 		config := &api.Config{Flags: api.FeatureFlags{IsReadonlyEnabled: true}}
-		expectedConfig := []byte("Expected config")
-		handler := NewHandler(mockDb, logger, nil, config, nil, expectedConfig)
+		webConfig := &api.WebConfig{
+			SupportEmail: "test",
+			Contacts:     []api.WebContact{},
+		}
+		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig)
 
 		Convey("Get notifier health", func() {
 			mockDb.EXPECT().GetNotifierState().Return("OK", nil).Times(1)
@@ -92,10 +96,16 @@ func TestReadonlyMode(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
-			actual, _ := io.ReadAll(response.Body)
+			actual, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			actualStr := strings.TrimSpace(string(actual))
+
+			expected, err := json.Marshal(webConfig)
+			So(err, ShouldBeNil)
+			expectedStr := strings.TrimSpace(string(expected))
 
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
-			So(actual, ShouldResemble, expectedConfig)
+			So(actualStr, ShouldResemble, expectedStr)
 		})
 	})
 }

@@ -1,6 +1,31 @@
 package api
 
-import "time"
+import (
+	"net/http"
+	"time"
+)
+
+// WebContact is container for web ui contact validation.
+type WebContact struct {
+	ContactType     string `json:"type" example:"webhook"`
+	ContactLabel    string `json:"label" example:"Webhook"`
+	ValidationRegex string `json:"validation,omitempty" example:"^(http|https):\\/\\/.*(moira.ru)(:[0-9]{2,5})?\\/"`
+	Placeholder     string `json:"placeholder,omitempty" example:"https://moira.ru/webhooks"`
+	Help            string `json:"help,omitempty" example:"### Domains whitelist:\n - moira.ru\n"`
+}
+
+// FeatureFlags is struct to manage feature flags.
+type FeatureFlags struct {
+	IsPlottingDefaultOn              bool `json:"isPlottingDefaultOn" example:"false"`
+	IsPlottingAvailable              bool `json:"isPlottingAvailable" example:"true"`
+	IsSubscriptionToAllTagsAvailable bool `json:"isSubscriptionToAllTagsAvailable" example:"false"`
+	IsReadonlyEnabled                bool `json:"isReadonlyEnabled" example:"false"`
+}
+
+// Sentry - config for sentry settings
+type Sentry struct {
+	DSN string `json:"dsn,omitempty" example:"https://secret@sentry.host"`
+}
 
 // Config for api configuration variables.
 type Config struct {
@@ -14,25 +39,13 @@ type Config struct {
 
 // WebConfig is container for web ui configuration parameters.
 type WebConfig struct {
-	SupportEmail  string       `json:"supportEmail,omitempty"`
-	RemoteAllowed bool         `json:"remoteAllowed"`
+	SupportEmail  string       `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
+	RemoteAllowed bool         `json:"remoteAllowed" example:"true"`
 	Contacts      []WebContact `json:"contacts"`
 	FeatureFlags  FeatureFlags `json:"featureFlags"`
+	Sentry        Sentry       `json:"sentry"`
 }
 
-// WebContact is container for web ui contact validation.
-type WebContact struct {
-	ContactType     string `json:"type"`
-	ContactLabel    string `json:"label"`
-	ValidationRegex string `json:"validation,omitempty"`
-	Placeholder     string `json:"placeholder,omitempty"`
-	Help            string `json:"help,omitempty"`
-}
-
-// FeatureFlags is struct to manage feature flags.
-type FeatureFlags struct {
-	IsPlottingDefaultOn              bool `json:"isPlottingDefaultOn"`
-	IsPlottingAvailable              bool `json:"isPlottingAvailable"`
-	IsSubscriptionToAllTagsAvailable bool `json:"isSubscriptionToAllTagsAvailable"`
-	IsReadonlyEnabled                bool `json:"isReadonlyEnabled"`
+func (WebConfig) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }

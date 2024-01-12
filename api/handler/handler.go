@@ -28,9 +28,9 @@ func NewHandler(
 	db moira.Database,
 	log moira.Logger,
 	index moira.Searcher,
-	config *api.Config,
+	apiConfig *api.Config,
 	metricSourceProvider *metricSource.SourceProvider,
-	webConfigContent []byte,
+	webConfig *api.WebConfig,
 ) http.Handler {
 	database = db
 	searchIndex = index
@@ -94,13 +94,13 @@ func NewHandler(
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Route("/health", health)
 		router.Route("/", func(router chi.Router) {
-			router.Use(moiramiddle.ReadOnlyMiddleware(config))
-			router.Get("/config", getWebConfig(webConfigContent))
+			router.Use(moiramiddle.ReadOnlyMiddleware(apiConfig))
+			router.Get("/config", getWebConfig(webConfig))
 			router.Route("/user", user)
 			router.With(moiramiddle.Triggers(
-				config.GraphiteLocalMetricTTL,
-				config.GraphiteRemoteMetricTTL,
-				config.PrometheusRemoteMetricTTL,
+				apiConfig.GraphiteLocalMetricTTL,
+				apiConfig.GraphiteRemoteMetricTTL,
+				apiConfig.PrometheusRemoteMetricTTL,
 			)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
 			router.Route("/tag", tag)
 			router.Route("/pattern", pattern)
@@ -118,7 +118,7 @@ func NewHandler(
 		})
 	})
 
-	if config.EnableCORS {
+	if apiConfig.EnableCORS {
 		return cors.AllowAll().Handler(router)
 	}
 	return router

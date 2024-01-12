@@ -112,23 +112,32 @@ func Test_webConfig_getDefault(t *testing.T) {
 
 func Test_webConfig_getSettings(t *testing.T) {
 	Convey("Empty config, fill it", t, func() {
-		wC := webConfig{}
+		config := webConfig{}
 
-		result, err := wC.getSettings(true)
-		So(err, ShouldBeEmpty)
-		So(string(result), ShouldResemble, `{"remoteAllowed":true,"contacts":[],"featureFlags":{"isPlottingDefaultOn":false,"isPlottingAvailable":false,"isSubscriptionToAllTagsAvailable":false,"isReadonlyEnabled":false}}`)
+		settings := config.getSettings(true)
+		So(settings, ShouldResemble, &api.WebConfig{
+			RemoteAllowed: true,
+			Contacts:      []api.WebContact{},
+		})
 	})
 
 	Convey("Default config, fill it", t, func() {
 		config := getDefault()
 
-		result, err := config.Web.getSettings(true)
-		So(err, ShouldBeEmpty)
-		So(string(result), ShouldResemble, `{"remoteAllowed":true,"contacts":[],"featureFlags":{"isPlottingDefaultOn":true,"isPlottingAvailable":true,"isSubscriptionToAllTagsAvailable":true,"isReadonlyEnabled":false}}`)
+		settings := config.Web.getSettings(true)
+		So(settings, ShouldResemble, &api.WebConfig{
+			RemoteAllowed: true,
+			Contacts:      []api.WebContact{},
+			FeatureFlags: api.FeatureFlags{
+				IsPlottingDefaultOn:              true,
+				IsPlottingAvailable:              true,
+				IsSubscriptionToAllTagsAvailable: true,
+			},
+		})
 	})
 
 	Convey("Not empty config, fill it", t, func() {
-		wC := webConfig{
+		config := webConfig{
 			SupportEmail:  "lalal@mail.la",
 			RemoteAllowed: false,
 			Contacts: []webContact{
@@ -142,13 +151,36 @@ func Test_webConfig_getSettings(t *testing.T) {
 			},
 			FeatureFlags: featureFlags{
 				IsPlottingDefaultOn:              true,
-				IsPlottingAvailable:              false,
+				IsPlottingAvailable:              true,
 				IsSubscriptionToAllTagsAvailable: true,
+				IsReadonlyEnabled:                false,
+			},
+			Sentry: sentryConfig{
+				DSN: "test dsn",
 			},
 		}
 
-		result, err := wC.getSettings(true)
-		So(err, ShouldBeEmpty)
-		So(string(result), ShouldResemble, `{"supportEmail":"lalal@mail.la","remoteAllowed":true,"contacts":[{"type":"slack","label":"label","validation":"t(\\d+)","help":"help"}],"featureFlags":{"isPlottingDefaultOn":true,"isPlottingAvailable":false,"isSubscriptionToAllTagsAvailable":true,"isReadonlyEnabled":false}}`)
+		settings := config.getSettings(true)
+		So(settings, ShouldResemble, &api.WebConfig{
+			SupportEmail:  "lalal@mail.la",
+			RemoteAllowed: true,
+			Contacts: []api.WebContact{
+				{
+					ContactType:     "slack",
+					ContactLabel:    "label",
+					ValidationRegex: "t(\\d+)",
+					Help:            "help",
+				},
+			},
+			FeatureFlags: api.FeatureFlags{
+				IsPlottingDefaultOn:              true,
+				IsPlottingAvailable:              true,
+				IsSubscriptionToAllTagsAvailable: true,
+				IsReadonlyEnabled:                false,
+			},
+			Sentry: api.Sentry{
+				DSN: "test dsn",
+			},
+		})
 	})
 }
