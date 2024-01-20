@@ -53,7 +53,7 @@ func (provider *SourceProvider) GetTriggerMetricSource(trigger *moira.Trigger) (
 // GetMetricSource return metric source depending on trigger flag: is remote trigger or not. GetLocal if not.
 func (provider *SourceProvider) GetMetricSource(clusterKey moira.ClusterKey) (MetricSource, error) {
 	if source, ok := provider.sources[clusterKey]; ok {
-		return source, nil
+		return returnSource(source)
 	}
 
 	return nil, fmt.Errorf("unknown metric source")
