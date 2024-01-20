@@ -86,7 +86,7 @@ func TestNotifier(t *testing.T) {
 	database.SaveTrigger(trigger.ID, &trigger)   //nolint
 	database.PushNotificationEvent(&event, true) //nolint
 
-	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil, nil)
+	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(database), nil, nil)
 
 	notifierInstance := notifier.NewNotifier(
 		database,

@@ -25,7 +25,7 @@ func TestTriggerValidation(t *testing.T) {
 		localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
+		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
 		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")

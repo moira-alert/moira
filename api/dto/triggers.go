@@ -180,7 +180,8 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	trigger.TriggerSource = trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
 
 	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
-	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.TriggerSource)
+	/// TODO: use proper cluster key
+	metricsSource, err := metricsSourceProvider.GetMetricSource(moira.MakeClusterKey(trigger.TriggerSource, "default"))
 	if err != nil {
 		return err
 	}
