@@ -89,15 +89,23 @@ func Test_webConfig_getDefault(t *testing.T) {
 				},
 				Pprof: cmd.ProfilerConfig{Enabled: false},
 			},
-			Remote: cmd.GraphiteRemoteConfig{
-				Timeout:    "60s",
-				MetricsTTL: "7d",
-			},
-			Prometheus: cmd.PrometheusRemoteConfig{
-				Timeout:      "60s",
-				MetricsTTL:   "7d",
-				Retries:      1,
-				RetryTimeout: "10s",
+			Remotes: cmd.RemotesConfig{
+				Graphite: []cmd.GraphiteRemoteConfig{
+					{
+						CheckInterval: "60s",
+						Timeout:       "60s",
+						MetricsTTL:    "7d",
+					},
+				},
+				Prometheus: []cmd.PrometheusRemoteConfig{
+					{
+						CheckInterval: "60s",
+						Timeout:       "60s",
+						MetricsTTL:    "7d",
+						Retries:       1,
+						RetryTimeout:  "10s",
+					},
+				},
 			},
 			NotificationHistory: cmd.NotificationHistoryConfig{
 				NotificationHistoryTTL:        "48h",

@@ -22,8 +22,6 @@ type Config struct {
 
 type SourceCheckConfig struct {
 	Enabled           bool
-	ClusterId         string
-	ClusterName       string
 	CheckInterval     time.Duration
 	MaxParallelChecks int
 }

@@ -21,10 +21,7 @@ type Checker struct {
 	Logger   moira.Logger
 	Database moira.Database
 
-	Config *checker.Config
-	/// RemoteConfig      *remote.Config
-	/// PrometheusConfig  *prometheus.Config
-
+	Config         *checker.Config
 	SourceProvider *metricSource.SourceProvider
 	Metrics        *metrics.CheckerMetrics
 

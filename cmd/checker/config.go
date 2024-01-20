@@ -37,8 +37,6 @@ type checkerConfig struct {
 	NoDataCheckInterval string `yaml:"nodata_check_interval"`
 	// Period for every trigger to cancel forced check (earlier than 'NoDataCheckInterval') if no metrics were received
 	StopCheckingInterval string `yaml:"stop_checking_interval"`
-	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
-	CheckInterval string `yaml:"check_interval"`
 	// Max period to perform lazy triggers re-check. Note: lazy triggers are triggers which has no subscription for it. Moira will check its state less frequently.
 	// Delay for check lazy trigger is random between LazyTriggersCheckInterval/2 and LazyTriggersCheckInterval.
 	LazyTriggersCheckInterval string `yaml:"lazy_triggers_check_interval"`
@@ -59,44 +57,71 @@ func handleParallelChecks(parallelChecks *int) bool {
 	return false
 }
 
-func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
+func (config *config) getSettings(logger moira.Logger) *checker.Config {
 	logTriggersToLevel := make(map[string]string)
-	for _, v := range config.SetLogLevel.TriggersToLevel {
+	for _, v := range config.Checker.SetLogLevel.TriggersToLevel {
 		logTriggersToLevel[v.ID] = v.Level
 	}
 	logger.Info().
 		Int("number_of_triggers", len(logTriggersToLevel)).
 		Msg("Found dynamic log rules in config for some triggers")
 
-	/// if handleParallelChecks(&config.MaxParallelChecks) {
-	/// 	logger.Info().
-	/// 		Int("number_of_cpu", config.MaxParallelChecks).
-	/// 		Msg("MaxParallelChecks is not configured, set it to the number of CPU")
-	/// }
+	sourceCheckConfigs := make(map[moira.ClusterKey]checker.SourceCheckConfig)
 
-	/// if handleParallelChecks(&config.MaxParallelRemoteChecks) {
-	/// 	logger.Info().
-	/// 		Int("number_of_cpu", config.MaxParallelRemoteChecks).
-	/// 		Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
-	/// }
+	localCheckConfig := checker.SourceCheckConfig{
+		Enabled:           true,
+		CheckInterval:     to.Duration(config.Local.CheckInterval),
+		MaxParallelChecks: config.Local.MaxParallelChecks,
+	}
+	if handleParallelChecks(&localCheckConfig.MaxParallelChecks) {
+		logger.Info().
+			Int("number_of_cpu", localCheckConfig.MaxParallelChecks).
+			String("trigger_source", moira.GraphiteLocal.String()).
+			String("cluster_id", "default").
+			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
+	}
+	sourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, "default")] = localCheckConfig
 
-	/// if handleParallelChecks(&config.MaxParallelPrometheusChecks) {
-	/// 	logger.Info().
-	/// 		Int("number_of_cpu", config.MaxParallelPrometheusChecks).
-	/// 		Msg("MaxParallelPrometheusChecks is not configured, set it to the number of CPU")
-	/// }
+	for _, remote := range config.Remotes.Graphite {
+		checkConfig := checker.SourceCheckConfig{
+			Enabled:           true,
+			CheckInterval:     to.Duration(remote.CheckInterval),
+			MaxParallelChecks: remote.MaxParallelChecks,
+		}
+		if handleParallelChecks(&checkConfig.MaxParallelChecks) {
+			logger.Info().
+				Int("number_of_cpu", checkConfig.MaxParallelChecks).
+				String("trigger_source", moira.GraphiteRemote.String()).
+				String("cluster_id", remote.ClusterId).
+				Msg("MaxParallelChecks is not configured, set it to the number of CPU")
+		}
+		sourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteRemote, remote.ClusterId)] = checkConfig
+	}
+
+	for _, remote := range config.Remotes.Prometheus {
+		checkConfig := checker.SourceCheckConfig{
+			Enabled:           true,
+			CheckInterval:     to.Duration(remote.CheckInterval),
+			MaxParallelChecks: remote.MaxParallelChecks,
+		}
+		if handleParallelChecks(&checkConfig.MaxParallelChecks) {
+			logger.Info().
+				Int("number_of_cpu", checkConfig.MaxParallelChecks).
+				String("trigger_source", moira.PrometheusRemote.String()).
+				String("cluster_id", remote.ClusterId).
+				Msg("MaxParallelChecks is not configured, set it to the number of CPU")
+		}
+		sourceCheckConfigs[moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterId)] = checkConfig
+	}
 
 	return &checker.Config{
-		/// CheckInterval:               to.Duration(config.CheckInterval),
-		LazyTriggersCheckInterval:   to.Duration(config.LazyTriggersCheckInterval),
-		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
-		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
-		/// MaxParallelLocalChecks:      config.MaxParallelChecks,
-		/// MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
-		/// MaxParallelPrometheusChecks: config.MaxParallelPrometheusChecks,
-		LogTriggersToLevel:      logTriggersToLevel,
-		MetricEventPopBatchSize: int64(config.MetricEventPopBatchSize),
-		MetricEventPopDelay:     to.Duration(config.MetricEventPopDelay),
+		SourceCheckConfigs:          sourceCheckConfigs,
+		LazyTriggersCheckInterval:   to.Duration(config.Checker.LazyTriggersCheckInterval),
+		NoDataCheckInterval:         to.Duration(config.Checker.NoDataCheckInterval),
+		StopCheckingIntervalSeconds: int64(to.Duration(config.Checker.StopCheckingInterval).Seconds()),
+		LogTriggersToLevel:          logTriggersToLevel,
+		MetricEventPopBatchSize:     int64(config.Checker.MetricEventPopBatchSize),
+		MetricEventPopDelay:         to.Duration(config.Checker.MetricEventPopDelay),
 	}
 }
 
@@ -113,8 +138,8 @@ func getDefault() config {
 			LogPrettyFormat: false,
 		},
 		Checker: checkerConfig{
-			NoDataCheckInterval:       "60s",
-			CheckInterval:             "5s",
+			NoDataCheckInterval: "60s",
+			/// CheckInterval:             "5s",
 			LazyTriggersCheckInterval: "10m",
 			StopCheckingInterval:      "30s",
 		},
