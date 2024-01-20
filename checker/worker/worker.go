@@ -2,14 +2,13 @@ package worker
 
 import (
 	"errors"
+	"fmt"
 	"sync/atomic"
 	"time"
 
 	"github.com/moira-alert/moira/metrics"
 
 	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/prometheus"
-	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
 
@@ -19,13 +18,16 @@ import (
 
 // Checker represents workers for periodically triggers checking based by new events
 type Checker struct {
-	Logger            moira.Logger
-	Database          moira.Database
-	Config            *checker.Config
-	RemoteConfig      *remote.Config
-	PrometheusConfig  *prometheus.Config
-	SourceProvider    *metricSource.SourceProvider
-	Metrics           *metrics.CheckerMetrics
+	Logger   moira.Logger
+	Database moira.Database
+
+	Config *checker.Config
+	/// RemoteConfig      *remote.Config
+	/// PrometheusConfig  *prometheus.Config
+
+	SourceProvider *metricSource.SourceProvider
+	Metrics        *metrics.CheckerMetrics
+
 	TriggerCache      *cache.Cache
 	LazyTriggersCache *cache.Cache
 	PatternCache      *cache.Cache
@@ -48,17 +50,17 @@ func (check *Checker) Start() error {
 		return err
 	}
 
-	err = check.startCheckerWorker(newRemoteChecker(check))
+	err = check.startCheckerWorker(newRemoteChecker(check, "default"))
 	if err != nil {
 		return err
 	}
 
-	err = check.startCheckerWorker(newPrometheusChecker(check))
+	err = check.startCheckerWorker(newPrometheusChecker(check, "default"))
 	if err != nil {
 		return err
 	}
 
-	err = check.startCheckerWorker(newLocalChecker(check))
+	err = check.startCheckerWorker(newLocalChecker(check, "default"))
 	if err != nil {
 		return err
 	}
@@ -85,7 +87,12 @@ func (check *Checker) startLocalMetricEvents() error {
 		return err
 	}
 
-	for i := 0; i < check.Config.MaxParallelLocalChecks; i++ {
+	localConfig, ok := check.Config.SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, "default")]
+	if !ok {
+		return fmt.Errorf("can not initialize localMetricEvents: default local source is not configured")
+	}
+
+	for i := 0; i < localConfig.MaxParallelChecks; i++ {
 		check.tomb.Go(func() error {
 			return check.newMetricsHandler(metricEventsChannel)
 		})
@@ -120,7 +127,12 @@ type checkerWorker interface {
 	GetTriggersToCheck(count int) ([]string, error)
 }
 
-func (check *Checker) startCheckerWorker(w checkerWorker) error {
+// / Todo: remove ugly error passing
+func (check *Checker) startCheckerWorker(w checkerWorker, err error) error {
+	if err != nil {
+		return err
+	}
+
 	if !w.IsEnabled() {
 		check.Logger.Info().Msg(w.Name() + " checker disabled")
 		return nil
@@ -163,25 +175,48 @@ func (check *Checker) startLazyTriggers() error {
 }
 
 func (check *Checker) checkTriggersToCheckCount() error {
+	/// TODO: Why we update metrics so frequently?
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
-	var triggersToCheckCount, remoteTriggersToCheckCount int64
-	var err error
 	for {
 		select {
 		case <-check.tomb.Dying():
 			return nil
 		case <-checkTicker.C:
-			triggersToCheckCount, err = check.Database.GetLocalTriggersToCheckCount()
-			if err == nil {
-				check.Metrics.LocalMetrics.TriggersToCheckCount.Update(triggersToCheckCount)
-			}
-			if check.RemoteConfig.Enabled {
-				remoteTriggersToCheckCount, err = check.Database.GetRemoteTriggersToCheckCount()
-				if err == nil {
-					check.Metrics.RemoteMetrics.TriggersToCheckCount.Update(remoteTriggersToCheckCount)
+			for clusterKey, config := range check.Config.SourceCheckConfigs {
+				if !config.Enabled {
+					continue
 				}
+
+				metrics, err := check.Metrics.GetCheckMetricsBySource(clusterKey)
+				if err != nil {
+					/// TODO: log warn?
+					continue
+				}
+
+				triggersToCheck, err := getTriggersToCheck(check.Database, clusterKey)
+				if err != nil {
+					/// TODO: log warn?
+					continue
+				}
+				metrics.TriggersToCheckCount.Update(triggersToCheck)
 			}
 		}
+	}
+}
+
+func getTriggersToCheck(database moira.Database, clusterKey moira.ClusterKey) (int64, error) {
+	switch clusterKey.TriggerSource {
+	case moira.GraphiteLocal:
+		return database.GetLocalTriggersToCheckCount()
+
+	case moira.GraphiteRemote:
+		return database.GetRemoteTriggersToCheckCount()
+
+	case moira.PrometheusRemote:
+		return database.GetPrometheusTriggersToCheckCount()
+
+	default:
+		return 0, fmt.Errorf("No triggers to check for cluster `%s`", clusterKey.String())
 	}
 }
 

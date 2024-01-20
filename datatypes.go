@@ -363,6 +363,26 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (s TriggerSource) String() string {
+	return string(s)
+}
+
+type ClusterKey struct {
+	TriggerSource TriggerSource
+	ClusterId     string
+}
+
+func MakeClusterKey(triggerSource TriggerSource, clusterId string) ClusterKey {
+	return ClusterKey{
+		TriggerSource: triggerSource,
+		ClusterId:     clusterId,
+	}
+}
+
+func (clusterKey ClusterKey) String() string {
+	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
+}
+
 // Neede for backwards compatibility with moira versions that used oly isRemote flag
 func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
 	if triggerSource == TriggerSourceNotSet {

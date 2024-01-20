@@ -8,8 +8,8 @@ import (
 	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira/image_store/s3"
-	"github.com/moira-alert/moira/metric_source/prometheus"
-	remoteSource "github.com/moira-alert/moira/metric_source/remote"
+	prometheusRemoteSource "github.com/moira-alert/moira/metric_source/prometheus"
+	graphiteRemoteSource "github.com/moira-alert/moira/metric_source/remote"
 	"github.com/xiam/to"
 	"gopkg.in/yaml.v2"
 
@@ -147,12 +147,20 @@ type ProfilerConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-// RemoteConfig is remote graphite settings structure
-type RemoteConfig struct {
+type RemotesConfig struct {
+	Graphite   []GraphiteRemoteConfig   `yaml:"remote"`
+	Prometheus []PrometheusRemoteConfig `yaml:"prometheus"`
+}
+
+// GraphiteRemoteConfig is remote graphite settings structure
+type GraphiteRemoteConfig struct {
+	ClusterId   string `yaml:"cluster_id"`
+	ClusterName string `yaml:"cluster_name"`
 	// graphite url e.g http://graphite/render
 	URL string `yaml:"url"`
 	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
-	CheckInterval string `yaml:"check_interval"`
+	CheckInterval     string `yaml:"check_interval"`
+	MaxParallelChecks int    `yaml:"max_parallel_checks"`
 	// Moira won't fetch metrics older than this value from remote storage. Note that Moira doesn't delete old data from
 	// remote storage. Large values will lead to OOM problems in checker.
 	// See https://github.com/moira-alert/moira/pull/519
@@ -168,8 +176,8 @@ type RemoteConfig struct {
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
-func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
-	return &remoteSource.Config{
+func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSource.Config {
+	return &graphiteRemoteSource.Config{
 		URL:           config.URL,
 		CheckInterval: to.Duration(config.CheckInterval),
 		MetricsTTL:    to.Duration(config.MetricsTTL),
@@ -180,11 +188,14 @@ func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 	}
 }
 
-type PrometheusConfig struct {
+type PrometheusRemoteConfig struct {
+	ClusterId   string `yaml:"cluster_id"`
+	ClusterName string `yaml:"cluster_name"`
 	// Url of prometheus API
 	URL string `yaml:"url"`
 	// Min period to perform triggers re-check
-	CheckInterval string `yaml:"check_interval"`
+	CheckInterval     string `yaml:"check_interval"`
+	MaxParallelChecks int    `yaml:"max_parallel_checks"`
 	// Moira won't fetch metrics older than this value from prometheus remote storage.
 	// Large values will lead to OOM problems in checker.
 	MetricsTTL string `yaml:"metrics_ttl"`
@@ -203,8 +214,8 @@ type PrometheusConfig struct {
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
-func (config *PrometheusConfig) GetPrometheusSourceSettings() *prometheus.Config {
-	return &prometheus.Config{
+func (config *PrometheusRemoteConfig) GetPrometheusSourceSettings() *prometheusRemoteSource.Config {
+	return &prometheusRemoteSource.Config{
 		Enabled:        config.Enabled,
 		URL:            config.URL,
 		CheckInterval:  to.Duration(config.CheckInterval),

@@ -89,11 +89,11 @@ func Test_webConfig_getDefault(t *testing.T) {
 				},
 				Pprof: cmd.ProfilerConfig{Enabled: false},
 			},
-			Remote: cmd.RemoteConfig{
+			Remote: cmd.GraphiteRemoteConfig{
 				Timeout:    "60s",
 				MetricsTTL: "7d",
 			},
-			Prometheus: cmd.PrometheusConfig{
+			Prometheus: cmd.PrometheusRemoteConfig{
 				Timeout:      "60s",
 				MetricsTTL:   "7d",
 				Retries:      1,

@@ -15,8 +15,8 @@ type config struct {
 	API                 apiConfig                     `yaml:"api"`
 	Web                 webConfig                     `yaml:"web"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
-	Remote              cmd.RemoteConfig              `yaml:"remote"`
-	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
+	Remote              cmd.GraphiteRemoteConfig      `yaml:"remote"`
+	Prometheus          cmd.PrometheusRemoteConfig    `yaml:"prometheus"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 }
 
@@ -155,11 +155,11 @@ func getDefault() config {
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
-		Remote: cmd.RemoteConfig{
+		Remote: cmd.GraphiteRemoteConfig{
 			Timeout:    "60s",
 			MetricsTTL: "7d",
 		},
-		Prometheus: cmd.PrometheusConfig{
+		Prometheus: cmd.PrometheusRemoteConfig{
 			Timeout:      "60s",
 			MetricsTTL:   "7d",
 			Retries:      1,

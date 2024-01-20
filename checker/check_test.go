@@ -20,14 +20,18 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+var defaultLocalClusterKey = moira.MakeClusterKey(moira.GraphiteLocal, "default")
+
 func TestGetMetricDataState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	var warnValue float64 = 10
 	var errValue float64 = 20
-	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
+	checkerMetrics, _ := metrics.
+		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+		GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		logger:  logger,
-		metrics: checkerMetrics.LocalMetrics,
+		metrics: checkerMetrics,
 		until:   67,
 		from:    17,
 		trigger: &moira.Trigger{
@@ -535,9 +539,11 @@ func TestCheckForNODATA(t *testing.T) {
 
 	var ttl int64 = 600
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
+	checkerMetrics, _ := metrics.
+		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+		GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
-		metrics: checkerMetrics.LocalMetrics,
+		metrics: checkerMetrics,
 		logger:  logger,
 		ttl:     ttl,
 		lastCheck: &moira.CheckData{
@@ -656,14 +662,16 @@ func TestCheck(t *testing.T) {
 
 		var ttl int64 = 30
 
-		checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
+		checkerMetrics, _ := metrics.
+			ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+			GetCheckMetricsBySource(defaultLocalClusterKey)
 		triggerChecker := TriggerChecker{
 			triggerID: "SuperId",
 			database:  dataBase,
 			source:    source,
 			logger:    logger,
 			config:    &Config{},
-			metrics:   checkerMetrics.LocalMetrics,
+			metrics:   checkerMetrics,
 			from:      17,
 			until:     67,
 			ttl:       ttl,
@@ -1375,13 +1383,16 @@ func TestTriggerChecker_Check(t *testing.T) {
 
 	var ttl int64 = 30
 
+	checkerMetrics, _ := metrics.
+		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+		GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
 		database:  dataBase,
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false).LocalMetrics,
+		metrics:   checkerMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,
@@ -1458,13 +1469,16 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 
 	var ttl int64 = 30
 
+	checkerMetrics, _ := metrics.
+		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+		GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
 		database:  dataBase,
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false).LocalMetrics,
+		metrics:   checkerMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,

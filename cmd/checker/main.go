@@ -6,14 +6,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/moira-alert/moira/checker/worker"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
@@ -85,29 +83,14 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Checker)
 
-	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
-
-	localSource := local.Create(database)
-	remoteSource := remote.Create(remoteConfig)
-	prometheusSource, err := prometheus.Create(prometheusConfig, logger)
+	metricSourceProvider, err := initMetricSources(config, database, logger)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Failed to initialize prometheus metric source")
+			Msg("Failed to initialize metric sources")
 	}
 
-	// TODO: Abstractions over sources, so that they all are handled the same way
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(
-		localSource,
-		remoteSource,
-		prometheusSource,
-	)
-
-	remoteConfigured, _ := remoteSource.IsConfigured()
-	prometheusConfigured, _ := prometheusSource.IsConfigured()
-
-	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, remoteConfigured, prometheusConfigured)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, clusterKeyList(metricSourceProvider))
 	checkerSettings := config.Checker.getSettings(logger)
 
 	if triggerID != nil && *triggerID != "" {
@@ -115,16 +98,16 @@ func main() {
 	}
 
 	checkerWorker := &worker.Checker{
-		Logger:            logger,
-		Database:          database,
-		Config:            checkerSettings,
-		RemoteConfig:      remoteConfig,
-		PrometheusConfig:  prometheusConfig,
-		SourceProvider:    metricSourceProvider,
-		Metrics:           checkerMetrics,
-		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
-		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),                //nolint
-		PatternCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
+		Logger:   logger,
+		Database: database,
+		Config:   checkerSettings,
+		/// RemoteConfig:      remoteConfig,
+		/// PrometheusConfig:  prometheusConfig,
+		SourceProvider: metricSourceProvider,
+		Metrics:        checkerMetrics,
+		/// TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
+		/// LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),                //nolint
+		/// PatternCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
 	}
 	err = checkerWorker.Start()
 	if err != nil {
@@ -171,4 +154,34 @@ func stopChecker(service *worker.Checker) {
 			Error(err).
 			Msg("Failed to Stop Moira Checker")
 	}
+}
+
+func initMetricSources(config config, database moira.Database, logger moira.Logger) (*metricSource.SourceProvider, error) {
+	provider := metricSource.CreateMetricSourceProvider()
+	provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteLocal, "default"), local.Create(database))
+
+	for _, graphite := range config.Remotes.Graphite {
+		config := graphite.GetRemoteSourceSettings()
+		source := remote.Create(config)
+		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteRemote, graphite.ClusterId), source)
+	}
+
+	for _, prom := range config.Remotes.Prometheus {
+		config := prom.GetPrometheusSourceSettings()
+		source, err := prometheus.Create(config, logger)
+		if err != nil {
+			return nil, err
+		}
+		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteRemote, prom.ClusterId), source)
+	}
+
+	return provider, nil
+}
+
+func clusterKeyList(provider *metricSource.SourceProvider) []moira.ClusterKey {
+	keys := make([]moira.ClusterKey, 0, len(provider.GetAllSources()))
+	for ck := range provider.GetAllSources() {
+		keys = append(keys, ck)
+	}
+	return keys
 }

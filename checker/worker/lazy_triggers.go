@@ -1,8 +1,11 @@
 package worker
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/moira-alert/moira"
 )
 
 const (
@@ -10,10 +13,15 @@ const (
 )
 
 func (check *Checker) lazyTriggersWorker() error {
-	if check.Config.LazyTriggersCheckInterval <= check.Config.CheckInterval {
+	localConfig, ok := check.Config.SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, "default")]
+	if !ok {
+		return fmt.Errorf("can not initialize lazyTriggersWorker: default local source is not configured")
+	}
+
+	if check.Config.LazyTriggersCheckInterval <= localConfig.CheckInterval {
 		check.Logger.Info().
 			Interface("lazy_triggers_check_interval", check.Config.LazyTriggersCheckInterval).
-			Interface("check_interval", check.Config.CheckInterval).
+			Interface("check_interval", localConfig.CheckInterval).
 			Msg("Lazy triggers worker won't start because lazy triggers interval is less or equal to check interval")
 		return nil
 	}

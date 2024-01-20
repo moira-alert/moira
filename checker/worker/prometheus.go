@@ -3,6 +3,9 @@ package worker
 import (
 	"time"
 
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/checker"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics"
 	w "github.com/moira-alert/moira/worker"
 )
@@ -13,13 +16,31 @@ const (
 )
 
 type prometheusChecker struct {
-	check *Checker
+	metrics           *metrics.CheckMetrics
+	sourceCheckConfig checker.SourceCheckConfig
+	source            metricSource.MetricSource
+	check             *Checker
 }
 
-func newPrometheusChecker(check *Checker) checkerWorker {
-	return &prometheusChecker{
-		check: check,
+func newPrometheusChecker(check *Checker, clusterId string) (checkerWorker, error) {
+	key := moira.MakeClusterKey(moira.GraphiteRemote, clusterId)
+
+	metrics, err := check.Metrics.GetCheckMetricsBySource(key)
+	if err != nil {
+		return nil, err
 	}
+
+	source, err := check.SourceProvider.GetMetricSource(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &prometheusChecker{
+		check:             check,
+		sourceCheckConfig: check.Config.SourceCheckConfigs[key],
+		source:            source,
+		metrics:           metrics,
+	}, nil
 }
 
 func (ch *prometheusChecker) Name() string {
@@ -27,15 +48,15 @@ func (ch *prometheusChecker) Name() string {
 }
 
 func (ch *prometheusChecker) IsEnabled() bool {
-	return ch.check.PrometheusConfig.Enabled
+	return ch.sourceCheckConfig.Enabled
 }
 
 func (ch *prometheusChecker) MaxParallelChecks() int {
-	return ch.check.Config.MaxParallelPrometheusChecks
+	return ch.sourceCheckConfig.MaxParallelChecks
 }
 
 func (ch *prometheusChecker) Metrics() *metrics.CheckMetrics {
-	return ch.check.Metrics.PrometheusMetrics
+	return ch.metrics
 }
 
 func (ch *prometheusChecker) StartTriggerGetter() error {
@@ -54,7 +75,7 @@ func (ch *prometheusChecker) GetTriggersToCheck(count int) ([]string, error) {
 }
 
 func (ch *prometheusChecker) prometheusTriggerChecker(stop <-chan struct{}) error {
-	checkTicker := time.NewTicker(ch.check.PrometheusConfig.CheckInterval)
+	checkTicker := time.NewTicker(ch.sourceCheckConfig.CheckInterval)
 	ch.check.Logger.Info().Msg(prometheusTriggerName + " started")
 	for {
 		select {
@@ -73,10 +94,7 @@ func (ch *prometheusChecker) prometheusTriggerChecker(stop <-chan struct{}) erro
 }
 
 func (ch *prometheusChecker) checkPrometheus() error {
-	source, err := ch.check.SourceProvider.GetPrometheus()
-	if err != nil {
-		return err
-	}
+	source := ch.source
 
 	available, err := source.IsAvailable()
 	if !available {

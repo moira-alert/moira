@@ -3,6 +3,8 @@ package worker
 import (
 	"time"
 
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/metrics"
 	w "github.com/moira-alert/moira/worker"
 )
@@ -14,13 +16,24 @@ const (
 )
 
 type localChecker struct {
-	check *Checker
+	metrics           *metrics.CheckMetrics
+	sourceCheckConfig checker.SourceCheckConfig
+	check             *Checker
 }
 
-func newLocalChecker(check *Checker) checkerWorker {
-	return &localChecker{
-		check: check,
+func newLocalChecker(check *Checker, clusterId string) (checkerWorker, error) {
+	key := moira.MakeClusterKey(moira.GraphiteLocal, clusterId)
+
+	metrics, err := check.Metrics.GetCheckMetricsBySource(key)
+	if err != nil {
+		return nil, err
 	}
+
+	return &localChecker{
+		check:             check,
+		sourceCheckConfig: check.Config.SourceCheckConfigs[key],
+		metrics:           metrics,
+	}, nil
 }
 
 func (ch *localChecker) Name() string {
@@ -32,11 +45,11 @@ func (ch *localChecker) IsEnabled() bool {
 }
 
 func (ch *localChecker) MaxParallelChecks() int {
-	return ch.check.Config.MaxParallelLocalChecks
+	return ch.sourceCheckConfig.MaxParallelChecks
 }
 
 func (ch *localChecker) Metrics() *metrics.CheckMetrics {
-	return ch.check.Metrics.LocalMetrics
+	return ch.metrics
 }
 
 // localTriggerGetter starts NODATA checker and manages its subscription in Redis

@@ -3,6 +3,9 @@ package worker
 import (
 	"time"
 
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/checker"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics"
 	w "github.com/moira-alert/moira/worker"
 )
@@ -13,13 +16,31 @@ const (
 )
 
 type remoteChecker struct {
-	check *Checker
+	metrics           *metrics.CheckMetrics
+	sourceCheckConfig checker.SourceCheckConfig
+	source            metricSource.MetricSource
+	check             *Checker
 }
 
-func newRemoteChecker(check *Checker) checkerWorker {
-	return &remoteChecker{
-		check: check,
+func newRemoteChecker(check *Checker, clusterId string) (checkerWorker, error) {
+	key := moira.MakeClusterKey(moira.GraphiteRemote, clusterId)
+
+	metrics, err := check.Metrics.GetCheckMetricsBySource(key)
+	if err != nil {
+		return nil, err
 	}
+
+	source, err := check.SourceProvider.GetMetricSource(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &remoteChecker{
+		check:             check,
+		sourceCheckConfig: check.Config.SourceCheckConfigs[key],
+		source:            source,
+		metrics:           metrics,
+	}, nil
 }
 
 func (ch *remoteChecker) Name() string {
@@ -27,15 +48,15 @@ func (ch *remoteChecker) Name() string {
 }
 
 func (ch *remoteChecker) IsEnabled() bool {
-	return ch.check.RemoteConfig.Enabled
+	return ch.sourceCheckConfig.Enabled
 }
 
 func (ch *remoteChecker) MaxParallelChecks() int {
-	return ch.check.Config.MaxParallelRemoteChecks
+	return ch.sourceCheckConfig.MaxParallelChecks
 }
 
 func (ch *remoteChecker) Metrics() *metrics.CheckMetrics {
-	return ch.check.Metrics.RemoteMetrics
+	return ch.metrics
 }
 
 func (ch *remoteChecker) StartTriggerGetter() error {
@@ -54,7 +75,7 @@ func (ch *remoteChecker) GetTriggersToCheck(count int) ([]string, error) {
 }
 
 func (ch *remoteChecker) remoteTriggerChecker(stop <-chan struct{}) error {
-	checkTicker := time.NewTicker(ch.check.RemoteConfig.CheckInterval)
+	checkTicker := time.NewTicker(ch.sourceCheckConfig.CheckInterval)
 	ch.check.Logger.Info().Msg(remoteTriggerName + " started")
 	for {
 		select {
@@ -74,10 +95,7 @@ func (ch *remoteChecker) remoteTriggerChecker(stop <-chan struct{}) error {
 }
 
 func (ch *remoteChecker) checkRemote() error {
-	source, err := ch.check.SourceProvider.GetRemote()
-	if err != nil {
-		return err
-	}
+	source := ch.source
 
 	available, err := source.IsAvailable()
 	if !available {

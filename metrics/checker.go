@@ -1,37 +1,31 @@
 package metrics
 
-import "github.com/moira-alert/moira"
+import (
+	"fmt"
+
+	"github.com/moira-alert/moira"
+)
 
 // CheckerMetrics is a collection of metrics used in checker
 type CheckerMetrics struct {
-	LocalMetrics           *CheckMetrics
-	RemoteMetrics          *CheckMetrics
-	PrometheusMetrics      *CheckMetrics
+	MetricsBySource        map[moira.ClusterKey]*CheckMetrics
 	MetricEventsChannelLen Histogram
 	UnusedTriggersCount    Histogram
 	MetricEventsHandleTime Timer
 }
 
 // GetCheckMetrics return check metrics dependent on given trigger type
-func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) *CheckMetrics {
-	return metrics.GetCheckMetricsBySource(trigger.TriggerSource)
+func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) (*CheckMetrics, error) {
+	return metrics.GetCheckMetricsBySource(moira.MakeClusterKey(trigger.TriggerSource, "default"))
 }
 
 // GetCheckMetricsBySource return check metrics dependent on given trigger type
-func (metrics *CheckerMetrics) GetCheckMetricsBySource(triggerSource moira.TriggerSource) *CheckMetrics {
-	switch triggerSource {
-	case moira.GraphiteLocal:
-		return metrics.LocalMetrics
-
-	case moira.GraphiteRemote:
-		return metrics.RemoteMetrics
-
-	case moira.PrometheusRemote:
-		return metrics.PrometheusMetrics
-
-	default:
-		return nil
+func (metrics *CheckerMetrics) GetCheckMetricsBySource(clusterKey moira.ClusterKey) (*CheckMetrics, error) {
+	if checkMetrics, ok := metrics.MetricsBySource[clusterKey]; ok {
+		return checkMetrics, nil
 	}
+
+	return nil, fmt.Errorf("unknown cluster with key `%s`", clusterKey.String())
 }
 
 // CheckMetrics is a collection of metrics for trigger checks
@@ -43,27 +37,25 @@ type CheckMetrics struct {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator
-func ConfigureCheckerMetrics(registry Registry, remoteEnabled, prometheusEnabled bool) *CheckerMetrics {
-	m := &CheckerMetrics{
-		LocalMetrics:           configureCheckMetrics(registry, "local"),
+func ConfigureCheckerMetrics(registry Registry, sources []moira.ClusterKey) *CheckerMetrics {
+	metrics := &CheckerMetrics{
+		MetricsBySource:        make(map[moira.ClusterKey]*CheckMetrics),
 		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
 		MetricEventsHandleTime: registry.NewTimer("metricEventsHandle"),
 		UnusedTriggersCount:    registry.NewHistogram("triggers", "unused"),
 	}
-	if remoteEnabled {
-		m.RemoteMetrics = configureCheckMetrics(registry, "remote")
+	for _, clusterKey := range sources {
+		metrics.MetricsBySource[clusterKey] = configureCheckMetrics(registry, clusterKey)
 	}
-	if prometheusEnabled {
-		m.PrometheusMetrics = configureCheckMetrics(registry, "prometheus")
-	}
-	return m
+	return metrics
 }
 
-func configureCheckMetrics(registry Registry, prefix string) *CheckMetrics {
+func configureCheckMetrics(registry Registry, clusterKey moira.ClusterKey) *CheckMetrics {
+	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId
 	return &CheckMetrics{
-		CheckError:           registry.NewMeter(prefix, "errors", "check"),
-		HandleError:          registry.NewMeter(prefix, "errors", "handle"),
-		TriggersCheckTime:    registry.NewTimer(prefix, "triggers"),
-		TriggersToCheckCount: registry.NewHistogram(prefix, "triggersToCheck"),
+		CheckError:           registry.NewMeter(source, id, "errors", "check"),
+		HandleError:          registry.NewMeter(source, id, "errors", "handle"),
+		TriggersCheckTime:    registry.NewTimer(source, id, "triggers"),
+		TriggersToCheckCount: registry.NewHistogram(source, id, "triggersToCheck"),
 	}
 }
