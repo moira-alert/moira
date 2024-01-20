@@ -17,8 +17,7 @@ type config struct {
 	Logger              cmd.LoggerConfig              `yaml:"log"`
 	Notifier            notifierConfig                `yaml:"notifier"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
-	Remote              cmd.GraphiteRemoteConfig      `yaml:"remote"`
-	Prometheus          cmd.PrometheusRemoteConfig    `yaml:"prometheus"`
+	Remotes             cmd.RemotesConfig             `yaml:",inline"`
 	ImageStores         cmd.ImageStoreConfig          `yaml:"image_store"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 	Notification        cmd.NotificationConfig        `yaml:"notification"`
@@ -126,15 +125,23 @@ func getDefault() config {
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
-		Remote: cmd.GraphiteRemoteConfig{
-			Timeout:    "60s",
-			MetricsTTL: "24h",
-		},
-		Prometheus: cmd.PrometheusRemoteConfig{
-			Timeout:      "60s",
-			MetricsTTL:   "7d",
-			Retries:      1,
-			RetryTimeout: "10s",
+		Remotes: cmd.RemotesConfig{
+			Graphite: []cmd.GraphiteRemoteConfig{
+				{
+					CheckInterval: "60s",
+					Timeout:       "60s",
+					MetricsTTL:    "7d",
+				},
+			},
+			Prometheus: []cmd.PrometheusRemoteConfig{
+				{
+					CheckInterval: "60s",
+					Timeout:       "60s",
+					MetricsTTL:    "7d",
+					Retries:       1,
+					RetryTimeout:  "10s",
+				},
+			},
 		},
 		ImageStores: cmd.ImageStoreConfig{},
 	}
