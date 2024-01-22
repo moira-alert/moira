@@ -28,12 +28,14 @@ type apiConfig struct {
 }
 
 type sentryConfig struct {
-	DSN string `yaml:"dsn"`
+	DSN      string `yaml:"dsn"`
+	Platform string `yaml:"platform"`
 }
 
 func (config *sentryConfig) getSettings() api.Sentry {
 	return api.Sentry{
-		DSN: config.DSN,
+		DSN:      config.DSN,
+		Platform: config.Platform,
 	}
 }
 
