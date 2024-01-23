@@ -97,7 +97,7 @@ func main() {
 	}
 
 	cacheDefaultExpiration := checkerSettings.SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, "default")].CheckInterval
-	checkerWorker := &worker.Checker{
+	checkerWorker := &worker.WorkerManager{
 		Logger:            logger,
 		Database:          database,
 		Config:            checkerSettings,
@@ -107,7 +107,7 @@ func main() {
 		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),         //nolint
 		PatternCache:      cache.New(cacheDefaultExpiration, time.Minute*60), //nolint
 	}
-	err = checkerWorker.Start()
+	err = checkerWorker.StartWorkers()
 	if err != nil {
 		logger.Fatal().
 			Error(err).
@@ -146,7 +146,7 @@ func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics
 	os.Exit(0)
 }
 
-func stopChecker(service *worker.Checker) {
+func stopChecker(service *worker.WorkerManager) {
 	if err := service.Stop(); err != nil {
 		logger.Error().
 			Error(err).

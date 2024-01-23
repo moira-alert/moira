@@ -14,15 +14,15 @@ const checkerLockTTL = time.Second * 15
 type universalChecker struct {
 	metrics           *metrics.CheckMetrics
 	sourceCheckConfig checker.SourceCheckConfig
-	check             *Checker
+	manager             *WorkerManager
 	name              string
 	lockName          string
 	clusterKey        moira.ClusterKey
 	validateSource    func() error
 }
 
-func newUniversalChecker(check *Checker, clusterKey moira.ClusterKey, validateSource func() error) (checkerWorker, error) {
-	metrics, err := check.Metrics.GetCheckMetricsBySource(clusterKey)
+func newUniversalChecker(manager *WorkerManager, clusterKey moira.ClusterKey, validateSource func() error) (*universalChecker, error) {
+	metrics, err := manager.Metrics.GetCheckMetricsBySource(clusterKey)
 	if err != nil {
 		return nil, err
 	}
@@ -35,8 +35,8 @@ func newUniversalChecker(check *Checker, clusterKey moira.ClusterKey, validateSo
 	lockName := "moira-" + name + "-lock"
 
 	return &universalChecker{
-		check:             check,
-		sourceCheckConfig: check.Config.SourceCheckConfigs[clusterKey],
+		manager:             manager,
+		sourceCheckConfig: manager.Config.SourceCheckConfigs[clusterKey],
 		metrics:           metrics,
 		name:              name,
 		lockName:          lockName,
@@ -49,10 +49,6 @@ func (ch *universalChecker) Name() string {
 	return ch.name
 }
 
-func (ch *universalChecker) IsEnabled() bool {
-	return ch.sourceCheckConfig.Enabled
-}
-
 func (ch *universalChecker) MaxParallelChecks() int {
 	return ch.sourceCheckConfig.MaxParallelChecks
 }
@@ -61,35 +57,35 @@ func (ch *universalChecker) Metrics() *metrics.CheckMetrics {
 	return ch.metrics
 }
 
-func (ch *universalChecker) StartTriggerGetter() error {
+func (ch *universalChecker) StartTriggerScheduler() error {
 	w.NewWorker(
 		ch.name,
-		ch.check.Logger,
-		ch.check.Database.NewLock(ch.lockName, checkerLockTTL),
+		ch.manager.Logger,
+		ch.manager.Database.NewLock(ch.lockName, checkerLockTTL),
 		ch.triggerScheduler,
-	).Run(ch.check.tomb.Dying())
+	).Run(ch.manager.tomb.Dying())
 
 	return nil
 }
 
 func (ch *universalChecker) GetTriggersToCheck(count int) ([]string, error) {
-	return ch.check.Database.GetTriggersToCheck(ch.clusterKey, count)
+	return ch.manager.Database.GetTriggersToCheck(ch.clusterKey, count)
 }
 
 func (ch *universalChecker) triggerScheduler(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(ch.sourceCheckConfig.CheckInterval)
 
-	ch.check.Logger.Info().Msg(ch.name + " started")
+	ch.manager.Logger.Info().Msg(ch.name + " started")
 	for {
 		select {
 		case <-stop:
-			ch.check.Logger.Info().Msg(ch.name + " stopped")
+			ch.manager.Logger.Info().Msg(ch.name + " stopped")
 			checkTicker.Stop()
 			return nil
 
 		case <-checkTicker.C:
 			if err := ch.scheduleTriggersToCheck(); err != nil {
-				ch.check.Logger.Error().
+				ch.manager.Logger.Error().
 					Error(err).
 					Msg(ch.name + " trigger failed")
 			}
@@ -100,18 +96,18 @@ func (ch *universalChecker) triggerScheduler(stop <-chan struct{}) error {
 func (ch *universalChecker) scheduleTriggersToCheck() error {
 	err := ch.validateSource()
 	if err != nil {
-		ch.check.Logger.Info().
+		ch.manager.Logger.Info().
 			Error(err).
 			String("cluster_key", ch.clusterKey.String()).
 			Msg("Source is invalid. Stop scheduling trigger checks")
 		return nil
 	}
 
-	ch.check.Logger.Debug().
+	ch.manager.Logger.Debug().
 		String("cluster_key", ch.clusterKey.String()).
 		Msg("Scheduling triggers")
 
-	triggerIds, err := ch.check.Database.GetRemoteTriggerIDs()
+	triggerIds, err := ch.manager.Database.GetRemoteTriggerIDs()
 	if err != nil {
 		return err
 	}
@@ -125,9 +121,9 @@ func (ch *universalChecker) scheduleTriggersToCheck() error {
 }
 
 func (ch *universalChecker) addTriggerIDsIfNeeded(clusterKey moira.ClusterKey, triggerIDs []string) error {
-	needToCheckTriggerIDs := ch.check.filterOutLazyTriggerIDs(triggerIDs)
+	needToCheckTriggerIDs := ch.manager.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
-		return ch.check.Database.AddTriggersToCheck(clusterKey, needToCheckTriggerIDs)
+		return ch.manager.Database.AddTriggersToCheck(clusterKey, needToCheckTriggerIDs)
 	}
 	return nil
 }

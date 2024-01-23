@@ -13,18 +13,18 @@ import (
 const sleepAfterCheckingError = time.Second * 2
 
 // startTriggerHandler is a blocking func
-func (check *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics) error {
+func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics) error {
 	for {
 		triggerID, ok := <-triggerIDsToCheck
 		if !ok {
 			return nil
 		}
 
-		err := check.handleTrigger(triggerID, metrics)
+		err := manager.handleTrigger(triggerID, metrics)
 		if err != nil {
 			metrics.HandleError.Mark(1)
 
-			check.Logger.Error().
+			manager.Logger.Error().
 				String(moira.LogFieldNameTriggerID, triggerID).
 				Error(err).
 				Msg("Failed to handle trigger")
@@ -34,18 +34,20 @@ func (check *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metri
 	}
 }
 
-func (check *Checker) handleTrigger(triggerID string, metrics *metrics.CheckMetrics) (err error) {
+func (manager *WorkerManager) handleTrigger(triggerID string, metrics *metrics.CheckMetrics) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: '%s' stack: %s", r, debug.Stack())
 		}
 	}()
-	err = check.handleTriggerInLock(triggerID, metrics)
+	err = manager.handleTriggerInLock(triggerID, metrics)
 	return err
 }
 
-func (check *Checker) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics) error {
-	acquired, err := check.Database.SetTriggerCheckLock(triggerID)
+func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics) error {
+	acquired, err := manager.Database.SetTriggerCheckLock(triggerID)
+	defer manager.Database.DeleteTriggerCheckLock(triggerID) //nolint
+
 	if err != nil {
 		return err
 	}
@@ -57,20 +59,18 @@ func (check *Checker) handleTriggerInLock(triggerID string, metrics *metrics.Che
 	startedAt := time.Now()
 	defer metrics.TriggersCheckTime.UpdateSince(startedAt)
 
-	err = check.checkTrigger(triggerID)
+	err = manager.checkTrigger(triggerID)
 	return err
 }
 
-func (check *Checker) checkTrigger(triggerID string) error {
-	defer check.Database.DeleteTriggerCheckLock(triggerID) //nolint
-
+func (manager *WorkerManager) checkTrigger(triggerID string) error {
 	triggerChecker, err := checker.MakeTriggerChecker(
 		triggerID,
-		check.Database,
-		check.Logger,
-		check.Config,
-		check.SourceProvider,
-		check.Metrics,
+		manager.Database,
+		manager.Logger,
+		manager.Config,
+		manager.SourceProvider,
+		manager.Metrics,
 	)
 
 	if err == checker.ErrTriggerNotExists {

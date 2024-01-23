@@ -7,16 +7,16 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func (check *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.MetricEvent) error {
+func (manager *WorkerManager) newMetricsHandler(metricEventsChannel <-chan *moira.MetricEvent) error {
 	for {
 		metricEvent, ok := <-metricEventsChannel
 		if !ok {
 			return nil
 		}
 		pattern := metricEvent.Pattern
-		if check.needHandlePattern(pattern) {
-			if err := check.handleMetricEvent(pattern); err != nil {
-				check.Logger.Error().
+		if manager.needHandlePattern(pattern) {
+			if err := manager.handleMetricEvent(pattern); err != nil {
+				manager.Logger.Error().
 					Error(err).
 					Msg("Failed to handle metricEvent")
 			}
@@ -24,28 +24,28 @@ func (check *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.Metric
 	}
 }
 
-func (check *Checker) needHandlePattern(pattern string) bool {
-	err := check.PatternCache.Add(pattern, true, cache.DefaultExpiration)
+func (manager *WorkerManager) needHandlePattern(pattern string) bool {
+	err := manager.PatternCache.Add(pattern, true, cache.DefaultExpiration)
 	return err == nil
 }
 
-func (check *Checker) handleMetricEvent(pattern string) error {
+func (manager *WorkerManager) handleMetricEvent(pattern string) error {
 	start := time.Now()
-	defer check.Metrics.MetricEventsHandleTime.UpdateSince(start)
+	defer manager.Metrics.MetricEventsHandleTime.UpdateSince(start)
 
-	check.lastData = time.Now().UTC().Unix()
-	triggerIds, err := check.Database.GetPatternTriggerIDs(pattern)
+	manager.lastData = time.Now().UTC().Unix()
+	triggerIds, err := manager.Database.GetPatternTriggerIDs(pattern)
 	if err != nil {
 		return err
 	}
 
 	// Cleanup pattern and its metrics if this pattern doesn't match to any trigger
 	if len(triggerIds) == 0 {
-		if err := check.Database.RemovePatternWithMetrics(pattern); err != nil {
+		if err := manager.Database.RemovePatternWithMetrics(pattern); err != nil {
 			return err
 		}
 	}
 
-	check.addLocalTriggerIDsIfNeeded(triggerIds)
+	manager.addLocalTriggerIDsIfNeeded(triggerIds)
 	return nil
 }

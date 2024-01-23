@@ -21,7 +21,6 @@ type Config struct {
 }
 
 type SourceCheckConfig struct {
-	Enabled           bool
 	CheckInterval     time.Duration
 	MaxParallelChecks int
 }

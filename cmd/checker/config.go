@@ -69,7 +69,6 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 	sourceCheckConfigs := make(map[moira.ClusterKey]checker.SourceCheckConfig)
 
 	localCheckConfig := checker.SourceCheckConfig{
-		Enabled:           true,
 		CheckInterval:     to.Duration(config.Local.CheckInterval),
 		MaxParallelChecks: config.Local.MaxParallelChecks,
 	}
@@ -84,7 +83,6 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 
 	for _, remote := range config.Remotes.Graphite {
 		checkConfig := checker.SourceCheckConfig{
-			Enabled:           true,
 			CheckInterval:     to.Duration(remote.CheckInterval),
 			MaxParallelChecks: remote.MaxParallelChecks,
 		}
@@ -100,7 +98,6 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 
 	for _, remote := range config.Remotes.Prometheus {
 		checkConfig := checker.SourceCheckConfig{
-			Enabled:           true,
 			CheckInterval:     to.Duration(remote.CheckInterval),
 			MaxParallelChecks: remote.MaxParallelChecks,
 		}
