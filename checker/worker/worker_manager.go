@@ -68,15 +68,7 @@ func (manager *WorkerManager) StartWorkers() error {
 
 func (manager *WorkerManager) makeSourceValidator(clusterKey moira.ClusterKey) (func() error, error) {
 	if clusterKey.TriggerSource == moira.GraphiteLocal {
-		return func() error {
-			now := time.Now().UTC().Unix()
-
-			if manager.lastData+manager.Config.StopCheckingIntervalSeconds < now {
-				return nil
-			}
-
-			return fmt.Errorf("graphite local source invalid: no metrics for %d second", manager.Config.StopCheckingIntervalSeconds)
-		}, nil
+		return manager.validateGraphiteLocal, nil
 	}
 
 	source, err := manager.SourceProvider.GetMetricSource(clusterKey)
@@ -92,60 +84,26 @@ func (manager *WorkerManager) makeSourceValidator(clusterKey moira.ClusterKey) (
 	}, nil
 }
 
-func (manager *WorkerManager) startLocalMetricEvents() error {
-	if manager.Config.MetricEventPopBatchSize < 0 {
-		return errors.New("MetricEventPopBatchSize param was less than zero")
+func (manager *WorkerManager) validateGraphiteLocal() error {
+	now := time.Now().UTC().Unix()
+
+	if manager.lastData+manager.Config.StopCheckingIntervalSeconds < now {
+		return nil
 	}
 
-	if manager.Config.MetricEventPopBatchSize == 0 {
-		manager.Config.MetricEventPopBatchSize = 100
-	}
-
-	subscribeMetricEventsParams := moira.SubscribeMetricEventsParams{
-		BatchSize: manager.Config.MetricEventPopBatchSize,
-		Delay:     manager.Config.MetricEventPopDelay,
-	}
-
-	metricEventsChannel, err := manager.Database.SubscribeMetricEvents(&manager.tomb, &subscribeMetricEventsParams)
-	if err != nil {
-		return err
-	}
-
-	localConfig, ok := manager.Config.SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, "default")]
-	if !ok {
-		return fmt.Errorf("can not initialize localMetricEvents: default local source is not configured")
-	}
-
-	for i := 0; i < localConfig.MaxParallelChecks; i++ {
-		manager.tomb.Go(func() error {
-			return manager.newMetricsHandler(metricEventsChannel)
-		})
-	}
-
-	manager.tomb.Go(func() error {
-		return manager.checkMetricEventsChannelLen(metricEventsChannel)
-	})
-
-	manager.Logger.Info().Msg("Checking new events started")
-
-	go func() {
-		<-manager.tomb.Dying()
-		manager.Logger.Info().Msg("Checking for new events stopped")
-	}()
-
-	return nil
+	return fmt.Errorf("graphite local source invalid: no metrics for %d second", manager.Config.StopCheckingIntervalSeconds)
 }
 
-func (manager *WorkerManager) startCheckerWorker(w *universalChecker) error {
+func (manager *WorkerManager) startCheckerWorker(w *scheduler) error {
 	const maxParallelChecksMaxValue = 1024 * 8
 	if w.MaxParallelChecks() > maxParallelChecksMaxValue {
 		return errors.New("MaxParallel" + w.Name() + "Checks value is too large")
 	}
 
 	manager.tomb.Go(w.StartTriggerScheduler)
-	manager.Logger.Info().Msg(w.Name() + "checker started")
+	manager.Logger.Info().Msg(w.Name() + " scheduler started")
 
-	triggerIdsToCheckChan := manager.startTriggerToCheckGetter(
+	triggerIdsToCheckChan := manager.pipeTriggerToCheckQueue(
 		w.GetTriggersToCheck,
 		w.MaxParallelChecks(),
 	)
@@ -203,27 +161,8 @@ func getTriggersToCheck(database moira.Database, clusterKey moira.ClusterKey) (i
 	return database.GetTriggersToCheckCount(clusterKey)
 }
 
-func (manager *WorkerManager) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
-	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
-	for {
-		select {
-		case <-manager.tomb.Dying():
-			return nil
-		case <-checkTicker.C:
-			manager.Metrics.MetricEventsChannelLen.Update(int64(len(ch)))
-		}
-	}
-}
-
 // Stop stops checks triggers
 func (manager *WorkerManager) Stop() error {
 	manager.tomb.Kill(nil)
 	return manager.tomb.Wait()
-}
-
-func (manager *WorkerManager) addLocalTriggerIDsIfNeeded(triggerIDs []string) {
-	needToCheckTriggerIDs := manager.filterOutLazyTriggerIDs(triggerIDs)
-	if len(needToCheckTriggerIDs) > 0 {
-		manager.Database.AddLocalTriggersToCheck(needToCheckTriggerIDs) //nolint
-	}
 }

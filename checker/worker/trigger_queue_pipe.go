@@ -6,25 +6,29 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-const sleepAfterGetTriggerIDError = time.Second * 1
-const sleepWhenNoTriggerToCheck = time.Millisecond * 500
+const (
+	sleepAfterGetTriggerIDError = time.Second * 1
+	sleepWhenNoTriggerToCheck   = time.Millisecond * 500
+)
 
-func (manager *WorkerManager) startTriggerToCheckGetter(fetch func(int) ([]string, error), batchSize int) <-chan string {
+func (manager *WorkerManager) pipeTriggerToCheckQueue(fetch func(int) ([]string, error), batchSize int) <-chan string {
 	triggerIDsToCheck := make(chan string, batchSize*2) //nolint
 	manager.tomb.Go(func() error {
-		return manager.triggerToCheckGetter(fetch, batchSize, triggerIDsToCheck)
+		return manager.pipeTriggerToCheckQueueToChan(fetch, batchSize, triggerIDsToCheck)
 	})
 	return triggerIDsToCheck
 }
 
-func (manager *WorkerManager) triggerToCheckGetter(fetch func(int) ([]string, error), batchSize int, triggerIDsToCheck chan<- string) error {
+func (manager *WorkerManager) pipeTriggerToCheckQueueToChan(fetch func(int) ([]string, error), batchSize int, triggerIDsToCheck chan<- string) error {
 	var fetchDelay time.Duration
 	for {
 		startFetch := time.After(fetchDelay)
+
 		select {
 		case <-manager.tomb.Dying():
 			close(triggerIDsToCheck)
 			return nil
+
 		case <-startFetch:
 			triggerIDs, err := fetch(batchSize)
 			fetchDelay = manager.handleFetchResponse(triggerIDs, err, triggerIDsToCheck)
@@ -37,14 +41,18 @@ func (manager *WorkerManager) handleFetchResponse(triggerIDs []string, fetchErro
 		manager.Logger.Error().
 			Error(fetchError).
 			Msg("Failed to handle trigger loop")
+
 		return sleepAfterGetTriggerIDError
 	}
+
 	if len(triggerIDs) == 0 {
 		return sleepWhenNoTriggerToCheck
 	}
+
 	for _, triggerID := range triggerIDs {
 		triggerIDsToCheck <- triggerID
 	}
+
 	return time.Duration(0)
 }
 

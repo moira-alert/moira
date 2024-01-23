@@ -11,17 +11,17 @@ import (
 
 const checkerLockTTL = time.Second * 15
 
-type universalChecker struct {
-	metrics           *metrics.CheckMetrics
+type scheduler struct {
+	manager           *WorkerManager
+	clusterKey        moira.ClusterKey
 	sourceCheckConfig checker.SourceCheckConfig
-	manager             *WorkerManager
 	name              string
 	lockName          string
-	clusterKey        moira.ClusterKey
 	validateSource    func() error
+	metrics           *metrics.CheckMetrics
 }
 
-func newUniversalChecker(manager *WorkerManager, clusterKey moira.ClusterKey, validateSource func() error) (*universalChecker, error) {
+func newUniversalChecker(manager *WorkerManager, clusterKey moira.ClusterKey, validateSource func() error) (*scheduler, error) {
 	metrics, err := manager.Metrics.GetCheckMetricsBySource(clusterKey)
 	if err != nil {
 		return nil, err
@@ -34,8 +34,8 @@ func newUniversalChecker(manager *WorkerManager, clusterKey moira.ClusterKey, va
 
 	lockName := "moira-" + name + "-lock"
 
-	return &universalChecker{
-		manager:             manager,
+	return &scheduler{
+		manager:           manager,
 		sourceCheckConfig: manager.Config.SourceCheckConfigs[clusterKey],
 		metrics:           metrics,
 		name:              name,
@@ -45,19 +45,19 @@ func newUniversalChecker(manager *WorkerManager, clusterKey moira.ClusterKey, va
 	}, nil
 }
 
-func (ch *universalChecker) Name() string {
+func (ch *scheduler) Name() string {
 	return ch.name
 }
 
-func (ch *universalChecker) MaxParallelChecks() int {
+func (ch *scheduler) MaxParallelChecks() int {
 	return ch.sourceCheckConfig.MaxParallelChecks
 }
 
-func (ch *universalChecker) Metrics() *metrics.CheckMetrics {
+func (ch *scheduler) Metrics() *metrics.CheckMetrics {
 	return ch.metrics
 }
 
-func (ch *universalChecker) StartTriggerScheduler() error {
+func (ch *scheduler) StartTriggerScheduler() error {
 	w.NewWorker(
 		ch.name,
 		ch.manager.Logger,
@@ -68,11 +68,11 @@ func (ch *universalChecker) StartTriggerScheduler() error {
 	return nil
 }
 
-func (ch *universalChecker) GetTriggersToCheck(count int) ([]string, error) {
+func (ch *scheduler) GetTriggersToCheck(count int) ([]string, error) {
 	return ch.manager.Database.GetTriggersToCheck(ch.clusterKey, count)
 }
 
-func (ch *universalChecker) triggerScheduler(stop <-chan struct{}) error {
+func (ch *scheduler) triggerScheduler(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(ch.sourceCheckConfig.CheckInterval)
 
 	ch.manager.Logger.Info().Msg(ch.name + " started")
@@ -93,7 +93,7 @@ func (ch *universalChecker) triggerScheduler(stop <-chan struct{}) error {
 	}
 }
 
-func (ch *universalChecker) scheduleTriggersToCheck() error {
+func (ch *scheduler) scheduleTriggersToCheck() error {
 	err := ch.validateSource()
 	if err != nil {
 		ch.manager.Logger.Info().
@@ -112,7 +112,7 @@ func (ch *universalChecker) scheduleTriggersToCheck() error {
 		return err
 	}
 
-	err = ch.addTriggerIDsIfNeeded(ch.clusterKey, triggerIds)
+	err = ch.sheduleTriggerIDsIfNeeded(ch.clusterKey, triggerIds)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (ch *universalChecker) scheduleTriggersToCheck() error {
 	return nil
 }
 
-func (ch *universalChecker) addTriggerIDsIfNeeded(clusterKey moira.ClusterKey, triggerIDs []string) error {
+func (ch *scheduler) sheduleTriggerIDsIfNeeded(clusterKey moira.ClusterKey, triggerIDs []string) error {
 	needToCheckTriggerIDs := ch.manager.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
 		return ch.manager.Database.AddTriggersToCheck(clusterKey, needToCheckTriggerIDs)
