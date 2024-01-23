@@ -47,22 +47,49 @@ func (check *Checker) Start() error {
 		return err
 	}
 
-	err = check.startCheckerWorker(newRemoteChecker(check, "default"))
-	if err != nil {
-		return err
-	}
+	for clusterKey := range check.Config.SourceCheckConfigs {
+		validator, err := check.makeSourceValidator(clusterKey)
+		if err != nil {
+			return err
+		}
 
-	err = check.startCheckerWorker(newPrometheusChecker(check, "default"))
-	if err != nil {
-		return err
-	}
-
-	err = check.startCheckerWorker(newLocalChecker(check, "default"))
-	if err != nil {
-		return err
+		checker, err := newUniversalChecker(check, clusterKey, validator)
+		if err != nil {
+			return err
+		}
+		err = check.startCheckerWorker(checker)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func (check *Checker) makeSourceValidator(clusterKey moira.ClusterKey) (func() error, error) {
+	if clusterKey.TriggerSource == moira.GraphiteLocal {
+		return func() error {
+			now := time.Now().UTC().Unix()
+
+			if check.lastData+check.Config.StopCheckingIntervalSeconds < now {
+				return nil
+			}
+
+			return fmt.Errorf("graphite local source invalid: no metrics for %d second", check.Config.StopCheckingIntervalSeconds)
+		}, nil
+	}
+
+	source, err := check.SourceProvider.GetMetricSource(clusterKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return func() error {
+		if available, err := source.IsAvailable(); !available {
+			return fmt.Errorf("source is not available: %w", err)
+		}
+		return nil
+	}, nil
 }
 
 func (check *Checker) startLocalMetricEvents() error {
@@ -124,12 +151,7 @@ type checkerWorker interface {
 	GetTriggersToCheck(count int) ([]string, error)
 }
 
-/// Todo: remove ugly error passing
-func (check *Checker) startCheckerWorker(w checkerWorker, err error) error {
-	if err != nil {
-		return err
-	}
-
+func (check *Checker) startCheckerWorker(w checkerWorker) error {
 	if !w.IsEnabled() {
 		check.Logger.Info().Msg(w.Name() + " checker disabled")
 		return nil
@@ -233,4 +255,11 @@ func (check *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) 
 func (check *Checker) Stop() error {
 	check.tomb.Kill(nil)
 	return check.tomb.Wait()
+}
+
+func (check *Checker) addLocalTriggerIDsIfNeeded(triggerIDs []string) {
+	needToCheckTriggerIDs := check.filterOutLazyTriggerIDs(triggerIDs)
+	if len(needToCheckTriggerIDs) > 0 {
+		check.Database.AddLocalTriggersToCheck(needToCheckTriggerIDs) //nolint
+	}
 }

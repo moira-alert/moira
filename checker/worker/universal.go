@@ -9,10 +9,7 @@ import (
 	w "github.com/moira-alert/moira/worker"
 )
 
-const (
-	universalTriggerLockName = "moira-remote-checker"
-	universalTriggerName     = "Remote checker"
-)
+const checkerLockTTL = time.Second * 15
 
 type universalChecker struct {
 	metrics           *metrics.CheckMetrics
@@ -21,10 +18,10 @@ type universalChecker struct {
 	name              string
 	lockName          string
 	clusterKey        moira.ClusterKey
-	sourceValidation  func() (bool, error)
+	validateSource    func() error
 }
 
-func newUniversalChecker(check *Checker, clusterKey moira.ClusterKey, sourceValidation func() (bool, error)) (checkerWorker, error) {
+func newUniversalChecker(check *Checker, clusterKey moira.ClusterKey, validateSource func() error) (checkerWorker, error) {
 	metrics, err := check.Metrics.GetCheckMetricsBySource(clusterKey)
 	if err != nil {
 		return nil, err
@@ -44,7 +41,7 @@ func newUniversalChecker(check *Checker, clusterKey moira.ClusterKey, sourceVali
 		name:              name,
 		lockName:          lockName,
 		clusterKey:        clusterKey,
-		sourceValidation:  sourceValidation,
+		validateSource:    validateSource,
 	}, nil
 }
 
@@ -68,7 +65,7 @@ func (ch *universalChecker) StartTriggerGetter() error {
 	w.NewWorker(
 		ch.name,
 		ch.check.Logger,
-		ch.check.Database.NewLock(ch.lockName, nodataCheckerLockTTL),
+		ch.check.Database.NewLock(ch.lockName, checkerLockTTL),
 		ch.triggerScheduler,
 	).Run(ch.check.tomb.Dying())
 
@@ -101,8 +98,8 @@ func (ch *universalChecker) triggerScheduler(stop <-chan struct{}) error {
 }
 
 func (ch *universalChecker) scheduleTriggersToCheck() error {
-	available, err := ch.sourceValidation()
-	if !available {
+	err := ch.validateSource()
+	if err != nil {
 		ch.check.Logger.Info().
 			Error(err).
 			String("cluster_key", ch.clusterKey.String()).
