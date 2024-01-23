@@ -113,20 +113,6 @@ type Database interface {
 	RemoveMetricsValues(metrics []string, toTime int64) error
 	GetMetricsTTLSeconds() int64
 
-	/// Old methods
-	AddLocalTriggersToCheck(triggerIDs []string) error
-	GetLocalTriggersToCheck(count int) ([]string, error)
-	GetLocalTriggersToCheckCount() (int64, error)
-
-	AddRemoteTriggersToCheck(triggerIDs []string) error
-	GetRemoteTriggersToCheck(count int) ([]string, error)
-	GetRemoteTriggersToCheckCount() (int64, error)
-
-	AddPrometheusTriggersToCheck(triggerIDs []string) error
-	GetPrometheusTriggersToCheck(count int) ([]string, error)
-	GetPrometheusTriggersToCheckCount() (int64, error)
-
-	/// New methods
 	AddTriggersToCheck(clusterKey ClusterKey, triggerIDs []string) error
 	GetTriggersToCheck(clusterKey ClusterKey, count int) ([]string, error)
 	GetTriggersToCheckCount(clusterKey ClusterKey) (int64, error)

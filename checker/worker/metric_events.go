@@ -100,7 +100,7 @@ func (manager *WorkerManager) handleMetricEvent(pattern string) error {
 func (manager *WorkerManager) scheduleLocalTriggerIDsIfNeeded(triggerIDs []string) {
 	needToCheckTriggerIDs := manager.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
-		manager.Database.AddLocalTriggersToCheck(needToCheckTriggerIDs) //nolint
+		manager.Database.AddTriggersToCheck(moira.MakeClusterKey(moira.GraphiteLocal, "default"), needToCheckTriggerIDs) //nolint
 	}
 }
 
