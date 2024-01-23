@@ -109,7 +109,7 @@ func (ch *localChecker) addLocalTriggersToCheckQueue() error {
 }
 
 func (check *Checker) addLocalTriggerIDsIfNeeded(triggerIDs []string) {
-	needToCheckTriggerIDs := check.getTriggerIDsToCheck(triggerIDs)
+	needToCheckTriggerIDs := check.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
 		check.Database.AddLocalTriggersToCheck(needToCheckTriggerIDs) //nolint
 	}

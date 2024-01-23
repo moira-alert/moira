@@ -48,10 +48,11 @@ func (check *Checker) handleFetchResponse(triggerIDs []string, fetchError error,
 	return time.Duration(0)
 }
 
-func (check *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
+func (check *Checker) filterOutLazyTriggerIDs(triggerIDs []string) []string {
 	triggerIDsToCheck := make([]string, 0, len(triggerIDs))
 
 	lazyTriggerIDs := check.lazyTriggerIDs.Load().(map[string]bool)
+
 	for _, triggerID := range triggerIDs {
 		if _, ok := lazyTriggerIDs[triggerID]; ok {
 			randomDuration := check.getRandomLazyCacheDuration()

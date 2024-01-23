@@ -61,7 +61,7 @@ func (ch *prometheusChecker) Metrics() *metrics.CheckMetrics {
 
 func (ch *prometheusChecker) StartTriggerGetter() error {
 	w.NewWorker(
-		remoteTriggerName,
+		prometheusTriggerName,
 		ch.check.Logger,
 		ch.check.Database.NewLock(prometheusTriggerLockName, nodataCheckerLockTTL),
 		ch.prometheusTriggerChecker,
@@ -117,7 +117,7 @@ func (ch *prometheusChecker) checkPrometheus() error {
 }
 
 func (ch *prometheusChecker) addPrometheusTriggerIDsIfNeeded(triggerIDs []string) {
-	needToCheckPrometheusTriggerIDs := ch.check.getTriggerIDsToCheck(triggerIDs)
+	needToCheckPrometheusTriggerIDs := ch.check.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckPrometheusTriggerIDs) > 0 {
 		ch.check.Database.AddPrometheusTriggersToCheck(needToCheckPrometheusTriggerIDs) //nolint
 	}

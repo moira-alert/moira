@@ -124,7 +124,7 @@ type checkerWorker interface {
 	GetTriggersToCheck(count int) ([]string, error)
 }
 
-// / Todo: remove ugly error passing
+/// Todo: remove ugly error passing
 func (check *Checker) startCheckerWorker(w checkerWorker, err error) error {
 	if err != nil {
 		return err

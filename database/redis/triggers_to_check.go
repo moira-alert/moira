@@ -4,8 +4,33 @@ import (
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
+
+func (connector *DbConnector) AddTriggersToCheck(clusterKey moira.ClusterKey, triggerIDs []string) error {
+	key, err := makeTriggersToCheckKey(clusterKey)
+	if err != nil {
+		return err
+	}
+	return connector.addTriggersToCheck(key, triggerIDs)
+}
+
+func (connector *DbConnector) GetTriggersToCheck(clusterKey moira.ClusterKey, count int) ([]string, error) {
+	key, err := makeTriggersToCheckKey(clusterKey)
+	if err != nil {
+		return nil, err
+	}
+	return connector.getTriggersToCheck(key, count)
+}
+
+func (connector *DbConnector) GetTriggersToCheckCount(clusterKey moira.ClusterKey) (int64, error) {
+	key, err := makeTriggersToCheckKey(clusterKey)
+	if err != nil {
+		return 0, err
+	}
+	return connector.getTriggersToCheckCount(key)
+}
 
 // AddLocalTriggersToCheck gets trigger IDs and save it to Redis Set
 func (connector *DbConnector) AddLocalTriggersToCheck(triggerIDs []string) error {
@@ -92,6 +117,35 @@ func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error)
 	return triggersToCheckCount, nil
 }
 
-var remoteTriggersToCheckKey = "moira-remote-triggers-to-check"
-var prometheusTriggersToCheckKey = "moira-prometheus-triggers-to-check"
-var localTriggersToCheckKey = "moira-triggers-to-check"
+const (
+	remoteTriggersToCheckKey     = "moira-remote-triggers-to-check"
+	prometheusTriggersToCheckKey = "moira-prometheus-triggers-to-check"
+	localTriggersToCheckKey      = "moira-triggers-to-check"
+)
+
+func makeTriggersToCheckKey(clusterKey moira.ClusterKey) (string, error) {
+	var prefix string
+
+	switch clusterKey.TriggerSource {
+	case moira.GraphiteLocal:
+		prefix = localTriggersToCheckKey
+
+	case moira.GraphiteRemote:
+		prefix = remoteTriggersToCheckKey
+
+	case moira.PrometheusRemote:
+		prefix = prometheusTriggersToCheckKey
+
+	default:
+		return "", fmt.Errorf("unknown trigger source `%s`", clusterKey.TriggerSource.String())
+	}
+
+	return makeTriggersToCheckKeyByClusterId(prefix, clusterKey.ClusterId), nil
+}
+
+func makeTriggersToCheckKeyByClusterId(prefix, clusterId string) string {
+	if clusterId == "default" {
+		return prefix
+	}
+	return fmt.Sprintf("%s:%s", prefix, clusterId)
+}

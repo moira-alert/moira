@@ -117,7 +117,7 @@ func (ch *remoteChecker) checkRemote() error {
 }
 
 func (ch *remoteChecker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
-	needToCheckRemoteTriggerIDs := ch.check.getTriggerIDsToCheck(triggerIDs)
+	needToCheckRemoteTriggerIDs := ch.check.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckRemoteTriggerIDs) > 0 {
 		ch.check.Database.AddRemoteTriggersToCheck(needToCheckRemoteTriggerIDs) //nolint
 	}
