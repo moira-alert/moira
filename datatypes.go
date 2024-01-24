@@ -166,6 +166,7 @@ type TriggerData struct {
 	ErrorValue    float64       `json:"error_value" example:"1000"`
 	IsRemote      bool          `json:"is_remote" example:"false"`
 	TriggerSource TriggerSource `json:"trigger_source,omitempty" example:"graphite_local"`
+	ClusterId     ClusterId     `json:"cluster_id,omitempty" example:"default"`
 	Tags          []string      `json:"__notifier_trigger_tags" example:"server,disk"`
 }
 
@@ -330,12 +331,17 @@ type Trigger struct {
 	PythonExpression *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
 	Patterns         []string        `json:"patterns" example:""`
 	TriggerSource    TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
+	ClusterId        ClusterId       `json:"cluster_id,omitempty" example:"default"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
 	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
 	CreatedAt        *int64          `json:"created_at" format:"int64" extensions:"x-nullable"`
 	UpdatedAt        *int64          `json:"updated_at" format:"int64" extensions:"x-nullable"`
 	CreatedBy        string          `json:"created_by"`
 	UpdatedBy        string          `json:"updated_by"`
+}
+
+func (trigger *Trigger) ClusterKey() ClusterKey {
+	return MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
 }
 
 type TriggerSource string
@@ -363,27 +369,7 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (s TriggerSource) String() string {
-	return string(s)
-}
-
-type ClusterKey struct {
-	TriggerSource TriggerSource
-	ClusterId     string
-}
-
-func MakeClusterKey(triggerSource TriggerSource, clusterId string) ClusterKey {
-	return ClusterKey{
-		TriggerSource: triggerSource,
-		ClusterId:     clusterId,
-	}
-}
-
-func (clusterKey ClusterKey) String() string {
-	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
-}
-
-// Neede for backwards compatibility with moira versions that used oly isRemote flag
+// Needed for backwards compatibility with moira versions that used oly isRemote flag
 func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
 	if triggerSource == TriggerSourceNotSet {
 		if isRempte {
@@ -393,6 +379,44 @@ func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
 		}
 	}
 	return triggerSource
+}
+
+func (triggerSource TriggerSource) String() string {
+	return string(triggerSource)
+}
+
+type ClusterId string
+
+var (
+	ClusterNotSet  ClusterId = ""
+	DefaultCluster ClusterId = "default"
+)
+
+func (clusterId ClusterId) FillInIfNotSet() ClusterId {
+	if clusterId == ClusterNotSet {
+		return DefaultCluster
+	}
+	return clusterId
+}
+
+func (clusterId ClusterId) String() string {
+	return string(clusterId)
+}
+
+type ClusterKey struct {
+	TriggerSource TriggerSource
+	ClusterId     ClusterId
+}
+
+func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey {
+	return ClusterKey{
+		TriggerSource: triggerSource,
+		ClusterId:     clusterId,
+	}
+}
+
+func (clusterKey ClusterKey) String() string {
+	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp

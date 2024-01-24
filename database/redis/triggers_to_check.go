@@ -143,8 +143,8 @@ func makeTriggersToCheckKey(clusterKey moira.ClusterKey) (string, error) {
 	return makeTriggersToCheckKeyByClusterId(prefix, clusterKey.ClusterId), nil
 }
 
-func makeTriggersToCheckKeyByClusterId(prefix, clusterId string) string {
-	if clusterId == "default" {
+func makeTriggersToCheckKeyByClusterId(prefix string, clusterId moira.ClusterId) string {
+	if clusterId == moira.DefaultCluster {
 		return prefix
 	}
 	return fmt.Sprintf("%s:%s", prefix, clusterId)

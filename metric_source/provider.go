@@ -25,13 +25,13 @@ func CreateTestMetricSourceProvider(local, graphiteRemote, prometheusRemote Metr
 	provider := CreateMetricSourceProvider()
 
 	if local != nil {
-		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteLocal, "default"), local)
+		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster), local)
 	}
 	if graphiteRemote != nil {
-		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteRemote, "default"), graphiteRemote)
+		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster), graphiteRemote)
 	}
 	if prometheusRemote != nil {
-		provider.RegisterSource(moira.MakeClusterKey(moira.PrometheusRemote, "default"), prometheusRemote)
+		provider.RegisterSource(moira.MakeClusterKey(moira.PrometheusRemote, moira.DefaultCluster), prometheusRemote)
 	}
 
 	return provider
@@ -47,7 +47,7 @@ func (provider *SourceProvider) GetAllSources() map[moira.ClusterKey]MetricSourc
 
 // GetTriggerMetricSource get metrics source by given trigger. If it not configured returns not empty error
 func (provider *SourceProvider) GetTriggerMetricSource(trigger *moira.Trigger) (MetricSource, error) {
-	return provider.GetMetricSource(moira.MakeClusterKey(trigger.TriggerSource, "default"))
+	return provider.GetMetricSource(moira.MakeClusterKey(trigger.TriggerSource, moira.DefaultCluster))
 }
 
 // GetMetricSource return metric source depending on trigger flag: is remote trigger or not. GetLocal if not.

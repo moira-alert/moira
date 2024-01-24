@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
 	"github.com/golang/mock/gomock"
@@ -13,6 +14,7 @@ import (
 )
 
 func TestCheckDelay_Check(t *testing.T) {
+	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
 	Convey("Test local checker heartbeat", t, func() {
 		err := errors.New("test error localChecker")
 		now := time.Now().Unix()
@@ -27,7 +29,7 @@ func TestCheckDelay_Check(t *testing.T) {
 		})
 
 		Convey("GraphiteLocalChecker error handling test", func() {
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), err)
+			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), err)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldEqual, err)
@@ -38,7 +40,7 @@ func TestCheckDelay_Check(t *testing.T) {
 		Convey("Test update lastSuccessfulCheck", func() {
 			now += 1000
 			database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -50,7 +52,7 @@ func TestCheckDelay_Check(t *testing.T) {
 		Convey("Test get notification", func() {
 			check.lastSuccessfulCheck = now - check.delay - 1
 			database.EXPECT().GetChecksUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -60,7 +62,7 @@ func TestCheckDelay_Check(t *testing.T) {
 
 		Convey("Exit without action", func() {
 			database.EXPECT().GetChecksUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)

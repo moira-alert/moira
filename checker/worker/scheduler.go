@@ -21,17 +21,13 @@ type scheduler struct {
 	metrics           *metrics.CheckMetrics
 }
 
-func newUniversalChecker(manager *WorkerManager, clusterKey moira.ClusterKey, validateSource func() error) (*scheduler, error) {
+func newScheduler(manager *WorkerManager, clusterKey moira.ClusterKey, validateSource func() error) (*scheduler, error) {
 	metrics, err := manager.Metrics.GetCheckMetricsBySource(clusterKey)
 	if err != nil {
 		return nil, err
 	}
 
-	name := clusterKey.TriggerSource.String()
-	if clusterKey.ClusterId != "default" {
-		name = name + ":" + clusterKey.ClusterId
-	}
-
+	name := clusterKey.TriggerSource.String() + ":" + clusterKey.ClusterId.String()
 	lockName := "moira-" + name + "-lock"
 
 	return &scheduler{

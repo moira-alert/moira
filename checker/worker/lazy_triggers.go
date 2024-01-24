@@ -13,7 +13,7 @@ const (
 )
 
 func (manager *WorkerManager) lazyTriggersWorker() error {
-	localConfig, ok := manager.Config.SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, "default")]
+	localConfig, ok := manager.Config.SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)]
 	if !ok {
 		return fmt.Errorf("can not initialize lazyTriggersWorker: default local source is not configured")
 	}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira/image_store/s3"
@@ -154,8 +155,8 @@ type RemotesConfig struct {
 
 // GraphiteRemoteConfig is remote graphite settings structure
 type GraphiteRemoteConfig struct {
-	ClusterId   string `yaml:"cluster_id"`
-	ClusterName string `yaml:"cluster_name"`
+	ClusterId   moira.ClusterId `yaml:"cluster_id"`
+	ClusterName string          `yaml:"cluster_name"`
 	// graphite url e.g http://graphite/render
 	URL string `yaml:"url"`
 	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
@@ -189,8 +190,8 @@ func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSou
 }
 
 type PrometheusRemoteConfig struct {
-	ClusterId   string `yaml:"cluster_id"`
-	ClusterName string `yaml:"cluster_name"`
+	ClusterId   moira.ClusterId `yaml:"cluster_id"`
+	ClusterName string          `yaml:"cluster_name"`
 	// Url of prometheus API
 	URL string `yaml:"url"`
 	// Min period to perform triggers re-check

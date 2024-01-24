@@ -59,7 +59,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
-		triggerChecker.trigger.TriggerSource,
+		triggerChecker.trigger.ClusterKey(),
 	)
 }
 
@@ -105,7 +105,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 	err = triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
-		triggerChecker.trigger.TriggerSource,
+		triggerChecker.trigger.ClusterKey(),
 	)
 	return MustStopCheck, checkData, err
 }
@@ -129,7 +129,7 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			return triggerChecker.database.SetTriggerLastCheck(
 				triggerChecker.triggerID,
 				&checkData,
-				triggerChecker.trigger.TriggerSource,
+				triggerChecker.trigger.ClusterKey(),
 			)
 		}
 	case remote.ErrRemoteTriggerResponse:
@@ -155,7 +155,7 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
-		triggerChecker.trigger.TriggerSource,
+		triggerChecker.trigger.ClusterKey(),
 	)
 }
 
@@ -178,7 +178,7 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
-		triggerChecker.trigger.TriggerSource,
+		triggerChecker.trigger.ClusterKey(),
 	)
 }
 

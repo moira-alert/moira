@@ -134,10 +134,10 @@ func HandlePushTriggerLastCheck(
 	database moira.Database,
 	triggerID string,
 	lastCheck *moira.CheckData,
-	triggerSource moira.TriggerSource,
+	clusterKey moira.ClusterKey,
 ) error {
 	logger.Info().Msg("Save trigger last check")
-	if err := database.SetTriggerLastCheck(triggerID, lastCheck, triggerSource); err != nil {
+	if err := database.SetTriggerLastCheck(triggerID, lastCheck, clusterKey); err != nil {
 		return fmt.Errorf("cannot set trigger last check: %w", err)
 	}
 	logger.Info().Msg("Trigger last check was saved")

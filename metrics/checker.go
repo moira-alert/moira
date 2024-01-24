@@ -16,7 +16,7 @@ type CheckerMetrics struct {
 
 // GetCheckMetrics return check metrics dependent on given trigger type
 func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) (*CheckMetrics, error) {
-	return metrics.GetCheckMetricsBySource(moira.MakeClusterKey(trigger.TriggerSource, "default"))
+	return metrics.GetCheckMetricsBySource(moira.MakeClusterKey(trigger.TriggerSource, moira.DefaultCluster))
 }
 
 // GetCheckMetricsBySource return check metrics dependent on given trigger type
@@ -51,7 +51,7 @@ func ConfigureCheckerMetrics(registry Registry, sources []moira.ClusterKey) *Che
 }
 
 func configureCheckMetrics(registry Registry, clusterKey moira.ClusterKey) *CheckMetrics {
-	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId
+	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId.String()
 	return &CheckMetrics{
 		CheckError:           registry.NewMeter(source, id, "errors", "check"),
 		HandleError:          registry.NewMeter(source, id, "errors", "handle"),

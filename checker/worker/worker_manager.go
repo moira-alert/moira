@@ -53,7 +53,7 @@ func (manager *WorkerManager) StartWorkers() error {
 			return err
 		}
 
-		checker, err := newUniversalChecker(manager, clusterKey, validator)
+		checker, err := newScheduler(manager, clusterKey, validator)
 		if err != nil {
 			return err
 		}
@@ -138,6 +138,7 @@ func (manager *WorkerManager) checkTriggersToCheckCount() error {
 		select {
 		case <-manager.tomb.Dying():
 			return nil
+
 		case <-checkTicker.C:
 			for clusterKey := range manager.Config.SourceCheckConfigs {
 				metrics, err := manager.Metrics.GetCheckMetricsBySource(clusterKey)

@@ -96,7 +96,9 @@ func main() {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
 
-	cacheDefaultExpiration := checkerSettings.SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, "default")].CheckInterval
+	cacheDefaultExpiration := checkerSettings.
+		SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)].
+		CheckInterval
 	checkerWorker := &worker.WorkerManager{
 		Logger:            logger,
 		Database:          database,

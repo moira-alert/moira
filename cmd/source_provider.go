@@ -10,7 +10,7 @@ import (
 
 func InitMetricSources(remotes RemotesConfig, database moira.Database, logger moira.Logger) (*metricSource.SourceProvider, error) {
 	provider := metricSource.CreateMetricSourceProvider()
-	provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteLocal, "default"), local.Create(database))
+	provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster), local.Create(database))
 
 	for _, graphite := range remotes.Graphite {
 		config := graphite.GetRemoteSourceSettings()

@@ -73,6 +73,7 @@ type TriggerModel struct {
 	IsRemote bool `json:"is_remote" example:"false"`
 	// Shows the source from where the metrics are fetched
 	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_local"`
+	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics" example:"false"`
 	// A list of targets that have only alone metrics
@@ -128,6 +129,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Patterns:       trigger.Patterns,
 		IsRemote:       trigger.TriggerSource == moira.GraphiteRemote,
 		TriggerSource:  trigger.TriggerSource,
+		ClusterId:      trigger.ClusterId,
 		MuteNewMetrics: trigger.MuteNewMetrics,
 		AloneMetrics:   trigger.AloneMetrics,
 		CreatedAt:      getDateTime(trigger.CreatedAt),
@@ -178,10 +180,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 
 	trigger.TriggerSource = trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
+	trigger.ClusterId = trigger.ClusterId.FillInIfNotSet()
 
 	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
-	/// TODO: use proper cluster key
-	metricsSource, err := metricsSourceProvider.GetMetricSource(moira.MakeClusterKey(trigger.TriggerSource, "default"))
+	metricsSource, err := metricsSourceProvider.GetMetricSource(moira.MakeClusterKey(trigger.TriggerSource, trigger.ClusterId))
 	if err != nil {
 		return err
 	}

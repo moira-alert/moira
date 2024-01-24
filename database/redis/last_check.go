@@ -28,8 +28,8 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.Check
 }
 
 // SetTriggerLastCheck sets trigger last check data
-func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, triggerSource moira.TriggerSource) error {
-	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(triggerSource)
+func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, clusterKey moira.ClusterKey) error {
+	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(clusterKey)
 	bytes, err := reply.GetCheckBytes(*checkData)
 	if err != nil {
 		return err
@@ -65,23 +65,32 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	return nil
 }
 
-func (connector *DbConnector) getSelfStateCheckCountKey(triggerSource moira.TriggerSource) string {
+func (connector *DbConnector) getSelfStateCheckCountKey(clusterKey moira.ClusterKey) string {
 	if connector.source != Checker {
 		return ""
 	}
-	switch triggerSource {
+
+	var key string
+
+	switch clusterKey.TriggerSource {
 	case moira.GraphiteLocal:
-		return selfStateChecksCounterKey
+		key = selfStateChecksCounterKey
 
 	case moira.GraphiteRemote:
-		return selfStateRemoteChecksCounterKey
+		key = selfStateRemoteChecksCounterKey
 
 	case moira.PrometheusRemote:
-		return selfStatePrometheusChecksCounterKey
+		key = selfStatePrometheusChecksCounterKey
 
 	default:
 		return ""
 	}
+
+	if clusterKey.ClusterId != moira.DefaultCluster {
+		key = key + ":" + clusterKey.ClusterId.String()
+	}
+
+	return key
 }
 
 func appendRemoveTriggerLastCheckToRedisPipeline(ctx context.Context, pipe redis.Pipeliner, triggerID string) redis.Pipeliner {

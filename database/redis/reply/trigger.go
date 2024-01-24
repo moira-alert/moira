@@ -28,6 +28,7 @@ type triggerStorageElement struct {
 	TTL              string              `json:"ttl,omitempty"`
 	IsRemote         bool                `json:"is_remote"`
 	TriggerSource    moira.TriggerSource `json:"trigger_source,omitempty"`
+	ClusterId        moira.ClusterId     `json:"cluster_id,omitempty"`
 	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
 	AloneMetrics     map[string]bool     `json:"alone_metrics"`
 	CreatedAt        *int64              `json:"created_at"`

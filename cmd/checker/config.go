@@ -79,7 +79,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 			String("cluster_id", "default").
 			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 	}
-	sourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, "default")] = localCheckConfig
+	sourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)] = localCheckConfig
 
 	for _, remote := range config.Remotes.Graphite {
 		checkConfig := checker.SourceCheckConfig{
@@ -90,7 +90,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 			logger.Info().
 				Int("number_of_cpu", checkConfig.MaxParallelChecks).
 				String("trigger_source", moira.GraphiteRemote.String()).
-				String("cluster_id", remote.ClusterId).
+				String("cluster_id", remote.ClusterId.String()).
 				Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 		}
 		sourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteRemote, remote.ClusterId)] = checkConfig
@@ -105,7 +105,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 			logger.Info().
 				Int("number_of_cpu", checkConfig.MaxParallelChecks).
 				String("trigger_source", moira.PrometheusRemote.String()).
-				String("cluster_id", remote.ClusterId).
+				String("cluster_id", remote.ClusterId.String()).
 				Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 		}
 		sourceCheckConfigs[moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterId)] = checkConfig
