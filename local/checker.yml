@@ -12,18 +12,22 @@ telemetry:
   pprof:
     enabled: true
   listen: ":8092"
-remote:
-  enabled: true
-  url: "http://graphite:80/render"
+local:
   check_interval: 60s
-  timeout: 60s
-  metrics_ttl: 168h
-prometheus:
-  url: "http://prometheus:9090"
-  enabled: true
-  check_interval: 60s
-  timeout: 60s
-  metrics_ttl: 168h
+graphite_remote:
+  - cluster_id: default
+    cluster_name: Graphite 1
+    url: "http://graphite:80/render"
+    check_interval: 60s
+    timeout: 60s
+    metrics_ttl: 168h
+prometheus_remote:
+  - cluster_id: default
+    cluster_name: Prometheus 1
+    url: "http://prometheus:9090"
+    check_interval: 60s
+    timeout: 60s
+    metrics_ttl: 168h
 checker:
   nodata_check_interval: 60s
   check_interval: 10s

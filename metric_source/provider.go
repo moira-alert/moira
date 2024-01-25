@@ -47,7 +47,7 @@ func (provider *SourceProvider) GetAllSources() map[moira.ClusterKey]MetricSourc
 
 // GetTriggerMetricSource get metrics source by given trigger. If it not configured returns not empty error
 func (provider *SourceProvider) GetTriggerMetricSource(trigger *moira.Trigger) (MetricSource, error) {
-	return provider.GetMetricSource(moira.MakeClusterKey(trigger.TriggerSource, moira.DefaultCluster))
+	return provider.GetMetricSource(trigger.ClusterKey())
 }
 
 // GetMetricSource return metric source depending on trigger flag: is remote trigger or not. GetLocal if not.
@@ -56,7 +56,7 @@ func (provider *SourceProvider) GetMetricSource(clusterKey moira.ClusterKey) (Me
 		return returnSource(source)
 	}
 
-	return nil, fmt.Errorf("unknown metric source with cluster key `%s`", clusterKey.String())
+	return nil, fmt.Errorf("unknown metric source with cluster key `%s` (%+v)", clusterKey.String(), provider.sources)
 }
 
 func returnSource(source MetricSource) (MetricSource, error) {

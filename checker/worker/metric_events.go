@@ -14,6 +14,8 @@ func (manager *WorkerManager) startLocalMetricEvents() error {
 		return errors.New("MetricEventPopBatchSize param was less than zero")
 	}
 
+	manager.Logger.Info().Msg("Starting local metric event handler")
+
 	if manager.Config.MetricEventPopBatchSize == 0 {
 		manager.Config.MetricEventPopBatchSize = 100
 	}

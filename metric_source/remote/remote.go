@@ -30,11 +30,14 @@ type Remote struct {
 }
 
 // Create configures remote metric source
-func Create(config *Config) metricSource.MetricSource {
+func Create(config *Config) (metricSource.MetricSource, error) {
+	if config.URL == "" {
+		return nil, fmt.Errorf("remote graphite URL should not be empty")
+	}
 	return &Remote{
 		config: config,
 		client: &http.Client{Timeout: config.Timeout},
-	}
+	}, nil
 }
 
 // Fetch fetches remote metrics and converts them to expected format
@@ -75,10 +78,7 @@ func (remote *Remote) GetMetricsTTLSeconds() int64 {
 
 // IsConfigured returns false in cases that user does not properly configure remote settings like graphite URL
 func (remote *Remote) IsConfigured() (bool, error) {
-	if remote.config.isEnabled() {
-		return true, nil
-	}
-	return false, ErrRemoteStorageDisabled
+	return true, nil
 }
 
 // IsRemoteAvailable checks if graphite API is available and returns 200 response

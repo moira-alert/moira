@@ -149,8 +149,8 @@ type ProfilerConfig struct {
 }
 
 type RemotesConfig struct {
-	Graphite   []GraphiteRemoteConfig   `yaml:"remote"`
-	Prometheus []PrometheusRemoteConfig `yaml:"prometheus"`
+	Graphite   []GraphiteRemoteConfig   `yaml:"graphite_remote"`
+	Prometheus []PrometheusRemoteConfig `yaml:"prometheus_remote"`
 }
 
 // GraphiteRemoteConfig is remote graphite settings structure
@@ -172,8 +172,6 @@ type GraphiteRemoteConfig struct {
 	User string `yaml:"user"`
 	// Password for basic auth
 	Password string `yaml:"password"`
-	// If true, remote worker will be enabled.
-	Enabled bool `yaml:"enabled"`
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
@@ -185,7 +183,6 @@ func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSou
 		Timeout:       to.Duration(config.Timeout),
 		User:          config.User,
 		Password:      config.Password,
-		Enabled:       config.Enabled,
 	}
 }
 
@@ -210,14 +207,11 @@ type PrometheusRemoteConfig struct {
 	User string `yaml:"user"`
 	// Password for basic auth
 	Password string `yaml:"password"`
-	// If true, prometheus remote worker will be enabled.
-	Enabled bool `yaml:"enabled"`
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
 func (config *PrometheusRemoteConfig) GetPrometheusSourceSettings() *prometheusRemoteSource.Config {
 	return &prometheusRemoteSource.Config{
-		Enabled:        config.Enabled,
 		URL:            config.URL,
 		CheckInterval:  to.Duration(config.CheckInterval),
 		MetricsTTL:     to.Duration(config.MetricsTTL),

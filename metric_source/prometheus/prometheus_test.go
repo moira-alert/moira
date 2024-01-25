@@ -8,14 +8,14 @@ import (
 
 func TestIsConfigured(t *testing.T) {
 	Convey("Metric source is not configured", t, func() {
-		source, _ := Create(&Config{URL: "", Enabled: false}, nil)
+		source, _ := Create(&Config{URL: ""}, nil)
 		isConfigured, err := source.IsConfigured()
 		So(isConfigured, ShouldBeFalse)
 		So(err, ShouldResemble, ErrPrometheusStorageDisabled)
 	})
 
 	Convey("Metric source is configured", t, func() {
-		source, _ := Create(&Config{URL: "http://host", Enabled: true}, nil)
+		source, _ := Create(&Config{URL: "http://host"}, nil)
 		isConfigured, err := source.IsConfigured()
 		So(isConfigured, ShouldBeTrue)
 		So(err, ShouldBeEmpty)

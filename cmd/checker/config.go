@@ -151,6 +151,9 @@ func getDefault() config {
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
+		Local: localCheckConfig {
+			CheckInterval: "60s",
+		},
 		Remotes: cmd.RemotesConfig{
 			Graphite: []cmd.GraphiteRemoteConfig{
 				{
