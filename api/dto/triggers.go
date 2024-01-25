@@ -105,6 +105,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Expression:     &model.Expression,
 		Patterns:       model.Patterns,
 		TriggerSource:  model.TriggerSource,
+		ClusterId:      model.ClusterId,
 		MuteNewMetrics: model.MuteNewMetrics,
 		AloneMetrics:   model.AloneMetrics,
 		UpdatedBy:      model.UpdatedBy,

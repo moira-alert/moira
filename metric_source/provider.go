@@ -56,7 +56,7 @@ func (provider *SourceProvider) GetMetricSource(clusterKey moira.ClusterKey) (Me
 		return returnSource(source)
 	}
 
-	return nil, fmt.Errorf("unknown metric source")
+	return nil, fmt.Errorf("unknown metric source with cluster key `%s`", clusterKey.String())
 }
 
 func returnSource(source MetricSource) (MetricSource, error) {

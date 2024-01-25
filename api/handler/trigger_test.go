@@ -35,6 +35,7 @@ func TestGetTrigger(t *testing.T) {
 			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{
 				ID:            "triggerID-0000000000001",
 				TriggerSource: moira.GraphiteLocal,
+				ClusterId:     moira.DefaultCluster,
 			}, nil)
 			mockDb.EXPECT().GetTriggerThrottling("triggerID-0000000000001").Return(throttlingTime, throttlingTime)
 			database = mockDb
@@ -51,7 +52,7 @@ func TestGetTrigger(t *testing.T) {
 
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
-			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":null,\"updated_at\":null,\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
+			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"cluster_id\":\"default\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":null,\"updated_at\":null,\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
 			So(contents, ShouldEqual, expected)
 		})
 
@@ -64,6 +65,7 @@ func TestGetTrigger(t *testing.T) {
 						ID:            "triggerID-0000000000001",
 						CreatedAt:     &triggerTime,
 						TriggerSource: moira.GraphiteLocal,
+						ClusterId:     moira.DefaultCluster,
 						UpdatedAt:     &triggerTime,
 					},
 					nil)
@@ -82,7 +84,7 @@ func TestGetTrigger(t *testing.T) {
 
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
-			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":\"2022-06-07T10:00:00Z\",\"updated_at\":\"2022-06-07T10:00:00Z\",\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
+			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"cluster_id\":\"default\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":\"2022-06-07T10:00:00Z\",\"updated_at\":\"2022-06-07T10:00:00Z\",\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
 			So(contents, ShouldEqual, expected)
 		})
 

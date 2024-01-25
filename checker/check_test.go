@@ -721,7 +721,7 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().SetTriggerLastCheck(
 					triggerChecker.triggerID,
 					&lastCheck,
-					triggerChecker.trigger.TriggerSource,
+					triggerChecker.trigger.ClusterKey(),
 				).Return(nil),
 			)
 			err := triggerChecker.Check()
@@ -756,7 +756,7 @@ func TestCheck(t *testing.T) {
 					dataBase.EXPECT().SetTriggerLastCheck(
 						triggerChecker.triggerID,
 						&lastCheck,
-						triggerChecker.trigger.TriggerSource,
+						triggerChecker.trigger.ClusterKey(),
 					).Return(nil),
 				)
 				err := triggerChecker.Check()
@@ -805,7 +805,7 @@ func TestCheck(t *testing.T) {
 					dataBase.EXPECT().SetTriggerLastCheck(
 						triggerChecker.triggerID,
 						&lastCheck,
-						triggerChecker.trigger.TriggerSource,
+						triggerChecker.trigger.ClusterKey(),
 					).Return(nil),
 				)
 				err := triggerChecker.Check()
@@ -853,7 +853,7 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().SetTriggerLastCheck(
 					triggerChecker.triggerID,
 					&lastCheck,
-					triggerChecker.trigger.TriggerSource,
+					triggerChecker.trigger.ClusterKey(),
 				).Return(nil),
 			)
 			err := triggerChecker.Check()
@@ -899,7 +899,7 @@ func TestCheck(t *testing.T) {
 			dataBase.EXPECT().SetTriggerLastCheck(
 				triggerChecker.triggerID,
 				&lastCheck,
-				triggerChecker.trigger.TriggerSource,
+				triggerChecker.trigger.ClusterKey(),
 			).Return(nil)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -973,7 +973,7 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().SetTriggerLastCheck(
 					triggerChecker.triggerID,
 					&lastCheck,
-					triggerChecker.trigger.TriggerSource,
+					triggerChecker.trigger.ClusterKey(),
 				).Return(nil),
 			)
 			err := triggerChecker.Check()
@@ -1446,7 +1446,7 @@ func TestTriggerChecker_Check(t *testing.T) {
 	dataBase.EXPECT().SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&lastCheck,
-		triggerChecker.trigger.TriggerSource,
+		triggerChecker.trigger.ClusterKey(),
 	).Return(nil)
 	_ = triggerChecker.Check()
 }
@@ -1532,7 +1532,7 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	dataBase.EXPECT().SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&lastCheck,
-		triggerChecker.trigger.TriggerSource,
+		triggerChecker.trigger.ClusterKey(),
 	).Return(nil).AnyTimes()
 
 	for n := 0; n < b.N; n++ {
@@ -1653,6 +1653,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 
 		trigger := &moira.Trigger{
 			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
 		}
 		triggerChecker := TriggerChecker{
 			triggerID: "test trigger",
@@ -1695,7 +1696,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				Metric:           triggerChecker.trigger.Name,
 				MessageEventInfo: nil,
 			}, true)
-			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, trigger.ClusterKey())
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
 			So(pass, ShouldEqual, MustStopCheck)
@@ -1712,7 +1713,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				State:          moira.StateNODATA,
 				EventTimestamp: 10,
 			}
-			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, trigger.ClusterKey())
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
 			So(pass, ShouldEqual, MustStopCheck)

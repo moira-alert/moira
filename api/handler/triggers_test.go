@@ -82,6 +82,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 				Expression:     "",
 				Patterns:       []string{},
 				TriggerSource:  moira.GraphiteLocal,
+				ClusterId:      moira.DefaultCluster,
 				MuteNewMetrics: false,
 				AloneMetrics:   map[string]bool{},
 				CreatedAt:      &time.Time{},
@@ -530,6 +531,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 
 func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 
 	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
@@ -548,7 +550,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
 		Convey("Expect trigger to be graphite local", func() {
-			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.GraphiteLocal)
+			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster))
 
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
@@ -562,7 +564,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
 		Convey("Expect trigger to be graphite remote", func() {
-			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.GraphiteRemote)
+			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster))
 
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
@@ -576,7 +578,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
 		Convey("Expect trigger to be graphite local", func() {
-			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.GraphiteLocal)
+			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster))
 
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
@@ -590,7 +592,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
 		Convey("Expect trigger to be graphite remote", func() {
-			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.GraphiteRemote)
+			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster))
 
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
@@ -604,7 +606,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
 		Convey("Expect trigger to be prometheus remote", func() {
-			setupExpectationsForCreateTrigger(prometheusSource, db, target, triggerId, moira.PrometheusRemote)
+			setupExpectationsForCreateTrigger(prometheusSource, db, target, triggerId, moira.MakeClusterKey(moira.PrometheusRemote, moira.DefaultCluster))
 
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
@@ -618,7 +620,41 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
 		Convey("Expect trigger to be graphite local", func() {
-			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.GraphiteLocal)
+			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster))
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			So(responseWriter.Code, ShouldEqual, 200)
+		})
+	})
+}
+
+func TestTriggersCreatedWithNonDefaultClusterId(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+
+	remoteStagingCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.ClusterId("staging"))
+	remoteStagingSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+
+	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, nil, nil)
+	sourceProvider.RegisterSource(remoteStagingCluster, remoteStagingSource)
+
+	db := mock_moira_alert.NewMockDatabase(mockCtrl)
+	database = db
+	defer func() { database = nil }()
+
+	triggerId := "test"
+	target := `test_target_value`
+
+	Convey("Given cluster_id is set", t, func() {
+		jsonTrigger := makeTestTriggerJson(target, triggerId, `"trigger_source": "graphite_local", "cluster_id": "staging"`)
+		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
+
+		Convey("Expect trigger have non default cluster id", func() {
+			setupExpectationsForCreateTrigger(remoteStagingSource, db, target, triggerId, remoteStagingCluster)
 
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
@@ -649,7 +685,7 @@ func setupExpectationsForCreateTrigger(
 	source *mock_metric_source.MockMetricSource,
 	db *mock_moira_alert.MockDatabase,
 	target, triggerId string,
-	triggerSource moira.TriggerSource,
+	clusterKey moira.ClusterKey,
 ) {
 	source.EXPECT().IsConfigured().Return(true, nil)
 	source.EXPECT().GetMetricsTTLSeconds().Return(int64(3600))
@@ -659,7 +695,7 @@ func setupExpectationsForCreateTrigger(
 	db.EXPECT().AcquireTriggerCheckLock(triggerId, gomock.Any()).Return(nil)
 	db.EXPECT().DeleteTriggerCheckLock(triggerId).Return(nil)
 	db.EXPECT().GetTriggerLastCheck(triggerId).Return(moira.CheckData{}, dataBase.ErrNil)
-	db.EXPECT().SetTriggerLastCheck(triggerId, gomock.Any(), triggerSource).Return(nil)
+	db.EXPECT().SetTriggerLastCheck(triggerId, gomock.Any(), clusterKey).Return(nil)
 	db.EXPECT().SaveTrigger(triggerId, gomock.Any()).Return(nil)
 }
 
