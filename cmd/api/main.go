@@ -126,7 +126,7 @@ func main() {
 	}
 
 	/// TODO: proper web config
-	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0)
+	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
 
 	httpHandler := handler.NewHandler(
 		database,

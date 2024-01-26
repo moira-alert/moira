@@ -103,7 +103,7 @@ func (config *apiConfig) getSettings(
 	}
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool) *api.WebConfig {
+func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
 	webContacts := make([]api.WebContact, 0, len(config.Contacts))
 	for _, configContact := range config.Contacts {
 		contact := api.WebContact{
@@ -116,12 +116,37 @@ func (config *webConfig) getSettings(isRemoteEnabled bool) *api.WebConfig {
 		webContacts = append(webContacts, contact)
 	}
 
+	clusters := []api.MetricSourceCluster{{
+		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
+		ClusterName:   "Graphite Local",
+	}}
+
+	for _, remote := range remotes.Graphite {
+		cluster := api.MetricSourceCluster{
+			TriggerSource: moira.GraphiteRemote,
+			ClusterId:     remote.ClusterId,
+			ClusterName:   remote.ClusterName,
+		}
+		clusters = append(clusters, cluster)
+	}
+
+	for _, remote := range remotes.Prometheus {
+		cluster := api.MetricSourceCluster{
+			TriggerSource: moira.PrometheusRemote,
+			ClusterId:     remote.ClusterId,
+			ClusterName:   remote.ClusterName,
+		}
+		clusters = append(clusters, cluster)
+	}
+
 	return &api.WebConfig{
-		SupportEmail:  config.SupportEmail,
-		RemoteAllowed: isRemoteEnabled,
-		Contacts:      webContacts,
-		FeatureFlags:  config.getFeatureFlags(),
-		Sentry:        config.Sentry.getSettings(),
+		SupportEmail:         config.SupportEmail,
+		RemoteAllowed:        isRemoteEnabled,
+		MetricSourceClusters: clusters,
+		Contacts:             webContacts,
+		FeatureFlags:         config.getFeatureFlags(),
+		Sentry:               config.Sentry.getSettings(),
 	}
 }
 

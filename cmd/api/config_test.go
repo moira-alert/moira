@@ -107,20 +107,28 @@ func Test_webConfig_getDefault(t *testing.T) {
 }
 
 func Test_webConfig_getSettings(t *testing.T) {
+	metricSourceClustersDefault := []api.MetricSourceCluster{{
+		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
+		ClusterName:   "Graphite Local",
+	}}
+	remotesDefault := cmd.RemotesConfig{}
+
 	Convey("Empty config, fill it", t, func() {
 		config := webConfig{}
 
-		settings := config.getSettings(true)
+		settings := config.getSettings(true, remotesDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
-			RemoteAllowed: true,
-			Contacts:      []api.WebContact{},
+			RemoteAllowed:        true,
+			Contacts:             []api.WebContact{},
+			MetricSourceClusters: metricSourceClustersDefault,
 		})
 	})
 
 	Convey("Default config, fill it", t, func() {
 		config := getDefault()
 
-		settings := config.Web.getSettings(true)
+		settings := config.Web.getSettings(true, remotesDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},
@@ -129,6 +137,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 				IsPlottingAvailable:              true,
 				IsSubscriptionToAllTagsAvailable: true,
 			},
+			MetricSourceClusters: metricSourceClustersDefault,
 		})
 	})
 
@@ -156,7 +165,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			},
 		}
 
-		settings := config.getSettings(true)
+		settings := config.getSettings(true, remotesDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			SupportEmail:  "lalal@mail.la",
 			RemoteAllowed: true,
@@ -176,6 +185,44 @@ func Test_webConfig_getSettings(t *testing.T) {
 			},
 			Sentry: api.Sentry{
 				DSN: "test dsn",
+			},
+			MetricSourceClusters: metricSourceClustersDefault,
+		})
+	})
+
+	Convey("Empty config, non default cluster list", t, func() {
+		config := webConfig{}
+		remotes := cmd.RemotesConfig{
+			Graphite: []cmd.GraphiteRemoteConfig{{
+				ClusterId:   "default",
+				ClusterName: "Graphite Remote 123",
+			}},
+			Prometheus: []cmd.PrometheusRemoteConfig{{
+				ClusterId:   "default",
+				ClusterName: "Prometheus Remote 888",
+			}},
+		}
+
+		settings := config.getSettings(true, remotes)
+		So(settings, ShouldResemble, &api.WebConfig{
+			RemoteAllowed: true,
+			Contacts:      []api.WebContact{},
+			MetricSourceClusters: []api.MetricSourceCluster{
+				{
+					TriggerSource: moira.GraphiteLocal,
+					ClusterId:     moira.DefaultCluster,
+					ClusterName:   "Graphite Local",
+				},
+				{
+					TriggerSource: moira.GraphiteRemote,
+					ClusterId:     moira.DefaultCluster,
+					ClusterName:   "Graphite Remote 123",
+				},
+				{
+					TriggerSource: moira.PrometheusRemote,
+					ClusterId:     moira.DefaultCluster,
+					ClusterName:   "Prometheus Remote 888",
+				},
 			},
 		})
 	})

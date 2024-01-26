@@ -39,11 +39,18 @@ type Config struct {
 
 // WebConfig is container for web ui configuration parameters.
 type WebConfig struct {
-	SupportEmail  string       `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
-	RemoteAllowed bool         `json:"remoteAllowed" example:"true"`
-	Contacts      []WebContact `json:"contacts"`
-	FeatureFlags  FeatureFlags `json:"featureFlags"`
-	Sentry        Sentry       `json:"sentry"`
+	SupportEmail         string                `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
+	RemoteAllowed        bool                  `json:"remoteAllowed" example:"true"`
+	MetricSourceClusters []MetricSourceCluster `json:"metric_source_clusters"`
+	Contacts             []WebContact          `json:"contacts"`
+	FeatureFlags         FeatureFlags          `json:"featureFlags"`
+	Sentry               Sentry                `json:"sentry"`
+}
+
+type MetricSourceCluster struct {
+	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_remote"`
+	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`
+	ClusterName   string              `json:"cluster_name" example:"Graphite Remote Prod"`
 }
 
 func (WebConfig) Render(w http.ResponseWriter, r *http.Request) error {
