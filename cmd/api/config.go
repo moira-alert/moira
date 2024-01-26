@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
 
 	"github.com/xiam/to"
@@ -17,6 +20,24 @@ type config struct {
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
 	Remotes             cmd.RemotesConfig             `yaml:",inline"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
+}
+
+func (config *config) AllMetricsTTL() map[moira.ClusterKey]time.Duration {
+	result := make(map[moira.ClusterKey]time.Duration)
+
+	result[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)] = to.Duration(config.Redis.MetricsTTL)
+
+	for _, remote := range config.Remotes.Graphite {
+		key := moira.MakeClusterKey(moira.GraphiteRemote, moira.ClusterId(remote.ClusterId))
+		result[key] = to.Duration(remote.MetricsTTL)
+	}
+
+	for _, remote := range config.Remotes.Prometheus {
+		key := moira.MakeClusterKey(moira.PrometheusRemote, moira.ClusterId(remote.ClusterId))
+		result[key] = to.Duration(remote.MetricsTTL)
+	}
+
+	return result
 }
 
 type apiConfig struct {
@@ -71,15 +92,14 @@ type featureFlags struct {
 }
 
 func (config *apiConfig) getSettings(
-	localMetricTTL, remoteMetricTTL string,
+	metricsTTL map[moira.ClusterKey]time.Duration,
 	flags api.FeatureFlags,
 ) *api.Config {
 	return &api.Config{
-		EnableCORS:              config.EnableCORS,
-		Listen:                  config.Listen,
-		GraphiteLocalMetricTTL:  to.Duration(localMetricTTL),
-		GraphiteRemoteMetricTTL: to.Duration(remoteMetricTTL),
-		Flags:                   flags,
+		EnableCORS: config.EnableCORS,
+		Listen:     config.Listen,
+		MetricsTTL: metricsTTL,
+		Flags:      flags,
 	}
 }
 
@@ -154,23 +174,6 @@ func getDefault() config {
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
-		Remotes: cmd.RemotesConfig{
-			Graphite: []cmd.GraphiteRemoteConfig{
-				{
-					CheckInterval: "60s",
-					Timeout:       "60s",
-					MetricsTTL:    "7d",
-				},
-			},
-			Prometheus: []cmd.PrometheusRemoteConfig{
-				{
-					CheckInterval: "60s",
-					Timeout:       "60s",
-					MetricsTTL:    "7d",
-					Retries:       1,
-					RetryTimeout:  "10s",
-				},
-			},
-		},
+		Remotes: cmd.RemotesConfig{},
 	}
 }

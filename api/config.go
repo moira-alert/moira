@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 	"time"
+
+	"github.com/moira-alert/moira"
 )
 
 // WebContact is container for web ui contact validation.
@@ -29,12 +31,10 @@ type Sentry struct {
 
 // Config for api configuration variables.
 type Config struct {
-	EnableCORS                bool
-	Listen                    string
-	GraphiteLocalMetricTTL    time.Duration
-	GraphiteRemoteMetricTTL   time.Duration
-	PrometheusRemoteMetricTTL time.Duration
-	Flags                     FeatureFlags
+	EnableCORS bool
+	Listen     string
+	MetricsTTL map[moira.ClusterKey]time.Duration
+	Flags      FeatureFlags
 }
 
 // WebConfig is container for web ui configuration parameters.

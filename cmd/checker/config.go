@@ -151,26 +151,9 @@ func getDefault() config {
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
-		Local: localCheckConfig {
+		Local: localCheckConfig{
 			CheckInterval: "60s",
 		},
-		Remotes: cmd.RemotesConfig{
-			Graphite: []cmd.GraphiteRemoteConfig{
-				{
-					CheckInterval: "60s",
-					Timeout:       "60s",
-					MetricsTTL:    "7d",
-				},
-			},
-			Prometheus: []cmd.PrometheusRemoteConfig{
-				{
-					CheckInterval: "60s",
-					Timeout:       "60s",
-					MetricsTTL:    "7d",
-					Retries:       1,
-					RetryTimeout:  "10s",
-				},
-			},
-		},
+		Remotes: cmd.RemotesConfig{},
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 
 	"github.com/moira-alert/moira/api"
@@ -13,20 +14,24 @@ import (
 
 func Test_apiConfig_getSettings(t *testing.T) {
 	Convey("Settings successfully filled", t, func() {
+		metricTTLs := map[moira.ClusterKey]time.Duration{
+			moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster):  time.Hour,
+			moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster): 24 * time.Hour,
+		}
+
 		apiConf := apiConfig{
 			Listen:     "0000",
 			EnableCORS: true,
 		}
 
 		expectedResult := &api.Config{
-			EnableCORS:              true,
-			Listen:                  "0000",
-			GraphiteLocalMetricTTL:  time.Hour,
-			GraphiteRemoteMetricTTL: 24 * time.Hour,
-			Flags:                   api.FeatureFlags{IsReadonlyEnabled: true},
+			EnableCORS: true,
+			Listen:     "0000",
+			MetricsTTL: metricTTLs,
+			Flags:      api.FeatureFlags{IsReadonlyEnabled: true},
 		}
 
-		result := apiConf.getSettings("1h", "24h", api.FeatureFlags{IsReadonlyEnabled: true})
+		result := apiConf.getSettings(metricTTLs, api.FeatureFlags{IsReadonlyEnabled: true})
 		So(result, ShouldResemble, expectedResult)
 	})
 }
@@ -89,24 +94,7 @@ func Test_webConfig_getDefault(t *testing.T) {
 				},
 				Pprof: cmd.ProfilerConfig{Enabled: false},
 			},
-			Remotes: cmd.RemotesConfig{
-				Graphite: []cmd.GraphiteRemoteConfig{
-					{
-						CheckInterval: "60s",
-						Timeout:       "60s",
-						MetricsTTL:    "7d",
-					},
-				},
-				Prometheus: []cmd.PrometheusRemoteConfig{
-					{
-						CheckInterval: "60s",
-						Timeout:       "60s",
-						MetricsTTL:    "7d",
-						Retries:       1,
-						RetryTimeout:  "10s",
-					},
-				},
-			},
+			Remotes: cmd.RemotesConfig{},
 			NotificationHistory: cmd.NotificationHistoryConfig{
 				NotificationHistoryTTL:        "48h",
 				NotificationHistoryQueryLimit: -1,

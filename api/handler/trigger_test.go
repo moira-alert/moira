@@ -160,7 +160,7 @@ func TestUpdateTrigger(t *testing.T) {
 			testRequest := httptest.NewRequest("", url, bytes.NewBuffer(jsonTrigger))
 			testRequest.Header.Add("content-type", "application/json")
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "localMetricTTL", to.Duration("65m")))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "allMetricTTL", MakeTestTTLs()))
 
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), triggerIDKey, triggerID))
 
@@ -201,7 +201,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request := httptest.NewRequest("", url, bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "allMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
 
 			responseWriter := httptest.NewRecorder()
@@ -240,7 +240,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "allMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
 
 			responseWriter := httptest.NewRecorder()
@@ -265,7 +265,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request := httptest.NewRequest("", fmt.Sprintf("/trigger?%s", validateFlag), bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "allMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
 
 			responseWriter := httptest.NewRecorder()
@@ -328,7 +328,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "allMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
 
 			responseWriter := httptest.NewRecorder()
@@ -346,7 +346,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request := httptest.NewRequest("", fmt.Sprintf("/trigger?%s", validateFlag), bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "allMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
 
 			responseWriter := httptest.NewRecorder()
@@ -540,4 +540,11 @@ func isTriggerUpdated(response *http.Response) bool {
 	const expected = "trigger updated"
 
 	return actual.Message == expected
+}
+
+func MakeTestTTLs() map[moira.ClusterKey]time.Duration {
+	return map[moira.ClusterKey]time.Duration{
+		moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster):  to.Duration("65m"),
+		moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster): to.Duration("168h"),
+	}
 }

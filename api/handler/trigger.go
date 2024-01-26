@@ -95,7 +95,11 @@ func needValidate(request *http.Request) bool {
 // validateTargets checks targets of trigger.
 // Returns tree of problems if there is any invalid child, else returns nil.
 func validateTargets(request *http.Request, trigger *dto.Trigger) ([]dto.TreeOfProblems, *api.ErrorResponse) {
-	ttl := getMetricTTLByTrigger(request, trigger)
+	ttl, err := getMetricTTLByTrigger(request, trigger)
+	if err != nil {
+		return nil, api.ErrorInvalidRequest(err)
+	}
+
 	treesOfProblems, err := dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
 
 	if err != nil {

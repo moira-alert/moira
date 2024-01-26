@@ -58,10 +58,7 @@ func main() {
 	}
 
 	apiConfig := applicationConfig.API.getSettings(
-		applicationConfig.Redis.MetricsTTL,
-		/// TODO: Proper remote TTL?
-		// applicationConfig.Remote.MetricsTTL,
-		applicationConfig.Redis.MetricsTTL,
+		applicationConfig.AllMetricsTTL(),
 		applicationConfig.Web.getFeatureFlags(),
 	)
 
