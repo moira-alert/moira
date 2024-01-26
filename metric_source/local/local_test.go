@@ -489,19 +489,6 @@ func TestLocalMetricsTTL(t *testing.T) {
 	})
 }
 
-func TestLocal_IsConfigured(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := Create(dataBase)
-
-	Convey("Always true", t, func() {
-		actual, err := localSource.IsConfigured()
-		So(err, ShouldBeNil)
-		So(actual, ShouldBeTrue)
-	})
-}
-
 func TestLocal_evalExpr(t *testing.T) {
 	Convey("When everything is correct, we don't return any error", t, func() {
 		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}

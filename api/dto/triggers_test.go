@@ -51,7 +51,6 @@ func TestTriggerValidation(t *testing.T) {
 		}
 
 		Convey("Test FallingTrigger", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -94,7 +93,6 @@ func TestTriggerValidation(t *testing.T) {
 			})
 		})
 		Convey("Test RisingTrigger", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -137,7 +135,6 @@ func TestTriggerValidation(t *testing.T) {
 			})
 		})
 		Convey("Test ExpressionTrigger", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -173,7 +170,6 @@ func TestTriggerValidation(t *testing.T) {
 		})
 
 		Convey("Test alone metrics", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -216,7 +212,6 @@ func TestTriggerValidation(t *testing.T) {
 		})
 
 		Convey("Test patterns", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()

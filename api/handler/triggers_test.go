@@ -56,7 +56,6 @@ func TestGetTriggerFromRequest(t *testing.T) {
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
-	localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 	localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 	fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -176,13 +175,11 @@ func TestTriggerCheckHandler(t *testing.T) {
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 			sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
 
-			remoteSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			remoteSource.EXPECT().GetMetricsTTLSeconds().Return(int64(604800)).AnyTimes()
 			remoteSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 
@@ -270,7 +267,6 @@ func TestCreateTriggerHandler(t *testing.T) {
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
-	localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
@@ -687,7 +683,6 @@ func setupExpectationsForCreateTrigger(
 	target, triggerId string,
 	clusterKey moira.ClusterKey,
 ) {
-	source.EXPECT().IsConfigured().Return(true, nil)
 	source.EXPECT().GetMetricsTTLSeconds().Return(int64(3600))
 	source.EXPECT().Fetch(target, gomock.Any(), gomock.Any(), gomock.Any()).Return(&local.FetchResult{}, nil)
 

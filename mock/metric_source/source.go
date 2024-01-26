@@ -77,18 +77,3 @@ func (mr *MockMetricSourceMockRecorder) IsAvailable() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAvailable", reflect.TypeOf((*MockMetricSource)(nil).IsAvailable))
 }
-
-// IsConfigured mocks base method.
-func (m *MockMetricSource) IsConfigured() (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsConfigured")
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// IsConfigured indicates an expected call of IsConfigured.
-func (mr *MockMetricSourceMockRecorder) IsConfigured() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsConfigured", reflect.TypeOf((*MockMetricSource)(nil).IsConfigured))
-}

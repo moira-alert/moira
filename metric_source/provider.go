@@ -6,9 +6,6 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// ErrMetricSourceIsNotConfigured is used then metric source return false on IsConfigured method call with nil error
-var ErrMetricSourceIsNotConfigured = fmt.Errorf("metric source is not configured")
-
 // SourceProvider is a provider for all known metrics sources
 type SourceProvider struct {
 	sources map[moira.ClusterKey]MetricSource
@@ -53,16 +50,8 @@ func (provider *SourceProvider) GetTriggerMetricSource(trigger *moira.Trigger) (
 // GetMetricSource return metric source depending on trigger flag: is remote trigger or not. GetLocal if not.
 func (provider *SourceProvider) GetMetricSource(clusterKey moira.ClusterKey) (MetricSource, error) {
 	if source, ok := provider.sources[clusterKey]; ok {
-		return returnSource(source)
+		return source, nil
 	}
 
-	return nil, fmt.Errorf("unknown metric source with cluster key `%s` (%+v)", clusterKey.String(), provider.sources)
-}
-
-func returnSource(source MetricSource) (MetricSource, error) {
-	isConfigured, err := source.IsConfigured()
-	if !isConfigured && err == nil {
-		return source, ErrMetricSourceIsNotConfigured
-	}
-	return source, err
+	return nil, fmt.Errorf("unknown metric source with cluster key `%s`", clusterKey.String())
 }

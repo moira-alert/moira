@@ -9,22 +9,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestIsConfigured(t *testing.T) {
-	Convey("Remote is not configured", t, func() {
-		_, err := Create(&Config{URL: ""})
-		So(err, ShouldNotBeEmpty)
-	})
-
-	Convey("Remote is configured", t, func() {
-		remote, err := Create(&Config{URL: "http://host"})
-		So(err, ShouldBeEmpty)
-
-		isConfigured, err := remote.IsConfigured()
-		So(isConfigured, ShouldBeTrue)
-		So(err, ShouldBeEmpty)
-	})
-}
-
 func TestIsRemoteAvailable(t *testing.T) {
 	Convey("Is available", t, func() {
 		server := createServer([]byte("Some string"), http.StatusOK)

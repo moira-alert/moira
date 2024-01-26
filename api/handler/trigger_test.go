@@ -117,7 +117,6 @@ func TestUpdateTrigger(t *testing.T) {
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
-	localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
