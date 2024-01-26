@@ -107,6 +107,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 		&checkData,
 		triggerChecker.trigger.TriggerSource,
 	)
+
 	return MustStopCheck, checkData, err
 }
 
@@ -252,7 +253,6 @@ func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][
 	}
 
 	multiMetricTargets, aloneMetrics, err := preparedPatternMetrics.FilterAloneMetrics(triggerChecker.trigger.AloneMetrics)
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -268,6 +268,7 @@ func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][
 	if len(duplicates) > 0 {
 		return converted, populatedAloneMetrics, NewErrTriggerHasSameMetricNames(duplicates)
 	}
+
 	return converted, populatedAloneMetrics, nil
 }
 
@@ -319,7 +320,10 @@ func (triggerChecker *TriggerChecker) check(
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, log)
 
 		if needToDeleteMetric {
-			log.Debug().String("metric_name", metricName).Msg("Remove metric")
+			log.Debug().
+				String("metric_name", metricName).
+				Msg("Remove metric")
+
 			checkData.RemoveMetricState(metricName)
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
@@ -509,6 +513,7 @@ func getExpressionValues(metrics map[string]metricSource.MetricData, valueTimest
 	expression := &expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64, len(metrics)-1),
 	}
+
 	values = make(map[string]float64, len(metrics))
 
 	for i := 0; i < len(metrics); i++ {
@@ -521,11 +526,14 @@ func getExpressionValues(metrics map[string]metricSource.MetricData, valueTimest
 		if !moira.IsFiniteNumber(value) {
 			return expression, values, false
 		}
+
 		if i == 0 {
 			expression.MainTargetValue = value
 			continue
 		}
+
 		expression.AdditionalTargetsValues[targetName] = value
 	}
+
 	return expression, values, true
 }
