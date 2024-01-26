@@ -28,12 +28,12 @@ func (config *config) AllMetricsTTL() map[moira.ClusterKey]time.Duration {
 	result[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)] = to.Duration(config.Redis.MetricsTTL)
 
 	for _, remote := range config.Remotes.Graphite {
-		key := moira.MakeClusterKey(moira.GraphiteRemote, moira.ClusterId(remote.ClusterId))
+		key := moira.MakeClusterKey(moira.GraphiteRemote, remote.ClusterId)
 		result[key] = to.Duration(remote.MetricsTTL)
 	}
 
 	for _, remote := range config.Remotes.Prometheus {
-		key := moira.MakeClusterKey(moira.PrometheusRemote, moira.ClusterId(remote.ClusterId))
+		key := moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterId)
 		result[key] = to.Duration(remote.MetricsTTL)
 	}
 
