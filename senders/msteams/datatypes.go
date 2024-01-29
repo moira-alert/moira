@@ -74,7 +74,7 @@ type Action struct {
 MessageCard models an MSTeams compatible MessageCard
 
 	 {
-			"@extensions": "https://schema.org/extensions",
+			"@context": "https://schema.org/extensions",
 	    "@type": "MessageCard",
 			"summary": "Moira Alert"
 			"title" : "WARN Trigger Name [tag1]"
@@ -106,7 +106,7 @@ MessageCard models an MSTeams compatible MessageCard
 	 }
 */
 type MessageCard struct {
-	Context         string    `json:"@extensions"`
+	Context         string    `json:"@context"`
 	MessageType     string    `json:"@type"`
 	Summary         string    `json:"summary"`
 	ThemeColor      string    `json:"themeColor"`
