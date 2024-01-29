@@ -97,7 +97,7 @@ func main() {
 	}
 
 	cacheDefaultExpiration := checkerSettings.
-		SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)].
+		SourceCheckConfigs[moira.DefaultLocalCluster].
 		CheckInterval
 	checkerWorkerManager := &worker.WorkerManager{
 		Logger:            logger,

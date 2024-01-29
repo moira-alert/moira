@@ -563,7 +563,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
 		Convey("Expect trigger to be graphite remote", func() {
-			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster))
+			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.DefaultGraphiteRemoteCluster)
 
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
@@ -591,7 +591,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
 		Convey("Expect trigger to be graphite remote", func() {
-			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster))
+			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.DefaultGraphiteRemoteCluster)
 
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)

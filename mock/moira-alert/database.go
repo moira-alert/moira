@@ -354,21 +354,6 @@ func (mr *MockDatabaseMockRecorder) GetIDByUsername(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIDByUsername", reflect.TypeOf((*MockDatabase)(nil).GetIDByUsername), arg0, arg1)
 }
 
-// GetLocalTriggerIDs mocks base method.
-func (m *MockDatabase) GetLocalTriggerIDs() ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetLocalTriggerIDs")
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetLocalTriggerIDs indicates an expected call of GetLocalTriggerIDs.
-func (mr *MockDatabaseMockRecorder) GetLocalTriggerIDs() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLocalTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetLocalTriggerIDs))
-}
-
 // GetMetricRetention mocks base method.
 func (m *MockDatabase) GetMetricRetention(arg0 string) (int64, error) {
 	m.ctrl.T.Helper()
@@ -563,21 +548,6 @@ func (mr *MockDatabaseMockRecorder) GetPrometheusChecksUpdatesCount() *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusChecksUpdatesCount", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusChecksUpdatesCount))
 }
 
-// GetPrometheusTriggerIDs mocks base method.
-func (m *MockDatabase) GetPrometheusTriggerIDs() ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPrometheusTriggerIDs")
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPrometheusTriggerIDs indicates an expected call of GetPrometheusTriggerIDs.
-func (mr *MockDatabaseMockRecorder) GetPrometheusTriggerIDs() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusTriggerIDs))
-}
-
 // GetRemoteChecksUpdatesCount mocks base method.
 func (m *MockDatabase) GetRemoteChecksUpdatesCount() (int64, error) {
 	m.ctrl.T.Helper()
@@ -591,21 +561,6 @@ func (m *MockDatabase) GetRemoteChecksUpdatesCount() (int64, error) {
 func (mr *MockDatabaseMockRecorder) GetRemoteChecksUpdatesCount() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteChecksUpdatesCount", reflect.TypeOf((*MockDatabase)(nil).GetRemoteChecksUpdatesCount))
-}
-
-// GetRemoteTriggerIDs mocks base method.
-func (m *MockDatabase) GetRemoteTriggerIDs() ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRemoteTriggerIDs")
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetRemoteTriggerIDs indicates an expected call of GetRemoteTriggerIDs.
-func (mr *MockDatabaseMockRecorder) GetRemoteTriggerIDs() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetRemoteTriggerIDs))
 }
 
 // GetSubscription mocks base method.
@@ -786,6 +741,21 @@ func (m *MockDatabase) GetTriggerCount() (map[moira.TriggerSource]int64, error) 
 func (mr *MockDatabaseMockRecorder) GetTriggerCount() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggerCount))
+}
+
+// GetTriggerIDs mocks base method.
+func (m *MockDatabase) GetTriggerIDs(arg0 moira.ClusterKey) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTriggerIDs", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerIDs indicates an expected call of GetTriggerIDs.
+func (mr *MockDatabaseMockRecorder) GetTriggerIDs(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDs), arg0)
 }
 
 // GetTriggerIDsStartWith mocks base method.

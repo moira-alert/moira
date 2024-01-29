@@ -29,7 +29,7 @@ type selfCheckWorkerMock struct {
 
 func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
-	defaultRemoteCluster := moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster)
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 
 	mock := configureWorker(t, true)
 	Convey("SelfCheckWorker should call all heartbeats checks", t, func() {

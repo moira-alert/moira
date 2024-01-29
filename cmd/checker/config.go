@@ -79,7 +79,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 			String("cluster_id", "default").
 			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 	}
-	sourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)] = localCheckConfig
+	sourceCheckConfigs[moira.DefaultLocalCluster] = localCheckConfig
 
 	for _, remote := range config.Remotes.Graphite {
 		checkConfig := checker.SourceCheckConfig{

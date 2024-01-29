@@ -15,8 +15,8 @@ import (
 func Test_apiConfig_getSettings(t *testing.T) {
 	Convey("Settings successfully filled", t, func() {
 		metricTTLs := map[moira.ClusterKey]time.Duration{
-			moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster):  time.Hour,
-			moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster): 24 * time.Hour,
+			moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster): time.Hour,
+			moira.DefaultGraphiteRemoteCluster:                              24 * time.Hour,
 		}
 
 		apiConf := apiConfig{

@@ -363,7 +363,7 @@ func TestRemoteLastCheck(t *testing.T) {
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
 	defer dataBase.Flush()
-	defaultRemoteCluster := moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster)
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 
 	Convey("LastCheck manipulation", t, func() {
 		Convey("Test read write delete", func() {

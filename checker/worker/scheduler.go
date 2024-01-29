@@ -103,7 +103,7 @@ func (ch *scheduler) scheduleTriggersToCheck() error {
 		String("cluster_key", ch.clusterKey.String()).
 		Msg("Scheduling triggers")
 
-	triggerIds, err := ch.manager.Database.GetRemoteTriggerIDs()
+	triggerIds, err := ch.manager.Database.GetTriggerIDs(ch.clusterKey)
 	if err != nil {
 		return err
 	}

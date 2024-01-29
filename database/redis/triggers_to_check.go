@@ -124,28 +124,25 @@ const (
 )
 
 func makeTriggersToCheckKey(clusterKey moira.ClusterKey) (string, error) {
-	var prefix string
+	var key string
 
 	switch clusterKey.TriggerSource {
 	case moira.GraphiteLocal:
-		prefix = localTriggersToCheckKey
+		key = localTriggersToCheckKey
 
 	case moira.GraphiteRemote:
-		prefix = remoteTriggersToCheckKey
+		key = remoteTriggersToCheckKey
 
 	case moira.PrometheusRemote:
-		prefix = prometheusTriggersToCheckKey
+		key = prometheusTriggersToCheckKey
 
 	default:
 		return "", fmt.Errorf("unknown trigger source `%s`", clusterKey.TriggerSource.String())
 	}
 
-	return makeTriggersToCheckKeyByClusterId(prefix, clusterKey.ClusterId), nil
-}
-
-func makeTriggersToCheckKeyByClusterId(prefix string, clusterId moira.ClusterId) string {
-	if clusterId == moira.DefaultCluster {
-		return prefix
+	if clusterKey.ClusterId != moira.DefaultCluster {
+		key = key + ":" + clusterKey.ClusterId.String()
 	}
-	return fmt.Sprintf("%s:%s", prefix, clusterId)
+
+	return key, nil
 }

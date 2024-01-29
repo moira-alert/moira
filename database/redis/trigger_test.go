@@ -71,7 +71,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *trigger)
 
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 
@@ -192,7 +192,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})
 
-			ids, err = dataBase.GetLocalTriggerIDs()
+			ids, err = dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldBeEmpty)
 
@@ -352,7 +352,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *triggerVer1)
 
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{triggerVer1.ID})
 
@@ -398,7 +398,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *triggerVer2)
 
-			ids, err = dataBase.GetLocalTriggerIDs()
+			ids, err = dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{triggerVer2.ID})
 
@@ -448,7 +448,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})
 
-			ids, err = dataBase.GetLocalTriggerIDs()
+			ids, err = dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 
@@ -568,12 +568,12 @@ func TestRemoteTrigger(t *testing.T) {
 			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should not be added to local triggers collection", func() {
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
 		Convey("Trigger should be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultGraphiteRemoteCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-triggers-list}:moira-remote-triggers-list").Val()
@@ -606,7 +606,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(*actual.CreatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 		})
 		Convey("Trigger should be added to triggers collection", func() {
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
@@ -616,7 +616,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger shouldn't be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultGraphiteRemoteCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -649,7 +649,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(*actual.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 		})
 		Convey("Trigger should be deleted from local triggers collection", func() {
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -659,7 +659,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultGraphiteRemoteCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
@@ -689,7 +689,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 	})
 
 	Convey("Should throw error when no connection", t, func() {
-		actual, err := dataBase.GetLocalTriggerIDs()
+		actual, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 		So(err, ShouldNotBeNil)
 		So(actual, ShouldBeNil)
 

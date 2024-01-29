@@ -27,17 +27,14 @@ type Database interface {
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
-	/// ClusterKey
-	SetTriggerLastCheck(triggerID string, checkData *CheckData, triggerSource ClusterKey) error
+	SetTriggerLastCheck(triggerID string, checkData *CheckData, clusterKey ClusterKey) error
 	RemoveTriggerLastCheck(triggerID string) error
 	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error
 	CleanUpAbandonedTriggerLastCheck() error
 
 	// Trigger storing
 	GetAllTriggerIDs() ([]string, error)
-	GetLocalTriggerIDs() ([]string, error)
-	GetRemoteTriggerIDs() ([]string, error)
-	GetPrometheusTriggerIDs() ([]string, error)
+	GetTriggerIDs(clusterKey ClusterKey) ([]string, error)
 
 	GetTriggerCount() (map[TriggerSource]int64, error)
 

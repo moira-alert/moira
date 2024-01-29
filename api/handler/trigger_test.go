@@ -544,7 +544,7 @@ func isTriggerUpdated(response *http.Response) bool {
 
 func MakeTestTTLs() map[moira.ClusterKey]time.Duration {
 	return map[moira.ClusterKey]time.Duration{
-		moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster):  to.Duration("65m"),
-		moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster): to.Duration("168h"),
+		moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster): to.Duration("65m"),
+		moira.DefaultGraphiteRemoteCluster:                              to.Duration("168h"),
 	}
 }

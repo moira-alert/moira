@@ -125,7 +125,6 @@ func main() {
 			Msg("Failed to initialize metric sources")
 	}
 
-	/// TODO: proper web config
 	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
 
 	httpHandler := handler.NewHandler(

@@ -25,7 +25,7 @@ type config struct {
 func (config *config) AllMetricsTTL() map[moira.ClusterKey]time.Duration {
 	result := make(map[moira.ClusterKey]time.Duration)
 
-	result[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)] = to.Duration(config.Redis.MetricsTTL)
+	result[moira.DefaultLocalCluster] = to.Duration(config.Redis.MetricsTTL)
 
 	for _, remote := range config.Remotes.Graphite {
 		key := moira.MakeClusterKey(moira.GraphiteRemote, remote.ClusterId)

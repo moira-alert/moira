@@ -16,7 +16,7 @@ func TestSelfCheckWithWritesInChecker(t *testing.T) {
 	dataBase.Flush()
 	defer dataBase.Flush()
 	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
-	defaultRemoteCluster := moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster)
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 
 	Convey("Self state triggers manipulation", t, func() {
 		Convey("Empty config", func() {
@@ -74,7 +74,7 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	dataBase.Flush()
 	defer dataBase.Flush()
 	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
-	defaultRemoteCluster := moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster)
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 
 	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func() {
 		Convey("Update metrics checks updates count", func() {

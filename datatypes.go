@@ -408,6 +408,9 @@ type ClusterKey struct {
 	ClusterId     ClusterId
 }
 
+var DefaultLocalCluster = MakeClusterKey(GraphiteLocal, DefaultCluster)
+var DefaultGraphiteRemoteCluster = MakeClusterKey(GraphiteRemote, DefaultCluster)
+
 func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey {
 	return ClusterKey{
 		TriggerSource: triggerSource,

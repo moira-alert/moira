@@ -14,7 +14,7 @@ import (
 )
 
 func TestGraphiteRemoteChecker(t *testing.T) {
-	defaultRemoteCluster := moira.MakeClusterKey(moira.GraphiteRemote, moira.DefaultCluster)
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 
 	Convey("Test remote checker heartbeat", t, func() {
 		err := errors.New("test error remoteChecker")

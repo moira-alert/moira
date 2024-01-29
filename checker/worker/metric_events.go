@@ -30,8 +30,8 @@ func (manager *WorkerManager) startLocalMetricEvents() error {
 		return err
 	}
 
-	/// Maybe different config value
-	localConfig, ok := manager.Config.SourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)]
+	defaultLocalKey := moira.DefaultLocalCluster
+	localConfig, ok := manager.Config.SourceCheckConfigs[defaultLocalKey]
 	if !ok {
 		return fmt.Errorf("can not initialize localMetricEvents: default local source is not configured")
 	}
@@ -102,7 +102,7 @@ func (manager *WorkerManager) handleMetricEvent(pattern string) error {
 func (manager *WorkerManager) scheduleLocalTriggerIDsIfNeeded(triggerIDs []string) {
 	needToCheckTriggerIDs := manager.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
-		manager.Database.AddTriggersToCheck(moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster), needToCheckTriggerIDs) //nolint
+		manager.Database.AddTriggersToCheck(moira.DefaultLocalCluster, needToCheckTriggerIDs) //nolint
 	}
 }
 

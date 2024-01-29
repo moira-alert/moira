@@ -28,10 +28,19 @@ prometheus_remote:
     check_interval: 60s
     timeout: 60s
     metrics_ttl: 168h
+  - cluster_id: staging
+    cluster_name: Prometheus 2
+    url: "http://prometheus_2:9090"
+    check_interval: 60s
+    timeout: 60s
+    metrics_ttl: 168h
+    retries: 5
+    retry_timeout: 15s
 checker:
   nodata_check_interval: 60s
   check_interval: 10s
   stop_checking_interval: 30s
+  lazy_triggers_check_interval: 60s
 log:
   log_file: stdout
   log_level: debug

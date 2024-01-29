@@ -50,6 +50,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 
 	triggerSource := storageElement.TriggerSource.FillInIfNotSet(storageElement.IsRemote)
+	clusterId := storageElement.ClusterId.FillInIfNotSet()
 	return moira.Trigger{
 		ID:               storageElement.ID,
 		Name:             storageElement.Name,
@@ -66,6 +67,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		Patterns:         storageElement.Patterns,
 		TTL:              getTriggerTTL(storageElement.TTL),
 		TriggerSource:    triggerSource,
+		ClusterId:        clusterId,
 		MuteNewMetrics:   storageElement.MuteNewMetrics,
 		AloneMetrics:     storageElement.AloneMetrics,
 		CreatedAt:        storageElement.CreatedAt,
