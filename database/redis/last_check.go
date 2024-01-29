@@ -214,7 +214,7 @@ func (connector *DbConnector) getTriggersLastCheck(triggerIDs []string) ([]*moir
 	}
 
 	_, err := pipe.Exec(ctx)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
 

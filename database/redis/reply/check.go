@@ -118,7 +118,7 @@ func Checks(replies []*redis.StringCmd) ([]*moira.CheckData, error) {
 		if value != nil {
 			check, err := Check(value)
 			if err != nil {
-				if err != database.ErrNil {
+				if !errors.Is(err, redis.Nil) {
 					return nil, err
 				}
 				continue
