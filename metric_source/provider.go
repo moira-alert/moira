@@ -43,7 +43,7 @@ func (provider *SourceProvider) GetAllSources() map[moira.ClusterKey]MetricSourc
 }
 
 func (provider *SourceProvider) GetClusterList() []moira.ClusterKey {
-	result := make([]moira.ClusterKey, len(provider.sources))
+	result := make([]moira.ClusterKey, 0, len(provider.sources))
 
 	for key := range provider.sources {
 		result = append(result, key)

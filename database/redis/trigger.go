@@ -210,7 +210,8 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 		}
 
 		if newTrigger.ClusterKey() != oldTrigger.ClusterKey() {
-			oldTriggersListKey, err := makeTriggerListKey(oldTrigger.ClusterKey())
+			var oldTriggersListKey string
+			oldTriggersListKey, err = makeTriggerListKey(oldTrigger.ClusterKey())
 			if err != nil {
 				return fmt.Errorf("could not update trigger: %w", err)
 			}
