@@ -38,36 +38,35 @@ func (connector *DbConnector) GetTriggerIDs(clusterKey moira.ClusterKey) ([]stri
 	return triggerIds, nil
 }
 
-func (connector *DbConnector) GetTriggerCount() (map[moira.TriggerSource]int64, error) {
+func (connector *DbConnector) GetTriggerCount(clusterKeys []moira.ClusterKey) (map[moira.ClusterKey]int64, error) {
 	pipe := (*connector.client).TxPipeline()
 
-	local := pipe.SCard(connector.context, localTriggersListKey)
-	remote := pipe.SCard(connector.context, remoteTriggersListKey)
-	prometheus := pipe.SCard(connector.context, prometheusTriggersListKey)
+	cmds := make(map[moira.ClusterKey]*redis.IntCmd, len(clusterKeys))
+	for _, key := range clusterKeys {
+		redisKey, err := makeTriggerListKey(key)
+		if err != nil {
+			return nil, err
+		}
+
+		cmds[key] = pipe.SCard(connector.context, redisKey)
+	}
 
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return nil, err
 	}
 
-	localCount, err := local.Result()
-	if err != nil {
-		return nil, err
-	}
-	remoteCount, err := remote.Result()
-	if err != nil {
-		return nil, err
-	}
-	prometheusCount, err := prometheus.Result()
-	if err != nil {
-		return nil, err
+	res := make(map[moira.ClusterKey]int64, len(clusterKeys))
+	for key, cmd := range cmds {
+		value, err := cmd.Result()
+		if err != nil {
+			return nil, err
+		}
+
+		res[key] = value
 	}
 
-	return map[moira.TriggerSource]int64{
-		moira.GraphiteLocal:    localCount,
-		moira.GraphiteRemote:   remoteCount,
-		moira.PrometheusRemote: prometheusCount,
-	}, nil
+	return res, nil
 }
 
 // GetTrigger gets trigger and trigger tags by given ID and return it in merged object

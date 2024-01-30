@@ -36,7 +36,7 @@ type Database interface {
 	GetAllTriggerIDs() ([]string, error)
 	GetTriggerIDs(clusterKey ClusterKey) ([]string, error)
 
-	GetTriggerCount() (map[TriggerSource]int64, error)
+	GetTriggerCount(clusterKeys []ClusterKey) (map[ClusterKey]int64, error)
 
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)

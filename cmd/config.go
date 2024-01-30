@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -153,8 +154,44 @@ type RemotesConfig struct {
 	Prometheus []PrometheusRemoteConfig `yaml:"prometheus_remote"`
 }
 
-// GraphiteRemoteConfig is remote graphite settings structure
-type GraphiteRemoteConfig struct {
+func (remotes *RemotesConfig) Validate() error {
+	errs := []error{}
+
+	errs = append(errs, validateRemotes[GraphiteRemoteConfig](remotes.Graphite)...)
+	errs = append(errs, validateRemotes[PrometheusRemoteConfig](remotes.Prometheus)...)
+
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.Join(errs...)
+}
+
+func validateRemotes[T remoteCommon](remotes []T) []error {
+	errs := []error{}
+
+	countDefaults := 0
+	for _, remote := range remotes {
+		common := remote.getRemoteCommon()
+		if common.ClusterId == moira.DefaultCluster {
+			countDefaults++
+		}
+		if common.ClusterId == moira.ClusterNotSet {
+			err := fmt.Errorf("Cluster id must be set for remote source (name: `%s`, url: `%s`)",
+				common.ClusterName, common.URL,
+			)
+			errs = append(errs, err)
+		}
+	}
+
+	if len(remotes) != 0 && countDefaults != 1 {
+		err := fmt.Errorf("Expect one and only one default cluster for remote source, got %d defaults", countDefaults)
+		errs = append(errs, err)
+	}
+
+	return errs
+}
+
+type RemoteCommonConfig struct {
 	ClusterId   moira.ClusterId `yaml:"cluster_id"`
 	ClusterName string          `yaml:"cluster_name"`
 	// graphite url e.g http://graphite/render
@@ -166,12 +203,25 @@ type GraphiteRemoteConfig struct {
 	// remote storage. Large values will lead to OOM problems in checker.
 	// See https://github.com/moira-alert/moira/pull/519
 	MetricsTTL string `yaml:"metrics_ttl"`
+}
+
+type remoteCommon interface {
+	getRemoteCommon() *RemoteCommonConfig
+}
+
+// GraphiteRemoteConfig is remote graphite settings structure
+type GraphiteRemoteConfig struct {
+	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for remote requests
 	Timeout string `yaml:"timeout"`
 	// Username for basic auth
 	User string `yaml:"user"`
 	// Password for basic auth
 	Password string `yaml:"password"`
+}
+
+func (config GraphiteRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
+	return &config.RemoteCommonConfig
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
@@ -187,16 +237,7 @@ func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSou
 }
 
 type PrometheusRemoteConfig struct {
-	ClusterId   moira.ClusterId `yaml:"cluster_id"`
-	ClusterName string          `yaml:"cluster_name"`
-	// Url of prometheus API
-	URL string `yaml:"url"`
-	// Min period to perform triggers re-check
-	CheckInterval     string `yaml:"check_interval"`
-	MaxParallelChecks int    `yaml:"max_parallel_checks"`
-	// Moira won't fetch metrics older than this value from prometheus remote storage.
-	// Large values will lead to OOM problems in checker.
-	MetricsTTL string `yaml:"metrics_ttl"`
+	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for prometheus api requests
 	Timeout string `yaml:"timeout"`
 	// Number of retries for prometheus api requests
@@ -207,6 +248,10 @@ type PrometheusRemoteConfig struct {
 	User string `yaml:"user"`
 	// Password for basic auth
 	Password string `yaml:"password"`
+}
+
+func (config PrometheusRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
+	return &config.RemoteCommonConfig
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files

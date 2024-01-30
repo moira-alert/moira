@@ -410,6 +410,7 @@ type ClusterKey struct {
 
 var DefaultLocalCluster = MakeClusterKey(GraphiteLocal, DefaultCluster)
 var DefaultGraphiteRemoteCluster = MakeClusterKey(GraphiteRemote, DefaultCluster)
+var DefaultPrometheusRemoteCluster = MakeClusterKey(PrometheusRemote, DefaultCluster)
 
 func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey {
 	return ClusterKey{

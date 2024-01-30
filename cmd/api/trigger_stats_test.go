@@ -20,29 +20,34 @@ func TestTriggerStatsCheckTriggerCount(t *testing.T) {
 
 		graphiteLocalCount := int64(12)
 		graphiteRemoteCount := int64(24)
-		promethteusRemoteCount := int64(42)
+		prometheusRemoteCount := int64(42)
 
 		graphiteLocalMeter := mock_metrics.NewMockMeter(mockCtrl)
 		graphiteRemoteMeter := mock_metrics.NewMockMeter(mockCtrl)
-		promethteusRemoteMeter := mock_metrics.NewMockMeter(mockCtrl)
+		prometheusRemoteMeter := mock_metrics.NewMockMeter(mockCtrl)
 
-		registry.EXPECT().NewMeter("triggers", string(moira.GraphiteLocal), "count").Return(graphiteLocalMeter)
-		registry.EXPECT().NewMeter("triggers", string(moira.GraphiteRemote), "count").Return(graphiteRemoteMeter)
-		registry.EXPECT().NewMeter("triggers", string(moira.PrometheusRemote), "count").Return(promethteusRemoteMeter)
+		registry.EXPECT().NewMeter("triggers", moira.GraphiteLocal.String(), moira.DefaultCluster.String()).Return(graphiteLocalMeter)
+		registry.EXPECT().NewMeter("triggers", moira.GraphiteRemote.String(), moira.DefaultCluster.String()).Return(graphiteRemoteMeter)
+		registry.EXPECT().NewMeter("triggers", moira.PrometheusRemote.String(), moira.DefaultCluster.String()).Return(prometheusRemoteMeter)
 
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-		dataBase.EXPECT().GetTriggerCount().Return(map[moira.TriggerSource]int64{
-			moira.GraphiteLocal:    graphiteLocalCount,
-			moira.GraphiteRemote:   graphiteRemoteCount,
-			moira.PrometheusRemote: promethteusRemoteCount,
+		dataBase.EXPECT().GetTriggerCount(gomock.Any()).Return(map[moira.ClusterKey]int64{
+			moira.DefaultLocalCluster:            graphiteLocalCount,
+			moira.DefaultGraphiteRemoteCluster:   graphiteRemoteCount,
+			moira.DefaultPrometheusRemoteCluster: prometheusRemoteCount,
 		}, nil)
 
 		graphiteLocalMeter.EXPECT().Mark(graphiteLocalCount)
 		graphiteRemoteMeter.EXPECT().Mark(graphiteRemoteCount)
-		promethteusRemoteMeter.EXPECT().Mark(promethteusRemoteCount)
+		prometheusRemoteMeter.EXPECT().Mark(prometheusRemoteCount)
 
 		logger, _ := zerolog_adapter.GetLogger("Test")
-		triggerStats := newTriggerStats(logger, dataBase, registry)
+		clusters := []moira.ClusterKey{
+			moira.DefaultLocalCluster,
+			moira.DefaultGraphiteRemoteCluster,
+			moira.DefaultPrometheusRemoteCluster,
+		}
+		triggerStats := newTriggerStats(clusters, logger, dataBase, registry)
 
 		triggerStats.checkTriggerCount()
 	})

@@ -194,12 +194,16 @@ func Test_webConfig_getSettings(t *testing.T) {
 		config := webConfig{}
 		remotes := cmd.RemotesConfig{
 			Graphite: []cmd.GraphiteRemoteConfig{{
-				ClusterId:   "default",
-				ClusterName: "Graphite Remote 123",
+				RemoteCommonConfig: cmd.RemoteCommonConfig{
+					ClusterId:   "default",
+					ClusterName: "Graphite Remote 123",
+				},
 			}},
 			Prometheus: []cmd.PrometheusRemoteConfig{{
-				ClusterId:   "default",
-				ClusterName: "Prometheus Remote 888",
+				RemoteCommonConfig: cmd.RemoteCommonConfig{
+					ClusterId:   "default",
+					ClusterName: "Prometheus Remote 888",
+				},
 			}},
 		}
 

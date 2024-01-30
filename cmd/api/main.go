@@ -72,6 +72,13 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira API stopped")
 
+	err = applicationConfig.Remotes.Validate()
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Invalid config for remote metric sources")
+	}
+
 	telemetry, err := cmd.ConfigureTelemetry(logger, applicationConfig.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().
@@ -98,10 +105,6 @@ func main() {
 	}
 	defer searchIndex.Stop() //nolint
 
-	stats := newTriggerStats(logger, database, telemetry.Metrics)
-	stats.Start()
-	defer stats.Stop() //nolint
-
 	if !searchIndex.IsReady() {
 		logger.Fatal().Msg("Search index is not ready, exit")
 	}
@@ -124,6 +127,10 @@ func main() {
 			Error(err).
 			Msg("Failed to initialize metric sources")
 	}
+
+	stats := newTriggerStats(metricSourceProvider.GetClusterList(), logger, database, telemetry.Metrics)
+	stats.Start()
+	defer stats.Stop() //nolint
 
 	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
 
