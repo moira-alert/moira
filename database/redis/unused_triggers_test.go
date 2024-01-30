@@ -86,30 +86,36 @@ func TestUnusedTriggers(t *testing.T) {
 
 	Convey("Check triggers are marked used and unused properly", t, func() {
 		trigger1Ver1 := &moira.Trigger{
-			ID:          "triggerID-0000000000001",
-			Name:        "test trigger 1 v1.0",
-			Targets:     []string{"test.target.1"},
-			Tags:        []string{"test-tag-1"},
-			Patterns:    []string{"test.pattern.1"},
-			TriggerType: moira.RisingTrigger,
+			ID:            "triggerID-0000000000001",
+			Name:          "test trigger 1 v1.0",
+			Targets:       []string{"test.target.1"},
+			Tags:          []string{"test-tag-1"},
+			Patterns:      []string{"test.pattern.1"},
+			TriggerType:   moira.RisingTrigger,
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
 		}
 
 		trigger1Ver2 := &moira.Trigger{
-			ID:          "triggerID-0000000000001",
-			Name:        "test trigger 1 v2.0",
-			Targets:     []string{"test.target.1"},
-			Tags:        []string{"test-tag-2", "test-tag-1"},
-			Patterns:    []string{"test.pattern.1"},
-			TriggerType: moira.RisingTrigger,
+			ID:            "triggerID-0000000000001",
+			Name:          "test trigger 1 v2.0",
+			Targets:       []string{"test.target.1"},
+			Tags:          []string{"test-tag-2", "test-tag-1"},
+			Patterns:      []string{"test.pattern.1"},
+			TriggerType:   moira.RisingTrigger,
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
 		}
 
 		trigger1Ver3 := &moira.Trigger{
-			ID:          "triggerID-0000000000001",
-			Name:        "test trigger 1 v3.0",
-			Targets:     []string{"test.target.1"},
-			Tags:        []string{"test-tag-2", "test-tag-3"},
-			Patterns:    []string{"test.pattern.1"},
-			TriggerType: moira.RisingTrigger,
+			ID:            "triggerID-0000000000001",
+			Name:          "test trigger 1 v3.0",
+			Targets:       []string{"test.target.1"},
+			Tags:          []string{"test-tag-2", "test-tag-3"},
+			Patterns:      []string{"test.pattern.1"},
+			TriggerType:   moira.RisingTrigger,
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
 		}
 
 		subscription1Ver1 := &moira.SubscriptionData{
@@ -186,6 +192,8 @@ func TestUnusedTriggers(t *testing.T) {
 					Tags:        []string{"new-tag-1"},
 					Patterns:    []string{"test.pattern.1"},
 					TriggerType: moira.RisingTrigger,
+					TriggerSource: moira.GraphiteLocal,
+					ClusterId: moira.DefaultCluster,
 				},
 				{
 					ID:          "new-trigger-2",
@@ -194,6 +202,8 @@ func TestUnusedTriggers(t *testing.T) {
 					Tags:        []string{"new-tag-2"},
 					Patterns:    []string{"test.pattern.1"},
 					TriggerType: moira.RisingTrigger,
+					TriggerSource: moira.GraphiteLocal,
+					ClusterId: moira.DefaultCluster,
 				},
 				{
 					ID:          "new-trigger-3",
@@ -202,6 +212,8 @@ func TestUnusedTriggers(t *testing.T) {
 					Tags:        []string{"new-tag-3"},
 					Patterns:    []string{"test.pattern.1"},
 					TriggerType: moira.RisingTrigger,
+					TriggerSource: moira.GraphiteLocal,
+					ClusterId: moira.DefaultCluster,
 				},
 				{
 					ID:          "new-trigger-4",
@@ -210,6 +222,8 @@ func TestUnusedTriggers(t *testing.T) {
 					Tags:        []string{"new-tag-1", "new-tag-2", "new-tag-3"},
 					Patterns:    []string{"test.pattern.1"},
 					TriggerType: moira.RisingTrigger,
+					TriggerSource: moira.GraphiteLocal,
+					ClusterId: moira.DefaultCluster,
 				},
 				{
 					ID:          "new-trigger-5",
@@ -218,6 +232,8 @@ func TestUnusedTriggers(t *testing.T) {
 					Tags:        []string{"new-tag-1", "new-tag-2"},
 					Patterns:    []string{"test.pattern.1"},
 					TriggerType: moira.RisingTrigger,
+					TriggerSource: moira.GraphiteLocal,
+					ClusterId: moira.DefaultCluster,
 				},
 				{
 					ID:          "new-trigger-6",
@@ -226,6 +242,8 @@ func TestUnusedTriggers(t *testing.T) {
 					Tags:        []string{"new-tag-5", "new-tag-6"},
 					Patterns:    []string{"test.pattern.1"},
 					TriggerType: moira.RisingTrigger,
+					TriggerSource: moira.GraphiteLocal,
+					ClusterId: moira.DefaultCluster,
 				},
 			}
 			subscriptions := []*moira.SubscriptionData{

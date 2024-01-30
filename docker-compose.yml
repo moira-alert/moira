@@ -9,116 +9,116 @@ services:
       - "6379:6379"
     restart: always
 
-  graphite:
-    image: graphiteapp/graphite-statsd
-    ports:
-      - "7080:80"
-    restart: always
+  # graphite:
+  #   image: graphiteapp/graphite-statsd
+  #   ports:
+  #     - "7080:80"
+  #   restart: always
 
-  prometheus:
-    image: prom/prometheus
-    volumes:
-      - ./local/prometheus.yml:/etc/prometheus/prometheus.yml
-    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
-    ports:
-      - "9080:9090"
-    restart: always
+  # prometheus:
+  #   image: prom/prometheus
+  #   volumes:
+  #     - ./local/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+  #   ports:
+  #     - "9080:9090"
+  #   restart: always
 
-  prometheus_2:
-    image: prom/prometheus
-    volumes:
-      - ./local/prometheus.yml:/etc/prometheus/prometheus.yml
-    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
-    ports:
-      - "9081:9090"
-    restart: always
+  # prometheus_2:
+  #   image: prom/prometheus
+  #   volumes:
+  #     - ./local/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+  #   ports:
+  #     - "9081:9090"
+  #   restart: always
 
-  filter:
-    build:
-      context: .
-      dockerfile: Dockerfile.filter
-    volumes:
-      - ./local/filter.yml:/etc/moira/filter.yml
-    depends_on:
-      - redis
-      - relay
-    ports:
-      - "8094:8094"
-    restart: always
+  # filter:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.filter
+  #   volumes:
+  #     - ./local/filter.yml:/etc/moira/filter.yml
+  #   depends_on:
+  #     - redis
+  #     - relay
+  #   ports:
+  #     - "8094:8094"
+  #   restart: always
 
-  checker:
-    build:
-      context: .
-      dockerfile: Dockerfile.checker
-    volumes:
-      - ./local/checker.yml:/etc/moira/checker.yml
-    depends_on:
-      - redis
-      - filter
-      - graphite
-      - relay
-    ports:
-      - "8092:8092"
-    restart: always
+  # checker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.checker
+  #   volumes:
+  #     - ./local/checker.yml:/etc/moira/checker.yml
+  #   depends_on:
+  #     - redis
+  #     - filter
+  #     - graphite
+  #     - relay
+  #   ports:
+  #     - "8092:8092"
+  #   restart: always
 
-  notifier:
-    build:
-      context: .
-      dockerfile: Dockerfile.notifier
-    volumes:
-      - ./local/notifier.yml:/etc/moira/notifier.yml
-    depends_on:
-      - redis
-      - checker
-      - relay
-    ports:
-      - "8093:8093"
-    restart: always
+  # notifier:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.notifier
+  #   volumes:
+  #     - ./local/notifier.yml:/etc/moira/notifier.yml
+  #   depends_on:
+  #     - redis
+  #     - checker
+  #     - relay
+  #   ports:
+  #     - "8093:8093"
+  #   restart: always
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    volumes:
-      - ./local/api.yml:/etc/moira/api.yml
-    depends_on:
-      - redis
-      - checker
-      - relay
-    networks:
-      - default
-      - balancer
-    ports:
-      - "8091:8091"
-  web:
-    image: moira/web2
-    networks:
-      - balancer
-    restart: always
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.api
+  #   volumes:
+  #     - ./local/api.yml:/etc/moira/api.yml
+  #   depends_on:
+  #     - redis
+  #     - checker
+  #     - relay
+  #   networks:
+  #     - default
+  #     - balancer
+  #   ports:
+  #     - "8091:8091"
+  # web:
+  #   image: moira/web2
+  #   networks:
+  #     - balancer
+  #   restart: always
 
-  balancer:
-    image: nginx:alpine
-    ports:
-      - "8080:8080"
-    depends_on:
-      - web
-      - api
-    networks:
-      - balancer
-    volumes:
-      - ./local/nginx.conf:/etc/nginx/conf.d/moira.conf
-    restart: always
+  # balancer:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - web
+  #     - api
+  #   networks:
+  #     - balancer
+  #   volumes:
+  #     - ./local/nginx.conf:/etc/nginx/conf.d/moira.conf
+  #   restart: always
 
-  relay:
-    image: openitcockpit/carbon-c-relay
-    ports:
-      - "2003:2003"
-    depends_on:
-      - graphite
-    volumes:
-      - ./local/relay.conf:/opt/carbon-c-relay/relay.conf
-    command: /opt/carbon-c-relay/bin/relay -E -s -f /opt/carbon-c-relay/relay.conf
-    restart: always
+  # relay:
+  #   image: openitcockpit/carbon-c-relay
+  #   ports:
+  #     - "2003:2003"
+  #   depends_on:
+  #     - graphite
+  #   volumes:
+  #     - ./local/relay.conf:/opt/carbon-c-relay/relay.conf
+  #   command: /opt/carbon-c-relay/bin/relay -E -s -f /opt/carbon-c-relay/relay.conf
+  #   restart: always
 networks:
   balancer:
 volumes:
