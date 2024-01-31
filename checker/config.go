@@ -20,6 +20,7 @@ type Config struct {
 	MetricEventPopDelay         time.Duration
 }
 
+// SourceCheckConfig represents check parameters for a single metric source
 type SourceCheckConfig struct {
 	CheckInterval     time.Duration
 	MaxParallelChecks int

@@ -346,6 +346,7 @@ func (trigger *Trigger) ClusterKey() ClusterKey {
 	return MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
 }
 
+// TriggerSource is a enum which values correspond to types of moira's metric sources 
 type TriggerSource string
 
 var (
@@ -372,9 +373,9 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 }
 
 // Needed for backwards compatibility with moira versions that used oly isRemote flag
-func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
+func (triggerSource TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
 	if triggerSource == TriggerSourceNotSet {
-		if isRempte {
+		if isRemote {
 			return GraphiteRemote
 		} else {
 			return GraphiteLocal
@@ -387,6 +388,7 @@ func (triggerSource TriggerSource) String() string {
 	return string(triggerSource)
 }
 
+// ClusterId represent the unique id for each cluster with the same TriggerSource
 type ClusterId string
 
 var (
@@ -406,6 +408,7 @@ func (clusterId ClusterId) String() string {
 	return string(clusterId)
 }
 
+// ClusterKey represents unique key of a metric source
 type ClusterKey struct {
 	TriggerSource TriggerSource
 	ClusterId     ClusterId
