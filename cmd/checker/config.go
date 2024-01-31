@@ -135,8 +135,7 @@ func getDefault() config {
 			LogPrettyFormat: false,
 		},
 		Checker: checkerConfig{
-			NoDataCheckInterval: "60s",
-			/// CheckInterval:             "5s",
+			NoDataCheckInterval:       "60s",
 			LazyTriggersCheckInterval: "10m",
 			StopCheckingInterval:      "30s",
 		},

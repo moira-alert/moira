@@ -132,7 +132,6 @@ func (manager *WorkerManager) startLazyTriggers() error {
 }
 
 func (manager *WorkerManager) checkTriggersToCheckCount() error {
-	/// TODO: Why we update metrics so frequently?
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
 	for {
 		select {
@@ -143,13 +142,11 @@ func (manager *WorkerManager) checkTriggersToCheckCount() error {
 			for clusterKey := range manager.Config.SourceCheckConfigs {
 				metrics, err := manager.Metrics.GetCheckMetricsBySource(clusterKey)
 				if err != nil {
-					/// TODO: log warn?
 					continue
 				}
 
 				triggersToCheck, err := getTriggersToCheck(manager.Database, clusterKey)
 				if err != nil {
-					/// TODO: log warn?
 					continue
 				}
 				metrics.TriggersToCheckCount.Update(triggersToCheck)

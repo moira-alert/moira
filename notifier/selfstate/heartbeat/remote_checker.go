@@ -24,8 +24,6 @@ func GetRemoteChecker(delay int64, logger moira.Logger, database moira.Database)
 }
 
 func (check *remoteChecker) Check(nowTS int64) (int64, bool, error) {
-	/// Should we use this here?
-	/// Probable should make universal heartbeat for any trigger source
 	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 	triggerCount, err := check.database.GetTriggersToCheckCount(defaultRemoteCluster)
 	if err != nil {

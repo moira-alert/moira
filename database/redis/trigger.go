@@ -23,7 +23,7 @@ func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
-// / NEW
+// GetTriggerIDs returns list of ids of triggers with given cluster key
 func (connector *DbConnector) GetTriggerIDs(clusterKey moira.ClusterKey) ([]string, error) {
 	c := *connector.client
 	key, err := makeTriggerListKey(clusterKey)
