@@ -72,13 +72,6 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira API stopped")
 
-	err = applicationConfig.Remotes.Validate()
-	if err != nil {
-		logger.Fatal().
-			Error(err).
-			Msg("Invalid config for remote metric sources")
-	}
-
 	telemetry, err := cmd.ConfigureTelemetry(logger, applicationConfig.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().

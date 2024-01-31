@@ -171,22 +171,28 @@ func (remotes *RemotesConfig) Validate() error {
 func validateRemotes[T remoteCommon](remotes []T) []error {
 	errs := []error{}
 
-	countDefaults := 0
+	keys := make(map[moira.ClusterId]int)
 	for _, remote := range remotes {
 		common := remote.getRemoteCommon()
-		if common.ClusterId == moira.DefaultCluster {
-			countDefaults++
-		}
 		if common.ClusterId == moira.ClusterNotSet {
-			err := fmt.Errorf("Cluster id must be set for remote source (name: `%s`, url: `%s`)",
+			err := fmt.Errorf("cluster id must be set for remote source (name: `%s`, url: `%s`)",
 				common.ClusterName, common.URL,
 			)
 			errs = append(errs, err)
 		}
+		keys[common.ClusterId]++
 	}
 
-	if len(remotes) != 0 && countDefaults != 1 {
-		err := fmt.Errorf("Expect one and only one default cluster for remote source, got %d defaults", countDefaults)
+	for key, count := range keys {
+		if count > 1 {
+			err := fmt.Errorf("cluster id must be unique, non unique cluster id found: %s", key.String())
+			errs = append(errs, err)
+		}
+	}
+
+	countDefaults := keys[moira.DefaultCluster]
+	if len(remotes) != 0 && countDefaults == 0 {
+		err := fmt.Errorf("expect at least one default cluster for remote source, got none")
 		errs = append(errs, err)
 	}
 
@@ -196,16 +202,16 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 // RemoteCommonConfig is designed to be embedded in remote configs, It contains fields that are similar for all remotes
 type RemoteCommonConfig struct {
 	// Unique id of the cluster
-	ClusterId   moira.ClusterId `yaml:"cluster_id"`
-	// Human-readable name of the cluster 
-	ClusterName string          `yaml:"cluster_name"`
+	ClusterId moira.ClusterId `yaml:"cluster_id"`
+	// Human-readable name of the cluster
+	ClusterName string `yaml:"cluster_name"`
 	// graphite url e.g http://graphite/render
 	URL string `yaml:"url"`
 	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
-	CheckInterval     string `yaml:"check_interval"`
+	CheckInterval string `yaml:"check_interval"`
 	// Number of checks that can be run in parallel
 	// If empty will be set to number of cpu cores
-	MaxParallelChecks int    `yaml:"max_parallel_checks"`
+	MaxParallelChecks int `yaml:"max_parallel_checks"`
 	// Moira won't fetch metrics older than this value from remote storage. Note that Moira doesn't delete old data from
 	// remote storage. Large values will lead to OOM problems in checker.
 	// See https://github.com/moira-alert/moira/pull/519

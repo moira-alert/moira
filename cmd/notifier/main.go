@@ -66,13 +66,6 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira Notifier stopped.")
 
-	err = config.Remotes.Validate()
-	if err != nil {
-		logger.Fatal().
-			Error(err).
-			Msg("Invalid config for remote metric sources")
-	}
-
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().

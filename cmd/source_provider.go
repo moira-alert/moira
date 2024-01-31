@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
@@ -10,6 +12,11 @@ import (
 
 // InitMetricSources initializes SourceProvider from given remote source configs
 func InitMetricSources(remotes RemotesConfig, database moira.Database, logger moira.Logger) (*metricSource.SourceProvider, error) {
+	err := remotes.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("remotes config validation failed: %w", err)
+	}
+
 	provider := metricSource.CreateMetricSourceProvider()
 	provider.RegisterSource(moira.DefaultLocalCluster, local.Create(database))
 
