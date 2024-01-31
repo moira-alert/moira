@@ -417,6 +417,8 @@ github.com/Masterminds/sprig/v3 v3.2.3/go.mod h1:rXcFaZ2zZbLRJv/xSysmlgIM1u11eBa
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/PagerDuty/go-pagerduty v1.5.1 h1:zpMQ8WwWlUahipB2q+ERVIA9D0/ti8kvsQUSagCK86g=
 github.com/PagerDuty/go-pagerduty v1.5.1/go.mod h1:txr8VbObXdk2RkqF+C2an4qWssdGY99fK26XYUDjh+4=
+github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
+github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/RoaringBitmap/roaring v1.3.0 h1:aQmu9zQxDU0uhwR8SXOH/OrqEf+X8A0LQmwW3JX8Lcg=
 github.com/RoaringBitmap/roaring v1.3.0/go.mod h1:plvDsJQpxOC5bw8LRteu/MLWHsHez/3y6cubLI4/1yE=
 github.com/Shopify/sarama v1.29.0/go.mod h1:2QpgD79wpdAESqNQMxNc0KYMkycd4slxGdV3TWSVqrU=
@@ -446,6 +448,7 @@ github.com/aws/aws-sdk-go v1.44.293/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8
 github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df h1:GSoSVRLoBaFpOOds6QyY1L8AX7uoY+Ln3BHc22W40X0=
 github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df/go.mod h1:hiVxq5OP2bUGBRNS3Z/bt/reCLFNbdcST6gISi1fiOM=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
+github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
@@ -591,6 +594,12 @@ github.com/go-gl/glfw/v3.3/glfw v0.0.0-20191125211704-12ad95a8df72/go.mod h1:tQ2
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/go-graphite/carbonapi v0.16.0 h1:HvPjAKYChiwdHtNpFu33hLRpPCYA7gyyeFWpPR2XvXs=
 github.com/go-graphite/carbonapi v0.16.0/go.mod h1:RQpis4h2a1kxn1s/R5LQXbumFj+kR2bRz+BebPN1Z1Q=
+github.com/go-graphite/carbonapi v0.16.2-0.20240124150956-c1b3322b46f9 h1:MqxCV1+rbk8y/G5NA/oKnHuaWX9F6SFJ4Z8KBdCL47A=
+github.com/go-graphite/carbonapi v0.16.2-0.20240124150956-c1b3322b46f9/go.mod h1:vefIVMyWf471SFMpHS4CSbySjGaMPtNxmMTnTlU2tSc=
+github.com/go-graphite/carbonapi v0.16.2-0.20240129100721-e7002f7cea1e h1:+M4vocPNZ3wEVfyB/+hfF/CX/RgyhpRonE/438LSLXU=
+github.com/go-graphite/carbonapi v0.16.2-0.20240129100721-e7002f7cea1e/go.mod h1:vefIVMyWf471SFMpHS4CSbySjGaMPtNxmMTnTlU2tSc=
+github.com/go-graphite/carbonapi v0.16.2-0.20240129104954-334f41c1f479 h1:s+Qp5JYNfEIu1YWI3+0vpEMDZZDAcabjBCs3HyusxPI=
+github.com/go-graphite/carbonapi v0.16.2-0.20240129104954-334f41c1f479/go.mod h1:vefIVMyWf471SFMpHS4CSbySjGaMPtNxmMTnTlU2tSc=
 github.com/go-graphite/protocol v1.0.0 h1:Fqb0mkVVtfMrn6vw6Ntm3raf3gVVZCOVdZu4JosW5qE=
 github.com/go-graphite/protocol v1.0.0/go.mod h1:eonkg/0UGhJUYu+PshOg1NzWSUcXskr/yHeQXJHJr8Y=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
@@ -1132,6 +1141,7 @@ go.uber.org/atomic v1.11.0/go.mod h1:LUxbIzbOniOlMKjJjyPfpl4v+PKK2cNJn91OQbhoJI0
 go.uber.org/automaxprocs v1.5.1 h1:e1YG66Lrk73dn4qhg8WFSvhF0JuFQF0ERIp4rpuV8Qk=
 go.uber.org/automaxprocs v1.5.1/go.mod h1:BF4eumQw0P9GtnuxxovUd06vwm1o18oMzFtK66vU6XU=
 go.uber.org/goleak v1.1.11 h1:wy28qYRKZgnJTxGxvye5/wgWr1EKjmUDGYox5mGlRlI=
+go.uber.org/goleak v1.1.11/go.mod h1:cwTWslyiVhfpKIDGSZEM2HlOvcqm+tG4zioyIeLoqMQ=
 go.uber.org/multierr v1.6.0/go.mod h1:cdWPpRnG4AhwMwsgIHip0KRBQjJy5kYEpYjJxpXp9iU=
 go.uber.org/multierr v1.8.0 h1:dg6GjLku4EH+249NNmoIciG9N/jURbDG+pFlTkhzIC8=
 go.uber.org/multierr v1.8.0/go.mod h1:7EAYxJLBy9rStEaz58O2t4Uvip6FSURkq8/ppBp95ak=

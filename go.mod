@@ -15,7 +15,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
-	github.com/go-graphite/carbonapi v0.16.0
+	github.com/go-graphite/carbonapi v0.16.2-0.20240129104954-334f41c1f479
 	github.com/go-graphite/protocol v1.0.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redsync/redsync/v4 v4.4.4
