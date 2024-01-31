@@ -187,7 +187,7 @@ func Triggers(metricTTL map[moira.ClusterKey]time.Duration) func(next http.Handl
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ctx := request.Context()
 
-			ctx = context.WithValue(ctx, allMetricTTLKey, metricTTL)
+			ctx = context.WithValue(ctx, clustersMetricTTLKey, metricTTL)
 
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})

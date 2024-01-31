@@ -194,6 +194,7 @@ func TestUpdateTrigger(t *testing.T) {
 					ErrorValue:    &triggerErrorValue,
 					Targets:       []string{},
 					TriggerSource: moira.GraphiteLocal,
+					ClusterId:     moira.DefaultCluster,
 				},
 			}
 

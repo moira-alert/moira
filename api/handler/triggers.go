@@ -179,7 +179,7 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 // getMetricTTLByTrigger gets metric ttl duration time from request context for local or remote trigger.
 func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) (time.Duration, error) {
 	metricTTLs := middleware.GetMetricTTL(request)
-	key := moira.MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
+	key := trigger.ClusterKey()
 
 	ttl, ok := metricTTLs[key]
 	if !ok {

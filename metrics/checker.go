@@ -16,7 +16,7 @@ type CheckerMetrics struct {
 
 // GetCheckMetrics return check metrics dependent on given trigger type
 func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) (*CheckMetrics, error) {
-	return metrics.GetCheckMetricsBySource(moira.MakeClusterKey(trigger.TriggerSource, moira.DefaultCluster))
+	return metrics.GetCheckMetricsBySource(trigger.ClusterKey())
 }
 
 // GetCheckMetricsBySource return check metrics dependent on given trigger type

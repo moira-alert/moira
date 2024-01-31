@@ -71,9 +71,10 @@ type TriggerModel struct {
 	//
 	// Deprecated: Use TriggerSource field instead
 	IsRemote bool `json:"is_remote" example:"false"`
-	// Shows the source from where the metrics are fetched
+	// Shows the type of source from where the metrics are fetched
 	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_local"`
-	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`
+	// Shows the exact cluster from where the metrics are fetched
+	ClusterId moira.ClusterId `json:"cluster_id" example:"default"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics" example:"false"`
 	// A list of targets that have only alone metrics
@@ -86,6 +87,11 @@ type TriggerModel struct {
 	CreatedBy string `json:"created_by"`
 	// Username who updated trigger
 	UpdatedBy string `json:"updated_by"`
+}
+
+// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger
+func (trigger *TriggerModel) ClusterKey() moira.ClusterKey {
+	return moira.MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -184,7 +190,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	trigger.ClusterId = trigger.ClusterId.FillInIfNotSet()
 
 	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
-	metricsSource, err := metricsSourceProvider.GetMetricSource(moira.MakeClusterKey(trigger.TriggerSource, trigger.ClusterId))
+	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.ClusterKey())
 	if err != nil {
 		return err
 	}

@@ -20,7 +20,7 @@ var (
 	databaseKey          ContextKey = "database"
 	searcherKey          ContextKey = "searcher"
 	triggerIDKey         ContextKey = "triggerID"
-	allMetricTTLKey      ContextKey = "allMetricTTL"
+	clustersMetricTTLKey ContextKey = "clustersMetricTTLKey"
 	populateKey          ContextKey = "populated"
 	contactIDKey         ContextKey = "contactID"
 	tagKey               ContextKey = "tag"
@@ -63,7 +63,7 @@ func GetTriggerID(request *http.Request) string {
 
 // GetLocalMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware
 func GetMetricTTL(request *http.Request) map[moira.ClusterKey]time.Duration {
-	return request.Context().Value(allMetricTTLKey).(map[moira.ClusterKey]time.Duration)
+	return request.Context().Value(clustersMetricTTLKey).(map[moira.ClusterKey]time.Duration)
 }
 
 // GetPopulated get populate bool from request context, which was sets in TriggerContext middleware
