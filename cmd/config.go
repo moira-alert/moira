@@ -149,11 +149,13 @@ type ProfilerConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
+// RemotesConfig is designed to be embedded in config files to configure all remote sources
 type RemotesConfig struct {
 	Graphite   []GraphiteRemoteConfig   `yaml:"graphite_remote"`
 	Prometheus []PrometheusRemoteConfig `yaml:"prometheus_remote"`
 }
 
+// Validate returns nil if config is valid, or error if it is malformed
 func (remotes *RemotesConfig) Validate() error {
 	errs := []error{}
 
@@ -191,13 +193,18 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 	return errs
 }
 
+// RemoteCommonConfig is designed to be embedded in remote configs, It contains fields that are similar for all remotes
 type RemoteCommonConfig struct {
+	// Unique id of the cluster
 	ClusterId   moira.ClusterId `yaml:"cluster_id"`
+	// Human-readable name of the cluster 
 	ClusterName string          `yaml:"cluster_name"`
 	// graphite url e.g http://graphite/render
 	URL string `yaml:"url"`
 	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
 	CheckInterval     string `yaml:"check_interval"`
+	// Number of checks that can be run in parallel
+	// If empty will be set to number of cpu cores
 	MaxParallelChecks int    `yaml:"max_parallel_checks"`
 	// Moira won't fetch metrics older than this value from remote storage. Note that Moira doesn't delete old data from
 	// remote storage. Large values will lead to OOM problems in checker.
@@ -236,6 +243,7 @@ func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSou
 	}
 }
 
+// GraphiteRemoteConfig is remote prometheus settings structure
 type PrometheusRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for prometheus api requests

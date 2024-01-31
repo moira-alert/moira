@@ -41,19 +41,11 @@ func newScheduler(manager *WorkerManager, clusterKey moira.ClusterKey, validateS
 	}, nil
 }
 
-func (ch *scheduler) Name() string {
-	return ch.name
-}
-
-func (ch *scheduler) MaxParallelChecks() int {
+func (ch *scheduler) getMaxParallelChecks() int {
 	return ch.sourceCheckConfig.MaxParallelChecks
 }
 
-func (ch *scheduler) Metrics() *metrics.CheckMetrics {
-	return ch.metrics
-}
-
-func (ch *scheduler) StartTriggerScheduler() error {
+func (ch *scheduler) startTriggerScheduler() error {
 	w.NewWorker(
 		ch.name,
 		ch.manager.Logger,
@@ -64,7 +56,7 @@ func (ch *scheduler) StartTriggerScheduler() error {
 	return nil
 }
 
-func (ch *scheduler) GetTriggersToCheck(count int) ([]string, error) {
+func (ch *scheduler) getTriggersToCheck(count int) ([]string, error) {
 	return ch.manager.Database.GetTriggersToCheck(ch.clusterKey, count)
 }
 

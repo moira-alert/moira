@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira/metric_source/remote"
 )
 
+// InitMetricSources initializes SourceProvider from given remote source configs
 func InitMetricSources(remotes RemotesConfig, database moira.Database, logger moira.Logger) (*metricSource.SourceProvider, error) {
 	provider := metricSource.CreateMetricSourceProvider()
 	provider.RegisterSource(moira.DefaultLocalCluster, local.Create(database))

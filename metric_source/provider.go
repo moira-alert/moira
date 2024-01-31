@@ -18,6 +18,7 @@ func CreateMetricSourceProvider() *SourceProvider {
 	}
 }
 
+// CreateTestMetricSourceProvider creates source provider and registers default clusters for each trigger source if given
 func CreateTestMetricSourceProvider(local, graphiteRemote, prometheusRemote MetricSource) *SourceProvider {
 	provider := CreateMetricSourceProvider()
 
@@ -34,14 +35,17 @@ func CreateTestMetricSourceProvider(local, graphiteRemote, prometheusRemote Metr
 	return provider
 }
 
+// RegisterSource adds given metric source with given cluster key to pool of available trigger sources 
 func (provider *SourceProvider) RegisterSource(clusterKey moira.ClusterKey, source MetricSource) {
 	provider.sources[clusterKey] = source
 }
 
+// GetAllSources returns all registered cluster keys mapped to corresponding sources
 func (provider *SourceProvider) GetAllSources() map[moira.ClusterKey]MetricSource {
 	return provider.sources
 }
 
+// GetClusterList returns a list of all registered cluster keys
 func (provider *SourceProvider) GetClusterList() []moira.ClusterKey {
 	result := make([]moira.ClusterKey, 0, len(provider.sources))
 

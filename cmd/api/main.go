@@ -129,8 +129,8 @@ func main() {
 	}
 
 	stats := newTriggerStats(metricSourceProvider.GetClusterList(), logger, database, telemetry.Metrics)
-	stats.Start()
-	defer stats.Stop() //nolint
+	stats.start()
+	defer stats.stop() //nolint
 
 	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
 

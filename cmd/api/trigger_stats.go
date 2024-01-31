@@ -36,7 +36,7 @@ func newTriggerStats(
 	}
 }
 
-func (stats *triggerStats) Start() {
+func (stats *triggerStats) start() {
 	stats.tomb.Go(stats.startCheckingTriggerCount)
 }
 
@@ -53,7 +53,7 @@ func (stats *triggerStats) startCheckingTriggerCount() error {
 	}
 }
 
-func (stats *triggerStats) Stop() error {
+func (stats *triggerStats) stop() error {
 	stats.tomb.Kill(nil)
 	return stats.tomb.Wait()
 }

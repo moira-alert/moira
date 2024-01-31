@@ -170,6 +170,7 @@ type TriggerData struct {
 	Tags          []string      `json:"__notifier_trigger_tags" example:"server,disk"`
 }
 
+// GetTriggerSource returns trigger source associated with the trigger
 func (trigger TriggerData) GetTriggerSource() TriggerSource {
 	return trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
 }
@@ -340,6 +341,7 @@ type Trigger struct {
 	UpdatedBy        string          `json:"updated_by"`
 }
 
+// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger 
 func (trigger *Trigger) ClusterKey() ClusterKey {
 	return MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
 }
@@ -392,6 +394,7 @@ var (
 	DefaultCluster ClusterId = "default"
 )
 
+// FillInIfNotSet returns new ClusterId with value set to default if it was empty 
 func (clusterId ClusterId) FillInIfNotSet() ClusterId {
 	if clusterId == ClusterNotSet {
 		return DefaultCluster
@@ -412,6 +415,7 @@ var DefaultLocalCluster = MakeClusterKey(GraphiteLocal, DefaultCluster)
 var DefaultGraphiteRemoteCluster = MakeClusterKey(GraphiteRemote, DefaultCluster)
 var DefaultPrometheusRemoteCluster = MakeClusterKey(PrometheusRemote, DefaultCluster)
 
+// MakeClusterKey creates new cluster key with given trigger source and cluster id
 func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey {
 	return ClusterKey{
 		TriggerSource: triggerSource,

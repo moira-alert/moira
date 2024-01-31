@@ -96,23 +96,23 @@ func (manager *WorkerManager) validateGraphiteLocal() error {
 
 func (manager *WorkerManager) startCheckerWorker(w *scheduler) error {
 	const maxParallelChecksMaxValue = 1024 * 8
-	if w.MaxParallelChecks() > maxParallelChecksMaxValue {
-		return errors.New("MaxParallel" + w.Name() + "Checks value is too large")
+	if w.getMaxParallelChecks() > maxParallelChecksMaxValue {
+		return errors.New("MaxParallel" + w.name + "Checks value is too large")
 	}
 
-	manager.tomb.Go(w.StartTriggerScheduler)
-	manager.Logger.Info().Msg(w.Name() + " scheduler started")
+	manager.tomb.Go(w.startTriggerScheduler)
+	manager.Logger.Info().Msg(w.name + " scheduler started")
 
 	triggerIdsToCheckChan := manager.pipeTriggerToCheckQueue(
-		w.GetTriggersToCheck,
-		w.MaxParallelChecks(),
+		w.getTriggersToCheck,
+		w.getMaxParallelChecks(),
 	)
 
-	for i := 0; i < w.MaxParallelChecks(); i++ {
+	for i := 0; i < w.getMaxParallelChecks(); i++ {
 		manager.tomb.Go(func() error {
 			return manager.startTriggerHandler(
 				triggerIdsToCheckChan,
-				w.Metrics(),
+				w.metrics,
 			)
 		})
 	}

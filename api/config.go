@@ -47,6 +47,7 @@ type WebConfig struct {
 	Sentry               Sentry                `json:"sentry"`
 }
 
+// MetricSourceCluster contains data about supported metric source cluster
 type MetricSourceCluster struct {
 	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_remote"`
 	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`
