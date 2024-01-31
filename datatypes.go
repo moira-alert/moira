@@ -341,12 +341,12 @@ type Trigger struct {
 	UpdatedBy        string          `json:"updated_by"`
 }
 
-// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger 
+// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger
 func (trigger *Trigger) ClusterKey() ClusterKey {
 	return MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
 }
 
-// TriggerSource is a enum which values correspond to types of moira's metric sources 
+// TriggerSource is a enum which values correspond to types of moira's metric sources
 type TriggerSource string
 
 var (
@@ -396,7 +396,7 @@ var (
 	DefaultCluster ClusterId = "default"
 )
 
-// FillInIfNotSet returns new ClusterId with value set to default if it was empty 
+// FillInIfNotSet returns new ClusterId with value set to default if it was empty
 func (clusterId ClusterId) FillInIfNotSet() ClusterId {
 	if clusterId == ClusterNotSet {
 		return DefaultCluster

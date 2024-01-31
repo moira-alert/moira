@@ -35,7 +35,7 @@ func CreateTestMetricSourceProvider(local, graphiteRemote, prometheusRemote Metr
 	return provider
 }
 
-// RegisterSource adds given metric source with given cluster key to pool of available trigger sources 
+// RegisterSource adds given metric source with given cluster key to pool of available trigger sources
 func (provider *SourceProvider) RegisterSource(clusterKey moira.ClusterKey, source MetricSource) {
 	provider.sources[clusterKey] = source
 }
