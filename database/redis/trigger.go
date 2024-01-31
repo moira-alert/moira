@@ -152,7 +152,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 
 	err := connector.updateTrigger(triggerID, trigger, oldTrigger)
 	if err != nil {
-		return fmt.Errorf("failed to update trigger: %s", err.Error())
+		return fmt.Errorf("failed to update trigger: %w", err)
 	}
 
 	hasSubscriptions, err := connector.triggerHasSubscriptions(trigger)

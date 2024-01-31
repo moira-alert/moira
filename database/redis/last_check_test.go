@@ -318,19 +318,24 @@ func TestCleanUpAbandonedTriggerLastCheck(t *testing.T) {
 	Convey("Test clean up abandoned trigger last check", t, func() {
 		Convey("Given trigger with last check", func() {
 			trigger := moira.Trigger{
-				ID:           "triggerID-0000000000001",
-				Name:         "test trigger 1 v1.0",
-				Targets:      []string{"test.target.1"},
-				Tags:         []string{"test-tag-1"},
-				Patterns:     []string{"test.pattern.1"},
-				TriggerType:  moira.RisingTrigger,
-				TTLState:     &moira.TTLStateNODATA,
-				AloneMetrics: map[string]bool{},
+				ID:            "triggerID-0000000000001",
+				Name:          "test trigger 1 v1.0",
+				Targets:       []string{"test.target.1"},
+				Tags:          []string{"test-tag-1"},
+				Patterns:      []string{"test.pattern.1"},
+				TriggerType:   moira.RisingTrigger,
+				TTLState:      &moira.TTLStateNODATA,
+				AloneMetrics:  map[string]bool{},
+				TriggerSource: moira.GraphiteLocal,
+				ClusterId:     moira.DefaultCluster,
 			}
-			_ = dataBase.SaveTrigger(trigger.ID, &trigger)
+			err := dataBase.SaveTrigger(trigger.ID, &trigger)
+			So(err, ShouldBeNil)
 
-			_ = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, defaultLocalCluster)
-			_, err := dataBase.GetTriggerLastCheck(trigger.ID)
+			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, defaultLocalCluster)
+			So(err, ShouldBeNil)
+
+			_, err = dataBase.GetTriggerLastCheck(trigger.ID)
 			So(err, ShouldBeNil)
 
 			Convey("Given abandoned last check (without saved trigger)", func() {

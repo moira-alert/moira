@@ -312,6 +312,7 @@ func TestTriggerStoring(t *testing.T) {
 				Patterns:      []string{pattern1},
 				TriggerType:   moira.RisingTrigger,
 				TriggerSource: moira.GraphiteLocal,
+				ClusterId:     moira.DefaultCluster,
 				AloneMetrics:  map[string]bool{},
 			}
 
@@ -323,6 +324,7 @@ func TestTriggerStoring(t *testing.T) {
 				Patterns:      []string{pattern2},
 				TriggerType:   moira.RisingTrigger,
 				TriggerSource: moira.GraphiteLocal,
+				ClusterId:     moira.DefaultCluster,
 				AloneMetrics:  map[string]bool{},
 			}
 
