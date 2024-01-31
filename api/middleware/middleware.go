@@ -20,7 +20,7 @@ var (
 	databaseKey          ContextKey = "database"
 	searcherKey          ContextKey = "searcher"
 	triggerIDKey         ContextKey = "triggerID"
-	clustersMetricTTLKey ContextKey = "clustersMetricTTLKey"
+	clustersMetricTTLKey ContextKey = "clustersMetricTTL"
 	populateKey          ContextKey = "populated"
 	contactIDKey         ContextKey = "contactID"
 	tagKey               ContextKey = "tag"

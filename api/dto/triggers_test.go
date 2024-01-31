@@ -302,6 +302,7 @@ func TestTriggerModel_ToMoiraTrigger(t *testing.T) {
 			Expression:     &expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
+			ClusterId:      moira.DefaultCluster,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,
@@ -343,6 +344,7 @@ func TestCreateTriggerModel(t *testing.T) {
 			Expression:     &expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
+			ClusterId:      moira.DefaultCluster,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,

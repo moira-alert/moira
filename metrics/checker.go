@@ -25,7 +25,7 @@ func (metrics *CheckerMetrics) GetCheckMetricsBySource(clusterKey moira.ClusterK
 		return checkMetrics, nil
 	}
 
-	return nil, fmt.Errorf("unknown cluster with key `%s`", clusterKey.String())
+	return nil, fmt.Errorf("can't get check metrics: unknown cluster with key `%s`", clusterKey.String())
 }
 
 // CheckMetrics is a collection of metrics for trigger checks
