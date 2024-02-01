@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira/support"
 )
 
-const maxTriggerLockAttempts = 10
+const maxTriggerLockAttempts = 15
 
 // UpdateTrigger update trigger data and trigger metrics in last state
 func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
