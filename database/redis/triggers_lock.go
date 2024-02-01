@@ -16,7 +16,7 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, maxAttem
 	attemptsCount := 0
 	for !acquired && attemptsCount < maxAttemptsCount {
 		attemptsCount++
-		<-time.After(time.Millisecond * 500) //nolint
+		<-time.After(time.Second) //nolint
 		acquired, err = connector.SetTriggerCheckLock(triggerID)
 		if err != nil {
 			return err
