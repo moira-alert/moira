@@ -26,6 +26,14 @@ prometheus_remote:
     check_interval: 60s
     timeout: 60s
     metrics_ttl: 168h
+  - cluster_id: staging
+    cluster_name: Prometheus 2
+    url: "http://prometheus_2:9090"
+    check_interval: 60s
+    timeout: 60s
+    metrics_ttl: 168h
+    retries: 5
+    retry_timeout: 15s
 api:
   listen: ":8081"
   enable_cors: false

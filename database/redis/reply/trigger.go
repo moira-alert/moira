@@ -95,6 +95,7 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		TTL:              getTriggerTTLString(trigger.TTL),
 		IsRemote:         trigger.TriggerSource == moira.GraphiteRemote,
 		TriggerSource:    trigger.TriggerSource,
+		ClusterId:        trigger.ClusterId,
 		MuteNewMetrics:   trigger.MuteNewMetrics,
 		AloneMetrics:     trigger.AloneMetrics,
 		CreatedAt:        trigger.CreatedAt,
