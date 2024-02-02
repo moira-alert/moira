@@ -63,7 +63,7 @@ func (check *Checker) handleTriggerInLock(triggerID string, metrics *metrics.Che
 		check.Logger.Warning().
 			String("trigger_id", triggerID).
 			Error(err).
-			Msg("It took to long to check trigger")
+			Msg("It took too long to check trigger")
 	}
 	return err
 }
