@@ -58,6 +58,13 @@ func (check *Checker) handleTriggerInLock(triggerID string, metrics *metrics.Che
 	defer metrics.TriggersCheckTime.UpdateSince(startedAt)
 
 	err = check.checkTrigger(triggerID)
+
+	if time.Since(startedAt) > check.Config.CriticalTimeOfCheck {
+		check.Logger.Warning().
+			String("trigger_id", triggerID).
+			Error(err).
+			Msg("It took to long to check trigger")
+	}
 	return err
 }
 

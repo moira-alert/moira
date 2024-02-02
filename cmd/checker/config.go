@@ -49,6 +49,8 @@ type checkerConfig struct {
 	MetricEventPopBatchSize int `yaml:"metric_event_pop_batch_size"`
 	// Metric event pop operation delay
 	MetricEventPopDelay string `yaml:"metric_event_pop_delay"`
+	// Duration of check that is considered critical and must be logged
+	CriticalTimeOfCheck string `yaml:"critical_time_of_check"`
 }
 
 func handleParallelChecks(parallelChecks *int) bool {
@@ -98,6 +100,7 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 		LogTriggersToLevel:          logTriggersToLevel,
 		MetricEventPopBatchSize:     int64(config.MetricEventPopBatchSize),
 		MetricEventPopDelay:         to.Duration(config.MetricEventPopDelay),
+		CriticalTimeOfCheck:         to.Duration(config.CriticalTimeOfCheck),
 	}
 }
 
@@ -120,6 +123,7 @@ func getDefault() config {
 			StopCheckingInterval:      "30s",
 			MaxParallelChecks:         0,
 			MaxParallelRemoteChecks:   0,
+			CriticalTimeOfCheck:       "1h",
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8092",
