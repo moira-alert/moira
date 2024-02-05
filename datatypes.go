@@ -372,7 +372,7 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Needed for backwards compatibility with moira versions that used oly isRemote flag
+// Needed for backwards compatibility with moira versions that used only isRemote flag
 func (triggerSource TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
 	if triggerSource == TriggerSourceNotSet {
 		if isRemote {
