@@ -22,12 +22,6 @@ func newTriggerStats(
 	database moira.Database,
 	metricsRegistry metrics.Registry,
 ) *triggerStats {
-	// sources := sourceProvider.GetAllSources()
-	// clusters := make([]moira.ClusterKey, 0, len(sources))
-	// for key := range sources {
-	// 	clusters = append(clusters, key)
-	// }
-
 	return &triggerStats{
 		logger:   logger,
 		database: database,

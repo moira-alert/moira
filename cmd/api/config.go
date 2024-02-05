@@ -22,8 +22,8 @@ type config struct {
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 }
 
-// AllMetricsTTL parses TTLs of all clusters provided in config
-func (config *config) AllMetricsTTL() map[moira.ClusterKey]time.Duration {
+// ClustersMetricTTL parses TTLs of all clusters provided in config
+func (config *config) ClustersMetricTTL() map[moira.ClusterKey]time.Duration {
 	result := make(map[moira.ClusterKey]time.Duration)
 
 	result[moira.DefaultLocalCluster] = to.Duration(config.Redis.MetricsTTL)

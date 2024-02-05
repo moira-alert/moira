@@ -27,7 +27,7 @@ func newScheduler(manager *WorkerManager, clusterKey moira.ClusterKey, validateS
 		return nil, err
 	}
 
-	name := clusterKey.TriggerSource.String() + ":" + clusterKey.ClusterId.String()
+	name := clusterKey.String()
 	lockName := "moira-" + name + "-lock"
 
 	return &scheduler{
@@ -100,7 +100,7 @@ func (ch *scheduler) scheduleTriggersToCheck() error {
 		return err
 	}
 
-	err = ch.sheduleTriggerIDsIfNeeded(ch.clusterKey, triggerIds)
+	err = ch.scheduleTriggerIDsIfNeeded(ch.clusterKey, triggerIds)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (ch *scheduler) scheduleTriggersToCheck() error {
 	return nil
 }
 
-func (ch *scheduler) sheduleTriggerIDsIfNeeded(clusterKey moira.ClusterKey, triggerIDs []string) error {
+func (ch *scheduler) scheduleTriggerIDsIfNeeded(clusterKey moira.ClusterKey, triggerIDs []string) error {
 	needToCheckTriggerIDs := ch.manager.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
 		return ch.manager.Database.AddTriggersToCheck(clusterKey, needToCheckTriggerIDs)

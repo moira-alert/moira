@@ -58,7 +58,7 @@ func main() {
 	}
 
 	apiConfig := applicationConfig.API.getSettings(
-		applicationConfig.AllMetricsTTL(),
+		applicationConfig.ClustersMetricTTL(),
 		applicationConfig.Web.getFeatureFlags(),
 	)
 

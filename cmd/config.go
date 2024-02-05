@@ -157,7 +157,7 @@ type RemotesConfig struct {
 
 // Validate returns nil if config is valid, or error if it is malformed
 func (remotes *RemotesConfig) Validate() error {
-	errs := []error{}
+	errs := make([]error, 0)
 
 	errs = append(errs, validateRemotes[GraphiteRemoteConfig](remotes.Graphite)...)
 	errs = append(errs, validateRemotes[PrometheusRemoteConfig](remotes.Prometheus)...)
@@ -169,7 +169,7 @@ func (remotes *RemotesConfig) Validate() error {
 }
 
 func validateRemotes[T remoteCommon](remotes []T) []error {
-	errs := []error{}
+	errs := make([]error, 0)
 
 	keys := make(map[moira.ClusterId]int)
 	for _, remote := range remotes {

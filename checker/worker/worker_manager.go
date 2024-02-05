@@ -133,6 +133,8 @@ func (manager *WorkerManager) startLazyTriggers() error {
 
 func (manager *WorkerManager) checkTriggersToCheckCount() error {
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
+	defer checkTicker.Stop()
+
 	for {
 		select {
 		case <-manager.tomb.Dying():
