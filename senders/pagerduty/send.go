@@ -20,7 +20,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	event := sender.buildEvent(events, contact, trigger, plots, throttled)
 	_, err := pagerduty.ManageEventWithContext(context.Background(), event)
 	if err != nil {
-		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %s. ", contact.Value, err)
+		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %w. ", contact.Value, err)
 	}
 	return nil
 }

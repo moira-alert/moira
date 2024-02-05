@@ -2,6 +2,7 @@ package msteams
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,7 +16,7 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
-const context = "http://schema.org/extensions"
+const extensions = "http://schema.org/extensions"
 const messageType = "MessageCard"
 const summary = "Moira Alert"
 const teamsBaseURL = "https://outlook.office.com/webhook/"
@@ -94,7 +95,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	//handle non 2xx responses
+	// handle non 2xx responses
 	if response.StatusCode >= http.StatusBadRequest && response.StatusCode <= http.StatusNetworkAuthenticationRequired {
 		return fmt.Errorf("server responded with a non 2xx code: %d", response.StatusCode)
 	}
@@ -131,7 +132,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	state := events.GetCurrentState(throttled)
 
 	return MessageCard{
-		Context:     context,
+		Context:     extensions,
 		MessageType: messageType,
 		Summary:     summary,
 		ThemeColor:  getColourForState(state),
@@ -155,7 +156,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 		return nil, err
 	}
 
-	request, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return request, err
 	}
@@ -246,6 +247,6 @@ func getColourForState(state moira.State) string {
 	case moira.StateNODATA:
 		return Black
 	default:
-		return White //unhandled state
+		return White // unhandled state
 	}
 }

@@ -154,7 +154,7 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
 	endOffset := time.Duration(schedule.EndOffset) * time.Minute
 	if schedule.EndOffset < schedule.StartOffset {
-		endOffset = endOffset + (time.Hour * 24)
+		endOffset += time.Hour * 24
 	}
 
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute

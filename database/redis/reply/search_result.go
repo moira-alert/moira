@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -59,7 +60,7 @@ func unmarshalSearchResult(bytes []byte, err error) (moira.SearchResult, error) 
 	storageElement := searchResultStorageElement{}
 
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return searchResult, database.ErrNil
 		}
 		return searchResult, fmt.Errorf("failed to read searchResult: %w", err)
@@ -77,7 +78,7 @@ func SearchResults(rep *redis.StringSliceCmd, repTotal *redis.IntCmd) ([]*moira.
 	total := repTotal.Val()
 	values, err := rep.Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]*moira.SearchResult, 0), 0, nil
 		}
 		return nil, 0, fmt.Errorf("failed to read SearchResults: %w", err)
@@ -85,9 +86,10 @@ func SearchResults(rep *redis.StringSliceCmd, repTotal *redis.IntCmd) ([]*moira.
 	searchResults := make([]*moira.SearchResult, len(values))
 	for i, value := range values {
 		searchResult, err2 := unmarshalSearchResult([]byte(value), err)
-		if err2 != nil && err2 != database.ErrNil {
+		if err2 != nil && !errors.Is(err2, database.ErrNil) {
 			return nil, 0, err2
-		} else if err2 == database.ErrNil {
+		}
+		if errors.Is(err2, database.ErrNil) {
 			searchResults[i] = nil
 		} else {
 			searchResults[i] = &searchResult

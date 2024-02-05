@@ -256,7 +256,7 @@ func Populate(name, description string, events []Event) (desc string, err error)
 	defer func() {
 		if errRecover := recover(); errRecover != nil {
 			desc = description
-			err = fmt.Errorf("PANIC in populate: %v, Trigger name: %s, desc: %s, events:%#v",
+			err = fmt.Errorf("PANIC in populate: %w, Trigger name: %s, desc: %s, events:%#v",
 				err, name, description, events)
 		}
 	}()

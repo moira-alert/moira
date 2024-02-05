@@ -28,8 +28,10 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
+    - decorder
     - dogsled
     - errcheck
+    - errorlint
     - goconst
     - gocyclo
     - gofmt
@@ -38,9 +40,11 @@ linters:
     - gosimple
     - govet
     - ineffassign
+    - loggercheck
     - makezero
     - misspell
     - nilerr
+    - noctx
     - prealloc
     - promlinter
     - staticcheck
@@ -55,6 +59,7 @@ issues:
     - path: _test\.go
       linters:
         - gomnd
+        - errcheck
 
 run:
   timeout: 5m
