@@ -444,7 +444,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*mo
 
 		types, err := connector.handleNotifications(limitedNotifications)
 		if err != nil {
-			return fmt.Errorf("failed to validate notifications: %w", err)
+			return fmt.Errorf("failed to handle notifications: %w", err)
 		}
 
 		result = types.Valid
