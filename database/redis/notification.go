@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -410,9 +411,13 @@ func getLimitedNotifications(
 
 	limitedNotifications := notifications
 
+	log.Printf("before limit notifications: %v\n", notifications)
+
 	if limit != notifier.NotificationsLimitUnlimited {
 		limitedNotifications = limitNotifications(notifications)
 		lastTs := limitedNotifications[len(limitedNotifications)-1].Timestamp
+
+		log.Printf("after limit notifications: %v, last ts: %v\n", limitedNotifications, lastTs)
 
 		if len(notifications) == len(limitedNotifications) {
 			// this means that all notifications have same timestamp,
@@ -422,6 +427,7 @@ func getLimitedNotifications(
 			if err != nil {
 				return nil, fmt.Errorf("failed to get notification without limit in transaction: %w", err)
 			}
+			log.Printf("last update of limited notifications: %v\n", limitedNotifications)
 		}
 	}
 
