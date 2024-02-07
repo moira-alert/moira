@@ -291,12 +291,6 @@ func (triggerChecker *TriggerChecker) preparePatternMetrics(fetchedMetrics conve
 	return result, duplicates
 }
 
-// Checks if the metric has changed since the previous check
-func isMetricChanged(metrics map[string]moira.MetricState, metricName string, metricState moira.MetricState) bool {
-	prevMetricState := metrics[metricName]
-	return prevMetricState.Timestamp != metricState.Timestamp
-}
-
 /*
 check - function that calculates the state of metrics in the trigger
 
@@ -315,21 +309,43 @@ func (triggerChecker *TriggerChecker) check(
 ) (moira.CheckData, error) {
 	// Case when trigger have only alone metrics
 	if len(regularMetrics) == 0 {
-		// We should not create a metric if the number of alone metrics does not match
-		// the number of targets, otherwise errors may occur during the calculation of
-		// the expression
-		if len(aloneMetrics) != len(triggerChecker.trigger.Targets) {
-			return checkData, nil
-		}
-
-		if regularMetrics == nil {
-			regularMetrics = make(map[string]map[string]metricSource.MetricData, 1)
-		}
-
-		metricName := conversion.MetricName(aloneMetrics)
-		regularMetrics[metricName] = make(map[string]metricSource.MetricData)
+		return triggerChecker.handleAloneMetrics(aloneMetrics, checkData)
 	}
 
+	return triggerChecker.checkRegularMetrics(regularMetrics, aloneMetrics, checkData)
+}
+
+func (triggerChecker *TriggerChecker) handleAloneMetrics(
+	aloneMetrics map[string]metricSource.MetricData,
+	checkData moira.CheckData,
+) (moira.CheckData, error) {
+	// We should not create a metric if the number of alone metrics does not match
+	// the number of targets, otherwise errors may occur during the calculation of
+	// the expression
+	if len(aloneMetrics) != len(triggerChecker.trigger.Targets) {
+		return checkData, nil
+	}
+
+	// Create a regular metric with first alone metric name
+	metricName := conversion.MetricName(aloneMetrics)
+	regularMetrics := map[string]map[string]metricSource.MetricData{
+		metricName: make(map[string]metricSource.MetricData),
+	}
+
+	return triggerChecker.checkRegularMetrics(regularMetrics, aloneMetrics, checkData)
+}
+
+// Checks if the metric has changed since the previous check
+func isMetricChanged(metrics map[string]moira.MetricState, metricName string, metricState moira.MetricState) bool {
+	prevMetricState := metrics[metricName]
+	return prevMetricState.Timestamp != metricState.Timestamp
+}
+
+func (triggerChecker *TriggerChecker) checkRegularMetrics(
+	regularMetrics map[string]map[string]metricSource.MetricData,
+	aloneMetrics map[string]metricSource.MetricData,
+	checkData moira.CheckData,
+) (moira.CheckData, error) {
 	for metricName, targets := range regularMetrics {
 		triggerChecker.logger = triggerChecker.logger.Clone().
 			String(moira.LogFieldNameMetricName, metricName)
