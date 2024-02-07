@@ -343,6 +343,7 @@ func (connector *DbConnector) fetchNotifications(to int64, limit int64) ([]*moir
 		}
 
 		connector.logger.Info().
+			Error(err).
 			Int("transaction_retries", i+1).
 			Msg("Transaction error. Retry")
 
