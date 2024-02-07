@@ -34,4 +34,7 @@ type NotificationConfig struct {
 	// TransactionHeuristicLimit maximum allowable limit, after this limit all notifications
 	// without limit will be taken
 	TransactionHeuristicLimit int64
+	// ResaveTime is the time by which the timestamp of notifications with triggers
+	// or metrics on Maintenance is incremented
+	ResaveTime time.Duration
 }
