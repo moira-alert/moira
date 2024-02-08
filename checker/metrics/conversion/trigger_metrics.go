@@ -109,6 +109,7 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 		targetMetrics = targetMetrics.Populate(metrics, from, to)
 		result[targetName] = targetMetrics
 	}
+
 	return result
 }
 
@@ -166,11 +167,14 @@ func (triggerMetrics TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map
 			errorBuilder.addUnexpected(targetName, targetMetrics)
 			continue
 		}
+
 		aloneMetrics[targetName] = targetMetrics[metricName]
 	}
+
 	if err := errorBuilder.build(); err != nil {
 		return TriggerMetrics{}, AloneMetrics{}, err
 	}
+
 	return result, aloneMetrics, nil
 }
 

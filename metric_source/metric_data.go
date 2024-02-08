@@ -53,6 +53,7 @@ func (metricData *MetricData) GetTimestampValue(valueTimestamp int64) float64 {
 	if len(metricData.Values) <= valueIndex {
 		return math.NaN()
 	}
+
 	return metricData.Values[valueIndex]
 }
 
