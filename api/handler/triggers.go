@@ -151,7 +151,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorResponse) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
+		switch err.(type) { // nolint:errorlint
 		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))
 		case expression.ErrInvalidExpression:
@@ -206,7 +206,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	response := dto.TriggerCheckResponse{}
 
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
+		switch err.(type) { // nolint:errorlint
 		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			// TODO write comment, why errors are ignored, it is not obvious.
 			// In getTriggerFromRequest these types of errors lead to 400.

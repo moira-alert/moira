@@ -51,7 +51,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		ApiKey: sender.apiKey,
 	})
 	if err != nil {
-		return fmt.Errorf("error while creating opsgenie client: %s", err)
+		return fmt.Errorf("error while creating opsgenie client: %w", err)
 	}
 
 	sender.frontURI = cfg.FrontURI

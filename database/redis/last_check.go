@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -123,7 +124,7 @@ func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client 
 		lastCheckKey := lastCheckIterator.Val()
 		triggerID := strings.TrimPrefix(lastCheckKey, metricLastCheckKey(""))
 		_, err := connector.GetTrigger(triggerID)
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			err = connector.RemoveTriggerLastCheck(triggerID)
 			if err != nil {
 				return err
@@ -161,7 +162,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 
 	lastCheckString, readingErr := c.Get(ctx, metricLastCheckKey(triggerID)).Result()
 	if readingErr != nil {
-		if readingErr != redis.Nil {
+		if !errors.Is(readingErr, redis.Nil) {
 			return readingErr
 		}
 		return nil
@@ -222,7 +223,7 @@ func (connector *DbConnector) getTriggersLastCheck(triggerIDs []string) ([]*moir
 	}
 
 	_, err := pipe.Exec(ctx)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
 

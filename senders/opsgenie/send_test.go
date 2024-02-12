@@ -123,7 +123,7 @@ func TestBuildTitle(t *testing.T) {
 	Convey("Build title that exceeds the title limit", t, func() {
 		var reallyLongTag string
 		for i := 0; i < 30; i++ {
-			reallyLongTag = reallyLongTag + "randomstring"
+			reallyLongTag += "randomstring"
 		}
 
 		Convey("without throttling", func() {

@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -76,7 +77,7 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 	triggerTags := pipe.SMembers(connector.context, triggerTagsKey(triggerID))
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.Trigger{}, database.ErrNil
 		}
 		return moira.Trigger{}, fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -94,7 +95,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 		pipe.SMembers(connector.context, triggerTagsKey(triggerID))
 	}
 	rawResponse, err := pipe.Exec(connector.context)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 
@@ -104,7 +105,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 		triggerCmd, tagCmd := rawResponse[i].(*redis.StringCmd), rawResponse[i+1].(*redis.StringSliceCmd)
 		trigger, err := connector.getTriggerWithTags(triggerCmd, tagCmd, triggerID)
 		if err != nil {
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				continue
 			}
 			return nil, err
@@ -130,7 +131,7 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	c := *connector.client
 	_, err := c.Del(connector.context, patternTriggersKey(pattern)).Result()
 	if err != nil {
-		return fmt.Errorf("failed delete pattern-triggers: %s, error: %s", pattern, err)
+		return fmt.Errorf("failed delete pattern-triggers: %s, error: %w", pattern, err)
 	}
 	return nil
 }
@@ -144,7 +145,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	var oldTrigger *moira.Trigger
 	if existing, err := connector.GetTrigger(triggerID); err == nil {
 		oldTrigger = &existing
-	} else if err != database.ErrNil {
+	} else if !errors.Is(err, database.ErrNil) {
 		return fmt.Errorf("failed to get trigger: %s", err.Error())
 	}
 
@@ -270,7 +271,7 @@ func (connector *DbConnector) preSaveTrigger(newTrigger *moira.Trigger, oldTrigg
 func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	trigger, err := connector.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil
 		}
 		return err
@@ -327,8 +328,8 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 	}
 	rawResponse, err := pipe.Exec(connector.context)
 
-	if err != nil && err != redis.Nil {
-		return nil, fmt.Errorf("failed to EXEC: %s", err)
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return nil, fmt.Errorf("failed to EXEC: %w", err)
 	}
 	var slices [][]interface{}
 	for i := 0; i < len(rawResponse); i += 4 {
@@ -343,13 +344,13 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 		triggerCmd, tagCmd := slice[1].(*redis.StringCmd), slice[2].(*redis.StringSliceCmd)
 		trigger, err := connector.getTriggerWithTags(triggerCmd, tagCmd, triggerID)
 		if err != nil {
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				continue
 			}
 			return nil, err
 		}
 		lastCheck, err := reply.Check(slice[3].(*redis.StringCmd))
-		if err != nil && err != database.ErrNil {
+		if err != nil && !errors.Is(err, database.ErrNil) {
 			return nil, err
 		}
 		throttlingStr, _ := slice[4].(*redis.StringCmd).Result()

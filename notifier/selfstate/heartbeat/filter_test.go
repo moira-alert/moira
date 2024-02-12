@@ -80,7 +80,7 @@ func TestFilter(t *testing.T) {
 		})
 
 		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			//TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
+			// TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
 			So(check.NeedToCheckOthers(), ShouldBeTrue)
 
 			So(check.NeedTurnOffNotifier(), ShouldBeFalse)

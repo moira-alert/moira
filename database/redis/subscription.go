@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -41,7 +42,7 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	}
 	_, err := pipe.Exec(connector.context)
 
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	for i, result := range results {
@@ -68,7 +69,7 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 
 	if subscription, err := connector.GetSubscription(subscription.ID); err == nil {
 		oldSubscription = &subscription
-	} else if err != database.ErrNil {
+	} else if !errors.Is(err, database.ErrNil) {
 		return err
 	}
 	oldTriggers, err := connector.getSubscriptionTriggers(oldSubscription)
@@ -142,7 +143,7 @@ func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.Subs
 func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 	subscription, err := connector.GetSubscription(subscriptionID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil
 		}
 		return err

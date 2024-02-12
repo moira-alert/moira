@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -35,13 +36,13 @@ func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 			return lost, nil
 		}
 
-		if err == database.ErrLockAlreadyHeld {
+		if errors.Is(err, database.ErrLockAlreadyHeld) {
 			return nil, database.ErrLockAlreadyHeld
 		}
 
-		switch e := err.(type) {
+		switch e := err.(type) { // nolint:errorlint
 		case *database.ErrLockNotAcquired:
-			if e.Err != redsync.ErrFailed {
+			if !errors.Is(e.Err, redsync.ErrFailed) {
 				return nil, err
 			}
 		}

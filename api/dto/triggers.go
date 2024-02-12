@@ -151,27 +151,34 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if len(trigger.Targets) == 0 {
 		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("targets is required")}
 	}
+
 	if len(trigger.Tags) == 0 {
 		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("tags is required")}
 	}
+
 	if trigger.Name == "" {
 		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("trigger name is required")}
 	}
+
 	if err := checkWarnErrorExpression(trigger); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
+
 	if len(trigger.Targets) <= 1 { // we should have empty alone metrics dictionary when there is only one target
 		trigger.AloneMetrics = map[string]bool{}
 	}
+
 	for targetName := range trigger.AloneMetrics {
 		if !targetNameRegex.MatchString(targetName) {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")}
 		}
+
 		targetIndexStr := targetNameRegex.FindStringSubmatch(targetName)[1]
 		targetIndex, err := strconv.Atoi(targetIndexStr)
 		if err != nil {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be valid number: %w", err)}
 		}
+
 		if targetIndex < 0 || targetIndex > len(trigger.Targets) {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")}
 		}
@@ -203,6 +210,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if err != nil {
 		return err
 	}
+
 	// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
 	for _, pattern := range trigger.Patterns {
 		if pattern == asteriskPattern {

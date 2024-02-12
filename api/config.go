@@ -26,7 +26,8 @@ type FeatureFlags struct {
 
 // Sentry - config for sentry settings
 type Sentry struct {
-	DSN string `json:"dsn,omitempty" example:"https://secret@sentry.host"`
+	DSN      string `json:"dsn,omitempty" example:"https://secret@sentry.host"`
+	Platform string `json:"platform,omitempty" example:"dev"`
 }
 
 // Config for api configuration variables.

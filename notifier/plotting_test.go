@@ -224,7 +224,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 
 		Convey("with error ErrEvaluateTargetFailedWithPanic and error again", func() {
 			var err error = local.ErrEvaluateTargetFailedWithPanic{}
-			var secondErr = errors.New("Test error")
+			var secondErr = errors.New("test error")
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), false).Return(nil, secondErr).Times(1),
@@ -234,7 +234,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 		})
 
 		Convey("with unknown error", func() {
-			var err error = errors.New("Test error")
+			var err = errors.New("test error")
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 			)

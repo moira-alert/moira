@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -43,7 +44,7 @@ func MarshallTeam(team moira.Team) ([]byte, error) {
 func NewTeam(rep *redis.StringCmd) (moira.Team, error) {
 	bytes, err := rep.Bytes()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.Team{}, database.ErrNil
 		}
 		return moira.Team{}, fmt.Errorf("failed to read team: %w", err)

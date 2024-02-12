@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -33,7 +34,7 @@ func (connector *DbConnector) RemoveTriggersToReindex(to int64) error {
 
 	_, err := c.ZRemRangeByScore(ctx, triggersToReindexKey, "-inf", strconv.FormatInt(to, 10)).Result()
 
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return fmt.Errorf("failed to remove triggers to reindex: %s", err.Error())
 	}
 

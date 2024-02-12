@@ -1,6 +1,7 @@
 package events
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -37,7 +38,7 @@ func (worker *FetchEventsWorker) Start() {
 				{
 					event, err := worker.Database.FetchNotificationEvent()
 					if err != nil {
-						if err != database.ErrNil {
+						if !errors.Is(err, database.ErrNil) {
 							worker.Metrics.EventsMalformed.Mark(1)
 							worker.Logger.Warning().
 								Error(err).

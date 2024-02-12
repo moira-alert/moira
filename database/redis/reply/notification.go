@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -60,7 +61,7 @@ func GetNotificationBytes(notification moira.ScheduledNotification) ([]byte, err
 // unmarshalNotification converts JSON to moira.ScheduledNotification object
 func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification, error) {
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.ScheduledNotification{}, database.ErrNil
 		}
 		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %w", err)
@@ -77,7 +78,7 @@ func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification
 
 // Notifications converts redis DB reply to moira.ScheduledNotification objects array
 func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotification, error) {
-	if responses == nil || responses.Err() == redis.Nil {
+	if responses == nil || errors.Is(responses.Err(), redis.Nil) {
 		return make([]*moira.ScheduledNotification, 0), nil
 	}
 
@@ -89,9 +90,10 @@ func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotificat
 	notifications := make([]*moira.ScheduledNotification, len(data))
 	for i, value := range data {
 		notification, err2 := unmarshalNotification([]byte(value), err)
-		if err2 != nil && err2 != database.ErrNil {
+		if err2 != nil && !errors.Is(err2, database.ErrNil) {
 			return nil, err2
-		} else if err2 == database.ErrNil {
+		}
+		if errors.Is(err2, database.ErrNil) {
 			notifications[i] = nil
 		} else {
 			notifications[i] = &notification

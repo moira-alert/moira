@@ -588,14 +588,14 @@ func TestGetRenderable(t *testing.T) {
 				if testCase.errorValue != nil {
 					errorValue := testCase.errorValue.(float64)
 					if !testCase.useHumanizedValues {
-						errorValue = errorValue * plotTestOuterPointMultiplier
+						errorValue *= plotTestOuterPointMultiplier
 					}
 					trigger.ErrorValue = &errorValue
 				}
 				if testCase.warnValue != nil {
 					warnValue := testCase.warnValue.(float64)
 					if !testCase.useHumanizedValues {
-						warnValue = warnValue * plotTestOuterPointMultiplier
+						warnValue *= plotTestOuterPointMultiplier
 					}
 					trigger.WarnValue = &warnValue
 				}

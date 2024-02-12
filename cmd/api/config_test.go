@@ -161,7 +161,8 @@ func Test_webConfig_getSettings(t *testing.T) {
 				IsReadonlyEnabled:                false,
 			},
 			Sentry: sentryConfig{
-				DSN: "test dsn",
+				DSN:      "test dsn",
+				Platform: "dev",
 			},
 		}
 
@@ -184,7 +185,8 @@ func Test_webConfig_getSettings(t *testing.T) {
 				IsReadonlyEnabled:                false,
 			},
 			Sentry: api.Sentry{
-				DSN: "test dsn",
+				DSN:      "test dsn",
+				Platform: "dev",
 			},
 			MetricSourceClusters: metricSourceClustersDefault,
 		})

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -38,7 +39,7 @@ func TestGetSearchRequestString(t *testing.T) {
 				{"QueRy", "query"},
 			}
 			for _, testCase := range testCases {
-				req, _ := http.NewRequest("GET", fmt.Sprintf("/api/trigger/search?onlyProblems=false&p=0&size=20&text=%s", testCase.text), nil)
+				req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("/api/trigger/search?onlyProblems=false&p=0&size=20&text=%s", testCase.text), nil)
 				searchRequest := getSearchRequestString(req)
 				So(searchRequest, ShouldEqual, testCase.expectedSearchRequest)
 			}

@@ -71,7 +71,7 @@ func TestCheckDelay_Check(t *testing.T) {
 		})
 
 		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			//TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
+			// TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
 			needCheck := check.NeedToCheckOthers()
 			So(needCheck, ShouldBeTrue)
 
