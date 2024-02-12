@@ -194,12 +194,6 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 		}
 	}
 
-	countDefaults := keys[moira.DefaultCluster]
-	if len(remotes) != 0 && countDefaults == 0 {
-		err := fmt.Errorf("expect at least one default cluster for remote source, got none")
-		errs = append(errs, err)
-	}
-
 	return errs
 }
 

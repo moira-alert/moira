@@ -9,6 +9,8 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
+const defaultMetricEventPopBatchSize = 100
+
 func (manager *WorkerManager) startLocalMetricEvents() error {
 	if manager.Config.MetricEventPopBatchSize < 0 {
 		return errors.New("MetricEventPopBatchSize param was less than zero")
@@ -17,7 +19,7 @@ func (manager *WorkerManager) startLocalMetricEvents() error {
 	manager.Logger.Info().Msg("Starting local metric event handler")
 
 	if manager.Config.MetricEventPopBatchSize == 0 {
-		manager.Config.MetricEventPopBatchSize = 100
+		manager.Config.MetricEventPopBatchSize = defaultMetricEventPopBatchSize
 	}
 
 	subscribeMetricEventsParams := moira.SubscribeMetricEventsParams{
