@@ -36,6 +36,41 @@ func TestGetAllTags(t *testing.T) {
 	})
 }
 
+func TestCreateTags(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	emptyTags := &dto.TagsData{
+		TagNames: make([]string, 0),
+	}
+	tags := &dto.TagsData{
+		TagNames: []string{"test1", "test2"},
+	}
+
+	Convey("Success with empty tags", t, func() {
+		database.EXPECT().CreateTags(emptyTags.TagNames).Return(nil).Times(1)
+
+		err := CreateTags(database, emptyTags)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success with many tags", t, func() {
+		database.EXPECT().CreateTags(tags.TagNames).Return(nil).Times(1)
+
+		err := CreateTags(database, tags)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Error from database", t, func() {
+		expectedErr := fmt.Errorf("some error")
+		database.EXPECT().CreateTags(tags.TagNames).Return(expectedErr).Times(1)
+
+		err := CreateTags(database, tags)
+		So(err, ShouldResemble, api.ErrorInternalServer(expectedErr))
+	})
+}
+
 func TestDeleteTag(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()

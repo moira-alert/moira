@@ -191,6 +191,20 @@ func (mr *MockDatabaseMockRecorder) CleanUpOutdatedMetrics(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedMetrics), arg0)
 }
 
+// CreateTags mocks base method.
+func (m *MockDatabase) CreateTags(arg0 []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateTags", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateTags indicates an expected call of CreateTags.
+func (mr *MockDatabaseMockRecorder) CreateTags(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTags", reflect.TypeOf((*MockDatabase)(nil).CreateTags), arg0)
+}
+
 // DeleteTeam mocks base method.
 func (m *MockDatabase) DeleteTeam(arg0, arg1 string) error {
 	m.ctrl.T.Helper()

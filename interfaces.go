@@ -21,6 +21,7 @@ type Database interface {
 
 	// Tag storing
 	GetTagNames() ([]string, error)
+	CreateTags(tags []string) error
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
 	CleanUpAbandonedTags() (int, error)
