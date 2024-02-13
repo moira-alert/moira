@@ -230,7 +230,15 @@ func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemO
 	}
 
 	if strings.HasPrefix(funcName, "seriesByTag") {
-		if !validateSeriesByTag(funcName) {
+		valid, err := validateSeriesByTag(funcName)
+		if err != nil {
+			return &ProblemOfTarget{
+				Argument:    funcName,
+				Type:        isBad,
+				Description: "Incorrect seriesByTag syntax.",
+			}
+		}
+		if !valid {
 			return &ProblemOfTarget{
 				Argument:    funcName,
 				Type:        isBad,
@@ -293,20 +301,20 @@ func funcIsSupported(funcName string) bool {
 }
 
 // checks if a seriesByTag expression has at least one argument with a strict equality
-func validateSeriesByTag(target string) bool {
+func validateSeriesByTag(target string) (bool, error) {
 	tagArgs, err := filter.ParseSeriesByTag(target)
 
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	for _, arg := range tagArgs {
 		if arg.Operator == filter.EqualOperator && !hasWildcard(arg.Value) {
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func hasWildcard(target string) bool {
