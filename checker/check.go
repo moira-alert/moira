@@ -75,7 +75,7 @@ const (
 // is not serious and check process can be continued first return value became CanContinueCheck and Filled CheckData returned.
 // in the other case first return value became MustStopCheck and error passed to this function is handled.
 func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckData, err error) (ErrorSeverity, moira.CheckData, error) {
-	switch err.(type) {
+	switch err.(type) { // nolint:errorlint
 	case ErrTriggerHasSameMetricNames:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
@@ -113,7 +113,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 
 // handleFetchError is a function that checks error returned from fetchTriggerMetrics function.
 func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData, err error) error {
-	switch err.(type) {
+	switch err.(type) { // nolint:errorlint
 	case ErrTriggerHasEmptyTargets, ErrTriggerHasOnlyWildcards:
 		triggerChecker.logger.Debug().
 			String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).

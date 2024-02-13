@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -37,7 +38,7 @@ type triggerStorageElement struct {
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
-	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	if storageElement.AloneMetrics == nil {
 		aloneMetricsLen := len(storageElement.Targets)
 		storageElement.AloneMetrics = make(map[string]bool, aloneMetricsLen)
@@ -46,7 +47,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 			storageElement.AloneMetrics[targetName] = true
 		}
 	}
-	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 
 	triggerSource := storageElement.TriggerSource.FillInIfNotSet(storageElement.IsRemote)
 	return moira.Trigger{
@@ -117,7 +118,7 @@ func getTriggerTTLString(ttl int64) string {
 func Trigger(rep *redis.StringCmd) (moira.Trigger, error) {
 	bytes, err := rep.Bytes()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.Trigger{}, database.ErrNil
 		}
 		return moira.Trigger{}, fmt.Errorf("failed to read trigger: %s", err.Error())

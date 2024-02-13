@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -36,7 +37,7 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 
 	triggerIDs, err := c.SMembers(connector.context, tagTriggersKey(tagName)).Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]string, 0), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve tag triggers:%s, err: %s", tagName, err.Error())
@@ -56,7 +57,7 @@ func (connector *DbConnector) CleanUpAbandonedTags() (int, error) {
 
 		result, err := client.Exists(connector.context, tagTriggersKey(tag)).Result()
 		if err != nil {
-			return count, fmt.Errorf("failed to check tag triggers existence, error: %v", err)
+			return count, fmt.Errorf("failed to check tag triggers existence, error: %w", err)
 		}
 		if isTriggerExists := result == 1; isTriggerExists {
 			continue
@@ -64,7 +65,7 @@ func (connector *DbConnector) CleanUpAbandonedTags() (int, error) {
 
 		result, err = client.Exists(connector.context, tagSubscriptionKey(tag)).Result()
 		if err != nil {
-			return count, fmt.Errorf("failed to check tag subscription existence, error: %v", err)
+			return count, fmt.Errorf("failed to check tag subscription existence, error: %w", err)
 		}
 		if isSubscriptionExists := result == 1; isSubscriptionExists {
 			continue

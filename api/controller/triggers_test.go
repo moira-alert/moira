@@ -22,7 +22,7 @@ func TestCreateTrigger(t *testing.T) {
 
 	Convey("Success with trigger.ID empty", t, func() {
 		triggerModel := dto.TriggerModel{}
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -36,7 +36,7 @@ func TestCreateTrigger(t *testing.T) {
 		triggerID := uuid.Must(uuid.NewV4()).String()
 		triggerModel := dto.TriggerModel{ID: triggerID}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -51,7 +51,7 @@ func TestCreateTrigger(t *testing.T) {
 		triggerID := "Valid.Custom_Trigger~Name-42"
 		triggerModel := dto.TriggerModel{ID: triggerID}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -94,7 +94,7 @@ func TestCreateTrigger(t *testing.T) {
 		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)

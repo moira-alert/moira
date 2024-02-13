@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,13 +12,13 @@ import (
 	"github.com/moira-alert/moira/support"
 )
 
-const maxTriggerLockAttempts = 10
+const maxTriggerLockAttempts = 30
 
 // UpdateTrigger update trigger data and trigger metrics in last state
 func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	_, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", triggerID))
 		}
 		return nil, api.ErrorInternalServer(err)
@@ -32,11 +33,11 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 	}
 	defer dataBase.DeleteTriggerCheckLock(triggerID) //nolint
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
-	if err != nil && err != database.ErrNil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if err != database.ErrNil {
+	if !errors.Is(err, database.ErrNil) {
 		for metric := range lastCheck.Metrics {
 			if _, ok := timeSeriesNames[metric]; !ok {
 				lastCheck.RemoveMetricState(metric)
@@ -74,7 +75,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 func GetTrigger(dataBase moira.Database, triggerID string) (*dto.Trigger, *api.ErrorResponse) {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorNotFound("trigger not found")
 		}
 		return nil, api.ErrorInternalServer(err)
@@ -119,7 +120,7 @@ func GetTriggerLastCheck(dataBase moira.Database, triggerID string) (*dto.Trigge
 
 	*lastCheck, err = dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil {
-		if err != database.ErrNil {
+		if !errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorInternalServer(err)
 		}
 		lastCheck = nil

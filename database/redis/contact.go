@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -19,7 +20,7 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	var contact moira.ContactData
 
 	result := c.Get(connector.context, contactKey(id))
-	if result.Err() == redis.Nil {
+	if errors.Is(result.Err(), redis.Nil) {
 		return contact, database.ErrNil
 	}
 	contact, err := reply.Contact(result)
@@ -42,7 +43,7 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 		results = append(results, result)
 	}
 	_, err := pipe.Exec(connector.context)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
 
@@ -108,7 +109,7 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 // SaveContact writes contact data and updates user contacts
 func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	existing, getContactErr := connector.GetContact(contact.ID)
-	if getContactErr != nil && getContactErr != database.ErrNil {
+	if getContactErr != nil && !errors.Is(getContactErr, database.ErrNil) {
 		return getContactErr
 	}
 	contactString, err := json.Marshal(contact)
@@ -120,10 +121,10 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 
 	pipe := c.TxPipeline()
 	pipe.Set(connector.context, contactKey(contact.ID), contactString, redis.KeepTTL)
-	if getContactErr != database.ErrNil && contact.User != existing.User {
+	if !errors.Is(getContactErr, database.ErrNil) && contact.User != existing.User {
 		pipe.SRem(connector.context, userContactsKey(existing.User), contact.ID)
 	}
-	if getContactErr != database.ErrNil && contact.Team != existing.Team {
+	if !errors.Is(getContactErr, database.ErrNil) && contact.Team != existing.Team {
 		pipe.SRem(connector.context, teamContactsKey(existing.Team), contact.ID)
 	}
 	if contact.User != "" {
@@ -142,7 +143,7 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 // RemoveContact deletes contact data and contactID from user contacts
 func (connector *DbConnector) RemoveContact(contactID string) error {
 	existing, err := connector.GetContact(contactID)
-	if err != nil && err != database.ErrNil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return err
 	}
 	c := *connector.client

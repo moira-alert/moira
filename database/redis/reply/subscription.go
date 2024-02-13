@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -17,7 +18,7 @@ func Subscription(rep *redis.StringCmd) (moira.SubscriptionData, error) {
 	}
 	bytes, err := rep.Bytes()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return subscription, database.ErrNil
 		}
 		return subscription, fmt.Errorf("failed to read subscription: %s", err.Error())

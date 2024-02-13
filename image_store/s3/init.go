@@ -43,7 +43,7 @@ func (imageStore *ImageStore) Init(config Config) error {
 	var err error
 	imageStore.sess, err = session.NewSession(awsconfig)
 	if err != nil {
-		return fmt.Errorf("could not configure s3 session: %s", err)
+		return fmt.Errorf("could not configure s3 session: %w", err)
 	}
 	imageStore.uploader = s3manager.NewUploader(imageStore.sess)
 

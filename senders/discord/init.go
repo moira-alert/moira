@@ -46,7 +46,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	sender.session, err = discordgo.New("Bot " + cfg.Token)
 	if err != nil {
-		return fmt.Errorf("error creating discord session: %s", err)
+		return fmt.Errorf("error creating discord session: %w", err)
 	}
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI

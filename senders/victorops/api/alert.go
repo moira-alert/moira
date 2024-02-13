@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,9 +43,9 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 
 	body, err := json.Marshal(alert)
 	if err != nil {
-		return fmt.Errorf("error while encoding json: %s", err)
+		return fmt.Errorf("error while encoding json: %w", err)
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", client.routingURL, routingKey), bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/%s", client.routingURL, routingKey), bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("error while making the request to victorops: %s", err)
+		return fmt.Errorf("error while making the request to victorops: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {

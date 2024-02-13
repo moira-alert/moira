@@ -44,7 +44,7 @@ func (worker *FetchNotificationsWorker) Start() {
 				return nil
 			case <-checkTicker.C:
 				if err := worker.processScheduledNotifications(); err != nil {
-					switch err.(type) {
+					switch err.(type) { // nolint:errorlint
 					case notifierInBadStateError:
 						worker.Logger.Warning().
 							String("stop_sending_notifications_for", sleepAfterNotifierBadState.String()).

@@ -120,7 +120,7 @@ func subscriptionFilter(next http.Handler) http.Handler {
 func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {
-		switch err.(type) {
+		switch err.(type) { // nolint:errorlint
 		case dto.ErrProvidedContactsForbidden:
 			render.Render(writer, request, api.ErrorForbidden(err.Error())) //nolint
 		default:

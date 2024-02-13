@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"errors"
 	"fmt"
 	"runtime/debug"
 	"time"
@@ -73,7 +74,7 @@ func (check *Checker) checkTrigger(triggerID string) error {
 		check.Metrics,
 	)
 
-	if err == checker.ErrTriggerNotExists {
+	if errors.Is(err, checker.ErrTriggerNotExists) {
 		return nil
 	}
 	if err != nil {

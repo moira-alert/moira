@@ -125,7 +125,7 @@ func buildExecString(template string, trigger moira.TriggerData, contact moira.C
 		moira.VariableTriggerName:  trigger.Name,
 	}
 	for k, v := range templateVariables {
-		template = strings.Replace(template, k, v, -1)
+		template = strings.ReplaceAll(template, k, v)
 	}
 	return template
 }

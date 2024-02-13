@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -16,7 +17,7 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, maxAttem
 	attemptsCount := 0
 	for !acquired && attemptsCount < maxAttemptsCount {
 		attemptsCount++
-		<-time.After(time.Millisecond * 500) //nolint
+		<-time.After(time.Second) //nolint
 		acquired, err = connector.SetTriggerCheckLock(triggerID)
 		if err != nil {
 			return err
@@ -33,7 +34,7 @@ func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error
 	c := *connector.client
 	err := c.SetArgs(connector.context, metricCheckLockKey(triggerID), time.Now().Unix(), redis.SetArgs{TTL: 30 * time.Second, Mode: "NX"}).Err()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return false, nil
 		}
 		return false, fmt.Errorf("failed to set check lock: %s error: %s", triggerID, err.Error())

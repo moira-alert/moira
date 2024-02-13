@@ -64,11 +64,9 @@ func describePlotCurves(metricData metricSource.MetricData) []plotCurve {
 			timeStampValue := moira.Int64ToTime(timeStamp)
 			curves[curvesInd].timeStamps = append(curves[curvesInd].timeStamps, timeStampValue)
 			curves[curvesInd].values = append(curves[curvesInd].values, pointValue)
-		} else {
-			if len(curves[curvesInd].values) > 0 {
-				curves = append(curves, plotCurve{})
-				curvesInd++
-			}
+		} else if len(curves[curvesInd].values) > 0 {
+			curves = append(curves, plotCurve{})
+			curvesInd++
 		}
 		timeStamp += metricData.StepTime
 	}

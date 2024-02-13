@@ -24,7 +24,7 @@ const (
 
 	messageMaxCharacters = 4000
 
-	//see errors https://api.slack.com/methods/chat.postMessage
+	// see errors https://api.slack.com/methods/chat.postMessage
 	ErrorTextChannelArchived = "is_archived"
 	ErrorTextChannelNotFound = "channel_not_found"
 	ErrorTextNotInChannel    = "not_in_channel"
