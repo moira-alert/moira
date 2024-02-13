@@ -51,7 +51,7 @@ func getAllTags(writer http.ResponseWriter, request *http.Request) {
 //	@tags		tag
 //	@accept		json
 //	@produce	json
-//	@param		team	body	dto.TagsData	true	"Tags data"
+//	@param		tags	body	dto.TagsData	true	"Tags data"
 //	@success	200		"Create tags successfully"
 //	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure	422		{object}	api.ErrorRenderExample			"Render error"
