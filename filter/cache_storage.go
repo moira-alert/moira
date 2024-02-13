@@ -80,11 +80,12 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 
 	for retentionScanner.Scan() {
 		line1 := retentionScanner.Text()
-		if strings.HasPrefix(line1, "#") || strings.Count(line1, "=") != 1 {
+		if strings.HasPrefix(line1, "#") || strings.Count(line1, "=") < 1 {
 			continue
 		}
 
-		patternString := strings.TrimSpace(strings.Split(line1, "=")[1])
+		_, after, _ := strings.Cut(line1, "=")
+		patternString := strings.TrimSpace(after)
 		pattern, err := regexp.Compile(patternString)
 		if err != nil {
 			return err
