@@ -166,9 +166,11 @@ type TriggerData struct {
 	ErrorValue    float64       `json:"error_value" example:"1000"`
 	IsRemote      bool          `json:"is_remote" example:"false"`
 	TriggerSource TriggerSource `json:"trigger_source,omitempty" example:"graphite_local"`
+	ClusterId     ClusterId     `json:"cluster_id,omitempty" example:"default"`
 	Tags          []string      `json:"__notifier_trigger_tags" example:"server,disk"`
 }
 
+// GetTriggerSource returns trigger source associated with the trigger
 func (trigger TriggerData) GetTriggerSource() TriggerSource {
 	return trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
 }
@@ -332,6 +334,7 @@ type Trigger struct {
 	PythonExpression *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
 	Patterns         []string        `json:"patterns" example:""`
 	TriggerSource    TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
+	ClusterId        ClusterId       `json:"cluster_id,omitempty" example:"default"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
 	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
 	CreatedAt        *int64          `json:"created_at" format:"int64" extensions:"x-nullable"`
@@ -340,6 +343,12 @@ type Trigger struct {
 	UpdatedBy        string          `json:"updated_by"`
 }
 
+// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger
+func (trigger *Trigger) ClusterKey() ClusterKey {
+	return MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
+}
+
+// TriggerSource is a enum which values correspond to types of moira's metric sources
 type TriggerSource string
 
 var (
@@ -365,16 +374,62 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Neede for backwards compatibility with moira versions that used oly isRemote flag
-func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
+// Needed for backwards compatibility with moira versions that used only isRemote flag
+func (triggerSource TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
 	if triggerSource == TriggerSourceNotSet {
-		if isRempte {
+		if isRemote {
 			return GraphiteRemote
 		} else {
 			return GraphiteLocal
 		}
 	}
 	return triggerSource
+}
+
+func (triggerSource TriggerSource) String() string {
+	return string(triggerSource)
+}
+
+// ClusterId represent the unique id for each cluster with the same TriggerSource
+type ClusterId string
+
+var (
+	ClusterNotSet  ClusterId = ""
+	DefaultCluster ClusterId = "default"
+)
+
+// FillInIfNotSet returns new ClusterId with value set to default if it was empty
+func (clusterId ClusterId) FillInIfNotSet() ClusterId {
+	if clusterId == ClusterNotSet {
+		return DefaultCluster
+	}
+	return clusterId
+}
+
+func (clusterId ClusterId) String() string {
+	return string(clusterId)
+}
+
+// ClusterKey represents unique key of a metric source
+type ClusterKey struct {
+	TriggerSource TriggerSource
+	ClusterId     ClusterId
+}
+
+var DefaultLocalCluster = MakeClusterKey(GraphiteLocal, DefaultCluster)
+var DefaultGraphiteRemoteCluster = MakeClusterKey(GraphiteRemote, DefaultCluster)
+var DefaultPrometheusRemoteCluster = MakeClusterKey(PrometheusRemote, DefaultCluster)
+
+// MakeClusterKey creates new cluster key with given trigger source and cluster id
+func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey {
+	return ClusterKey{
+		TriggerSource: triggerSource,
+		ClusterId:     clusterId,
+	}
+}
+
+func (clusterKey ClusterKey) String() string {
+	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp

@@ -28,14 +28,17 @@ type selfCheckWorkerMock struct {
 }
 
 func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
+	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
+
 	mock := configureWorker(t, true)
 	Convey("SelfCheckWorker should call all heartbeats checks", t, func() {
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
-		mock.database.EXPECT().GetRemoteTriggersToCheckCount().Return(int64(1), nil)
-		mock.database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil).Times(2)
+		mock.database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil).Times(2)
+		mock.database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 
 		// Start worker after configuring Mock to avoid race conditions
 		err := mock.selfCheckWorker.Start()

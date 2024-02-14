@@ -68,11 +68,16 @@ func MakeTriggerChecker(
 		}
 	}
 
+	triggerMetrics, err := metrics.GetCheckMetrics(&trigger)
+	if err != nil {
+		return nil, err
+	}
+
 	triggerChecker := &TriggerChecker{
 		database: dataBase,
 		logger:   triggerLogger,
 		config:   config,
-		metrics:  metrics.GetCheckMetrics(&trigger),
+		metrics:  triggerMetrics,
 		source:   source,
 
 		from:  calculateFrom(lastCheck.Timestamp, trigger.TTL),

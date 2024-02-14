@@ -17,10 +17,6 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/index"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metric_source/prometheus"
-	"github.com/moira-alert/moira/metric_source/remote"
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -62,8 +58,7 @@ func main() {
 	}
 
 	apiConfig := applicationConfig.API.getSettings(
-		applicationConfig.Redis.MetricsTTL,
-		applicationConfig.Remote.MetricsTTL,
+		applicationConfig.ClustersMetricTTL(),
 		applicationConfig.Web.getFeatureFlags(),
 	)
 
@@ -103,10 +98,6 @@ func main() {
 	}
 	defer searchIndex.Stop() //nolint
 
-	stats := newTriggerStats(logger, database, telemetry.Metrics)
-	stats.Start()
-	defer stats.Stop() //nolint
-
 	if !searchIndex.IsReady() {
 		logger.Fatal().Msg("Search index is not ready, exit")
 	}
@@ -123,25 +114,18 @@ func main() {
 		String("listen_address", apiConfig.Listen).
 		Msg("Start listening")
 
-	remoteConfig := applicationConfig.Remote.GetRemoteSourceSettings()
-	prometheusConfig := applicationConfig.Prometheus.GetPrometheusSourceSettings()
-
-	localSource := local.Create(database)
-	remoteSource := remote.Create(remoteConfig)
-	prometheusSource, err := prometheus.Create(prometheusConfig, logger)
+	metricSourceProvider, err := cmd.InitMetricSources(applicationConfig.Remotes, database, logger)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Failed to initialize prometheus metric source")
+			Msg("Failed to initialize metric sources")
 	}
 
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(
-		localSource,
-		remoteSource,
-		prometheusSource,
-	)
+	stats := newTriggerStats(metricSourceProvider.GetClusterList(), logger, database, telemetry.Metrics)
+	stats.start()
+	defer stats.stop() //nolint
 
-	webConfig := applicationConfig.Web.getSettings(remoteConfig.Enabled || prometheusConfig.Enabled)
+	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
 
 	httpHandler := handler.NewHandler(
 		database,

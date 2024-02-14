@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
 	"github.com/golang/mock/gomock"
@@ -13,6 +14,8 @@ import (
 )
 
 func TestGraphiteRemoteChecker(t *testing.T) {
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
+
 	Convey("Test remote checker heartbeat", t, func() {
 		err := errors.New("test error remoteChecker")
 		now := time.Now().Unix()
@@ -27,7 +30,7 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 		})
 
 		Convey("GraphiteRemoteChecker error handling test", func() {
-			database.EXPECT().GetRemoteTriggersToCheckCount().Return(int64(0), err)
+			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(0), err)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldEqual, err)
@@ -38,7 +41,7 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 		Convey("Test update lastSuccessfulCheck", func() {
 			now += 1000
 			database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
-			database.EXPECT().GetRemoteTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -51,7 +54,7 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 			check.lastSuccessfulCheck = now - check.delay - 1
 
 			database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetRemoteTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -61,7 +64,7 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 
 		Convey("Exit without action", func() {
 			database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetRemoteTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)

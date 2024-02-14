@@ -316,7 +316,7 @@ func main() { //nolint
 			database,
 			dump.Trigger.ID,
 			&dump.LastCheck,
-			dump.Trigger.TriggerSource,
+			dump.Trigger.ClusterKey(),
 		); err != nil {
 			logger.Fatal().
 				Error(err).

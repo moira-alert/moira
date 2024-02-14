@@ -177,21 +177,16 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 }
 
 // getMetricTTLByTrigger gets metric ttl duration time from request context for local or remote trigger.
-func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Duration {
-	var ttl time.Duration
+func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) (time.Duration, error) {
+	metricTTLs := middleware.GetMetricTTL(request)
+	key := trigger.ClusterKey()
 
-	switch trigger.TriggerSource {
-	case moira.GraphiteLocal:
-		ttl = middleware.GetLocalMetricTTL(request)
-
-	case moira.GraphiteRemote:
-		ttl = middleware.GetRemoteMetricTTL(request)
-
-	case moira.PrometheusRemote:
-		ttl = middleware.GetPrometheusMetricTTL(request)
+	ttl, ok := metricTTLs[key]
+	if !ok {
+		return 0, fmt.Errorf("can't get ttl: unknown cluster %s", key.String())
 	}
 
-	return ttl
+	return ttl, nil
 }
 
 // nolint: gofmt,goimports
@@ -221,7 +216,11 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	ttl := getMetricTTLByTrigger(request, trigger)
+	ttl, err := getMetricTTLByTrigger(request, trigger)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
 
 	if len(trigger.Targets) > 0 {
 		var err error

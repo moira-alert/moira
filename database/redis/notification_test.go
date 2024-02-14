@@ -497,6 +497,7 @@ func TestFilterNotificationsByState(t *testing.T) {
 	database := NewTestDatabase(logger)
 	database.Flush()
 	defer database.Flush()
+	defaultSourceNotSetCluster := moira.MakeClusterKey(moira.TriggerSourceNotSet, moira.DefaultCluster)
 
 	notificationOld := &moira.ScheduledNotification{
 		Trigger: moira.TriggerData{
@@ -532,13 +533,13 @@ func TestFilterNotificationsByState(t *testing.T) {
 		CreatedAt: now,
 	}
 
-	_ = database.SetTriggerLastCheck("test1", &moira.CheckData{}, moira.TriggerSourceNotSet)
+	_ = database.SetTriggerLastCheck("test1", &moira.CheckData{}, defaultSourceNotSetCluster)
 
 	_ = database.SetTriggerLastCheck("test2", &moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"test": {},
 		},
-	}, moira.TriggerSourceNotSet)
+	}, defaultSourceNotSetCluster)
 
 	Convey("Test filter notifications by state", t, func() {
 		Convey("With empty notifications", func() {
@@ -562,7 +563,7 @@ func TestFilterNotificationsByState(t *testing.T) {
 		Convey("With removed check data", func() {
 			database.RemoveTriggerLastCheck("test1") //nolint
 			defer func() {
-				_ = database.SetTriggerLastCheck("test1", &moira.CheckData{}, moira.TriggerSourceNotSet)
+				_ = database.SetTriggerLastCheck("test1", &moira.CheckData{}, defaultSourceNotSetCluster)
 			}()
 
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
@@ -612,6 +613,7 @@ func TestHandleNotifications(t *testing.T) {
 	database := NewTestDatabase(logger)
 	database.Flush()
 	defer database.Flush()
+	defaultSourceNotSetCluster := moira.MakeClusterKey(moira.TriggerSourceNotSet, moira.DefaultCluster)
 
 	notificationOld := &moira.ScheduledNotification{
 		Trigger: moira.TriggerData{
@@ -673,13 +675,13 @@ func TestHandleNotifications(t *testing.T) {
 		CreatedAt: now,
 	}
 
-	_ = database.SetTriggerLastCheck("test1", &moira.CheckData{}, moira.TriggerSourceNotSet)
+	_ = database.SetTriggerLastCheck("test1", &moira.CheckData{}, defaultSourceNotSetCluster)
 
 	_ = database.SetTriggerLastCheck("test2", &moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"test": {},
 		},
-	}, moira.TriggerSourceNotSet)
+	}, defaultSourceNotSetCluster)
 
 	Convey("Test handle notifications", t, func() {
 		Convey("Without delayed notifications", func() {
@@ -704,7 +706,7 @@ func TestHandleNotifications(t *testing.T) {
 		Convey("With both delayed and not delayed notifications and removed check data", func() {
 			database.RemoveTriggerLastCheck("test1") //nolint
 			defer func() {
-				_ = database.SetTriggerLastCheck("test1", &moira.CheckData{}, moira.TriggerSourceNotSet)
+				_ = database.SetTriggerLastCheck("test1", &moira.CheckData{}, defaultSourceNotSetCluster)
 			}()
 
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
@@ -823,18 +825,20 @@ func TestFetchNotificationsDo(t *testing.T) {
 
 	var limit int64
 
+	defaultSourceNotSetCluster := moira.MakeClusterKey(moira.TriggerSourceNotSet, moira.DefaultCluster)
+
 	_ = database.SetTriggerLastCheck("test1", &moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"test1": {},
 		},
-	}, moira.TriggerSourceNotSet)
+	}, defaultSourceNotSetCluster)
 
 	_ = database.SetTriggerLastCheck("test2", &moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"test1": {},
 			"test2": {},
 		},
-	}, moira.TriggerSourceNotSet)
+	}, defaultSourceNotSetCluster)
 
 	now := time.Now().Unix()
 	notificationOld := moira.ScheduledNotification{
@@ -990,7 +994,7 @@ func TestFetchNotificationsDo(t *testing.T) {
 					Metrics: map[string]moira.MetricState{
 						"test1": {},
 					},
-				}, moira.TriggerSourceNotSet)
+				}, defaultSourceNotSetCluster)
 			}()
 
 			Convey("With big limit", func() {
@@ -1209,13 +1213,14 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 	database := NewTestDatabase(logger)
 	database.Flush()
 	defer database.Flush()
+	defaultSourceNotSetCluster := moira.MakeClusterKey(moira.TriggerSourceNotSet, moira.DefaultCluster)
 
 	_ = database.SetTriggerLastCheck("test1", &moira.CheckData{
 		Timestamp: 1,
-	}, moira.TriggerSourceNotSet)
+	}, defaultSourceNotSetCluster)
 	_ = database.SetTriggerLastCheck("test2", &moira.CheckData{
 		Timestamp: 2,
-	}, moira.TriggerSourceNotSet)
+	}, defaultSourceNotSetCluster)
 
 	Convey("getNotificationsTriggerChecks manipulations", t, func() {
 		notification1 := &moira.ScheduledNotification{
@@ -1272,7 +1277,7 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 			defer func() {
 				_ = database.SetTriggerLastCheck("test1", &moira.CheckData{
 					Timestamp: 1,
-				}, moira.TriggerSourceNotSet)
+				}, defaultSourceNotSetCluster)
 			}()
 
 			notifications := []*moira.ScheduledNotification{notification1, notification2, notification3}

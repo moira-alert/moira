@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -12,11 +11,13 @@ import (
 type triggerStats struct {
 	tomb     tomb.Tomb
 	metrics  *metrics.TriggersMetrics
+	clusters []moira.ClusterKey
 	database moira.Database
 	logger   moira.Logger
 }
 
 func newTriggerStats(
+	clusters []moira.ClusterKey,
 	logger moira.Logger,
 	database moira.Database,
 	metricsRegistry metrics.Registry,
@@ -24,11 +25,12 @@ func newTriggerStats(
 	return &triggerStats{
 		logger:   logger,
 		database: database,
-		metrics:  metrics.NewTriggersMetrics(metricsRegistry),
+		metrics:  metrics.NewTriggersMetrics(metricsRegistry, clusters),
+		clusters: clusters,
 	}
 }
 
-func (stats *triggerStats) Start() {
+func (stats *triggerStats) start() {
 	stats.tomb.Go(stats.startCheckingTriggerCount)
 }
 
@@ -45,13 +47,13 @@ func (stats *triggerStats) startCheckingTriggerCount() error {
 	}
 }
 
-func (stats *triggerStats) Stop() error {
+func (stats *triggerStats) stop() error {
 	stats.tomb.Kill(nil)
 	return stats.tomb.Wait()
 }
 
 func (stats *triggerStats) checkTriggerCount() {
-	triggersCount, err := stats.database.GetTriggerCount()
+	triggersCount, err := stats.database.GetTriggerCount(stats.clusters)
 	if err != nil {
 		stats.logger.Warning().
 			Error(err).
@@ -61,6 +63,5 @@ func (stats *triggerStats) checkTriggerCount() {
 
 	for source, count := range triggersCount {
 		stats.metrics.Mark(source, count)
-		stats.logger.Debug().Msg(fmt.Sprintf("source: %s, count: %d", string(source), count))
 	}
 }

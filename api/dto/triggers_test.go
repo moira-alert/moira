@@ -25,7 +25,7 @@ func TestTriggerValidation(t *testing.T) {
 		localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
+		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
 		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")
@@ -47,11 +47,11 @@ func TestTriggerValidation(t *testing.T) {
 			TTLState:       &moira.TTLStateNODATA,
 			TTL:            600,
 			TriggerSource:  moira.GraphiteLocal,
+			ClusterId:      moira.DefaultCluster,
 			MuteNewMetrics: false,
 		}
 
 		Convey("Test FallingTrigger", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -94,7 +94,6 @@ func TestTriggerValidation(t *testing.T) {
 			})
 		})
 		Convey("Test RisingTrigger", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -137,7 +136,6 @@ func TestTriggerValidation(t *testing.T) {
 			})
 		})
 		Convey("Test ExpressionTrigger", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -173,7 +171,6 @@ func TestTriggerValidation(t *testing.T) {
 		})
 
 		Convey("Test alone metrics", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -216,7 +213,6 @@ func TestTriggerValidation(t *testing.T) {
 		})
 
 		Convey("Test patterns", func() {
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
@@ -272,6 +268,7 @@ func TestTriggerModel_ToMoiraTrigger(t *testing.T) {
 			Expression:     expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
+			ClusterId:      moira.DefaultCluster,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,
@@ -305,6 +302,7 @@ func TestTriggerModel_ToMoiraTrigger(t *testing.T) {
 			Expression:     &expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
+			ClusterId:      moira.DefaultCluster,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,
@@ -346,6 +344,7 @@ func TestCreateTriggerModel(t *testing.T) {
 			Expression:     &expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
+			ClusterId:      moira.DefaultCluster,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,
@@ -377,6 +376,7 @@ func TestCreateTriggerModel(t *testing.T) {
 			Expression:     expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
+			ClusterId:      moira.DefaultCluster,
 			IsRemote:       true,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
