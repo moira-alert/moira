@@ -47,7 +47,6 @@ func (manager *WorkerManager) handleTrigger(triggerID string, metrics *metrics.C
 
 func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics) error {
 	acquired, err := manager.Database.SetTriggerCheckLock(triggerID)
-	defer manager.Database.DeleteTriggerCheckLock(triggerID) //nolint
 
 	if err != nil {
 		return err
@@ -56,6 +55,8 @@ func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *met
 	if !acquired {
 		return nil
 	}
+
+	defer manager.Database.DeleteTriggerCheckLock(triggerID) //nolint
 
 	startedAt := time.Now()
 	defer metrics.TriggersCheckTime.UpdateSince(startedAt)
