@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"errors"
+
 	"gopkg.in/tucnak/telebot.v2"
 
 	"github.com/moira-alert/moira"
@@ -146,7 +148,9 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 	if err == nil {
 		return nil
 	}
-	if e, ok := err.(*telebot.APIError); ok {
+
+	var e *telebot.APIError
+	if ok := errors.As(err, &e); ok {
 		logger.Debug().
 			Int("code", e.Code).
 			String("msg", e.Message).

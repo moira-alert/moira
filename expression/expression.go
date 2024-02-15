@@ -124,6 +124,7 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 	if triggerExpression.ErrorValue == nil && triggerExpression.WarnValue == nil {
 		return nil, fmt.Errorf("error value and warning value can not be empty")
 	}
+
 	switch triggerExpression.TriggerType {
 	case "":
 		return nil, fmt.Errorf("trigger_type is not set")
@@ -143,9 +144,10 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 		} else {
 			return exprWarnRising, nil
 		}
+	default:
+		return nil, fmt.Errorf("wrong set of parametres: warn_value - %v, error_value - %v, trigger_type: %v",
+			triggerExpression.WarnValue, triggerExpression.ErrorValue, triggerExpression.TriggerType)
 	}
-	return nil, fmt.Errorf("wrong set of parametres: warn_value - %v, error_value - %v, trigger_type: %v",
-		triggerExpression.WarnValue, triggerExpression.ErrorValue, triggerExpression.TriggerType)
 }
 
 func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression, error) {

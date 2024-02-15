@@ -98,9 +98,7 @@ func NewHandler(
 			router.Get("/config", getWebConfig(webConfig))
 			router.Route("/user", user)
 			router.With(moiramiddle.Triggers(
-				apiConfig.GraphiteLocalMetricTTL,
-				apiConfig.GraphiteRemoteMetricTTL,
-				apiConfig.PrometheusRemoteMetricTTL,
+				apiConfig.MetricsTTL,
 			)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
 			router.Route("/tag", tag)
 			router.Route("/pattern", pattern)

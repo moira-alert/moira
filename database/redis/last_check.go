@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -28,8 +29,8 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.Check
 }
 
 // SetTriggerLastCheck sets trigger last check data
-func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, triggerSource moira.TriggerSource) error {
-	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(triggerSource)
+func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, clusterKey moira.ClusterKey) error {
+	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(clusterKey)
 	bytes, err := reply.GetCheckBytes(*checkData)
 	if err != nil {
 		return err
@@ -65,23 +66,32 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	return nil
 }
 
-func (connector *DbConnector) getSelfStateCheckCountKey(triggerSource moira.TriggerSource) string {
+func (connector *DbConnector) getSelfStateCheckCountKey(clusterKey moira.ClusterKey) string {
 	if connector.source != Checker {
 		return ""
 	}
-	switch triggerSource {
+
+	var key string
+
+	switch clusterKey.TriggerSource {
 	case moira.GraphiteLocal:
-		return selfStateChecksCounterKey
+		key = selfStateChecksCounterKey
 
 	case moira.GraphiteRemote:
-		return selfStateRemoteChecksCounterKey
+		key = selfStateRemoteChecksCounterKey
 
 	case moira.PrometheusRemote:
-		return selfStatePrometheusChecksCounterKey
+		key = selfStatePrometheusChecksCounterKey
 
 	default:
 		return ""
 	}
+
+	if clusterKey.ClusterId != moira.DefaultCluster {
+		key = key + ":" + clusterKey.ClusterId.String()
+	}
+
+	return key
 }
 
 func appendRemoveTriggerLastCheckToRedisPipeline(ctx context.Context, pipe redis.Pipeliner, triggerID string) redis.Pipeliner {
@@ -114,7 +124,7 @@ func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client 
 		lastCheckKey := lastCheckIterator.Val()
 		triggerID := strings.TrimPrefix(lastCheckKey, metricLastCheckKey(""))
 		_, err := connector.GetTrigger(triggerID)
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			err = connector.RemoveTriggerLastCheck(triggerID)
 			if err != nil {
 				return err
@@ -152,7 +162,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 
 	lastCheckString, readingErr := c.Get(ctx, metricLastCheckKey(triggerID)).Result()
 	if readingErr != nil {
-		if readingErr != redis.Nil {
+		if !errors.Is(readingErr, redis.Nil) {
 			return readingErr
 		}
 		return nil
@@ -213,7 +223,7 @@ func (connector *DbConnector) getTriggersLastCheck(triggerIDs []string) ([]*moir
 	}
 
 	_, err := pipe.Exec(ctx)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
 

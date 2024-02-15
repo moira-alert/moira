@@ -71,7 +71,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *trigger)
 
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 
@@ -192,7 +192,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})
 
-			ids, err = dataBase.GetLocalTriggerIDs()
+			ids, err = dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldBeEmpty)
 
@@ -248,7 +248,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
 			//Add check data
-			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, moira.GraphiteLocal)
+			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster))
 			So(err, ShouldBeNil)
 
 			triggerCheck.LastCheck = lastCheckTest
@@ -312,6 +312,7 @@ func TestTriggerStoring(t *testing.T) {
 				Patterns:      []string{pattern1},
 				TriggerType:   moira.RisingTrigger,
 				TriggerSource: moira.GraphiteLocal,
+				ClusterId:     moira.DefaultCluster,
 				AloneMetrics:  map[string]bool{},
 			}
 
@@ -323,6 +324,7 @@ func TestTriggerStoring(t *testing.T) {
 				Patterns:      []string{pattern2},
 				TriggerType:   moira.RisingTrigger,
 				TriggerSource: moira.GraphiteLocal,
+				ClusterId:     moira.DefaultCluster,
 				AloneMetrics:  map[string]bool{},
 			}
 
@@ -352,7 +354,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *triggerVer1)
 
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{triggerVer1.ID})
 
@@ -398,7 +400,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *triggerVer2)
 
-			ids, err = dataBase.GetLocalTriggerIDs()
+			ids, err = dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{triggerVer2.ID})
 
@@ -448,7 +450,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})
 
-			ids, err = dataBase.GetLocalTriggerIDs()
+			ids, err = dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 
@@ -541,6 +543,7 @@ func TestRemoteTrigger(t *testing.T) {
 		Targets:       []string{"test.target.remote1"},
 		Patterns:      []string{pattern},
 		TriggerSource: moira.GraphiteRemote,
+		ClusterId:     moira.DefaultCluster,
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 	}
@@ -568,12 +571,12 @@ func TestRemoteTrigger(t *testing.T) {
 			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should not be added to local triggers collection", func() {
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
 		Convey("Trigger should be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultGraphiteRemoteCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-triggers-list}:moira-remote-triggers-list").Val()
@@ -606,7 +609,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(*actual.CreatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 		})
 		Convey("Trigger should be added to triggers collection", func() {
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
@@ -616,7 +619,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger shouldn't be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultGraphiteRemoteCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -649,7 +652,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(*actual.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 		})
 		Convey("Trigger should be deleted from local triggers collection", func() {
-			ids, err := dataBase.GetLocalTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -659,7 +662,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetTriggerIDs(moira.DefaultGraphiteRemoteCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
@@ -689,7 +692,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 	})
 
 	Convey("Should throw error when no connection", t, func() {
-		actual, err := dataBase.GetLocalTriggerIDs()
+		actual, err := dataBase.GetTriggerIDs(moira.DefaultLocalCluster)
 		So(err, ShouldNotBeNil)
 		So(actual, ShouldBeNil)
 
@@ -805,13 +808,19 @@ func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
 	Convey("Given 3 triggers in DB", t, func() {
 		const prefix = "prefix"
 		var triggerWithPrefix1 = moira.Trigger{
-			ID: prefix + "1",
+			ID:            prefix + "1",
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.ClusterNotSet,
 		}
 		var triggerWithPrefix2 = moira.Trigger{
-			ID: prefix + "2",
+			ID:            prefix + "2",
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.ClusterNotSet,
 		}
 		var triggerWithoutPrefix = moira.Trigger{
-			ID: "without-prefix",
+			ID:            "without-prefix",
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.ClusterNotSet,
 		}
 		var triggers = []moira.Trigger{
 			triggerWithPrefix1,
@@ -850,8 +859,9 @@ var testTriggers = []moira.Trigger{
 		TriggerType:  moira.RisingTrigger,
 		TTLState:     &moira.TTLStateNODATA,
 		AloneMetrics: map[string]bool{},
-		//TODO: Test that empty TriggerSource is filled on getting vale from db
+		// TODO: Test that empty TriggerSource is filled on getting vale from db
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 	{
 		ID:            "triggerID-0000000000001",
@@ -862,6 +872,7 @@ var testTriggers = []moira.Trigger{
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{"t2": true},
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 	{
 		ID:            "triggerID-0000000000001",
@@ -872,6 +883,7 @@ var testTriggers = []moira.Trigger{
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 	{
 		ID:            "triggerID-0000000000004",
@@ -881,6 +893,7 @@ var testTriggers = []moira.Trigger{
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 	{
 		ID:            "triggerID-0000000000005",
@@ -890,6 +903,7 @@ var testTriggers = []moira.Trigger{
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 	{
 		ID:            "triggerID-0000000000006",
@@ -899,6 +913,7 @@ var testTriggers = []moira.Trigger{
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 	{
 		ID:            "triggerID-0000000000007",
@@ -908,6 +923,7 @@ var testTriggers = []moira.Trigger{
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 	{
 		ID:            "triggerID-0000000000008",
@@ -917,6 +933,7 @@ var testTriggers = []moira.Trigger{
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 	{
 		ID:            "triggerID-0000000000009",
@@ -926,5 +943,6 @@ var testTriggers = []moira.Trigger{
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
 	},
 }

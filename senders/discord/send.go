@@ -38,7 +38,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	channelID, err := sender.getChannelID(contact.Value)
 	if err != nil {
-		return fmt.Errorf("failed to get the channel ID: %s", err)
+		return fmt.Errorf("failed to get the channel ID: %w", err)
 	}
 	_, err = sender.session.ChannelMessageSendComplex(channelID, data)
 	if err != nil {

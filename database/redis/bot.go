@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -16,7 +17,7 @@ func (connector *DbConnector) GetIDByUsername(messenger, username string) (strin
 	}
 	c := *connector.client
 	result, err := c.Get(connector.context, usernameKey(messenger, username)).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return result, database.ErrNil
 	}
 	return result, err

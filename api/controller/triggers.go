@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
@@ -204,7 +205,7 @@ func getTriggerChecks(database moira.Database, triggerIDs []string) ([]moira.Tri
 
 func triggerExists(database moira.Database, triggerID string) (bool, error) {
 	_, err := database.GetTrigger(triggerID)
-	if err == db.ErrNil {
+	if errors.Is(err, db.ErrNil) {
 		return false, nil
 	}
 	if err != nil {

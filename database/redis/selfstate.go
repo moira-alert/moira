@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"errors"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 )
@@ -16,7 +18,7 @@ func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 	c := *connector.client
 	ts, err := c.Get(connector.context, selfStateMetricsHeartbeatKey).Int64()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return 0, nil
 	}
 	return ts, err
@@ -26,7 +28,7 @@ func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 	c := *connector.client
 	ts, err := c.Get(connector.context, selfStateChecksCounterKey).Int64()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return 0, nil
 	}
 	return ts, err
@@ -36,17 +38,17 @@ func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 func (connector *DbConnector) GetRemoteChecksUpdatesCount() (int64, error) {
 	c := *connector.client
 	ts, err := c.Get(connector.context, selfStateRemoteChecksCounterKey).Int64()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return 0, nil
 	}
 	return ts, err
 }
 
-// GetRemoteChecksUpdatesCount return remote checks count by Moira-Checker
+// GetPrometheusChecksUpdatesCount return remote checks count by Moira-Checker
 func (connector *DbConnector) GetPrometheusChecksUpdatesCount() (int64, error) {
 	c := *connector.client
 	ts, err := c.Get(connector.context, selfStatePrometheusChecksCounterKey).Int64()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return 0, nil
 	}
 	return ts, err
@@ -56,7 +58,7 @@ func (connector *DbConnector) GetPrometheusChecksUpdatesCount() (int64, error) {
 func (connector *DbConnector) GetNotifierState() (string, error) {
 	c := *connector.client
 	ts, err := c.Get(connector.context, selfStateNotifierHealth).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		ts = moira.SelfStateOK
 		err = connector.SetNotifierState(ts)
 	} else if err != nil {

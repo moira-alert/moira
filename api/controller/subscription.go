@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -107,7 +108,7 @@ func SendTestNotification(database moira.Database, subscriptionID string) *api.E
 func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID string, userLogin string) (moira.SubscriptionData, *api.ErrorResponse) {
 	subscription, err := dataBase.GetSubscription(subscriptionID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return moira.SubscriptionData{}, api.ErrorNotFound(fmt.Sprintf("subscription with ID '%s' does not exists", subscriptionID))
 		}
 		return moira.SubscriptionData{}, api.ErrorInternalServer(err)
@@ -129,7 +130,7 @@ func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID
 
 func isSubscriptionExists(dataBase moira.Database, subscriptionID string) (bool, error) {
 	_, err := dataBase.GetSubscription(subscriptionID)
-	if err == database.ErrNil {
+	if errors.Is(err, database.ErrNil) {
 		return false, nil
 	}
 	if err != nil {

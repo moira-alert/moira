@@ -15,6 +15,9 @@ func TestSelfCheckWithWritesInChecker(t *testing.T) {
 	dataBase.source = Checker
 	dataBase.Flush()
 	defer dataBase.Flush()
+	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
+
 	Convey("Self state triggers manipulation", t, func() {
 		Convey("Empty config", func() {
 			count, err := dataBase.GetMetricsUpdatesCount()
@@ -40,14 +43,14 @@ func TestSelfCheckWithWritesInChecker(t *testing.T) {
 		})
 
 		Convey("Update metrics checks updates count", func() {
-			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, moira.GraphiteLocal)
+			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, defaultLocalCluster)
 			So(err, ShouldBeNil)
 
 			count, err := dataBase.GetChecksUpdatesCount()
 			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
 
-			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, moira.GraphiteRemote)
+			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, defaultRemoteCluster)
 			So(err, ShouldBeNil)
 
 			count, err = dataBase.GetRemoteChecksUpdatesCount()
@@ -70,16 +73,19 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	dataBase.source = dbSource
 	dataBase.Flush()
 	defer dataBase.Flush()
+	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
+
 	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func() {
 		Convey("Update metrics checks updates count", func() {
-			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, moira.GraphiteLocal)
+			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, defaultLocalCluster)
 			So(err, ShouldBeNil)
 
 			count, err := dataBase.GetChecksUpdatesCount()
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
 
-			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, moira.GraphiteRemote)
+			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, defaultRemoteCluster)
 			So(err, ShouldBeNil)
 
 			count, err = dataBase.GetRemoteChecksUpdatesCount()

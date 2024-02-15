@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
 	"github.com/golang/mock/gomock"
@@ -190,7 +192,9 @@ func TestCheckBrokenContactError(t *testing.T) {
 			for _, brokenContactError := range brokenContactErrorsList {
 				err := checkBrokenContactError(logger, brokenContactError)
 				So(err, ShouldHaveSameTypeAs, moira.SenderBrokenContactError{})
-				So(err.(moira.SenderBrokenContactError).SenderError, ShouldEqual, brokenContactError)
+				var convertedErr moira.SenderBrokenContactError
+				errors.As(err, &convertedErr)
+				So(convertedErr.SenderError, ShouldEqual, brokenContactError)
 			}
 		})
 		Convey("Other errors are returned as is", func() {
@@ -211,7 +215,9 @@ func TestCheckBrokenContactError(t *testing.T) {
 			userNotFoundError := fmt.Errorf("failed to get username uuid: nil returned")
 			err := checkBrokenContactError(logger, userNotFoundError)
 			So(err, ShouldHaveSameTypeAs, moira.SenderBrokenContactError{})
-			So(err.(moira.SenderBrokenContactError).SenderError, ShouldEqual, userNotFoundError)
+			var convertedErr moira.SenderBrokenContactError
+			errors.As(err, &convertedErr)
+			So(convertedErr.SenderError, ShouldEqual, userNotFoundError)
 		})
 	})
 }

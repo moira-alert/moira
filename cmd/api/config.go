@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
 
 	"github.com/xiam/to"
@@ -15,9 +18,27 @@ type config struct {
 	API                 apiConfig                     `yaml:"api"`
 	Web                 webConfig                     `yaml:"web"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
-	Remote              cmd.RemoteConfig              `yaml:"remote"`
-	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
+	Remotes             cmd.RemotesConfig             `yaml:",inline"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
+}
+
+// ClustersMetricTTL parses TTLs of all clusters provided in config
+func (config *config) ClustersMetricTTL() map[moira.ClusterKey]time.Duration {
+	result := make(map[moira.ClusterKey]time.Duration)
+
+	result[moira.DefaultLocalCluster] = to.Duration(config.Redis.MetricsTTL)
+
+	for _, remote := range config.Remotes.Graphite {
+		key := moira.MakeClusterKey(moira.GraphiteRemote, remote.ClusterId)
+		result[key] = to.Duration(remote.MetricsTTL)
+	}
+
+	for _, remote := range config.Remotes.Prometheus {
+		key := moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterId)
+		result[key] = to.Duration(remote.MetricsTTL)
+	}
+
+	return result
 }
 
 type apiConfig struct {
@@ -74,19 +95,18 @@ type featureFlags struct {
 }
 
 func (config *apiConfig) getSettings(
-	localMetricTTL, remoteMetricTTL string,
+	metricsTTL map[moira.ClusterKey]time.Duration,
 	flags api.FeatureFlags,
 ) *api.Config {
 	return &api.Config{
-		EnableCORS:              config.EnableCORS,
-		Listen:                  config.Listen,
-		GraphiteLocalMetricTTL:  to.Duration(localMetricTTL),
-		GraphiteRemoteMetricTTL: to.Duration(remoteMetricTTL),
-		Flags:                   flags,
+		EnableCORS: config.EnableCORS,
+		Listen:     config.Listen,
+		MetricsTTL: metricsTTL,
+		Flags:      flags,
 	}
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool) *api.WebConfig {
+func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
 	webContacts := make([]api.WebContact, 0, len(config.Contacts))
 	for _, configContact := range config.Contacts {
 		contact := api.WebContact{
@@ -99,12 +119,37 @@ func (config *webConfig) getSettings(isRemoteEnabled bool) *api.WebConfig {
 		webContacts = append(webContacts, contact)
 	}
 
+	clusters := []api.MetricSourceCluster{{
+		TriggerSource: moira.GraphiteLocal,
+		ClusterId:     moira.DefaultCluster,
+		ClusterName:   "Graphite Local",
+	}}
+
+	for _, remote := range remotes.Graphite {
+		cluster := api.MetricSourceCluster{
+			TriggerSource: moira.GraphiteRemote,
+			ClusterId:     remote.ClusterId,
+			ClusterName:   remote.ClusterName,
+		}
+		clusters = append(clusters, cluster)
+	}
+
+	for _, remote := range remotes.Prometheus {
+		cluster := api.MetricSourceCluster{
+			TriggerSource: moira.PrometheusRemote,
+			ClusterId:     remote.ClusterId,
+			ClusterName:   remote.ClusterName,
+		}
+		clusters = append(clusters, cluster)
+	}
+
 	return &api.WebConfig{
-		SupportEmail:  config.SupportEmail,
-		RemoteAllowed: isRemoteEnabled,
-		Contacts:      webContacts,
-		FeatureFlags:  config.getFeatureFlags(),
-		Sentry:        config.Sentry.getSettings(),
+		SupportEmail:         config.SupportEmail,
+		RemoteAllowed:        isRemoteEnabled,
+		MetricSourceClusters: clusters,
+		Contacts:             webContacts,
+		FeatureFlags:         config.getFeatureFlags(),
+		Sentry:               config.Sentry.getSettings(),
 	}
 }
 
@@ -157,15 +202,6 @@ func getDefault() config {
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
-		Remote: cmd.RemoteConfig{
-			Timeout:    "60s",
-			MetricsTTL: "7d",
-		},
-		Prometheus: cmd.PrometheusConfig{
-			Timeout:      "60s",
-			MetricsTTL:   "7d",
-			Retries:      1,
-			RetryTimeout: "10s",
-		},
+		Remotes: cmd.RemotesConfig{},
 	}
 }

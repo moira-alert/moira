@@ -55,10 +55,12 @@ var subscription = moira.SubscriptionData{
 }
 
 var trigger = moira.Trigger{
-	ID:      "triggerID-0000000000001",
-	Name:    "test trigger 1",
-	Targets: []string{"test.target.1"},
-	Tags:    []string{"test-tag-1"},
+	ID:            "triggerID-0000000000001",
+	Name:          "test trigger 1",
+	Targets:       []string{"test.target.1"},
+	Tags:          []string{"test-tag-1"},
+	TriggerSource: moira.GraphiteLocal,
+	ClusterId:     moira.DefaultCluster,
 }
 
 var triggerData = moira.TriggerData{
@@ -81,12 +83,36 @@ func TestNotifier(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	database := redis.NewTestDatabase(logger)
-	database.SaveContact(&contact)               //nolint
-	database.SaveSubscription(&subscription)     //nolint
-	database.SaveTrigger(trigger.ID, &trigger)   //nolint
-	database.PushNotificationEvent(&event, true) //nolint
 
-	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil, nil)
+	err := database.SaveContact(&contact)
+	if err != nil {
+		t.Fail()
+		fmt.Printf("Error occurred: %s\n", err.Error())
+		return
+	}
+
+	err = database.SaveSubscription(&subscription)
+	if err != nil {
+		t.Fail()
+		fmt.Printf("Error occurred: %s\n", err.Error())
+		return
+	}
+
+	err = database.SaveTrigger(trigger.ID, &trigger)
+	if err != nil {
+		t.Fail()
+		fmt.Printf("Error occurred: %s\n", err.Error())
+		return
+	}
+
+	err = database.PushNotificationEvent(&event, true)
+	if err != nil {
+		t.Fail()
+		fmt.Printf("Error occurred: %s\n", err.Error())
+		return
+	}
+
+	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(database), nil, nil)
 
 	notifierInstance := notifier.NewNotifier(
 		database,

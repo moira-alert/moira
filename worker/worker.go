@@ -39,7 +39,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			Msg("Worker tries to acquire the lock...")
 		lost, err := worker.lock.Acquire(stop)
 		if err != nil {
-			switch err {
+			switch err { // nolint:errorlint
 			case database.ErrLockAcquireInterrupted:
 				return
 			default:

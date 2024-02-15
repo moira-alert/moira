@@ -49,7 +49,7 @@ func getTagByFieldName(fieldName string) string {
 	var fieldTag string
 	if field, ok := reflect.TypeOf(&trigger).Elem().FieldByName(fieldName); ok {
 		fieldTag = field.Tag.Get("json")
-		fieldTag = strings.Replace(fieldTag, ",omitempty", "", -1)
+		fieldTag = strings.ReplaceAll(fieldTag, ",omitempty", "")
 	}
 	return fieldTag
 }

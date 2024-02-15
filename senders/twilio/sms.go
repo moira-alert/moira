@@ -24,7 +24,7 @@ func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, conta
 	twilioMessage, err := twilio_client.NewMessage(sender.client, sender.APIFromPhone, contact.Value, twilio_client.Body(message))
 
 	if err != nil {
-		return fmt.Errorf("failed to send message to contact %s: %s", contact.Value, err)
+		return fmt.Errorf("failed to send message to contact %s: %w", contact.Value, err)
 	}
 
 	sender.logger.Debug().

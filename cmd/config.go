@@ -1,15 +1,17 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira/image_store/s3"
-	"github.com/moira-alert/moira/metric_source/prometheus"
-	remoteSource "github.com/moira-alert/moira/metric_source/remote"
+	prometheusRemoteSource "github.com/moira-alert/moira/metric_source/prometheus"
+	graphiteRemoteSource "github.com/moira-alert/moira/metric_source/remote"
 	"github.com/xiam/to"
 	"gopkg.in/yaml.v2"
 
@@ -91,6 +93,9 @@ type NotificationConfig struct {
 	// TransactionHeuristicLimit maximum allowable limit, after this limit all notifications
 	// without limit will be taken
 	TransactionHeuristicLimit int64 `yaml:"transaction_heuristic_limit"`
+	// ResaveTime is the time by which the timestamp of notifications with triggers
+	// or metrics on Maintenance is incremented
+	ResaveTime string `yaml:"resave_time"`
 }
 
 // GetSettings returns notification storage configuration
@@ -100,6 +105,7 @@ func (notificationConfig *NotificationConfig) GetSettings() redis.NotificationCo
 		TransactionTimeout:        to.Duration(notificationConfig.TransactionTimeout),
 		TransactionMaxRetries:     notificationConfig.TransactionMaxRetries,
 		TransactionHeuristicLimit: notificationConfig.TransactionHeuristicLimit,
+		ResaveTime:                to.Duration(notificationConfig.ResaveTime),
 	}
 }
 
@@ -147,47 +153,103 @@ type ProfilerConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-// RemoteConfig is remote graphite settings structure
-type RemoteConfig struct {
+// RemotesConfig is designed to be embedded in config files to configure all remote sources
+type RemotesConfig struct {
+	Graphite   []GraphiteRemoteConfig   `yaml:"graphite_remote"`
+	Prometheus []PrometheusRemoteConfig `yaml:"prometheus_remote"`
+}
+
+// Validate returns nil if config is valid, or error if it is malformed
+func (remotes *RemotesConfig) Validate() error {
+	errs := make([]error, 0)
+
+	errs = append(errs, validateRemotes[GraphiteRemoteConfig](remotes.Graphite)...)
+	errs = append(errs, validateRemotes[PrometheusRemoteConfig](remotes.Prometheus)...)
+
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.Join(errs...)
+}
+
+func validateRemotes[T remoteCommon](remotes []T) []error {
+	errs := make([]error, 0)
+
+	keys := make(map[moira.ClusterId]int)
+	for _, remote := range remotes {
+		common := remote.getRemoteCommon()
+		if common.ClusterId == moira.ClusterNotSet {
+			err := fmt.Errorf("cluster id must be set for remote source (name: `%s`, url: `%s`)",
+				common.ClusterName, common.URL,
+			)
+			errs = append(errs, err)
+		}
+		keys[common.ClusterId]++
+	}
+
+	for key, count := range keys {
+		if count > 1 {
+			err := fmt.Errorf("cluster id must be unique, non unique cluster id found: %s", key.String())
+			errs = append(errs, err)
+		}
+	}
+
+	return errs
+}
+
+// RemoteCommonConfig is designed to be embedded in remote configs, It contains fields that are similar for all remotes
+type RemoteCommonConfig struct {
+	// Unique id of the cluster
+	ClusterId moira.ClusterId `yaml:"cluster_id"`
+	// Human-readable name of the cluster
+	ClusterName string `yaml:"cluster_name"`
 	// graphite url e.g http://graphite/render
 	URL string `yaml:"url"`
 	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
 	CheckInterval string `yaml:"check_interval"`
+	// Number of checks that can be run in parallel
+	// If empty will be set to number of cpu cores
+	MaxParallelChecks int `yaml:"max_parallel_checks"`
 	// Moira won't fetch metrics older than this value from remote storage. Note that Moira doesn't delete old data from
 	// remote storage. Large values will lead to OOM problems in checker.
 	// See https://github.com/moira-alert/moira/pull/519
 	MetricsTTL string `yaml:"metrics_ttl"`
+}
+
+type remoteCommon interface {
+	getRemoteCommon() *RemoteCommonConfig
+}
+
+// GraphiteRemoteConfig is remote graphite settings structure
+type GraphiteRemoteConfig struct {
+	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for remote requests
 	Timeout string `yaml:"timeout"`
 	// Username for basic auth
 	User string `yaml:"user"`
 	// Password for basic auth
 	Password string `yaml:"password"`
-	// If true, remote worker will be enabled.
-	Enabled bool `yaml:"enabled"`
+}
+
+func (config GraphiteRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
+	return &config.RemoteCommonConfig
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
-func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
-	return &remoteSource.Config{
+func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSource.Config {
+	return &graphiteRemoteSource.Config{
 		URL:           config.URL,
 		CheckInterval: to.Duration(config.CheckInterval),
 		MetricsTTL:    to.Duration(config.MetricsTTL),
 		Timeout:       to.Duration(config.Timeout),
 		User:          config.User,
 		Password:      config.Password,
-		Enabled:       config.Enabled,
 	}
 }
 
-type PrometheusConfig struct {
-	// Url of prometheus API
-	URL string `yaml:"url"`
-	// Min period to perform triggers re-check
-	CheckInterval string `yaml:"check_interval"`
-	// Moira won't fetch metrics older than this value from prometheus remote storage.
-	// Large values will lead to OOM problems in checker.
-	MetricsTTL string `yaml:"metrics_ttl"`
+// GraphiteRemoteConfig is remote prometheus settings structure
+type PrometheusRemoteConfig struct {
+	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for prometheus api requests
 	Timeout string `yaml:"timeout"`
 	// Number of retries for prometheus api requests
@@ -198,14 +260,15 @@ type PrometheusConfig struct {
 	User string `yaml:"user"`
 	// Password for basic auth
 	Password string `yaml:"password"`
-	// If true, prometheus remote worker will be enabled.
-	Enabled bool `yaml:"enabled"`
+}
+
+func (config PrometheusRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
+	return &config.RemoteCommonConfig
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
-func (config *PrometheusConfig) GetPrometheusSourceSettings() *prometheus.Config {
-	return &prometheus.Config{
-		Enabled:        config.Enabled,
+func (config *PrometheusRemoteConfig) GetPrometheusSourceSettings() *prometheusRemoteSource.Config {
+	return &prometheusRemoteSource.Config{
 		URL:            config.URL,
 		CheckInterval:  to.Duration(config.CheckInterval),
 		MetricsTTL:     to.Duration(config.MetricsTTL),

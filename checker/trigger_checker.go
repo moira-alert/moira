@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"errors"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -42,7 +43,7 @@ func MakeTriggerChecker(
 	until := time.Now().Unix()
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil, ErrTriggerNotExists
 		}
 		return nil, err
@@ -67,11 +68,16 @@ func MakeTriggerChecker(
 		}
 	}
 
+	triggerMetrics, err := metrics.GetCheckMetrics(&trigger)
+	if err != nil {
+		return nil, err
+	}
+
 	triggerChecker := &TriggerChecker{
 		database: dataBase,
 		logger:   triggerLogger,
 		config:   config,
-		metrics:  metrics.GetCheckMetrics(&trigger),
+		metrics:  triggerMetrics,
 		source:   source,
 
 		from:  calculateFrom(lastCheck.Timestamp, trigger.TTL),
@@ -89,11 +95,11 @@ func MakeTriggerChecker(
 
 func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimestamp int64) (*moira.CheckData, error) {
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
-	if err != nil && err != database.ErrNil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return nil, err
 	}
 
-	if err == database.ErrNil {
+	if errors.Is(err, database.ErrNil) {
 		lastCheck = moira.CheckData{
 			Metrics:   make(map[string]moira.MetricState),
 			State:     moira.StateOK,

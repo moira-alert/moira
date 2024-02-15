@@ -10,9 +10,6 @@ import (
 
 	"github.com/moira-alert/moira/checker/worker"
 	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metric_source/prometheus"
-	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
@@ -85,54 +82,40 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Checker)
 
-	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
-
-	localSource := local.Create(database)
-	remoteSource := remote.Create(remoteConfig)
-	prometheusSource, err := prometheus.Create(prometheusConfig, logger)
+	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Failed to initialize prometheus metric source")
+			Msg("Failed to initialize metric sources")
 	}
 
-	// TODO: Abstractions over sources, so that they all are handled the same way
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(
-		localSource,
-		remoteSource,
-		prometheusSource,
-	)
-
-	remoteConfigured, _ := remoteSource.IsConfigured()
-	prometheusConfigured, _ := prometheusSource.IsConfigured()
-
-	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, remoteConfigured, prometheusConfigured)
-	checkerSettings := config.Checker.getSettings(logger)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, clusterKeyList(metricSourceProvider))
+	checkerSettings := config.getSettings(logger)
 
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
 
-	checkerWorker := &worker.Checker{
+	cacheDefaultExpiration := checkerSettings.
+		SourceCheckConfigs[moira.DefaultLocalCluster].
+		CheckInterval
+	checkerWorkerManager := &worker.WorkerManager{
 		Logger:            logger,
 		Database:          database,
 		Config:            checkerSettings,
-		RemoteConfig:      remoteConfig,
-		PrometheusConfig:  prometheusConfig,
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
-		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
-		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),                //nolint
-		PatternCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
+		TriggerCache:      cache.New(cacheDefaultExpiration, time.Minute*60), //nolint
+		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),         //nolint
+		PatternCache:      cache.New(cacheDefaultExpiration, time.Minute*60), //nolint
 	}
-	err = checkerWorker.Start()
+	err = checkerWorkerManager.StartWorkers()
 	if err != nil {
 		logger.Fatal().
 			Error(err).
 			Msg("Failed to start worker check")
 	}
-	defer stopChecker(checkerWorker)
+	defer stopChecker(checkerWorkerManager)
 
 	logger.Info().
 		String("moira_version", MoiraVersion).
@@ -165,10 +148,18 @@ func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics
 	os.Exit(0)
 }
 
-func stopChecker(service *worker.Checker) {
+func stopChecker(service *worker.WorkerManager) {
 	if err := service.Stop(); err != nil {
 		logger.Error().
 			Error(err).
 			Msg("Failed to Stop Moira Checker")
 	}
+}
+
+func clusterKeyList(provider *metricSource.SourceProvider) []moira.ClusterKey {
+	keys := make([]moira.ClusterKey, 0, len(provider.GetAllSources()))
+	for ck := range provider.GetAllSources() {
+		keys = append(keys, ck)
+	}
+	return keys
 }

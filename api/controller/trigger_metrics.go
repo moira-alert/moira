@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/moira-alert/moira"
@@ -51,7 +52,7 @@ func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.
 func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string) (*dto.TriggerMetrics, *api.ErrorResponse) {
 	tts, _, err := GetTriggerEvaluationResult(dataBase, metricSourceProvider, from, to, triggerID, false)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
 		}
 		return nil, api.ErrorInternalServer(err)
@@ -79,7 +80,7 @@ func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSour
 func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID string, removeAllNodataMetrics bool) *api.ErrorResponse {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
 		}
 		return api.ErrorInternalServer(err)
@@ -92,7 +93,7 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return api.ErrorInvalidRequest(fmt.Errorf("trigger check not found"))
 		}
 		return api.ErrorInternalServer(err)
@@ -109,12 +110,15 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 			delete(lastCheck.Metrics, metricName)
 		}
 	}
+
 	lastCheck.UpdateScore()
 	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource); err != nil {
+
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }

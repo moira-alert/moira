@@ -48,5 +48,5 @@ type ErrTriggerHasEmptyTargets struct {
 
 // ErrTriggerHasEmptyTargets implementation with error message
 func (err ErrTriggerHasEmptyTargets) Error() string {
-	return fmt.Sprintf("target t%v has no metrics", strings.Join(err.targets, ", "))
+	return fmt.Sprintf("target %v has no metrics", strings.Join(err.targets, ", "))
 }

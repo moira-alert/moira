@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -21,7 +22,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	if err != nil {
 		return nil, err
 	}
-	request, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(requestBody))
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return request, err
 	}
@@ -80,7 +81,7 @@ func buildRequestURL(template string, trigger moira.TriggerData, contact moira.C
 			(strings.HasPrefix(v, "http://") || strings.HasPrefix(v, "https://")) {
 			value = v
 		}
-		template = strings.Replace(template, k, value, -1)
+		template = strings.ReplaceAll(template, k, value)
 	}
 	return template
 }

@@ -1,6 +1,7 @@
 package remote
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 )
 
 func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Request, error) {
-	req, err := http.NewRequest("GET", remote.config.URL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, remote.config.URL, nil)
 	if err != nil {
 		return nil, err
 	}
