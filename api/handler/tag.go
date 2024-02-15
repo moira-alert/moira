@@ -64,8 +64,7 @@ func createTags(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err := controller.CreateTags(database, &tags)
-	if err != nil {
+	if err := controller.CreateTags(database, &tags); err != nil {
 		render.Render(writer, request, err) //nolint
 	}
 }
