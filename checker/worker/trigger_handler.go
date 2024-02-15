@@ -62,6 +62,16 @@ func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *met
 	defer metrics.TriggersCheckTime.UpdateSince(startedAt)
 
 	err = manager.checkTrigger(triggerID)
+
+	timeSince := time.Since(startedAt)
+	if timeSince > manager.Config.CriticalTimeOfCheck {
+		manager.Logger.Warning().
+			String("trigger_id", triggerID).
+			Error(err).
+			String("time_of_check", timeSince.String()).
+			Msg("It took too long to check trigger")
+	}
+
 	return err
 }
 

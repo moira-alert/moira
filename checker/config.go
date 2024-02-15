@@ -18,6 +18,7 @@ type Config struct {
 	LogTriggersToLevel          map[string]string
 	MetricEventPopBatchSize     int64
 	MetricEventPopDelay         time.Duration
+	CriticalTimeOfCheck         time.Duration
 }
 
 // SourceCheckConfig represents check parameters for a single metric source
