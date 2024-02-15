@@ -84,7 +84,7 @@ func (ch *scheduler) triggerScheduler(stop <-chan struct{}) error {
 func (ch *scheduler) scheduleTriggersToCheck() error {
 	err := ch.validateSource()
 	if err != nil {
-		ch.manager.Logger.Info().
+		ch.manager.Logger.Warning().
 			Error(err).
 			String("cluster_key", ch.clusterKey.String()).
 			Msg("Source is invalid. Stop scheduling trigger checks")

@@ -87,7 +87,7 @@ func (manager *WorkerManager) makeSourceValidator(clusterKey moira.ClusterKey) (
 func (manager *WorkerManager) validateGraphiteLocal() error {
 	now := time.Now().UTC().Unix()
 
-	if manager.lastData+manager.Config.StopCheckingIntervalSeconds < now {
+	if manager.lastData+manager.Config.StopCheckingIntervalSeconds > now {
 		return nil
 	}
 
