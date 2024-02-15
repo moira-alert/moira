@@ -121,7 +121,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 		LogTriggersToLevel:          logTriggersToLevel,
 		MetricEventPopBatchSize:     int64(config.Checker.MetricEventPopBatchSize),
 		MetricEventPopDelay:         to.Duration(config.Checker.MetricEventPopDelay),
-		CriticalTimeOfCheck:         to.Duration(config.CriticalTimeOfCheck),
+		CriticalTimeOfCheck:         to.Duration(config.Checker.CriticalTimeOfCheck),
 	}
 }
 
