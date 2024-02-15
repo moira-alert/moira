@@ -138,9 +138,10 @@ func getDefault() config {
 			LogPrettyFormat: false,
 		},
 		Checker: checkerConfig{
-			LazyTriggersCheckInterval: "10m",
-			StopCheckingInterval:      "30s",
-			CriticalTimeOfCheck:       "1h",
+			LazyTriggersCheckInterval:       "10m",
+			StopCheckingInterval:            "30s",
+			CriticalTimeOfCheck:             "1h",
+			MetricEventTriggerCheckInterval: "30s",
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8092",
