@@ -91,7 +91,7 @@ func (manager *WorkerManager) validateGraphiteLocal() error {
 		return nil
 	}
 
-	return fmt.Errorf("graphite local source invalid: no metrics for %d second", manager.Config.StopCheckingIntervalSeconds)
+	return fmt.Errorf("graphite local source invalid: no metrics for %d second", now-manager.lastData)
 }
 
 func (manager *WorkerManager) startCheckerWorker(w *scheduler) error {
