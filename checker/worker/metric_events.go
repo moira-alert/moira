@@ -84,7 +84,13 @@ func (manager *WorkerManager) handleMetricEvent(pattern string) error {
 	start := time.Now()
 	defer manager.Metrics.MetricEventsHandleTime.UpdateSince(start)
 
-	manager.lastData = time.Now().UTC().Unix()
+	now := time.Now().UTC().Unix()
+	manager.lastData = now
+
+	manager.Logger.Info().
+		Int64("now", now).
+		Msg("checker handle metric event")
+
 	triggerIds, err := manager.Database.GetPatternTriggerIDs(pattern)
 	if err != nil {
 		return err
