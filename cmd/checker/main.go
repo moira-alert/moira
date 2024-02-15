@@ -96,18 +96,16 @@ func main() {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
 
-	cacheDefaultExpiration := checkerSettings.
-		SourceCheckConfigs[moira.DefaultLocalCluster].
-		CheckInterval
+	cacheExpiration := checkerSettings.MetricEventTriggerCheckInterval
 	checkerWorkerManager := &worker.WorkerManager{
 		Logger:            logger,
 		Database:          database,
 		Config:            checkerSettings,
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
-		TriggerCache:      cache.New(cacheDefaultExpiration, time.Minute*60), //nolint
-		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),         //nolint
-		PatternCache:      cache.New(cacheDefaultExpiration, time.Minute*60), //nolint
+		TriggerCache:      cache.New(cacheExpiration, time.Minute*60), //nolint
+		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),  //nolint
+		PatternCache:      cache.New(cacheExpiration, time.Minute*60), //nolint
 	}
 	err = checkerWorkerManager.StartWorkers()
 	if err != nil {

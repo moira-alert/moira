@@ -33,8 +33,8 @@ type localCheckConfig struct {
 }
 
 type checkerConfig struct {
-	// Period for every trigger to perform forced check on
-	NoDataCheckInterval string `yaml:"nodata_check_interval"`
+	// Delay between trigger checks, scheduled due to metric events
+	MetricEventTriggerCheckInterval string `yaml:"metric_event_trigger_check_interval"`
 	// Period for every trigger to cancel forced check (earlier than 'NoDataCheckInterval') if no metrics were received
 	StopCheckingInterval string `yaml:"stop_checking_interval"`
 	// Max period to perform lazy triggers re-check. Note: lazy triggers are triggers which has no subscription for it. Moira will check its state less frequently.
@@ -114,14 +114,14 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 	}
 
 	return &checker.Config{
-		SourceCheckConfigs:          sourceCheckConfigs,
-		LazyTriggersCheckInterval:   to.Duration(config.Checker.LazyTriggersCheckInterval),
-		NoDataCheckInterval:         to.Duration(config.Checker.NoDataCheckInterval),
-		StopCheckingIntervalSeconds: int64(to.Duration(config.Checker.StopCheckingInterval).Seconds()),
-		LogTriggersToLevel:          logTriggersToLevel,
-		MetricEventPopBatchSize:     int64(config.Checker.MetricEventPopBatchSize),
-		MetricEventPopDelay:         to.Duration(config.Checker.MetricEventPopDelay),
-		CriticalTimeOfCheck:         to.Duration(config.Checker.CriticalTimeOfCheck),
+		SourceCheckConfigs:              sourceCheckConfigs,
+		LazyTriggersCheckInterval:       to.Duration(config.Checker.LazyTriggersCheckInterval),
+		StopCheckingIntervalSeconds:     int64(to.Duration(config.Checker.StopCheckingInterval).Seconds()),
+		LogTriggersToLevel:              logTriggersToLevel,
+		MetricEventPopBatchSize:         int64(config.Checker.MetricEventPopBatchSize),
+		MetricEventPopDelay:             to.Duration(config.Checker.MetricEventPopDelay),
+		CriticalTimeOfCheck:             to.Duration(config.Checker.CriticalTimeOfCheck),
+		MetricEventTriggerCheckInterval: to.Duration(config.Checker.MetricEventTriggerCheckInterval),
 	}
 }
 
@@ -138,10 +138,10 @@ func getDefault() config {
 			LogPrettyFormat: false,
 		},
 		Checker: checkerConfig{
-			NoDataCheckInterval:       "60s",
-			LazyTriggersCheckInterval: "10m",
-			StopCheckingInterval:      "30s",
-			CriticalTimeOfCheck:       "1h",
+			LazyTriggersCheckInterval:       "10m",
+			StopCheckingInterval:            "30s",
+			CriticalTimeOfCheck:             "1h",
+			MetricEventTriggerCheckInterval: "30s",
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8092",
