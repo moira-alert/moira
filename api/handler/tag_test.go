@@ -152,9 +152,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 					Triggers: []string{"test1", "test2"},
 					Subscriptions: []moira.SubscriptionData{
 						{
-							Contacts: []string{"test"},
-							Tags:     []string{"test"},
-							ID:       "test-sub",
+							ID: "test-sub",
 						},
 					},
 				},
@@ -187,9 +185,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 			mockDb.EXPECT().GetTagNames().Return([]string{"test"}, nil).Times(1)
 			mockDb.EXPECT().GetTagsSubscriptions([]string{"test"}).Return([]*moira.SubscriptionData{
 				{
-					Contacts: []string{"test"},
-					Tags:     []string{"test"},
-					ID:       "test-sub",
+					ID: "test-sub",
 				},
 			}, nil).Times(1)
 			mockDb.EXPECT().GetTagTriggerIDs("test").Return([]string{"test1", "test2"}, nil).Times(1)
