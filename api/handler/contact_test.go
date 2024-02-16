@@ -25,6 +25,7 @@ const (
 	LoginKey       = "login"
 	defaultContact = "testContact"
 	defaultLogin   = "testLogin"
+	defaultTeamID  = "testTeamID"
 )
 
 func TestGetAllContacts(t *testing.T) {
@@ -336,7 +337,7 @@ func TestCreateNewContact(t *testing.T) {
 		})
 
 		Convey("Trying to create a contact when both userLogin and teamID specified", func() {
-			newContactDto.TeamID = "test"
+			newContactDto.TeamID = defaultTeamID
 			defer func() {
 				newContactDto.TeamID = ""
 			}()
