@@ -128,7 +128,7 @@ func TestUpdateTrigger(t *testing.T) {
 	database = mockDb
 
 	const triggerIDKey = "triggerID"
-	const triggerID = "test"
+	const triggerID = "testID"
 
 	Convey("When updateTrigger was called with normal input", t, func() {
 		urls := []string{
