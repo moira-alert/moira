@@ -148,7 +148,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 		expectedTagsAndSubscriptions := &dto.TagsStatistics{
 			List: []dto.TagStatistics{
 				{
-					TagName:  "test",
+					TagName:  defaultTag,
 					Triggers: []string{"test1", "test2"},
 					Subscriptions: []moira.SubscriptionData{
 						{
@@ -182,13 +182,13 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 		})
 
 		Convey("Successfully get all tags and subscriptions", func() {
-			mockDb.EXPECT().GetTagNames().Return([]string{"test"}, nil).Times(1)
-			mockDb.EXPECT().GetTagsSubscriptions([]string{"test"}).Return([]*moira.SubscriptionData{
+			mockDb.EXPECT().GetTagNames().Return([]string{defaultTag}, nil).Times(1)
+			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{
 				{
 					ID: "test-sub",
 				},
 			}, nil).Times(1)
-			mockDb.EXPECT().GetTagTriggerIDs("test").Return([]string{"test1", "test2"}, nil).Times(1)
+			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{"test1", "test2"}, nil).Times(1)
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodGet, tagStatsRoute, http.NoBody)
@@ -219,19 +219,18 @@ func TestRemoveTag(t *testing.T) {
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-		tag := "test"
 		deletedTagMsg := &dto.MessageResponse{
 			Message: "tag deleted",
 		}
 
 		Convey("Successfully remove tag", func() {
-			mockDb.EXPECT().GetTagTriggerIDs(tag).Return([]string{}, nil).Times(1)
-			mockDb.EXPECT().GetTagsSubscriptions([]string{tag}).Return([]*moira.SubscriptionData{}, nil).Times(1)
-			mockDb.EXPECT().RemoveTag(tag).Return(nil).Times(1)
+			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{}, nil).Times(1)
+			mockDb.EXPECT().RemoveTag(defaultTag).Return(nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+tag, http.NoBody)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", tag))
+			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+defaultTag, http.NoBody)
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", defaultTag))
 
 			removeTag(responseWriter, testRequest)
 
@@ -248,11 +247,11 @@ func TestRemoveTag(t *testing.T) {
 		})
 
 		Convey("Failed to remove tag with an existing trigger", func() {
-			mockDb.EXPECT().GetTagTriggerIDs(tag).Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{defaultTag}, nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+tag, http.NoBody)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", tag))
+			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+defaultTag, http.NoBody)
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", defaultTag))
 
 			removeTag(responseWriter, testRequest)
 
@@ -267,16 +266,16 @@ func TestRemoveTag(t *testing.T) {
 		})
 
 		Convey("Failed to remove tag with an existing subscription", func() {
-			mockDb.EXPECT().GetTagTriggerIDs(tag).Return([]string{}, nil).Times(1)
-			mockDb.EXPECT().GetTagsSubscriptions([]string{tag}).Return([]*moira.SubscriptionData{
+			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{
 				{
 					ID: "test-sub",
 				},
 			}, nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+tag, http.NoBody)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", tag))
+			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+defaultTag, http.NoBody)
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", defaultTag))
 
 			removeTag(responseWriter, testRequest)
 
