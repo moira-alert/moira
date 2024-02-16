@@ -19,6 +19,11 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const (
+	tagRoute      = "/tag/"
+	tagStatsRoute = "/tag/stats"
+)
+
 func TestCreateTags(t *testing.T) {
 	Convey("Test create tags", t, func() {
 		mockCtrl := gomock.NewController(t)
@@ -41,7 +46,7 @@ func TestCreateTags(t *testing.T) {
 			mockDb.EXPECT().CreateTags(emptyTags.TagNames).Return(nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodPost, "/tag", bytes.NewBuffer(jsonTags))
+			testRequest := httptest.NewRequest(http.MethodPost, tagRoute, bytes.NewBuffer(jsonTags))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createTags(responseWriter, testRequest)
@@ -58,7 +63,7 @@ func TestCreateTags(t *testing.T) {
 			mockDb.EXPECT().CreateTags(tags.TagNames).Return(nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodPost, "/tag", bytes.NewBuffer(jsonTags))
+			testRequest := httptest.NewRequest(http.MethodPost, tagRoute, bytes.NewBuffer(jsonTags))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createTags(responseWriter, testRequest)
@@ -89,7 +94,7 @@ func TestGetAllTags(t *testing.T) {
 			mockDb.EXPECT().GetTagNames().Return([]string{}, nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodGet, "/tag", http.NoBody)
+			testRequest := httptest.NewRequest(http.MethodGet, tagRoute, http.NoBody)
 
 			getAllTags(responseWriter, testRequest)
 
@@ -109,7 +114,7 @@ func TestGetAllTags(t *testing.T) {
 			mockDb.EXPECT().GetTagNames().Return([]string{"test1", "test2"}, nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodGet, "/tag", http.NoBody)
+			testRequest := httptest.NewRequest(http.MethodGet, tagRoute, http.NoBody)
 
 			getAllTags(responseWriter, testRequest)
 
@@ -160,7 +165,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 			mockDb.EXPECT().GetTagNames().Return([]string{}, nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodGet, "/tag/stats", http.NoBody)
+			testRequest := httptest.NewRequest(http.MethodGet, tagStatsRoute, http.NoBody)
 			apiLogEntry := middleware.NewLogEntry(logger, testRequest)
 			testRequest = testRequest.WithContext(context.WithValue(testRequest.Context(), chi_middleware.LogEntryCtxKey, apiLogEntry))
 
@@ -190,7 +195,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 			mockDb.EXPECT().GetTagTriggerIDs("test").Return([]string{"test1", "test2"}, nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodGet, "/tag/stats", http.NoBody)
+			testRequest := httptest.NewRequest(http.MethodGet, tagStatsRoute, http.NoBody)
 			apiLogEntry := middleware.NewLogEntry(logger, testRequest)
 			testRequest = testRequest.WithContext(context.WithValue(testRequest.Context(), chi_middleware.LogEntryCtxKey, apiLogEntry))
 
@@ -229,7 +234,7 @@ func TestRemoveTag(t *testing.T) {
 			mockDb.EXPECT().RemoveTag(tag).Return(nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodDelete, "/tag/"+tag, http.NoBody)
+			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+tag, http.NoBody)
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", tag))
 
 			removeTag(responseWriter, testRequest)
@@ -250,7 +255,7 @@ func TestRemoveTag(t *testing.T) {
 			mockDb.EXPECT().GetTagTriggerIDs(tag).Return([]string{"test"}, nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodDelete, "/tag/"+tag, http.NoBody)
+			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+tag, http.NoBody)
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", tag))
 
 			removeTag(responseWriter, testRequest)
@@ -274,7 +279,7 @@ func TestRemoveTag(t *testing.T) {
 			}, nil).Times(1)
 			database = mockDb
 
-			testRequest := httptest.NewRequest(http.MethodDelete, "/tag/"+tag, http.NoBody)
+			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+tag, http.NoBody)
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "tag", tag))
 
 			removeTag(responseWriter, testRequest)
