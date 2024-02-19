@@ -82,6 +82,15 @@ func getTagNamesSorted(database moira.Database) ([]string, error) {
 	return tagsNames, nil
 }
 
+// CreateTags create tags with tag names
+func CreateTags(database moira.Database, tags *dto.TagsData) *api.ErrorResponse {
+	if err := database.CreateTags(tags.TagNames); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+
+	return nil
+}
+
 // RemoveTag deletes tag by name
 func RemoveTag(database moira.Database, tagName string) (*dto.MessageResponse, *api.ErrorResponse) {
 	triggerIDs, err := database.GetTagTriggerIDs(tagName)

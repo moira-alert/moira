@@ -21,7 +21,10 @@ import (
 	"github.com/xiam/to"
 )
 
-const triggerIDKey = "triggerID"
+const (
+	triggerIDKey = "triggerID"
+	defaultTag   = "test"
+)
 
 func TestGetTrigger(t *testing.T) {
 	Convey("Get trigger by id", t, func() {
@@ -129,7 +132,7 @@ func TestUpdateTrigger(t *testing.T) {
 	database = mockDb
 
 	const triggerIDKey = "triggerID"
-	const triggerID = "test"
+	const triggerID = "testID"
 
 	Convey("When updateTrigger was called with normal input", t, func() {
 		urls := []string{
@@ -408,7 +411,7 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 			WarnValue:     newFloat64(1.0),
 			ErrorValue:    newFloat64(2.0),
 			TriggerType:   moira.RisingTrigger,
-			Tags:          []string{"test"},
+			Tags:          []string{defaultTag},
 			TTLState:      &moira.TTLStateOK,
 			TTL:           600,
 			Schedule:      &moira.ScheduleData{},
@@ -452,7 +455,7 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 			WarnValue:     newFloat64(1.0),
 			ErrorValue:    newFloat64(2.0),
 			TriggerType:   moira.RisingTrigger,
-			Tags:          []string{"test"},
+			Tags:          []string{defaultTag},
 			TTLState:      &moira.TTLStateOK,
 			TTL:           600,
 			Schedule:      &moira.ScheduleData{},
@@ -496,7 +499,7 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 			WarnValue:     newFloat64(1.0),
 			ErrorValue:    newFloat64(2.0),
 			TriggerType:   moira.RisingTrigger,
-			Tags:          []string{"test"},
+			Tags:          []string{defaultTag},
 			TTLState:      &moira.TTLStateOK,
 			TTL:           600,
 			Schedule:      &moira.ScheduleData{},
