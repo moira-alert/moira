@@ -35,9 +35,10 @@ func teams(router chi.Router) {
 // usersFilterForTeams is middleware that checks that user exists in this
 func usersFilterForTeams(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		userID := middleware.GetLogin(request)
+		userLogin := middleware.GetLogin(request)
 		teamID := middleware.GetTeamID(request)
-		err := controller.CheckUserPermissionsForTeam(database, teamID, userID)
+		auth := middleware.GetAuth(request)
+		err := controller.CheckUserPermissionsForTeam(database, teamID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return

@@ -13,6 +13,8 @@ import (
 
 func pattern(router chi.Router) {
 	router.Get("/", getAllPatterns)
+
+	router.Use(middleware.AdminOnlyMiddleware())
 	router.Delete("/{pattern}", deletePattern)
 }
 

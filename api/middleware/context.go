@@ -267,3 +267,12 @@ func TeamUserIDContext(next http.Handler) http.Handler {
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
 }
+
+func AuthorizationContext(auth *api.Authorization) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), authKey, auth)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}

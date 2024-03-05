@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -32,10 +33,23 @@ type Sentry struct {
 
 // Config for api configuration variables.
 type Config struct {
-	EnableCORS bool
-	Listen     string
-	MetricsTTL map[moira.ClusterKey]time.Duration
-	Flags      FeatureFlags
+	EnableCORS    bool
+	Listen        string
+	MetricsTTL    map[moira.ClusterKey]time.Duration
+	Flags         FeatureFlags
+	Authorization Authorization
+}
+
+type Authorization struct {
+	AdminList []string
+}
+
+func (auth *Authorization) IsEnabled() bool {
+	return len(auth.AdminList) > 0
+}
+
+func (auth *Authorization) IsAdmin(login string) bool {
+	return slices.Contains(auth.AdminList, login)
 }
 
 // WebConfig is container for web ui configuration parameters.

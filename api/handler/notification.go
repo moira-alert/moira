@@ -10,10 +10,13 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
+	"github.com/moira-alert/moira/api/middleware"
 )
 
 func notification(router chi.Router) {
 	router.Get("/", getNotification)
+
+	router.Use(middleware.AdminOnlyMiddleware())
 	router.Delete("/", deleteNotification)
 	router.Delete("/all", deleteAllNotifications)
 }

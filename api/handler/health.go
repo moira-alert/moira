@@ -8,10 +8,13 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/api/middleware"
 )
 
 func health(router chi.Router) {
 	router.Get("/notifier", getNotifierState)
+
+	router.Use(middleware.AdminOnlyMiddleware())
 	router.Put("/notifier", setNotifierState)
 }
 
