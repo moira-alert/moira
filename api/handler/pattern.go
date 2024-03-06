@@ -12,10 +12,10 @@ import (
 )
 
 func pattern(router chi.Router) {
-	router.Get("/", getAllPatterns)
+	router.Use(middleware.AdminOnlyMiddleware())
 
-	router.With(middleware.AdminOnlyMiddleware()).
-		Delete("/{pattern}", deletePattern)
+	router.Get("/", getAllPatterns)
+	router.Delete("/{pattern}", deletePattern)
 }
 
 // nolint: gofmt,goimports
