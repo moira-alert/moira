@@ -16,9 +16,11 @@ import (
 func notification(router chi.Router) {
 	router.Get("/", getNotification)
 
-	router.Use(middleware.AdminOnlyMiddleware())
-	router.Delete("/", deleteNotification)
-	router.Delete("/all", deleteAllNotifications)
+	router.Route("/", func(r chi.Router) {
+		r.Use(middleware.AdminOnlyMiddleware())
+		r.Delete("/", deleteNotification)
+		r.Delete("/all", deleteAllNotifications)
+	})
 }
 
 // nolint: gofmt,goimports

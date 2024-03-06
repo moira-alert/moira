@@ -14,8 +14,8 @@ import (
 func health(router chi.Router) {
 	router.Get("/notifier", getNotifierState)
 
-	router.Use(middleware.AdminOnlyMiddleware())
-	router.Put("/notifier", setNotifierState)
+	router.With(middleware.AdminOnlyMiddleware()).
+		Put("/notifier", setNotifierState)
 }
 
 // nolint: gofmt,goimports
