@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -49,7 +48,12 @@ func (auth *Authorization) IsEnabled() bool {
 }
 
 func (auth *Authorization) IsAdmin(login string) bool {
-	return slices.Contains(auth.AdminList, login)
+	for _, admin := range auth.AdminList {
+		if admin == login {
+			return true
+		}
+	}
+	return false
 }
 
 // WebConfig is container for web ui configuration parameters.
