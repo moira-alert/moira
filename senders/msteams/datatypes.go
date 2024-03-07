@@ -10,7 +10,7 @@ const White = "ffffff"
 //
 //	{
 //		"name": "10:45",
-//		"value": "someServer = 0.11 (NODATA to WARN)".
+//		"value": "someServer = 0.11 (NODATA to WARN)"
 //	}
 type Fact struct {
 	Name  string `json:"name"`
