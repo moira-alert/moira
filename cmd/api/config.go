@@ -52,8 +52,8 @@ type apiConfig struct {
 
 type Authorization struct {
 	// True if should limit non-admins and give admins additional privileges
-	Enabled   bool     `yaml:"enabled"`
-	// List of logins of users who are considered to be admins 
+	Enabled bool `yaml:"enabled"`
+	// List of logins of users who are considered to be admins
 	AdminList []string `yaml:"admin_list"`
 }
 
