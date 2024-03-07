@@ -46,14 +46,14 @@ type apiConfig struct {
 	Listen string `yaml:"listen"`
 	// If true, CORS for cross-domain requests will be enabled. This option can be used only for debugging purposes.
 	EnableCORS bool `yaml:"enable_cors"`
-	// Authorization configuration
+	// Authorization contains authorization configuration.
 	Authorization Authorization `yaml:"authorization"`
 }
 
 type Authorization struct {
-	// True if should limit non-admins and give admins additional privileges
+	// True if should limit non-admins and give admins additional privileges.
 	Enabled bool `yaml:"enabled"`
-	// List of logins of users who are considered to be admins
+	// List of logins of users who are considered to be admins.
 	AdminList []string `yaml:"admin_list"`
 }
 

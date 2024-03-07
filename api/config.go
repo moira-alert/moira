@@ -39,18 +39,18 @@ type Config struct {
 	Authorization Authorization
 }
 
-// Authorization configuration
+// Authorization contains authorization configuration.
 type Authorization struct {
 	AdminList []string
 	Enabled   bool
 }
 
-// IsEnabled returns true if auth is enabled and false otherwise
+// IsEnabled returns true if auth is enabled and false otherwise.
 func (auth *Authorization) IsEnabled() bool {
 	return auth.Enabled
 }
 
-// IsAdmin checks whether given user is considered an administrator
+// IsAdmin checks whether given user is considered an administrator.
 func (auth *Authorization) IsAdmin(login string) bool {
 	if !auth.IsEnabled() {
 		return false

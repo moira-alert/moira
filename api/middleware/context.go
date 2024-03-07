@@ -268,6 +268,7 @@ func TeamUserIDContext(next http.Handler) http.Handler {
 	})
 }
 
+// AuthorizationContext sets given authorization configuration to request context.
 func AuthorizationContext(auth *api.Authorization) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {

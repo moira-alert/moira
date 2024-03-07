@@ -158,6 +158,7 @@ func SetContextValueForTest(ctx context.Context, key string, value interface{}) 
 	return context.WithValue(ctx, ContextKey(key), value)
 }
 
+// GetAuth gets authorization configuration.
 func GetAuth(request *http.Request) *api.Authorization {
 	return request.Context().Value(authKey).(*api.Authorization)
 }
