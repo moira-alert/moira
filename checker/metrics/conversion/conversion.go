@@ -25,7 +25,7 @@ func MetricName(metrics map[string]metricSource.MetricData) string {
 	return ""
 }
 
-// GetRelations is a function that returns a map with relation between target name and metric.
+// GetRelations is a function that returns a map with relation between target name and metric
 // name for this target.
 func GetRelations(metrics map[string]metricSource.MetricData, declaredAloneMetrics map[string]bool) map[string]string {
 	result := make(map[string]string, len(metrics))
@@ -35,7 +35,7 @@ func GetRelations(metrics map[string]metricSource.MetricData, declaredAloneMetri
 	return result
 }
 
-// Merge is a function that merges two metricSource.MetricData maps and returns a map.
+// Merge is a function that merges two metricSource.MetricData maps and returns a map
 // where represented elements from both maps.
 func Merge(metrics map[string]metricSource.MetricData, other map[string]metricSource.MetricData) map[string]metricSource.MetricData {
 	result := make(map[string]metricSource.MetricData, len(metrics)+len(other))

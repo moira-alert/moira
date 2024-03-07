@@ -130,7 +130,7 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 	return total, nil
 }
 
-// getDelayedTimeInSeconds returns the time, if the difference between notification.
+// getDelayedTimeInSeconds returns the time, if the difference between notification
 // creation and sending time is greater than this time, the notification will be considered delayed.
 func (connector *DbConnector) getDelayedTimeInSeconds() int64 {
 	return int64(connector.notification.DelayedTime.Seconds())
@@ -353,7 +353,7 @@ func (connector *DbConnector) fetchNotifications(to int64, limit int64) ([]*moir
 	return nil, fmt.Errorf("transaction tries limit exceeded")
 }
 
-// getNotificationsInTxWithLimit receives notifications from the database by a certain time.
+// getNotificationsInTxWithLimit receives notifications from the database by a certain time
 // sorted by timestamp in one transaction with or without limit, depending on whether limit is nil.
 func getNotificationsInTxWithLimit(ctx context.Context, tx *redis.Tx, to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	var rng *redis.ZRangeBy

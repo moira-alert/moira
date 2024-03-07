@@ -5,17 +5,17 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-// TriggerTargetMetrics is a map that contains metrics of one target. Keys of this map.
+// TriggerTargetMetrics is a map that contains metrics of one target. Keys of this map
 // are metric names. This map have a methods that helps to prepare metrics for check.
 type TriggerTargetMetrics map[string]metricSource.MetricData
 
-// newTriggerTargetMetricsWithCapacity is a constructor function for TriggerTargetMetrics that creates.
+// newTriggerTargetMetricsWithCapacity is a constructor function for TriggerTargetMetrics that creates
 // a new map with given capacity.
 func newTriggerTargetMetricsWithCapacity(capacity int) TriggerTargetMetrics {
 	return make(TriggerTargetMetrics, capacity)
 }
 
-// NewTriggerTargetMetrics is a constructor function for TriggerTargetMetrics that creates.
+// NewTriggerTargetMetrics is a constructor function for TriggerTargetMetrics that creates
 // a new empty map.
 func NewTriggerTargetMetrics(source FetchedTargetMetrics) TriggerTargetMetrics {
 	result := newTriggerTargetMetricsWithCapacity(len(source))
@@ -25,7 +25,7 @@ func NewTriggerTargetMetrics(source FetchedTargetMetrics) TriggerTargetMetrics {
 	return result
 }
 
-// Populate is a function that takes the list of metric names that first appeared and.
+// Populate is a function that takes the list of metric names that first appeared and
 // adds metrics with this names and empty values.
 func (m TriggerTargetMetrics) Populate(lastMetrics set[string], from, to int64) TriggerTargetMetrics {
 	result := newTriggerTargetMetricsWithCapacity(len(m))
@@ -59,8 +59,8 @@ func NewTriggerMetricsWithCapacity(capacity int) TriggerMetrics {
 	return make(TriggerMetrics, capacity)
 }
 
-// Populate is a function that takes TriggerMetrics and populate targets.
-// that is missing metrics that appear in another targets except the targets that have.
+// Populate is a function that takes TriggerMetrics and populate targets
+// that is missing metrics that appear in another targets except the targets that have
 // only alone metrics.
 func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, declaredAloneMetrics map[string]bool, from int64, to int64) TriggerMetrics {
 	// This one have all metrics that should be in final TriggerMetrics.
@@ -113,9 +113,9 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 	return result
 }
 
-// FilterAloneMetrics is a function that remove alone metrics targets from TriggerMetrics.
+// FilterAloneMetrics is a function that remove alone metrics targets from TriggerMetrics
 // and return this metrics in format map[targetName]MetricData.
-// We split targets that declared as targets with alone metrics.
+// We split targets that declared as targets with alone metrics
 // from targets with multiple metrics.
 //
 //	For example, we have a targets with metrics:
@@ -178,7 +178,7 @@ func (triggerMetrics TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map
 	return result, aloneMetrics, nil
 }
 
-// FindMissingMetrics is a function that returns a map of target names with metric names that are absent in.
+// FindMissingMetrics is a function that returns a map of target names with metric names that are absent in
 // current target but appear in another targets.
 func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set[string]) map[string]set[string] {
 	result := make(map[string]set[string])
@@ -210,8 +210,8 @@ func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set
 	return result
 }
 
-// ConvertForCheck is a function that converts TriggerMetrics with structure.
-// map[TargetName]map[MetricName]MetricData to ConvertedTriggerMetrics.
+// ConvertForCheck is a function that converts TriggerMetrics with structure
+// map[TargetName]map[MetricName]MetricData to ConvertedTriggerMetrics
 // with structure map[MetricName]map[TargetName]MetricData.
 func (m TriggerMetrics) ConvertForCheck() map[string]map[string]metricSource.MetricData {
 	result := make(map[string]map[string]metricSource.MetricData)

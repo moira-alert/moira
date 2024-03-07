@@ -30,8 +30,8 @@ type TriggerChecker struct {
 }
 
 // MakeTriggerChecker initialize new triggerChecker data.
-// if trigger does not exists then return ErrTriggerNotExists error.
-// if trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
+// If trigger does not exists then return ErrTriggerNotExists error.
+// If trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
 func MakeTriggerChecker(
 	triggerID string,
 	dataBase moira.Database,

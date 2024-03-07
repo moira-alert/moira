@@ -71,9 +71,9 @@ const (
 	MustStopCheck    ErrorSeverity = 2
 )
 
-// handlePrepareError is a function that checks error returned from prepareMetrics function. If error.
-// is not serious and check process can be continued first return value became CanContinueCheck and Filled CheckData returned.
-// in the other case first return value became MustStopCheck and error passed to this function is handled.
+// handlePrepareError is a function that checks error returned from prepareMetrics function.
+// If error is not serious and check process can be continued first return value became CanContinueCheck and Filled CheckData returned.
+// In the other case first return value became MustStopCheck and error passed to this function is handled.
 func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckData, err error) (ErrorSeverity, moira.CheckData, error) {
 	switch err.(type) { // nolint:errorlint
 	case ErrTriggerHasSameMetricNames:

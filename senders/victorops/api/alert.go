@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-// CreateAlertRequest the API request to be made to.
+// CreateAlertRequest the API request to be made to
 // create a victorops alert.
 type CreateAlertRequest struct {
 	MessageType       MessageType `json:"message_type,omitempty"`

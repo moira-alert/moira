@@ -35,7 +35,7 @@ func newSetFromTriggerTargetMetrics(metrics TriggerTargetMetrics) set[string] {
 	return result
 }
 
-// diff is a set relative complement operation that returns a new set with elements.
+// diff is a set relative complement operation that returns a new set with elements
 // that appear only in second set.
 func (self set[string]) diff(other set[string]) set[string] {
 	result := make(set[string], len(self))

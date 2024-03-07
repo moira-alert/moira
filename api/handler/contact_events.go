@@ -24,22 +24,22 @@ func contactEvents(router chi.Router) {
 	})
 }
 
-// nolint: gofmt,goimports.
+// nolint: gofmt,goimports
 //
-//	@summary	Get contact events by ID with time range.
-//	@id			get-contact-events-by-id.
-//	@tags		contact.
-//	@produce	json.
-//	@param		contactID	path		string							true	"Contact ID"					default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c).
-//	@param		from		query		string							false	"Start time of the time range"	default(-3hour).
-//	@param		to			query		string							false	"End time of the time range"	default(now).
-//	@success	200			{object}	dto.ContactEventItemList		"Successfully received contact events".
-//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client".
-//	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden".
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found".
-//	@failure	422			{object}	api.ErrorRenderExample			"Render error".
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error".
-//	@router		/contact/{contactID}/events [get].
+//	@summary	Get contact events by ID with time range
+//	@id			get-contact-events-by-id
+//	@tags		contact
+//	@produce	json
+//	@param		contactID	path		string							true	"Contact ID"					default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		from		query		string							false	"Start time of the time range"	default(-3hour)
+//	@param		to			query		string							false	"End time of the time range"	default(now)
+//	@success	200			{object}	dto.ContactEventItemList		"Successfully received contact events"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure	422			{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/contact/{contactID}/events [get]
 func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	fromStr := middleware.GetFromStr(request)

@@ -50,7 +50,7 @@ func getTimeValueFormatter(location *time.Location, format string) chart.ValueFo
 	}
 }
 
-// locationStorage is a container to store.
+// locationStorage is a container to store
 // timezone and provide time value formatter.
 type locationStorage struct {
 	location *time.Location
@@ -70,7 +70,7 @@ func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat 
 	return ""
 }
 
-// getYAxisValuesFormatter returns value formatter.
+// getYAxisValuesFormatter returns value formatter
 // for values on yaxis and resolved maximal formatted value length.
 func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int) {
 	var formatter func(v interface{}) string

@@ -92,7 +92,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// runTelebot starts telegram bot and manages bot subscriptions.
+// runTelebot starts telegram bot and manages bot subscriptions
 // to make sure there is always only one working Poller.
 func (sender *Sender) runTelebot() {
 	workerAction := func(stop <-chan struct{}) error {

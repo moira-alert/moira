@@ -43,7 +43,7 @@ func (b *errUnexpectedAloneMetricBuilder) build() error {
 	return nil
 }
 
-// ErrUnexpectedAloneMetric is an error that fired by checker if alone metrics do not.
+// ErrUnexpectedAloneMetric is an error that fired by checker if alone metrics do not
 // match alone metrics specified in trigger.
 type ErrUnexpectedAloneMetric struct {
 	declared   map[string]bool
@@ -93,7 +93,7 @@ func NewErrEmptyAloneMetricsTarget(targetName string) error {
 	}
 }
 
-// ErrEmptyAloneMetricsTarget is an error that raise in situation when target marked as alone metrics target.
+// ErrEmptyAloneMetricsTarget is an error that raise in situation when target marked as alone metrics target
 // but do not have metrics yet and do not have metrics saved in last check.
 type ErrEmptyAloneMetricsTarget struct {
 	targetName string

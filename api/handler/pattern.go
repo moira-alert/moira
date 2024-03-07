@@ -16,16 +16,16 @@ func pattern(router chi.Router) {
 	router.Delete("/{pattern}", deletePattern)
 }
 
-// nolint: gofmt,goimports.
+// nolint: gofmt,goimports
 //
-//	@summary	Get all patterns.
-//	@id			get-all-patterns.
-//	@tags		pattern.
-//	@produce	json.
-//	@success	200	{object}	dto.PatternList					"Patterns fetched successfully".
-//	@Failure	422	{object}	api.ErrorRenderExample			"Render error".
-//	@Failure	500	{object}	api.ErrorInternalServerExample	"Internal server error".
-//	@router		/pattern [get].
+//	@summary	Get all patterns
+//	@id			get-all-patterns
+//	@tags		pattern
+//	@produce	json
+//	@success	200	{object}	dto.PatternList					"Patterns fetched successfully"
+//	@Failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@Failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/pattern [get]
 func getAllPatterns(writer http.ResponseWriter, request *http.Request) {
 	logger := middleware.GetLoggerEntry(request)
 	patternsList, err := controller.GetAllPatterns(database, logger)
@@ -38,17 +38,17 @@ func getAllPatterns(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports.
+// nolint: gofmt,goimports
 //
-//	@summary	Deletes a Moira pattern.
-//	@id			delete-pattern.
-//	@tags		pattern.
-//	@produce	json.
-//	@param		pattern	path	string	true	"Trigger pattern to operate on"	default(DevOps.my_server.hdd.freespace_mbytes).
-//	@success	200		"Pattern deleted successfully".
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client".
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error".
-//	@router		/pattern/{pattern} [delete].
+//	@summary	Deletes a Moira pattern
+//	@id			delete-pattern
+//	@tags		pattern
+//	@produce	json
+//	@param		pattern	path	string	true	"Trigger pattern to operate on"	default(DevOps.my_server.hdd.freespace_mbytes)
+//	@success	200		"Pattern deleted successfully"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/pattern/{pattern} [delete]
 func deletePattern(writer http.ResponseWriter, request *http.Request) {
 	pattern := chi.URLParam(request, "pattern")
 	if pattern == "" {

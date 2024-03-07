@@ -39,16 +39,16 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 	}
 }
 
-// nolint: gofmt,goimports.
+// nolint: gofmt,goimports
 //
-//	@summary	Get all triggers.
-//	@id			get-all-triggers.
-//	@tags		trigger.
-//	@produce	json.
-//	@success	200	{object}	dto.TriggersList				"Fetched all triggers".
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error".
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error".
-//	@router		/trigger [get].
+//	@summary	Get all triggers
+//	@id			get-all-triggers
+//	@tags		trigger
+//	@produce	json
+//	@success	200	{object}	dto.TriggersList				"Fetched all triggers"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
 	if errorResponse != nil {
@@ -62,16 +62,16 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports.
+// nolint: gofmt,goimports
 //
-//	@summary	Get unused triggers.
-//	@id			get-unused-triggers.
-//	@tags		trigger.
-//	@produce	json.
-//	@success	200	{object}	dto.TriggersList				"Fetched unused triggers".
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error".
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error".
-//	@router		/trigger/unused [get].
+//	@summary	Get unused triggers
+//	@id			get-unused-triggers
+//	@tags		trigger
+//	@produce	json
+//	@success	200	{object}	dto.TriggersList				"Fetched unused triggers"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger/unused [get]
 func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetUnusedTriggerIDs(database)
 	if errorResponse != nil {
@@ -85,22 +85,22 @@ func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports.
-// createTrigger handler creates moira.Trigger.
+// nolint: gofmt,goimports
+// createTrigger handler creates moira.Trigger
 //
-//	@summary	Create a new trigger.
-//	@id			create-trigger.
-//	@tags		trigger.
-//	@accept		json.
-//	@produce	json.
-//	@param		validate	query		bool									false	"For validating targets".
-//	@param		trigger		body		dto.Trigger								true	"Trigger data".
-//	@success	200			{object}	dto.SaveTriggerResponse					"Trigger created successfully".
-//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client".
-//	@failure	422			{object}	api.ErrorRenderExample					"Render error".
-//	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error".
-//	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable".
-//	@router		/trigger [put].
+//	@summary	Create a new trigger
+//	@id			create-trigger
+//	@tags		trigger
+//	@accept		json
+//	@produce	json
+//	@param		validate	query		bool									false	"For validating targets"
+//	@param		trigger		body		dto.Trigger								true	"Trigger data"
+//	@success	200			{object}	dto.SaveTriggerResponse					"Trigger created successfully"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	422			{object}	api.ErrorRenderExample					"Render error"
+//	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
+//	@router		/trigger [put]
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
 	if err != nil {
@@ -189,18 +189,18 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) (time.Du
 	return ttl, nil
 }
 
-// nolint: gofmt,goimports.
+// nolint: gofmt,goimports
 //
-//	@summary	Validates trigger target.
-//	@id			trigger-check.
-//	@tags		trigger.
-//	@accept		json.
-//	@produce	json.
-//	@param		trigger	body		dto.Trigger						true	"Trigger data".
-//	@success	200		{object}	dto.TriggerCheckResponse		"Validation is done, see response body for validation result".
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client".
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error".
-//	@router		/trigger/check [put].
+//	@summary	Validates trigger target
+//	@id			trigger-check
+//	@tags		trigger
+//	@accept		json
+//	@produce	json
+//	@param		trigger	body		dto.Trigger						true	"Trigger data"
+//	@success	200		{object}	dto.TriggerCheckResponse		"Validation is done, see response body for validation result"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger/check [put]
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	response := dto.TriggerCheckResponse{}
@@ -235,27 +235,27 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	render.JSON(writer, request, response)
 }
 
-// nolint: gofmt,goimports.
+// nolint: gofmt,goimports
 //
-//	@summary		Search triggers. Replaces the deprecated `page` path.
-//	@description	You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on.
-//	@description	For example, `/api/trigger/search?tags[0]=test&tags[1]=test1`.
-//	@id				search-triggers.
-//	@tags			trigger.
-//	@produce		json.
-//	@param			onlyProblems	query		boolean							false	"Only include problems"	default(false).
-//	@param			text			query		string							false	"Search text"			default(cpu).
-//	@param			p				query		integer							false	"Page number"			default(0).
-//	@param			size			query		integer							false	"Page size"				default(10).
-//	@param			createPager		query		boolean							false	"Create pager"			default(false).
-//	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c).
-//	@param			createdBy		query		string							false	"Created By"			default(moira.team).
-//	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers".
-//	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client".
-//	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found".
-//	@failure		422				{object}	api.ErrorRenderExample			"Render error".
-//	@failure		500				{object}	api.ErrorInternalServerExample	"Internal server error".
-//	@router			/trigger/search [get].
+//	@summary		Search triggers. Replaces the deprecated `page` path
+//	@description	You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on
+//	@description	For example, `/api/trigger/search?tags[0]=test&tags[1]=test1`
+//	@id				search-triggers
+//	@tags			trigger
+//	@produce		json
+//	@param			onlyProblems	query		boolean							false	"Only include problems"	default(false)
+//	@param			text			query		string							false	"Search text"			default(cpu)
+//	@param			p				query		integer							false	"Page number"			default(0)
+//	@param			size			query		integer							false	"Page size"				default(10)
+//	@param			createPager		query		boolean							false	"Create pager"			default(false)
+//	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param			createdBy		query		string							false	"Created By"			default(moira.team)
+//	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
+//	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure		422				{object}	api.ErrorRenderExample			"Render error"
+//	@failure		500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router			/trigger/search [get]
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
 
@@ -284,18 +284,18 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports.
+// nolint: gofmt,goimports
 //
-//	@summary	Delete triggers pager.
-//	@id			delete-pager.
-//	@tags		trigger.
-//	@produce	json.
-//	@param		pagerID	query		string									false	"Pager ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c).
-//	@success	200		{object}	dto.TriggersSearchResultDeleteResponse	"Successfully deleted pager".
-//	@failure	404		{object}	api.ErrorNotFoundExample				"Resource not found".
-//	@failure	422		{object}	api.ErrorRenderExample					"Render error".
-//	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error".
-//	@router		/trigger/search/pager [delete].
+//	@summary	Delete triggers pager
+//	@id			delete-pager
+//	@tags		trigger
+//	@produce	json
+//	@param		pagerID	query		string									false	"Pager ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200		{object}	dto.TriggersSearchResultDeleteResponse	"Successfully deleted pager"
+//	@failure	404		{object}	api.ErrorNotFoundExample				"Resource not found"
+//	@failure	422		{object}	api.ErrorRenderExample					"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@router		/trigger/search/pager [delete]
 func deletePager(writer http.ResponseWriter, request *http.Request) {
 	pagerID := middleware.GetPagerID(request)
 
@@ -335,8 +335,8 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 }
 
 // Checks if the createdBy field has been set.
-// if the field has been set, searches for triggers with a specific author createdBy.
-// if the field has not been set, searches for triggers with any author.
+// If the field has been set, searches for triggers with a specific author createdBy.
+// If the field has not been set, searches for triggers with any author.
 func getTriggerCreatedBy(request *http.Request) (string, bool) {
 	if createdBy, ok := request.Form["createdBy"]; ok {
 		return createdBy[0], true

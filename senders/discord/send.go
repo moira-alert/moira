@@ -97,7 +97,7 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 	return desc
 }
 
-// buildEventsString builds the string from moira events and limits it to charsForEvents.
+// buildEventsString builds the string from moira events and limits it to charsForEvents
 // if n is negative buildEventsString does not limit the events string.
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool, trigger moira.TriggerData) string {
 	charsForThrottleMsg := 0

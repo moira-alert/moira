@@ -44,7 +44,7 @@ func (it *BytesScanner) Next() (result []byte) {
 	return result
 }
 
-// NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner.
+// NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner
 // which allows scanning for these subslices.
 func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
 	return &BytesScanner{

@@ -137,7 +137,7 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 }
 
 // SaveTrigger sets trigger data by given trigger and triggerID.
-// If trigger already exists, then merge old and new trigger patterns and tags list.
+// If trigger already exists, then merge old and new trigger patterns and tags list
 // and cleanup not used tags and patterns from lists.
 // If given trigger contains new tags then create it.
 // If given trigger has no subscription on it, add it to triggers-without-subscriptions.

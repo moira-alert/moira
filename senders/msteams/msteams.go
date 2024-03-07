@@ -190,7 +190,7 @@ func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger 
 	return title, triggerURI
 }
 
-// buildEventsFacts builds Facts from moira events.
+// buildEventsFacts builds Facts from moira events
 // if n is negative buildEventsFacts does not limit the Facts array.
 func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvents int, throttled bool) []Fact {
 	var facts []Fact //nolint

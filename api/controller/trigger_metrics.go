@@ -11,7 +11,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-// GetTriggerEvaluationResult evaluates every target in trigger and returns.
+// GetTriggerEvaluationResult evaluates every target in trigger and returns
 // result, separated on main and additional targets metrics.
 func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
 	trigger, err := dataBase.GetTrigger(triggerID)

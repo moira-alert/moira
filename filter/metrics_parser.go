@@ -20,7 +20,7 @@ type ParsedMetric struct {
 }
 
 // ParseMetric parses metric from string.
-// supported format: "<metricString> <valueFloat64> <timestampInt64>".
+// Supported format: "<metricString> <valueFloat64> <timestampInt64>".
 func ParseMetric(input []byte) (*ParsedMetric, error) {
 	if !isPrintableASCII(input) {
 		return nil, fmt.Errorf("non-ascii or non-printable chars in metric name: '%s'", input)
