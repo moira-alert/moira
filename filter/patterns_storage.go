@@ -12,7 +12,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// PatternStorage contains pattern tree
+// PatternStorage contains pattern tree.
 type PatternStorage struct {
 	database                moira.Database
 	metrics                 *metrics.FilterMetrics
@@ -23,7 +23,7 @@ type PatternStorage struct {
 	compatibility           Compatibility
 }
 
-// NewPatternStorage creates new PatternStorage struct
+// NewPatternStorage creates new PatternStorage struct.
 func NewPatternStorage(
 	database moira.Database,
 	metrics *metrics.FilterMetrics,
@@ -41,7 +41,7 @@ func NewPatternStorage(
 	return storage, err
 }
 
-// Refresh builds pattern's indexes from redis data
+// Refresh builds pattern's indexes from redis data.
 func (storage *PatternStorage) Refresh() error {
 	newPatterns, err := storage.database.GetPatterns()
 	if err != nil {
@@ -64,7 +64,7 @@ func (storage *PatternStorage) Refresh() error {
 	return nil
 }
 
-// ProcessIncomingMetric validates, parses and matches incoming raw string
+// ProcessIncomingMetric validates, parses and matches incoming raw string.
 func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL time.Duration) *moira.MatchedMetric {
 	storage.metrics.TotalMetricsReceived.Inc()
 	count := storage.metrics.TotalMetricsReceived.Count()

@@ -33,12 +33,12 @@ func (connector *DbConnector) GetTriggersToCheckCount(clusterKey moira.ClusterKe
 	return connector.getTriggersToCheckCount(key)
 }
 
-// AddLocalTriggersToCheck gets trigger IDs and save it to Redis Set
+// AddLocalTriggersToCheck gets trigger IDs and save it to Redis Set.
 func (connector *DbConnector) AddLocalTriggersToCheck(triggerIDs []string) error {
 	return connector.addTriggersToCheck(localTriggersToCheckKey, triggerIDs)
 }
 
-// AddRemoteTriggersToCheck gets remote trigger IDs and save it to Redis Set
+// AddRemoteTriggersToCheck gets remote trigger IDs and save it to Redis Set.
 func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) error {
 	return connector.addTriggersToCheck(remoteTriggersToCheckKey, triggerIDs)
 }
@@ -47,12 +47,12 @@ func (connector *DbConnector) AddPrometheusTriggersToCheck(triggerIDs []string) 
 	return connector.addTriggersToCheck(prometheusTriggersToCheckKey, triggerIDs)
 }
 
-// GetLocalTriggersToCheck return random trigger ID from Redis Set
+// GetLocalTriggersToCheck return random trigger ID from Redis Set.
 func (connector *DbConnector) GetLocalTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(localTriggersToCheckKey, count)
 }
 
-// GetRemoteTriggersToCheck return random remote trigger ID from Redis Set
+// GetRemoteTriggersToCheck return random remote trigger ID from Redis Set.
 func (connector *DbConnector) GetRemoteTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(remoteTriggersToCheckKey, count)
 }
@@ -61,12 +61,12 @@ func (connector *DbConnector) GetPrometheusTriggersToCheck(count int) ([]string,
 	return connector.getTriggersToCheck(prometheusTriggersToCheckKey, count)
 }
 
-// GetLocalTriggersToCheckCount return number of triggers ID to check from Redis Set
+// GetLocalTriggersToCheckCount return number of triggers ID to check from Redis Set.
 func (connector *DbConnector) GetLocalTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(localTriggersToCheckKey)
 }
 
-// GetRemoteTriggersToCheckCount return number of remote triggers ID to check from Redis Set
+// GetRemoteTriggersToCheckCount return number of remote triggers ID to check from Redis Set.
 func (connector *DbConnector) GetRemoteTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(remoteTriggersToCheckKey)
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// GetAllTriggerIDs gets all moira triggerIDs
+// GetAllTriggerIDs gets all moira triggerIDs.
 func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	c := *connector.client
 	triggerIds, err := c.SMembers(connector.context, allTriggersListKey).Result()
@@ -24,7 +24,7 @@ func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
-// GetTriggerIDs returns list of ids of triggers with given cluster key
+// GetTriggerIDs returns list of ids of triggers with given cluster key.
 func (connector *DbConnector) GetTriggerIDs(clusterKey moira.ClusterKey) ([]string, error) {
 	c := *connector.client
 	key, err := makeTriggerListKey(clusterKey)
@@ -70,7 +70,7 @@ func (connector *DbConnector) GetTriggerCount(clusterKeys []moira.ClusterKey) (m
 	return res, nil
 }
 
-// GetTrigger gets trigger and trigger tags by given ID and return it in merged object
+// GetTrigger gets trigger and trigger tags by given ID and return it in merged object.
 func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error) {
 	pipe := (*connector.client).TxPipeline()
 	trigger := pipe.Get(connector.context, triggerKey(triggerID))
@@ -87,7 +87,7 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 }
 
 // GetTriggers returns triggers data by given ids, len of triggerIDs is equal to len of returned values array.
-// If there is no object by current ID, then nil is returned
+// If there is no object by current ID, then nil is returned.
 func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger, error) {
 	pipe := (*connector.client).TxPipeline()
 	for _, triggerID := range triggerIDs {
@@ -115,7 +115,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 	return triggers, nil
 }
 
-// GetPatternTriggerIDs gets trigger list by given pattern
+// GetPatternTriggerIDs gets trigger list by given pattern.
 func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, error) {
 	c := *connector.client
 
@@ -126,7 +126,7 @@ func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, er
 	return triggerIds, nil
 }
 
-// RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern
+// RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern.
 func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	c := *connector.client
 	_, err := c.Del(connector.context, patternTriggersKey(pattern)).Result()
@@ -136,11 +136,11 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	return nil
 }
 
-// SaveTrigger sets trigger data by given trigger and triggerID
-// If trigger already exists, then merge old and new trigger patterns and tags list
-// and cleanup not used tags and patterns from lists
+// SaveTrigger sets trigger data by given trigger and triggerID.
+// If trigger already exists, then merge old and new trigger patterns and tags list.
+// and cleanup not used tags and patterns from lists.
 // If given trigger contains new tags then create it.
-// If given trigger has no subscription on it, add it to triggers-without-subscriptions
+// If given trigger has no subscription on it, add it to triggers-without-subscriptions.
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
 	var oldTrigger *moira.Trigger
 	if existing, err := connector.GetTrigger(triggerID); err == nil {
@@ -266,8 +266,8 @@ func (connector *DbConnector) preSaveTrigger(newTrigger *moira.Trigger, oldTrigg
 }
 
 // RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,
-// Deletes triggerID from containing tags triggers list and from containing patterns triggers list
-// If containing patterns doesn't used in another triggers, then delete this patterns with metrics data
+// deletes triggerID from containing tags triggers list and from containing patterns triggers list.
+// If containing patterns doesn't used in another triggers, then delete this patterns with metrics data.
 func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	trigger, err := connector.GetTrigger(triggerID)
 	if err != nil {
@@ -315,9 +315,9 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 	return nil
 }
 
-// GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
+// GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs.
 // Len of triggerIDs is equal to len of returned values array.
-// If there is no object by current ID, then nil is returned
+// If there is no object by current ID, then nil is returned.
 func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerCheck, error) {
 	pipe := (*connector.client).TxPipeline()
 	for _, triggerID := range triggerIDs {

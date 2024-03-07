@@ -18,19 +18,19 @@ func notification(router chi.Router) {
 	router.Delete("/all", deleteAllNotifications)
 }
 
-// nolint: gofmt,goimports
+// nolint: gofmt,goimports.
 //
-//	@summary	Gets a paginated list of notifications, all notifications are fetched if end = -1 and start = 0
-//	@id			get-notifications
-//	@tags		notification
-//	@produce	json
-//	@param		start	query		int								false	"Default Value: 0"	default(0)
-//	@param		end		query		int								false	"Default Value: -1"	default(-1)
-//	@success	200		{object}	dto.NotificationsList			"Notifications fetched successfully"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/notification [get]
+//	@summary	Gets a paginated list of notifications, all notifications are fetched if end = -1 and start = 0.
+//	@id			get-notifications.
+//	@tags		notification.
+//	@produce	json.
+//	@param		start	query		int								false	"Default Value: 0"	default(0).
+//	@param		end		query		int								false	"Default Value: -1"	default(-1).
+//	@success	200		{object}	dto.NotificationsList			"Notifications fetched successfully".
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client".
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error".
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error".
+//	@router		/notification [get].
 func getNotification(writer http.ResponseWriter, request *http.Request) {
 	urlValues, err := url.ParseQuery(request.URL.RawQuery)
 	if err != nil {
@@ -59,18 +59,18 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports
+// nolint: gofmt,goimports.
 //
-//	@summary	Delete a notification by id
-//	@id			delete-notification
-//	@tags		notification
-//	@param		id	query	string	true	"The ID of deleted notification"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@produce	json
-//	@success	200	{object}	dto.NotificationDeleteResponse	"Notification have been deleted"
-//	@failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/notification [delete]
+//	@summary	Delete a notification by id.
+//	@id			delete-notification.
+//	@tags		notification.
+//	@param		id	query	string	true	"The ID of deleted notification"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c).
+//	@produce	json.
+//	@success	200	{object}	dto.NotificationDeleteResponse	"Notification have been deleted".
+//	@failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client".
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error".
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error".
+//	@router		/notification [delete].
 func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 	urlValues, err := url.ParseQuery(request.URL.RawQuery)
 	if err != nil {

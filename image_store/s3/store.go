@@ -10,7 +10,7 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// StoreImage stores an image in aws s3 and returns the link to it
+// StoreImage stores an image in aws s3 and returns the link to it.
 func (imageStore *ImageStore) StoreImage(image []byte) (string, error) {
 	uploadInput, err := imageStore.buildUploadInput(image)
 	if err != nil {

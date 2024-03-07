@@ -16,7 +16,7 @@ import (
 	_ "go.uber.org/automaxprocs"
 )
 
-// Moira version
+// Moira version.
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"

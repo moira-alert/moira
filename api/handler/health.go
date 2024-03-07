@@ -15,16 +15,16 @@ func health(router chi.Router) {
 	router.Put("/notifier", setNotifierState)
 }
 
-// nolint: gofmt,goimports
+// nolint: gofmt,goimports.
 //
-//	@summary	Get notifier state
-//	@id			get-notifier-state
-//	@tags		health
-//	@produce	json
-//	@success	200	{object}	dto.NotifierState				"Notifier state retrieved"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/health/notifier [get]
+//	@summary	Get notifier state.
+//	@id			get-notifier-state.
+//	@tags		health.
+//	@produce	json.
+//	@success	200	{object}	dto.NotifierState				"Notifier state retrieved".
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error".
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error".
+//	@router		/health/notifier [get].
 func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 	state, err := controller.GetNotifierState(database)
 	if err != nil {

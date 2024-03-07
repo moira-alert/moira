@@ -17,7 +17,7 @@ const (
 	msgLimit   = 15000
 )
 
-// SendEvents sends the events as an alert to opsgenie
+// SendEvents sends the events as an alert to opsgenie.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	createAlertRequest := sender.makeCreateAlertRequest(events, contact, trigger, plots, throttled)
 	_, err := sender.client.Create(context.Background(), createAlertRequest)
@@ -83,7 +83,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 }
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
-// if n is negative buildEventsString does not limit the events string
+// if n is negative buildEventsString does not limit the events string.
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."

@@ -40,7 +40,7 @@ const (
 	mattermostSender  = "mattermost"
 )
 
-// RegisterSenders watch on senders config and register all configured senders
+// RegisterSenders watch on senders config and register all configured senders.
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
 	for _, senderSettings := range notifier.config.Senders {
@@ -94,7 +94,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 	return nil
 }
 
-// RegisterSender adds sender for notification type and registers metrics
+// RegisterSender adds sender for notification type and registers metrics.
 func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error {
 	var senderIdent string
 	senderType, ok := senderSettings["type"].(string)
@@ -138,7 +138,7 @@ func (notifier *StandardNotifier) runSenders(sender moira.Sender, eventsChannel 
 	}
 }
 
-// StopSenders close all sending channels
+// StopSenders close all sending channels.
 func (notifier *StandardNotifier) StopSenders() {
 	for _, ch := range notifier.senders {
 		close(ch)

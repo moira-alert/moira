@@ -15,13 +15,13 @@ const (
 	// thresholdGapCoefficient = 0.25
 )
 
-// threshold represents threshold parameters
+// threshold represents threshold parameters.
 type threshold struct {
 	thresholdType string
 	yCoordinate   float64
 }
 
-// newThreshold returns described threshold item
+// newThreshold returns described threshold item.
 func newThreshold(triggerType, thresholdType string, thresholdValue, higherLimit float64) *threshold {
 	var yCoordinate float64
 	if triggerType == moira.RisingTrigger {
@@ -35,7 +35,7 @@ func newThreshold(triggerType, thresholdType string, thresholdValue, higherLimit
 	}
 }
 
-// getThresholdSeriesList returns collection of thresholds and annotations
+// getThresholdSeriesList returns collection of thresholds and annotations.
 func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limits plotLimits) []chart.Series {
 	thresholdSeriesList := make([]chart.Series, 0)
 	if trigger.TriggerType == moira.ExpressionTrigger {
@@ -50,7 +50,7 @@ func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limit
 	return thresholdSeriesList
 }
 
-// generateThresholds returns thresholds available for plot
+// generateThresholds returns thresholds available for plot.
 func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold {
 	thresholds := make([]*threshold, 0)
 	// No thresholds required
@@ -95,7 +95,7 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold 
 	return thresholds
 }
 
-// generateThresholdSeries returns threshold series
+// generateThresholdSeries returns threshold series.
 func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limits plotLimits) chart.TimeSeries {
 	thresholdSeries := chart.TimeSeries{
 		Name:    thresholdSerie,
@@ -110,7 +110,7 @@ func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limit
 }
 
 /**
-// generateAnnotationSeries returns threshold annotation series
+// generateAnnotationSeries returns threshold annotation series.
 func (threshold *threshold) generateAnnotationSeries(theme moira.PlotTheme, limits plotLimits) chart.AnnotationSeries {
 	annotationSeries := chart.AnnotationSeries{
 		Annotations: []chart.Value2{

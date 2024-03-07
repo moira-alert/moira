@@ -19,7 +19,7 @@ var exprErrFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ER
 
 var exprCache = cache.New(cache.NoExpiration, cache.NoExpiration)
 
-// ErrInvalidExpression represents bad expression or its state error
+// ErrInvalidExpression represents bad expression or its state error.
 type ErrInvalidExpression struct {
 	internalError error
 }
@@ -28,7 +28,7 @@ func (err ErrInvalidExpression) Error() string {
 	return err.internalError.Error()
 }
 
-// TriggerExpression represents trigger expression handler parameters, what can be used for trigger expression handling
+// TriggerExpression represents trigger expression handler parameters, what can be used for trigger expression handling.
 type TriggerExpression struct {
 	Expression *string
 
@@ -41,7 +41,7 @@ type TriggerExpression struct {
 	PreviousState           moira.State
 }
 
-// Get realizing govaluate.Parameters interface used in evaluable expression
+// Get realizing govaluate.Parameters interface used in evaluable expression.
 func (triggerExpression TriggerExpression) Get(name string) (interface{}, error) {
 	name = strings.ToLower(name)
 
@@ -77,7 +77,7 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 	}
 }
 
-// Evaluate gets trigger expression and evaluates it for given parameters using govaluate
+// Evaluate gets trigger expression and evaluates it for given parameters using govaluate.
 func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	expr, err := getExpression(triggerExpression)
 	if err != nil {

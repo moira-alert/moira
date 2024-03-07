@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/moira/index/mapping"
 )
 
-// Write adds moira.TriggerChecks to TriggerIndex
+// Write adds moira.TriggerChecks to TriggerIndex.
 func (index *TriggerIndex) Write(checks []*moira.TriggerCheck) error {
 	batch := index.index.NewBatch()
 	defer batch.Reset()
@@ -22,7 +22,7 @@ func (index *TriggerIndex) Write(checks []*moira.TriggerCheck) error {
 	return index.index.Batch(batch)
 }
 
-// used as abstraction
+// used as abstraction.
 func (index *TriggerIndex) batchIndexTriggerCheck(batch *bleve.Batch, triggerCheck *moira.TriggerCheck) error {
 	return batch.Index(triggerCheck.ID, mapping.CreateIndexedTrigger(triggerCheck))
 }

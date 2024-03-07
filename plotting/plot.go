@@ -13,17 +13,17 @@ const (
 	plotNameLen = 40
 )
 
-// ErrNoPointsToRender is used to prevent unnecessary render calls
+// ErrNoPointsToRender is used to prevent unnecessary render calls.
 type ErrNoPointsToRender struct {
 	triggerID string
 }
 
-// ErrNoPointsToRender implementation with detailed error message
+// ErrNoPointsToRender implementation with detailed error message.
 func (err ErrNoPointsToRender) Error() string {
 	return fmt.Sprintf("no points found to render trigger: %s", err.triggerID)
 }
 
-// Plot represents plot structure to render
+// Plot represents plot structure to render.
 type Plot struct {
 	theme    moira.PlotTheme
 	location *time.Location
@@ -31,7 +31,7 @@ type Plot struct {
 	height   int
 }
 
-// GetPlotTemplate returns plot template
+// GetPlotTemplate returns plot template.
 func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 	plotTheme, err := getPlotTheme(theme)
 	if err != nil {
@@ -48,7 +48,7 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 	}, nil
 }
 
-// GetRenderable returns go-chart to render
+// GetRenderable returns go-chart to render.
 func (plot *Plot) GetRenderable(targetName string, trigger *moira.Trigger, metricsData []metricSource.MetricData) (chart.Chart, error) {
 	var renderable chart.Chart
 

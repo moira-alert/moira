@@ -6,7 +6,7 @@ import (
 
 type AloneMetrics map[string]metricSource.MetricData
 
-// NewAloneMetricsWithCapacity is a constructor function for AloneMetrics
+// NewAloneMetricsWithCapacity is a constructor function for AloneMetrics.
 func NewAloneMetricsWithCapacity(capacity int) AloneMetrics {
 	return make(map[string]metricSource.MetricData, capacity)
 }
@@ -14,23 +14,23 @@ func NewAloneMetricsWithCapacity(capacity int) AloneMetrics {
 // Populate is a method that tries to restore alone metrics that were in last check but absent in current check.
 // For example lastCheckMetricsToTargetRelation is:
 //
-//	{
+//	{.
 //		"t2": "metric.name.1",
 //		"t3": "metric.name.2",
-//	}
+//	}.
 //
-// and current alone metrics are
+// and current alone metrics are.
 //
-//	{
-//		"t2": metricSource.MetricData{Name: "metric.name.1"}
-//	}
+//	{.
+//		"t2": metricSource.MetricData{Name: "metric.name.1"}.
+//	}.
 //
 // result will be:
 //
-//	{
+//	{.
 //		"t2": metricSource.MetricData{Name: "metric.name.1"},
 //		"t3": metricSource.MetricData{Name: "metric.name.2"},
-//	}
+//	}.
 func (m AloneMetrics) Populate(lastCheckMetricsToTargetRelation map[string]string, declaredAloneMetrics map[string]bool, from, to int64) (AloneMetrics, error) {
 	result := NewAloneMetricsWithCapacity(len(m))
 

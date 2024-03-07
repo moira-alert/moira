@@ -18,11 +18,11 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 )
 
-// RedisConfig is a redis config structure that initialises at the start of moira
+// RedisConfig is a redis config structure that initialises at the start of moira.
 // Redis configuration depends on fields specified in redis config section:
-// 1. Use fields MasterName and Addrs to enable Redis Sentinel support
-// 2. Specify two or more comma-separated Addrs to enable cluster support
-// 3. Otherwise, standalone configuration is enabled
+// 1. Use fields MasterName and Addrs to enable Redis Sentinel support.
+// 2. Specify two or more comma-separated Addrs to enable cluster support.
+// 3. Otherwise, standalone configuration is enabled.
 type RedisConfig struct {
 	// Redis Sentinel master name
 	MasterName string `yaml:"master_name"`
@@ -49,7 +49,7 @@ type RedisConfig struct {
 	MaxRetries int `yaml:"max_retries"`
 }
 
-// GetSettings returns redis config parsed from moira config files
+// GetSettings returns redis config parsed from moira config files.
 func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 	return redis.DatabaseConfig{
 		MasterName:   config.MasterName,
@@ -64,8 +64,8 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 	}
 }
 
-// NotificationHistoryConfig is the config which coordinates interaction with notification statistics
-// e.g. how much time should we store it, or how many history items can we request from database
+// NotificationHistoryConfig is the config which coordinates interaction with notification statistics.
+// e.g. how much time should we store it, or how many history items can we request from database.
 type NotificationHistoryConfig struct {
 	// Time which moira should store contacts and theirs events history
 	NotificationHistoryTTL string `yaml:"ttl"`
@@ -73,7 +73,7 @@ type NotificationHistoryConfig struct {
 	NotificationHistoryQueryLimit int `yaml:"query_limit"`
 }
 
-// GetSettings returns notification history storage policy configuration
+// GetSettings returns notification history storage policy configuration.
 func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.NotificationHistoryConfig {
 	return redis.NotificationHistoryConfig{
 		NotificationHistoryTTL:        to.Duration(notificationHistoryConfig.NotificationHistoryTTL),
@@ -81,7 +81,7 @@ func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.
 	}
 }
 
-// NotificationConfig is a config that stores the necessary configuration of the notifier
+// NotificationConfig is a config that stores the necessary configuration of the notifier.
 type NotificationConfig struct {
 	// Need to determine if notification is delayed - the difference between creation time and sending time
 	// is greater than DelayedTime
@@ -98,7 +98,7 @@ type NotificationConfig struct {
 	ResaveTime string `yaml:"resave_time"`
 }
 
-// GetSettings returns notification storage configuration
+// GetSettings returns notification storage configuration.
 func (notificationConfig *NotificationConfig) GetSettings() redis.NotificationConfig {
 	return redis.NotificationConfig{
 		DelayedTime:               to.Duration(notificationConfig.DelayedTime),
@@ -109,7 +109,7 @@ func (notificationConfig *NotificationConfig) GetSettings() redis.NotificationCo
 	}
 }
 
-// GraphiteConfig is graphite metrics config structure that initialises at the start of moira
+// GraphiteConfig is graphite metrics config structure that initialises at the start of moira.
 type GraphiteConfig struct {
 	// If true, graphite sender will be enabled.
 	Enabled bool `yaml:"enabled"`
@@ -123,7 +123,7 @@ type GraphiteConfig struct {
 	Interval string `yaml:"interval"`
 }
 
-// GetSettings returns graphite metrics config parsed from moira config files
+// GetSettings returns graphite metrics config parsed from moira config files.
 func (graphiteConfig *GraphiteConfig) GetSettings() metrics.GraphiteRegistryConfig {
 	return metrics.GraphiteRegistryConfig{
 		Enabled:      graphiteConfig.Enabled,
@@ -134,32 +134,32 @@ func (graphiteConfig *GraphiteConfig) GetSettings() metrics.GraphiteRegistryConf
 	}
 }
 
-// LoggerConfig is logger settings structure that initialises at the start of moira
+// LoggerConfig is logger settings structure that initialises at the start of moira.
 type LoggerConfig struct {
 	LogFile         string `yaml:"log_file"`
 	LogLevel        string `yaml:"log_level"`
 	LogPrettyFormat bool   `yaml:"log_pretty_format"`
 }
 
-// TelemetryConfig is settings for listener, pprof, graphite
+// TelemetryConfig is settings for listener, pprof, graphite.
 type TelemetryConfig struct {
 	Listen   string         `yaml:"listen"`
 	Pprof    ProfilerConfig `yaml:"pprof"`
 	Graphite GraphiteConfig `yaml:"graphite"`
 }
 
-// ProfilerConfig is pprof settings structure that initialises at the start of moira
+// ProfilerConfig is pprof settings structure that initialises at the start of moira.
 type ProfilerConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-// RemotesConfig is designed to be embedded in config files to configure all remote sources
+// RemotesConfig is designed to be embedded in config files to configure all remote sources.
 type RemotesConfig struct {
 	Graphite   []GraphiteRemoteConfig   `yaml:"graphite_remote"`
 	Prometheus []PrometheusRemoteConfig `yaml:"prometheus_remote"`
 }
 
-// Validate returns nil if config is valid, or error if it is malformed
+// Validate returns nil if config is valid, or error if it is malformed.
 func (remotes *RemotesConfig) Validate() error {
 	errs := make([]error, 0)
 
@@ -197,7 +197,7 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 	return errs
 }
 
-// RemoteCommonConfig is designed to be embedded in remote configs, It contains fields that are similar for all remotes
+// RemoteCommonConfig is designed to be embedded in remote configs, It contains fields that are similar for all remotes.
 type RemoteCommonConfig struct {
 	// Unique id of the cluster
 	ClusterId moira.ClusterId `yaml:"cluster_id"`
@@ -220,7 +220,7 @@ type remoteCommon interface {
 	getRemoteCommon() *RemoteCommonConfig
 }
 
-// GraphiteRemoteConfig is remote graphite settings structure
+// GraphiteRemoteConfig is remote graphite settings structure.
 type GraphiteRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for remote requests
@@ -235,7 +235,7 @@ func (config GraphiteRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
 	return &config.RemoteCommonConfig
 }
 
-// GetRemoteSourceSettings returns remote config parsed from moira config files
+// GetRemoteSourceSettings returns remote config parsed from moira config files.
 func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSource.Config {
 	return &graphiteRemoteSource.Config{
 		URL:           config.URL,
@@ -247,7 +247,7 @@ func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSou
 	}
 }
 
-// GraphiteRemoteConfig is remote prometheus settings structure
+// GraphiteRemoteConfig is remote prometheus settings structure.
 type PrometheusRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for prometheus api requests
@@ -266,7 +266,7 @@ func (config PrometheusRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
 	return &config.RemoteCommonConfig
 }
 
-// GetRemoteSourceSettings returns remote config parsed from moira config files
+// GetRemoteSourceSettings returns remote config parsed from moira config files.
 func (config *PrometheusRemoteConfig) GetPrometheusSourceSettings() *prometheusRemoteSource.Config {
 	return &prometheusRemoteSource.Config{
 		URL:            config.URL,
@@ -280,12 +280,12 @@ func (config *PrometheusRemoteConfig) GetPrometheusSourceSettings() *prometheusR
 	}
 }
 
-// ImageStoreConfig defines the configuration for all the image stores to be initialized by InitImageStores
+// ImageStoreConfig defines the configuration for all the image stores to be initialized by InitImageStores.
 type ImageStoreConfig struct {
 	S3 s3.Config `yaml:"s3"`
 }
 
-// ReadConfig parses config file by the given path into Moira-used type
+// ReadConfig parses config file by the given path into Moira-used type.
 func ReadConfig(configFileName string, config interface{}) error {
 	configYaml, err := os.ReadFile(configFileName)
 	if err != nil {
@@ -298,7 +298,7 @@ func ReadConfig(configFileName string, config interface{}) error {
 	return nil
 }
 
-// PrintConfig prints config to stdout
+// PrintConfig prints config to stdout.
 func PrintConfig(config interface{}) {
 	d, _ := yaml.Marshal(&config)
 	fmt.Println(string(d))

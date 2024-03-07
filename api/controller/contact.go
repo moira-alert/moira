@@ -15,7 +15,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// GetAllContacts gets all moira contacts
+// GetAllContacts gets all moira contacts.
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
 	contacts, err := database.GetAllContacts()
 	if err != nil {
@@ -27,7 +27,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	return &contactsList, nil
 }
 
-// GetContactById gets notification contact by its id string
+// GetContactById gets notification contact by its id string.
 func GetContactById(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
 	contact, err := database.GetContact(contactID)
 	if err != nil {
@@ -45,7 +45,7 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 	return contactToReturn, nil
 }
 
-// CreateContact creates new notification contact for current user
+// CreateContact creates new notification contact for current user.
 func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin, teamID string) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified"))
@@ -82,7 +82,7 @@ func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin, tea
 	return nil
 }
 
-// UpdateContact updates notification contact for current user
+// UpdateContact updates notification contact for current user.
 func UpdateContact(dataBase moira.Database, contactDTO dto.Contact, contactData moira.ContactData) (dto.Contact, *api.ErrorResponse) {
 	contactData.Type = contactDTO.Type
 	contactData.Value = contactDTO.Value
@@ -95,7 +95,7 @@ func UpdateContact(dataBase moira.Database, contactDTO dto.Contact, contactData 
 	return contactDTO, nil
 }
 
-// RemoveContact deletes notification contact for current user and remove contactID from all subscriptions
+// RemoveContact deletes notification contact for current user and remove contactID from all subscriptions.
 func RemoveContact(database moira.Database, contactID string, userLogin string, teamID string) *api.ErrorResponse { //nolint:gocyclo
 	subscriptionIDs := make([]string, 0)
 	if userLogin != "" {
@@ -160,7 +160,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 	return nil
 }
 
-// SendTestContactNotification push test notification to verify the correct contact settings
+// SendTestContactNotification push test notification to verify the correct contact settings.
 func SendTestContactNotification(dataBase moira.Database, contactID string) *api.ErrorResponse {
 	eventData := &moira.NotificationEvent{
 		ContactID: contactID,
@@ -176,7 +176,7 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 	return nil
 }
 
-// CheckUserPermissionsForContact checks contact for existence and permissions for given user
+// CheckUserPermissionsForContact checks contact for existence and permissions for given user.
 func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, userLogin string) (moira.ContactData, *api.ErrorResponse) {
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {

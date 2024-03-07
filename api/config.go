@@ -24,7 +24,7 @@ type FeatureFlags struct {
 	IsReadonlyEnabled                bool `json:"isReadonlyEnabled" example:"false"`
 }
 
-// Sentry - config for sentry settings
+// Sentry - config for sentry settings.
 type Sentry struct {
 	DSN      string `json:"dsn,omitempty" example:"https://secret@sentry.host"`
 	Platform string `json:"platform,omitempty" example:"dev"`
@@ -48,7 +48,7 @@ type WebConfig struct {
 	Sentry               Sentry                `json:"sentry"`
 }
 
-// MetricSourceCluster contains data about supported metric source cluster
+// MetricSourceCluster contains data about supported metric source cluster.
 type MetricSourceCluster struct {
 	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_remote"`
 	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`

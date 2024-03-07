@@ -9,20 +9,20 @@ import (
 
 const lockRetryDelay = time.Second * 5
 
-// Action is the shorthand to `func(stop <-chan struct{}) error`
+// Action is the shorthand to `func(stop <-chan struct{}) error`.
 type Action func(stop <-chan struct{}) error
 
-// NewWorker creates Worker
+// NewWorker creates Worker.
 func NewWorker(name string, logger moira.Logger, lock moira.Lock, action Action) *Worker {
 	return &Worker{name: name, logger: logger, lock: lock, action: action, lockRetryDelay: lockRetryDelay}
 }
 
-// SetLockRetryDelay changes the delay between unsuccessful acquire attempts of the lock
+// SetLockRetryDelay changes the delay between unsuccessful acquire attempts of the lock.
 func (worker *Worker) SetLockRetryDelay(lockRetryDelay time.Duration) {
 	worker.lockRetryDelay = lockRetryDelay
 }
 
-// Worker simplifies usage of the lock
+// Worker simplifies usage of the lock.
 type Worker struct {
 	name           string
 	logger         moira.Logger
@@ -31,7 +31,7 @@ type Worker struct {
 	lockRetryDelay time.Duration
 }
 
-// Run the worker
+// Run the worker.
 func (worker *Worker) Run(stop <-chan struct{}) {
 	for {
 		worker.logger.Info().

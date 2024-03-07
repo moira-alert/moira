@@ -34,7 +34,7 @@ func (m FetchedTargetMetrics) CleanWildcards() FetchedTargetMetrics {
 	return result
 }
 
-// Deduplicate is a function that checks if FetchedPatternMetrics have a two or more metrics with
+// Deduplicate is a function that checks if FetchedPatternMetrics have a two or more metrics with.
 // the same name and returns new FetchedPatternMetrics without duplicates and slice of duplicated metrics names.
 func (m FetchedTargetMetrics) Deduplicate() (FetchedTargetMetrics, []string) {
 	deduplicated := NewFetchedTargetMetricsWithCapacity(len(m))
@@ -51,7 +51,7 @@ func (m FetchedTargetMetrics) Deduplicate() (FetchedTargetMetrics, []string) {
 	return deduplicated, duplicates
 }
 
-// FetchedMetrics represent collections of metrics associated with target name
+// FetchedMetrics represent collections of metrics associated with target name.
 // There is a map where keys are target names and values are maps of metrics with metric names as keys.
 type FetchedMetrics map[string]FetchedTargetMetrics
 

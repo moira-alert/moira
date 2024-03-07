@@ -16,15 +16,15 @@ func user(router chi.Router) {
 	router.Get("/settings", getUserSettings)
 }
 
-// nolint: gofmt,goimports
+// nolint: gofmt,goimports.
 //
-//	@summary	Gets the username of the authenticated user if it is available
-//	@id			get-user-name
-//	@tags		user
-//	@produce	json
-//	@success	200	{object}	dto.User				"User name fetched successfully"
-//	@failure	422	{object}	api.ErrorRenderExample	"Render error"
-//	@router		/user [get]
+//	@summary	Gets the username of the authenticated user if it is available.
+//	@id			get-user-name.
+//	@tags		user.
+//	@produce	json.
+//	@success	200	{object}	dto.User				"User name fetched successfully".
+//	@failure	422	{object}	api.ErrorRenderExample	"Render error".
+//	@router		/user [get].
 func getUserName(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	if err := render.Render(writer, request, &dto.User{Login: userLogin}); err != nil {
@@ -33,16 +33,16 @@ func getUserName(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports
+// nolint: gofmt,goimports.
 //
-//	@summary	Get the user's contacts and subscriptions
-//	@id			get-user-settings
-//	@tags		user
-//	@produce	json
-//	@success	200	{object}	dto.UserSettings				"Settings fetched successfully"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/user/settings [get]
+//	@summary	Get the user's contacts and subscriptions.
+//	@id			get-user-settings.
+//	@tags		user.
+//	@produce	json.
+//	@success	200	{object}	dto.UserSettings				"Settings fetched successfully".
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error".
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error".
+//	@router		/user/settings [get].
 func getUserSettings(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	userSettings, err := controller.GetUserSettings(database, userLogin)

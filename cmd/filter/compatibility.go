@@ -4,8 +4,8 @@ import (
 	"github.com/moira-alert/moira/filter"
 )
 
-// Compatibility struct contains feature-flags that give user control over
-// features supported by different versions of graphit compatible with moira
+// Compatibility struct contains feature-flags that give user control over.
+// features supported by different versions of graphit compatible with moira.
 type compatibility struct {
 	// Controls how regices in tag matching are treated
 	// If false (default value), regex will match start of the string strictly. 'tag~=foo' is equivalent to 'tag~=^foo.*'

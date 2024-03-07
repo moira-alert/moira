@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// GetUserSubscriptions get all user subscriptions
+// GetUserSubscriptions get all user subscriptions.
 func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.SubscriptionList, *api.ErrorResponse) {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
@@ -35,7 +35,7 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 	return subscriptionsList, nil
 }
 
-// CreateSubscription create or update subscription
+// CreateSubscription create or update subscription.
 func CreateSubscription(dataBase moira.Database, userLogin, teamID string, subscription *dto.Subscription) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateSubscription: cannot create subscription when both userLogin and teamID specified"))
@@ -65,7 +65,7 @@ func CreateSubscription(dataBase moira.Database, userLogin, teamID string, subsc
 	return nil
 }
 
-// UpdateSubscription updates existing subscription
+// UpdateSubscription updates existing subscription.
 func UpdateSubscription(dataBase moira.Database, subscriptionID string, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
 	subscription.ID = subscriptionID
 	if subscription.TeamID == "" {
@@ -78,7 +78,7 @@ func UpdateSubscription(dataBase moira.Database, subscriptionID string, userLogi
 	return nil
 }
 
-// RemoveSubscription deletes subscription
+// RemoveSubscription deletes subscription.
 func RemoveSubscription(database moira.Database, subscriptionID string) *api.ErrorResponse {
 	if err := database.RemoveSubscription(subscriptionID); err != nil {
 		return api.ErrorInternalServer(err)
@@ -86,7 +86,7 @@ func RemoveSubscription(database moira.Database, subscriptionID string) *api.Err
 	return nil
 }
 
-// SendTestNotification push test notification to verify the correct notification settings
+// SendTestNotification push test notification to verify the correct notification settings.
 func SendTestNotification(database moira.Database, subscriptionID string) *api.ErrorResponse {
 	eventData := &moira.NotificationEvent{
 		SubscriptionID: &subscriptionID,
@@ -104,7 +104,7 @@ func SendTestNotification(database moira.Database, subscriptionID string) *api.E
 	return nil
 }
 
-// CheckUserPermissionsForSubscription checks subscription for existence and permissions for given user
+// CheckUserPermissionsForSubscription checks subscription for existence and permissions for given user.
 func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID string, userLogin string) (moira.SubscriptionData, *api.ErrorResponse) {
 	subscription, err := dataBase.GetSubscription(subscriptionID)
 	if err != nil {

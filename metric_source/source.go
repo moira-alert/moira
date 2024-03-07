@@ -1,13 +1,13 @@
 package metricsource
 
-// MetricSource implements graphite metrics source abstraction
+// MetricSource implements graphite metrics source abstraction.
 type MetricSource interface {
 	Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (FetchResult, error)
 	GetMetricsTTLSeconds() int64
 	IsAvailable() (bool, error)
 }
 
-// FetchResult implements moira metric sources fetching result format
+// FetchResult implements moira metric sources fetching result format.
 type FetchResult interface {
 	GetMetricsData() []MetricData
 	GetPatterns() ([]string, error)

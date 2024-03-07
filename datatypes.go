@@ -41,7 +41,7 @@ const (
 	SIFormatNumbers
 )
 
-// NotificationEvent represents trigger state changes event
+// NotificationEvent represents trigger state changes event.
 type NotificationEvent struct {
 	IsTriggerEvent   bool               `json:"trigger_event,omitempty" example:"true"`
 	Timestamp        int64              `json:"timestamp" example:"1590741878" format:"int64"`
@@ -57,8 +57,8 @@ type NotificationEvent struct {
 	MessageEventInfo *EventInfo         `json:"event_message" extensions:"x-nullable"`
 }
 
-// NotificationEventHistoryItem is in use to store notifications history of channel
-// (see database/redis/contact_notifications_history.go
+// NotificationEventHistoryItem is in use to store notifications history of channel.
+// (see database/redis/contact_notifications_history.go.
 type NotificationEventHistoryItem struct {
 	TimeStamp int64  `json:"timestamp" format:"int64"`
 	Metric    string `json:"metric"`
@@ -126,7 +126,7 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 	return messageBuffer.String()
 }
 
-// NotificationEvents represents slice of NotificationEvent
+// NotificationEvents represents slice of NotificationEvent.
 type NotificationEvents []NotificationEvent
 
 func (trigger *TriggerData) PopulatedDescription(events NotificationEvents) error {
@@ -156,7 +156,7 @@ func NotificationEventsToTemplatingEvents(events NotificationEvents) []templatin
 	return templatingEvents
 }
 
-// TriggerData represents trigger object
+// TriggerData represents trigger object.
 type TriggerData struct {
 	ID            string        `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 	Name          string        `json:"name" example:"Not enough disk space left"`
@@ -170,12 +170,12 @@ type TriggerData struct {
 	Tags          []string      `json:"__notifier_trigger_tags" example:"server,disk"`
 }
 
-// GetTriggerSource returns trigger source associated with the trigger
+// GetTriggerSource returns trigger source associated with the trigger.
 func (trigger TriggerData) GetTriggerSource() TriggerSource {
 	return trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
 }
 
-// GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
+// GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications.
 func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 	if trigger.ID != "" {
 		return fmt.Sprintf("%s/trigger/%s", frontURI, trigger.ID)
@@ -183,14 +183,14 @@ func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 	return ""
 }
 
-// Team is a structure that represents a group of users that share a subscriptions and contacts
+// Team is a structure that represents a group of users that share a subscriptions and contacts.
 type Team struct {
 	ID          string
 	Name        string
 	Description string
 }
 
-// ContactData represents contact object
+// ContactData represents contact object.
 type ContactData struct {
 	Type  string `json:"type" example:"mail"`
 	Value string `json:"value" example:"devops@example.com"`
@@ -199,7 +199,7 @@ type ContactData struct {
 	Team  string `json:"team"`
 }
 
-// SubscriptionData represents user subscription
+// SubscriptionData represents user subscription.
 type SubscriptionData struct {
 	Contacts          []string     `json:"contacts" example:"acd2db98-1659-4a2f-b227-52d71f6e3ba1"`
 	Tags              []string     `json:"tags" example:"server,cpu"`
@@ -215,13 +215,13 @@ type SubscriptionData struct {
 	TeamID            string       `json:"team_id" example:"324516ed-4924-4154-a62c-eb124234fce"`
 }
 
-// PlottingData represents plotting settings
+// PlottingData represents plotting settings.
 type PlottingData struct {
 	Enabled bool   `json:"enabled" example:"true"`
 	Theme   string `json:"theme" example:"dark"`
 }
 
-// ScheduleData represents subscription schedule
+// ScheduleData represents subscription schedule.
 type ScheduleData struct {
 	Days           []ScheduleDataDay `json:"days"`
 	TimezoneOffset int64             `json:"tzOffset" example:"-60" format:"int64"`
@@ -229,13 +229,13 @@ type ScheduleData struct {
 	EndOffset      int64             `json:"endOffset" example:"1439" format:"int64"`
 }
 
-// ScheduleDataDay represents week day of schedule
+// ScheduleDataDay represents week day of schedule.
 type ScheduleDataDay struct {
 	Enabled bool   `json:"enabled" example:"true"`
 	Name    string `json:"name,omitempty" example:"Mon"`
 }
 
-// ScheduledNotification represent notification object
+// ScheduledNotification represent notification object.
 type ScheduledNotification struct {
 	Event     NotificationEvent `json:"event"`
 	Trigger   TriggerData       `json:"trigger"`
@@ -255,7 +255,7 @@ const (
 	RemovedNotification
 )
 
-// Less is needed for the ScheduledNotification to match the Comparable interface
+// Less is needed for the ScheduledNotification to match the Comparable interface.
 func (notification *ScheduledNotification) Less(other Comparable) (bool, error) {
 	otherNotification, ok := other.(*ScheduledNotification)
 	if !ok {
@@ -265,8 +265,8 @@ func (notification *ScheduledNotification) Less(other Comparable) (bool, error) 
 	return notification.Timestamp < otherNotification.Timestamp, nil
 }
 
-// IsDelayed checks if the notification is delayed, the difference between the send time and the create time
-// is greater than the delayedTime
+// IsDelayed checks if the notification is delayed, the difference between the send time and the create time.
+// is greater than the delayedTime.
 func (notification *ScheduledNotification) IsDelayed(delayedTime int64) bool {
 	return notification.CreatedAt != 0 && notification.Timestamp-notification.CreatedAt > delayedTime
 }
@@ -291,7 +291,7 @@ func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) sch
 	return ResavedNotification
 }
 
-// MatchedMetric represents parsed and matched metric data
+// MatchedMetric represents parsed and matched metric data.
 type MatchedMetric struct {
 	Metric             string
 	Patterns           []string
@@ -301,7 +301,7 @@ type MatchedMetric struct {
 	Retention          int
 }
 
-// MetricValue represents metric data
+// MetricValue represents metric data.
 type MetricValue struct {
 	RetentionTimestamp int64   `json:"step,omitempty" format:"int64"`
 	Timestamp          int64   `json:"ts" format:"int64"`
@@ -317,7 +317,7 @@ const (
 	ExpressionTrigger = "expression"
 )
 
-// Trigger represents trigger data object
+// Trigger represents trigger data object.
 type Trigger struct {
 	ID               string          `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 	Name             string          `json:"name" example:"Not enough disk space left"`
@@ -343,12 +343,12 @@ type Trigger struct {
 	UpdatedBy        string          `json:"updated_by"`
 }
 
-// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger
+// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
 func (trigger *Trigger) ClusterKey() ClusterKey {
 	return MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
 }
 
-// TriggerSource is a enum which values correspond to types of moira's metric sources
+// TriggerSource is a enum which values correspond to types of moira's metric sources.
 type TriggerSource string
 
 var (
@@ -374,7 +374,7 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Needed for backwards compatibility with moira versions that used only isRemote flag
+// Needed for backwards compatibility with moira versions that used only isRemote flag.
 func (triggerSource TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
 	if triggerSource == TriggerSourceNotSet {
 		if isRemote {
@@ -390,7 +390,7 @@ func (triggerSource TriggerSource) String() string {
 	return string(triggerSource)
 }
 
-// ClusterId represent the unique id for each cluster with the same TriggerSource
+// ClusterId represent the unique id for each cluster with the same TriggerSource.
 type ClusterId string
 
 var (
@@ -398,7 +398,7 @@ var (
 	DefaultCluster ClusterId = "default"
 )
 
-// FillInIfNotSet returns new ClusterId with value set to default if it was empty
+// FillInIfNotSet returns new ClusterId with value set to default if it was empty.
 func (clusterId ClusterId) FillInIfNotSet() ClusterId {
 	if clusterId == ClusterNotSet {
 		return DefaultCluster
@@ -410,7 +410,7 @@ func (clusterId ClusterId) String() string {
 	return string(clusterId)
 }
 
-// ClusterKey represents unique key of a metric source
+// ClusterKey represents unique key of a metric source.
 type ClusterKey struct {
 	TriggerSource TriggerSource
 	ClusterId     ClusterId
@@ -420,7 +420,7 @@ var DefaultLocalCluster = MakeClusterKey(GraphiteLocal, DefaultCluster)
 var DefaultGraphiteRemoteCluster = MakeClusterKey(GraphiteRemote, DefaultCluster)
 var DefaultPrometheusRemoteCluster = MakeClusterKey(PrometheusRemote, DefaultCluster)
 
-// MakeClusterKey creates new cluster key with given trigger source and cluster id
+// MakeClusterKey creates new cluster key with given trigger source and cluster id.
 func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey {
 	return ClusterKey{
 		TriggerSource: triggerSource,
@@ -432,7 +432,7 @@ func (clusterKey ClusterKey) String() string {
 	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
 }
 
-// TriggerCheck represents trigger data with last check data and check timestamp
+// TriggerCheck represents trigger data with last check data and check timestamp.
 type TriggerCheck struct {
 	Trigger
 	Throttling int64             `json:"throttling" example:"0" format:"int64"`
@@ -440,7 +440,7 @@ type TriggerCheck struct {
 	Highlights map[string]string `json:"highlights"`
 }
 
-// SearchOptions represents the options that can be selected when searching triggers
+// SearchOptions represents the options that can be selected when searching triggers.
 type SearchOptions struct {
 	Page                  int64
 	Size                  int64
@@ -453,13 +453,13 @@ type SearchOptions struct {
 	PagerID               string
 }
 
-// MaintenanceCheck set maintenance user, time
+// MaintenanceCheck set maintenance user, time.
 type MaintenanceCheck interface {
 	SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64)
 	GetMaintenance() (MaintenanceInfo, int64)
 }
 
-// CheckData represents last trigger check data
+// CheckData represents last trigger check data.
 type CheckData struct {
 	Metrics map[string]MetricState `json:"metrics"`
 	// MetricsToTargetRelation is a map that holds relation between metric names that was alone during last
@@ -481,7 +481,7 @@ type CheckData struct {
 }
 
 // Need to not show the user metrics that should have been deleted due to ttlState = Del,
-// but remained in the database because their Maintenance did not expire
+// but remained in the database because their Maintenance did not expire.
 func (checkData *CheckData) RemoveDeadMetrics() {
 	for metricName, metricState := range checkData.Metrics {
 		if metricState.DeletedButKept {
@@ -500,12 +500,12 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 	checkData.MetricsToTargetRelation = make(map[string]string)
 }
 
-// IsTriggerOnMaintenance checks if the trigger is on Maintenance
+// IsTriggerOnMaintenance checks if the trigger is on Maintenance.
 func (checkData *CheckData) IsTriggerOnMaintenance() bool {
 	return time.Now().Unix() <= checkData.Maintenance
 }
 
-// IsMetricOnMaintenance checks if the metric of the given trigger is on Maintenance
+// IsMetricOnMaintenance checks if the metric of the given trigger is on Maintenance.
 func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
 	if checkData.Metrics == nil {
 		return false
@@ -519,7 +519,7 @@ func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
 	return time.Now().Unix() <= metricState.Maintenance
 }
 
-// MetricState represents metric state data for given timestamp
+// MetricState represents metric state data for given timestamp.
 type MetricState struct {
 	EventTimestamp  int64              `json:"event_timestamp" example:"1590741878" format:"int64"`
 	State           State              `json:"state" example:"OK"`
@@ -536,18 +536,18 @@ type MetricState struct {
 	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
 }
 
-// SetMaintenance set maintenance user, time for MetricState
+// SetMaintenance set maintenance user, time for MetricState.
 func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
 	metricState.MaintenanceInfo = *maintenanceInfo
 	metricState.Maintenance = maintenance
 }
 
-// GetMaintenance return metricState MaintenanceInfo
+// GetMaintenance return metricState MaintenanceInfo.
 func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 	return metricState.MaintenanceInfo, metricState.Maintenance
 }
 
-// MaintenanceInfo represents user and time set/unset maintenance
+// MaintenanceInfo represents user and time set/unset maintenance.
 type MaintenanceInfo struct {
 	StartUser *string `json:"setup_user" extensions:"x-nullable"`
 	StartTime *int64  `json:"setup_time" example:"0" format:"int64" extensions:"x-nullable"`
@@ -555,7 +555,7 @@ type MaintenanceInfo struct {
 	StopTime  *int64  `json:"remove_time" example:"0" format:"int64" extensions:"x-nullable"`
 }
 
-// Set maintanace start and stop users and times
+// Set maintanace start and stop users and times.
 func (maintenanceInfo *MaintenanceInfo) Set(startUser *string, startTime *int64, stopUser *string, stopTime *int64) {
 	maintenanceInfo.StartUser = startUser
 	maintenanceInfo.StartTime = startTime
@@ -563,31 +563,31 @@ func (maintenanceInfo *MaintenanceInfo) Set(startUser *string, startTime *int64,
 	maintenanceInfo.StopTime = stopTime
 }
 
-// MetricEvent represents filter metric event
+// MetricEvent represents filter metric event.
 type MetricEvent struct {
 	Metric  string `json:"metric"`
 	Pattern string `json:"pattern"`
 }
 
-// SubscribeMetricEventsParams represents params of subscription
+// SubscribeMetricEventsParams represents params of subscription.
 type SubscribeMetricEventsParams struct {
 	BatchSize int64
 	Delay     time.Duration
 }
 
-// SearchHighlight represents highlight
+// SearchHighlight represents highlight.
 type SearchHighlight struct {
 	Field string
 	Value string
 }
 
-// SearchResult represents fulltext search result
+// SearchResult represents fulltext search result.
 type SearchResult struct {
 	ObjectID   string
 	Highlights []SearchHighlight
 }
 
-// GetSubjectState returns the most critical state of events
+// GetSubjectState returns the most critical state of events.
 func (events NotificationEvents) getSubjectState() State {
 	result := StateOK
 	states := make(map[State]bool)
@@ -602,7 +602,7 @@ func (events NotificationEvents) getSubjectState() State {
 	return result
 }
 
-// GetLastState returns the last state of events
+// GetLastState returns the last state of events.
 func (events NotificationEvents) getLastState() State {
 	if len(events) != 0 {
 		return events[len(events)-1].State
@@ -610,7 +610,7 @@ func (events NotificationEvents) getLastState() State {
 	return StateNODATA
 }
 
-// Returns the current state depending on the throttled parameter
+// Returns the current state depending on the throttled parameter.
 func (events NotificationEvents) GetCurrentState(throttled bool) State {
 	if throttled {
 		return events.getLastState()
@@ -618,7 +618,7 @@ func (events NotificationEvents) GetCurrentState(throttled bool) State {
 	return events.getSubjectState()
 }
 
-// GetTags returns "[tag1][tag2]...[tagN]" string
+// GetTags returns "[tag1][tag2]...[tagN]" string.
 func (trigger *TriggerData) GetTags() string {
 	var buffer bytes.Buffer
 	for _, tag := range trigger.Tags {
@@ -627,7 +627,7 @@ func (trigger *TriggerData) GetTags() string {
 	return buffer.String()
 }
 
-// GetKey return notification key to prevent duplication to the same contact
+// GetKey return notification key to prevent duplication to the same contact.
 func (notification *ScheduledNotification) GetKey() string {
 	return fmt.Sprintf("%s:%s:%s:%s:%s:%d:%s:%d:%t:%d",
 		notification.Contact.Type,
@@ -643,7 +643,7 @@ func (notification *ScheduledNotification) GetKey() string {
 	)
 }
 
-// IsScheduleAllows check if the time is in the allowed schedule interval
+// IsScheduleAllows check if the time is in the allowed schedule interval.
 func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	if schedule == nil {
 		return true
@@ -677,7 +677,7 @@ func (event NotificationEvent) String() string {
 	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(DefaultNotificationSettings), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
 }
 
-// GetMetricsValues gets event metric value and format it to human readable presentation
+// GetMetricsValues gets event metric value and format it to human readable presentation.
 func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettings) string {
 	targetNames := make([]string, 0, len(event.Values))
 	for targetName := range event.Values {
@@ -722,7 +722,7 @@ func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettin
 	return builder.String()
 }
 
-// FormatTimestamp gets event timestamp and format it using given location to human readable presentation
+// FormatTimestamp gets event timestamp and format it using given location to human readable presentation.
 func (event NotificationEvent) FormatTimestamp(location *time.Location, timeFormat string) string {
 	timestamp := time.Unix(event.Timestamp, 0).In(location)
 	formattedTime := timestamp.Format(timeFormat)
@@ -731,7 +731,7 @@ func (event NotificationEvent) FormatTimestamp(location *time.Location, timeForm
 	return formattedTime + " (GMT" + offset + ")"
 }
 
-// GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
+// GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric.
 func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, muteNewMetric bool) MetricState {
 	_, ok := checkData.Metrics[metric]
 	if !ok {
@@ -740,13 +740,13 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 	return checkData.Metrics[metric]
 }
 
-// SetMaintenance set maintenance user, time for CheckData
+// SetMaintenance set maintenance user, time for CheckData.
 func (checkData *CheckData) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
 	checkData.MaintenanceInfo = *maintenanceInfo
 	checkData.Maintenance = maintenance
 }
 
-// GetMaintenance return metricState MaintenanceInfo
+// GetMaintenance return metricState MaintenanceInfo.
 func (checkData *CheckData) GetMaintenance() (MaintenanceInfo, int64) {
 	return checkData.MaintenanceInfo, checkData.Maintenance
 }
@@ -768,13 +768,13 @@ func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool
 	}
 }
 
-// GetCheckPoint gets check point for given MetricState
-// CheckPoint is the timestamp from which to start checking the current state of the metric
+// GetCheckPoint gets check point for given MetricState.
+// CheckPoint is the timestamp from which to start checking the current state of the metric.
 func (metricState *MetricState) GetCheckPoint(checkPointGap int64) int64 {
 	return int64(math.Max(float64(metricState.Timestamp-checkPointGap), float64(metricState.EventTimestamp)))
 }
 
-// GetEventTimestamp gets event timestamp for given metric
+// GetEventTimestamp gets event timestamp for given metric.
 func (metricState MetricState) GetEventTimestamp() int64 {
 	if metricState.EventTimestamp == 0 {
 		return metricState.Timestamp
@@ -782,7 +782,7 @@ func (metricState MetricState) GetEventTimestamp() int64 {
 	return metricState.EventTimestamp
 }
 
-// GetEventTimestamp gets event timestamp for given check
+// GetEventTimestamp gets event timestamp for given check.
 func (checkData CheckData) GetEventTimestamp() int64 {
 	if checkData.EventTimestamp == 0 {
 		return checkData.Timestamp
@@ -790,9 +790,9 @@ func (checkData CheckData) GetEventTimestamp() int64 {
 	return checkData.EventTimestamp
 }
 
-// IsSimple checks triggers patterns
+// IsSimple checks triggers patterns.
 // If patterns more than one or it contains standard graphite wildcard symbols,
-// when this target can contain more then one metrics, and is it not simple trigger
+// when this target can contain more then one metrics, and is it not simple trigger.
 func (trigger *Trigger) IsSimple() bool {
 	if len(trigger.Targets) > 1 || len(trigger.Patterns) > 1 {
 		return false
@@ -805,7 +805,7 @@ func (trigger *Trigger) IsSimple() bool {
 	return true
 }
 
-// UpdateScore update and return checkData score, based on metric states and checkData state
+// UpdateScore update and return checkData score, based on metric states and checkData state.
 func (checkData *CheckData) UpdateScore() int64 {
 	checkData.Score = stateScores[checkData.State]
 	for _, metricData := range checkData.Metrics {
@@ -814,7 +814,7 @@ func (checkData *CheckData) UpdateScore() int64 {
 	return checkData.Score
 }
 
-// MustIgnore returns true if given state transition must be ignored
+// MustIgnore returns true if given state transition must be ignored.
 func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) bool {
 	if oldStateWeight, ok := eventStateWeight[eventData.OldState]; ok {
 		if newStateWeight, ok := eventStateWeight[eventData.State]; ok {
@@ -833,12 +833,12 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 	return false
 }
 
-// isAnonymous checks if user is Anonymous or empty
+// isAnonymous checks if user is Anonymous or empty.
 func isAnonymous(user string) bool {
 	return user == "anonymous" || user == ""
 }
 
-// SetMaintenanceUserAndTime set startuser and starttime or stopuser and stoptime for MaintenanceInfo
+// SetMaintenanceUserAndTime set startuser and starttime or stopuser and stoptime for MaintenanceInfo.
 func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance int64, user string, callMaintenance int64) {
 	maintenanceInfo, _ := maintenanceCheck.GetMaintenance()
 	if maintenance < callMaintenance {

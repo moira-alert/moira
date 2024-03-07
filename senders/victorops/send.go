@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira/senders/victorops/api"
 )
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	createAlertRequest := sender.buildCreateAlertRequest(events, trigger, throttled, plots, time.Now().Unix())
 	err := sender.client.CreateAlert(contact.Value, createAlertRequest)
@@ -86,7 +86,7 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 }
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
-// if n is negative buildEventsString does not limit the events string
+// if n is negative buildEventsString does not limit the events string.
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."

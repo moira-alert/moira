@@ -2,7 +2,7 @@ package redis
 
 import "time"
 
-// DatabaseConfig - Redis database connection config
+// DatabaseConfig - Redis database connection config.
 type DatabaseConfig struct {
 	MasterName       string
 	Addrs            []string
@@ -22,7 +22,7 @@ type NotificationHistoryConfig struct {
 	NotificationHistoryQueryLimit int
 }
 
-// Notifier configuration in redis
+// Notifier configuration in redis.
 type NotificationConfig struct {
 	// Need to determine if notification is delayed - the difference between creation time and sending time
 	// is greater than DelayedTime

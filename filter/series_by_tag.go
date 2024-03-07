@@ -13,10 +13,10 @@ var (
 	wildcardExprRegex     = regexp.MustCompile(`\{(.*?)\}`)
 )
 
-// ErrNotSeriesByTag is returned if the pattern is not seriesByTag
+// ErrNotSeriesByTag is returned if the pattern is not seriesByTag.
 var ErrNotSeriesByTag = fmt.Errorf("not seriesByTag pattern")
 
-// TagSpecOperator represents an operator and it is used to query metric by tag value
+// TagSpecOperator represents an operator and it is used to query metric by tag value.
 type TagSpecOperator string
 
 const (
@@ -32,7 +32,7 @@ const (
 	correctLengthOfMatchedWildcardIndexesSlice = 4
 )
 
-// TagSpec is a filter expression inside seriesByTag pattern
+// TagSpec is a filter expression inside seriesByTag pattern.
 type TagSpec struct {
 	Name     string
 	Operator TagSpecOperator
@@ -73,7 +73,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	return "^" + result + "$", true
 }
 
-// ParseSeriesByTag parses seriesByTag pattern and returns tags specs
+// ParseSeriesByTag parses seriesByTag pattern and returns tags specs.
 func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	matchedSeriesByTagIndexes := seriesByTagRegex.FindStringSubmatchIndex(input)
 	if len(matchedSeriesByTagIndexes) != 4 { //nolint
@@ -125,10 +125,10 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
-// MatchingHandler is a function for pattern matching
+// MatchingHandler is a function for pattern matching.
 type MatchingHandler func(string, map[string]string) bool
 
-// CreateMatchingHandlerForPattern creates function for matching by tag list
+// CreateMatchingHandlerForPattern creates function for matching by tag list.
 func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string

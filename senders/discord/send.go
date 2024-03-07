@@ -20,7 +20,7 @@ var (
 	mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 )
 
-// SendEvents implements pushover build and send message functionality
+// SendEvents implements pushover build and send message functionality.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	data := &discordgo.MessageSend{}
 	data.Content = sender.buildMessage(events, trigger, throttled)
@@ -98,7 +98,7 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 }
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
-// if n is negative buildEventsString does not limit the events string
+// if n is negative buildEventsString does not limit the events string.
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool, trigger moira.TriggerData) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."

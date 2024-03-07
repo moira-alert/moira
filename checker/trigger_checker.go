@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// TriggerChecker represents data, used for handling new trigger state
+// TriggerChecker represents data, used for handling new trigger state.
 type TriggerChecker struct {
 	database moira.Database
 	logger   moira.Logger
@@ -29,8 +29,8 @@ type TriggerChecker struct {
 	ttlState moira.TTLState
 }
 
-// MakeTriggerChecker initialize new triggerChecker data
-// if trigger does not exists then return ErrTriggerNotExists error
+// MakeTriggerChecker initialize new triggerChecker data.
+// if trigger does not exists then return ErrTriggerNotExists error.
 // if trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
 func MakeTriggerChecker(
 	triggerID string,

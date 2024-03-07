@@ -14,7 +14,7 @@ import (
 
 const sleepAfterNotifierBadState = time.Second * 10
 
-// FetchNotificationsWorker - check for new notifications and send it using notifier
+// FetchNotificationsWorker - check for new notifications and send it using notifier.
 type FetchNotificationsWorker struct {
 	Logger   moira.Logger
 	Database moira.Database
@@ -32,7 +32,7 @@ func (worker *FetchNotificationsWorker) updateFetchNotificationsMetric(fetchNoti
 	worker.Metrics.UpdateFetchNotificationsDurationMs(fetchNotificationsStartTime)
 }
 
-// Start is a cycle that fetches scheduled notifications from database
+// Start is a cycle that fetches scheduled notifications from database.
 func (worker *FetchNotificationsWorker) Start() {
 	worker.tomb.Go(func() error {
 		checkTicker := time.NewTicker(time.Second)
@@ -63,7 +63,7 @@ func (worker *FetchNotificationsWorker) Start() {
 	worker.Logger.Info().Msg("Moira Notifier Fetching scheduled notifications started")
 }
 
-// Stop stops new notifications fetching and wait for finish
+// Stop stops new notifications fetching and wait for finish.
 func (worker *FetchNotificationsWorker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()

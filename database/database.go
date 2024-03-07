@@ -2,7 +2,7 @@ package database
 
 import "fmt"
 
-// ErrNil return from database data storing methods if no object in DB
+// ErrNil return from database data storing methods if no object in DB.
 var ErrNil = fmt.Errorf("nil returned")
 
 var (
@@ -12,7 +12,7 @@ var (
 	ErrLockAcquireInterrupted = fmt.Errorf("lock's request was interrupted")
 )
 
-// ErrLockNotAcquired if we cannot acquire
+// ErrLockNotAcquired if we cannot acquire.
 type ErrLockNotAcquired struct {
 	Err error
 }

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Registry implements metrics collection abstraction
+// Registry implements metrics collection abstraction.
 type Registry interface {
 	NewMeter(path ...string) Meter
 	NewTimer(path ...string) Timer
@@ -13,13 +13,13 @@ type Registry interface {
 	NewCounter(path ...string) Counter
 }
 
-// MetersCollection implements meter collection abstraction
+// MetersCollection implements meter collection abstraction.
 type MetersCollection interface {
 	RegisterMeter(name string, path ...string) Meter
 	GetRegisteredMeter(name string) (Meter, bool)
 }
 
-// Meter count events to produce exponentially-weighted moving average rates
+// Meter count events to produce exponentially-weighted moving average rates.
 // at one-, five-, and fifteen-minutes and a mean rate.
 type Meter interface {
 	Count() int64
@@ -48,7 +48,7 @@ func NewMetersCollection(registry Registry) MetersCollection {
 	return &DefaultMetersCollection{registry: registry, meters: map[string]Meter{}}
 }
 
-// DefaultMetersCollection holds registered meters
+// DefaultMetersCollection holds registered meters.
 type DefaultMetersCollection struct {
 	registry Registry
 	meters   map[string]Meter

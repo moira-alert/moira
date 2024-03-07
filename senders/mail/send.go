@@ -37,7 +37,7 @@ type triggerData struct {
 	PlotCID      string
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.makeMessage(events, contact, trigger, plots, throttled)
 	return sender.dialAndSend(message)

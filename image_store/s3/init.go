@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-// ImageStore implements the ImageStore interface for aws s3
+// ImageStore implements the ImageStore interface for aws s3.
 type ImageStore struct {
 	sess     *session.Session
 	uploader *s3manager.Uploader
@@ -18,7 +18,7 @@ type ImageStore struct {
 	enabled  bool
 }
 
-// Init initializes the s3 image store with config from the yaml file
+// Init initializes the s3 image store with config from the yaml file.
 func (imageStore *ImageStore) Init(config Config) error {
 	awsconfig := &aws.Config{}
 
@@ -51,7 +51,7 @@ func (imageStore *ImageStore) Init(config Config) error {
 	return nil
 }
 
-// IsEnabled indicates whether the image store has been configured or not
+// IsEnabled indicates whether the image store has been configured or not.
 func (imageStore *ImageStore) IsEnabled() bool {
 	return imageStore.enabled
 }

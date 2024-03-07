@@ -285,7 +285,7 @@ func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemO
 	return nil
 }
 
-// functionArgumentsInTheRangeTTL: Checking function arguments that they are in the range of TTL
+// functionArgumentsInTheRangeTTL: Checking function arguments that they are in the range of TTL.
 func functionArgumentsInTheRangeTTL(expression parser.Expr, ttl time.Duration) (string, bool) {
 	if _, ok := timedFunctions[expression.Target()]; ok && len(expression.Args()) > 1 {
 		argument, argumentDuration := positiveDuration(expression.Args()[1])
@@ -300,7 +300,7 @@ func funcIsSupported(funcName string) bool {
 	return ok || funcName == ""
 }
 
-// checks if a seriesByTag expression has at least one argument with a strict equality
+// checks if a seriesByTag expression has at least one argument with a strict equality.
 func validateSeriesByTag(target string) (bool, error) {
 	tagArgs, err := filter.ParseSeriesByTag(target)
 

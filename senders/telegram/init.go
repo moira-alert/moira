@@ -31,13 +31,13 @@ var (
 	}
 )
 
-// Structure that represents the Telegram configuration in the YAML file
+// Structure that represents the Telegram configuration in the YAML file.
 type config struct {
 	APIToken string `mapstructure:"api_token"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
-// Sender implements moira sender interface via telegram
+// Sender implements moira sender interface via telegram.
 type Sender struct {
 	DataBase moira.Database
 	logger   moira.Logger
@@ -58,7 +58,7 @@ func removeTokenFromError(err error, bot *telebot.Bot) error {
 	return err
 }
 
-// Init loads yaml config, configures and starts telegram bot
+// Init loads yaml config, configures and starts telegram bot.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -92,8 +92,8 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// runTelebot starts telegram bot and manages bot subscriptions
-// to make sure there is always only one working Poller
+// runTelebot starts telegram bot and manages bot subscriptions.
+// to make sure there is always only one working Poller.
 func (sender *Sender) runTelebot() {
 	workerAction := func(stop <-chan struct{}) error {
 		sender.bot.Start()

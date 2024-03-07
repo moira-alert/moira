@@ -1,18 +1,18 @@
 package moira
 
-// State type describe all default moira triggers or metrics states
+// State type describe all default moira triggers or metrics states.
 type State string
 
-// TTLState declares all ttl (NODATA) states, used if metric has no values for given interval (ttl)
+// TTLState declares all ttl (NODATA) states, used if metric has no values for given interval (ttl).
 type TTLState string
 
-// Moira notifier self-states
+// Moira notifier self-states.
 const (
 	SelfStateOK    = "OK"    // OK means notifier is healthy
 	SelfStateERROR = "ERROR" // ERROR means notifier is stopped, admin intervention is required
 )
 
-// Moira trigger and metric states
+// Moira trigger and metric states.
 var (
 	StateOK        State = "OK"
 	StateWARN      State = "WARN"
@@ -22,7 +22,7 @@ var (
 	StateTEST      State = "TEST"      // Use this only for test notifications
 )
 
-// Moira ttl states
+// Moira ttl states.
 var (
 	TTLStateOK     TTLState = "OK"
 	TTLStateWARN   TTLState = "WARN"
@@ -48,12 +48,12 @@ var (
 	}
 )
 
-// String is a simple Stringer implementation for State
+// String is a simple Stringer implementation for State.
 func (state State) String() string {
 	return string(state)
 }
 
-// ToSelfState converts State to corresponding SelfState
+// ToSelfState converts State to corresponding SelfState.
 func (state State) ToSelfState() string {
 	if state != StateOK {
 		return SelfStateERROR

@@ -9,8 +9,8 @@ import (
 	"net/http"
 )
 
-// CreateAlertRequest the API request to be made to
-// create a victorops alert
+// CreateAlertRequest the API request to be made to.
+// create a victorops alert.
 type CreateAlertRequest struct {
 	MessageType       MessageType `json:"message_type,omitempty"`
 	EntityID          string      `json:"entity_id,omitempty"`
@@ -23,10 +23,10 @@ type CreateAlertRequest struct {
 	MonitoringTool    string      `json:"monitoring_tool,omitempty"`
 }
 
-// MessageType is the type of a victorops alert
+// MessageType is the type of a victorops alert.
 type MessageType string
 
-// Various possible MessageTypes
+// Various possible MessageTypes.
 const (
 	Critical        MessageType = "CRITICAL"
 	Warning         MessageType = "WARNING"
@@ -35,7 +35,7 @@ const (
 	Recovery        MessageType = "RECOVERY"
 )
 
-// CreateAlert creates a new alert in the victorops timeline
+// CreateAlert creates a new alert in the victorops timeline.
 func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) error {
 	if alert.MessageType == "" {
 		return fmt.Errorf("field MessageType cannot be empty")
