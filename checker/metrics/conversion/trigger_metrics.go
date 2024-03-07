@@ -119,28 +119,28 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 // from targets with multiple metrics.
 //
 //	For example, we have a targets with metrics:
-//	{.
+//	{
 //		"t1": {"m1": {metrics}, "m2": {metrics}, "m3": {metrics}},
 //		"t2": {"m1": {metrics}, "m2": {metrics}, "m3": {metrics}},
 //		"t3": {"m4": {metrics}},
-//	}.
+//	}
 //
 // and declared alone metrics.
 //
-//	{"t3": true}.
+//	{"t3": true}
 //
 // These methods will return.
 //
-//	{.
+//	{
 //		"t1": {"m1", "m2", "m3"},
 //		"t2": {"m1", "m2", "m3"},
-//	}.
+//	}
 //
 // and.
 //
-//	{.
+//	{
 //	"t3": {metrics},
-//	}.
+//	}
 func (triggerMetrics TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool) (TriggerMetrics, AloneMetrics, error) {
 	if len(declaredAloneMetrics) == 0 {
 		return triggerMetrics, NewAloneMetricsWithCapacity(0), nil

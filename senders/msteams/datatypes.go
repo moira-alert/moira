@@ -8,10 +8,10 @@ const White = "ffffff"
 
 // Fact models a fact in a MessageCard, contains a timestamp and trigger data.
 //
-//	{.
+//	{
 //		"name": "10:45",
 //		"value": "someServer = 0.11 (NODATA to WARN)".
-//	}.
+//	}
 type Fact struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
