@@ -87,7 +87,6 @@ var ErrNotFound = &ErrorResponse{HTTPStatusCode: http.StatusNotFound, StatusText
 var ErrMethodNotAllowed = &ErrorResponse{HTTPStatusCode: http.StatusMethodNotAllowed, StatusText: "Method not allowed."}
 
 // Examples for `swaggo`:
-.
 type ErrorInternalServerExample struct {
 	StatusText string `json:"status" example:"Internal Server Error"`
 	ErrorText  string `json:"error" example:"server error during request handling"`

@@ -182,7 +182,6 @@ func DoesAnyTreeHaveError(trees []TreeOfProblems) bool {
 
 // checkExpression validates expression.
 func checkExpression(expression parser.Expr, ttl time.Duration, triggerSource moira.TriggerSource) *ProblemOfTarget {
-
 	if !expression.IsFunc() && !strings.HasPrefix(expression.Target(), "seriesByTag") {
 		return nil
 	}
