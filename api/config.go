@@ -39,15 +39,22 @@ type Config struct {
 	Authorization Authorization
 }
 
+// / TODO: godoc
 type Authorization struct {
 	AdminList []string
+	Enabled   bool
 }
 
+// / TODO: godoc
 func (auth *Authorization) IsEnabled() bool {
-	return len(auth.AdminList) > 0
+	return auth.Enabled
 }
 
+// / TODO: godoc
 func (auth *Authorization) IsAdmin(login string) bool {
+	if !auth.IsEnabled() {
+		return false
+	}
 	for _, admin := range auth.AdminList {
 		if admin == login {
 			return true

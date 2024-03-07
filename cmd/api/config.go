@@ -53,6 +53,7 @@ type apiConfig struct {
 type Authorization struct {
 	/// TODO: godoc
 	AdminList []string `yaml:"admin_list"`
+	Enabled   bool     `yaml:"enabled"`
 }
 
 type sentryConfig struct {
@@ -111,6 +112,7 @@ func (config *apiConfig) getSettings(
 		MetricsTTL: metricsTTL,
 		Flags:      flags,
 		Authorization: api.Authorization{
+			Enabled:   config.Authorization.Enabled,
 			AdminList: config.Authorization.AdminList,
 		},
 	}

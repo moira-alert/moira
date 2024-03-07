@@ -556,6 +556,41 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	})
 }
 
+func TestCheckAdminPermissionsForContact(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	teamID := uuid.Must(uuid.NewV4()).String()
+	id := uuid.Must(uuid.NewV4()).String()
+	adminLogin := "admin_login"
+	auth := &api.Authorization{Enabled: true, AdminList: []string{"admin_login"}}
+
+	Convey("Same user", t, func() {
+		expectedContact := moira.ContactData{ID: id, User: adminLogin}
+		dataBase.EXPECT().GetContact(id).Return(expectedContact, nil)
+		actualContact, errorResponse := CheckUserPermissionsForContact(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedContact)
+	})
+
+	Convey("Different user", t, func() {
+		expectedContact := moira.ContactData{ID: id, User: "diffUser"}
+		dataBase.EXPECT().GetContact(id).Return(expectedContact, nil)
+		actualContact, errorResponse := CheckUserPermissionsForContact(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedContact)
+	})
+
+	Convey("Team contact", t, func() {
+		expectedContact := moira.ContactData{ID: id, Team: teamID}
+		dataBase.EXPECT().GetContact(id).Return(expectedContact, nil)
+		actualContact, errorResponse := CheckUserPermissionsForContact(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedContact)
+	})
+}
+
 func Test_isContactExists(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
