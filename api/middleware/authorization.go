@@ -7,7 +7,7 @@ import (
 	"github.com/moira-alert/moira/api"
 )
 
-// / TODO: Godoc
+// AdminOnlyMiddleware returns 403 if request for made by non-admin user
 func AdminOnlyMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {

@@ -46,14 +46,15 @@ type apiConfig struct {
 	Listen string `yaml:"listen"`
 	// If true, CORS for cross-domain requests will be enabled. This option can be used only for debugging purposes.
 	EnableCORS bool `yaml:"enable_cors"`
-	/// TODO: godoc
+	// Authorization configuration
 	Authorization Authorization `yaml:"authorization"`
 }
 
 type Authorization struct {
-	/// TODO: godoc
-	AdminList []string `yaml:"admin_list"`
+	// True if should limit non-admins and give admins additional privileges
 	Enabled   bool     `yaml:"enabled"`
+	// List of logins of users who are considered to be admins 
+	AdminList []string `yaml:"admin_list"`
 }
 
 type sentryConfig struct {

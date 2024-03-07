@@ -39,18 +39,18 @@ type Config struct {
 	Authorization Authorization
 }
 
-// / TODO: godoc
+// Authorization configuration
 type Authorization struct {
 	AdminList []string
 	Enabled   bool
 }
 
-// / TODO: godoc
+// IsEnabled returns true if auth is enabled and false otherwise
 func (auth *Authorization) IsEnabled() bool {
 	return auth.Enabled
 }
 
-// / TODO: godoc
+// IsAdmin checks whether given user is considered an administrator
 func (auth *Authorization) IsAdmin(login string) bool {
 	if !auth.IsEnabled() {
 		return false
