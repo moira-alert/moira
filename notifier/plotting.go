@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	// defaultTimeShift is default time shift to fetch timeseries
+	// defaultTimeShift is default time shift to fetch timeseries.
 	defaultTimeShift = 1 * time.Minute
-	// defaultTimeRange is default time range to fetch timeseries
+	// defaultTimeRange is default time range to fetch timeseries.
 	defaultTimeRange = 30 * time.Minute
-	// defaultRetentionSeconds is the most common metric retention
+	// defaultRetentionSeconds is the most common metric retention.
 	defaultRetentionSeconds = 60
 )
 

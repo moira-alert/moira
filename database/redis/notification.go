@@ -258,7 +258,7 @@ handleNotifications filters notifications into delayed and not delayed,
 then filters delayed notifications by notification state, then merges the 2 arrays
 of not delayed and valid delayed notifications into a single sorted array
 
-Returns valid notifications in sorted order by timestamp and notifications to remove
+Returns valid notifications in sorted order by timestamp and notifications to remove.
 */
 func (connector *DbConnector) handleNotifications(notifications []*moira.ScheduledNotification) (notificationTypes, error) {
 	if len(notifications) == 0 {
@@ -382,7 +382,7 @@ with arrays of notifications with timestamps:
     so we will get all notifications from the database with the last timestamp <= 1, i.e.,
     if the database at this moment has [1, 1, 1, 1, 1], then the output will be [1, 1, 1, 1, 1]
 
-This is to ensure that notifications with the same timestamp are always clumped into a single stack
+This is to ensure that notifications with the same timestamp are always clumped into a single stack.
 */
 func getLimitedNotifications(
 	ctx context.Context,

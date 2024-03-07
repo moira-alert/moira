@@ -8,11 +8,13 @@ import (
 )
 
 const (
-	// thresholdSerie is a name that indicates threshold
+	// thresholdSerie is a name that indicates threshold.
 	thresholdSerie = "threshold"
-	//// thresholdGapCoefficient is max allowed area
-	//// between thresholds as percentage of limits delta
-	// thresholdGapCoefficient = 0.25
+	/*
+		// thresholdGapCoefficient is max allowed area.
+		// between thresholds as percentage of limits delta.
+		thresholdGapCoefficient = 0.25
+	*/
 )
 
 // threshold represents threshold parameters.

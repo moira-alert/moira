@@ -29,7 +29,7 @@ var (
 )
 
 // TestGeneratePlotCurves tests generatePlotCurves returns
-// collection of chart.Timeseries with actual field values
+// collection of chart.Timeseries with actual field values.
 func TestGeneratePlotCurves(t *testing.T) {
 	Convey("First value is absent", t, func() {
 		metricName := "metric.firstValueIsAbsent"
@@ -86,7 +86,7 @@ func TestGeneratePlotCurves(t *testing.T) {
 }
 
 // TestDescribePlotCurves tests describePlotCurves returns collection of
-// n PlotCurves from timeseries with n-1 gaps (IsAbsent values)
+// n PlotCurves from timeseries with n-1 gaps (IsAbsent values).
 func TestDescribePlotCurves(t *testing.T) {
 	Convey("First value is not a number", t, func() {
 		metricData.Values = firstValIsNanVals
@@ -154,7 +154,7 @@ func TestDescribePlotCurves(t *testing.T) {
 }
 
 // TestResolveFirstPoint tests resolveFirstPoint returns correct start time
-// for given MetricData whether IsAbsent[0] is true or false
+// for given MetricData whether IsAbsent[0] is true or false.
 func TestResolveFirstPoint(t *testing.T) {
 	Convey("First value is not a number", t, func() {
 		metricData.Values = firstValIsNanVals

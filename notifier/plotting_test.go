@@ -18,7 +18,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// generateTestMetricsData generates metricsData map for tests
+// generateTestMetricsData generates metricsData map for tests.
 func generateTestMetricsData() map[string][]metricSource.MetricData {
 	metricData1 := metricSource.MetricData{
 		Name:      "MetricName",
@@ -148,7 +148,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 	})
 }
 
-// TestGetMetricDataToShow tests to limited metricsData returns only necessary metricsData
+// TestGetMetricDataToShow tests to limited metricsData returns only necessary metricsData.
 func TestGetMetricDataToShow(t *testing.T) {
 	givenSeries := map[string][]metricSource.MetricData{
 		"t1": {

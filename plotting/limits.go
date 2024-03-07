@@ -11,11 +11,11 @@ import (
 
 const (
 	// defaultRangeDelta is an additional value to
-	// cover cases with equal highest/lowest limits values
+	// cover cases with equal highest/lowest limits values.
 	defaultRangeDelta = 10
 	// defaultYAxisRangePercent is a default percent value to
 	// generate plotLimits lowest/highest additional increment
-	// used in plot-prettifying purposes only
+	// used in plot-prettifying purposes only.
 	defaultYAxisRangePercent = 10
 )
 

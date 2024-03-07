@@ -6,9 +6,9 @@ import "fmt"
 var ErrNil = fmt.Errorf("nil returned")
 
 var (
-	// ErrLockAlreadyHeld is returned if we attempt to double acquire
+	// ErrLockAlreadyHeld is returned if we attempt to double acquire.
 	ErrLockAlreadyHeld = fmt.Errorf("lock was already held")
-	// ErrLockAcquireInterrupted is returned if we cancel the acquire
+	// ErrLockAcquireInterrupted is returned if we cancel the acquire.
 	ErrLockAcquireInterrupted = fmt.Errorf("lock's request was interrupted")
 )
 

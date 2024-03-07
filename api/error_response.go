@@ -86,7 +86,7 @@ var ErrNotFound = &ErrorResponse{HTTPStatusCode: http.StatusNotFound, StatusText
 // ErrMethodNotAllowed is default 405 router method not allowed.
 var ErrMethodNotAllowed = &ErrorResponse{HTTPStatusCode: http.StatusMethodNotAllowed, StatusText: "Method not allowed."}
 
-// Examples for `swaggo`:
+// Following types are declared to generate examples with `swaggo`.
 type ErrorInternalServerExample struct {
 	StatusText string `json:"status" example:"Internal Server Error"`
 	ErrorText  string `json:"error" example:"server error during request handling"`

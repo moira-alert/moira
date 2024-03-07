@@ -320,7 +320,6 @@ func hasWildcard(target string) bool {
 	return strings.ContainsAny(target, "[]{}*?")
 }
 
-// positiveDuration:
 func positiveDuration(argument parser.Expr) (string, time.Duration) {
 	var secondTimeDuration time.Duration
 	var value string

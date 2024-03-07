@@ -53,6 +53,7 @@ linters:
     - unparam
     - unused
     - whitespace
+    - godot
 
 issues:
   exclude-rules:

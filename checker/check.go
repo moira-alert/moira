@@ -300,7 +300,7 @@ check - function that calculates the state of metrics in the trigger
 is created and then the values of other alone metrics are added to it
 
 2) The trigger has regular metrics, in this case all alone metrics are simply added to
-all regular metrics
+all regular metrics.
 */
 func (triggerChecker *TriggerChecker) check(
 	regularMetrics map[string]map[string]metricSource.MetricData,

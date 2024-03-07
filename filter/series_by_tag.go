@@ -20,13 +20,13 @@ var ErrNotSeriesByTag = fmt.Errorf("not seriesByTag pattern")
 type TagSpecOperator string
 
 const (
-	// EqualOperator is a strict equality operator and it is used to query metric by tag's value
+	// EqualOperator is a strict equality operator and it is used to query metric by tag's value.
 	EqualOperator TagSpecOperator = "="
-	// NotEqualOperator is a strict non-equality operator and it is used to query metric by tag's value
+	// NotEqualOperator is a strict non-equality operator and it is used to query metric by tag's value.
 	NotEqualOperator TagSpecOperator = "!="
-	// MatchOperator is a match operator which helps to match metric by regex
+	// MatchOperator is a match operator which helps to match metric by regex.
 	MatchOperator TagSpecOperator = "=~"
-	// NotMatchOperator is a non-match operator which helps not to match metric by regex
+	// NotMatchOperator is a non-match operator which helps not to match metric by regex.
 	NotMatchOperator TagSpecOperator = "!=~"
 
 	correctLengthOfMatchedWildcardIndexesSlice = 4

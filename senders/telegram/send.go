@@ -15,9 +15,9 @@ import (
 type messageType string
 
 const (
-	// Album type used if notification has plots
+	// Album type used if notification has plots.
 	Album messageType = "album"
-	// Message type used if notification has not plot
+	// Message type used if notification has not plot.
 	Message messageType = "message"
 )
 

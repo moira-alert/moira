@@ -15,15 +15,15 @@ import (
 )
 
 const (
-	// VariableContactID is used to render template with contact.ID
+	// VariableContactID is used to render template with contact.ID.
 	VariableContactID = "${contact_id}"
-	// VariableContactValue is used to render template with contact.Value
+	// VariableContactValue is used to render template with contact.Value.
 	VariableContactValue = "${contact_value}"
-	// VariableContactType is used to render template with contact.Type
+	// VariableContactType is used to render template with contact.Type.
 	VariableContactType = "${contact_type}"
-	// VariableTriggerID is used to render template with trigger.ID
+	// VariableTriggerID is used to render template with trigger.ID.
 	VariableTriggerID = "${trigger_id}"
-	// VariableTriggerName is used to render template with trigger.Name
+	// VariableTriggerName is used to render template with trigger.Name.
 	VariableTriggerName = "${trigger_name}"
 )
 
@@ -273,11 +273,11 @@ func (notification *ScheduledNotification) IsDelayed(delayedTime int64) bool {
 
 /*
 GetState checks:
-  - If the trigger for which the notification was generated has been deleted, returns Removed state
-  - If the metric is on Maintenance, returns Resaved state
-  - If the trigger is on Maintenance, returns Resaved state
+  - If the trigger for which the notification was generated has been deleted, returns Removed state.
+  - If the metric is on Maintenance, returns Resaved state.
+  - If the trigger is on Maintenance, returns Resaved state.
 
-Otherwise returns Valid state
+Otherwise returns Valid state.
 */
 func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) scheduledNotificationState {
 	if triggerCheck == nil {
@@ -309,11 +309,11 @@ type MetricValue struct {
 }
 
 const (
-	// FallingTrigger represents falling trigger type, in which OK > WARN > ERROR
+	// FallingTrigger represents falling trigger type, in which OK > WARN > ERROR.
 	FallingTrigger = "falling"
-	// RisingTrigger represents rising trigger type, in which OK < WARN < ERROR
+	// RisingTrigger represents rising trigger type, in which OK < WARN < ERROR.
 	RisingTrigger = "rising"
-	// ExpressionTrigger represents trigger type with custom user expression
+	// ExpressionTrigger represents trigger type with custom user expression.
 	ExpressionTrigger = "expression"
 )
 

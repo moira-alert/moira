@@ -7,17 +7,17 @@ import (
 )
 
 var (
-	// TriggerID represents field data for moira.Trigger.ID
+	// TriggerID represents field data for moira.Trigger.ID.
 	TriggerID = FieldData{"ID", "id", 5}
-	// TriggerName represents field data for moira.Trigger.Name
+	// TriggerName represents field data for moira.Trigger.Name.
 	TriggerName = FieldData{"Name", "name", 3}
-	// TriggerDesc represents field data for moira.Trigger.Desc
+	// TriggerDesc represents field data for moira.Trigger.Desc.
 	TriggerDesc = FieldData{"Desc", "desc", 1}
-	// TriggerTags represents field data for moira.Trigger.Tags
+	// TriggerTags represents field data for moira.Trigger.Tags.
 	TriggerTags = FieldData{"Tags", "tags", 0}
-	// TriggerCreatedBy represents field data for moira.Trigger.CreatedBy
+	// TriggerCreatedBy represents field data for moira.Trigger.CreatedBy.
 	TriggerCreatedBy = FieldData{"CreatedBy", "created_by", 0}
-	// TriggerLastCheckScore represents field data for moira.CheckData score
+	// TriggerLastCheckScore represents field data for moira.CheckData score.
 	TriggerLastCheckScore = FieldData{"LastCheckScore", "", 0}
 )
 
