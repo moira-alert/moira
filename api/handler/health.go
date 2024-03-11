@@ -41,6 +41,17 @@ func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// nolint: gofmt,goimports
+//
+//	@summary	Set notifier state
+//	@id			set-notifier-state
+//	@tags		health
+//	@produce	json
+//	@success	200	{object}	dto.NotifierState				"Notifier state retrieved"
+//	@failure	403	{object}	api.ErrorForbidden				"Forbidden"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/health/notifier [get]
 func setNotifierState(writer http.ResponseWriter, request *http.Request) {
 	state := &dto.NotifierState{}
 	if err := render.Bind(request, state); err != nil {
