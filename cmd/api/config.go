@@ -65,8 +65,8 @@ type webConfig struct {
 	SupportEmail string `yaml:"supportEmail"`
 	// If true, users will be able to choose Graphite as trigger metrics data source
 	RemoteAllowed bool
-	// List of enabled contact types
-	Contacts []webContact `yaml:"contacts"`
+	// List of enabled contacts template
+	Contacts []webContact `yaml:"contacts_template"`
 	// Struct to manage feature flags
 	FeatureFlags featureFlags `yaml:"feature_flags"`
 	// Returns the sentry configuration for the frontend
