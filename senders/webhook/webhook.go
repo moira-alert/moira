@@ -12,7 +12,6 @@ import (
 
 // Structure that represents the Webhook configuration in the YAML file
 type config struct {
-	Name     string `mapstructure:"name"`
 	URL      string `mapstructure:"url"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
@@ -35,10 +34,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to webhook config: %w", err)
-	}
-
-	if cfg.Name == "" {
-		return fmt.Errorf("required name for sender type webhook")
 	}
 
 	sender.url = cfg.URL
@@ -76,7 +71,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to build request: %s", err.Error())
+		return fmt.Errorf("failed to build request: %w", err)
 	}
 
 	response, err := sender.client.Do(request)
@@ -85,7 +80,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to perform request: %s", err.Error())
+		return fmt.Errorf("failed to perform request: %w", err)
 	}
 
 	if !isAllowedResponseCode(response.StatusCode) {

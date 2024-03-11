@@ -15,7 +15,6 @@ import (
 
 // Structure that represents the Script configuration in the YAML file
 type config struct {
-	Name string `mapstructure:"name"`
 	Exec string `mapstructure:"exec"`
 }
 
@@ -41,15 +40,14 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
 	}
 
-	if cfg.Name == "" {
-		return fmt.Errorf("required name for sender type script")
-	}
 	_, _, err = parseExec(cfg.Exec)
 	if err != nil {
 		return err
 	}
+
 	sender.exec = cfg.Exec
 	sender.logger = logger
+
 	return nil
 }
 

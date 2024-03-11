@@ -20,7 +20,8 @@ import (
 )
 
 var senderSettings = map[string]interface{}{
-	"type": "mega-sender",
+	"sender_type":  "mega-sender",
+	"contact_type": "mega-contact",
 }
 
 var location, _ = time.LoadLocation("UTC")
