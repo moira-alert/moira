@@ -183,17 +183,19 @@ var requestURLTestCases = []requestURLTestCase{
 }
 
 func TestBuildRequestBody(t *testing.T) {
+	sender := Sender{}
 	Convey("Payload should be valid", t, func() {
 		Convey("Trigger state change", func() {
 			events, contact, trigger, plot, throttled := testEvents, testContact, testTrigger, testPlot, testThrottled
-			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
+			requestBody, err := sender.buildRequestBody(events, contact, trigger, plot, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedStateChangePayload)
 			So(actual, ShouldEqual, expected)
 			So(err, ShouldBeNil)
 		})
+
 		Convey("Empty notification", func() {
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
-			requestBody, err := buildRequestBody(events, contact, trigger, plots, throttled)
+			requestBody, err := sender.buildRequestBody(events, contact, trigger, plots, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedEmptyPayload)
 			So(actual, ShouldEqual, expected)
 			So(actual, ShouldNotContainSubstring, "null")

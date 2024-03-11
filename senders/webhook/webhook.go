@@ -12,15 +12,18 @@ import (
 
 // Structure that represents the Webhook configuration in the YAML file
 type config struct {
-	URL      string `mapstructure:"url"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	Timeout  int    `mapstructure:"timeout"`
+	URL      string            `mapstructure:"url"`
+	Body     string            `mapstructure:"body"`
+	Headers  map[string]string `mapstructure:"headers"`
+	User     string            `mapstructure:"user"`
+	Password string            `mapstructure:"password"`
+	Timeout  int               `mapstructure:"timeout"`
 }
 
 // Sender implements moira sender interface via webhook
 type Sender struct {
 	url      string
+	body     string
 	user     string
 	password string
 	headers  map[string]string
@@ -41,11 +44,17 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("can not read url from config")
 	}
 
+	sender.body = cfg.Body
+
 	sender.user, sender.password = cfg.User, cfg.Password
 
 	sender.headers = map[string]string{
 		"User-Agent":   "Moira",
 		"Content-Type": "application/json",
+	}
+
+	for header, value := range cfg.Headers {
+		sender.headers[header] = value
 	}
 
 	var timeout int
@@ -60,6 +69,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		Timeout:   time.Duration(timeout) * time.Second,
 		Transport: &http.Transport{DisableKeepAlives: true},
 	}
+
 	return nil
 }
 

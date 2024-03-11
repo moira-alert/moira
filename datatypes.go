@@ -129,8 +129,10 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 // NotificationEvents represents slice of NotificationEvent
 type NotificationEvents []NotificationEvent
 
+// PopulatedDescription populates a description template using provided trigger and events data
 func (trigger *TriggerData) PopulatedDescription(events NotificationEvents) error {
-	description, err := templating.Populate(trigger.Name, trigger.Desc, NotificationEventsToTemplatingEvents(events))
+	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(trigger.Name, events.ToTemplateEvents())
+	description, err := triggerDescriptionPopulater.Populate(trigger.Desc)
 	if err != nil {
 		description = "Your description is using the wrong template. Since we were unable to populate your template with " +
 			"data, we return it so you can parse it.\n\n" + trigger.Desc
@@ -141,10 +143,11 @@ func (trigger *TriggerData) PopulatedDescription(events NotificationEvents) erro
 	return err
 }
 
-func NotificationEventsToTemplatingEvents(events NotificationEvents) []templating.Event {
-	templatingEvents := make([]templating.Event, 0, len(events))
+// ToTemplateEvents converts a slice of NotificationEvent into a slice of templating.Event
+func (events NotificationEvents) ToTemplateEvents() []templating.Event {
+	templateEvents := make([]templating.Event, 0, len(events))
 	for _, event := range events {
-		templatingEvents = append(templatingEvents, templating.Event{
+		templateEvents = append(templateEvents, templating.Event{
 			Metric:         event.Metric,
 			MetricElements: strings.Split(event.Metric, "."),
 			Timestamp:      event.Timestamp,
@@ -153,7 +156,7 @@ func NotificationEventsToTemplatingEvents(events NotificationEvents) []templatin
 		})
 	}
 
-	return templatingEvents
+	return templateEvents
 }
 
 // TriggerData represents trigger object
@@ -197,6 +200,13 @@ type ContactData struct {
 	ID    string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User  string `json:"user" example:""`
 	Team  string `json:"team"`
+}
+
+func (contact *ContactData) ToTemplateContact() *templating.Contact {
+	return &templating.Contact{
+		Type:  contact.Type,
+		Value: contact.Value,
+	}
 }
 
 // SubscriptionData represents user subscription
