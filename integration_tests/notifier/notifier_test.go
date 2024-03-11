@@ -43,7 +43,7 @@ var mockCtrl *gomock.Controller
 
 var contact = moira.ContactData{
 	ID:    "ContactID-000000000000001",
-	Type:  "mega-sender",
+	Type:  "mega-contact",
 	Value: "mail1@example.com",
 }
 
