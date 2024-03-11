@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
 	"github.com/golang/mock/gomock"
@@ -19,6 +20,7 @@ func TestFilter(t *testing.T) {
 		check, mockCtrl := createFilterTest(t)
 		defer mockCtrl.Finish()
 		database := check.database.(*mock_moira_alert.MockDatabase)
+		defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
 
 		Convey("Checking the created filter", func() {
 			expected := &filter{
@@ -35,7 +37,7 @@ func TestFilter(t *testing.T) {
 		})
 
 		Convey("Filter error handling test", func() {
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), err)
+			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), err)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldEqual, err)
@@ -46,7 +48,7 @@ func TestFilter(t *testing.T) {
 		Convey("Test update lastSuccessfulCheck", func() {
 			now += 1000
 			database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -59,7 +61,7 @@ func TestFilter(t *testing.T) {
 			check.lastSuccessfulCheck = now - check.delay - 1
 
 			database.EXPECT().GetMetricsUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -69,7 +71,7 @@ func TestFilter(t *testing.T) {
 
 		Convey("Exit without action", func() {
 			database.EXPECT().GetMetricsUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
+			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)

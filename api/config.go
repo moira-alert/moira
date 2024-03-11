@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 	"time"
+
+	"github.com/moira-alert/moira"
 )
 
 // WebContact is container for web ui contact validation.
@@ -30,21 +32,27 @@ type Sentry struct {
 
 // Config for api configuration variables.
 type Config struct {
-	EnableCORS                bool
-	Listen                    string
-	GraphiteLocalMetricTTL    time.Duration
-	GraphiteRemoteMetricTTL   time.Duration
-	PrometheusRemoteMetricTTL time.Duration
-	Flags                     FeatureFlags
+	EnableCORS bool
+	Listen     string
+	MetricsTTL map[moira.ClusterKey]time.Duration
+	Flags      FeatureFlags
 }
 
 // WebConfig is container for web ui configuration parameters.
 type WebConfig struct {
-	SupportEmail  string       `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
-	RemoteAllowed bool         `json:"remoteAllowed" example:"true"`
-	Contacts      []WebContact `json:"contacts"`
-	FeatureFlags  FeatureFlags `json:"featureFlags"`
-	Sentry        Sentry       `json:"sentry"`
+	SupportEmail         string                `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
+	RemoteAllowed        bool                  `json:"remoteAllowed" example:"true"`
+	MetricSourceClusters []MetricSourceCluster `json:"metric_source_clusters"`
+	Contacts             []WebContact          `json:"contacts"`
+	FeatureFlags         FeatureFlags          `json:"featureFlags"`
+	Sentry               Sentry                `json:"sentry"`
+}
+
+// MetricSourceCluster contains data about supported metric source cluster
+type MetricSourceCluster struct {
+	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_remote"`
+	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`
+	ClusterName   string              `json:"cluster_name" example:"Graphite Remote Prod"`
 }
 
 func (WebConfig) Render(w http.ResponseWriter, r *http.Request) error {

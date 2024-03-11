@@ -21,24 +21,23 @@ type Database interface {
 
 	// Tag storing
 	GetTagNames() ([]string, error)
+	CreateTags(tags []string) error
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
 	CleanUpAbandonedTags() (int, error)
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
-	SetTriggerLastCheck(triggerID string, checkData *CheckData, triggerSource TriggerSource) error
+	SetTriggerLastCheck(triggerID string, checkData *CheckData, clusterKey ClusterKey) error
 	RemoveTriggerLastCheck(triggerID string) error
 	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error
 	CleanUpAbandonedTriggerLastCheck() error
 
 	// Trigger storing
 	GetAllTriggerIDs() ([]string, error)
-	GetLocalTriggerIDs() ([]string, error)
-	GetRemoteTriggerIDs() ([]string, error)
-	GetPrometheusTriggerIDs() ([]string, error)
+	GetTriggerIDs(clusterKey ClusterKey) ([]string, error)
 
-	GetTriggerCount() (map[TriggerSource]int64, error)
+	GetTriggerCount(clusterKeys []ClusterKey) (map[ClusterKey]int64, error)
 
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
@@ -113,17 +112,9 @@ type Database interface {
 	RemoveMetricsValues(metrics []string, toTime int64) error
 	GetMetricsTTLSeconds() int64
 
-	AddLocalTriggersToCheck(triggerIDs []string) error
-	GetLocalTriggersToCheck(count int) ([]string, error)
-	GetLocalTriggersToCheckCount() (int64, error)
-
-	AddRemoteTriggersToCheck(triggerIDs []string) error
-	GetRemoteTriggersToCheck(count int) ([]string, error)
-	GetRemoteTriggersToCheckCount() (int64, error)
-
-	AddPrometheusTriggersToCheck(triggerIDs []string) error
-	GetPrometheusTriggersToCheck(count int) ([]string, error)
-	GetPrometheusTriggersToCheckCount() (int64, error)
+	AddTriggersToCheck(clusterKey ClusterKey, triggerIDs []string) error
+	GetTriggersToCheck(clusterKey ClusterKey, count int) ([]string, error)
+	GetTriggersToCheckCount(clusterKey ClusterKey) (int64, error)
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error

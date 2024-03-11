@@ -12,39 +12,49 @@ telemetry:
   pprof:
     enabled: true
   listen: ":8091"
-remote:
-  enabled: true
-  url: "http://graphite:80/render"
-  check_interval: 60s
-  timeout: 60s
-  metrics_ttl: 168h
-prometheus:
-  url: "http://prometheus:9090"
-  enabled: true
-  check_interval: 60s
-  timeout: 60s
-  metrics_ttl: 168h
+graphite_remote:
+  - cluster_id: default
+    cluster_name: Graphite 1
+    url: "http://graphite:80/render"
+    check_interval: 60s
+    timeout: 60s
+    metrics_ttl: 168h
+prometheus_remote:
+  - cluster_id: default
+    cluster_name: Prometheus 1
+    url: "http://prometheus:9090"
+    check_interval: 60s
+    timeout: 60s
+    metrics_ttl: 168h
+  - cluster_id: staging
+    cluster_name: Prometheus 2
+    url: "http://prometheus_2:9090"
+    check_interval: 60s
+    timeout: 60s
+    metrics_ttl: 168h
+    retries: 5
+    retry_timeout: 15s
 api:
   listen: ":8081"
   enable_cors: false
 web:
   contacts:
-    - type: mail
+    - contact_id: mail
       label: E-mail
-    - type: pushover
+    - contact_id: pushover
       label: Pushover
-    - type: slack
+    - contact_id: slack
       label: Slack
-    - type: telegram
+    - contact_id: telegram
       label: Telegram
       help: required to grant @MoiraBot admin privileges
-    - type: twilio sms
+    - contact_id: twilio sms
       label: Twilio SMS
-    - type: twilio voice
+    - contact_id: twilio voice
       label: Twilio voice
-    - type: msteams
+    - contact_id: msteams
       label: MS Teams
-    - type: mattermost
+    - contact_id: mattermost
       label: Mattermost
   feature_flags:
     is_plotting_available: true

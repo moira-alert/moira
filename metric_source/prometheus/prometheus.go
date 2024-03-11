@@ -13,7 +13,6 @@ const StepTimeSeconds int64 = 60
 var ErrPrometheusStorageDisabled = fmt.Errorf("remote prometheus storage is not enabled")
 
 type Config struct {
-	Enabled        bool
 	CheckInterval  time.Duration
 	MetricsTTL     time.Duration
 	RequestTimeout time.Duration
@@ -44,10 +43,7 @@ func (prometheus *Prometheus) GetMetricsTTLSeconds() int64 {
 }
 
 func (prometheus *Prometheus) IsConfigured() (bool, error) {
-	if prometheus.config.Enabled {
-		return prometheus.config.Enabled, nil
-	}
-	return false, ErrPrometheusStorageDisabled
+	return true, nil
 }
 
 func (prometheus *Prometheus) IsAvailable() (bool, error) {

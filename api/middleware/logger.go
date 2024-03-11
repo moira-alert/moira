@@ -40,7 +40,7 @@ func WithLogEntry(r *http.Request, entry *apiLoggerEntry) *http.Request {
 func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
-			entry := newLogEntry(logger, request)
+			entry := NewLogEntry(logger, request)
 			wrapWriter := middleware.NewWrapResponseWriter(&responseWriterWithBody{ResponseWriter: writer}, request.ProtoMajor)
 
 			t1 := time.Now()
@@ -76,7 +76,8 @@ func getErrorResponseIfItHas(writer http.ResponseWriter) *api.ErrorResponse {
 	return errResp
 }
 
-func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
+// NewLogEntry is a function that creates an api logger entry
+func NewLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	entry := &apiLoggerEntry{
 		logger:  logger.Clone(),
 		request: request,

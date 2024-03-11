@@ -41,23 +41,23 @@ func (metrics *NotifierMetrics) UpdateFetchNotificationsDurationMs(fetchNotifica
 	metrics.fetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
 }
 
-// MarkSendersDroppedNotifications marks metrics as 1 by contactType for dropped notifications.
-func (metrics *NotifierMetrics) MarkSendersDroppedNotifications(contactType string) {
-	if metric, found := metrics.SendersDroppedNotifications.GetRegisteredMeter(contactType); found {
+// MarkSendersDroppedNotifications marks metrics as 1 by contact type for dropped notifications.
+func (metrics *NotifierMetrics) MarkSendersDroppedNotifications(contactID string) {
+	if metric, found := metrics.SendersDroppedNotifications.GetRegisteredMeter(contactID); found {
 		metric.Mark(1)
 	}
 }
 
-// MarkSendersOkMetrics marks metrics as 1 by contactType when notifications were successfully sent.
-func (metrics *NotifierMetrics) MarkSendersOkMetrics(contactType string) {
-	if metric, found := metrics.SendersOkMetrics.GetRegisteredMeter(contactType); found {
+// MarkSendersOkMetrics marks metrics as 1 by contact type when notifications were successfully sent.
+func (metrics *NotifierMetrics) MarkSendersOkMetrics(contactID string) {
+	if metric, found := metrics.SendersOkMetrics.GetRegisteredMeter(contactID); found {
 		metric.Mark(1)
 	}
 }
 
-// MarkSendersFailedMetrics marks metrics as 1 by contactType when notifications were unsuccessfully sent.
-func (metrics *NotifierMetrics) MarkSendersFailedMetrics(contactType string) {
-	if metric, found := metrics.SendersFailedMetrics.GetRegisteredMeter(contactType); found {
+// MarkSendersFailedMetrics marks metrics as 1 by contact type when notifications were unsuccessfully sent.
+func (metrics *NotifierMetrics) MarkSendersFailedMetrics(contactID string) {
+	if metric, found := metrics.SendersFailedMetrics.GetRegisteredMeter(contactID); found {
 		metric.Mark(1)
 	}
 }

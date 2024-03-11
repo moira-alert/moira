@@ -182,14 +182,12 @@ func Populate(defaultPopulated bool) func(next http.Handler) http.Handler {
 }
 
 // Triggers gets string value target from URI query and set it to request context. If query has not values sets given values
-func Triggers(localMetricTTL, remoteMetricTTL, prometheusMetricTTL time.Duration) func(next http.Handler) http.Handler {
+func Triggers(metricTTL map[moira.ClusterKey]time.Duration) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ctx := request.Context()
 
-			ctx = context.WithValue(ctx, localMetricTTLKey, localMetricTTL)
-			ctx = context.WithValue(ctx, remoteMetricTTLKey, remoteMetricTTL)
-			ctx = context.WithValue(ctx, prometheusMetricTTLKey, prometheusMetricTTL)
+			ctx = context.WithValue(ctx, clustersMetricTTLKey, metricTTL)
 
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})

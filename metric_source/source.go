@@ -4,7 +4,6 @@ package metricsource
 type MetricSource interface {
 	Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (FetchResult, error)
 	GetMetricsTTLSeconds() int64
-	IsConfigured() (bool, error)
 	IsAvailable() (bool, error)
 }
 

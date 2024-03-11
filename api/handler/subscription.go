@@ -38,12 +38,13 @@ func subscription(router chi.Router) {
 //	@router		/subscription [get]
 func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
-	contacts, err := controller.GetUserSubscriptions(database, userLogin)
+	subscriptions, err := controller.GetUserSubscriptions(database, userLogin)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
-	if err := render.Render(writer, request, contacts); err != nil {
+
+	if err := render.Render(writer, request, subscriptions); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
@@ -89,9 +90,9 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 // subscriptionFilter is middleware for check subscription existence and user permissions
 func subscriptionFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		contactID := middleware.GetSubscriptionID(request)
+		subscriptionID := middleware.GetSubscriptionID(request)
 		userLogin := middleware.GetLogin(request)
-		subscriptionData, err := controller.CheckUserPermissionsForSubscription(database, contactID, userLogin)
+		subscriptionData, err := controller.CheckUserPermissionsForSubscription(database, subscriptionID, userLogin)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return

@@ -24,6 +24,15 @@ services:
       - "9080:9090"
     restart: always
 
+  prometheus_2:
+    image: prom/prometheus
+    volumes:
+      - ./local/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+    ports:
+      - "9081:9090"
+    restart: always
+
   filter:
     build:
       context: .
