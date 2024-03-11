@@ -50,7 +50,7 @@ func TestGetEvents(t *testing.T) {
 	})
 
 	Convey("Test error", t, func() {
-		expected := fmt.Errorf("oooops! Can not get all delivery channels")
+		expected := fmt.Errorf("oooops! Can not get all contacts")
 		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size-1).Return(nil, expected)
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))

@@ -39,22 +39,22 @@ api:
   enable_cors: false
 web:
   contacts:
-    - contact_id: mail
+    - type: mail
       label: E-mail
-    - contact_id: pushover
+    - type: pushover
       label: Pushover
-    - contact_id: slack
+    - type: slack
       label: Slack
-    - contact_id: telegram
+    - type: telegram
       label: Telegram
       help: required to grant @MoiraBot admin privileges
-    - contact_id: twilio sms
+    - type: twilio sms
       label: Twilio SMS
-    - contact_id: twilio voice
+    - type: twilio voice
       label: Twilio voice
-    - contact_id: msteams
+    - type: msteams
       label: MS Teams
-    - contact_id: mattermost
+    - type: mattermost
       label: Mattermost
   feature_flags:
     is_plotting_available: true

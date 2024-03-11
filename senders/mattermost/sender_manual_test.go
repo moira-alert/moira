@@ -45,7 +45,7 @@ func TestSender(t *testing.T) {
 				OldState:  moira.StateOK,
 				State:     moira.StateNODATA,
 			}
-			events, contact, trigger, plots, throttled := moira.NotificationEvents{event}, moira.Contact{
+			events, contact, trigger, plots, throttled := moira.NotificationEvents{event}, moira.ContactData{
 				Value: channelID,
 			}, moira.TriggerData{
 				ID:   "ID",

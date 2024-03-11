@@ -67,9 +67,9 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 // NotificationHistoryConfig is the config which coordinates interaction with notification statistics
 // e.g. how much time should we store it, or how many history items can we request from database
 type NotificationHistoryConfig struct {
-	// Time which moira should store delivery channels and theirs events history
+	// Time which moira should store contacts and theirs events history
 	NotificationHistoryTTL string `yaml:"ttl"`
-	// Max count of events which moira may send as response of delivery channel and its events history
+	// Max count of events which moira may send as response of contact and its events history
 	NotificationHistoryQueryLimit int `yaml:"query_limit"`
 }
 
