@@ -73,7 +73,7 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 //	@produce	json
 //	@success	200	{object}	dto.NotificationDeleteResponse	"Notification have been deleted"
 //	@failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	403	{object}	api.ErrorForbidden				"Forbidden"
+//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/notification [delete]
@@ -108,7 +108,7 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 //	@tags		notification
 //	@produce	json
 //	@success	200	{object}	dto.NotificationsList			"Notification have been deleted"
-//	@failure	403	{object}	api.ErrorForbidden				"Forbidden"
+//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/notification [delete]
 func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
