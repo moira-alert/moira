@@ -25,7 +25,7 @@ const (
 	LoginKey       = "login"
 	defaultContact = "testContact"
 	defaultLogin   = "testLogin"
-	defaultTeamID  = "testTeam"
+	defaultTeamID  = "testTeamID"
 )
 
 func TestGetAllContacts(t *testing.T) {
@@ -44,7 +44,7 @@ func TestGetAllContacts(t *testing.T) {
 					ID:    defaultContact,
 					Type:  "mail",
 					Value: "moira@skbkontur.ru",
-					User:  "moira",
+					User:  defaultLogin,
 					Team:  "",
 				},
 			}, nil).Times(1)
@@ -56,7 +56,7 @@ func TestGetAllContacts(t *testing.T) {
 						ID:    defaultContact,
 						Type:  "mail",
 						Value: "moira@skbkontur.ru",
-						User:  "moira",
+						User:  defaultLogin,
 						Team:  "",
 					},
 				},
@@ -121,7 +121,7 @@ func TestGetContactById(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
+				User:  defaultLogin,
 				Team:  "",
 			}, nil).Times(1)
 			database = mockDb
@@ -130,7 +130,7 @@ func TestGetContactById(t *testing.T) {
 				ID:     contactID,
 				Type:   "mail",
 				Value:  "moira@skbkontur.ru",
-				User:   "test",
+				User:   defaultLogin,
 				TeamID: "",
 			}
 
@@ -384,7 +384,7 @@ func TestUpdateContact(t *testing.T) {
 			ID:     contactID,
 			Type:   "mail",
 			Value:  "moira@skbkontur.ru",
-			User:   "test",
+			User:   defaultLogin,
 			TeamID: "",
 		}
 
@@ -503,7 +503,7 @@ func TestRemoveContact(t *testing.T) {
 		})
 
 		Convey("Successful deletion of a contact without team id and subscriptions", func() {
-			mockDb.EXPECT().GetUserSubscriptionIDs("test").Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
@@ -513,7 +513,7 @@ func TestRemoveContact(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
+				User:  defaultLogin,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 

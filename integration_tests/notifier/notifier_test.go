@@ -83,10 +83,6 @@ func TestNotifier(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	database := redis.NewTestDatabase(logger)
-	database.SaveContact(&contact)               //nolint
-	database.SaveSubscription(&subscription)     //nolint
-	database.SaveTrigger(trigger.ID, &trigger)   //nolint
-	database.PushNotificationEvent(&event, true) //nolint
 
 	err := database.SaveContact(&contact)
 	if err != nil {
