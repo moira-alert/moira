@@ -285,7 +285,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	userLogin := uuid.Must(uuid.NewV4()).String()
 	teamID := uuid.Must(uuid.NewV4()).String()
 	id := uuid.Must(uuid.NewV4()).String()
-	auth := &api.Authorization{AdminList: make([]string, 0)}
+	auth := &api.Authorization{}
 
 	Convey("No subscription", t, func() {
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, database.ErrNil)
@@ -353,7 +353,7 @@ func TestCheckAdminPermissionsForSubscription(t *testing.T) {
 	teamID := uuid.Must(uuid.NewV4()).String()
 	id := uuid.Must(uuid.NewV4()).String()
 	adminLogin := "admin_login"
-	auth := &api.Authorization{Enabled: true, AdminList: []string{"admin_login"}}
+	auth := &api.Authorization{Enabled: true, AdminList: map[string]struct{}{adminLogin: {}}}
 
 	Convey("Same user", t, func() {
 		expectedSub := moira.SubscriptionData{ID: id, User: adminLogin}

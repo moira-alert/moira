@@ -591,7 +591,7 @@ func TestSetTeamUsers(t *testing.T) {
 func TestCheckUserPermissionsForTeam(t *testing.T) {
 	const teamID = "testTeam"
 	const userID = "userID"
-	auth := &api.Authorization{AdminList: make([]string, 0)}
+	auth := &api.Authorization{}
 
 	Convey("CheckUserPermissionsForTeam", t, func() {
 		mockCtrl := gomock.NewController(t)

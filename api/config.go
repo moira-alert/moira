@@ -41,7 +41,7 @@ type Config struct {
 
 // Authorization contains authorization configuration.
 type Authorization struct {
-	AdminList []string
+	AdminList map[string]struct{}
 	Enabled   bool
 }
 
@@ -55,12 +55,8 @@ func (auth *Authorization) IsAdmin(login string) bool {
 	if !auth.IsEnabled() {
 		return false
 	}
-	for _, admin := range auth.AdminList {
-		if admin == login {
-			return true
-		}
-	}
-	return false
+	_, ok := auth.AdminList[login]
+	return ok
 }
 
 // WebConfig is container for web ui configuration parameters.

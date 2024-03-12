@@ -108,14 +108,22 @@ func (config *apiConfig) getSettings(
 	flags api.FeatureFlags,
 ) *api.Config {
 	return &api.Config{
-		EnableCORS: config.EnableCORS,
-		Listen:     config.Listen,
-		MetricsTTL: metricsTTL,
-		Flags:      flags,
-		Authorization: api.Authorization{
-			Enabled:   config.Authorization.Enabled,
-			AdminList: config.Authorization.AdminList,
-		},
+		EnableCORS:    config.EnableCORS,
+		Listen:        config.Listen,
+		MetricsTTL:    metricsTTL,
+		Flags:         flags,
+		Authorization: config.Authorization.toApiConfig(),
+	}
+}
+
+func (auth *authorization) toApiConfig() api.Authorization {
+	adminList := make(map[string]struct{}, len(auth.AdminList))
+	for _, admin := range auth.AdminList {
+		adminList[admin] = struct{}{}
+	}
+	return api.Authorization{
+		Enabled:   auth.Enabled,
+		AdminList: adminList,
 	}
 }
 

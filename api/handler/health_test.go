@@ -29,7 +29,7 @@ func TestSetHealthWithAuth(t *testing.T) {
 		adminLogin := "admin_login"
 		config := &api.Config{Authorization: api.Authorization{
 			Enabled:   true,
-			AdminList: []string{adminLogin},
+			AdminList: map[string]struct{}{adminLogin: {}},
 		}}
 		webConfig := &api.WebConfig{
 			SupportEmail: "test",

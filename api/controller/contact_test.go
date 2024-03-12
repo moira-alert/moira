@@ -497,7 +497,7 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	userLogin := uuid.Must(uuid.NewV4()).String()
 	teamID := uuid.Must(uuid.NewV4()).String()
 	id := uuid.Must(uuid.NewV4()).String()
-	auth := &api.Authorization{AdminList: make([]string, 0)}
+	auth := &api.Authorization{}
 
 	Convey("No contact", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{}, database.ErrNil)
@@ -564,7 +564,7 @@ func TestCheckAdminPermissionsForContact(t *testing.T) {
 	teamID := uuid.Must(uuid.NewV4()).String()
 	id := uuid.Must(uuid.NewV4()).String()
 	adminLogin := "admin_login"
-	auth := &api.Authorization{Enabled: true, AdminList: []string{"admin_login"}}
+	auth := &api.Authorization{Enabled: true, AdminList: map[string]struct{}{adminLogin: {}}}
 
 	Convey("Same user", t, func() {
 		expectedContact := moira.ContactData{ID: id, User: adminLogin}
