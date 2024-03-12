@@ -29,6 +29,9 @@ func Test_apiConfig_getSettings(t *testing.T) {
 			Listen:     "0000",
 			MetricsTTL: metricTTLs,
 			Flags:      api.FeatureFlags{IsReadonlyEnabled: true},
+			Authorization: api.Authorization{
+				AdminList: make(map[string]struct{}),
+			},
 		}
 
 		result := apiConf.getSettings(metricTTLs, api.FeatureFlags{IsReadonlyEnabled: true})
