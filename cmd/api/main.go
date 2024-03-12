@@ -28,7 +28,7 @@ var (
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )
 
-// Moira api bin version
+// Moira api bin version.
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
@@ -157,7 +157,7 @@ func main() {
 		Msg("Moira API shutting down.")
 }
 
-// Stop Moira API HTTP server
+// Stop Moira API HTTP server.
 func Stop(logger moira.Logger, server *http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //nolint
 	defer cancel()

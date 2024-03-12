@@ -6,7 +6,7 @@ import (
 
 type AloneMetrics map[string]metricSource.MetricData
 
-// NewAloneMetricsWithCapacity is a constructor function for AloneMetrics
+// NewAloneMetricsWithCapacity is a constructor function for AloneMetrics.
 func NewAloneMetricsWithCapacity(capacity int) AloneMetrics {
 	return make(map[string]metricSource.MetricData, capacity)
 }
@@ -19,7 +19,7 @@ func NewAloneMetricsWithCapacity(capacity int) AloneMetrics {
 //		"t3": "metric.name.2",
 //	}
 //
-// and current alone metrics are
+// and current alone metrics are.
 //
 //	{
 //		"t2": metricSource.MetricData{Name: "metric.name.1"}

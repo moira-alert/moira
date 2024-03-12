@@ -7,7 +7,7 @@ import (
 	"github.com/moira-alert/moira/api"
 )
 
-// ReadOnlyMiddleware returns 403 for mutating queries if readonly mode is enabled
+// ReadOnlyMiddleware returns 403 for mutating queries if readonly mode is enabled.
 func ReadOnlyMiddleware(config *api.Config) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {

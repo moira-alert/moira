@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
-// FetchEventsWorker checks for new events and new notifications based on it
+// FetchEventsWorker checks for new events and new notifications based on it.
 type FetchEventsWorker struct {
 	Logger    moira.Logger
 	Database  moira.Database
@@ -24,7 +24,7 @@ type FetchEventsWorker struct {
 	tomb      tomb.Tomb
 }
 
-// Start is a cycle that fetches events from database
+// Start is a cycle that fetches events from database.
 func (worker *FetchEventsWorker) Start() {
 	worker.tomb.Go(func() error {
 		for {
@@ -71,7 +71,7 @@ func (worker *FetchEventsWorker) Start() {
 	worker.Logger.Info().Msg("Moira Notifier Fetching events started")
 }
 
-// Stop stops new event fetching and wait for finish
+// Stop stops new event fetching and wait for finish.
 func (worker *FetchEventsWorker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()

@@ -25,18 +25,18 @@ type apiLoggerEntry struct {
 	msg     string
 }
 
-// GetLoggerEntry gets logger entry with configured logger
+// GetLoggerEntry gets logger entry with configured logger.
 func GetLoggerEntry(request *http.Request) moira.Logger {
 	apiLoggerEntry := request.Context().Value(middleware.LogEntryCtxKey).(*apiLoggerEntry)
 	return apiLoggerEntry.logger
 }
 
-// WithLogEntry sets to context configured logger entry
+// WithLogEntry sets to context configured logger entry.
 func WithLogEntry(r *http.Request, entry *apiLoggerEntry) *http.Request {
 	return r.WithContext(context.WithValue(r.Context(), middleware.LogEntryCtxKey, entry))
 }
 
-// RequestLogger is overload method of go-chi.middleware RequestLogger with custom response logging
+// RequestLogger is overload method of go-chi.middleware RequestLogger with custom response logging.
 func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(writer http.ResponseWriter, request *http.Request) {
@@ -76,7 +76,7 @@ func getErrorResponseIfItHas(writer http.ResponseWriter) *api.ErrorResponse {
 	return errResp
 }
 
-// NewLogEntry is a function that creates an api logger entry
+// NewLogEntry is a function that creates an api logger entry.
 func NewLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	entry := &apiLoggerEntry{
 		logger:  logger.Clone(),

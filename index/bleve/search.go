@@ -11,9 +11,9 @@ import (
 )
 
 // Search gets search params and returns triggerIDs in following order:
-// TriggerCheck.Score (desc)
-// Relevance (asc)
-// Trigger.Name (asc)
+// TriggerCheck.Score (desc).
+// Relevance (asc).
+// Trigger.Name (asc).
 func (index *TriggerIndex) Search(options moira.SearchOptions) (searchResults []*moira.SearchResult, total int64, err error) {
 	if options.Size < 0 {
 		options.Page = 0

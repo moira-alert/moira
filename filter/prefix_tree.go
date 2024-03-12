@@ -15,7 +15,7 @@ type PrefixTree struct {
 	Logger moira.Logger
 }
 
-// PatternNode contains pattern node
+// PatternNode contains pattern node.
 type PatternNode struct {
 	Children   []*PatternNode
 	Part       string
@@ -26,12 +26,12 @@ type PatternNode struct {
 	Payload    map[string]MatchingHandler
 }
 
-// Add inserts pattern in tree
+// Add inserts pattern in tree.
 func (source *PrefixTree) Add(pattern string) {
 	source.AddWithPayload(pattern, "", nil)
 }
 
-// AddWithPayload inserts pattern and payload in tree
+// AddWithPayload inserts pattern and payload in tree.
 func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payloadValue MatchingHandler) {
 	currentNode := source.Root
 	parts := strings.Split(pattern, ".")
@@ -91,7 +91,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 	}
 }
 
-// Match finds metric in tree and returns prefixes for all matched nodes
+// Match finds metric in tree and returns prefixes for all matched nodes.
 func (source *PrefixTree) Match(metric string) []string {
 	nodes, found := source.findNodes(metric)
 	if found == 0 {
@@ -108,7 +108,7 @@ func (source *PrefixTree) Match(metric string) []string {
 	return matched
 }
 
-// MatchWithValue finds metric in tree and returns payloads for all matched nodes
+// MatchWithValue finds metric in tree and returns payloads for all matched nodes.
 func (source *PrefixTree) MatchWithValue(metric string) map[string]MatchingHandler {
 	nodes, _ := source.findNodes(metric)
 	if nodes == nil {

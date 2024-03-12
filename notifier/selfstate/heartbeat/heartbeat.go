@@ -12,7 +12,7 @@ type Heartbeater interface {
 	GetErrorMessage() string
 }
 
-// heartbeat basic structure for Heartbeater
+// heartbeat basic structure for Heartbeater.
 type heartbeat struct {
 	logger   moira.Logger
 	database moira.Database

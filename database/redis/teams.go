@@ -7,7 +7,7 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// SaveTeam saves team into redis
+// SaveTeam saves team into redis.
 func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 	c := *connector.client
 
@@ -23,7 +23,7 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 	return nil
 }
 
-// GetTeam retrieves team from redis by it's id
+// GetTeam retrieves team from redis by it's id.
 func (connector *DbConnector) GetTeam(teamID string) (moira.Team, error) {
 	c := *connector.client
 
@@ -84,7 +84,7 @@ func (connector *DbConnector) GetUserTeams(userID string) ([]string, error) {
 	return teams, nil
 }
 
-// GetTeamUsers returns all users of certain team
+// GetTeamUsers returns all users of certain team.
 func (connector *DbConnector) GetTeamUsers(teamID string) ([]string, error) {
 	c := *connector.client
 

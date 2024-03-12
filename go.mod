@@ -195,5 +195,5 @@ require (
 	golang.org/x/tools v0.12.0 // indirect
 )
 
-// Have to exclude version that is incorectly retracted by authors
+// Have to exclude version that is incorectly retracted by authors.
 exclude github.com/gomodule/redigo v2.0.0+incompatible

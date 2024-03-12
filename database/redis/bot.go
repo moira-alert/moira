@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// GetIDByUsername read ID of user by messenger username
+// GetIDByUsername read ID of user by messenger username.
 func (connector *DbConnector) GetIDByUsername(messenger, username string) (string, error) {
 	if strings.HasPrefix(username, "#") {
 		result := "@" + username[1:]
@@ -23,14 +23,14 @@ func (connector *DbConnector) GetIDByUsername(messenger, username string) (strin
 	return result, err
 }
 
-// SetUsernameID store id of username
+// SetUsernameID store id of username.
 func (connector *DbConnector) SetUsernameID(messenger, username, id string) error {
 	c := *connector.client
 	err := c.Set(connector.context, usernameKey(messenger, username), id, redis.KeepTTL).Err()
 	return err
 }
 
-// RemoveUser removes username from messenger data
+// RemoveUser removes username from messenger data.
 func (connector *DbConnector) RemoveUser(messenger, username string) error {
 	c := *connector.client
 	err := c.Del(connector.context, usernameKey(messenger, username)).Err()

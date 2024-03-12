@@ -6,7 +6,7 @@ const Red = "ff0000"
 const Black = "000000"
 const White = "ffffff"
 
-// Fact models a fact in a MessageCard, contains a timestamp and trigger data
+// Fact models a fact in a MessageCard, contains a timestamp and trigger data.
 //
 //	{
 //		"name": "10:45",

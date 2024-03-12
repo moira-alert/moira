@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 )
 
-// GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs
+// GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs.
 func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*dto.TagsStatistics, *api.ErrorResponse) {
 	tagsNames, err := database.GetTagNames()
 	if err != nil {
@@ -59,7 +59,7 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 	return &tagsStatistics, nil
 }
 
-// GetAllTags gets all tag names
+// GetAllTags gets all tag names.
 func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
 	tagsNames, err := getTagNamesSorted(database)
 	if err != nil {
@@ -82,7 +82,7 @@ func getTagNamesSorted(database moira.Database) ([]string, error) {
 	return tagsNames, nil
 }
 
-// CreateTags create tags with tag names
+// CreateTags create tags with tag names.
 func CreateTags(database moira.Database, tags *dto.TagsData) *api.ErrorResponse {
 	if err := database.CreateTags(tags.TagNames); err != nil {
 		return api.ErrorInternalServer(err)
@@ -91,7 +91,7 @@ func CreateTags(database moira.Database, tags *dto.TagsData) *api.ErrorResponse 
 	return nil
 }
 
-// RemoveTag deletes tag by name
+// RemoveTag deletes tag by name.
 func RemoveTag(database moira.Database, tagName string) (*dto.MessageResponse, *api.ErrorResponse) {
 	triggerIDs, err := database.GetTagTriggerIDs(tagName)
 	if err != nil {

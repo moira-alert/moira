@@ -7,7 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Added delay because command is potentially dangerous and can delete unwanted triggers
+// Added delay because command is potentially dangerous and can delete unwanted triggers.
 var delay = 10 * time.Second
 
 func handleRemoveTriggersStartWith(logger moira.Logger, database moira.Database, prefix string) error {

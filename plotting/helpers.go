@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/go-chart"
 )
 
-// sortedByLen represents string array to be sorted by length
+// sortedByLen represents string array to be sorted by length.
 type sortedByLen []string
 
 func (initial sortedByLen) Len() int {
@@ -26,7 +26,7 @@ func (initial sortedByLen) Swap(i int, j int) {
 	initial[i], initial[j] = initial[j], initial[i]
 }
 
-// sanitizeLabelName shortens label names to max length
+// sanitizeLabelName shortens label names to max length.
 func sanitizeLabelName(label string, maxLabelLength int) string {
 	labelLength := utf8.RuneCountInString(label)
 	if labelLength > maxLabelLength {
@@ -36,13 +36,13 @@ func sanitizeLabelName(label string, maxLabelLength int) string {
 	return label
 }
 
-// percentsOfRange results expected percents of range by given min and max values
+// percentsOfRange results expected percents of range by given min and max values.
 func percentsOfRange(min, max, percent float64) float64 {
 	delta := math.Abs(max - min)
 	return percent * (delta / 100)
 }
 
-// getTimeValueFormatter returns a time formatter with a given format and timezone
+// getTimeValueFormatter returns a time formatter with a given format and timezone.
 func getTimeValueFormatter(location *time.Location, format string) chart.ValueFormatter {
 	return func(v interface{}) string {
 		storage := &locationStorage{location: location}
@@ -51,7 +51,7 @@ func getTimeValueFormatter(location *time.Location, format string) chart.ValueFo
 }
 
 // locationStorage is a container to store
-// timezone and provide time value formatter
+// timezone and provide time value formatter.
 type locationStorage struct {
 	location *time.Location
 }
@@ -71,7 +71,7 @@ func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat 
 }
 
 // getYAxisValuesFormatter returns value formatter
-// for values on yaxis and resolved maximal formatted value length
+// for values on yaxis and resolved maximal formatted value length.
 func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int) {
 	var formatter func(v interface{}) string
 	deltaLimits := int64(limits.highest) - int64(limits.lowest)
@@ -88,7 +88,7 @@ func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int
 	return formatter, highestLen
 }
 
-// floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot
+// floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot.
 func floatToHumanizedValueFormatter(v interface{}) string {
 	if typed, isTyped := v.(float64); isTyped {
 		if math.Abs(typed) < 1000 { //nolint

@@ -1,11 +1,11 @@
 package metrics
 
-// HeartBeatMetrics is a collection of metrics used in hearbeats
+// HeartBeatMetrics is a collection of metrics used in hearbeats.
 type HeartBeatMetrics struct {
 	notifierIsAlive Meter
 }
 
-// ConfigureHeartBeatMetrics is notifier metrics configurator
+// ConfigureHeartBeatMetrics is notifier metrics configurator.
 func ConfigureHeartBeatMetrics(registry Registry) *HeartBeatMetrics {
 	return &HeartBeatMetrics{
 		notifierIsAlive: registry.NewMeter("", "alive"),
