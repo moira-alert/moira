@@ -125,18 +125,18 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 //		"t3": {"m4": {metrics}},
 //	}
 //
-// and declared alone metrics
+// and declared alone metrics.
 //
 //	{"t3": true}
 //
-// These methods will return
+// These methods will return.
 //
 //	{
 //		"t1": {"m1", "m2", "m3"},
 //		"t2": {"m1", "m2", "m3"},
 //	}
 //
-// and
+// and.
 //
 //	{
 //	"t3": {metrics},

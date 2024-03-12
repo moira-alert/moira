@@ -1,6 +1,6 @@
 package metrics
 
-// FilterMetrics is a collection of metrics used in filter
+// FilterMetrics is a collection of metrics used in filter.
 type FilterMetrics struct {
 	TotalMetricsReceived    Counter
 	ValidMetricsReceived    Counter
@@ -12,7 +12,7 @@ type FilterMetrics struct {
 	LineChannelLen          Histogram
 }
 
-// ConfigureFilterMetrics initialize metrics
+// ConfigureFilterMetrics initialize metrics.
 func ConfigureFilterMetrics(registry Registry) *FilterMetrics {
 	return &FilterMetrics{
 		TotalMetricsReceived:    registry.NewCounter("received", "total"),

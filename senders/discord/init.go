@@ -17,13 +17,13 @@ const (
 	workerName      = "DiscordBot"
 )
 
-// Structure that represents the Discord configuration in the YAML file
+// Structure that represents the Discord configuration in the YAML file.
 type config struct {
 	Token    string `mapstructure:"token"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
-// Sender implements moira sender interface for discord
+// Sender implements moira sender interface for discord.
 type Sender struct {
 	DataBase  moira.Database
 	logger    moira.Logger
@@ -33,7 +33,7 @@ type Sender struct {
 	botUserID string
 }
 
-// Init reads the yaml config
+// Init reads the yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)

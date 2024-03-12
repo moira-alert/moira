@@ -7,7 +7,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// GetTagNames returns all tags from set with tag data
+// GetTagNames returns all tags from set with tag data.
 func (connector *DbConnector) GetTagNames() ([]string, error) {
 	c := *connector.client
 
@@ -19,7 +19,7 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 	return tagNames, nil
 }
 
-// CreateTags creates an array of tags without binding to a subscription or trigger
+// CreateTags creates an array of tags without binding to a subscription or trigger.
 func (connector *DbConnector) CreateTags(tags []string) error {
 	pipe := (*connector.client).TxPipeline()
 	ctx := connector.context
@@ -35,7 +35,7 @@ func (connector *DbConnector) CreateTags(tags []string) error {
 	return nil
 }
 
-// RemoveTag deletes tag from tags list, deletes triggerIDs and subscriptionsIDs lists by given tag
+// RemoveTag deletes tag from tags list, deletes triggerIDs and subscriptionsIDs lists by given tag.
 func (connector *DbConnector) RemoveTag(tagName string) error {
 	pipe := (*connector.client).TxPipeline()
 	pipe.SRem(connector.context, tagsKey, tagName)
@@ -50,7 +50,7 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 	return nil
 }
 
-// GetTagTriggerIDs gets all triggersIDs by given tagName
+// GetTagTriggerIDs gets all triggersIDs by given tagName.
 func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error) {
 	c := *connector.client
 

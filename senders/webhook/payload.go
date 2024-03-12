@@ -39,7 +39,7 @@ type contactData struct {
 	Team  string `json:"team"`
 }
 
-// toTriggerData returns correct triggerData structure to marshall JSON
+// toTriggerData returns correct triggerData structure to marshall JSON.
 func toTriggerData(trigger moira.TriggerData) triggerData {
 	result := triggerData{
 		ID:          trigger.ID,
@@ -51,7 +51,7 @@ func toTriggerData(trigger moira.TriggerData) triggerData {
 	return result
 }
 
-// toEventsData returns correct eventData structure collection to marshall JSON
+// toEventsData returns correct eventData structure collection to marshall JSON.
 func toEventsData(events moira.NotificationEvents) []eventData {
 	result := make([]eventData, 0, len(events))
 	for _, event := range events {
@@ -67,7 +67,7 @@ func toEventsData(events moira.NotificationEvents) []eventData {
 	return result
 }
 
-// bytesToBase64 converts given bytes slice to base64 string
+// bytesToBase64 converts given bytes slice to base64 string.
 func bytesToBase64(data []byte) string {
 	return base64.StdEncoding.EncodeToString(data)
 }

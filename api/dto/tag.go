@@ -11,12 +11,12 @@ type TagsData struct {
 	TagNames []string `json:"list" example:"cpu"`
 }
 
-// Render is a function that implements chi Renderer interface for TagsData
+// Render is a function that implements chi Renderer interface for TagsData.
 func (*TagsData) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// Bind is a method that implements Binder interface from chi and checks that validity of data in request
+// Bind is a method that implements Binder interface from chi and checks that validity of data in request.
 func (tags *TagsData) Bind(request *http.Request) error {
 	tags.TagNames = normalizeTags(tags.TagNames)
 	return nil

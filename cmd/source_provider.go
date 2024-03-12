@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/metric_source/remote"
 )
 
-// InitMetricSources initializes SourceProvider from given remote source configs
+// InitMetricSources initializes SourceProvider from given remote source configs.
 func InitMetricSources(remotes RemotesConfig, database moira.Database, logger moira.Logger) (*metricSource.SourceProvider, error) {
 	err := remotes.Validate()
 	if err != nil {

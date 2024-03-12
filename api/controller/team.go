@@ -16,7 +16,7 @@ import (
 
 const teamIDCreateRetries = 3
 
-// CreateTeam is a controller function that creates a new team in Moira
+// CreateTeam is a controller function that creates a new team in Moira.
 func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto.SaveTeamResponse, *api.ErrorResponse) {
 	var teamID string
 	if team.ID != "" { // if teamID is specified in request data then check that team with this id is not exist
@@ -67,7 +67,7 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
-// GetTeam is a controller function that returns a team by it's ID
+// GetTeam is a controller function that returns a team by it's ID.
 func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorResponse) {
 	team, err := dataBase.GetTeam(teamID)
 
@@ -82,7 +82,7 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 	return teamModel, nil
 }
 
-// GetUserTeams is a controller function that returns a teams in which user is a member bu user ID
+// GetUserTeams is a controller function that returns a teams in which user is a member bu user ID.
 func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.ErrorResponse) {
 	teams, err := dataBase.GetUserTeams(userID)
 
@@ -103,7 +103,7 @@ func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.E
 	return dto.UserTeams{Teams: result}, nil
 }
 
-// GetTeamUsers is a controller function that returns a users of team by team ID
+// GetTeamUsers is a controller function that returns a users of team by team ID.
 func GetTeamUsers(dataBase moira.Database, teamID string) (dto.TeamMembers, *api.ErrorResponse) {
 	users, err := dataBase.GetTeamUsers(teamID)
 
@@ -162,7 +162,7 @@ func addTeamsForNewUsers(dataBase moira.Database, teamID string, newUsers map[st
 	return teamsMap, nil
 }
 
-// SetTeamUsers is a controller function that sets all users for team
+// SetTeamUsers is a controller function that sets all users for team.
 func SetTeamUsers(dataBase moira.Database, teamID string, allUsers []string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
@@ -238,7 +238,7 @@ func addUserTeam(teamID string, teams []string) ([]string, error) {
 	return teams, nil
 }
 
-// AddTeamUsers is a controller function that adds a users to certain team
+// AddTeamUsers is a controller function that adds a users to certain team.
 func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
@@ -293,7 +293,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 	return result, nil
 }
 
-// UpdateTeam is a controller function that updates an existing team in Moira
+// UpdateTeam is a controller function that updates an existing team in Moira.
 func UpdateTeam(dataBase moira.Database, teamID string, team dto.TeamModel) (dto.SaveTeamResponse, *api.ErrorResponse) {
 	err := dataBase.SaveTeam(teamID, team.ToMoiraTeam())
 	if err != nil {
@@ -302,7 +302,7 @@ func UpdateTeam(dataBase moira.Database, teamID string, team dto.TeamModel) (dto
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
-// DeleteTeam is a controller function that removes an existing team in Moira
+// DeleteTeam is a controller function that removes an existing team in Moira.
 func DeleteTeam(dataBase moira.Database, teamID, userLogin string) (dto.SaveTeamResponse, *api.ErrorResponse) {
 	teamUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
@@ -332,7 +332,7 @@ func DeleteTeam(dataBase moira.Database, teamID, userLogin string) (dto.SaveTeam
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
-// DeleteTeamUser is a controller function that removes a user from certain team
+// DeleteTeamUser is a controller function that removes a user from certain team.
 func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
@@ -427,7 +427,7 @@ func CheckUserPermissionsForTeam(
 	return nil
 }
 
-// GetTeamSettings gets team contacts and subscriptions
+// GetTeamSettings gets team contacts and subscriptions.
 func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, *api.ErrorResponse) {
 	teamSettings := dto.TeamSettings{
 		TeamID:        teamID,

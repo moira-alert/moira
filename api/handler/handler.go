@@ -23,7 +23,7 @@ var searchIndex moira.Searcher
 const contactKey moiramiddle.ContextKey = "contact"
 const subscriptionKey moiramiddle.ContextKey = "subscription"
 
-// NewHandler creates new api handler request uris based on github.com/go-chi/chi
+// NewHandler creates new api handler request uris based on github.com/go-chi/chi.
 func NewHandler(
 	db moira.Database,
 	log moira.Logger,

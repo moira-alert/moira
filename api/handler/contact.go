@@ -111,7 +111,7 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// contactFilter is middleware for check contact existence and user permissions
+// contactFilter is middleware for check contact existence and user permissions.
 func contactFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetContactID(request)

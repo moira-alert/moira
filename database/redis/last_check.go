@@ -15,7 +15,7 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// GetTriggerLastCheck gets trigger last check data by given triggerID, if no value, return database.ErrNil error
+// GetTriggerLastCheck gets trigger last check data by given triggerID, if no value, return database.ErrNil error.
 func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.CheckData, error) {
 	ctx := connector.context
 	c := *connector.client
@@ -28,7 +28,7 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.Check
 	return lastCheck, nil
 }
 
-// SetTriggerLastCheck sets trigger last check data
+// SetTriggerLastCheck sets trigger last check data.
 func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, clusterKey moira.ClusterKey) error {
 	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(clusterKey)
 	bytes, err := reply.GetCheckBytes(*checkData)
@@ -103,7 +103,7 @@ func appendRemoveTriggerLastCheckToRedisPipeline(ctx context.Context, pipe redis
 	return pipe
 }
 
-// RemoveTriggerLastCheck removes trigger last check data
+// RemoveTriggerLastCheck removes trigger last check data.
 func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
@@ -154,7 +154,7 @@ func (connector *DbConnector) CleanUpAbandonedTriggerLastCheck() error {
 }
 
 // SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,
-// If CheckData does not contain one of given metrics it will ignore this metric
+// If CheckData does not contain one of given metrics it will ignore this metric.
 func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error {
 	ctx := connector.context
 	c := *connector.client
@@ -195,7 +195,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 	return c.Set(ctx, metricLastCheckKey(triggerID), newLastCheck, redis.KeepTTL).Err()
 }
 
-// checkDataScoreChanged returns true if checkData.Score changed since last check
+// checkDataScoreChanged returns true if checkData.Score changed since last check.
 func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData *moira.CheckData) bool {
 	ctx := connector.context
 	c := *connector.client
@@ -208,7 +208,7 @@ func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData 
 	return oldScore != float64(checkData.Score)
 }
 
-// getTriggersLastCheck returns an array of trigger checks by the passed ids, if the trigger does not exist, it is nil
+// getTriggersLastCheck returns an array of trigger checks by the passed ids, if the trigger does not exist, it is nil.
 func (connector *DbConnector) getTriggersLastCheck(triggerIDs []string) ([]*moira.CheckData, error) {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()

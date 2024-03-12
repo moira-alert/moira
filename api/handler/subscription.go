@@ -86,7 +86,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// subscriptionFilter is middleware for check subscription existence and user permissions
+// subscriptionFilter is middleware for check subscription existence and user permissions.
 func subscriptionFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetSubscriptionID(request)

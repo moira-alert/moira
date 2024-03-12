@@ -15,13 +15,13 @@ const printEventsCount int = 5
 const titleLimit = 250
 const urlLimit = 512
 
-// Structure that represents the Pushover configuration in the YAML file
+// Structure that represents the Pushover configuration in the YAML file.
 type config struct {
 	APIToken string `mapstructure:"api_token"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
-// Sender implements moira sender interface via pushover
+// Sender implements moira sender interface via pushover.
 type Sender struct {
 	logger   moira.Logger
 	location *time.Location
@@ -31,7 +31,7 @@ type Sender struct {
 	frontURI string
 }
 
-// Init read yaml config
+// Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -50,7 +50,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// SendEvents implements pushover build and send message functionality
+// SendEvents implements pushover build and send message functionality.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	pushoverMessage := sender.makePushoverMessage(events, trigger, plots, throttled)
 

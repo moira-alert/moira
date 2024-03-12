@@ -8,13 +8,13 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// Scheduler implements event scheduling functionality
+// Scheduler implements event scheduling functionality.
 type Scheduler interface {
 	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
 		contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification
 }
 
-// StandardScheduler represents standard event scheduling
+// StandardScheduler represents standard event scheduling.
 type StandardScheduler struct {
 	database moira.Database
 	metrics  *metrics.NotifierMetrics
@@ -26,7 +26,7 @@ type throttlingLevel struct {
 	count    int64
 }
 
-// NewScheduler is initializer for StandardScheduler
+// NewScheduler is initializer for StandardScheduler.
 func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
@@ -34,7 +34,7 @@ func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics
 	}
 }
 
-// ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings
+// ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings.
 func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
 	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification {
 	var (

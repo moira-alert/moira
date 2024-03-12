@@ -334,9 +334,9 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 	return false
 }
 
-// Checks if the createdBy field has been set:
-// if the field has been set, searches for triggers with a specific author createdBy
-// if the field has not been set, searches for triggers with any author
+// Checks if the createdBy field has been set.
+// If the field has been set, searches for triggers with a specific author createdBy.
+// If the field has not been set, searches for triggers with any author.
 func getTriggerCreatedBy(request *http.Request) (string, bool) {
 	if createdBy, ok := request.Form["createdBy"]; ok {
 		return createdBy[0], true

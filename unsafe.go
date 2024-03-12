@@ -5,12 +5,12 @@ import (
 	"unsafe"
 )
 
-// UnsafeBytesToString converts source to string without copying
+// UnsafeBytesToString converts source to string without copying.
 func UnsafeBytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// UnsafeStringToBytes converts string to source without copying
+// UnsafeStringToBytes converts string to source without copying.
 func UnsafeStringToBytes(s string) []byte {
 	var b []byte
 	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))

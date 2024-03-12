@@ -10,10 +10,10 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0.
 const firstTarget = "t1"
 
-// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0.
 type checkDataStorageElement struct {
 	Metrics                      map[string]moira.MetricState `json:"metrics"`
 	MetricsToTargetRelation      map[string]string            `json:"metrics_to_target_relation"`
@@ -88,7 +88,7 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 	}
 }
 
-// Check converts redis DB reply to moira.CheckData
+// Check converts redis DB reply to moira.CheckData.
 func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 	bytes, err := rep.Bytes()
 
@@ -110,7 +110,7 @@ func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 	return checkSE.toCheckData(), nil
 }
 
-// Checks converts an array of redis DB reply to moira.CheckData objects, if reply is nil, then checkdata is nil
+// Checks converts an array of redis DB reply to moira.CheckData objects, if reply is nil, then checkdata is nil.
 func Checks(replies []*redis.StringCmd) ([]*moira.CheckData, error) {
 	checks := make([]*moira.CheckData, len(replies))
 

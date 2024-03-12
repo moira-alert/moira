@@ -102,14 +102,14 @@ func unmarshalEvent(data string, err error) (moira.NotificationEvent, error) {
 	return eventSE.toNotificationEvent(), nil
 }
 
-// BRPopToEvent converts redis DB reply to moira.NotificationEvent object
+// BRPopToEvent converts redis DB reply to moira.NotificationEvent object.
 func BRPopToEvent(response *redis.StringSliceCmd) (moira.NotificationEvent, error) {
 	data, err := response.Result()
 
 	return unmarshalEvent(data[1], err)
 }
 
-// Events converts redis DB reply to moira.NotificationEvent objects array
+// Events converts redis DB reply to moira.NotificationEvent objects array.
 func Events(response *redis.StringSliceCmd) ([]*moira.NotificationEvent, error) {
 	values, err := response.Result()
 

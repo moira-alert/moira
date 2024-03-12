@@ -32,7 +32,7 @@ func teams(router chi.Router) {
 	})
 }
 
-// usersFilterForTeams is middleware that checks that user exists in this
+// usersFilterForTeams is middleware that checks that user exists in this.
 func usersFilterForTeams(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		userLogin := middleware.GetLogin(request)
