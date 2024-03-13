@@ -110,6 +110,7 @@ func subscriptionFilter(next http.Handler) http.Handler {
 //	@tags		subscription
 //	@produce	json
 //	@success	200	{object}	dto.Subscription				"Subscription fetched successfully"
+//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/subscription/{subscriptionID} [get]
