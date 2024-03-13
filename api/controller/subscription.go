@@ -65,6 +65,16 @@ func CreateSubscription(dataBase moira.Database, userLogin, teamID string, subsc
 	return nil
 }
 
+// GetSubscription returns subscription by it's id.
+func GetSubscription(dataBase moira.Database, subscriptionID string) (*dto.Subscription, *api.ErrorResponse) {
+	subscription, err := dataBase.GetSubscription(subscriptionID)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+	dto := dto.Subscription(subscription)
+	return &dto, nil
+}
+
 // UpdateSubscription updates existing subscription.
 func UpdateSubscription(dataBase moira.Database, subscriptionID string, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
 	subscription.ID = subscriptionID
