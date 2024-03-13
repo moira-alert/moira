@@ -20,6 +20,7 @@ func subscription(router chi.Router) {
 	router.Route("/{subscriptionId}", func(router chi.Router) {
 		router.Use(middleware.SubscriptionContext)
 		router.Use(subscriptionFilter)
+		router.Get("/", getSubscription)
 		router.Put("/", updateSubscription)
 		router.Delete("/", removeSubscription)
 		router.Put("/test", sendTestNotification)
@@ -100,6 +101,29 @@ func subscriptionFilter(next http.Handler) http.Handler {
 		ctx := context.WithValue(request.Context(), subscriptionKey, subscriptionData)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get subscription by id
+//	@id			get-subscription
+//	@tags		subscription
+//	@produce	json
+//	@success	200	{object}	dto.Subscription				"Subscription fetched successfully"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/subscription [get]
+func getSubscription(writer http.ResponseWriter, request *http.Request) {
+	subscriptionID := middleware.GetSubscriptionID(request)
+	subscription, err := controller.GetSubscription(database, subscriptionID)
+	if err != nil {
+		render.Render(writer, request, err) //nolint
+		return
+	}
+	if err := render.Render(writer, request, subscription); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
 }
 
 // nolint: gofmt,goimports
