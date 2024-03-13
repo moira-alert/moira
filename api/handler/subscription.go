@@ -91,7 +91,8 @@ func subscriptionFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetSubscriptionID(request)
 		userLogin := middleware.GetLogin(request)
-		subscriptionData, err := controller.CheckUserPermissionsForSubscription(database, contactID, userLogin)
+		auth := middleware.GetAuth(request)
+		subscriptionData, err := controller.CheckUserPermissionsForSubscription(database, contactID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return

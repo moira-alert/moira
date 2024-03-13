@@ -46,6 +46,15 @@ type apiConfig struct {
 	Listen string `yaml:"listen"`
 	// If true, CORS for cross-domain requests will be enabled. This option can be used only for debugging purposes.
 	EnableCORS bool `yaml:"enable_cors"`
+	// Authorization contains authorization configuration.
+	Authorization authorization `yaml:"authorization"`
+}
+
+type authorization struct {
+	// True if should limit non-admins and give admins additional privileges.
+	Enabled bool `yaml:"enabled"`
+	// List of logins of users who are considered to be admins.
+	AdminList []string `yaml:"admin_list"`
 }
 
 type sentryConfig struct {
@@ -99,10 +108,22 @@ func (config *apiConfig) getSettings(
 	flags api.FeatureFlags,
 ) *api.Config {
 	return &api.Config{
-		EnableCORS: config.EnableCORS,
-		Listen:     config.Listen,
-		MetricsTTL: metricsTTL,
-		Flags:      flags,
+		EnableCORS:    config.EnableCORS,
+		Listen:        config.Listen,
+		MetricsTTL:    metricsTTL,
+		Flags:         flags,
+		Authorization: config.Authorization.toApiConfig(),
+	}
+}
+
+func (auth *authorization) toApiConfig() api.Authorization {
+	adminList := make(map[string]struct{}, len(auth.AdminList))
+	for _, admin := range auth.AdminList {
+		adminList[admin] = struct{}{}
+	}
+	return api.Authorization{
+		Enabled:   auth.Enabled,
+		AdminList: adminList,
 	}
 }
 

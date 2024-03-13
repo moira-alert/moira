@@ -116,7 +116,8 @@ func contactFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetContactID(request)
 		userLogin := middleware.GetLogin(request)
-		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
+		auth := middleware.GetAuth(request)
+		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return

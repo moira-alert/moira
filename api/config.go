@@ -32,10 +32,31 @@ type Sentry struct {
 
 // Config for api configuration variables.
 type Config struct {
-	EnableCORS bool
-	Listen     string
-	MetricsTTL map[moira.ClusterKey]time.Duration
-	Flags      FeatureFlags
+	EnableCORS    bool
+	Listen        string
+	MetricsTTL    map[moira.ClusterKey]time.Duration
+	Flags         FeatureFlags
+	Authorization Authorization
+}
+
+// Authorization contains authorization configuration.
+type Authorization struct {
+	AdminList map[string]struct{}
+	Enabled   bool
+}
+
+// IsEnabled returns true if auth is enabled and false otherwise.
+func (auth *Authorization) IsEnabled() bool {
+	return auth.Enabled
+}
+
+// IsAdmin checks whether given user is considered an administrator.
+func (auth *Authorization) IsAdmin(login string) bool {
+	if !auth.IsEnabled() {
+		return false
+	}
+	_, ok := auth.AdminList[login]
+	return ok
 }
 
 // WebConfig is container for web ui configuration parameters.

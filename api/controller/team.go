@@ -400,7 +400,15 @@ func removeUserTeam(teams []string, teamID string) ([]string, error) {
 	return []string{}, fmt.Errorf("cannot find team in user teams: %s", teamID)
 }
 
-func CheckUserPermissionsForTeam(dataBase moira.Database, teamID, userID string) *api.ErrorResponse {
+func CheckUserPermissionsForTeam(
+	dataBase moira.Database,
+	teamID, userID string,
+	auth *api.Authorization,
+) *api.ErrorResponse {
+	if auth.IsAdmin(userID) {
+		return nil
+	}
+
 	_, err := dataBase.GetTeam(teamID)
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {

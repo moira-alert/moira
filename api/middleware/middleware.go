@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
@@ -37,6 +38,7 @@ var (
 	targetNameKey        ContextKey = "target"
 	teamIDKey            ContextKey = "teamID"
 	teamUserIDKey        ContextKey = "teamUserIDKey"
+	authKey              ContextKey = "auth"
 	anonymousUser                   = "anonymous"
 )
 
@@ -154,4 +156,9 @@ func GetTeamUserID(request *http.Request) string {
 // SetContextValueForTest is a helper function that is needed for testing purposes and sets context values with local ContextKey type.
 func SetContextValueForTest(ctx context.Context, key string, value interface{}) context.Context {
 	return context.WithValue(ctx, ContextKey(key), value)
+}
+
+// GetAuth gets authorization configuration.
+func GetAuth(request *http.Request) *api.Authorization {
+	return request.Context().Value(authKey).(*api.Authorization)
 }
