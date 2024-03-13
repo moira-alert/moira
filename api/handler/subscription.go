@@ -109,10 +109,11 @@ func subscriptionFilter(next http.Handler) http.Handler {
 //	@id			get-subscription
 //	@tags		subscription
 //	@produce	json
-//	@success	200	{object}	dto.Subscription				"Subscription fetched successfully"
-//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		subscriptionID	path		string							true	"ID of the subscription to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200				{object}	dto.Subscription				"Subscription fetched successfully"
+//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/subscription/{subscriptionID} [get]
 func getSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
