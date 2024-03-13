@@ -112,7 +112,7 @@ func subscriptionFilter(next http.Handler) http.Handler {
 //	@success	200	{object}	dto.Subscription				"Subscription fetched successfully"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/subscription [get]
+//	@router		/subscription/{subscriptionID} [get]
 func getSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
 	subscription, err := controller.GetSubscription(database, subscriptionID)
