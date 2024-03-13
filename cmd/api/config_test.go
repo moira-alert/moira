@@ -145,7 +145,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 		config := webConfig{
 			SupportEmail:  "lalal@mail.la",
 			RemoteAllowed: false,
-			Contacts: []webContact{
+			ContactsTemplate: []webContact{
 				{
 					ContactType:     "slack",
 					ContactLabel:    "label",
