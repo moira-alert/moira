@@ -11,7 +11,7 @@ import (
 
 // Structure that represents the Twilio configuration in the YAML file
 type config struct {
-	Type          string `mapstructure:"type"`
+	Type          string `mapstructure:"sender_type"`
 	APIAsid       string `mapstructure:"api_asid"`
 	APIAuthToken  string `mapstructure:"api_authtoken"`
 	APIFromPhone  string `mapstructure:"api_fromphone"`
