@@ -10,14 +10,14 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Structure that represents the VictorOps configuration in the YAML file
+// Structure that represents the VictorOps configuration in the YAML file.
 type config struct {
 	RoutingURL string `mapstructure:"routing_url"`
 	ImageStore string `mapstructure:"image_store"`
 	FrontURI   string `mapstructure:"front_uri"`
 }
 
-// Sender implements moira sender interface for victorops
+// Sender implements moira sender interface for victorops.
 type Sender struct {
 	DataBase             moira.Database
 	ImageStores          map[string]moira.ImageStore
@@ -32,7 +32,7 @@ type Sender struct {
 	client     *api.Client
 }
 
-// Init loads yaml config, configures the victorops sender
+// Init loads yaml config, configures the victorops sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)

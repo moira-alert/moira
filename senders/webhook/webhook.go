@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Structure that represents the Webhook configuration in the YAML file
+// Structure that represents the Webhook configuration in the YAML file.
 type config struct {
 	URL      string `mapstructure:"url"`
 	User     string `mapstructure:"user"`
@@ -18,7 +18,7 @@ type config struct {
 	Timeout  int    `mapstructure:"timeout"`
 }
 
-// Sender implements moira sender interface via webhook
+// Sender implements moira sender interface via webhook.
 type Sender struct {
 	url      string
 	user     string
@@ -28,7 +28,7 @@ type Sender struct {
 	log      moira.Logger
 }
 
-// Init read yaml config
+// Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -63,7 +63,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	request, err := sender.buildRequest(events, contact, trigger, plots, throttled)
 	if request != nil {

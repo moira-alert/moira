@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// BytesScanner allows to scan for subslices separated by separator
+// BytesScanner allows to scan for subslices separated by separator.
 type BytesScanner struct {
 	source         []byte
 	index          int
@@ -15,12 +15,12 @@ type BytesScanner struct {
 	emitEmptySlice bool
 }
 
-// HasNext checks if next subslice available or not
+// HasNext checks if next subslice available or not.
 func (it *BytesScanner) HasNext() bool {
 	return it.index < len(it.source) || it.emitEmptySlice
 }
 
-// Next returns available subslice and advances the scanner to next slice
+// Next returns available subslice and advances the scanner to next slice.
 func (it *BytesScanner) Next() (result []byte) {
 	if it.emitEmptySlice {
 		it.emitEmptySlice = false
@@ -45,7 +45,7 @@ func (it *BytesScanner) Next() (result []byte) {
 }
 
 // NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner
-// which allows scanning for these subslices
+// which allows scanning for these subslices.
 func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
 	return &BytesScanner{
 		source:         bytes,
@@ -55,12 +55,12 @@ func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
 	}
 }
 
-// Int64ToTime returns time.Time from int64
+// Int64ToTime returns time.Time from int64.
 func Int64ToTime(timeStamp int64) time.Time {
 	return time.Unix(timeStamp, 0).UTC()
 }
 
-// UseString gets pointer value of string or default string if pointer is nil
+// UseString gets pointer value of string or default string if pointer is nil.
 func UseString(str *string) string {
 	if str == nil {
 		return ""
@@ -68,7 +68,7 @@ func UseString(str *string) string {
 	return *str
 }
 
-// UseFloat64 gets pointer value of float64 or default float64 if pointer is nil
+// UseFloat64 gets pointer value of float64 or default float64 if pointer is nil.
 func UseFloat64(f *float64) float64 {
 	if f == nil {
 		return 0
@@ -76,12 +76,12 @@ func UseFloat64(f *float64) float64 {
 	return *f
 }
 
-// IsFiniteNumber checks float64 for Inf and NaN. If it is then float64 is not valid
+// IsFiniteNumber checks float64 for Inf and NaN. If it is then float64 is not valid.
 func IsFiniteNumber(val float64) bool {
 	return !(math.IsNaN(val) || math.IsInf(val, 0))
 }
 
-// Subset return whether first is a subset of second
+// Subset return whether first is a subset of second.
 func Subset(first, second []string) bool {
 	set := make(map[string]bool)
 	for _, value := range second {
@@ -120,7 +120,7 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 	return result
 }
 
-// GetStringListsUnion returns the union set of stringLists
+// GetStringListsUnion returns the union set of stringLists.
 func GetStringListsUnion(stringLists ...[]string) []string {
 	if len(stringLists) == 0 {
 		return []string{}
@@ -171,7 +171,7 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	return result
 }
 
-// ChunkSlice gets slice of strings and chunks it to a given size. It returns a batch of chunked lists
+// ChunkSlice gets slice of strings and chunks it to a given size. It returns a batch of chunked lists.
 func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 	if chunkSize < 1 {
 		return
@@ -199,7 +199,7 @@ func MaxInt64(a, b int64) int64 {
 	return b
 }
 
-// ReplaceSubstring removes one substring between the beginning and end substrings and replaces it with a replaced
+// ReplaceSubstring removes one substring between the beginning and end substrings and replaces it with a replaced.
 func ReplaceSubstring(str, begin, end, replaced string) string {
 	result := str
 	startIndex := strings.Index(str, begin)
@@ -218,7 +218,7 @@ type Comparable interface {
 	Less(other Comparable) (bool, error)
 }
 
-// Merge is a generic function that performs a merge of two sorted arrays into one sorted array
+// Merge is a generic function that performs a merge of two sorted arrays into one sorted array.
 func MergeToSorted[T Comparable](arr1, arr2 []T) ([]T, error) {
 	merged := make([]T, 0, len(arr1)+len(arr2))
 	i, j := 0, 0

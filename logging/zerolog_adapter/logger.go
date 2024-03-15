@@ -21,12 +21,12 @@ const (
 	DefaultTimeFormat = "2006-01-02 15:04:05.000"
 )
 
-// ConfigureLog creates new logger based on github.com/rs/zerolog package
+// ConfigureLog creates new logger based on github.com/rs/zerolog package.
 func ConfigureLog(logFile, logLevel, module string, pretty bool) (*Logger, error) {
 	return newLog(logFile, logLevel, module, pretty, false)
 }
 
-// GetLogger need only for backward compatibility in tests
+// GetLogger need only for backward compatibility in tests.
 func GetLogger(module string) (moira.Logger, error) {
 	return newLog("stdout", "info", module, true, true)
 }

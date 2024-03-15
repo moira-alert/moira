@@ -18,7 +18,7 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
-// GetPatterns gets updated patterns array
+// GetPatterns gets updated patterns array.
 func (connector *DbConnector) GetPatterns() ([]string, error) {
 	c := *connector.client
 	patterns, err := c.SMembers(connector.context, patternsListKey).Result()
@@ -28,7 +28,7 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 	return patterns, nil
 }
 
-// GetMetricsValues gets metrics values for given interval
+// GetMetricsValues gets metrics values for given interval.
 func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
 	c := *connector.client
 	resultByMetrics := make([]*redis.ZSliceCmd, 0, len(metrics))
@@ -52,7 +52,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 	return res, nil
 }
 
-// GetMetricRetention gets given metric retention, if retention is empty then return default retention value(60)
+// GetMetricRetention gets given metric retention, if retention is empty then return default retention value(60).
 func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
 	retention, ok := connector.getCachedRetention(metric)
 	if ok {
@@ -95,7 +95,7 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 	return retention, nil
 }
 
-// SaveMetrics saves new metrics
+// SaveMetrics saves new metrics.
 func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetric) error {
 	if len(metrics) == 0 {
 		return nil
@@ -151,7 +151,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	return nil
 }
 
-// SubscribeMetricEvents creates subscription for new metrics and return channel for this events
+// SubscribeMetricEvents creates subscription for new metrics and return channel for this events.
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moira.SubscribeMetricEventsParams) (<-chan *moira.MetricEvent, error) {
 	responseChannel := make(chan string, metricEventChannelSize)
 	metricChannel := make(chan *moira.MetricEvent, metricEventChannelSize)
@@ -234,7 +234,7 @@ func (connector *DbConnector) handlePopResponse(data []string, popError error, r
 	return defaultDelay
 }
 
-// AddPatternMetric adds new metrics by given pattern
+// AddPatternMetric adds new metrics by given pattern.
 func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	c := *connector.client
 	if _, err := c.SAdd(connector.context, patternMetricsKey(pattern), metric).Result(); err != nil {
@@ -243,7 +243,7 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	return nil
 }
 
-// GetPatternMetrics gets all metrics by given pattern
+// GetPatternMetrics gets all metrics by given pattern.
 func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error) {
 	c := *connector.client
 
@@ -257,7 +257,7 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 	return metrics, nil
 }
 
-// RemovePattern removes pattern from patterns list
+// RemovePattern removes pattern from patterns list.
 func (connector *DbConnector) RemovePattern(pattern string) error {
 	c := *connector.client
 	if _, err := c.SRem(connector.context, patternsListKey, pattern).Result(); err != nil {
@@ -266,7 +266,7 @@ func (connector *DbConnector) RemovePattern(pattern string) error {
 	return nil
 }
 
-// RemovePatternsMetrics removes metrics by given patterns
+// RemovePatternsMetrics removes metrics by given patterns.
 func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 	pipe := (*connector.client).TxPipeline()
 	for _, pattern := range patterns {
@@ -278,7 +278,7 @@ func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 	return nil
 }
 
-// RemovePatternWithMetrics removes pattern metrics with data and given pattern
+// RemovePatternWithMetrics removes pattern metrics with data and given pattern.
 func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	metrics, err := connector.GetPatternMetrics(pattern)
 	if err != nil {
@@ -307,7 +307,7 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 	return nil
 }
 
-// RemoveMetricValues remove metric timestamps values from 0 to given time
+// RemoveMetricValues remove metric timestamps values from 0 to given time.
 func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) (int64, error) {
 	if !connector.needRemoveMetrics(metric) {
 		return 0, nil
@@ -321,12 +321,12 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) (i
 	return result, nil
 }
 
-// GetMetricsTTLSeconds returns maximum time in seconds to store metrics in Redis
+// GetMetricsTTLSeconds returns maximum time in seconds to store metrics in Redis.
 func (connector *DbConnector) GetMetricsTTLSeconds() int64 {
 	return connector.metricsTTLSeconds
 }
 
-// RemoveMetricsValues remove metrics timestamps values from 0 to given time
+// RemoveMetricsValues remove metrics timestamps values from 0 to given time.
 func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64) error {
 	pipe := (*connector.client).TxPipeline()
 	for _, metric := range metrics {

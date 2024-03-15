@@ -16,7 +16,7 @@ import (
 	"github.com/moira-alert/moira/checker"
 )
 
-// WorkerManager represents workers for periodically triggers checking based by new events
+// WorkerManager represents workers for periodically triggers checking based by new events.
 type WorkerManager struct {
 	Logger   moira.Logger
 	Database moira.Database
@@ -33,7 +33,7 @@ type WorkerManager struct {
 	tomb              tomb.Tomb
 }
 
-// StartWorkers start schedule new MetricEvents and check for NODATA triggers
+// StartWorkers start schedule new MetricEvents and check for NODATA triggers.
 func (manager *WorkerManager) StartWorkers() error {
 	var err error
 
@@ -161,7 +161,7 @@ func getTriggersToCheck(database moira.Database, clusterKey moira.ClusterKey) (i
 	return database.GetTriggersToCheckCount(clusterKey)
 }
 
-// Stop stops checks triggers
+// Stop stops checks triggers.
 func (manager *WorkerManager) Stop() error {
 	manager.tomb.Kill(nil)
 	return manager.tomb.Wait()

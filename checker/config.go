@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Config represent checker config
+// Config represent checker config.
 type Config struct {
 	Enabled                         bool
 	LazyTriggersCheckInterval       time.Duration
@@ -21,7 +21,7 @@ type Config struct {
 	MetricEventTriggerCheckInterval time.Duration
 }
 
-// SourceCheckConfig represents check parameters for a single metric source
+// SourceCheckConfig represents check parameters for a single metric source.
 type SourceCheckConfig struct {
 	CheckInterval     time.Duration
 	MaxParallelChecks int

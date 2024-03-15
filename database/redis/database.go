@@ -20,10 +20,10 @@ const (
 	cacheValueExpirationDuration = time.Minute
 )
 
-// DBSource is type for describing who create database instance
+// DBSource is type for describing who create database instance.
 type DBSource string
 
-// All types of database users
+// All types of database users.
 const (
 	API        DBSource = "API"
 	Checker    DBSource = "Checker"
@@ -33,7 +33,7 @@ const (
 	testSource DBSource = "test"
 )
 
-// DbConnector contains redis client
+// DbConnector contains redis client.
 type DbConnector struct {
 	client               *redis.UniversalClient
 	logger               moira.Logger
@@ -86,7 +86,7 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 	return &connector
 }
 
-// NewTestDatabase use it only for tests
+// NewTestDatabase use it only for tests.
 func NewTestDatabase(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger, DatabaseConfig{
 		Addrs: []string{"0.0.0.0:6379"},
@@ -105,7 +105,7 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 		testSource)
 }
 
-// NewTestDatabaseWithIncorrectConfig use it only for tests
+// NewTestDatabaseWithIncorrectConfig use it only for tests.
 func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger,
 		DatabaseConfig{Addrs: []string{"0.0.0.0:0000"}},
@@ -123,7 +123,7 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 		testSource)
 }
 
-// Flush deletes all the keys of the DB, use it only for tests
+// Flush deletes all the keys of the DB, use it only for tests.
 func (connector *DbConnector) Flush() {
 	err := connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
 		return client.FlushDB(connector.context).Err()
@@ -133,12 +133,12 @@ func (connector *DbConnector) Flush() {
 	}
 }
 
-// Get key ttl, use it only for tests
+// Get key ttl, use it only for tests.
 func (connector *DbConnector) getTTL(key string) time.Duration {
 	return (*connector.client).PTTL(connector.context, key).Val()
 }
 
-// Delete the key, use it only for tests
+// Delete the key, use it only for tests.
 func (connector *DbConnector) delete(key string) {
 	(*connector.client).Del(connector.context, key)
 }

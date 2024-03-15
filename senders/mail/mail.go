@@ -12,7 +12,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Structure that represents the Mail configuration in the YAML file
+// Structure that represents the Mail configuration in the YAML file.
 type config struct {
 	MailFrom     string `mapstructure:"mail_from"`
 	SMTPHello    string `mapstructure:"smtp_hello"`
@@ -25,7 +25,7 @@ type config struct {
 	TemplateFile string `mapstructure:"template_file"`
 }
 
-// Sender implements moira sender interface via pushover
+// Sender implements moira sender interface via pushover.
 type Sender struct {
 	From           string
 	SMTPHello      string
@@ -43,7 +43,7 @@ type Sender struct {
 	dateTimeFormat string
 }
 
-// Init read yaml config
+// Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat)
 	if err != nil {
