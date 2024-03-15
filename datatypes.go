@@ -284,11 +284,11 @@ func (notification *ScheduledNotification) GetState(triggerCheck *CheckData) sch
 		return RemovedNotification
 	}
 
-	if !triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) && !triggerCheck.IsTriggerOnMaintenance() {
-		return ValidNotification
+	if triggerCheck.IsMetricOnMaintenance(notification.Event.Metric) || triggerCheck.IsTriggerOnMaintenance() {
+		return ResavedNotification
 	}
 
-	return ResavedNotification
+	return ValidNotification
 }
 
 // MatchedMetric represents parsed and matched metric data.
@@ -478,6 +478,7 @@ type CheckData struct {
 	Suppressed                   bool   `json:"suppressed,omitempty" example:"true"`
 	SuppressedState              State  `json:"suppressed_state,omitempty"`
 	Message                      string `json:"msg,omitempty"`
+	Clock                        Clock  `json:"-"`
 }
 
 // Need to not show the user metrics that should have been deleted due to ttlState = Del,
@@ -502,7 +503,7 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 
 // IsTriggerOnMaintenance checks if the trigger is on Maintenance.
 func (checkData *CheckData) IsTriggerOnMaintenance() bool {
-	return time.Now().Unix() <= checkData.Maintenance
+	return checkData.Clock.NowUnix() <= checkData.Maintenance
 }
 
 // IsMetricOnMaintenance checks if the metric of the given trigger is on Maintenance.
@@ -516,7 +517,7 @@ func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
 		return false
 	}
 
-	return time.Now().Unix() <= metricState.Maintenance
+	return checkData.Clock.NowUnix() <= metricState.Maintenance
 }
 
 // MetricState represents metric state data for given timestamp.
@@ -732,11 +733,11 @@ func (event NotificationEvent) FormatTimestamp(location *time.Location, timeForm
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric.
-func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, muteNewMetric bool) MetricState {
-	_, ok := checkData.Metrics[metric]
-	if !ok {
-		checkData.Metrics[metric] = createEmptyMetricState(emptyTimestampValue, !muteNewMetric)
+func (checkData *CheckData) GetOrCreateMetricState(metric string, muteFirstMetric bool, checkPointGap int64) MetricState {
+	if _, ok := checkData.Metrics[metric]; !ok {
+		checkData.Metrics[metric] = createEmptyMetricState(muteFirstMetric, checkPointGap, checkData.Clock)
 	}
+
 	return checkData.Metrics[metric]
 }
 
@@ -751,20 +752,18 @@ func (checkData *CheckData) GetMaintenance() (MaintenanceInfo, int64) {
 	return checkData.MaintenanceInfo, checkData.Maintenance
 }
 
-func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
-	if firstStateIsNodata {
+func createEmptyMetricState(muteFirstMetric bool, checkPointGap int64, clock Clock) MetricState {
+	if !muteFirstMetric {
 		return MetricState{
 			State:     StateNODATA,
-			Timestamp: defaultTimestampValue,
+			Timestamp: clock.NowUnix(),
 		}
 	}
 
-	unixNow := time.Now().Unix()
-
 	return MetricState{
 		State:          StateOK,
-		Timestamp:      unixNow,
-		EventTimestamp: unixNow,
+		Timestamp:      clock.NowUnix(),
+		EventTimestamp: clock.NowUnix() - checkPointGap,
 	}
 }
 

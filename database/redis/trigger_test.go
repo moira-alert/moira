@@ -553,7 +553,7 @@ func TestRemoteTrigger(t *testing.T) {
 
 	Convey("Saving remote trigger", t, func() {
 		Convey("Trigger should be saved correctly", func() {
-			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
+			systemClock.EXPECT().NowUnix().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -599,7 +599,7 @@ func TestRemoteTrigger(t *testing.T) {
 		trigger.TriggerSource = moira.GraphiteLocal
 		trigger.Patterns = []string{pattern}
 		Convey("Trigger should be saved correctly", func() {
-			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
+			systemClock.EXPECT().NowUnix().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -641,7 +641,7 @@ func TestRemoteTrigger(t *testing.T) {
 
 		trigger.TriggerSource = moira.GraphiteRemote
 		Convey("Update this trigger as remote", func() {
-			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
+			systemClock.EXPECT().NowUnix().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -725,7 +725,7 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	systemClock := mock_clock.NewMockClock(mockCtrl)
-	systemClock.EXPECT().Now().Return(testTime).Times(6)
+	systemClock.EXPECT().NowUnix().Return(testTime.Unix()).Times(6)
 	connector := &DbConnector{clock: systemClock}
 	patterns := []string{"pattern-1", "pattern-2"}
 

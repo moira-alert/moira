@@ -225,5 +225,6 @@ type PlotTheme interface {
 
 // Clock is an interface to work with Time.
 type Clock interface {
-	Now() time.Time
+	NowUTC() time.Time
+	NowUnix() int64
 }

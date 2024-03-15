@@ -42,7 +42,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 		Compatibility{AllowRegexLooseStartMatch: true},
 	)
 	systemClock := mock_clock.NewMockClock(mockCtrl)
-	systemClock.EXPECT().Now().Return(time.Date(2009, 2, 13, 23, 31, 30, 0, time.UTC)).AnyTimes()
+	systemClock.EXPECT().NowUTC().Return(time.Date(2009, 2, 13, 23, 31, 30, 0, time.UTC)).AnyTimes()
 	patternsStorage.clock = systemClock
 
 	Convey("Create new pattern storage, should no error", t, func() {

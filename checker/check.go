@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	secondsInHour int64 = 3600
 	checkPointGap int64 = 120
 )
 
@@ -211,6 +210,7 @@ func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckD
 	newCheckData.Timestamp = checkTimeStamp
 	newCheckData.MetricsToTargetRelation = metricsToTargetRelation
 	newCheckData.Message = ""
+
 	return newCheckData
 }
 
@@ -273,6 +273,9 @@ func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][
 	if len(duplicates) > 0 {
 		return converted, populatedAloneMetrics, NewErrTriggerHasSameMetricNames(duplicates)
 	}
+
+	fmt.Println("populated", populated)
+	fmt.Println("populatedAloneMetrics", populatedAloneMetrics)
 
 	return converted, populatedAloneMetrics, nil
 }
@@ -454,65 +457,89 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	metrics map[string]metricSource.MetricData,
 	logger moira.Logger,
 ) (
-	last moira.MetricState,
-	current []moira.MetricState,
+	lastMetricState moira.MetricState,
+	newMetricStates []moira.MetricState,
 	err error,
 ) {
 	var startTime int64
 	var stepTime int64
 
 	for _, metric := range metrics { // Taking values from any metric
-		last = triggerChecker.lastCheck.GetOrCreateMetricState(
+		lastMetricState = triggerChecker.lastCheck.GetOrCreateMetricState(
 			metricName,
-			metric.StartTime-secondsInHour,
 			triggerChecker.trigger.MuteNewMetrics,
+			checkPointGap,
 		)
+
 		startTime = metric.StartTime
 		stepTime = metric.StepTime
 		break
 	}
 
-	checkPoint := last.GetCheckPoint(checkPointGap)
+	checkPoint := lastMetricState.GetCheckPoint(checkPointGap)
 	logger.Debug().
 		Int64(moira.LogFieldNameCheckpoint, checkPoint).
 		Msg("Checkpoint got")
 
-	current = make([]moira.MetricState, 0)
+	fmt.Println("metrics from datasource", metrics)
 
 	// DO NOT CHANGE
 	// Specific optimization magic
-	previousState := last
+	previousMetricState := lastMetricState
 	difference := moira.MaxInt64(checkPoint-startTime, 0)
 	stepsDifference := difference / stepTime
-	if (difference % stepTime) > 0 {
-		stepsDifference++
-	}
 	valueTimestamp := startTime + stepTime*stepsDifference
 	endTimestamp := triggerChecker.until + stepTime
+
+	logger.Info().
+		Int64("difference", difference).
+		Int64("step", stepTime).
+		Int64("steps_difference", stepsDifference).
+		Msg("Steps")
+
+	if endTimestamp-valueTimestamp < 0 {
+		logger.Error().
+			Int64("end_timestamp", endTimestamp).
+			Int64("value_timestamp", valueTimestamp).
+			Msg("The end time of the metric check cannot be less than the current value")
+		return
+	}
+
+	newMetricStates = make([]moira.MetricState, 0, (endTimestamp-valueTimestamp)/stepTime)
+
+	logger.Info().
+		Int64("value_timestamp", valueTimestamp).
+		Int64("end_timestamp", endTimestamp).
+		Msg("Timestamp values")
+
 	for ; valueTimestamp < endTimestamp; valueTimestamp += stepTime {
-		metricNewState, err := triggerChecker.getMetricDataState(metrics, &previousState, &valueTimestamp, &checkPoint, logger)
+		newMetricState, err := triggerChecker.getMetricDataState(metrics, &previousMetricState, &valueTimestamp, logger)
 		if err != nil {
-			return last, current, err
+			return lastMetricState, newMetricStates, err
 		}
-		if metricNewState == nil {
+
+		if newMetricState == nil {
 			continue
 		}
-		previousState = *metricNewState
-		current = append(current, *metricNewState)
+
+		previousMetricState = *newMetricState
+		newMetricStates = append(newMetricStates, *newMetricState)
 	}
-	return last, current, nil
+
+	logger.Info().
+		Interface("new_metric_states", newMetricStates).
+		Interface("last_metric_state", lastMetricState).
+		Msg("Calculate metric states")
+
+	return lastMetricState, newMetricStates, nil
 }
 
 func (triggerChecker *TriggerChecker) getMetricDataState(
 	metrics map[string]metricSource.MetricData,
 	lastState *moira.MetricState,
-	valueTimestamp, checkPoint *int64,
+	valueTimestamp *int64,
 	logger moira.Logger,
 ) (*moira.MetricState, error) {
-	if *valueTimestamp <= *checkPoint {
-		return nil, nil
-	}
-
 	triggerExpression, values, noEmptyValues := getExpressionValues(metrics, valueTimestamp, logger)
 	if !noEmptyValues {
 		return nil, nil

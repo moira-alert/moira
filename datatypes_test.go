@@ -5,7 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	. "github.com/smartystreets/goconvey/convey"
+)
+
+const (
+	checkPointGap      = 120
+	defaultMaintenance = 600
 )
 
 func TestIsScheduleAllows(t *testing.T) {
@@ -297,6 +304,11 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 }
 
 func TestScheduledNotification_GetState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
 	Convey("Test get state of scheduled notifications", t, func() {
 		notification := ScheduledNotification{
 			Event: NotificationEvent{
@@ -310,52 +322,94 @@ func TestScheduledNotification_GetState(t *testing.T) {
 		})
 
 		Convey("Get Resaved state with metric on maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
 			state := notification.GetState(&CheckData{
 				Metrics: map[string]MetricState{
 					"test": {
-						Maintenance: time.Now().Add(time.Hour).Unix(),
+						Maintenance: testTime + defaultMaintenance,
 					},
 				},
+				Clock: mockTime,
 			})
+
 			So(state, ShouldEqual, ResavedNotification)
 		})
 
 		Convey("Get Resaved state with trigger on maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
 			state := notification.GetState(&CheckData{
-				Maintenance: time.Now().Add(time.Hour).Unix(),
+				Maintenance: testTime + defaultMaintenance,
+				Clock:       mockTime,
 			})
+
 			So(state, ShouldEqual, ResavedNotification)
 		})
 
 		Convey("Get Valid state with trigger without metrics", func() {
-			state := notification.GetState(&CheckData{})
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			state := notification.GetState(&CheckData{
+				Clock: mockTime,
+			})
+
 			So(state, ShouldEqual, ValidNotification)
 		})
 
 		Convey("Get Valid state with trigger with test metric", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(2)
+
 			state := notification.GetState(&CheckData{
 				Metrics: map[string]MetricState{
 					"test": {},
 				},
+				Clock: mockTime,
 			})
+
 			So(state, ShouldEqual, ValidNotification)
 		})
 	})
 }
 
 func TestCheckData_GetOrCreateMetricState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
 	Convey("Test no metric", t, func() {
+		mockClock := mock_clock.NewMockClock(mockCtrl)
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
+			Clock:   mockClock,
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: StateNODATA, Timestamp: 12343})
+
+		mockClock.EXPECT().NowUnix().Return(testTime).Times(1)
+
+		So(checkData.GetOrCreateMetricState("my.metric", false, checkPointGap), ShouldResemble, MetricState{State: StateNODATA, Timestamp: testTime})
 	})
-	Convey("Test no metric, notifyAboutNew = false", t, func() {
+
+	Convey("Test no metric, mute new metric = true", t, func() {
+		mockClock := mock_clock.NewMockClock(mockCtrl)
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
+			Clock:   mockClock,
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: StateOK, Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
+
+		mockClock.EXPECT().NowUnix().Return(testTime).Times(2)
+
+		So(checkData.GetOrCreateMetricState("my.metric", true, checkPointGap), ShouldResemble, MetricState{State: StateOK, Timestamp: testTime, EventTimestamp: testTime - checkPointGap})
 	})
+
 	Convey("Test has metric", t, func() {
 		metricState := MetricState{Timestamp: 11211}
 		checkData := CheckData{
@@ -363,7 +417,8 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 				"my.metric": metricState,
 			},
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, metricState)
+
+		So(checkData.GetOrCreateMetricState("my.metric", true, checkPointGap), ShouldResemble, metricState)
 	})
 }
 
@@ -491,21 +546,33 @@ func TestTrigger_IsSimple(t *testing.T) {
 }
 
 func TestCheckData_IsTriggerOnMaintenance(t *testing.T) {
-	Convey("IsTriggerOnMaintenance manipulations", t, func() {
-		checkData := &CheckData{
-			Maintenance: time.Now().Add(time.Hour).Unix(),
-		}
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 
-		Convey("Test with trigger check Maintenance more than time now", func() {
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
+	Convey("IsTriggerOnMaintenance manipulations", t, func() {
+		Convey("Test with trigger check Maintenance equal with current time", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Maintenance: testTime,
+				Clock:       mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
 			actual := checkData.IsTriggerOnMaintenance()
 			So(actual, ShouldBeTrue)
 		})
 
 		Convey("Test with trigger check Maintenance less than time now", func() {
-			checkData.Maintenance = time.Now().Add(-time.Hour).Unix()
-			defer func() {
-				checkData.Maintenance = time.Now().Add(time.Hour).Unix()
-			}()
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Maintenance: testTime - defaultMaintenance,
+				Clock:       mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
 
 			actual := checkData.IsTriggerOnMaintenance()
 			So(actual, ShouldBeFalse)
@@ -514,55 +581,82 @@ func TestCheckData_IsTriggerOnMaintenance(t *testing.T) {
 }
 
 func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
-	Convey("isMetricOnMaintenance manipulations", t, func() {
-		checkData := &CheckData{
-			Metrics: map[string]MetricState{
-				"test1": {
-					Maintenance: time.Now().Add(time.Hour).Unix(),
-				},
-				"test2": {},
-			},
-		}
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
+	Convey("isMetricOnMaintenance manipulations", t, func() {
 		Convey("Test with a metric that is not in the trigger", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {},
+					"test2": {},
+				},
+				Clock: mockTime,
+			}
+
 			actual := checkData.IsMetricOnMaintenance("")
 			So(actual, ShouldBeFalse)
 		})
 
 		Convey("Test with metrics that are in the trigger but not on maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {},
+					"test2": {},
+				},
+				Clock: mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
 			actual := checkData.IsMetricOnMaintenance("test2")
 			So(actual, ShouldBeFalse)
 		})
 
 		Convey("Test with metrics that are in the trigger and on maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						Maintenance: testTime + defaultMaintenance,
+					},
+					"test2": {},
+				},
+				Clock: mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
 			actual := checkData.IsMetricOnMaintenance("test1")
 			So(actual, ShouldBeTrue)
 		})
 
 		Convey("Test with the metric that is in the trigger, but the time now is more than Maintenance", func() {
-			metric := checkData.Metrics["test1"]
-			metric.Maintenance = time.Now().Add(-time.Hour).Unix()
-			checkData.Metrics["test1"] = metric
-			defer func() {
-				metric := checkData.Metrics["test1"]
-				metric.Maintenance = time.Now().Add(time.Hour).Unix()
-				checkData.Metrics["test1"] = metric
-			}()
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						Maintenance: testTime - defaultMaintenance,
+					},
+					"test2": {},
+				},
+				Clock: mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
 
 			actual := checkData.IsMetricOnMaintenance("test1")
 			So(actual, ShouldBeFalse)
 		})
 
 		Convey("Test with trigger without metrics", func() {
-			checkData.Metrics = make(map[string]MetricState)
-			defer func() {
-				checkData.Metrics = map[string]MetricState{
-					"test1": {
-						Maintenance: time.Now().Add(time.Hour).Unix(),
-					},
-					"test2": {},
-				}
-			}()
+			checkData := &CheckData{
+				Metrics: make(map[string]MetricState),
+			}
 
 			actual := checkData.IsMetricOnMaintenance("test1")
 			So(actual, ShouldBeFalse)
