@@ -14,7 +14,7 @@ const (
 	lightPlotTheme = "light"
 )
 
-// getPlotTheme returns plot theme
+// getPlotTheme returns plot theme.
 func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 	// TODO: rewrite light theme
 	var err error
@@ -40,7 +40,7 @@ func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 	return theme, nil
 }
 
-// getDefaultFont returns default font
+// getDefaultFont returns default font.
 func getDefaultFont() (*truetype.Font, error) {
 	ttf, err := truetype.Parse(fonts.DejaVuSans)
 	if err != nil {

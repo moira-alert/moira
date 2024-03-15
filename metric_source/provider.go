@@ -6,19 +6,19 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// SourceProvider is a provider for all known metrics sources
+// SourceProvider is a provider for all known metrics sources.
 type SourceProvider struct {
 	sources map[moira.ClusterKey]MetricSource
 }
 
-// CreateMetricSourceProvider just creates SourceProvider with all known metrics sources
+// CreateMetricSourceProvider just creates SourceProvider with all known metrics sources.
 func CreateMetricSourceProvider() *SourceProvider {
 	return &SourceProvider{
 		sources: make(map[moira.ClusterKey]MetricSource),
 	}
 }
 
-// CreateTestMetricSourceProvider creates source provider and registers default clusters for each trigger source if given
+// CreateTestMetricSourceProvider creates source provider and registers default clusters for each trigger source if given.
 func CreateTestMetricSourceProvider(local, graphiteRemote, prometheusRemote MetricSource) *SourceProvider {
 	provider := CreateMetricSourceProvider()
 
@@ -35,17 +35,17 @@ func CreateTestMetricSourceProvider(local, graphiteRemote, prometheusRemote Metr
 	return provider
 }
 
-// RegisterSource adds given metric source with given cluster key to pool of available trigger sources
+// RegisterSource adds given metric source with given cluster key to pool of available trigger sources.
 func (provider *SourceProvider) RegisterSource(clusterKey moira.ClusterKey, source MetricSource) {
 	provider.sources[clusterKey] = source
 }
 
-// GetAllSources returns all registered cluster keys mapped to corresponding sources
+// GetAllSources returns all registered cluster keys mapped to corresponding sources.
 func (provider *SourceProvider) GetAllSources() map[moira.ClusterKey]MetricSource {
 	return provider.sources
 }
 
-// GetClusterList returns a list of all registered cluster keys
+// GetClusterList returns a list of all registered cluster keys.
 func (provider *SourceProvider) GetClusterList() []moira.ClusterKey {
 	result := make([]moira.ClusterKey, 0, len(provider.sources))
 
@@ -56,7 +56,7 @@ func (provider *SourceProvider) GetClusterList() []moira.ClusterKey {
 	return result
 }
 
-// GetTriggerMetricSource get metrics source by given trigger. If it not configured returns not empty error
+// GetTriggerMetricSource get metrics source by given trigger. If it not configured returns not empty error.
 func (provider *SourceProvider) GetTriggerMetricSource(trigger *moira.Trigger) (MetricSource, error) {
 	return provider.GetMetricSource(trigger.ClusterKey())
 }

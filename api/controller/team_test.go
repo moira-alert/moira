@@ -591,6 +591,7 @@ func TestSetTeamUsers(t *testing.T) {
 func TestCheckUserPermissionsForTeam(t *testing.T) {
 	const teamID = "testTeam"
 	const userID = "userID"
+	auth := &api.Authorization{}
 
 	Convey("CheckUserPermissionsForTeam", t, func() {
 		mockCtrl := gomock.NewController(t)
@@ -600,31 +601,31 @@ func TestCheckUserPermissionsForTeam(t *testing.T) {
 		Convey("user in team", func() {
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userID).Return(true, nil)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldBeNil)
 		})
 		Convey("user is not in team", func() {
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userID).Return(false, nil)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldResemble, api.ErrorForbidden("you are not permitted to manipulate with this team"))
 		})
 		Convey("error while checking user", func() {
 			returnErr := errors.New("returning error")
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userID).Return(false, returnErr)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(returnErr))
 		})
 		Convey("error while getting team", func() {
 			returnErr := errors.New("returning error")
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, returnErr)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(returnErr))
 		})
 		Convey("team is not exist", func() {
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, database.ErrNil)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldResemble, api.ErrorNotFound("team with ID 'testTeam' does not exists"))
 		})
 	})

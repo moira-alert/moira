@@ -72,7 +72,7 @@ func (its *fixtureIndexedTriggers) ToTriggerIDs() []string {
 	return triggerIDs
 }
 
-// IndexedTriggerTestCases is a fixture to test fulltext search
+// IndexedTriggerTestCases is a fixture to test fulltext search.
 var IndexedTriggerTestCases = fixtureIndexedTriggers{
 	list: []fixtureIndexedTrigger{
 		{

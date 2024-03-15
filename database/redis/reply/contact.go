@@ -28,12 +28,12 @@ func unmarshalContact(bytes []byte, err error) (moira.ContactData, error) {
 	return contact, nil
 }
 
-// Contact converts redis DB reply to moira.ContactData object
+// Contact converts redis DB reply to moira.ContactData object.
 func Contact(rep *redis.StringCmd) (moira.ContactData, error) {
 	return unmarshalContact(rep.Bytes())
 }
 
-// Contacts converts redis DB reply to moira.ContactData objects array
+// Contacts converts redis DB reply to moira.ContactData objects array.
 func Contacts(rep []*redis.StringCmd) ([]*moira.ContactData, error) {
 	contacts := make([]*moira.ContactData, len(rep))
 	for i, value := range rep {

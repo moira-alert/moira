@@ -17,7 +17,7 @@ import (
 const selfStateLockName = "moira-self-state-monitor"
 const selfStateLockTTL = time.Second * 15
 
-// SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work
+// SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work.
 type SelfCheckWorker struct {
 	Logger     moira.Logger
 	Database   moira.Database
@@ -33,7 +33,7 @@ func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier n
 	return &SelfCheckWorker{Logger: logger, Database: database, Notifier: notifier, Config: config, heartbeats: heartbeats}
 }
 
-// Start self check worker
+// Start self check worker.
 func (selfCheck *SelfCheckWorker) Start() error {
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
@@ -53,7 +53,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	return nil
 }
 
-// Stop self check worker and wait for finish
+// Stop self check worker and wait for finish.
 func (selfCheck *SelfCheckWorker) Stop() error {
 	selfCheck.tomb.Kill(nil)
 	return selfCheck.tomb.Wait()

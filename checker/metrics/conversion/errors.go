@@ -86,7 +86,7 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 	return builder.String()
 }
 
-// NewErrEmptyAloneMetricsTarget constructor function for ErrEmptyAloneMetricsTarget
+// NewErrEmptyAloneMetricsTarget constructor function for ErrEmptyAloneMetricsTarget.
 func NewErrEmptyAloneMetricsTarget(targetName string) error {
 	return ErrEmptyAloneMetricsTarget{
 		targetName: targetName,
@@ -99,7 +99,7 @@ type ErrEmptyAloneMetricsTarget struct {
 	targetName string
 }
 
-// Error is an error interface implementation for ErrEmptyAloneMetricsTarget
+// Error is an error interface implementation for ErrEmptyAloneMetricsTarget.
 func (e ErrEmptyAloneMetricsTarget) Error() string {
 	return fmt.Sprintf("target %s declared as alone metrics target but do not have any metrics and saved state in last check", e.targetName)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility
+// Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility.
 type triggerStorageElement struct {
 	ID               string              `json:"id"`
 	Name             string              `json:"name"`
@@ -118,7 +118,7 @@ func getTriggerTTLString(ttl int64) string {
 	return fmt.Sprintf("%v", ttl)
 }
 
-// Trigger converts redis DB reply to moira.Trigger object
+// Trigger converts redis DB reply to moira.Trigger object.
 func Trigger(rep *redis.StringCmd) (moira.Trigger, error) {
 	bytes, err := rep.Bytes()
 	if err != nil {
@@ -137,7 +137,7 @@ func Trigger(rep *redis.StringCmd) (moira.Trigger, error) {
 	return trigger, nil
 }
 
-// GetTriggerBytes marshal moira.Trigger to bytes array
+// GetTriggerBytes marshal moira.Trigger to bytes array.
 func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
 	bytes, err := json.Marshal(triggerSE)

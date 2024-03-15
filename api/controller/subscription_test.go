@@ -285,10 +285,11 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	userLogin := uuid.Must(uuid.NewV4()).String()
 	teamID := uuid.Must(uuid.NewV4()).String()
 	id := uuid.Must(uuid.NewV4()).String()
+	auth := &api.Authorization{}
 
 	Convey("No subscription", t, func() {
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, database.ErrNil)
-		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("subscription with ID '%s' does not exists", id)))
 		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
@@ -296,7 +297,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	Convey("Different user", t, func() {
 		actualSub := moira.SubscriptionData{User: "diffUser"}
 		dataBase.EXPECT().GetSubscription(id).Return(actualSub, nil)
-		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorForbidden("you are not permitted"))
 		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
@@ -304,7 +305,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	Convey("Has subscription", t, func() {
 		actualSub := moira.SubscriptionData{ID: id, User: userLogin}
 		dataBase.EXPECT().GetSubscription(id).Return(actualSub, nil)
-		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 		So(expected, ShouldBeNil)
 		So(expectedSub, ShouldResemble, actualSub)
 	})
@@ -312,7 +313,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	Convey("Error get contact", t, func() {
 		err := fmt.Errorf("oooops! Can not read contact")
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, err)
-		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
@@ -322,14 +323,14 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 			expectedSub := moira.SubscriptionData{ID: id, TeamID: teamID}
 			dataBase.EXPECT().GetSubscription(id).Return(expectedSub, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(true, nil)
-			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expectedSub)
 		})
 		Convey("User is not in team", func() {
 			dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{ID: id, TeamID: teamID}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(false, nil)
-			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 			So(err, ShouldResemble, api.ErrorForbidden("you are not permitted"))
 			So(actual, ShouldResemble, moira.SubscriptionData{})
 		})
@@ -337,10 +338,45 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 			errReturned := errors.New("test error")
 			dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{ID: id, TeamID: teamID}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(false, errReturned)
-			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(errReturned))
 			So(actual, ShouldResemble, moira.SubscriptionData{})
 		})
+	})
+}
+
+func TestCheckAdminPermissionsForSubscription(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	teamID := uuid.Must(uuid.NewV4()).String()
+	id := uuid.Must(uuid.NewV4()).String()
+	adminLogin := "admin_login"
+	auth := &api.Authorization{Enabled: true, AdminList: map[string]struct{}{adminLogin: {}}}
+
+	Convey("Same user", t, func() {
+		expectedSub := moira.SubscriptionData{ID: id, User: adminLogin}
+		dataBase.EXPECT().GetSubscription(id).Return(expectedSub, nil)
+		actualContact, errorResponse := CheckUserPermissionsForSubscription(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedSub)
+	})
+
+	Convey("Different user", t, func() {
+		expectedSub := moira.SubscriptionData{ID: id, User: "diffUser"}
+		dataBase.EXPECT().GetSubscription(id).Return(expectedSub, nil)
+		actualContact, errorResponse := CheckUserPermissionsForSubscription(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedSub)
+	})
+
+	Convey("Team contact", t, func() {
+		expectedSub := moira.SubscriptionData{ID: id, TeamID: teamID}
+		dataBase.EXPECT().GetSubscription(id).Return(expectedSub, nil)
+		actualContact, errorResponse := CheckUserPermissionsForSubscription(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedSub)
 	})
 }
 

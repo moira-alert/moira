@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// scheduledNotificationStorageElement represent notification object
+// scheduledNotificationStorageElement represent notification object.
 type scheduledNotificationStorageElement struct {
 	Event     moira.NotificationEvent `json:"event"`
 	Trigger   moira.TriggerData       `json:"trigger"`
@@ -58,7 +58,7 @@ func GetNotificationBytes(notification moira.ScheduledNotification) ([]byte, err
 	return bytes, nil
 }
 
-// unmarshalNotification converts JSON to moira.ScheduledNotification object
+// unmarshalNotification converts JSON to moira.ScheduledNotification object.
 func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification, error) {
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
@@ -76,7 +76,7 @@ func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification
 	return notificationSE.toScheduledNotification(), nil
 }
 
-// Notifications converts redis DB reply to moira.ScheduledNotification objects array
+// Notifications converts redis DB reply to moira.ScheduledNotification objects array.
 func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotification, error) {
 	if responses == nil || errors.Is(responses.Err(), redis.Nil) {
 		return make([]*moira.ScheduledNotification, 0), nil

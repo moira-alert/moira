@@ -14,7 +14,7 @@ import (
 
 var eventsTTL int64 = 3600 * 24 * 30
 
-// GetNotificationEvents gets NotificationEvents by given triggerID and interval
+// GetNotificationEvents gets NotificationEvents by given triggerID and interval.
 func (connector *DbConnector) GetNotificationEvents(triggerID string, start int64, size int64) ([]*moira.NotificationEvent, error) {
 	ctx := connector.context
 	c := *connector.client
@@ -31,8 +31,8 @@ func (connector *DbConnector) GetNotificationEvents(triggerID string, start int6
 	return eventsData, nil
 }
 
-// PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days
-// If ui=true, then add to ui events list
+// PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days.
+// If ui=true, then add to ui events list.
 func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEvent, ui bool) error {
 	eventBytes, err := reply.GetEventBytes(*event)
 	if err != nil {
@@ -64,7 +64,7 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	return nil
 }
 
-// GetNotificationEventCount returns planned notifications count from given timestamp
+// GetNotificationEventCount returns planned notifications count from given timestamp.
 func (connector *DbConnector) GetNotificationEventCount(triggerID string, from int64) int64 {
 	ctx := connector.context
 	c := *connector.client
@@ -73,7 +73,7 @@ func (connector *DbConnector) GetNotificationEventCount(triggerID string, from i
 	return count
 }
 
-// FetchNotificationEvent waiting for event in events list
+// FetchNotificationEvent waiting for event in events list.
 func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	var event moira.NotificationEvent
 	ctx := connector.context
@@ -104,7 +104,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	return event, nil
 }
 
-// RemoveAllNotificationEvents removes all notification events from database
+// RemoveAllNotificationEvents removes all notification events from database.
 func (connector *DbConnector) RemoveAllNotificationEvents() error {
 	ctx := connector.context
 	c := *connector.client

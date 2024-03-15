@@ -36,13 +36,13 @@ var headers = map[string]string{
 	"Content-Type": "application/json",
 }
 
-// Structure that represents the MSTeams configuration in the YAML file
+// Structure that represents the MSTeams configuration in the YAML file.
 type config struct {
 	FrontURI  string `mapstructure:"front_uri"`
 	MaxEvents int    `mapstructure:"max_events"`
 }
 
-// Sender implements moira sender interface via MS Teams
+// Sender implements moira sender interface via MS Teams.
 type Sender struct {
 	frontURI  string
 	maxEvents int
@@ -51,7 +51,7 @@ type Sender struct {
 	client    *http.Client
 }
 
-// Init initialises settings required for full functionality
+// Init initialises settings required for full functionality.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -69,7 +69,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
@@ -191,7 +191,7 @@ func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger 
 }
 
 // buildEventsFacts builds Facts from moira events
-// if n is negative buildEventsFacts does not limit the Facts array
+// if n is negative buildEventsFacts does not limit the Facts array.
 func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvents int, throttled bool) []Fact {
 	var facts []Fact //nolint
 

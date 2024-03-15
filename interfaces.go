@@ -8,7 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
-// Database implements DB functionality
+// Database implements DB functionality.
 type Database interface {
 	// SelfState
 	UpdateMetricsHeartbeat() error
@@ -155,20 +155,20 @@ type Database interface {
 	RemoveAllMetrics() error
 }
 
-// Lock implements lock abstraction
+// Lock implements lock abstraction.
 type Lock interface {
 	Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error)
 	Release()
 }
 
-// Mutex implements mutex abstraction
+// Mutex implements mutex abstraction.
 type Mutex interface {
 	Lock() error
 	Unlock() (bool, error)
 	Extend() (bool, error)
 }
 
-// Logger implements logger abstraction
+// Logger implements logger abstraction.
 type Logger interface {
 	Debug() logging.EventBuilder
 	Info() logging.EventBuilder
@@ -188,20 +188,20 @@ type Logger interface {
 	Clone() Logger
 }
 
-// Sender interface for implementing specified contact type sender
+// Sender interface for implementing specified contact type sender.
 type Sender interface {
 	// TODO refactor: https://github.com/moira-alert/moira/issues/794
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot [][]byte, throttled bool) error
 	Init(senderSettings interface{}, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
-// ImageStore is the interface for image storage providers
+// ImageStore is the interface for image storage providers.
 type ImageStore interface {
 	StoreImage(image []byte) (string, error)
 	IsEnabled() bool
 }
 
-// Searcher interface implements full-text search index functionality
+// Searcher interface implements full-text search index functionality.
 type Searcher interface {
 	Start() error
 	Stop() error
@@ -209,7 +209,7 @@ type Searcher interface {
 	SearchTriggers(options SearchOptions) (searchResults []*SearchResult, total int64, err error)
 }
 
-// PlotTheme is an interface to access plot theme styles
+// PlotTheme is an interface to access plot theme styles.
 type PlotTheme interface {
 	GetTitleStyle() chart.Style
 	GetGridStyle() chart.Style

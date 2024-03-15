@@ -13,7 +13,7 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// GetContact returns contact data by given id, if no value, return database.ErrNil error
+// GetContact returns contact data by given id, if no value, return database.ErrNil error.
 func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	c := *connector.client
 
@@ -32,7 +32,7 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 }
 
 // GetContacts returns contacts data by given ids, len of contactIDs is equal to len of returned values array.
-// If there is no object by current ID, then nil is returned
+// If there is no object by current ID, then nil is returned.
 func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
 	results := make([]*redis.StringCmd, 0, len(contactIDs))
 
@@ -83,7 +83,7 @@ func getContactsKeysOnRedisNode(ctx context.Context, client redis.UniversalClien
 	return keys, nil
 }
 
-// GetAllContacts returns full contact list
+// GetAllContacts returns full contact list.
 func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	var keys []string
 
@@ -106,7 +106,7 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	return connector.GetContacts(contactIDs)
 }
 
-// SaveContact writes contact data and updates user contacts
+// SaveContact writes contact data and updates user contacts.
 func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	existing, getContactErr := connector.GetContact(contact.ID)
 	if getContactErr != nil && !errors.Is(getContactErr, database.ErrNil) {
@@ -140,7 +140,7 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	return nil
 }
 
-// RemoveContact deletes contact data and contactID from user contacts
+// RemoveContact deletes contact data and contactID from user contacts.
 func (connector *DbConnector) RemoveContact(contactID string) error {
 	existing, err := connector.GetContact(contactID)
 	if err != nil && !errors.Is(err, database.ErrNil) {
@@ -159,7 +159,7 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	return nil
 }
 
-// GetUserContactIDs returns contacts ids by given login
+// GetUserContactIDs returns contacts ids by given login.
 func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) {
 	c := *connector.client
 
@@ -170,7 +170,7 @@ func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) 
 	return contacts, nil
 }
 
-// GetTeamContactIDs returns contacts ids by given team
+// GetTeamContactIDs returns contacts ids by given team.
 func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) {
 	c := *connector.client
 	contacts, err := c.SMembers(connector.context, teamContactsKey(login)).Result()

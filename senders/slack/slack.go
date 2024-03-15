@@ -39,14 +39,14 @@ var stateEmoji = map[moira.State]string{
 	moira.StateTEST:      testEmoji,
 }
 
-// Structure that represents the Slack configuration in the YAML file
+// Structure that represents the Slack configuration in the YAML file.
 type config struct {
 	APIToken string `mapstructure:"api_token"`
 	UseEmoji bool   `mapstructure:"use_emoji"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
-// Sender implements moira sender interface via slack
+// Sender implements moira sender interface via slack.
 type Sender struct {
 	frontURI string
 	useEmoji bool
@@ -55,7 +55,7 @@ type Sender struct {
 	client   *slack_client.Client
 }
 
-// Init read yaml config
+// Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -74,7 +74,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
 	useDirectMessaging := useDirectMessaging(contact.Value)
@@ -159,8 +159,8 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 	return title
 }
 
-// buildEventsString builds the string from moira events and limits it to charsForEvents.
-// if n is negative buildEventsString does not limit the events string
+// buildEventsString builds the string from moira events and limits it to charsForEvents
+// if n is negative buildEventsString does not limit the events string.
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, *fix your system or tune this trigger* to generate less events."
@@ -251,7 +251,7 @@ func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, trig
 	return nil
 }
 
-// getStateEmoji returns corresponding state emoji
+// getStateEmoji returns corresponding state emoji.
 func (sender *Sender) getStateEmoji(subjectState moira.State) string {
 	if sender.useEmoji {
 		if emoji, ok := stateEmoji[subjectState]; ok {
@@ -261,7 +261,7 @@ func (sender *Sender) getStateEmoji(subjectState moira.State) string {
 	return slack_client.DEFAULT_MESSAGE_ICON_EMOJI
 }
 
-// useDirectMessaging returns true if user contact is provided
+// useDirectMessaging returns true if user contact is provided.
 func useDirectMessaging(contactValue string) bool {
 	return len(contactValue) > 0 && contactValue[0:1] == "@"
 }

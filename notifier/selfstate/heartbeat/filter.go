@@ -55,7 +55,7 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 	return 0, false, nil
 }
 
-// NeedTurnOffNotifier: turn off notifications if at least once the filter check was successful
+// NeedTurnOffNotifier: turn off notifications if at least once the filter check was successful.
 func (check filter) NeedTurnOffNotifier() bool {
 	return check.firstCheckWasSuccessful
 }
