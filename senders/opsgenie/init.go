@@ -11,13 +11,13 @@ import (
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
 )
 
-// Structure that represents the OpsGenie configuration in the YAML file
+// Structure that represents the OpsGenie configuration in the YAML file.
 type config struct {
 	APIKey   string `mapstructure:"api_key"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
-// Sender implements the Sender interface for opsgenie
+// Sender implements the Sender interface for opsgenie.
 type Sender struct {
 	apiKey               string
 	client               *alert.Client
@@ -30,7 +30,7 @@ type Sender struct {
 	frontURI             string
 }
 
-// Init initializes the opsgenie sender
+// Init initializes the opsgenie sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 

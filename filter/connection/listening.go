@@ -12,7 +12,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// MetricsListener is facade for standard net.MetricsListener and accept connection for handling it
+// MetricsListener is facade for standard net.MetricsListener and accept connection for handling it.
 type MetricsListener struct {
 	listener *net.TCPListener
 	handler  *Handler
@@ -21,7 +21,7 @@ type MetricsListener struct {
 	metrics  *metrics.FilterMetrics
 }
 
-// NewListener creates new listener
+// NewListener creates new listener.
 func NewListener(port string, logger moira.Logger, metrics *metrics.FilterMetrics) (*MetricsListener, error) {
 	address, err := net.ResolveTCPAddr("tcp", port)
 	if nil != err {
@@ -40,8 +40,8 @@ func NewListener(port string, logger moira.Logger, metrics *metrics.FilterMetric
 	return &listener, nil
 }
 
-// Listen waits for new data in connection and handles it in ConnectionHandler
-// All handled data sets to lineChan
+// Listen waits for new data in connection and handles it in ConnectionHandler.
+// All handled data sets to lineChan.
 func (listener *MetricsListener) Listen() chan []byte {
 	lineChan := make(chan []byte, 16384) //nolint
 	listener.tomb.Go(func() error {
@@ -94,7 +94,7 @@ func (listener *MetricsListener) checkNewLinesChannelLen(channel <-chan []byte) 
 	}
 }
 
-// Stop stops listening connection
+// Stop stops listening connection.
 func (listener *MetricsListener) Stop() error {
 	listener.tomb.Kill(nil)
 	return listener.tomb.Wait()

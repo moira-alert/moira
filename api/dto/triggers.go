@@ -19,7 +19,7 @@ import (
 
 var targetNameRegex = regexp.MustCompile("t(\\d+)")
 
-// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
+// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
 
 type TriggersList struct {
@@ -39,7 +39,7 @@ type Trigger struct {
 	Throttling int64 `json:"throttling" example:"0" format:"int64"`
 }
 
-// TriggerModel is moira.Trigger api representation
+// TriggerModel is moira.Trigger api representation.
 type TriggerModel struct {
 	// Trigger unique ID
 	ID string `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
@@ -89,12 +89,12 @@ type TriggerModel struct {
 	UpdatedBy string `json:"updated_by"`
 }
 
-// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger
+// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
 func (trigger *TriggerModel) ClusterKey() moira.ClusterKey {
 	return moira.MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
 }
 
-// ToMoiraTrigger transforms TriggerModel to moira.Trigger
+// ToMoiraTrigger transforms TriggerModel to moira.Trigger.
 func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 	return &moira.Trigger{
 		ID:             model.ID,
@@ -118,7 +118,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 	}
 }
 
-// CreateTriggerModel transforms moira.Trigger to TriggerModel
+// CreateTriggerModel transforms moira.Trigger to TriggerModel.
 func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 	return TriggerModel{
 		ID:             trigger.ID,

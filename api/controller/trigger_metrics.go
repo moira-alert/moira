@@ -12,7 +12,7 @@ import (
 )
 
 // GetTriggerEvaluationResult evaluates every target in trigger and returns
-// result, separated on main and additional targets metrics
+// result, separated on main and additional targets metrics.
 func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
@@ -37,18 +37,18 @@ func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *m
 	return triggerMetrics, &trigger, nil
 }
 
-// DeleteTriggerMetric deletes metric from last check and all trigger patterns metrics
+// DeleteTriggerMetric deletes metric from last check and all trigger patterns metrics.
 func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID string) *api.ErrorResponse {
 	return deleteTriggerMetrics(dataBase, metricName, triggerID, false)
 }
 
 // DeleteTriggerNodataMetrics deletes all metric from last check which are in NODATA state.
-// It also deletes all trigger patterns of those metrics
+// It also deletes all trigger patterns of those metrics.
 func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.ErrorResponse {
 	return deleteTriggerMetrics(dataBase, "", triggerID, true)
 }
 
-// GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now
+// GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now.
 func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string) (*dto.TriggerMetrics, *api.ErrorResponse) {
 	tts, _, err := GetTriggerEvaluationResult(dataBase, metricSourceProvider, from, to, triggerID, false)
 	if err != nil {

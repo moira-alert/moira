@@ -8,8 +8,8 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// FetchTriggersToReindex returns trigger IDs updated since 'from' param
-// The trigger could be changed by user, or it's score was changed during trigger check
+// FetchTriggersToReindex returns trigger IDs updated since 'from' param.
+// The trigger could be changed by user, or it's score was changed during trigger check.
 func (connector *DbConnector) FetchTriggersToReindex(from int64) ([]string, error) {
 	ctx := connector.context
 	c := *connector.client
@@ -27,7 +27,7 @@ func (connector *DbConnector) FetchTriggersToReindex(from int64) ([]string, erro
 	return response, nil
 }
 
-// RemoveTriggersToReindex removes outdated triggerIDs from redis
+// RemoveTriggersToReindex removes outdated triggerIDs from redis.
 func (connector *DbConnector) RemoveTriggersToReindex(to int64) error {
 	ctx := connector.context
 	c := *connector.client

@@ -15,7 +15,7 @@ import (
 
 const summaryMaxChars = 1024
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	event := sender.buildEvent(events, contact, trigger, plots, throttled)
 	_, err := pagerduty.ManageEventWithContext(context.Background(), event)

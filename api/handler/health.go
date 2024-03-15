@@ -8,11 +8,14 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/api/middleware"
 )
 
 func health(router chi.Router) {
 	router.Get("/notifier", getNotifierState)
-	router.Put("/notifier", setNotifierState)
+
+	router.With(middleware.AdminOnlyMiddleware()).
+		Put("/notifier", setNotifierState)
 }
 
 // nolint: gofmt,goimports
@@ -38,6 +41,17 @@ func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// nolint: gofmt,goimports
+//
+//	@summary	Set notifier state
+//	@id			set-notifier-state
+//	@tags		health
+//	@produce	json
+//	@success	200	{object}	dto.NotifierState				"Notifier state retrieved"
+//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/health/notifier [put]
 func setNotifierState(writer http.ResponseWriter, request *http.Request) {
 	state := &dto.NotifierState{}
 	if err := render.Bind(request, state); err != nil {

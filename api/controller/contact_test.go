@@ -497,17 +497,18 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	userLogin := uuid.Must(uuid.NewV4()).String()
 	teamID := uuid.Must(uuid.NewV4()).String()
 	id := uuid.Must(uuid.NewV4()).String()
+	auth := &api.Authorization{}
 
 	Convey("No contact", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{}, database.ErrNil)
-		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", id)))
 		So(expectedContact, ShouldResemble, moira.ContactData{})
 	})
 
 	Convey("Different user", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: "diffUser"}, nil)
-		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorForbidden("you are not permitted"))
 		So(expectedContact, ShouldResemble, moira.ContactData{})
 	})
@@ -515,7 +516,7 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	Convey("Has contact", t, func() {
 		actualContact := moira.ContactData{ID: id, User: userLogin}
 		dataBase.EXPECT().GetContact(id).Return(actualContact, nil)
-		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin, auth)
 		So(expected, ShouldBeNil)
 		So(expectedContact, ShouldResemble, actualContact)
 	})
@@ -523,7 +524,7 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	Convey("Error get contact", t, func() {
 		err := fmt.Errorf("oooops! Can not read contact")
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: userLogin}, err)
-		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		So(expectedContact, ShouldResemble, moira.ContactData{})
 	})
@@ -533,14 +534,14 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 			expectedSub := moira.ContactData{ID: id, Team: teamID}
 			dataBase.EXPECT().GetContact(id).Return(expectedSub, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(true, nil)
-			actual, err := CheckUserPermissionsForContact(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForContact(dataBase, id, userLogin, auth)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expectedSub)
 		})
 		Convey("User is not in team", func() {
 			dataBase.EXPECT().GetContact(id).Return(moira.ContactData{ID: id, Team: teamID}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(false, nil)
-			actual, err := CheckUserPermissionsForContact(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForContact(dataBase, id, userLogin, auth)
 			So(err, ShouldResemble, api.ErrorForbidden("you are not permitted"))
 			So(actual, ShouldResemble, moira.ContactData{})
 		})
@@ -548,10 +549,45 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 			errReturned := errors.New("test error")
 			dataBase.EXPECT().GetContact(id).Return(moira.ContactData{ID: id, Team: teamID}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(false, errReturned)
-			actual, err := CheckUserPermissionsForContact(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForContact(dataBase, id, userLogin, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(errReturned))
 			So(actual, ShouldResemble, moira.ContactData{})
 		})
+	})
+}
+
+func TestCheckAdminPermissionsForContact(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	teamID := uuid.Must(uuid.NewV4()).String()
+	id := uuid.Must(uuid.NewV4()).String()
+	adminLogin := "admin_login"
+	auth := &api.Authorization{Enabled: true, AdminList: map[string]struct{}{adminLogin: {}}}
+
+	Convey("Same user", t, func() {
+		expectedContact := moira.ContactData{ID: id, User: adminLogin}
+		dataBase.EXPECT().GetContact(id).Return(expectedContact, nil)
+		actualContact, errorResponse := CheckUserPermissionsForContact(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedContact)
+	})
+
+	Convey("Different user", t, func() {
+		expectedContact := moira.ContactData{ID: id, User: "diffUser"}
+		dataBase.EXPECT().GetContact(id).Return(expectedContact, nil)
+		actualContact, errorResponse := CheckUserPermissionsForContact(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedContact)
+	})
+
+	Convey("Team contact", t, func() {
+		expectedContact := moira.ContactData{ID: id, Team: teamID}
+		dataBase.EXPECT().GetContact(id).Return(expectedContact, nil)
+		actualContact, errorResponse := CheckUserPermissionsForContact(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedContact)
 	})
 }
 

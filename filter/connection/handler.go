@@ -9,14 +9,14 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Handler handling connection data and shift it to lineChan channel
+// Handler handling connection data and shift it to lineChan channel.
 type Handler struct {
 	logger    moira.Logger
 	wg        sync.WaitGroup
 	terminate chan struct{}
 }
 
-// NewConnectionsHandler creates new Handler
+// NewConnectionsHandler creates new Handler.
 func NewConnectionsHandler(logger moira.Logger) *Handler {
 	return &Handler{
 		logger:    logger,
@@ -24,7 +24,7 @@ func NewConnectionsHandler(logger moira.Logger) *Handler {
 	}
 }
 
-// HandleConnection convert every line from connection to metric and send it to lineChan channel
+// HandleConnection convert every line from connection to metric and send it to lineChan channel.
 func (handler *Handler) HandleConnection(connection net.Conn, lineChan chan<- []byte) {
 	handler.wg.Add(1)
 	go func() {
@@ -63,7 +63,7 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 	}
 }
 
-// StopHandlingConnections closes all open connections and wait for handling remaining metrics
+// StopHandlingConnections closes all open connections and wait for handling remaining metrics.
 func (handler *Handler) StopHandlingConnections() {
 	close(handler.terminate)
 	handler.wg.Wait()

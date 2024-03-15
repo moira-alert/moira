@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Structure that represents the Twilio configuration in the YAML file
+// Structure that represents the Twilio configuration in the YAML file.
 type config struct {
 	Type          string `mapstructure:"sender_type"`
 	APIAsid       string `mapstructure:"api_asid"`
@@ -20,7 +20,7 @@ type config struct {
 	AppendMessage bool   `mapstructure:"append_message"`
 }
 
-// Sender implements moira sender interface via twilio
+// Sender implements moira sender interface via twilio.
 type Sender struct {
 	sender sendEventsTwilio
 }
@@ -36,7 +36,7 @@ type twilioSender struct {
 	location     *time.Location
 }
 
-// Init read yaml config
+// Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -90,7 +90,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	return sender.sender.SendEvents(events, contact, trigger, plots, throttled)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/go-chart/drawing"
 )
 
-// PlotTheme implements moira.PlotTheme interface
+// PlotTheme implements moira.PlotTheme interface.
 type PlotTheme struct {
 	font              *truetype.Font
 	fontSizePrimary   float64
@@ -15,7 +15,7 @@ type PlotTheme struct {
 	curveColors       []string
 }
 
-// NewTheme returns dark theme
+// NewTheme returns dark theme.
 func NewTheme(themeFont *truetype.Font) (*PlotTheme, error) {
 	return &PlotTheme{
 		font:              themeFont,
@@ -29,7 +29,7 @@ func NewTheme(themeFont *truetype.Font) (*PlotTheme, error) {
 	}, nil
 }
 
-// GetTitleStyle returns title style
+// GetTitleStyle returns title style.
 func (theme *PlotTheme) GetTitleStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
@@ -41,7 +41,7 @@ func (theme *PlotTheme) GetTitleStyle() chart.Style {
 	}
 }
 
-// GetGridStyle returns grid style
+// GetGridStyle returns grid style.
 func (theme *PlotTheme) GetGridStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
@@ -50,14 +50,14 @@ func (theme *PlotTheme) GetGridStyle() chart.Style {
 	}
 }
 
-// GetCanvasStyle returns canvas style
+// GetCanvasStyle returns canvas style.
 func (theme *PlotTheme) GetCanvasStyle() chart.Style {
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
 	}
 }
 
-// GetBackgroundStyle returns background style
+// GetBackgroundStyle returns background style.
 func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
 	verticalShift := 40
 	horizontalShift := 20
@@ -75,7 +75,7 @@ func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
 	}
 }
 
-// GetThresholdStyle returns threshold style
+// GetThresholdStyle returns threshold style.
 func (theme *PlotTheme) GetThresholdStyle(thresholdType string) chart.Style {
 	var thresholdColor string
 	switch thresholdType {
@@ -92,7 +92,7 @@ func (theme *PlotTheme) GetThresholdStyle(thresholdType string) chart.Style {
 	}
 }
 
-// GetAnnotationStyle returns annotation style
+// GetAnnotationStyle returns annotation style.
 func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 	var rightBoxDimension int
 	var annotationColor string
@@ -114,7 +114,7 @@ func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 	}
 }
 
-// GetSerieStyles returns curve and single point styles
+// GetSerieStyles returns curve and single point styles.
 func (theme *PlotTheme) GetSerieStyles(curveInd int) (chart.Style, chart.Style) {
 	var curveColor drawing.Color
 	if curveInd >= len(theme.curveColors)-1 {
@@ -138,7 +138,7 @@ func (theme *PlotTheme) GetSerieStyles(curveInd int) (chart.Style, chart.Style) 
 	return curveStyle, pointStyle
 }
 
-// GetLegendStyle returns legend style
+// GetLegendStyle returns legend style.
 func (theme *PlotTheme) GetLegendStyle() chart.Style {
 	return chart.Style{
 		Font:        theme.font,
@@ -149,7 +149,7 @@ func (theme *PlotTheme) GetLegendStyle() chart.Style {
 	}
 }
 
-// GetXAxisStyle returns x axis style
+// GetXAxisStyle returns x axis style.
 func (theme *PlotTheme) GetXAxisStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
@@ -160,7 +160,7 @@ func (theme *PlotTheme) GetXAxisStyle() chart.Style {
 	}
 }
 
-// GetYAxisStyle returns y axis style
+// GetYAxisStyle returns y axis style.
 func (theme *PlotTheme) GetYAxisStyle() chart.Style {
 	return chart.Style{
 		Show:        true,

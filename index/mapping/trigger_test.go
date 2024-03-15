@@ -43,7 +43,7 @@ func TestTriggerField_GetTagValue(t *testing.T) {
 	})
 }
 
-// getTagByFieldName returns corresponding moira.Trigger JSON tag for given trigger field
+// getTagByFieldName returns corresponding moira.Trigger JSON tag for given trigger field.
 func getTagByFieldName(fieldName string) string {
 	var trigger moira.Trigger
 	var fieldTag string

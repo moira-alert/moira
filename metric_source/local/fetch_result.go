@@ -5,14 +5,14 @@ import (
 )
 
 // FetchResult is implementation of metric_source.FetchResult interface,
-// which represent fetching result from moira data source in moira format
+// which represent fetching result from moira data source in moira format.
 type FetchResult struct {
 	MetricsData []metricSource.MetricData
 	Patterns    []string
 	Metrics     []string
 }
 
-// CreateEmptyFetchResult just creates FetchResult with initialized empty fields
+// CreateEmptyFetchResult just creates FetchResult with initialized empty fields.
 func CreateEmptyFetchResult() *FetchResult {
 	return &FetchResult{
 		MetricsData: make([]metricSource.MetricData, 0),
@@ -21,17 +21,17 @@ func CreateEmptyFetchResult() *FetchResult {
 	}
 }
 
-// GetMetricsData return all metrics data from fetch result
+// GetMetricsData return all metrics data from fetch result.
 func (fetchResult *FetchResult) GetMetricsData() []metricSource.MetricData {
 	return fetchResult.MetricsData
 }
 
-// GetPatterns return all patterns which contains in evaluated graphite target
+// GetPatterns return all patterns which contains in evaluated graphite target.
 func (fetchResult *FetchResult) GetPatterns() ([]string, error) {
 	return fetchResult.Patterns, nil
 }
 
-// GetPatternMetrics return all metrics which match to evaluated graphite target patterns
+// GetPatternMetrics return all metrics which match to evaluated graphite target patterns.
 func (fetchResult *FetchResult) GetPatternMetrics() ([]string, error) {
 	return fetchResult.Metrics, nil
 }

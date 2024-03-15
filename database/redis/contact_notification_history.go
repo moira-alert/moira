@@ -58,8 +58,8 @@ func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID str
 	return notifications, nil
 }
 
-// PushContactNotificationToHistory converts ScheduledNotification to NotificationEventHistoryItem and
-// saves it, and deletes items older than specified ttl
+// PushContactNotificationToHistory converts ScheduledNotification to NotificationEventHistoryItem and saves it,
+// and deletes items older than specified ttl.
 func (connector *DbConnector) PushContactNotificationToHistory(notification *moira.ScheduledNotification) error {
 	notificationItemToSave := &moira.NotificationEventHistoryItem{
 		Metric:    notification.Event.Metric,

@@ -10,22 +10,22 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-// ErrSubscriptionContainsTeamAndUser used when user try to save subscription team and user attributes specified
+// ErrSubscriptionContainsTeamAndUser used when user try to save subscription team and user attributes specified.
 type ErrSubscriptionContainsTeamAndUser struct {
 }
 
-// Error is an error interface implementation method
+// Error is an error interface implementation method.
 func (ErrSubscriptionContainsTeamAndUser) Error() string {
 	return "cannot create subscription that contains contact and team attributes"
 }
 
-// ErrProvidedContactsForbidden used when user try to save subscription with another users contacts
+// ErrProvidedContactsForbidden used when user try to save subscription with another users contacts.
 type ErrProvidedContactsForbidden struct {
 	contactIds   []string
 	contactNames []string
 }
 
-// Error is implementation of golang error interface for ErrProvidedContactsForbidden struct
+// Error is implementation of golang error interface for ErrProvidedContactsForbidden struct.
 func (err ErrProvidedContactsForbidden) Error() string {
 	if len(err.contactNames) == 1 {
 		return fmt.Sprintf("user not permitted to use contact '%s'", err.contactNames[0])

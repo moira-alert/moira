@@ -9,12 +9,12 @@ import (
 	"github.com/moira-alert/moira/senders"
 )
 
-// Structure that represents the PagerDuty configuration in the YAML file
+// Structure that represents the PagerDuty configuration in the YAML file.
 type config struct {
 	FrontURI string `mapstructure:"front_uri"`
 }
 
-// Sender implements moira sender interface for pagerduty
+// Sender implements moira sender interface for pagerduty.
 type Sender struct {
 	ImageStores          map[string]moira.ImageStore
 	imageStoreID         string
@@ -25,7 +25,7 @@ type Sender struct {
 	location             *time.Location
 }
 
-// Init loads yaml config, configures the pagerduty client
+// Init loads yaml config, configures the pagerduty client.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)

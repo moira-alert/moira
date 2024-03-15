@@ -13,7 +13,7 @@ import (
 
 const sleepAfterCheckingError = time.Second * 2
 
-// startTriggerHandler is a blocking func
+// startTriggerHandler is a blocking func.
 func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics) error {
 	for {
 		triggerID, ok := <-triggerIDsToCheck
