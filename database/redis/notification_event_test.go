@@ -11,12 +11,17 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-const triggerID = "81588c33-eab3-4ad4-aa03-82a9560adad9"
-const triggerID1 = "7854DE02-0E4B-4430-A570-B0C0162755E4"
-const triggerID2 = "26D3C4E4-507E-4930-9B1E-FD5AD369445C"
-const triggerID3 = "F0F4A5B9-637C-4933-AA0D-88B9798A2630" //nolint
-var now = time.Now().Unix()
-var value = float64(0)
+const (
+	triggerID  = "81588c33-eab3-4ad4-aa03-82a9560adad9"
+	triggerID1 = "7854DE02-0E4B-4430-A570-B0C0162755E4"
+	triggerID2 = "26D3C4E4-507E-4930-9B1E-FD5AD369445C"
+	triggerID3 = "F0F4A5B9-637C-4933-AA0D-88B9798A2630" //nolint
+)
+
+var (
+	now   = time.Now().Unix()
+	value = float64(0)
+)
 
 // nolint
 func TestNotificationEvents(t *testing.T) {
@@ -297,7 +302,7 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 	defer dataBase.Flush()
 
 	// TODO(litleleprikon): check why notification is event created here again
-	var newNotificationEvent = moira.NotificationEvent{
+	newNotificationEvent := moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
 		State:     moira.StateNODATA,
 		OldState:  moira.StateNODATA,

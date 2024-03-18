@@ -64,7 +64,7 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 
 func getErrorResponseIfItHas(writer http.ResponseWriter) *api.ErrorResponse {
 	writerWithBody := writer.(*responseWriterWithBody)
-	var errResp = &api.ErrorResponse{}
+	errResp := &api.ErrorResponse{}
 	if err := json.NewDecoder(&writerWithBody.body).Decode(errResp); err != nil {
 		return &api.ErrorResponse{
 			HTTPStatusCode: http.StatusInternalServerError,

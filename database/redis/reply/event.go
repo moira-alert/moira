@@ -112,7 +112,6 @@ func BRPopToEvent(response *redis.StringSliceCmd) (moira.NotificationEvent, erro
 // Events converts redis DB reply to moira.NotificationEvent objects array.
 func Events(response *redis.StringSliceCmd) ([]*moira.NotificationEvent, error) {
 	values, err := response.Result()
-
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil

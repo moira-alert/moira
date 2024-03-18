@@ -11,9 +11,11 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-const printEventsCount int = 5
-const titleLimit = 250
-const urlLimit = 512
+const (
+	printEventsCount = 5
+	titleLimit       = 250
+	urlLimit         = 512
+)
 
 // Structure that represents the Pushover configuration in the YAML file.
 type config struct {

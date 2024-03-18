@@ -1,10 +1,9 @@
 package worker
 
 import (
+	"errors"
 	"testing"
 	"time"
-
-	"errors"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"

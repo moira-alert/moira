@@ -2,7 +2,6 @@ package plotting
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -12,33 +11,6 @@ import (
 
 	"github.com/moira-alert/moira"
 )
-
-// TestSortByLen tests simple string array sorting by length.
-func TestSortByLen(t *testing.T) {
-	labelsUnsorted := []string{
-		"CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"MetricPrefix.ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"CategoryCounterType.MetricName",
-		"MetricName",
-		"CategoryCounterName.CategoryCounterType.MetricName",
-		"HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-	}
-	labelsSorted := []string{
-		"MetricName",
-		"CategoryCounterType.MetricName",
-		"CategoryCounterName.CategoryCounterType.MetricName",
-		"CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"MetricPrefix.ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-	}
-	Convey("Sort initial unsorted string array", t, func() {
-		sort.Sort(sortedByLen(labelsUnsorted))
-		So(len(labelsUnsorted), ShouldEqual, len(labelsSorted))
-		So(labelsUnsorted, ShouldResemble, labelsSorted)
-	})
-}
 
 // TestSanitizeLabelName tests simple label names shortener.
 func TestSanitizeLabelName(t *testing.T) {

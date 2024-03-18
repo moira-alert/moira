@@ -19,7 +19,7 @@ var plottingData = moira.PlottingData{
 }
 
 func TestThrottling(t *testing.T) {
-	var trigger = moira.TriggerData{
+	trigger := moira.TriggerData{
 		ID:         "triggerID-0000000000001",
 		Name:       "test trigger",
 		Targets:    []string{"test.target.5"},
@@ -28,7 +28,7 @@ func TestThrottling(t *testing.T) {
 		Tags:       []string{"test-tag"},
 	}
 
-	var contact = moira.ContactData{
+	contact := moira.ContactData{
 		ID:    "ContactID-000000000000001",
 		Type:  "email",
 		Value: "mail1@example.com",
@@ -36,7 +36,7 @@ func TestThrottling(t *testing.T) {
 
 	subID := "SubscriptionID-000000000000001" //nolint
 
-	var event = moira.NotificationEvent{
+	event := moira.NotificationEvent{
 		Metric:         "generate.event.1",
 		State:          moira.StateOK,
 		OldState:       moira.StateWARN,
@@ -111,7 +111,7 @@ func TestThrottling(t *testing.T) {
 
 func TestSubscriptionSchedule(t *testing.T) {
 	subID := "SubscriptionID-000000000000001"
-	var subscription = moira.SubscriptionData{
+	subscription := moira.SubscriptionData{
 		ID:                "SubscriptionID-000000000000001",
 		Enabled:           true,
 		Tags:              []string{"test-tag"},
@@ -119,7 +119,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		ThrottlingEnabled: true,
 	}
 
-	var event = moira.NotificationEvent{
+	event := moira.NotificationEvent{
 		Metric:         "generate.event.1",
 		State:          moira.StateOK,
 		OldState:       moira.StateWARN,

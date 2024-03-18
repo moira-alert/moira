@@ -24,8 +24,7 @@ func TestReadImageStoreConfig(t *testing.T) {
 			logger.EXPECT().Warning().Return(eventBuilder)
 			eventBuilder.EXPECT().Msg("Cannot read image_store from the config, will not be able to attach plot images to alerts")
 
-			imageStoreID, imageStore, imageStoreConfigured :=
-				ReadImageStoreConfig(map[string]interface{}{}, imageStores, logger)
+			imageStoreID, imageStore, imageStoreConfigured := ReadImageStoreConfig(map[string]interface{}{}, imageStores, logger)
 			So(imageStoreConfigured, ShouldResemble, false)
 			So(imageStoreID, ShouldResemble, "")
 			So(imageStore, ShouldResemble, nil)
@@ -36,8 +35,7 @@ func TestReadImageStoreConfig(t *testing.T) {
 			eventBuilder.EXPECT().String("image_store_id", "s4").Return(eventBuilder)
 			eventBuilder.EXPECT().Msg("Image store specified has not been configured")
 
-			imageStoreID, imageStore, imageStoreConfigured :=
-				ReadImageStoreConfig(map[string]interface{}{"image_store": "s4"}, imageStores, logger)
+			imageStoreID, imageStore, imageStoreConfigured := ReadImageStoreConfig(map[string]interface{}{"image_store": "s4"}, imageStores, logger)
 			So(imageStoreConfigured, ShouldResemble, false)
 			So(imageStoreID, ShouldResemble, "")
 			So(imageStore, ShouldResemble, nil)
@@ -49,8 +47,7 @@ func TestReadImageStoreConfig(t *testing.T) {
 			eventBuilder.EXPECT().Msg("Image store specified has not been configured")
 
 			mockimageStore.EXPECT().IsEnabled().Return(false)
-			imageStoreID, imageStore, imageStoreConfigured :=
-				ReadImageStoreConfig(map[string]interface{}{"image_store": "s3"}, imageStores, logger)
+			imageStoreID, imageStore, imageStoreConfigured := ReadImageStoreConfig(map[string]interface{}{"image_store": "s3"}, imageStores, logger)
 			So(imageStoreConfigured, ShouldResemble, false)
 			So(imageStoreID, ShouldResemble, "")
 			So(imageStore, ShouldResemble, nil)
@@ -58,8 +55,7 @@ func TestReadImageStoreConfig(t *testing.T) {
 
 		Convey("image store is configured", func() {
 			mockimageStore.EXPECT().IsEnabled().Return(true)
-			imageStoreID, imageStore, imageStoreConfigured :=
-				ReadImageStoreConfig(map[string]interface{}{"image_store": "s3"}, imageStores, logger)
+			imageStoreID, imageStore, imageStoreConfigured := ReadImageStoreConfig(map[string]interface{}{"image_store": "s3"}, imageStores, logger)
 			So(imageStoreConfigured, ShouldResemble, true)
 			So(imageStoreID, ShouldResemble, "s3")
 			So(imageStore, ShouldResemble, mockimageStore)

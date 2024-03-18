@@ -55,7 +55,6 @@ func main() {
 	fmt.Printf("Reading %s\n", file)
 
 	dataTTF, err := fileBytes(file)
-
 	if err != nil {
 		fmt.Printf("Error opening file: %v\n", err)
 		os.Exit(1)

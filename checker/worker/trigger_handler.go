@@ -47,7 +47,6 @@ func (manager *WorkerManager) handleTrigger(triggerID string, metrics *metrics.C
 
 func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics) error {
 	acquired, err := manager.Database.SetTriggerCheckLock(triggerID)
-
 	if err != nil {
 		return err
 	}
