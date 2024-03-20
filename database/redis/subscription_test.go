@@ -386,9 +386,11 @@ func TestSubscriptionErrorConnection(t *testing.T) {
 	})
 }
 
-var tag1 = "tag1"
-var tag2 = "tag2"
-var tag3 = "tag3"
+var (
+	tag1 = "tag1"
+	tag2 = "tag2"
+	tag3 = "tag3"
+)
 
 var subscriptions = []*moira.SubscriptionData{
 	{

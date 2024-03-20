@@ -29,7 +29,7 @@ func TestMetricsStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		//But you still can add new metrics by this pattern
+		// But you still can add new metrics by this pattern
 		err = dataBase.AddPatternMetric(pattern, metric1)
 		So(err, ShouldBeNil)
 
@@ -44,7 +44,7 @@ func TestMetricsStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actualMetric, ShouldHaveLength, 2)
 
-		//And nothing to remove
+		// And nothing to remove
 		err = dataBase.RemovePattern(pattern)
 		So(err, ShouldBeNil)
 
@@ -52,14 +52,14 @@ func TestMetricsStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		//Now save trigger with this pattern
+		// Now save trigger with this pattern
 		dataBase.SaveTrigger(trigger.ID, &trigger) //nolint
 
 		actual, err = dataBase.GetPatterns()
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, trigger.Patterns)
 
-		//And you still can get metrics by this pattern
+		// And you still can get metrics by this pattern
 		actualMetric, err = dataBase.GetPatternMetrics(pattern)
 		So(err, ShouldBeNil)
 		So(actualMetric, ShouldHaveLength, 2)
@@ -68,7 +68,7 @@ func TestMetricsStoring(t *testing.T) {
 			err = dataBase.RemovePattern(pattern)
 			So(err, ShouldBeNil)
 
-			//But you still can get metrics by this pattern
+			// But you still can get metrics by this pattern
 			actualMetric, err = dataBase.GetPatternMetrics(pattern)
 			So(err, ShouldBeNil)
 			So(actualMetric, ShouldHaveLength, 2)
@@ -82,12 +82,12 @@ func TestMetricsStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		//Now it have not patterns and metrics for this
+		// Now it have not patterns and metrics for this
 		actual, err = dataBase.GetPatterns()
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		//And you still can get metrics by this pattern
+		// And you still can get metrics by this pattern
 		actualMetric, err = dataBase.GetPatternMetrics(pattern)
 		So(err, ShouldBeNil)
 		So(actualMetric, ShouldBeEmpty)
@@ -173,11 +173,11 @@ func TestMetricsStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric1: {}})
 
-		//Save metric with changed retention
+		// Save metric with changed retention
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: val3})
 		So(err, ShouldBeNil)
 
-		//But retention still old, because cache
+		// But retention still old, because cache
 		actualRet, err = dataBase.GetMetricRetention(metric1)
 		So(err, ShouldBeNil)
 		So(actualRet, ShouldEqual, 10)
@@ -273,11 +273,11 @@ func TestRemoveMetricValues(t *testing.T) {
 
 	Convey("Test", t, func() {
 		err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1})
-		So(err, ShouldBeNil) //Save metric with changed retention
+		So(err, ShouldBeNil) // Save metric with changed retention
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met2})
-		So(err, ShouldBeNil) //Save metric with changed retention
+		So(err, ShouldBeNil) // Save metric with changed retention
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met3})
-		So(err, ShouldBeNil) //Save metric with changed retention
+		So(err, ShouldBeNil) // Save metric with changed retention
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met4})
 		So(err, ShouldBeNil)
 
@@ -757,7 +757,8 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 						RetentionTimestamp: 10,
 						Timestamp:          5,
 						Value:              1,
-					}})
+					},
+				})
 			So(err, ShouldBeNil)
 		}
 
@@ -771,7 +772,8 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 						RetentionTimestamp: 10,
 						Timestamp:          5,
 						Value:              1,
-					}})
+					},
+				})
 			So(err, ShouldBeNil)
 		}
 
@@ -822,7 +824,8 @@ func TestRemoveAllMetrics(t *testing.T) {
 						RetentionTimestamp: 10,
 						Timestamp:          5,
 						Value:              1,
-					}})
+					},
+				})
 			So(err, ShouldBeNil)
 		}
 
@@ -836,7 +839,8 @@ func TestRemoveAllMetrics(t *testing.T) {
 						RetentionTimestamp: 10,
 						Timestamp:          5,
 						Value:              1,
-					}})
+					},
+				})
 			So(err, ShouldBeNil)
 		}
 

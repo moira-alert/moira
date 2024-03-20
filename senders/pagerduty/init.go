@@ -35,8 +35,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.frontURI = cfg.FrontURI
 
-	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
-		senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
+	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured = senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
 
 	sender.logger = logger
 	sender.location = location

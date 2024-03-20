@@ -69,7 +69,6 @@ func getContactsKeysOnRedisNode(ctx context.Context, client redis.UniversalClien
 		var keysResult []string
 		var err error
 		keysResult, cursor, err = client.Scan(ctx, cursor, contactKey("*"), scanCount).Result()
-
 		if err != nil {
 			return nil, err
 		}

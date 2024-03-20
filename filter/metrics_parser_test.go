@@ -64,10 +64,18 @@ func TestParseMetric(t *testing.T) {
 			{"One.two.three;four= 123 1234567890", "One.two.three;four=", "One.two.three", map[string]string{"four": ""}, 123, 1234567890},
 			{"One.two.three;six=seven;four=five 123 1234567890", "One.two.three;four=five;six=seven", "One.two.three", map[string]string{"four": "five", "six": "seven"}, 123, 1234567890},
 			{"One.two.three;four=five;six=seven=eight 123 1234567890", "One.two.three;four=five;six=seven=eight", "One.two.three", map[string]string{"four": "five", "six": "seven=eight"}, 123, 1234567890},
-			{"One.two.three;four=five;six=seven=eight=nine 123 1234567890", "One.two.three;four=five;six=seven=eight=nine",
-				"One.two.three", map[string]string{"four": "five", "six": "seven=eight=nine"}, 123, 1234567890},
-			{"One.two.three;four=five;six=seven=eight=nine= 123 1234567890", "One.two.three;four=five;six=seven=eight=nine=",
-				"One.two.three", map[string]string{"four": "five", "six": "seven=eight=nine="}, 123, 1234567890},
+			{
+				"One.two.three;four=five;six=seven=eight=nine 123 1234567890", "One.two.three;four=five;six=seven=eight=nine",
+				"One.two.three",
+				map[string]string{"four": "five", "six": "seven=eight=nine"},
+				123, 1234567890,
+			},
+			{
+				"One.two.three;four=five;six=seven=eight=nine= 123 1234567890", "One.two.three;four=five;six=seven=eight=nine=",
+				"One.two.three",
+				map[string]string{"four": "five", "six": "seven=eight=nine="},
+				123, 1234567890,
+			},
 		}
 
 		for _, validMetric := range validMetrics {
@@ -219,7 +227,7 @@ func TestParsedMetric_IsTooOld(t *testing.T) {
 	Convey("When metric is young, return false", t, func() {
 		metric := ParsedMetric{
 			Name:      "too old metric",
-			Timestamp: time.Date(2022, 6, 16, 9, 00, 0, 0, time.UTC).Unix(),
+			Timestamp: time.Date(2022, 6, 16, 9, 0o0, 0, 0, time.UTC).Unix(),
 		}
 		So(metric.IsTooOld(maxTTL, now), ShouldBeFalse)
 	})

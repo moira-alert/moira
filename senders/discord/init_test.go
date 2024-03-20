@@ -21,6 +21,7 @@ type MockLock struct {
 func (lock *MockLock) Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error) {
 	return lost, nil
 }
+
 func (db *MockDB) NewLock(name string, ttl time.Duration) moira.Lock {
 	return &MockLock{}
 }
