@@ -15,7 +15,7 @@ import (
 )
 
 func contact(router chi.Router) {
-	router.Get("/", getAllContacts)
+	router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllContacts)
 	router.Put("/", createNewContact)
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
