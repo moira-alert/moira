@@ -54,14 +54,14 @@ func TestGetUserSettings(t *testing.T) {
 
 	Convey("Admin auth enabled", t, func() {
 		adminLogin := "admin_login"
-		auth := &api.Authorization{Enabled: true, AdminList: map[string]struct{}{adminLogin: {}}}
+		authFull := &api.Authorization{Enabled: true, AdminList: map[string]struct{}{adminLogin: {}}}
 
 		Convey("User is not admin", func() {
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetUserContactIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
-			settings, err := GetUserSettings(database, login, auth)
+			settings, err := GetUserSettings(database, login, authFull)
 			So(err, ShouldBeNil)
 			So(settings, ShouldResemble, &dto.UserSettings{
 				User:          dto.User{Login: login, HasAdminRights: false},
@@ -75,7 +75,7 @@ func TestGetUserSettings(t *testing.T) {
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetUserContactIDs(adminLogin).Return(make([]string, 0), nil)
 			database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
-			settings, err := GetUserSettings(database, adminLogin, auth)
+			settings, err := GetUserSettings(database, adminLogin, authFull)
 			So(err, ShouldBeNil)
 			So(settings, ShouldResemble, &dto.UserSettings{
 				User:          dto.User{Login: adminLogin, HasAdminRights: true},
