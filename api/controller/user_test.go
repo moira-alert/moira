@@ -18,6 +18,7 @@ func TestGetUserSettings(t *testing.T) {
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	login := "user"
+	auth := &api.Authorization{}
 
 	Convey("Success get user data", t, func() {
 		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
@@ -28,10 +29,10 @@ func TestGetUserSettings(t *testing.T) {
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetUserContactIDs(login).Return(contactIDs, nil)
 		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
-		settings, err := GetUserSettings(database, login)
+		settings, err := GetUserSettings(database, login, auth)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
-			User:          dto.User{Login: login},
+			User:          dto.User{Login: login, HasAdminRights: true},
 			Contacts:      []moira.ContactData{*contacts[0], *contacts[1]},
 			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
 		})
@@ -42,12 +43,45 @@ func TestGetUserSettings(t *testing.T) {
 		database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 		database.EXPECT().GetUserContactIDs(login).Return(make([]string, 0), nil)
 		database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
-		settings, err := GetUserSettings(database, login)
+		settings, err := GetUserSettings(database, login, auth)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
-			User:          dto.User{Login: login},
+			User:          dto.User{Login: login, HasAdminRights: true},
 			Contacts:      make([]moira.ContactData, 0),
 			Subscriptions: make([]moira.SubscriptionData, 0),
+		})
+	})
+
+	Convey("Admin auth enabled", t, func() {
+		adminLogin := "admin_login"
+		auth := &api.Authorization{Enabled: true, AdminList: map[string]struct{}{adminLogin: {}}}
+
+		Convey("User is not admin", func() {
+			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
+			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
+			database.EXPECT().GetUserContactIDs(login).Return(make([]string, 0), nil)
+			database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
+			settings, err := GetUserSettings(database, login, auth)
+			So(err, ShouldBeNil)
+			So(settings, ShouldResemble, &dto.UserSettings{
+				User:          dto.User{Login: login, HasAdminRights: false},
+				Contacts:      make([]moira.ContactData, 0),
+				Subscriptions: make([]moira.SubscriptionData, 0),
+			})
+		})
+
+		Convey("User is admin", func() {
+			database.EXPECT().GetUserSubscriptionIDs(adminLogin).Return(make([]string, 0), nil)
+			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
+			database.EXPECT().GetUserContactIDs(adminLogin).Return(make([]string, 0), nil)
+			database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
+			settings, err := GetUserSettings(database, adminLogin, auth)
+			So(err, ShouldBeNil)
+			So(settings, ShouldResemble, &dto.UserSettings{
+				User:          dto.User{Login: adminLogin, HasAdminRights: true},
+				Contacts:      make([]moira.ContactData, 0),
+				Subscriptions: make([]moira.SubscriptionData, 0),
+			})
 		})
 	})
 
@@ -55,7 +89,7 @@ func TestGetUserSettings(t *testing.T) {
 		Convey("GetUserSubscriptionIDs", func() {
 			expected := fmt.Errorf("can not read ids")
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(nil, expected)
-			settings, err := GetUserSettings(database, login)
+			settings, err := GetUserSettings(database, login, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)
 		})
@@ -63,7 +97,7 @@ func TestGetUserSettings(t *testing.T) {
 			expected := fmt.Errorf("can not read subscriptions")
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expected)
-			settings, err := GetUserSettings(database, login)
+			settings, err := GetUserSettings(database, login, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)
 		})
@@ -72,7 +106,7 @@ func TestGetUserSettings(t *testing.T) {
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetUserContactIDs(login).Return(nil, expected)
-			settings, err := GetUserSettings(database, login)
+			settings, err := GetUserSettings(database, login, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)
 		})
@@ -85,7 +119,7 @@ func TestGetUserSettings(t *testing.T) {
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 			database.EXPECT().GetUserContactIDs(login).Return(contactIDs, nil)
 			database.EXPECT().GetContacts(contactIDs).Return(nil, expected)
-			settings, err := GetUserSettings(database, login)
+			settings, err := GetUserSettings(database, login, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)
 		})
