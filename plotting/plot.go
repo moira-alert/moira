@@ -75,7 +75,6 @@ func (plot *Plot) GetRenderable(targetName string, trigger *moira.Trigger, metri
 
 	name := fmt.Sprintf("%s - %s", targetName, trigger.Name)
 	renderable = chart.Chart{
-
 		Title:      sanitizeLabelName(name, plotNameLen),
 		TitleStyle: plot.theme.GetTitleStyle(),
 

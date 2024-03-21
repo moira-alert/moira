@@ -109,7 +109,7 @@ func TestParseSeriesByTag(t *testing.T) {
 }
 
 func TestSeriesByTagPatternIndex(t *testing.T) {
-	var logger, _ = logging.GetLogger("SeriesByTag")
+	logger, _ := logging.GetLogger("SeriesByTag")
 	Convey("Given empty patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		compatibility := Compatibility{
 			AllowRegexLooseStartMatch: true,
@@ -222,7 +222,8 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			Labels          map[string]string
 			MatchedPatterns []string
 		}{
-			{"cpu.test1.test2",
+			{
+				"cpu.test1.test2",
 				map[string]string{},
 				[]string{
 					"name=cpu.*.*",
@@ -230,8 +231,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=cpu.test1.*",
 					"name=cpu.test1.test2",
 					"name=~test1",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag": "val"},
 				[]string{
 					"name=cpu.*.*",
@@ -239,8 +242,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=cpu.test1.*",
 					"name=cpu.test1.test2",
 					"name=~test1",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag1": "val1"},
 				[]string{
 					"name=cpu.*.*",
@@ -251,8 +256,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=~cpu;tag1=val1",
 					"name=~test1",
 					"tag1=~al1",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag1": "val2"},
 				[]string{
 					"name=cpu.*.*",
@@ -260,8 +267,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=cpu.test1.*",
 					"name=cpu.test1.test2",
 					"name=~test1",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag1": "val1", "tag2": "val1"},
 				[]string{
 					"name=cpu.*.*",
@@ -274,10 +283,13 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"tag1=~al1",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag2": "val2"},
-				[]string{"name=cpu.*.*",
+				[]string{
+					"name=cpu.*.*",
 					"name=cpu.*.test2",
 					"name=cpu.*.test2;tag2=val2",
 					"name=cpu.test1.*",
@@ -285,16 +297,21 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=~test1",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test3.test2",
+				},
+			},
+			{
+				"cpu.test3.test2",
 				map[string]string{"tag2": "val2"},
-				[]string{"name=cpu.*.*",
+				[]string{
+					"name=cpu.*.*",
 					"name=cpu.*.test2",
 					"name=cpu.*.test2;tag2=val2",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag1": "val1", "tag2": "val2"},
 				[]string{
 					"name=cpu.*.*",
@@ -310,7 +327,8 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"tag1=~al1",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
+				},
+			},
 		}
 
 		compatibility := Compatibility{
@@ -327,7 +345,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 }
 
 func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
-	var logger, _ = logging.GetLogger("SeriesByTag")
+	logger, _ := logging.GetLogger("SeriesByTag")
 
 	Convey("Given related patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		tagSpecsByPattern := map[string][]TagSpec{
@@ -381,7 +399,8 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 			Labels          map[string]string
 			MatchedPatterns []string
 		}{
-			{"cpu.test1.test2",
+			{
+				"cpu.test1.test2",
 				map[string]string{},
 				[]string{
 					"name=cpu.*.*",
@@ -390,8 +409,10 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.test2",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag": "val"},
 				[]string{
 					"name=cpu.*.*",
@@ -400,8 +421,10 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.test2",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag1": "val1"},
 				[]string{
 					"name=cpu.*.*",
@@ -412,8 +435,10 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=~cpu;tag1=val1",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag1": "val2"},
 				[]string{
 					"name=cpu.*.*",
@@ -422,8 +447,10 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=cpu.test1.test2",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag1": "val1", "tag2": "val1"},
 				[]string{
 					"name=cpu.*.*",
@@ -434,26 +461,34 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"name=~cpu;tag1=val1",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag2": "val2"},
-				[]string{"name=cpu.*.*",
+				[]string{
+					"name=cpu.*.*",
 					"name=cpu.*.test2",
 					"name=cpu.*.test2;tag2=val2",
 					"name=cpu.test1.*",
 					"name=cpu.test1.test2",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test3.test2",
+				},
+			},
+			{
+				"cpu.test3.test2",
 				map[string]string{"tag2": "val2"},
-				[]string{"name=cpu.*.*",
+				[]string{
+					"name=cpu.*.*",
 					"name=cpu.*.test2",
 					"name=cpu.*.test2;tag2=val2",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
-			{"cpu.test1.test2",
+				},
+			},
+			{
+				"cpu.test1.test2",
 				map[string]string{"tag1": "val1", "tag2": "val2"},
 				[]string{
 					"name=cpu.*.*",
@@ -467,7 +502,8 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 					"tag1=val1;tag2=val2",
 					"tag2=~*",
 					"tag2=~.*",
-				}},
+				},
+			},
 		}
 
 		compatibility := Compatibility{

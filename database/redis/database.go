@@ -124,6 +124,7 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 }
 
 // Flush deletes all the keys of the DB, use it only for tests.
+// nolint:unused
 func (connector *DbConnector) Flush() {
 	err := connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
 		return client.FlushDB(connector.context).Err()
@@ -134,11 +135,13 @@ func (connector *DbConnector) Flush() {
 }
 
 // Get key ttl, use it only for tests.
+// nolint:unused
 func (connector *DbConnector) getTTL(key string) time.Duration {
 	return (*connector.client).PTTL(connector.context, key).Val()
 }
 
 // Delete the key, use it only for tests.
+// nolint:unused
 func (connector *DbConnector) delete(key string) {
 	(*connector.client).Del(connector.context, key)
 }

@@ -41,13 +41,9 @@ var (
 	downgradeToVersion = flag.String("to-version", "", "determines Moira version, TO which need to DOWNGRADE database structures")
 )
 
-var (
-	plotting = flag.Bool("plotting", false, "enable images in all notifications")
-)
+var plotting = flag.Bool("plotting", false, "enable images in all notifications")
 
-var (
-	removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given subscriptions separated by semicolons.")
-)
+var removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given subscriptions separated by semicolons.")
 
 var (
 	cleanupUsers      = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
@@ -421,7 +417,7 @@ func openFile(filePath string, mode int) (*os.File, error) {
 	if filePath == "" {
 		return nil, fmt.Errorf("file is not specified")
 	}
-	file, err := os.OpenFile(filePath, mode, 0666)
+	file, err := os.OpenFile(filePath, mode, 0o666) //nolint:gofumpt,gomnd
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}

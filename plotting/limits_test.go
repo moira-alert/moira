@@ -14,8 +14,8 @@ import (
 
 // TestResolveLimits tests plot limits will be calculated correctly for any metricData array.
 func TestResolveLimits(t *testing.T) {
-	var minValue = -1
-	var maxValue = 10000
+	minValue := -1
+	maxValue := 10000
 	stepTime := 60
 	elementsToUse := 10
 	startTime := time.Now().UTC().Unix()

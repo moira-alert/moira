@@ -10,8 +10,8 @@ import (
 
 func Test_TemplateDescription(t *testing.T) {
 	Convey("Test templates", t, func() {
-		var Name = "TestName"
-		var Desc = "" +
+		Name := "TestName"
+		Desc := "" +
 			"Trigger name: {{.Trigger.Name}}\n" +
 			"{{range $v := .Events }}\n" +
 			"Metric: {{$v.Metric}}\n" +
@@ -24,8 +24,10 @@ func Test_TemplateDescription(t *testing.T) {
 			"{{ range $i, $v := .Events }}{{ if ne $i 0 }}&{{ else }}?" +
 			"{{ end }}var-host={{ $v.Metric }}{{ end }}"
 
-		var testUnixTime = time.Now().Unix()
-		var events = []Event{{Metric: "1", Timestamp: testUnixTime}, {Metric: "2", Timestamp: testUnixTime}}
+		var (
+			testUnixTime = time.Now().Unix()
+			events       = []Event{{Metric: "1", Timestamp: testUnixTime}, {Metric: "2", Timestamp: testUnixTime}}
+		)
 
 		Convey("Test nil data", func() {
 			expected, err := Populate(Name, Desc, nil)

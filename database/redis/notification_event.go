@@ -20,7 +20,6 @@ func (connector *DbConnector) GetNotificationEvents(triggerID string, start int6
 	c := *connector.client
 
 	eventsData, err := reply.Events(c.ZRevRange(ctx, triggerEventsKey(triggerID), start, start+size))
-
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil
@@ -56,7 +55,6 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	}
 
 	_, err = pipe.Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -116,8 +114,10 @@ func (connector *DbConnector) RemoveAllNotificationEvents() error {
 	return nil
 }
 
-var notificationEventsList = "moira-trigger-events"
-var notificationEventsUIList = "moira-trigger-events-ui"
+var (
+	notificationEventsList   = "moira-trigger-events"
+	notificationEventsUIList = "moira-trigger-events-ui"
+)
 
 func triggerEventsKey(triggerID string) string {
 	return "moira-trigger-events:" + triggerID
