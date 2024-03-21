@@ -10,8 +10,9 @@ import (
 func GetUserSettings(database moira.Database, userLogin string, auth *api.Authorization) (*dto.UserSettings, *api.ErrorResponse) {
 	userSettings := &dto.UserSettings{
 		User: dto.User{
-			Login:          userLogin,
-			HasAdminRights: !auth.IsEnabled() || auth.IsAdmin(userLogin),
+			Login:       userLogin,
+			AuthEnabled: auth.IsEnabled(),
+			Role:        dto.GetRole(userLogin, auth),
 		},
 		Contacts:      make([]moira.ContactData, 0),
 		Subscriptions: make([]moira.SubscriptionData, 0),
