@@ -14,8 +14,10 @@ import (
 	w "github.com/moira-alert/moira/worker"
 )
 
-const selfStateLockName = "moira-self-state-monitor"
-const selfStateLockTTL = time.Second * 15
+const (
+	selfStateLockName = "moira-self-state-monitor"
+	selfStateLockTTL  = time.Second * 15
+)
 
 // SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work.
 type SelfCheckWorker struct {

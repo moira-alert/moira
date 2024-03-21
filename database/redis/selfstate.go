@@ -73,8 +73,10 @@ func (connector *DbConnector) SetNotifierState(health string) error {
 	return c.Set(connector.context, selfStateNotifierHealth, health, redis.KeepTTL).Err()
 }
 
-var selfStateMetricsHeartbeatKey = "moira-selfstate:metrics-heartbeat"
-var selfStateChecksCounterKey = "moira-selfstate:checks-counter"
-var selfStateRemoteChecksCounterKey = "moira-selfstate:remote-checks-counter"
-var selfStatePrometheusChecksCounterKey = "moira-selfstate:prometheus-checks-counter"
-var selfStateNotifierHealth = "moira-selfstate:notifier-health"
+var (
+	selfStateMetricsHeartbeatKey        = "moira-selfstate:metrics-heartbeat"
+	selfStateChecksCounterKey           = "moira-selfstate:checks-counter"
+	selfStateRemoteChecksCounterKey     = "moira-selfstate:remote-checks-counter"
+	selfStatePrometheusChecksCounterKey = "moira-selfstate:prometheus-checks-counter"
+	selfStateNotifierHealth             = "moira-selfstate:notifier-health"
+)

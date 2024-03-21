@@ -28,6 +28,7 @@ const (
 	ErrorTextChannelArchived = "is_archived"
 	ErrorTextChannelNotFound = "channel_not_found"
 	ErrorTextNotInChannel    = "not_in_channel"
+	quotes                   = "```"
 )
 
 var stateEmoji = map[moira.State]string{
@@ -170,7 +171,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
-	eventsString += "```"
+	eventsString += quotes
 	var tailString string
 
 	eventsLenLimitReached := false
@@ -182,7 +183,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len([]rune("```")) + len([]rune(tailString))
+		tailStringLen := len([]rune(quotes)) + len([]rune(tailString))
 		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
@@ -191,7 +192,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 		eventsString += line
 		eventsPrinted++
 	}
-	eventsString += "```"
+	eventsString += quotes
 
 	if eventsLenLimitReached {
 		eventsString += tailString

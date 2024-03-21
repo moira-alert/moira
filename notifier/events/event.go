@@ -212,7 +212,8 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 }
 
 func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData,
-	event moira.NotificationEvent, logger moira.Logger) bool {
+	event moira.NotificationEvent, logger moira.Logger,
+) bool {
 	if subscription == nil {
 		logger.Debug().Msg("Subscription is nil")
 		return false

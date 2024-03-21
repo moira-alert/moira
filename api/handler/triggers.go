@@ -225,7 +225,6 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	if len(trigger.Targets) > 0 {
 		var err error
 		response.Targets, err = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
-
 		if err != nil {
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return

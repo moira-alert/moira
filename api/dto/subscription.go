@@ -11,8 +11,7 @@ import (
 )
 
 // ErrSubscriptionContainsTeamAndUser used when user try to save subscription team and user attributes specified.
-type ErrSubscriptionContainsTeamAndUser struct {
-}
+type ErrSubscriptionContainsTeamAndUser struct{}
 
 // Error is an error interface implementation method.
 func (ErrSubscriptionContainsTeamAndUser) Error() string {
@@ -123,7 +122,7 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 }
 
 func normalizeTags(tags []string) []string {
-	var normalized = make([]string, 0)
+	normalized := make([]string, 0)
 	for _, subTag := range tags {
 		if subTag != "" {
 			normalized = append(normalized, subTag)

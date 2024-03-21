@@ -40,7 +40,7 @@ type TagSpec struct {
 }
 
 func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
-	var isTransformed = false
+	isTransformed := false
 
 	result := strings.ReplaceAll(input, ".", "\\.")
 

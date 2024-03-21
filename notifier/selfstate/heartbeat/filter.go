@@ -14,12 +14,13 @@ type filter struct {
 
 func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
 	if delay > 0 {
-		return &filter{heartbeat: heartbeat{
-			logger:              logger,
-			database:            database,
-			delay:               delay,
-			lastSuccessfulCheck: time.Now().Unix(),
-		},
+		return &filter{
+			heartbeat: heartbeat{
+				logger:              logger,
+				database:            database,
+				delay:               delay,
+				lastSuccessfulCheck: time.Now().Unix(),
+			},
 			firstCheckWasSuccessful: false,
 		}
 	}

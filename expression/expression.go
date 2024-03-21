@@ -10,12 +10,14 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var exprWarnErrorRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
-var exprWarnErrorFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
-var exprWarnRising, _ = govaluate.NewEvaluableExpression("t1 >= WARN_VALUE ? WARN : OK")
-var exprErrRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : OK")
-var exprWarnFalling, _ = govaluate.NewEvaluableExpression("t1 <= WARN_VALUE ? WARN : OK")
-var exprErrFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : OK")
+var (
+	exprWarnErrorRising, _  = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
+	exprWarnErrorFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
+	exprWarnRising, _       = govaluate.NewEvaluableExpression("t1 >= WARN_VALUE ? WARN : OK")
+	exprErrRising, _        = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : OK")
+	exprWarnFalling, _      = govaluate.NewEvaluableExpression("t1 <= WARN_VALUE ? WARN : OK")
+	exprErrFalling, _       = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : OK")
+)
 
 var exprCache = cache.New(cache.NoExpiration, cache.NoExpiration)
 

@@ -36,7 +36,8 @@ func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics
 
 // ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings.
 func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification {
+	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger,
+) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
@@ -72,7 +73,8 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 }
 
 func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.NotificationEvent,
-	logger moira.Logger) (time.Time, bool) {
+	logger moira.Logger,
+) (time.Time, bool) {
 	// if trigger switches more than .count times in .length seconds, delay next delivery for .delay seconds
 	// processing stops after first condition matches
 	throttlingLevels := []throttlingLevel{

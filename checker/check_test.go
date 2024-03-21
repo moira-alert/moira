@@ -218,7 +218,8 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 					"first":  {Values: map[string]float64{"t1": 0}},
 					"second": {Values: map[string]float64{"t1": 0}},
 					"third":  {Values: map[string]float64{"t1": 0}},
-				}}
+				},
+			}
 			Convey("last check has aloneMetrics", func() {
 				triggerChecker.trigger.AloneMetrics = map[string]bool{"t2": true}
 				triggerChecker.lastCheck = &moira.CheckData{
@@ -227,7 +228,8 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 						"first":  {Values: map[string]float64{"t1": 0, "t2": 0}},
 						"second": {Values: map[string]float64{"t1": 0, "t2": 0}},
 						"third":  {Values: map[string]float64{"t1": 0, "t2": 0}},
-					}}
+					},
+				}
 				Convey("fetched metrics is empty", func() {
 					triggerChecker.trigger.AloneMetrics = map[string]bool{"t2": true}
 					prepared, alone, err := triggerChecker.prepareMetrics(map[string][]metricSource.MetricData{})
@@ -1214,7 +1216,8 @@ func TestHandleTrigger(t *testing.T) {
 				OldState:  moira.StateOK,
 				Metric:    metric,
 				Values:    map[string]float64{},
-				Message:   nil}, true).Return(nil)
+				Message:   nil,
+			}, true).Return(nil)
 			aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)}
 			lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
 			checkData := newCheckData(&lastCheck, triggerChecker.until)

@@ -423,10 +423,12 @@ func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (b
 	return false, nil
 }
 
-var allTriggersListKey = "{moira-triggers-list}:moira-triggers-list"
-var localTriggersListKey = "{moira-triggers-list}:moira-local-triggers-list"
-var remoteTriggersListKey = "{moira-triggers-list}:moira-remote-triggers-list"
-var prometheusTriggersListKey = "{moira-triggers-list}:moira-prometheus-triggers-list"
+var (
+	allTriggersListKey        = "{moira-triggers-list}:moira-triggers-list"
+	localTriggersListKey      = "{moira-triggers-list}:moira-local-triggers-list"
+	remoteTriggersListKey     = "{moira-triggers-list}:moira-remote-triggers-list"
+	prometheusTriggersListKey = "{moira-triggers-list}:moira-prometheus-triggers-list"
+)
 
 func makeTriggerListKey(clusterKey moira.ClusterKey) (string, error) {
 	var key string
