@@ -230,6 +230,7 @@ var sprigFuncMap = filterKeys(sprig.FuncMap(), []string{
 	"uuidv4",
 })
 
+// Populater represents an interface for populating a template with data.
 type Populater interface {
 	Populate(template string) (string, error)
 }

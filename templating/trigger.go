@@ -4,6 +4,7 @@ type trigger struct {
 	Name string
 }
 
+// Event represents a template event with fields allowed for use in templates.
 type Event struct {
 	Metric         string
 	MetricElements []string
@@ -12,10 +13,12 @@ type Event struct {
 	State          string
 }
 
+// TimestampDecrease decreases the timestamp of the event by the given number of seconds.
 func (event Event) TimestampDecrease(second int64) int64 {
 	return event.Timestamp - second
 }
 
+// TimestampIncrease increases the timestamp of the event by the given number of seconds.
 func (event Event) TimestampIncrease(second int64) int64 {
 	return event.Timestamp + second
 }
@@ -25,6 +28,7 @@ type triggerDescriptionPopulater struct {
 	Events  []Event
 }
 
+// NewTriggerDescriptionPopulater creates a new trigger description populater with the given trigger name and template events.
 func NewTriggerDescriptionPopulater(triggerName string, events []Event) *triggerDescriptionPopulater {
 	return &triggerDescriptionPopulater{
 		Trigger: &trigger{
@@ -34,6 +38,7 @@ func NewTriggerDescriptionPopulater(triggerName string, events []Event) *trigger
 	}
 }
 
+// Populate populates the given template with trigger description data.
 func (templateData *triggerDescriptionPopulater) Populate(tmpl string) (string, error) {
 	return populate(tmpl, templateData)
 }

@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
+
+var ErrMissingURL = errors.New("can not read url from config")
 
 // Structure that represents the Webhook configuration in the YAML file.
 type config struct {
@@ -41,7 +44,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.url = cfg.URL
 	if sender.url == "" {
-		return fmt.Errorf("can not read url from config")
+		return ErrMissingURL
 	}
 
 	sender.body = cfg.Body

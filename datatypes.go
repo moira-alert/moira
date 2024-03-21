@@ -202,6 +202,7 @@ type ContactData struct {
 	Team  string `json:"team"`
 }
 
+// ToTemplateContact converts a ContactData into a template Contact.
 func (contact *ContactData) ToTemplateContact() *templating.Contact {
 	return &templating.Contact{
 		Type:  contact.Type,
