@@ -753,18 +753,18 @@ func (checkData *CheckData) GetMaintenance() (MaintenanceInfo, int64) {
 }
 
 func createEmptyMetricState(muteFirstMetric bool, checkPointGap int64, clock Clock) MetricState {
-	if !muteFirstMetric {
-		return MetricState{
-			State:     StateNODATA,
-			Timestamp: clock.NowUnix(),
-		}
-	}
-
-	return MetricState{
-		State:          StateOK,
+	metric := MetricState{
 		Timestamp:      clock.NowUnix(),
 		EventTimestamp: clock.NowUnix() - checkPointGap,
 	}
+
+	if !muteFirstMetric {
+		metric.State = StateNODATA
+	} else {
+		metric.State = StateOK
+	}
+
+	return metric
 }
 
 // GetCheckPoint gets check point for given MetricState.
