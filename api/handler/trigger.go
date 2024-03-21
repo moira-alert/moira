@@ -58,7 +58,6 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	var problems []dto.TreeOfProblems
 	if needValidate(request) {
 		problems, err = validateTargets(request, trigger)
-
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
@@ -101,7 +100,6 @@ func validateTargets(request *http.Request, trigger *dto.Trigger) ([]dto.TreeOfP
 	}
 
 	treesOfProblems, err := dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
-
 	if err != nil {
 		return nil, api.ErrorInvalidRequest(err)
 	}

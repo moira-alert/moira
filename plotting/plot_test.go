@@ -514,8 +514,12 @@ func generateTestMetricsData(useHumanizedValues bool) []metricSource.MetricData 
 }
 
 // renderTestMetricsDataToPNG renders and saves rendered plots to PNG.
-func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
-	metricsData []metricSource.MetricData, filePath string) error {
+func renderTestMetricsDataToPNG(
+	trigger moira.Trigger,
+	plotTheme string,
+	metricsData []metricSource.MetricData,
+	filePath string,
+) error {
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate(plotTheme, location)
 	if err != nil {

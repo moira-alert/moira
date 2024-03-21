@@ -1,3 +1,5 @@
+// Package filter
+// nolint
 package filter
 
 import (

@@ -10,10 +10,12 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const user1 = "user1"
-const user2 = "user2"
-const team1 = "team1"
-const team2 = "team2"
+const (
+	user1 = "user1"
+	user2 = "user2"
+	team1 = "team1"
+	team2 = "team2"
+)
 
 func TestContacts(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")

@@ -131,12 +131,11 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 				Metric:  metric.Metric,
 				Pattern: pattern,
 			})
-
 			if err != nil {
 				continue
 			}
 
-			var metricEventsChannel = metricEventsChannels[rand.Intn(len(metricEventsChannels))]
+			metricEventsChannel := metricEventsChannels[rand.Intn(len(metricEventsChannels))]
 			pipe.SAdd(ctx, metricEventsChannel, event)
 		}
 	}

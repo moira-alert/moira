@@ -75,7 +75,6 @@ func (connector *DbConnector) IsTriggersSearchResultsExist(pagerID string) (bool
 
 	pagerIDKey := triggersSearchResultsKey(pagerID)
 	response, err := c.Exists(ctx, pagerIDKey).Result()
-
 	if err != nil {
 		return false, fmt.Errorf("failed to check if pager exists: %w", err)
 	}
@@ -90,7 +89,6 @@ func (connector *DbConnector) DeleteTriggersSearchResults(pagerID string) error 
 
 	pagerIDKey := triggersSearchResultsKey(pagerID)
 	err := c.Del(ctx, pagerIDKey).Err()
-
 	if err != nil {
 		return fmt.Errorf("failed to check if pager exists: %w", err)
 	}

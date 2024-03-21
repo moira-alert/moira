@@ -91,7 +91,6 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 // Check converts redis DB reply to moira.CheckData.
 func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 	bytes, err := rep.Bytes()
-
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return moira.CheckData{}, database.ErrNil
@@ -102,7 +101,6 @@ func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 
 	checkSE := checkDataStorageElement{}
 	err = json.Unmarshal(bytes, &checkSE)
-
 	if err != nil {
 		return moira.CheckData{}, fmt.Errorf("failed to parse lastCheck json %s: %s", string(bytes), err.Error())
 	}

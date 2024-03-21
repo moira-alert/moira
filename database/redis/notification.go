@@ -48,7 +48,6 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 	pipe.ZRange(ctx, notifierNotificationsKey, start, end)
 	pipe.ZCard(ctx, notifierNotificationsKey)
 	response, err := pipe.Exec(ctx)
-
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -116,7 +115,6 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 		pipe.ZRem(ctx, notifierNotificationsKey, notificationString)
 	}
 	response, err := pipe.Exec(ctx)
-
 	if err != nil {
 		return 0, fmt.Errorf("failed to remove notifications: %w", err)
 	}
@@ -318,7 +316,6 @@ func (connector *DbConnector) notificationsCount(to int64) (int64, error) {
 	c := *connector.client
 
 	count, err := c.ZCount(ctx, notifierNotificationsKey, "-inf", strconv.FormatInt(to, 10)).Result()
-
 	if err != nil {
 		return 0, fmt.Errorf("failed to ZCOUNT to notificationsCount: %w", err)
 	}
@@ -478,7 +475,6 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*mo
 
 		return err
 	}, notifierNotificationsKey)
-
 	if err != nil {
 		return nil, err
 	}
@@ -519,7 +515,6 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 		pipe.ZAdd(ctx, notifierNotificationsKey, z)
 	}
 	_, err := pipe.Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}

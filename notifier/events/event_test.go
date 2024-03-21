@@ -279,7 +279,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		}
 
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
-		var subscriptionToIgnoreWarningsAndRecoverings = moira.SubscriptionData{
+		subscriptionToIgnoreWarningsAndRecoverings := moira.SubscriptionData{
 			ID:                "subscriptionID-00000000000003",
 			Enabled:           true,
 			Tags:              []string{"test-tag"},
@@ -608,8 +608,10 @@ func waitTestEnd(shutdown chan struct{}, worker *FetchEventsWorker) {
 	}
 }
 
-var warnValue float64 = 10
-var errorValue float64 = 20
+var (
+	warnValue  float64 = 10
+	errorValue float64 = 20
+)
 
 var triggerData = moira.TriggerData{
 	ID:         "triggerID-0000000000001",

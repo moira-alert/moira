@@ -302,7 +302,6 @@ func funcIsSupported(funcName string) bool {
 // checks if a seriesByTag expression has at least one argument with a strict equality.
 func validateSeriesByTag(target string) (bool, error) {
 	tagArgs, err := filter.ParseSeriesByTag(target)
-
 	if err != nil {
 		return false, err
 	}

@@ -15,7 +15,8 @@ func TestBuildMoiraMessage(t *testing.T) {
 	sender := twilioSenderSms{
 		twilioSender: twilioSender{
 			location: location,
-		}}
+		},
+	}
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{

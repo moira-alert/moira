@@ -103,7 +103,6 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 		p.Events = append(p.Events, notification.Event)
 
 		err = worker.Database.PushContactNotificationToHistory(notification)
-
 		if err != nil {
 			worker.Logger.Warning().Error(err).Msg("Can't save notification to history")
 		}

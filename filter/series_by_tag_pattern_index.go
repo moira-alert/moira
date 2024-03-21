@@ -25,7 +25,6 @@ func NewSeriesByTagPatternIndex(
 
 	for pattern, tagSpecs := range tagSpecsByPattern {
 		nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs, &compatibility)
-
 		if err != nil {
 			logger.Info().
 				Error(err).

@@ -70,7 +70,6 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 // GetTeam is a controller function that returns a team by it's ID.
 func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorResponse) {
 	team, err := dataBase.GetTeam(teamID)
-
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {
 			return dto.TeamModel{}, api.ErrorNotFound(fmt.Sprintf("cannot find team: %s", teamID))
@@ -106,7 +105,6 @@ func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.E
 // GetTeamUsers is a controller function that returns a users of team by team ID.
 func GetTeamUsers(dataBase moira.Database, teamID string) (dto.TeamMembers, *api.ErrorResponse) {
 	users, err := dataBase.GetTeamUsers(teamID)
-
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))

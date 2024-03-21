@@ -37,7 +37,8 @@ func BenchmarkCustomExpr(b *testing.B) {
 	expr := &expression.TriggerExpression{
 		Expression:              &expressionStr,
 		MainTargetValue:         11.0,
-		AdditionalTargetsValues: map[string]float64{"t2": 4.0}}
+		AdditionalTargetsValues: map[string]float64{"t2": 4.0},
+	}
 	for i := 0; i < b.N; i++ {
 		(expr).Evaluate() //nolint
 	}

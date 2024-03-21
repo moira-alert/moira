@@ -180,7 +180,6 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 	metric := &metrics.HeartBeatMetrics{}
 
 	return &selfCheckWorkerMock{
-
 		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, metric),
 		database:        database,
 		notif:           notif,
