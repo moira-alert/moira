@@ -12,37 +12,12 @@ import (
 
 const eventTimeFormat = "2006-01-02 15:04:05"
 
-type notification struct {
-	Trigger trigger
-	Events  []Event
-}
-
-type Event struct {
-	Metric         string
-	MetricElements []string
-	Timestamp      int64
-	Value          *float64
-	State          string
-}
-
 func date(unixTime int64) string {
 	return time.Unix(unixTime, 0).Format(eventTimeFormat)
 }
 
 func formatDate(unixTime int64, format string) string {
 	return time.Unix(unixTime, 0).Format(format)
-}
-
-func (event Event) TimestampDecrease(second int64) int64 {
-	return event.Timestamp - second
-}
-
-func (event Event) TimestampIncrease(second int64) int64 {
-	return event.Timestamp + second
-}
-
-type trigger struct {
-	Name string `json:"name"`
 }
 
 func filterKeys(source template.FuncMap, keys []string) template.FuncMap {
@@ -250,33 +225,34 @@ var sprigFuncMap = filterKeys(sprig.FuncMap(), []string{
 	"regexSplit",
 	"mustRegexSplit",
 	"regexQuoteMeta",
+
+	// Advanced functions
+	"uuidv4",
 })
 
-func Populate(name, description string, events []Event) (desc string, err error) {
+// Populater represents an interface for populating a template with data.
+type Populater interface {
+	Populate(template string) (string, error)
+}
+
+func populate(tmpl string, data any) (populatedTemplate string, err error) {
 	defer func() {
 		if errRecover := recover(); errRecover != nil {
-			desc = description
-			err = fmt.Errorf("PANIC in populate: %w, Trigger name: %s, desc: %s, events:%#v",
-				err, name, description, events)
+			populatedTemplate = tmpl
+			err = fmt.Errorf("PANIC in populate: %v, tmpl: %s, provided data: %#v", errRecover, tmpl, data)
 		}
 	}()
 
 	buffer := bytes.Buffer{}
 
-	dataToExecute := notification{
-		Trigger: trigger{Name: name},
-		Events:  events,
+	template := template.New("populate-template").Funcs(sprigFuncMap).Funcs(funcMap)
+
+	if template, err = template.Parse(tmpl); err != nil {
+		return tmpl, err
 	}
 
-	triggerTemplate := template.New("populate-description").Funcs(sprigFuncMap).Funcs(funcMap)
-	triggerTemplate, err = triggerTemplate.Parse(description)
-	if err != nil {
-		return description, err
-	}
-
-	err = triggerTemplate.Execute(&buffer, dataToExecute)
-	if err != nil {
-		return description, err
+	if err = template.Execute(&buffer, data); err != nil {
+		return tmpl, err
 	}
 
 	return strings.TrimSpace(buffer.String()), nil
