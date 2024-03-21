@@ -248,7 +248,6 @@ func TestBuildTriggerPlots(t *testing.T) {
 	Convey("Run buildTriggerPlots", t, func() {
 		triggerID := uuid.Must(uuid.NewV4()).String()
 		trigger := moira.Trigger{ID: triggerID}
-		location, _ := time.LoadLocation("UTC")
 		plotTemplate, _ := plotting.GetPlotTemplate("", location)
 
 		Convey("without errors", func() {
