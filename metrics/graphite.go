@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
 	goMetricsGraphite "github.com/cyberdelia/go-metrics-graphite"
 	goMetrics "github.com/rcrowley/go-metrics"
 )
+
+var nonAllowedMetricCharsRegex = regexp.MustCompile("[^a-zA-Z0-9_]")
+
+// ReplaceNonAllowedMetricCharacters replaces non-allowed characters in the given metric string with underscores.
+func ReplaceNonAllowedMetricCharacters(metric string) string {
+	return nonAllowedMetricCharsRegex.ReplaceAllString(metric, "_")
+}
 
 const hostnameTmpl = "{hostname}"
 

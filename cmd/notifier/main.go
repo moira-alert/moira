@@ -142,6 +142,11 @@ func main() {
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)
 
+	// Start contacts count stats
+	contactStats := newContactStats(telemetry.Metrics, database, logger)
+	contactStats.start()
+	defer contactStats.stop() //nolint
+
 	logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira Notifier Started")
