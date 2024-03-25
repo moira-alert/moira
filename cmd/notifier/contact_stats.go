@@ -58,7 +58,9 @@ func (stats *contactStats) checkContactsCount() {
 	contactsCounter := make(map[string]int64)
 
 	for _, contact := range contacts {
-		contactsCounter[contact.Type]++
+		if contact != nil {
+			contactsCounter[contact.Type]++
+		}
 	}
 
 	for contact, count := range contactsCounter {
