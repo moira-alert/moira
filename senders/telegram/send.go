@@ -2,10 +2,9 @@ package telegram
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
-
-	"errors"
 
 	"gopkg.in/tucnak/telebot.v2"
 

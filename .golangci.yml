@@ -32,13 +32,20 @@ linters:
     - dogsled
     - errcheck
     - errorlint
+    - exportloopref
     - goconst
+    - gocheckcompilerdirectives
     - gocyclo
+    - goconst
+    - godot
     - gofmt
+    - gofumpt
+    - goheader
     - goimports
     - gomnd
     - gosimple
     - govet
+    - grouper
     - ineffassign
     - loggercheck
     - makezero
@@ -53,7 +60,6 @@ linters:
     - unparam
     - unused
     - whitespace
-    - godot
 
 issues:
   exclude-rules:
@@ -61,8 +67,11 @@ issues:
       linters:
         - gomnd
         - errcheck
+        - goconst
 
 run:
   timeout: 5m
+  skip-files:
+    - notifier/registrator.go
   skip-dirs:
     - vendor

@@ -16,15 +16,18 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
-const extensions = "http://schema.org/extensions"
-const messageType = "MessageCard"
-const summary = "Moira Alert"
-const teamsBaseURL = "https://outlook.office.com/webhook/"
-const teamsOKResponse = "1"
-const openURI = "OpenUri"
-const openURIMessage = "View in Moira"
-const openURIOsDefault = "default"
-const activityTitleText = "Description"
+const (
+	extensions        = "http://schema.org/extensions"
+	messageType       = "MessageCard"
+	summary           = "Moira Alert"
+	teamsBaseURL      = "https://outlook.office.com/webhook/"
+	teamsOKResponse   = "1"
+	openURI           = "OpenUri"
+	openURIMessage    = "View in Moira"
+	openURIOsDefault  = "default"
+	activityTitleText = "Description"
+	quotes            = "```"
+)
 
 var throttleWarningFact = Fact{
 	Name:  "Warning",
@@ -77,13 +80,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	request, err := sender.buildRequest(events, contact, trigger, throttled)
-
 	if err != nil {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
 	response, err := sender.client.Do(request)
-
 	if err != nil {
 		return fmt.Errorf("failed to perform request: %w", err)
 	}
@@ -203,13 +204,13 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 		}
 		facts = append(facts, Fact{
 			Name:  event.FormatTimestamp(sender.location, moira.DefaultTimeFormat),
-			Value: "```" + line + "```",
+			Value: quotes + line + quotes,
 		})
 
 		if maxEvents != -1 && len(facts) > maxEvents {
 			facts = append(facts, Fact{
 				Name:  "Info",
-				Value: "```" + fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted) + "```",
+				Value: quotes + fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted) + quotes,
 			})
 			break
 		}

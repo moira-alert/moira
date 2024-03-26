@@ -49,7 +49,7 @@ func generateTestMetricsData() map[string][]metricSource.MetricData {
 		Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
 	}
 
-	var result = make(map[string][]metricSource.MetricData)
+	result := make(map[string][]metricSource.MetricData)
 
 	result["t1"] = []metricSource.MetricData{metricData1}
 	result["t2"] = []metricSource.MetricData{metricData2}
@@ -224,7 +224,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 
 		Convey("with error ErrEvaluateTargetFailedWithPanic and error again", func() {
 			var err error = local.ErrEvaluateTargetFailedWithPanic{}
-			var secondErr = errors.New("test error")
+			secondErr := errors.New("test error")
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), false).Return(nil, secondErr).Times(1),
@@ -234,7 +234,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 		})
 
 		Convey("with unknown error", func() {
-			var err = errors.New("test error")
+			err := errors.New("test error")
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 			)

@@ -44,8 +44,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("cannot read the api_key from the sender settings")
 	}
 
-	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
-		senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
+	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured = senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
 
 	sender.client, err = alert.NewClient(&client.Config{
 		ApiKey: sender.apiKey,

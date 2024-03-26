@@ -91,7 +91,8 @@ func createDefaultData(database moira.Database) error {
 		}
 
 		subscriptions = append(subscriptions,
-			&moira.SubscriptionData{ID: "subscription_" + contact.ID,
+			&moira.SubscriptionData{
+				ID:       "subscription_" + contact.ID,
 				User:     contact.User,
 				Enabled:  true,
 				Tags:     []string{"Tag" + contact.User},

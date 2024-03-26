@@ -637,7 +637,7 @@ func TestMaintenanceUserSave(t *testing.T) {
 		triggerID := uuid.Must(uuid.NewV4()).String()
 		checkData.MaintenanceInfo = moira.MaintenanceInfo{}
 		userLogin := "test"
-		var timeCallMaintenance = int64(3)
+		timeCallMaintenance := int64(3)
 		err := dataBase.SetTriggerLastCheck(triggerID, &checkData, defaultLocalCluster)
 		So(err, ShouldBeNil)
 

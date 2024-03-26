@@ -102,6 +102,7 @@ func TestTriggerTargetMetrics_Populate(t *testing.T) {
 		}
 	})
 }
+
 func TestNewTriggerMetricsWithCapacity(t *testing.T) {
 	Convey("NewTriggerMetricsWithCapacity", t, func() {
 		capacity := 10
