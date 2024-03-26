@@ -1,4 +1,4 @@
-package main
+package stats
 
 import (
 	"errors"
@@ -46,7 +46,7 @@ func TestNewContactsStats(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 
 	Convey("Successfully created new contacts stats", t, func() {
-		stats := newContactStats(registry, database, logger)
+		stats := NewContactStats(registry, database, logger)
 
 		So(stats, ShouldResemble, &contactStats{
 			metrics:  metrics.NewContactsMetrics(registry),
@@ -89,7 +89,7 @@ func TestCheckingContactsCount(t *testing.T) {
 			test2Meter.EXPECT().Mark(test2ContactCount)
 			test3Meter.EXPECT().Mark(test3ContactCount)
 
-			stats := newContactStats(registry, database, logger)
+			stats := NewContactStats(registry, database, logger)
 			stats.checkContactsCount()
 		})
 
@@ -100,7 +100,7 @@ func TestCheckingContactsCount(t *testing.T) {
 			eventBuilder.EXPECT().Error(getAllContactsErr).Return(eventBuilder).Times(1)
 			eventBuilder.EXPECT().Msg("Failed to get all contacts").Times(1)
 
-			stats := newContactStats(registry, database, logger)
+			stats := NewContactStats(registry, database, logger)
 			stats.checkContactsCount()
 		})
 	})

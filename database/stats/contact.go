@@ -1,21 +1,20 @@
-package main
+package stats
 
 import (
 	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
-	"gopkg.in/tomb.v2"
 )
 
 type contactStats struct {
-	tomb     tomb.Tomb
 	metrics  *metrics.ContactsMetrics
 	database moira.Database
 	logger   moira.Logger
 }
 
-func newContactStats(
+// NewContactStats creates and initializes a new contactStats object.
+func NewContactStats(
 	metricsRegistry metrics.Registry,
 	database moira.Database,
 	logger moira.Logger,
@@ -27,18 +26,18 @@ func newContactStats(
 	}
 }
 
-func (stats *contactStats) start() {
-	stats.tomb.Go(stats.startCheckingContactsCount)
-}
-
-func (stats *contactStats) startCheckingContactsCount() error {
+// StartReport starts reporting statistics about contacts.
+func (stats *contactStats) StartReport(stop <-chan struct{}) {
 	checkTicker := time.NewTicker(time.Minute)
 	defer checkTicker.Stop()
 
+	stats.logger.Info().Msg("Start contact statistics reporter")
+
 	for {
 		select {
-		case <-stats.tomb.Dying():
-			return nil
+		case <-stop:
+			stats.logger.Info().Msg("Stop contact statistics reporter")
+			return
 
 		case <-checkTicker.C:
 			stats.checkContactsCount()
@@ -64,11 +63,6 @@ func (stats *contactStats) checkContactsCount() {
 	}
 
 	for contact, count := range contactsCounter {
-		stats.metrics.Mark(metrics.ReplaceNonAllowedMetricCharacters(contact), count)
+		stats.metrics.Mark(contact, count)
 	}
-}
-
-func (stats *contactStats) stop() error {
-	stats.tomb.Kill(nil)
-	return stats.tomb.Wait()
 }
