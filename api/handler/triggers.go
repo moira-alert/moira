@@ -27,8 +27,10 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 	return func(router chi.Router) {
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
-		router.Get("/", getAllTriggers)
-		router.Get("/unused", getUnusedTriggers)
+
+		router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllTriggers)
+		router.With(middleware.AdminOnlyMiddleware()).Get("/unused", getUnusedTriggers)
+
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
