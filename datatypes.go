@@ -451,6 +451,7 @@ type SearchOptions struct {
 	Tags                  []string
 	CreatedBy             string
 	NeedSearchByCreatedBy bool
+	NeedSortingOnlyById   bool
 	CreatePager           bool
 	PagerID               string
 }

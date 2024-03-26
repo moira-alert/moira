@@ -15,6 +15,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/xiam/to"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
@@ -267,6 +268,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		SearchString:          getSearchRequestString(request),
 		CreatedBy:             createdBy,
 		NeedSearchByCreatedBy: ok,
+		NeedSortingOnlyById:   getNeedSortingOnlyById(request),
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
 	}
@@ -341,6 +343,13 @@ func getTriggerCreatedBy(request *http.Request) (string, bool) {
 		return createdBy[0], true
 	}
 	return "", false
+}
+
+func getNeedSortingOnlyById(request *http.Request) bool {
+	if sortById, ok := request.Form["sortById"]; ok {
+		return to.Bool(sortById)
+	}
+	return false
 }
 
 func getSearchRequestString(request *http.Request) string {
