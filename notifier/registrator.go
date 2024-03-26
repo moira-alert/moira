@@ -19,7 +19,7 @@ import (
 	"github.com/moira-alert/moira/senders/twilio"
 	"github.com/moira-alert/moira/senders/victorops"
 	"github.com/moira-alert/moira/senders/webhook"
-	// "github.com/moira-alert/moira/senders/kontur".
+	// "github.com/moira-alert/moira/senders/kontur"
 )
 
 const (
