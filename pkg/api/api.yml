@@ -14,7 +14,7 @@ api:
   listen: ":8081"
   enable_cors: false
 web:
-  contacts:
+  contacts_template:
     - type: mail
       label: E-mail
     - type: pushover
