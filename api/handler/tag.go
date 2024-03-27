@@ -14,9 +14,10 @@ import (
 func tag(router chi.Router) {
 	router.Post("/", createTags)
 	router.Get("/", getAllTags)
-	router.Get("/stats", getAllTagsAndSubscriptions)
+	router.With(middleware.AdminOnlyMiddleware()).Get("/stats", getAllTagsAndSubscriptions)
 	router.Route("/{tag}", func(router chi.Router) {
 		router.Use(middleware.TagContext)
+		router.Use(middleware.AdminOnlyMiddleware())
 		router.Delete("/", removeTag)
 	})
 }

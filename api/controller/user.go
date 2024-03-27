@@ -7,9 +7,13 @@ import (
 )
 
 // GetUserSettings gets user contacts and subscriptions.
-func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettings, *api.ErrorResponse) {
+func GetUserSettings(database moira.Database, userLogin string, auth *api.Authorization) (*dto.UserSettings, *api.ErrorResponse) {
 	userSettings := &dto.UserSettings{
-		User:          dto.User{Login: userLogin},
+		User: dto.User{
+			Login:       userLogin,
+			AuthEnabled: auth.IsEnabled(),
+			Role:        dto.GetRole(userLogin, auth),
+		},
 		Contacts:      make([]moira.ContactData, 0),
 		Subscriptions: make([]moira.SubscriptionData, 0),
 	}
