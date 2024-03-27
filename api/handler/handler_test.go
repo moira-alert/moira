@@ -166,13 +166,13 @@ func TestAdminOnly(t *testing.T) {
 		})
 	})
 
-	Convey("Get tag stats", t, func() {
+	Convey("Get unused triggers", t, func() {
 		Convey("For non-admin", func() {
 			trigger := &dto.Trigger{}
 			triggerBytes, err := json.Marshal(trigger)
 			So(err, ShouldBeNil)
 
-			testRequest := httptest.NewRequest(http.MethodGet, "/api/tag/stats", bytes.NewReader(triggerBytes))
+			testRequest := httptest.NewRequest(http.MethodGet, "/api/trigger/unused", bytes.NewReader(triggerBytes))
 			testRequest.Header.Add("x-webauth-user", userLogin)
 
 			responseWriter := httptest.NewRecorder()
@@ -188,11 +188,10 @@ func TestAdminOnly(t *testing.T) {
 			triggerBytes, err := json.Marshal(trigger)
 			So(err, ShouldBeNil)
 
-			mockDb.EXPECT().GetTagNames().Return([]string{"tag_1"}, nil)
-			mockDb.EXPECT().GetTagsSubscriptions([]string{"tag_1"}).Return([]*moira.SubscriptionData{}, nil)
-			mockDb.EXPECT().GetTagTriggerIDs("tag_1").Return([]string{"tag_1_trigger_id"}, nil)
+			mockDb.EXPECT().GetUnusedTriggerIDs().Return([]string{"tag_1"}, nil)
+			mockDb.EXPECT().GetTriggerChecks([]string{"tag_1"}).Return([]*moira.TriggerCheck{}, nil)
 
-			testRequest := httptest.NewRequest(http.MethodGet, "/api/tag/stats", bytes.NewReader(triggerBytes))
+			testRequest := httptest.NewRequest(http.MethodGet, "/api/trigger/unused", bytes.NewReader(triggerBytes))
 			testRequest.Header.Add("x-webauth-user", adminLogin)
 
 			responseWriter := httptest.NewRecorder()
