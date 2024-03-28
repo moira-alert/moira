@@ -65,11 +65,17 @@ func buildSearchRequest(options moira.SearchOptions) *bleve.SearchRequest {
 
 	from := options.Page * options.Size
 	req := bleve.NewSearchRequestOptions(searchQuery, int(options.Size), int(from), false)
-	// sorting order:
-	// TriggerCheck.Score (desc)
-	// Relevance (asc)
-	// Trigger.Name (asc)
-	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.GetName()), "-_score", mapping.TriggerName.GetName()})
+
+	if options.NeedSortingOnlyById {
+		req.SortBy([]string{mapping.TriggerID.GetName()})
+	} else {
+		// sorting order:
+		// TriggerCheck.Score (desc)
+		// Relevance (asc)
+		// Trigger.Name (asc)
+		req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.GetName()), "-_score", mapping.TriggerName.GetName()})
+	}
+
 	req.Highlight = bleve.NewHighlight()
 
 	return req
