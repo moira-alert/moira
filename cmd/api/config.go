@@ -70,29 +70,31 @@ func (config *sentryConfig) getSettings() api.Sentry {
 }
 
 type webConfig struct {
-	// Moira administrator email address
+	// Moira administrator email address.
 	SupportEmail string `yaml:"supportEmail"`
-	// If true, users will be able to choose Graphite as trigger metrics data source
+	// If true, users will be able to choose Graphite as trigger metrics data source.
 	RemoteAllowed bool
-	// List of enabled contact types
+	// List of enabled contact types.
 	Contacts []webContact `yaml:"contacts"`
-	// Struct to manage feature flags
+	// Struct to manage feature flags.
 	FeatureFlags featureFlags `yaml:"feature_flags"`
-	// Returns the sentry configuration for the frontend
+	// Returns the sentry configuration for the frontend.
 	Sentry sentryConfig `yaml:"sentry"`
 }
 
 type webContact struct {
 	// Contact type. Use sender name for script and webhook senders, in other cases use sender type.
-	// See senders section of notifier config for more details: https://moira.readthedocs.io/en/latest/installation/configuration.html#notifier
+	// See senders section of notifier config for more details: https://moira.readthedocs.io/en/latest/installation/configuration.html#notifier.
 	ContactType string `yaml:"type"`
-	// Contact type label that will be shown in web ui
+	// Contact type label that will be shown in web ui.
 	ContactLabel string `yaml:"label"`
-	// Regular expression to match valid contact values
+	// Logo URL sets the url to the image with the contact's logo.
+	LogoURL string `yaml:"logo_url"`
+	// Regular expression to match valid contact values.
 	ValidationRegex string `yaml:"validation"`
-	// Short description/example of valid contact value
+	// Short description/example of valid contact value.
 	Placeholder string `yaml:"placeholder"`
-	// More detailed contact description
+	// More detailed contact description.
 	Help string `yaml:"help"`
 }
 
@@ -133,6 +135,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		contact := api.WebContact{
 			ContactType:     configContact.ContactType,
 			ContactLabel:    configContact.ContactLabel,
+			LogoURL:         configContact.LogoURL,
 			ValidationRegex: configContact.ValidationRegex,
 			Placeholder:     configContact.Placeholder,
 			Help:            configContact.Help,
