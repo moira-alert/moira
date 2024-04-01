@@ -539,7 +539,7 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(moira.SubscriptionData{}, err)
 		sub, expected := worker.getNotificationSubscriptions(event, logger)
 		So(sub, ShouldBeNil)
-		So(expected, ShouldResemble, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error()))
+		So(expected, ShouldResemble, fmt.Errorf("error while read subscription %s: %w", *event.SubscriptionID, err))
 	})
 
 	Convey("Error GetContact", t, func() {

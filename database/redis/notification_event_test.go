@@ -67,7 +67,8 @@ func TestNotificationEvents(t *testing.T) {
 						TriggerID: triggerID,
 						Metric:    "my.metric",
 						Values:    map[string]float64{"t1": 0},
-					}})
+					},
+				})
 
 				total := dataBase.GetNotificationEventCount(triggerID, 0)
 				So(total, ShouldEqual, 1)

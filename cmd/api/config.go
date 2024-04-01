@@ -74,8 +74,8 @@ type webConfig struct {
 	SupportEmail string `yaml:"supportEmail"`
 	// If true, users will be able to choose Graphite as trigger metrics data source.
 	RemoteAllowed bool
-	// List of enabled contact types.
-	Contacts []webContact `yaml:"contacts"`
+	// List of enabled contacts template.
+	ContactsTemplate []webContact `yaml:"contacts_template"`
 	// Struct to manage feature flags.
 	FeatureFlags featureFlags `yaml:"feature_flags"`
 	// Returns the sentry configuration for the frontend.
@@ -130,15 +130,15 @@ func (auth *authorization) toApiConfig() api.Authorization {
 }
 
 func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
-	webContacts := make([]api.WebContact, 0, len(config.Contacts))
-	for _, configContact := range config.Contacts {
+	webContacts := make([]api.WebContact, 0, len(config.ContactsTemplate))
+	for _, contactTemplate := range config.ContactsTemplate {
 		contact := api.WebContact{
-			ContactType:     configContact.ContactType,
-			ContactLabel:    configContact.ContactLabel,
-			LogoURI:         configContact.LogoURI,
-			ValidationRegex: configContact.ValidationRegex,
-			Placeholder:     configContact.Placeholder,
-			Help:            configContact.Help,
+			ContactType:     contactTemplate.ContactType,
+			ContactLabel:    contactTemplate.ContactLabel,
+			LogoURI:         contactTemplate.LogoURI,
+			ValidationRegex: contactTemplate.ValidationRegex,
+			Placeholder:     contactTemplate.Placeholder,
+			Help:            contactTemplate.Help,
 		}
 		webContacts = append(webContacts, contact)
 	}
