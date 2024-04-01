@@ -88,8 +88,8 @@ type webContact struct {
 	ContactType string `yaml:"type"`
 	// Contact type label that will be shown in web ui.
 	ContactLabel string `yaml:"label"`
-	// Logo URL sets the url to the image with the contact's logo.
-	LogoURL string `yaml:"logo_url"`
+	// Logo URI sets the uri to the image with the contact's logo.
+	LogoURI string `yaml:"logo_uri"`
 	// Regular expression to match valid contact values.
 	ValidationRegex string `yaml:"validation"`
 	// Short description/example of valid contact value.
@@ -135,7 +135,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		contact := api.WebContact{
 			ContactType:     configContact.ContactType,
 			ContactLabel:    configContact.ContactLabel,
-			LogoURL:         configContact.LogoURL,
+			LogoURI:         configContact.LogoURI,
 			ValidationRegex: configContact.ValidationRegex,
 			Placeholder:     configContact.Placeholder,
 			Help:            configContact.Help,
