@@ -20,7 +20,8 @@ import (
 )
 
 var senderSettings = map[string]interface{}{
-	"type": "mega-sender",
+	"sender_type":  "mega-sender",
+	"contact_type": "mega-contact",
 }
 
 var (
@@ -46,7 +47,7 @@ var (
 
 var contact = moira.ContactData{
 	ID:    "ContactID-000000000000001",
-	Type:  "mega-sender",
+	Type:  "mega-contact",
 	Value: "mail1@example.com",
 }
 

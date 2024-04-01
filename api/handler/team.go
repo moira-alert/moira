@@ -252,7 +252,7 @@ func setTeamUsers(writer http.ResponseWriter, request *http.Request) {
 	teamID := middleware.GetTeamID(request)
 
 	response, apiErr := controller.SetTeamUsers(database, teamID, members.Usernames)
-	if err != nil {
+	if apiErr != nil {
 		render.Render(writer, request, apiErr) // nolint:errcheck
 		return
 	}
@@ -289,7 +289,7 @@ func addTeamUsers(writer http.ResponseWriter, request *http.Request) {
 	teamID := middleware.GetTeamID(request)
 
 	response, apiErr := controller.AddTeamUsers(database, teamID, members.Usernames)
-	if err != nil {
+	if apiErr != nil {
 		render.Render(writer, request, apiErr) // nolint:errcheck
 		return
 	}
