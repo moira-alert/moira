@@ -14,6 +14,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const subscriptionPrefix = "subscription_"
+
 func TestUpdateUsers(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
@@ -44,7 +46,7 @@ func TestUpdateUsers(t *testing.T) {
 		Convey("Test off notifications", func() {
 			So(usersCleanup(logger, database, users, conf.Cleanup), ShouldBeNil)
 			for _, contact := range contacts {
-				subscription, err := database.GetSubscription("subscription_" + contact.ID)
+				subscription, err := database.GetSubscription(subscriptionPrefix + contact.ID)
 
 				So(err, ShouldBeNil)
 
@@ -64,7 +66,7 @@ func TestUpdateUsers(t *testing.T) {
 					continue
 				}
 
-				_, err := database.GetSubscription("subscription_" + contact.ID)
+				_, err := database.GetSubscription(subscriptionPrefix + contact.ID)
 				So(err, ShouldNotBeNil)
 
 				_, err = database.GetContact(contact.ID)
@@ -92,7 +94,7 @@ func createDefaultData(database moira.Database) error {
 
 		subscriptions = append(subscriptions,
 			&moira.SubscriptionData{
-				ID:       "subscription_" + contact.ID,
+				ID:       subscriptionPrefix + contact.ID,
 				User:     contact.User,
 				Enabled:  true,
 				Tags:     []string{"Tag" + contact.User},
@@ -114,7 +116,7 @@ func cleanData(database moira.Database) error {
 			return err
 		}
 
-		if err := database.RemoveSubscription("subscription_" + contact.ID); err != nil {
+		if err := database.RemoveSubscription(subscriptionPrefix + contact.ID); err != nil {
 			return err
 		}
 	}

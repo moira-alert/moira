@@ -74,8 +74,8 @@ type webConfig struct {
 	SupportEmail string `yaml:"supportEmail"`
 	// If true, users will be able to choose Graphite as trigger metrics data source
 	RemoteAllowed bool
-	// List of enabled contact types
-	Contacts []webContact `yaml:"contacts"`
+	// List of enabled contacts template
+	ContactsTemplate []webContact `yaml:"contacts_template"`
 	// Struct to manage feature flags
 	FeatureFlags featureFlags `yaml:"feature_flags"`
 	// Returns the sentry configuration for the frontend
@@ -83,7 +83,7 @@ type webConfig struct {
 }
 
 type webContact struct {
-	// Contact type. Use sender name for script and webhook senders, in other cases use sender type.
+	// Contact Type. Use sender name for script and webhook senders, in other cases use sender type.
 	// See senders section of notifier config for more details: https://moira.readthedocs.io/en/latest/installation/configuration.html#notifier
 	ContactType string `yaml:"type"`
 	// Contact type label that will be shown in web ui
@@ -128,14 +128,14 @@ func (auth *authorization) toApiConfig() api.Authorization {
 }
 
 func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
-	webContacts := make([]api.WebContact, 0, len(config.Contacts))
-	for _, configContact := range config.Contacts {
+	webContacts := make([]api.WebContact, 0, len(config.ContactsTemplate))
+	for _, contactTemplate := range config.ContactsTemplate {
 		contact := api.WebContact{
-			ContactType:     configContact.ContactType,
-			ContactLabel:    configContact.ContactLabel,
-			ValidationRegex: configContact.ValidationRegex,
-			Placeholder:     configContact.Placeholder,
-			Help:            configContact.Help,
+			ContactType:     contactTemplate.ContactType,
+			ContactLabel:    contactTemplate.ContactLabel,
+			ValidationRegex: contactTemplate.ValidationRegex,
+			Placeholder:     contactTemplate.Placeholder,
+			Help:            contactTemplate.Help,
 		}
 		webContacts = append(webContacts, contact)
 	}

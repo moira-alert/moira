@@ -21,9 +21,82 @@ import (
 const (
 	testUser = "testUser"
 	testPass = "testPass"
+	testURL  = "http://localhost:8080"
+	testBody = "testBody"
+
+	dateTimeFormat = "15:04 02.01.2006"
 )
 
-var logger, _ = logging.GetLogger("webhook")
+var (
+	logger, _      = logging.GetLogger("webhook")
+	location, _    = time.LoadLocation("UTC")
+	defaultHeaders = map[string]string{
+		"User-Agent":   "Moira",
+		"Content-Type": "application/json",
+	}
+)
+
+func TestSender_Init(t *testing.T) {
+	Convey("Test Init function", t, func() {
+		Convey("With empty settings", func() {
+			settings := map[string]interface{}{}
+			sender := Sender{}
+
+			err := sender.Init(settings, logger, location, dateTimeFormat)
+			So(err, ShouldResemble, ErrMissingURL)
+		})
+
+		Convey("With only url", func() {
+			settings := map[string]interface{}{
+				"url": testURL,
+			}
+			sender := Sender{}
+
+			err := sender.Init(settings, logger, location, dateTimeFormat)
+			So(err, ShouldBeNil)
+			So(sender, ShouldResemble, Sender{
+				url:     testURL,
+				headers: defaultHeaders,
+				client: &http.Client{
+					Timeout:   30 * time.Second,
+					Transport: &http.Transport{DisableKeepAlives: true},
+				},
+				log: logger,
+			})
+		})
+
+		Convey("With full provided data", func() {
+			settings := map[string]interface{}{
+				"url":      testURL,
+				"body":     testBody,
+				"user":     testUser,
+				"password": testPass,
+				"headers": map[string]string{
+					"testHeader": "test",
+				},
+				"timeout": 120,
+			}
+			sender := Sender{}
+			expectedHeaders := defaultHeaders
+			expectedHeaders["testHeader"] = "test"
+
+			err := sender.Init(settings, logger, location, dateTimeFormat)
+			So(err, ShouldBeNil)
+			So(sender, ShouldResemble, Sender{
+				url:      testURL,
+				body:     testBody,
+				user:     testUser,
+				password: testPass,
+				headers:  expectedHeaders,
+				client: &http.Client{
+					Timeout:   120 * time.Second,
+					Transport: &http.Transport{DisableKeepAlives: true},
+				},
+				log: logger,
+			})
+		})
+	})
+}
 
 func TestSender_SendEvents(t *testing.T) {
 	Convey("Receive test webhook", t, func() {
@@ -52,7 +125,6 @@ func TestSender_SendEvents(t *testing.T) {
 		defer ts.Close()
 
 		senderSettings := map[string]interface{}{
-			"name":     "testWebhook",
 			"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
 			"user":     testUser,
 			"password": testPass,
