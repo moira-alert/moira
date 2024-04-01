@@ -152,6 +152,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 				{
 					ContactType:     "slack",
 					ContactLabel:    "label",
+					LogoURI:         "/test/test.svg",
 					ValidationRegex: "t(\\d+)",
 					Placeholder:     "",
 					Help:            "help",
@@ -177,6 +178,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 				{
 					ContactType:     "slack",
 					ContactLabel:    "label",
+					LogoURI:         "/test/test.svg",
 					ValidationRegex: "t(\\d+)",
 					Help:            "help",
 				},
