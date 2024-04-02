@@ -11,7 +11,7 @@ import (
 type WebContact struct {
 	ContactType     string `json:"type" example:"webhook"`
 	ContactLabel    string `json:"label" example:"Webhook"`
-	LogoURI         string `json:"logo_uri,omitempty" example:"/images/discord-logo.svg"`
+	LogoURI         string `json:"logo_uri,omitempty" example:"discord-logo.svg"`
 	ValidationRegex string `json:"validation,omitempty" example:"^(http|https):\\/\\/.*(moira.ru)(:[0-9]{2,5})?\\/"`
 	Placeholder     string `json:"placeholder,omitempty" example:"https://moira.ru/webhooks"`
 	Help            string `json:"help,omitempty" example:"### Domains whitelist:\n - moira.ru\n"`
