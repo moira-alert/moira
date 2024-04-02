@@ -374,6 +374,21 @@ func TestTriggerIndex_Search(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 	})
+
+	Convey("Search with strict sorting", t, func() {
+		searchOptions := moira.SearchOptions{
+			Page:                0,
+			Size:                50,
+			NeedSortingOnlyById: true,
+		}
+
+		res, _, err := newIndex.Search(searchOptions)
+		So(err, ShouldBeNil)
+
+		for i := 1; i < len(res); i++ {
+			So(res[i-1].ObjectID, ShouldBeLessThanOrEqualTo, res[i].ObjectID)
+		}
+	})
 }
 
 func TestStringsManipulations(t *testing.T) {

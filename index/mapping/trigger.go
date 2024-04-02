@@ -40,6 +40,7 @@ func (Trigger) Type() string {
 func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
 	triggerMapping := bleve.NewDocumentStaticMapping()
 
+	triggerMapping.AddFieldMappingsAt(TriggerID.GetName(), getKeywordMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerName.GetName(), getStandardMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerTags.GetName(), getKeywordMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerDesc.GetName(), getStandardMapping())
