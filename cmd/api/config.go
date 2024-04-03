@@ -70,29 +70,31 @@ func (config *sentryConfig) getSettings() api.Sentry {
 }
 
 type webConfig struct {
-	// Moira administrator email address
+	// Moira administrator email address.
 	SupportEmail string `yaml:"supportEmail"`
-	// If true, users will be able to choose Graphite as trigger metrics data source
+	// If true, users will be able to choose Graphite as trigger metrics data source.
 	RemoteAllowed bool
-	// List of enabled contacts template
+	// List of enabled contacts template.
 	ContactsTemplate []webContact `yaml:"contacts_template"`
-	// Struct to manage feature flags
+	// Struct to manage feature flags.
 	FeatureFlags featureFlags `yaml:"feature_flags"`
-	// Returns the sentry configuration for the frontend
+	// Returns the sentry configuration for the frontend.
 	Sentry sentryConfig `yaml:"sentry"`
 }
 
 type webContact struct {
-	// Contact Type. Use sender name for script and webhook senders, in other cases use sender type.
-	// See senders section of notifier config for more details: https://moira.readthedocs.io/en/latest/installation/configuration.html#notifier
+	// Contact type. Use sender name for script and webhook senders, in other cases use sender type.
+	// See senders section of notifier config for more details: https://moira.readthedocs.io/en/latest/installation/configuration.html#notifier.
 	ContactType string `yaml:"type"`
-	// Contact type label that will be shown in web ui
+	// Contact type label that will be shown in web ui.
 	ContactLabel string `yaml:"label"`
-	// Regular expression to match valid contact values
+	// Logo URI sets the uri to the image with the contact's logo.
+	LogoURI string `yaml:"logo_uri"`
+	// Regular expression to match valid contact values.
 	ValidationRegex string `yaml:"validation"`
-	// Short description/example of valid contact value
+	// Short description/example of valid contact value.
 	Placeholder string `yaml:"placeholder"`
-	// More detailed contact description
+	// More detailed contact description.
 	Help string `yaml:"help"`
 }
 
@@ -133,6 +135,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		contact := api.WebContact{
 			ContactType:     contactTemplate.ContactType,
 			ContactLabel:    contactTemplate.ContactLabel,
+			LogoURI:         contactTemplate.LogoURI,
 			ValidationRegex: contactTemplate.ValidationRegex,
 			Placeholder:     contactTemplate.Placeholder,
 			Help:            contactTemplate.Help,
