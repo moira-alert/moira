@@ -55,6 +55,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 	}
 
 	checkData.UpdateScore()
+	fmt.Printf("triggerID: %s, checkData: %#v\n", triggerChecker.triggerID, checkData)
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
@@ -210,6 +211,7 @@ func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckD
 	newCheckData.Timestamp = checkTimeStamp
 	newCheckData.MetricsToTargetRelation = metricsToTargetRelation
 	newCheckData.Message = ""
+	newCheckData.Clock = lastCheck.Clock
 
 	return newCheckData
 }
