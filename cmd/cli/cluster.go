@@ -7,16 +7,18 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 )
 
-var anyTagsSubscriptionsKeyOld = "moira-any-tags-subscriptions"
-var anyTagsSubscriptionsKeyNew = "{moira-tag-subscriptions}:moira-any-tags-subscriptions"
-var triggersListKeyOld = "moira-triggers-list"
-var triggersListKeyNew = "{moira-triggers-list}:moira-triggers-list"
-var remoteTriggersListKeyOld = "moira-remote-triggers-list"
-var remoteTriggersListKeyNew = "{moira-triggers-list}:moira-remote-triggers-list"
-var tagSubscriptionsKeyPrefixOld = "moira-tag-subscriptions:"
-var tagSubscriptionsKeyPrefixNew = "{moira-tag-subscriptions}:"
-var tagTriggersKeyKeyPrefixOld = "moira-tag-triggers:"
-var tagTriggersKeyKeyPrefixNew = "{moira-tag-triggers}:"
+var (
+	anyTagsSubscriptionsKeyOld   = "moira-any-tags-subscriptions"
+	anyTagsSubscriptionsKeyNew   = "{moira-tag-subscriptions}:moira-any-tags-subscriptions"
+	triggersListKeyOld           = "moira-triggers-list"
+	triggersListKeyNew           = "{moira-triggers-list}:moira-triggers-list"
+	remoteTriggersListKeyOld     = "moira-remote-triggers-list"
+	remoteTriggersListKeyNew     = "{moira-triggers-list}:moira-remote-triggers-list"
+	tagSubscriptionsKeyPrefixOld = "moira-tag-subscriptions:"
+	tagSubscriptionsKeyPrefixNew = "{moira-tag-subscriptions}:"
+	tagTriggersKeyKeyPrefixOld   = "moira-tag-triggers:"
+	tagTriggersKeyKeyPrefixNew   = "{moira-tag-triggers}:"
+)
 
 func renameKey(database moira.Database, oldValue, newValue string) error {
 	switch d := database.(type) {

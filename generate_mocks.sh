@@ -26,4 +26,6 @@ mockgen -destination=mock/moira-alert/metrics/registry.go -package=mock_moira_al
 mockgen -destination=mock/moira-alert/metrics/meter.go -package=mock_moira_alert github.com/moira-alert/moira/metrics Meter
 mockgen -destination=mock/moira-alert/prometheus_api.go -package=mock_moira_alert github.com/moira-alert/moira/metric_source/prometheus PrometheusApi
 
+mockgen -destination=mock/moira-alert/database_stats.go -package=mock_moira_alert github.com/moira-alert/moira/database/stats StatsReporter
+
 git add mock/*

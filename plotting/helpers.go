@@ -11,21 +11,6 @@ import (
 	"github.com/moira-alert/go-chart"
 )
 
-// sortedByLen represents string array to be sorted by length.
-type sortedByLen []string
-
-func (initial sortedByLen) Len() int {
-	return len(initial)
-}
-
-func (initial sortedByLen) Less(i int, j int) bool {
-	return len(initial[i]) < len(initial[j])
-}
-
-func (initial sortedByLen) Swap(i int, j int) {
-	initial[i], initial[j] = initial[j], initial[i]
-}
-
 // sanitizeLabelName shortens label names to max length.
 func sanitizeLabelName(label string, maxLabelLength int) string {
 	labelLength := utf8.RuneCountInString(label)

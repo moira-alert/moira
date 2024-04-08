@@ -1,18 +1,16 @@
 package redis
 
 import (
+	"errors"
+	"math/rand"
 	"strconv"
+	"testing"
+	"time"
 
 	"github.com/go-redsync/redsync/v4"
 
-	"errors"
-
 	"github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-
-	"math/rand"
-	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"

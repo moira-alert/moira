@@ -35,7 +35,8 @@ func (err errFetchAvailableSeriesFailed) Error() string {
 
 // buildTriggerPlots returns bytes slices containing trigger plots.
 func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSource.MetricData,
-	plotTemplate *plotting.Plot) ([][]byte, error) {
+	plotTemplate *plotting.Plot,
+) ([][]byte, error) {
 	result := make([][]byte, 0)
 	for targetName, metrics := range metricsData {
 		renderable, err := plotTemplate.GetRenderable(targetName, trigger, metrics)
@@ -149,7 +150,7 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 	if err != nil {
 		return nil, &trigger, err
 	}
-	var result = make(map[string][]metricSource.MetricData)
+	result := make(map[string][]metricSource.MetricData)
 	for i, target := range trigger.Targets {
 		i++ // Increase
 		targetName := fmt.Sprintf("t%d", i)

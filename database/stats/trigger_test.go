@@ -1,4 +1,4 @@
-package main
+package stats
 
 import (
 	"testing"
@@ -30,8 +30,8 @@ func TestTriggerStatsCheckTriggerCount(t *testing.T) {
 		registry.EXPECT().NewMeter("triggers", moira.GraphiteRemote.String(), moira.DefaultCluster.String()).Return(graphiteRemoteMeter)
 		registry.EXPECT().NewMeter("triggers", moira.PrometheusRemote.String(), moira.DefaultCluster.String()).Return(prometheusRemoteMeter)
 
-		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-		dataBase.EXPECT().GetTriggerCount(gomock.Any()).Return(map[moira.ClusterKey]int64{
+		database := mock_moira_alert.NewMockDatabase(mockCtrl)
+		database.EXPECT().GetTriggerCount(gomock.Any()).Return(map[moira.ClusterKey]int64{
 			moira.DefaultLocalCluster:            graphiteLocalCount,
 			moira.DefaultGraphiteRemoteCluster:   graphiteRemoteCount,
 			moira.DefaultPrometheusRemoteCluster: prometheusRemoteCount,
@@ -47,7 +47,7 @@ func TestTriggerStatsCheckTriggerCount(t *testing.T) {
 			moira.DefaultGraphiteRemoteCluster,
 			moira.DefaultPrometheusRemoteCluster,
 		}
-		triggerStats := newTriggerStats(clusters, logger, dataBase, registry)
+		triggerStats := NewTriggerStats(registry, database, logger, clusters)
 
 		triggerStats.checkTriggerCount()
 	})

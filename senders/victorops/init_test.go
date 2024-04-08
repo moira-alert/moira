@@ -31,7 +31,8 @@ func TestInit(t *testing.T) {
 			So(sender, ShouldResemble, Sender{
 				ImageStores: map[string]moira.ImageStore{
 					"s3": imageStore,
-				}})
+				},
+			})
 		})
 
 		Convey("Has settings", func() {

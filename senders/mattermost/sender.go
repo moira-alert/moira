@@ -163,7 +163,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	}
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
-	var eventsString = "```"
+	eventsString := "```"
 	var tailString string
 
 	eventsLenLimitReached := false

@@ -27,8 +27,10 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 	return func(router chi.Router) {
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
-		router.Get("/", getAllTriggers)
-		router.Get("/unused", getUnusedTriggers)
+
+		router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllTriggers)
+		router.With(middleware.AdminOnlyMiddleware()).Get("/unused", getUnusedTriggers)
+
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
@@ -225,7 +227,6 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	if len(trigger.Targets) > 0 {
 		var err error
 		response.Targets, err = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
-
 		if err != nil {
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return

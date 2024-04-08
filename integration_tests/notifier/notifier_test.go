@@ -20,11 +20,14 @@ import (
 )
 
 var senderSettings = map[string]interface{}{
-	"type": "mega-sender",
+	"sender_type":  "mega-sender",
+	"contact_type": "mega-contact",
 }
 
-var location, _ = time.LoadLocation("UTC")
-var dateTimeFormat = "15:04 02.01.2006"
+var (
+	location, _    = time.LoadLocation("UTC")
+	dateTimeFormat = "15:04 02.01.2006"
+)
 
 var notifierConfig = notifier.Config{
 	SendingTimeout:   time.Millisecond * 10,
@@ -36,13 +39,15 @@ var notifierConfig = notifier.Config{
 
 var shutdown = make(chan struct{})
 
-var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
-var logger, _ = logging.GetLogger("Notifier_Test")
-var mockCtrl *gomock.Controller
+var (
+	notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	logger, _       = logging.GetLogger("Notifier_Test")
+	mockCtrl        *gomock.Controller
+)
 
 var contact = moira.ContactData{
 	ID:    "ContactID-000000000000001",
-	Type:  "mega-sender",
+	Type:  "mega-contact",
 	Value: "mail1@example.com",
 }
 

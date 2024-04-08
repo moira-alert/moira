@@ -1,26 +1,25 @@
-package main
+package stats
 
 import (
 	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
-	"gopkg.in/tomb.v2"
 )
 
 type triggerStats struct {
-	tomb     tomb.Tomb
 	metrics  *metrics.TriggersMetrics
-	clusters []moira.ClusterKey
 	database moira.Database
 	logger   moira.Logger
+	clusters []moira.ClusterKey
 }
 
-func newTriggerStats(
-	clusters []moira.ClusterKey,
-	logger moira.Logger,
-	database moira.Database,
+// NewTriggerStats creates and initializes a new triggerStats object.
+func NewTriggerStats(
 	metricsRegistry metrics.Registry,
+	database moira.Database,
+	logger moira.Logger,
+	clusters []moira.ClusterKey,
 ) *triggerStats {
 	return &triggerStats{
 		logger:   logger,
@@ -30,26 +29,23 @@ func newTriggerStats(
 	}
 }
 
-func (stats *triggerStats) start() {
-	stats.tomb.Go(stats.startCheckingTriggerCount)
-}
+// StartReport starts reporting statistics about triggers.
+func (stats *triggerStats) StartReport(stop <-chan struct{}) {
+	checkTicker := time.NewTicker(time.Minute)
+	defer checkTicker.Stop()
 
-func (stats *triggerStats) startCheckingTriggerCount() error {
-	checkTicker := time.NewTicker(time.Second * 60)
+	stats.logger.Info().Msg("Start trigger statistics reporter")
+
 	for {
 		select {
-		case <-stats.tomb.Dying():
-			return nil
+		case <-stop:
+			stats.logger.Info().Msg("Stop trigger statistics reporter")
+			return
 
 		case <-checkTicker.C:
 			stats.checkTriggerCount()
 		}
 	}
-}
-
-func (stats *triggerStats) stop() error {
-	stats.tomb.Kill(nil)
-	return stats.tomb.Wait()
 }
 
 func (stats *triggerStats) checkTriggerCount() {

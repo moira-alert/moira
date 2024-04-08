@@ -174,13 +174,14 @@ func TestMakePushoverMessage(t *testing.T) {
 		logger:   logger,
 	}
 	Convey("Just build PushoverMessage", t, func() {
-		event := []moira.NotificationEvent{{
-			Values:    map[string]float64{"t1": 123},
-			Timestamp: 150000000,
-			Metric:    "Metric",
-			OldState:  moira.StateOK,
-			State:     moira.StateERROR,
-		},
+		event := []moira.NotificationEvent{
+			{
+				Values:    map[string]float64{"t1": 123},
+				Timestamp: 150000000,
+				Metric:    "Metric",
+				OldState:  moira.StateOK,
+				State:     moira.StateERROR,
+			},
 		}
 		trigger := moira.TriggerData{
 			ID:   "SomeID",

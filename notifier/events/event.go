@@ -181,7 +181,7 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
-			return nil, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error())
+			return nil, fmt.Errorf("error while read subscription %s: %w", *event.SubscriptionID, err)
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
@@ -212,7 +212,8 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 }
 
 func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData,
-	event moira.NotificationEvent, logger moira.Logger) bool {
+	event moira.NotificationEvent, logger moira.Logger,
+) bool {
 	if subscription == nil {
 		logger.Debug().Msg("Subscription is nil")
 		return false

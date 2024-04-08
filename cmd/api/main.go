@@ -15,6 +15,7 @@ import (
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/database/stats"
 	"github.com/moira-alert/moira/index"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	_ "go.uber.org/automaxprocs"
@@ -63,7 +64,6 @@ func main() {
 	)
 
 	logger, err := logging.ConfigureLog(applicationConfig.Logger.LogFile, applicationConfig.Logger.LogLevel, serviceName, applicationConfig.Logger.LogPrettyFormat)
-
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
@@ -121,9 +121,13 @@ func main() {
 			Msg("Failed to initialize metric sources")
 	}
 
-	stats := newTriggerStats(metricSourceProvider.GetClusterList(), logger, database, telemetry.Metrics)
-	stats.start()
-	defer stats.stop() //nolint
+	// Start stats manager
+	statsManager := stats.NewStatsManager(
+		stats.NewTriggerStats(telemetry.Metrics, database, logger, metricSourceProvider.GetClusterList()),
+		stats.NewContactStats(telemetry.Metrics, database, logger),
+	)
+	statsManager.Start()
+	defer statsManager.Stop() //nolint
 
 	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
 

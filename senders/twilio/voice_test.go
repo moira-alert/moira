@@ -1,14 +1,13 @@
 package twilio
 
 import (
+	"testing"
 	"time"
 
 	twilio_client "github.com/carlosdp/twiliogo"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-
-	"testing"
 )
 
 func TestTwilioSenderVoice_SendEvents(t *testing.T) {

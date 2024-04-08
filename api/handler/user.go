@@ -45,7 +45,8 @@ func getUserName(writer http.ResponseWriter, request *http.Request) {
 //	@router		/user/settings [get]
 func getUserSettings(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
-	userSettings, err := controller.GetUserSettings(database, userLogin)
+	auth := middleware.GetAuth(request)
+	userSettings, err := controller.GetUserSettings(database, userLogin, auth)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return

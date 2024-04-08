@@ -58,7 +58,6 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	}
 
 	_, err = pipe.Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -109,7 +108,6 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	pipe := (*connector.client).TxPipeline()
 	pipe = appendRemoveTriggerLastCheckToRedisPipeline(ctx, pipe, triggerID)
 	_, err := pipe.Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -168,7 +166,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		return nil
 	}
 
-	var lastCheck = moira.CheckData{}
+	lastCheck := moira.CheckData{}
 	err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
 	if err != nil {
 		return fmt.Errorf("failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
@@ -230,8 +228,10 @@ func (connector *DbConnector) getTriggersLastCheck(triggerIDs []string) ([]*moir
 	return reply.Checks(results)
 }
 
-var badStateTriggersKey = "moira-bad-state-triggers"
-var triggersChecksKey = "moira-triggers-checks"
+var (
+	badStateTriggersKey = "moira-bad-state-triggers"
+	triggersChecksKey   = "moira-triggers-checks"
+)
 
 func metricLastCheckKey(triggerID string) string {
 	return "moira-metric-last-check:" + triggerID
