@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -120,6 +121,8 @@ func TestInitTriggerChecker(t *testing.T) {
 		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
 		So(err, ShouldBeNil)
 
+		expectedLastCheck := lastCheck
+		expectedLastCheck.Clock = clock.NewSystemClock()
 		expected := TriggerChecker{
 			triggerID: triggerID,
 			database:  dataBase,
@@ -129,7 +132,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			trigger:   &trigger,
 			ttl:       trigger.TTL,
 			ttlState:  *trigger.TTLState,
-			lastCheck: &lastCheck,
+			lastCheck: &expectedLastCheck,
 			from:      lastCheck.Timestamp - ttl,
 			until:     actual.until,
 			metrics:   metrics,
@@ -156,6 +159,7 @@ func TestInitTriggerChecker(t *testing.T) {
 				Metrics:   make(map[string]moira.MetricState),
 				State:     moira.StateOK,
 				Timestamp: actual.until - 3600,
+				Clock:     clock.NewSystemClock(),
 			},
 			from:    actual.until - 3600 - ttl,
 			until:   actual.until,
@@ -186,6 +190,7 @@ func TestInitTriggerChecker(t *testing.T) {
 				Metrics:   make(map[string]moira.MetricState),
 				State:     moira.StateOK,
 				Timestamp: actual.until - 3600,
+				Clock:     clock.NewSystemClock(),
 			},
 			from:    actual.until - 3600 - 600,
 			until:   actual.until,
@@ -201,6 +206,8 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		So(err, ShouldBeNil)
 
+		expectedLastCheck := lastCheck
+		expectedLastCheck.Clock = clock.NewSystemClock()
 		expected := TriggerChecker{
 			triggerID: triggerID,
 			database:  dataBase,
@@ -210,7 +217,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			trigger:   &trigger,
 			ttl:       0,
 			ttlState:  moira.TTLStateNODATA,
-			lastCheck: &lastCheck,
+			lastCheck: &expectedLastCheck,
 			from:      lastCheck.Timestamp - 600,
 			until:     actual.until,
 			metrics:   metrics,

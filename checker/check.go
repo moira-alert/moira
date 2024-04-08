@@ -55,7 +55,6 @@ func (triggerChecker *TriggerChecker) Check() error {
 	}
 
 	checkData.UpdateScore()
-	fmt.Printf("triggerID: %s, checkData: %#v, clusterKey: %s\n", triggerChecker.triggerID, checkData, triggerChecker.trigger.ClusterKey())
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
@@ -211,7 +210,6 @@ func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckD
 	newCheckData.Timestamp = checkTimeStamp
 	newCheckData.MetricsToTargetRelation = metricsToTargetRelation
 	newCheckData.Message = ""
-	newCheckData.Clock = lastCheck.Clock
 
 	return newCheckData
 }
@@ -275,9 +273,6 @@ func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][
 	if len(duplicates) > 0 {
 		return converted, populatedAloneMetrics, NewErrTriggerHasSameMetricNames(duplicates)
 	}
-
-	fmt.Println("populated", populated)
-	fmt.Println("populatedAloneMetrics", populatedAloneMetrics)
 
 	return converted, populatedAloneMetrics, nil
 }
@@ -479,12 +474,9 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	}
 
 	checkPoint := lastMetricState.GetCheckPoint(checkPointGap)
-	fmt.Printf("checkPoint: %v, startTime: %v, stepTime: %v\n", checkPoint, startTime, stepTime)
 	logger.Debug().
 		Int64(moira.LogFieldNameCheckpoint, checkPoint).
 		Msg("Checkpoint got")
-
-	fmt.Println("metrics from datasource", metrics)
 
 	// DO NOT CHANGE
 	// Specific optimization magic
@@ -497,28 +489,13 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	valueTimestamp := startTime + stepTime*stepsDifference
 	endTimestamp := triggerChecker.until + stepTime
 
-	logger.Info().
-		Int64("difference", difference).
-		Int64("step", stepTime).
-		Int64("steps_difference", stepsDifference).
-		Msg("Steps")
-
 	newMetricStates = make([]moira.MetricState, 0)
-
-	logger.Info().
-		Int64("value_timestamp", valueTimestamp).
-		Int64("end_timestamp", endTimestamp).
-		Msg("Timestamp values")
 
 	for ; valueTimestamp < endTimestamp; valueTimestamp += stepTime {
 		newMetricState, err := triggerChecker.getMetricDataState(metrics, &previousMetricState, &valueTimestamp, &checkPoint, logger)
 		if err != nil {
 			return lastMetricState, newMetricStates, err
 		}
-
-		logger.Info().
-			Interface("new_metric_state", newMetricState).
-			Msg("Calculate new metric state")
 
 		if newMetricState == nil {
 			continue
@@ -527,11 +504,6 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 		previousMetricState = *newMetricState
 		newMetricStates = append(newMetricStates, *newMetricState)
 	}
-
-	logger.Info().
-		Interface("new_metric_states", newMetricStates).
-		Interface("last_metric_state", lastMetricState).
-		Msg("Calculate metric states")
 
 	return lastMetricState, newMetricStates, nil
 }
@@ -567,8 +539,6 @@ func (triggerChecker *TriggerChecker) getMetricDataState(
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("New Metric State - values: %#v\n", values)
 
 	return newMetricState(
 		*lastState,
