@@ -55,7 +55,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 	}
 
 	checkData.UpdateScore()
-	fmt.Printf("triggerID: %s, checkData: %#v\n", triggerChecker.triggerID, checkData)
+	fmt.Printf("triggerID: %s, checkData: %#v, clusterKey: %s\n", triggerChecker.triggerID, checkData, triggerChecker.trigger.ClusterKey())
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
@@ -479,6 +479,7 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	}
 
 	checkPoint := lastMetricState.GetCheckPoint(checkPointGap)
+	fmt.Printf("checkPoint: %v, startTime: %v, stepTime: %v\n", checkPoint, startTime, stepTime)
 	logger.Debug().
 		Int64(moira.LogFieldNameCheckpoint, checkPoint).
 		Msg("Checkpoint got")
@@ -502,15 +503,7 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 		Int64("steps_difference", stepsDifference).
 		Msg("Steps")
 
-	if endTimestamp-valueTimestamp < 0 {
-		logger.Error().
-			Int64("end_timestamp", endTimestamp).
-			Int64("value_timestamp", valueTimestamp).
-			Msg("The end time of the metric check cannot be less than the current value")
-		return
-	}
-
-	newMetricStates = make([]moira.MetricState, 0, (endTimestamp-valueTimestamp)/stepTime)
+	newMetricStates = make([]moira.MetricState, 0)
 
 	logger.Info().
 		Int64("value_timestamp", valueTimestamp).
@@ -522,6 +515,10 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 		if err != nil {
 			return lastMetricState, newMetricStates, err
 		}
+
+		logger.Info().
+			Interface("new_metric_state", newMetricState).
+			Msg("Calculate new metric state")
 
 		if newMetricState == nil {
 			continue
@@ -570,6 +567,8 @@ func (triggerChecker *TriggerChecker) getMetricDataState(
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("New Metric State - values: %#v\n", values)
 
 	return newMetricState(
 		*lastState,

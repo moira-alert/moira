@@ -758,10 +758,10 @@ func createEmptyMetricState(muteFirstMetric bool, checkPointGap int64, clock Clo
 		EventTimestamp: clock.NowUnix() - checkPointGap,
 	}
 
-	if !muteFirstMetric {
-		metric.State = StateNODATA
-	} else {
+	if muteFirstMetric {
 		metric.State = StateOK
+	} else {
+		metric.State = StateNODATA
 	}
 
 	return metric
