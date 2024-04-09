@@ -113,7 +113,9 @@ func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimes
 		lastCheck.Timestamp = emptyLastCheckTimestamp
 	}
 
-	lastCheck.Clock = clock.NewSystemClock()
+	if lastCheck.Clock == nil {
+		lastCheck.Clock = clock.NewSystemClock()
+	}
 
 	return &lastCheck, nil
 }
