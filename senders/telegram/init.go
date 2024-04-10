@@ -9,7 +9,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/worker"
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 )
 
 const (
@@ -81,12 +81,14 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return removeTokenFromError(err, sender.bot)
 	}
 
-	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
-		if err = sender.handleMessage(message); err != nil {
+	sender.bot.Handle(telebot.OnText, func(ctx telebot.Context) error {
+		if err = sender.handleMessage(ctx.Message()); err != nil {
 			sender.logger.Error().
 				Error(err).
 				Msg("Error handling incoming message: %s")
+			return err
 		}
+		return nil
 	})
 	go sender.runTelebot()
 	return nil

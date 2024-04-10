@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 )
 
 func TestGetResponseMessage(t *testing.T) {

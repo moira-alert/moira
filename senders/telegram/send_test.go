@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 )
 
 func TestBuildMessage(t *testing.T) {
@@ -179,15 +179,15 @@ func TestCheckBrokenContactError(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 		Convey("Broken contact error is properly recognized", func() {
-			brokenContactErrorsList := []*telebot.APIError{
+			brokenContactErrorsList := []*telebot.Error{
 				telebot.ErrNoRightsToSendPhoto,
 				telebot.ErrChatNotFound,
 				telebot.ErrNoRightsToSend,
 				telebot.ErrUnauthorized,
 				telebot.ErrBlockedByUser,
 				telebot.ErrUserIsDeactivated,
-				telebot.ErrBotKickedFromGroup,
-				telebot.ErrBotKickedFromSuperGroup,
+				telebot.ErrKickedFromGroup,
+				telebot.ErrKickedFromSuperGroup,
 			}
 			for _, brokenContactError := range brokenContactErrorsList {
 				err := checkBrokenContactError(logger, brokenContactError)
@@ -198,13 +198,13 @@ func TestCheckBrokenContactError(t *testing.T) {
 			}
 		})
 		Convey("Other errors are returned as is", func() {
-			otherTelebotErrors := []*telebot.APIError{
+			otherTelebotErrors := []*telebot.Error{
 				telebot.ErrInternal,
 				telebot.ErrTooLarge,
 				telebot.ErrEmptyMessage,
 				telebot.ErrWrongFileID,
 				telebot.ErrNoRightsToDelete,
-				telebot.ErrKickingChatOwner,
+				telebot.ErrCantRemoveOwner,
 			}
 			for _, otherError := range otherTelebotErrors {
 				err := checkBrokenContactError(logger, otherError)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 
 	"github.com/moira-alert/moira"
 )
@@ -111,7 +111,7 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 	if err != nil {
 		return nil, err
 	}
-	chat, err := sender.bot.ChatByID(uid)
+	chat, err := sender.bot.ChatByUsername(uid)
 	if err != nil {
 		err = removeTokenFromError(err, sender.bot)
 		return nil, fmt.Errorf("can't find recipient %s: %s", uid, err.Error())
@@ -148,7 +148,7 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 		return nil
 	}
 
-	var e *telebot.APIError
+	var e *telebot.Error
 	if ok := errors.As(err, &e); ok {
 		logger.Debug().
 			Int("code", e.Code).
@@ -169,7 +169,7 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 	return err
 }
 
-func isBrokenContactAPIError(err *telebot.APIError) bool {
+func isBrokenContactAPIError(err *telebot.Error) bool {
 	if err.Code == telebot.ErrUnauthorized.Code {
 		return true
 	}
@@ -179,9 +179,9 @@ func isBrokenContactAPIError(err *telebot.APIError) bool {
 			err.Description == telebot.ErrNoRightsToSend.Description) {
 		return true
 	}
-	if err.Code == telebot.ErrBotKickedFromGroup.Code &&
-		(err.Description == telebot.ErrBotKickedFromGroup.Description ||
-			err.Description == telebot.ErrBotKickedFromSuperGroup.Description) {
+	if err.Code == telebot.ErrKickedFromGroup.Code &&
+		(err.Description == telebot.ErrKickedFromGroup.Description ||
+			err.Description == telebot.ErrKickedFromSuperGroup.Description) {
 		return true
 	}
 	return false
