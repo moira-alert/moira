@@ -70,20 +70,21 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	sender.session.AddHandler(handleMsg)
 
-	go sender.runBot()
+	sender.runBot()
 	return nil
 }
 
 func (sender *Sender) runBot() {
+	err := sender.session.Open()
+	if err != nil {
+		sender.logger.Error().
+			Error(err).
+			Msg("error creating a connection to discord")
+		return
+	}
+	sender.botUserID = sender.session.State.User.ID
+
 	workerAction := func(stop <-chan struct{}) error {
-		err := sender.session.Open()
-		if err != nil {
-			sender.logger.Error().
-				Error(err).
-				Msg("error creating a connection to discord")
-			return nil
-		}
-		sender.botUserID = sender.session.State.User.ID
 		defer sender.session.Close()
 		<-stop
 		return nil
