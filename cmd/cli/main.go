@@ -46,14 +46,15 @@ var plotting = flag.Bool("plotting", false, "enable images in all notifications"
 var removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given subscriptions separated by semicolons.")
 
 var (
-	cleanupUsers      = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
-	cleanupLastChecks = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
-	cleanupTags       = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
-	cleanupMetrics    = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
-	cleanupRetentions = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
-	userDel           = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
-	fromUser          = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
-	toUser            = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+	cleanupUsers          = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
+	cleanupLastChecks     = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
+	cleanupTags           = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
+	cleanupMetrics        = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
+	cleanupPatternMetrics = flag.Bool("cleanup-pattern-metrics", false, "Delete outdated pattern metrics.")
+	cleanupRetentions     = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
+	userDel               = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
+	fromUser              = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
+	toUser                = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
 )
 
 var (
@@ -216,14 +217,15 @@ func main() { //nolint
 
 		log.Info().
 			Interface("user_whitelist", confCleanup.Whitelist).
-			Msg("Cleanup started")
+			Msg("Cleanup users started")
 
 		if err := handleCleanup(logger, database, confCleanup); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to cleanup")
 		}
-		log.Info().Msg("Cleanup finished")
+
+		log.Info().Msg("Cleanup users finished")
 	}
 
 	if *cleanupMetrics {
@@ -236,6 +238,27 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to cleanup outdated metrics")
 		}
+
+		log.Info().Msg("Cleanup of outdated metrics finished")
+	}
+
+	if *cleanupPatternMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-pattern-metrics")
+
+		log.Info().Msg("Cleanup of outdated pattern metrics started")
+
+		count, err := handleCleanUpOutdatedPatternMetrics(database)
+		if err != nil {
+			log.Error().
+				Error(err).
+				Msg("Failed to cleanup outdated pattern metrics")
+		}
+
+		log.Info().
+			Int64("deleted_pattern_metrics", count).
+			Msg("Cleaned up outdated pattern metrics")
+
+		log.Info().Msg("Cleanup of outdated pattern metrics finished")
 	}
 
 	if *cleanupLastChecks {
@@ -248,6 +271,7 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to cleanup abandoned triggers last checks")
 		}
+
 		log.Info().Msg("Cleanup abandoned triggers last checks finished")
 	}
 
@@ -417,7 +441,7 @@ func openFile(filePath string, mode int) (*os.File, error) {
 	if filePath == "" {
 		return nil, fmt.Errorf("file is not specified")
 	}
-	file, err := os.OpenFile(filePath, mode, 0666) //nolint:gofumpt,gomnd
+	file, err := os.OpenFile(filePath, mode, 0o666) //nolint:gofumpt,gomnd
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}
