@@ -415,13 +415,13 @@ func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) err
 func (connector *DbConnector) CleanupOutdatedPatternMetrics() (int64, error) {
 	var count int64
 
+	ctx := connector.context
+	client := *connector.client
+
 	patterns, err := connector.GetPatterns()
 	if err != nil {
 		return count, fmt.Errorf("failed to get patterns: %w", err)
 	}
-
-	ctx := connector.context
-	client := *connector.client
 
 	pipe := client.TxPipeline()
 
