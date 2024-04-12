@@ -62,6 +62,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 		for i := range slc {
 			slc[i] = strings.TrimSpace(slc[i])
 		}
+
 		regularExpression = strings.Join(slc, "|")
 		result = result[:matchedWildcardIndexes[0]] + regularExpression + result[matchedWildcardIndexes[1]:]
 		isTransformed = true
@@ -70,6 +71,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	if !isTransformed {
 		return input, false
 	}
+
 	return "^" + result + "$", true
 }
 
@@ -152,6 +154,7 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 				return false
 			}
 		}
+
 		return true
 	}
 
@@ -205,9 +208,11 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 		if spec.Name == "name" {
 			return matchingHandlerCondition(metric)
 		}
+
 		if value, found := labels[spec.Name]; found {
 			return matchingHandlerCondition(value)
 		}
+
 		return allowMatchEmpty && matchEmpty
 	}, nil
 }
