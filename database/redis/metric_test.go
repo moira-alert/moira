@@ -16,6 +16,11 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
+const (
+	toInf = "+inf"
+	fromInf = "-inf"
+)
+
 func TestMetricsStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
@@ -275,7 +280,8 @@ func TestRemoveMetricValues(t *testing.T) {
 			Timestamp:          46,
 			Value:              4,
 		}
-		from := "-inf"
+
+		from := fromInf
 
 		err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1})
 		So(err, ShouldBeNil) // Save metric with changed retention
@@ -449,8 +455,8 @@ func TestRemoveMetricValues(t *testing.T) {
 				dataBase.metricsCache.Flush()
 			}()
 
-			from := "-inf"
-			to := "+inf"
+			from := fromInf
+			to := toInf
 
 			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1})
 			So(err, ShouldBeNil)
@@ -488,12 +494,12 @@ func TestRemoveMetricValues(t *testing.T) {
 			defer func() {
 				dataBase.metricsCache.Flush()
 
-				deletedMetrics, err := dataBase.RemoveMetricValues(metric, "-inf", "+inf")
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
 				So(err, ShouldBeNil)
 				So(deletedMetrics, ShouldEqual, 5)
 			}()
 
-			from := "-inf"
+			from := fromInf
 			to := "5"
 
 			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1})
@@ -530,13 +536,13 @@ func TestRemoveMetricValues(t *testing.T) {
 			defer func() {
 				dataBase.metricsCache.Flush()
 
-				deletedMetrics, err := dataBase.RemoveMetricValues(metric, "-inf", "+inf")
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
 				So(err, ShouldBeNil)
 				So(deletedMetrics, ShouldEqual, 5)
 			}()
 
 			from := "60"
-			to := "+inf"
+			to := toInf
 
 			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1})
 			So(err, ShouldBeNil)
@@ -572,7 +578,7 @@ func TestRemoveMetricValues(t *testing.T) {
 			defer func() {
 				dataBase.metricsCache.Flush()
 
-				deletedMetrics, err := dataBase.RemoveMetricValues(metric, "-inf", "+inf")
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
 				So(err, ShouldBeNil)
 				So(deletedMetrics, ShouldEqual, 2)
 			}()
@@ -717,7 +723,7 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		err = dataBase.RemovePatternWithMetrics("123")
 		So(err, ShouldNotBeNil)
 
-		from := "-inf"
+		from := fromInf
 		var toTs int64 = 1
 		to := strconv.FormatInt(toTs, 10)
 		deletedCount, err := dataBase.RemoveMetricValues("123", from, to)
