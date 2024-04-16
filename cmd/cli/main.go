@@ -46,14 +46,15 @@ var plotting = flag.Bool("plotting", false, "enable images in all notifications"
 var removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given subscriptions separated by semicolons.")
 
 var (
-	cleanupUsers      = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
-	cleanupLastChecks = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
-	cleanupTags       = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
-	cleanupMetrics    = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
-	cleanupRetentions = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
-	userDel           = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
-	fromUser          = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
-	toUser            = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+	cleanupUsers         = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
+	cleanupLastChecks    = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
+	cleanupTags          = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
+	cleanupMetrics       = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
+	cleanupFutureMetrics = flag.Bool("cleanup-future-metrics", false, "Delete metrics from the database written to the future.")
+	cleanupRetentions    = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
+	userDel              = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
+	fromUser             = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
+	toUser               = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
 )
 
 var (
@@ -230,12 +231,28 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup-metrics")
 
 		log.Info().Msg("Cleanup of outdated metrics started")
-		err := handleCleanUpOutdatedMetrics(confCleanup, database)
-		if err != nil {
+
+		if err := handleCleanUpOutdatedMetrics(confCleanup, database); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to cleanup outdated metrics")
 		}
+
+		log.Info().Msg("Cleanup of outdated metrics finished")
+	}
+
+	if *cleanupFutureMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-future-metrics")
+
+		log.Info().Msg("Cleanup of future metrics started")
+
+		if err := handleCleanUpFutureMetrics(confCleanup, database); err != nil {
+			log.Error().
+				Error(err).
+				Msg("Failed to cleanup future metrics")
+		}
+
+		log.Info().Msg("Cleanup of future metrics finished")
 	}
 
 	if *cleanupLastChecks {
@@ -417,7 +434,7 @@ func openFile(filePath string, mode int) (*os.File, error) {
 	if filePath == "" {
 		return nil, fmt.Errorf("file is not specified")
 	}
-	file, err := os.OpenFile(filePath, mode, 0666) //nolint:gofumpt,gomnd
+	file, err := os.OpenFile(filePath, mode, 0o666) //nolint:gofumpt,gomnd
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}

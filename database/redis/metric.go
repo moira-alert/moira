@@ -18,6 +18,11 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
+var (
+	ErrCleanUpDurationLessThanZero    = errors.New("clean up duration value must be greater than zero, otherwise the current metrics may be deleted")
+	ErrCleanUpDurationGreaterThanZero = errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed")
+)
+
 // GetPatterns gets updated patterns array.
 func (connector *DbConnector) GetPatterns() ([]string, error) {
 	c := *connector.client
@@ -307,14 +312,15 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 }
 
 // RemoveMetricValues remove metric timestamps values from 0 to given time.
-func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) (int64, error) {
+func (connector *DbConnector) RemoveMetricValues(metric string, from, to string) (int64, error) {
 	if !connector.needRemoveMetrics(metric) {
 		return 0, nil
 	}
+
 	c := *connector.client
-	result, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result()
+	result, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), from, to).Result()
 	if err != nil {
-		return 0, fmt.Errorf("failed to remove metrics from -inf to %v, error: %w", toTime, err)
+		return 0, fmt.Errorf("failed to remove metrics from %s to %s, error: %w", from, to, err)
 	}
 
 	return result, nil
@@ -344,23 +350,25 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 	return err == nil
 }
 
-func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) error {
+func cleanUpMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, from, to string) error {
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
 	var count int64
 
 	for metricsIterator.Next(connector.context) {
 		key := metricsIterator.Val()
 		metric := strings.TrimPrefix(key, metricDataKey(""))
-		deletedCount, err := flushMetric(connector, metric, duration)
+
+		deletedCount, err := connector.RemoveMetricValues(metric, from, to)
 		if err != nil {
 			return err
 		}
+
 		count += deletedCount
 	}
 
 	connector.logger.Info().
 		Int64("count deleted metrics", count).
-		Msg("Cleaned up usefully metrics for trigger")
+		Msg("Cleaned up metrics")
 
 	return nil
 }
@@ -388,11 +396,29 @@ func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.
 
 func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) error {
 	if duration >= 0 {
-		return errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed")
+		return ErrCleanUpDurationGreaterThanZero
 	}
 
+	from := "-inf"
+	toTs := time.Now().UTC().Add(duration).Unix()
+	to := strconv.FormatInt(toTs, 10)
+
 	return connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
-		return cleanUpOutdatedMetricsOnRedisNode(connector, client, duration)
+		return cleanUpMetricsOnRedisNode(connector, client, from, to)
+	})
+}
+
+func (connector *DbConnector) CleanUpFutureMetrics(duration time.Duration) error {
+	if duration <= 0 {
+		return ErrCleanUpDurationLessThanZero
+	}
+
+	fromTs := connector.clock.Now().Add(duration).Unix()
+	from := strconv.FormatInt(fromTs, 10)
+	to := "+inf"
+
+	return connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
+		return cleanUpMetricsOnRedisNode(connector, client, from, to)
 	})
 }
 
@@ -473,16 +499,6 @@ func removeAllMetricsOnRedisNode(connector *DbConnector, client redis.UniversalC
 // RemoveAllMetrics removes all metrics.
 func (connector *DbConnector) RemoveAllMetrics() error {
 	return connector.callFunc(removeAllMetricsOnRedisNode)
-}
-
-func flushMetric(database moira.Database, metric string, duration time.Duration) (int64, error) {
-	lastTs := time.Now().UTC()
-	toTs := lastTs.Add(duration).Unix()
-	deletedCount, err := database.RemoveMetricValues(metric, toTs)
-	if err != nil {
-		return deletedCount, err
-	}
-	return deletedCount, nil
 }
 
 var patternsListKey = "moira-pattern-list"
