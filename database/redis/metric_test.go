@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	toInf = "+inf"
+	toInf   = "+inf"
 	fromInf = "-inf"
 )
 
