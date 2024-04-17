@@ -50,7 +50,6 @@ var (
 	cleanupLastChecks     = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
 	cleanupTags           = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
 	cleanupMetrics        = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
-	cleanupPatternMetrics = flag.Bool("cleanup-pattern-metrics", false, "Delete outdated pattern metrics.")
 	cleanupRetentions     = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
 	userDel               = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
 	fromUser              = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
@@ -239,14 +238,6 @@ func main() { //nolint
 				Msg("Failed to cleanup outdated metrics")
 		}
 
-		log.Info().Msg("Cleanup of outdated metrics finished")
-	}
-
-	if *cleanupPatternMetrics {
-		log := logger.String(moira.LogFieldNameContext, "cleanup-pattern-metrics")
-
-		log.Info().Msg("Cleanup of outdated pattern metrics started")
-
 		count, err := handleCleanUpOutdatedPatternMetrics(database)
 		if err != nil {
 			log.Error().
@@ -258,7 +249,7 @@ func main() { //nolint
 			Int64("deleted_pattern_metrics", count).
 			Msg("Cleaned up outdated pattern metrics")
 
-		log.Info().Msg("Cleanup of outdated pattern metrics finished")
+		log.Info().Msg("Cleanup of outdated metrics finished")
 	}
 
 	if *cleanupLastChecks {
