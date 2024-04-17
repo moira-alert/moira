@@ -74,6 +74,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 		storage.logger.Info().
 			Error(err).
 			Msg("Cannot parse input")
+
 		return nil
 	}
 
@@ -82,6 +83,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 			String(moira.LogFieldNameMetricName, parsedMetric.Name).
 			String(moira.LogFieldNameMetricTimestamp, fmt.Sprint(parsedMetric.Timestamp)).
 			Msg("Metric is too old")
+
 		return nil
 	}
 
@@ -92,6 +94,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 	if count%10 == 0 {
 		storage.metrics.MatchingTimer.UpdateSince(matchingStart)
 	}
+
 	if len(matchedPatterns) > 0 {
 		storage.metrics.MatchingMetricsReceived.Inc()
 		return &moira.MatchedMetric{
