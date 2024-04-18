@@ -246,6 +246,7 @@ func TestRemoveMetricValues(t *testing.T) {
 	defer dataBase.Flush()
 
 	Convey("Test that old metrics will be deleted", t, func() {
+		needCheckMetricInCache := true
 		metric1 := "my.test.super.metric"
 		pattern := "my.test.*.metric*"
 		met1 := &moira.MatchedMetric{
@@ -305,7 +306,7 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		var toTs int64 = 11
 		to := strconv.FormatInt(toTs, 10)
-		deletedCount, err := dataBase.RemoveMetricValues(metric1, from, to)
+		deletedCount, err := dataBase.RemoveMetricValues(metric1, from, to, needCheckMetricInCache)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(1))
 
@@ -321,7 +322,7 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		toTs = 22
 		to = strconv.FormatInt(toTs, 10)
-		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to, needCheckMetricInCache)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(0))
 
@@ -366,7 +367,7 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		toTs = 30
 		to = strconv.FormatInt(toTs, 10)
-		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to, needCheckMetricInCache)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(1))
 
@@ -382,7 +383,7 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		toTs = 39
 		to = strconv.FormatInt(toTs, 10)
-		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to, needCheckMetricInCache)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(0))
 
@@ -398,7 +399,7 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		toTs = 49
 		to = strconv.FormatInt(toTs, 10)
-		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to, needCheckMetricInCache)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(1))
 
@@ -451,10 +452,7 @@ func TestRemoveMetricValues(t *testing.T) {
 		}
 
 		Convey("Deleting metrics over the entire interval (from -inf to +inf)", func() {
-			defer func() {
-				dataBase.metricsCache.Flush()
-			}()
-
+			needCheckMetricInCache := false
 			from := fromInf
 			to := toInf
 
@@ -481,7 +479,7 @@ func TestRemoveMetricValues(t *testing.T) {
 				},
 			})
 
-			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to)
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to, needCheckMetricInCache)
 			So(err, ShouldBeNil)
 			So(deletedMetrics, ShouldEqual, 5)
 
@@ -492,13 +490,12 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		Convey("Deletion of metrics on the interval up to the first metric (from -inf to 5)", func() {
 			defer func() {
-				dataBase.metricsCache.Flush()
-
-				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf, false)
 				So(err, ShouldBeNil)
 				So(deletedMetrics, ShouldEqual, 5)
 			}()
 
+			needCheckMetricInCache := false
 			from := fromInf
 			to := "5"
 
@@ -513,9 +510,7 @@ func TestRemoveMetricValues(t *testing.T) {
 			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric5})
 			So(err, ShouldBeNil)
 
-			dataBase.metricsCache.Flush()
-
-			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to)
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to, needCheckMetricInCache)
 			So(err, ShouldBeNil)
 			So(deletedMetrics, ShouldEqual, 0)
 
@@ -534,13 +529,12 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		Convey("Deleting metrics on the interval after the last metric (from 60 to +inf)", func() {
 			defer func() {
-				dataBase.metricsCache.Flush()
-
-				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf, false)
 				So(err, ShouldBeNil)
 				So(deletedMetrics, ShouldEqual, 5)
 			}()
 
+			needCheckMetricInCache := false
 			from := "60"
 			to := toInf
 
@@ -555,9 +549,7 @@ func TestRemoveMetricValues(t *testing.T) {
 			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric5})
 			So(err, ShouldBeNil)
 
-			dataBase.metricsCache.Flush()
-
-			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to)
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to, needCheckMetricInCache)
 			So(err, ShouldBeNil)
 			So(deletedMetrics, ShouldEqual, 0)
 
@@ -576,13 +568,12 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		Convey("Deleting metrics inside the metric interval (from 20 to 40)", func() {
 			defer func() {
-				dataBase.metricsCache.Flush()
-
-				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf, false)
 				So(err, ShouldBeNil)
 				So(deletedMetrics, ShouldEqual, 2)
 			}()
 
+			needCheckMetricInCache := false
 			from := "20"
 			to := "40"
 
@@ -597,9 +588,7 @@ func TestRemoveMetricValues(t *testing.T) {
 			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric5})
 			So(err, ShouldBeNil)
 
-			dataBase.metricsCache.Flush()
-
-			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to)
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to, needCheckMetricInCache)
 			So(err, ShouldBeNil)
 			So(deletedMetrics, ShouldEqual, 3)
 
@@ -608,6 +597,60 @@ func TestRemoveMetricValues(t *testing.T) {
 			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
 				metric: {
 					&moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 1},
+					&moira.MetricValue{Timestamp: 50, RetentionTimestamp: 50, Value: 5},
+				},
+			})
+		})
+
+		Convey("Check operation needCheckMetricInCheck", func() {
+			defer func() {
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf, false)
+				So(err, ShouldBeNil)
+				So(deletedMetrics, ShouldEqual, 3)
+			}()
+
+			needCheckMetricInCache := true
+			from := "10"
+			to := "20"
+
+			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric2})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric3})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric4})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric5})
+			So(err, ShouldBeNil)
+
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to, needCheckMetricInCache)
+			So(err, ShouldBeNil)
+			So(deletedMetrics, ShouldEqual, 2)
+
+			actualValues, err := dataBase.GetMetricsValues([]string{metric}, 1, 99)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+				metric: {
+					&moira.MetricValue{Timestamp: 30, RetentionTimestamp: 30, Value: 3},
+					&moira.MetricValue{Timestamp: 40, RetentionTimestamp: 40, Value: 4},
+					&moira.MetricValue{Timestamp: 50, RetentionTimestamp: 50, Value: 5},
+				},
+			})
+
+			from = "30"
+			to = "50"
+
+			deletedMetrics, err = dataBase.RemoveMetricValues(metric, from, to, needCheckMetricInCache)
+			So(err, ShouldBeNil)
+			So(deletedMetrics, ShouldEqual, 0)
+
+			actualValues, err = dataBase.GetMetricsValues([]string{metric}, 1, 99)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+				metric: {
+					&moira.MetricValue{Timestamp: 30, RetentionTimestamp: 30, Value: 3},
+					&moira.MetricValue{Timestamp: 40, RetentionTimestamp: 40, Value: 4},
 					&moira.MetricValue{Timestamp: 50, RetentionTimestamp: 50, Value: 5},
 				},
 			})
@@ -726,7 +769,7 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		from := fromInf
 		var toTs int64 = 1
 		to := strconv.FormatInt(toTs, 10)
-		deletedCount, err := dataBase.RemoveMetricValues("123", from, to)
+		deletedCount, err := dataBase.RemoveMetricValues("123", from, to, true)
 		So(err, ShouldNotBeNil)
 		So(deletedCount, ShouldResemble, int64(0))
 
@@ -953,10 +996,6 @@ func TestCleanupFutureMetrics(t *testing.T) {
 		}
 
 		Convey("Without future metrics", func() {
-			defer func() {
-				dataBase.metricsCache.Flush()
-			}()
-
 			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
 				metric1: matchedMetric1,
 				metric2: matchedMetric3,
@@ -1013,10 +1052,6 @@ func TestCleanupFutureMetrics(t *testing.T) {
 		})
 
 		Convey("With future metrics", func() {
-			defer func() {
-				dataBase.metricsCache.Flush()
-			}()
-
 			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
 				metric1: matchedMetric1,
 				metric2: matchedMetric3,

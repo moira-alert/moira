@@ -312,8 +312,8 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 }
 
 // RemoveMetricValues remove metric timestamps values from 0 to given time.
-func (connector *DbConnector) RemoveMetricValues(metric string, from, to string) (int64, error) {
-	if !connector.needRemoveMetrics(metric) {
+func (connector *DbConnector) RemoveMetricValues(metric string, from, to string, needCheckMetricInCache bool) (int64, error) {
+	if needCheckMetricInCache && !connector.needRemoveMetrics(metric) {
 		return 0, nil
 	}
 
@@ -350,7 +350,7 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 	return err == nil
 }
 
-func cleanUpMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, from, to string) error {
+func cleanUpMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, from, to string, checkMetricInCache bool) error {
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
 	var count int64
 
@@ -358,7 +358,7 @@ func cleanUpMetricsOnRedisNode(connector *DbConnector, client redis.UniversalCli
 		key := metricsIterator.Val()
 		metric := strings.TrimPrefix(key, metricDataKey(""))
 
-		deletedCount, err := connector.RemoveMetricValues(metric, from, to)
+		deletedCount, err := connector.RemoveMetricValues(metric, from, to, checkMetricInCache)
 		if err != nil {
 			return err
 		}
@@ -404,7 +404,7 @@ func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) err
 	to := strconv.FormatInt(toTs, 10)
 
 	return connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
-		return cleanUpMetricsOnRedisNode(connector, client, from, to)
+		return cleanUpMetricsOnRedisNode(connector, client, from, to, true)
 	})
 }
 
@@ -418,7 +418,7 @@ func (connector *DbConnector) CleanUpFutureMetrics(duration time.Duration) error
 	to := "+inf"
 
 	return connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
-		return cleanUpMetricsOnRedisNode(connector, client, from, to)
+		return cleanUpMetricsOnRedisNode(connector, client, from, to, false)
 	})
 }
 
