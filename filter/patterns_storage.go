@@ -94,6 +94,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 	if count%10 == 0 {
 		storage.metrics.MatchingTimer.UpdateSince(matchingStart)
 	}
+
 	if len(matchedPatterns) > 0 {
 		storage.metrics.MatchingMetricsReceived.Inc()
 		return &moira.MatchedMetric{

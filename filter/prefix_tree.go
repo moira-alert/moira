@@ -41,6 +41,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 			Msg("Pattern is ignored because it contains an empty part")
 		return
 	}
+
 	for i, part := range parts {
 		found := false
 		for _, child := range currentNode.Children {
@@ -50,6 +51,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 				break
 			}
 		}
+
 		if !found {
 			newNode := &PatternNode{Part: part}
 
@@ -76,9 +78,11 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 					newNode.InnerParts = []string{part}
 				}
 			}
+
 			currentNode.Children = append(currentNode.Children, newNode)
 			currentNode = newNode
 		}
+
 		if i == len(parts)-1 {
 			currentNode.Terminal = true
 			if payloadValue != nil {
@@ -121,6 +125,7 @@ func (source *PrefixTree) MatchWithValue(metric string) map[string]MatchingHandl
 			if node.Payload == nil {
 				matched[node.Prefix] = nil
 			}
+
 			for pattern, matchingHandler := range node.Payload {
 				matched[pattern] = matchingHandler
 			}
@@ -158,6 +163,7 @@ func (source *PrefixTree) findNodes(metric string) ([]*PatternNode, int) {
 	if found == 0 {
 		return nil, 0
 	}
+
 	return currentLevel, found
 }
 
@@ -186,6 +192,7 @@ func findPart(part string, currentLevel []*PatternNode) ([]*PatternNode, int) {
 			}
 		}
 	}
+
 	return nextLevel, len(nextLevel)
 }
 
@@ -194,6 +201,7 @@ func split2(s, sep string) (string, string) {
 	if len(splitResult) < 2 { //nolint
 		return splitResult[0], ""
 	}
+
 	return splitResult[0], splitResult[1]
 }
 
@@ -203,5 +211,6 @@ func hasEmptyParts(parts []string) bool {
 			return true
 		}
 	}
+
 	return false
 }
