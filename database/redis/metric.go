@@ -411,7 +411,7 @@ func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) err
 	})
 }
 
-// CleanupOutdatedPatternMetrics removes already deleted metrics from the moira-patterns-metric key.
+// CleanupOutdatedPatternMetrics removes already deleted metrics from the moira-pattern-metrics key.
 func (connector *DbConnector) CleanupOutdatedPatternMetrics() (int64, error) {
 	var count int64
 
