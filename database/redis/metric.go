@@ -426,20 +426,14 @@ func (connector *DbConnector) CleanupOutdatedPatternMetrics() (int64, error) {
 	pipe := client.TxPipeline()
 
 	for _, pattern := range patterns {
-		patternMetricsIterator := client.SScan(ctx, patternMetricsKey(pattern), 0, "*", 0).Iterator()
+		nonExistentMetrics, err := connector.getNonExistentPatternMetrics(pattern)
+		if err != nil {
+			return count, fmt.Errorf("failed to get non existent metrics by pattern: %w", err)
+		}
 
-		for patternMetricsIterator.Next(ctx) {
-			metric := patternMetricsIterator.Val()
-
-			res, err := client.Exists(ctx, metricDataKey(metric)).Result()
-			if err != nil {
-				return count, fmt.Errorf("failed to check metric on existence: %w", err)
-			}
-
-			if res == 0 {
-				pipe.SRem(ctx, patternMetricsKey(pattern), metric)
-				count++
-			}
+		for _, metric := range nonExistentMetrics {
+			pipe.SRem(ctx, patternMetricsKey(pattern), metric)
+			count++
 		}
 	}
 
@@ -448,6 +442,47 @@ func (connector *DbConnector) CleanupOutdatedPatternMetrics() (int64, error) {
 	}
 
 	return count, nil
+}
+
+func (connector *DbConnector) getNonExistentPatternMetrics(pattern string) ([]string, error) {
+	ctx := connector.context
+	client := *connector.client
+
+	metrics, err := connector.GetPatternMetrics(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pattern metrics: %w", err)
+	}
+
+	pipe := client.TxPipeline()
+
+	for _, metric := range metrics {
+		pipe.Exists(ctx, metricDataKey(metric))
+	}
+
+	exec, err := pipe.Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to Exec Exists metric by pattern: %w", err)
+	}
+
+	nonExistentMetrics := make([]string, 0)
+
+	for i, cmder := range exec {
+		cmd, ok := cmder.(*redis.IntCmd)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert cmder to intcmd result: %w", err)
+		}
+
+		res, err := cmd.Result()
+		if err != nil {
+			return nil, err
+		}
+
+		if res == 0 {
+			nonExistentMetrics = append(nonExistentMetrics, metrics[i])
+		}
+	}
+
+	return nonExistentMetrics, nil
 }
 
 // CleanUpAbandonedRetentions removes metric retention keys that have no corresponding metric data.
