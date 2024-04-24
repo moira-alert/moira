@@ -47,12 +47,13 @@ func getDefault() config {
 			LogPrettyFormat: false,
 		},
 		Filter: filterConfig{
-			Listen:               ":2003",
-			RetentionConfig:      "/etc/moira/storage-schemas.conf",
-			CacheCapacity:        10, //nolint
-			MaxParallelMatches:   0,
-			PatternsUpdatePeriod: "1s",
-			DropMetricsTTL:       "1h",
+			Listen:                 ":2003",
+			RetentionConfig:        "/etc/moira/storage-schemas.conf",
+			CacheCapacity:          10, //nolint
+			MaxParallelMatches:     0,
+			PatternsUpdatePeriod:   "1s",
+			DropMetricsTTL:         "1h",
+			BatchForcedSaveTimeout: "1s",
 			Compatibility: compatibility{
 				AllowRegexLooseStartMatch: false,
 				AllowRegexMatchEmpty:      true,
