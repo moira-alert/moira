@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
@@ -143,7 +144,13 @@ func main() {
 
 	// Start metrics matcher
 	cacheCapacity := config.Filter.CacheCapacity
-	metricsMatcher := matchedmetrics.NewMetricsMatcher(filterMetrics, logger, database, cacheStorage, cacheCapacity)
+
+	batchForcedSaveTimeout := to.Duration(config.Filter.BatchForcedSaveTimeout)
+	if batchForcedSaveTimeout == 0 {
+		batchForcedSaveTimeout = time.Second
+	}
+
+	metricsMatcher := matchedmetrics.NewMetricsMatcher(filterMetrics, logger, database, cacheStorage, cacheCapacity, batchForcedSaveTimeout)
 	metricsMatcher.Start(metricsChan)
 	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events

@@ -30,6 +30,8 @@ type filterConfig struct {
 	DropMetricsTTL string `yaml:"drop_metrics_ttl"`
 	// Flags for compatibility with different graphite behaviours
 	Compatibility compatibility `yaml:"graphite_compatibility"`
+	// Time after which the batch of metrics is forced to be saved, default is 1s
+	BatchForcedSaveTimeout string `yaml:"batch_forced_save_timeout"`
 }
 
 func getDefault() config {
