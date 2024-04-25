@@ -150,6 +150,7 @@ type Database interface {
 
 	// Metrics management
 	CleanUpOutdatedMetrics(duration time.Duration) error
+	CleanupOutdatedPatternMetrics() (int64, error)
 	CleanUpAbandonedRetentions() error
 	RemoveMetricsByPrefix(pattern string) error
 	RemoveAllMetrics() error

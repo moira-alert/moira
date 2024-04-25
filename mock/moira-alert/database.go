@@ -163,6 +163,21 @@ func (mr *MockDatabaseMockRecorder) CleanUpOutdatedMetrics(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedMetrics), arg0)
 }
 
+// CleanupOutdatedPatternMetrics mocks base method.
+func (m *MockDatabase) CleanupOutdatedPatternMetrics() (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanupOutdatedPatternMetrics")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CleanupOutdatedPatternMetrics indicates an expected call of CleanupOutdatedPatternMetrics.
+func (mr *MockDatabaseMockRecorder) CleanupOutdatedPatternMetrics() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanupOutdatedPatternMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanupOutdatedPatternMetrics))
+}
+
 // CreateTags mocks base method.
 func (m *MockDatabase) CreateTags(arg0 []string) error {
 	m.ctrl.T.Helper()
