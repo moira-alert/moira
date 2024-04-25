@@ -88,7 +88,7 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 			case <-batchTimer.C:
 				batchedMetrics <- batch
 			}
-			batchTimer.Reset(time.Second)
+			batchTimer.Reset(matcher.batchForcedSaveTimeout)
 		}
 	}()
 	return batchedMetrics
