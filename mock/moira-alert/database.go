@@ -1143,18 +1143,18 @@ func (mr *MockDatabaseMockRecorder) RemoveMetricRetention(arg0 interface{}) *gom
 }
 
 // RemoveMetricValues mocks base method.
-func (m *MockDatabase) RemoveMetricValues(arg0, arg1, arg2 string, arg3 bool) (int64, error) {
+func (m *MockDatabase) RemoveMetricValues(arg0, arg1, arg2 string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveMetricValues", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "RemoveMetricValues", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RemoveMetricValues indicates an expected call of RemoveMetricValues.
-func (mr *MockDatabaseMockRecorder) RemoveMetricValues(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveMetricValues(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricValues), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricValues), arg0, arg1, arg2)
 }
 
 // RemoveMetricsByPrefix mocks base method.
