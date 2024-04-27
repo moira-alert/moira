@@ -34,16 +34,30 @@ func (m *MockClock) EXPECT() *MockClockMockRecorder {
 	return m.recorder
 }
 
-// Now mocks base method.
-func (m *MockClock) Now() time.Time {
+// NowUTC mocks base method.
+func (m *MockClock) NowUTC() time.Time {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Now")
+	ret := m.ctrl.Call(m, "NowUTC")
 	ret0, _ := ret[0].(time.Time)
 	return ret0
 }
 
-// Now indicates an expected call of Now.
-func (mr *MockClockMockRecorder) Now() *gomock.Call {
+// NowUTC indicates an expected call of NowUTC.
+func (mr *MockClockMockRecorder) NowUTC() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Now", reflect.TypeOf((*MockClock)(nil).Now))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NowUTC", reflect.TypeOf((*MockClock)(nil).NowUTC))
+}
+
+// NowUnix mocks base method.
+func (m *MockClock) NowUnix() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NowUnix")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// NowUnix indicates an expected call of NowUnix.
+func (mr *MockClockMockRecorder) NowUnix() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NowUnix", reflect.TypeOf((*MockClock)(nil).NowUnix))
 }

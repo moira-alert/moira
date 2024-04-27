@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 )
 
@@ -85,6 +86,7 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 		Suppressed:                   d.Suppressed,
 		SuppressedState:              d.SuppressedState,
 		Message:                      d.Message,
+		Clock:                        clock.NewSystemClock(),
 	}
 }
 

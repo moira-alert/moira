@@ -37,10 +37,9 @@ prometheus_remote:
     retries: 5
     retry_timeout: 15s
 checker:
-  nodata_check_interval: 60s
-  check_interval: 10s
+  metric_event_trigger_check_interval: 30s
   stop_checking_interval: 30s
-  lazy_triggers_check_interval: 60s
+  lazy_triggers_check_interval: 10m
 log:
   log_file: stdout
   log_level: debug
