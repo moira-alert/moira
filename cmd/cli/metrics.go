@@ -51,3 +51,7 @@ func handleRemoveMetricsByPrefix(database moira.Database, prefix string) error {
 func handleRemoveAllMetrics(database moira.Database) error {
 	return database.RemoveAllMetrics()
 }
+
+func handleCleanUpOutdatedPatternMetrics(database moira.Database) (int64, error) {
+	return database.CleanupOutdatedPatternMetrics()
+}

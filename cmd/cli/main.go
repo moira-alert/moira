@@ -217,14 +217,15 @@ func main() { //nolint
 
 		log.Info().
 			Interface("user_whitelist", confCleanup.Whitelist).
-			Msg("Cleanup started")
+			Msg("Cleanup users started")
 
 		if err := handleCleanup(logger, database, confCleanup); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to cleanup")
 		}
-		log.Info().Msg("Cleanup finished")
+
+		log.Info().Msg("Cleanup users finished")
 	}
 
 	if *cleanupMetrics {
@@ -237,6 +238,17 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to cleanup outdated metrics")
 		}
+
+		count, err := handleCleanUpOutdatedPatternMetrics(database)
+		if err != nil {
+			log.Error().
+				Error(err).
+				Msg("Failed to cleanup outdated pattern metrics")
+		}
+
+		log.Info().
+			Int64("deleted_pattern_metrics", count).
+			Msg("Cleaned up outdated pattern metrics")
 
 		log.Info().Msg("Cleanup of outdated metrics finished")
 	}
@@ -265,6 +277,7 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to cleanup abandoned triggers last checks")
 		}
+
 		log.Info().Msg("Cleanup abandoned triggers last checks finished")
 	}
 
