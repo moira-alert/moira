@@ -69,6 +69,16 @@ func (config *sentryConfig) getSettings() api.Sentry {
 	}
 }
 
+type grafanaConfig struct {
+	URL string `yaml:"url"`
+}
+
+func (config *grafanaConfig) getSettings() api.Grafana {
+	return api.Grafana{
+		URL: config.URL,
+	}
+}
+
 type webConfig struct {
 	// Moira administrator email address.
 	SupportEmail string `yaml:"supportEmail"`
@@ -80,6 +90,8 @@ type webConfig struct {
 	FeatureFlags featureFlags `yaml:"feature_flags"`
 	// Returns the sentry configuration for the frontend.
 	Sentry sentryConfig `yaml:"sentry"`
+	// Returns the grafana configuration for the frontend.
+	Grafana grafanaConfig `yaml:"grafana"`
 }
 
 type webContact struct {
@@ -174,6 +186,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		Contacts:             webContacts,
 		FeatureFlags:         config.getFeatureFlags(),
 		Sentry:               config.Sentry.getSettings(),
+		Grafana:              config.Grafana.getSettings(),
 	}
 }
 

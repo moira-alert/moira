@@ -31,6 +31,11 @@ type Sentry struct {
 	Platform string `json:"platform,omitempty" example:"dev"`
 }
 
+// Sentry - config for grafana settings.
+type Grafana struct {
+	URL string `json:"url,omitempty" example:"https://grafana.com/"`
+}
+
 // Config for api configuration variables.
 type Config struct {
 	EnableCORS    bool
@@ -68,6 +73,7 @@ type WebConfig struct {
 	Contacts             []WebContact          `json:"contacts"`
 	FeatureFlags         FeatureFlags          `json:"featureFlags"`
 	Sentry               Sentry                `json:"sentry"`
+	Grafana              Grafana               `json:"grafana,omitempty"`
 }
 
 // MetricSourceCluster contains data about supported metric source cluster.
