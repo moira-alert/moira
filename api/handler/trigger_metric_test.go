@@ -25,7 +25,6 @@ func TestDeleteTriggerMetric(t *testing.T) {
 			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, nil).Times(1)
 			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any()).Return(nil).Times(1)
-			mockDb.EXPECT().RemovePatternsMetrics(gomock.Any()).Return(nil).Times(1)
 			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 			database = mockDb
 
