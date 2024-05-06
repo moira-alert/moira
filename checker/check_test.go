@@ -1247,8 +1247,6 @@ func TestHandleTrigger(t *testing.T) {
 			triggerChecker.ttlState = moira.TTLStateDEL
 			lastCheck.Timestamp = 4267
 
-			dataBase.EXPECT().RemovePatternsMetrics(triggerChecker.trigger.Patterns).Return(nil)
-
 			aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)}
 			lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
 			checkData := newCheckData(&lastCheck, triggerChecker.until)
@@ -1347,8 +1345,6 @@ func TestHandleTrigger(t *testing.T) {
 			triggerChecker.until = 4267
 			triggerChecker.ttlState = moira.TTLStateDEL
 			lastCheck.Timestamp = 4267
-
-			dataBase.EXPECT().RemovePatternsMetrics(triggerChecker.trigger.Patterns).Return(nil)
 
 			aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)}
 			lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)

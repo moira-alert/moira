@@ -361,7 +361,6 @@ func (triggerChecker *TriggerChecker) checkRegularMetrics(
 			log.Debug().Msg("Remove metric")
 
 			checkData.RemoveMetricState(metricName)
-			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
 			// Starting to show user the updated metric, which has been hidden as its Maintenance time is not over
 			if metricState.DeletedButKept && isMetricChanged(checkData.Metrics, metricName, metricState) {
