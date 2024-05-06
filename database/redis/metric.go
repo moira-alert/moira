@@ -327,6 +327,7 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 }
 
 // RemoveMetricValues remove values by metrics from the interval of passed parameters, if they are not in the metricsCache.
+// In from and to, expect either -inf, +inf, or timestamps as strings.
 func (connector *DbConnector) RemoveMetricValues(metric string, from, to string) (int64, error) {
 	if !connector.needRemoveMetrics(metric) {
 		return 0, nil
