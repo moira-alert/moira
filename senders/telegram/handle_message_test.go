@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	mock_telegram "github.com/moira-alert/moira/mock/notifier/telegram"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/telebot.v3"
 )
@@ -14,10 +15,10 @@ func TestGetResponseMessage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	bot := telebot.Bot{Me: &telebot.User{Username: "MoiraBot"}}
+	bot := mock_telegram.NewMockBot(mockCtrl)
 
 	Convey("Test get response message", t, func() {
-		sender := Sender{DataBase: dataBase, bot: &bot}
+		sender := Sender{DataBase: dataBase, bot: bot}
 		Convey("Private chat and bad message", func() {
 			message := &telebot.Message{
 				Chat: &telebot.Chat{

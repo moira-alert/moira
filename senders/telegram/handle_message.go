@@ -16,7 +16,7 @@ func (sender *Sender) handleMessage(message *telebot.Message) error {
 	}
 	if responseMessage != "" {
 		if _, err = sender.bot.Reply(message, responseMessage); err != nil {
-			return removeTokenFromError(err, sender.bot)
+			return sender.removeTokenFromError(err)
 		}
 	}
 	return nil

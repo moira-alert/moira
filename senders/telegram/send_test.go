@@ -13,6 +13,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	mock_telegram "github.com/moira-alert/moira/mock/notifier/telegram"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/telebot.v3"
 )
@@ -117,34 +118,113 @@ http://moira.url/trigger/TriggerID
 	})
 }
 
-func TestGetChatUID(t *testing.T) {
+func TestGetChat(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	sender := Sender{location: location, frontURI: "http://moira.url", DataBase: dataBase}
+	bot := mock_telegram.NewMockBot(mockCtrl)
+	sender := Sender{location: location, frontURI: "http://moira.url", DataBase: dataBase, bot: bot}
 
 	Convey("Get Telegram chat's UID", t, func() {
-		Convey("For private channel with % prefix should return with -100 prefix", func() {
-			actual, err := sender.getChatUID("%1494975744")
-			expected := "-1001494975744"
+		Convey("For private channel with % prefix should fetch info from Telegram", func() {
+			expectedChat := &telebot.Chat{
+				ID:   -1001494975744,
+				Type: telebot.ChatPrivate,
+			}
+			bot.EXPECT().ChatByUsername("-1001494975744").Return(expectedChat, nil)
+
+			actual, err := sender.getChat("%1494975744")
+			expected := &Chat{
+				ID:   -1001494975744,
+				Type: telebot.ChatPrivate,
+			}
+
 			So(actual, ShouldResemble, expected)
 			So(err, ShouldBeNil)
 		})
 
-		Convey("For public channel with # prefix should return with @ prefix", func() {
-			dataBase.EXPECT().GetIDByUsername(messenger, "#MyPublicChannel").Return("@MyPublicChannel", nil)
-			actual, err := sender.getChatUID("#MyPublicChannel")
-			expected := "@MyPublicChannel"
+		Convey("For public channel with # prefix should fetch info from Telegram", func() {
+			expectedChat := &telebot.Chat{
+				ID:       -1001494975744,
+				Type:     telebot.ChatChannel,
+				Username: "MyPublicChannel",
+			}
+			bot.EXPECT().ChatByUsername("@MyPublicChannel").Return(expectedChat, nil)
+
+			actual, err := sender.getChat("#MyPublicChannel")
+			expected := &Chat{
+				ID:   -1001494975744,
+				Type: telebot.ChatChannel,
+			}
+
 			So(actual, ShouldResemble, expected)
 			So(err, ShouldBeNil)
 		})
 
-		Convey("If no UID exists in database for this username", func() {
-			dataBase.EXPECT().GetIDByUsername(messenger, "@durov").Return("", database.ErrNil)
-			actual, err := sender.getChatUID("@durov")
+		Convey("For private chat with @ prefix should fetch info from Telegram", func() {
+			expectedChat := &telebot.Chat{
+				ID:       1,
+				Type:     telebot.ChatPrivate,
+				Username: "Pavel Durov",
+			}
+			bot.EXPECT().ChatByUsername("@durov").Return(expectedChat, nil)
+
+			actual, err := sender.getChat("@durov")
+			expected := &Chat{
+				ID:   1,
+				Type: telebot.ChatPrivate,
+			}
+
+			So(actual, ShouldResemble, expected)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("For group should fetch from DB", func() {
+			dataBase.EXPECT().GetIDByUsername(messenger, "somegroup / moira").Return("{\"type\":\"group\",\"chatId\":-1001494975744}", nil)
+
+			actual, err := sender.getChat("somegroup / moira")
+			expected := &Chat{
+				ID:   -1001494975744,
+				Type: telebot.ChatGroup,
+			}
+
+			So(actual, ShouldResemble, expected)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("For supergroup's main thread should fetch from DB", func() {
+			dataBase.EXPECT().GetIDByUsername(messenger, "somesupergroup / moira").Return("{\"type\":\"supergroup\",\"chatId\":-1001494975744}", nil)
+
+			actual, err := sender.getChat("somesupergroup / moira")
+			expected := &Chat{
+				ID:   -1001494975744,
+				Type: telebot.ChatSuperGroup,
+			}
+
+			So(actual, ShouldResemble, expected)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("For supergroup's thread should fetch from DB", func() {
+			dataBase.EXPECT().GetIDByUsername(messenger, "-1001494975744/10").Return("{\"type\":\"supergroup\",\"chatId\":-1001494975744,\"threadId\":10}", nil)
+
+			actual, err := sender.getChat("-1001494975744/10")
+			expected := &Chat{
+				ID:   -1001494975744,
+				Type: telebot.ChatSuperGroup,
+				ThreadID: 10,
+			}
+
+			So(actual, ShouldResemble, expected)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("If no record exists in database for this contactValue", func() {
+			dataBase.EXPECT().GetIDByUsername(messenger, "-1001494975744/20").Return("", database.ErrNil)
+			actual, err := sender.getChat("-1001494975744/20")
 			So(err, ShouldResemble, fmt.Errorf("failed to get username uuid: nil returned"))
-			So(actual, ShouldBeEmpty)
+			So(actual, ShouldBeNil)
 		})
 	})
 }
