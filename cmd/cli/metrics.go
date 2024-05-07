@@ -12,8 +12,20 @@ func handleCleanUpOutdatedMetrics(config cleanupConfig, database moira.Database)
 		return err
 	}
 
-	err = database.CleanUpOutdatedMetrics(duration)
+	if err = database.CleanUpOutdatedMetrics(duration); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func handleCleanUpFutureMetrics(config cleanupConfig, database moira.Database) error {
+	duration, err := time.ParseDuration(config.CleanupFutureMetricsDuration)
 	if err != nil {
+		return err
+	}
+
+	if err = database.CleanUpFutureMetrics(duration); err != nil {
 		return err
 	}
 
