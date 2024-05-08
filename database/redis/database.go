@@ -62,6 +62,8 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		ReadTimeout:      config.ReadTimeout,
 		WriteTimeout:     config.WriteTimeout,
 		MaxRetries:       config.MaxRetries,
+		ReadOnly:         config.ReadOnly,
+		RouteRandomly:    config.RouteRandomly,
 	})
 
 	ctx := context.Background()
