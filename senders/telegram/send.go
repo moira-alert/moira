@@ -39,6 +39,19 @@ type Chat struct {
 	ThreadID int              `json:"threadId,omitempty" example:"10"`
 }
 
+var brokenContactAPIErrors = map[*telebot.Error]bool{
+	telebot.ErrUnauthorized:          true,
+	telebot.ErrUserIsDeactivated:     true,
+	telebot.ErrNoRightsToSendPhoto:   true,
+	telebot.ErrChatNotFound:          true,
+	telebot.ErrNoRightsToSend:        true,
+	telebot.ErrKickedFromGroup:       true,
+	telebot.ErrBlockedByUser:         true,
+	telebot.ErrKickedFromSuperGroup:  true,
+	telebot.ErrKickedFromChannel:     true,
+	telebot.ErrNotStartedByUser:      true,
+}
+
 func (c *Chat) Recipient() string {
 	return strconv.FormatInt(c.ID, 10)
 }
@@ -260,32 +273,8 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 }
 
 func isBrokenContactAPIError(err *telebot.Error) bool {
-	switch err {
-	case telebot.ErrUnauthorized:
-		return true
-	case telebot.ErrUserIsDeactivated:
-		return true
-	case telebot.ErrNoRightsToSendPhoto:
-		return true
-	case telebot.ErrChatNotFound:
-		return true
-	case telebot.ErrNoRightsToSend:
-		return true
-	case telebot.ErrKickedFromGroup:
-		return true
-	case telebot.ErrBlockedByUser:
-		return true
-	case telebot.ErrKickedFromGroup:
-		return true
-	case telebot.ErrKickedFromSuperGroup:
-		return true
-	case telebot.ErrKickedFromChannel:
-		return true
-	case telebot.ErrNotStartedByUser:
-		return true
-	default:
-		return false
-	}
+	_, exists := brokenContactAPIErrors[err]
+	return exists
 }
 
 func prepareAlbum(plots [][]byte, caption string) telebot.Album {

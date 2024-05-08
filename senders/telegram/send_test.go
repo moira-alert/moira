@@ -259,17 +259,7 @@ func TestCheckBrokenContactError(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 		Convey("Broken contact error is properly recognized", func() {
-			brokenContactErrorsList := []*telebot.Error{
-				telebot.ErrNoRightsToSendPhoto,
-				telebot.ErrChatNotFound,
-				telebot.ErrNoRightsToSend,
-				telebot.ErrUnauthorized,
-				telebot.ErrBlockedByUser,
-				telebot.ErrUserIsDeactivated,
-				telebot.ErrKickedFromGroup,
-				telebot.ErrKickedFromSuperGroup,
-			}
-			for _, brokenContactError := range brokenContactErrorsList {
+			for brokenContactError := range brokenContactAPIErrors {
 				err := checkBrokenContactError(logger, brokenContactError)
 				So(err, ShouldHaveSameTypeAs, moira.SenderBrokenContactError{})
 				var convertedErr moira.SenderBrokenContactError
