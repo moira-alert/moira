@@ -197,6 +197,7 @@ func TestCreateNewContact(t *testing.T) {
 
 		newContactDto := &dto.Contact{
 			ID:     defaultContact,
+			Name:   "Mail Alerts",
 			Type:   "mail",
 			Value:  "moira@skbkontur.ru",
 			User:   login,
@@ -210,6 +211,7 @@ func TestCreateNewContact(t *testing.T) {
 			mockDb.EXPECT().GetContact(defaultContact).Return(moira.ContactData{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    newContactDto.ID,
+				Name:  newContactDto.Name,
 				Type:  newContactDto.Type,
 				Value: newContactDto.Value,
 				User:  newContactDto.User,
@@ -267,6 +269,7 @@ func TestCreateNewContact(t *testing.T) {
 			So(actual.Type, ShouldEqual, newContactDto.Type)
 			So(actual.User, ShouldEqual, newContactDto.User)
 			So(actual.Value, ShouldEqual, newContactDto.Value)
+			So(actual.Name, ShouldEqual, newContactDto.Name)
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
@@ -382,6 +385,7 @@ func TestUpdateContact(t *testing.T) {
 		contactID := defaultContact
 		updatedContactDto := &dto.Contact{
 			ID:     contactID,
+			Name:   "Mail Alerts",
 			Type:   "mail",
 			Value:  "moira@skbkontur.ru",
 			User:   defaultLogin,
@@ -394,6 +398,7 @@ func TestUpdateContact(t *testing.T) {
 
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    updatedContactDto.ID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
@@ -403,6 +408,7 @@ func TestUpdateContact(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
 				ID:    contactID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
@@ -434,6 +440,7 @@ func TestUpdateContact(t *testing.T) {
 
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    updatedContactDto.ID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
