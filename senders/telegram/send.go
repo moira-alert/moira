@@ -52,6 +52,7 @@ var brokenContactAPIErrors = map[*telebot.Error]bool{
 	telebot.ErrNotStartedByUser:      true,
 }
 
+// Chat implements gopkg.in/telebot.v3#Recipient interface.
 func (c *Chat) Recipient() string {
 	return strconv.FormatInt(c.ID, 10)
 }
