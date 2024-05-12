@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/moira-alert/moira"
@@ -12,9 +11,7 @@ import (
 	"github.com/moira-alert/moira/senders/telegram"
 )
 
-var (
-	telegramUsersKey = "moira-telegram-users:"
-)
+var telegramUsersKey = "moira-telegram-users:"
 
 func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Start updateTelegramUsersRecords")

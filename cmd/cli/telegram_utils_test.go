@@ -47,7 +47,6 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 					result, err = client.Get(ctx, "moira-telegram-users:moira-bot-host").Result()
 					So(err, ShouldBeNil)
 					So(result, ShouldEqual, "D4VdnzZDTS/xXF87THARWw==")
-
 				})
 			})
 		})
@@ -91,7 +90,6 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 					result, err = client.Get(ctx, "moira-telegram-users:moira-bot-host").Result()
 					So(err, ShouldBeNil)
 					So(result, ShouldEqual, "D4VdnzZDTS/xXF87THARWw==")
-
 				})
 			})
 		})
