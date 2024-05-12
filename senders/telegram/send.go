@@ -40,16 +40,16 @@ type Chat struct {
 }
 
 var brokenContactAPIErrors = map[*telebot.Error]bool{
-	telebot.ErrUnauthorized:          true,
-	telebot.ErrUserIsDeactivated:     true,
-	telebot.ErrNoRightsToSendPhoto:   true,
-	telebot.ErrChatNotFound:          true,
-	telebot.ErrNoRightsToSend:        true,
-	telebot.ErrKickedFromGroup:       true,
-	telebot.ErrBlockedByUser:         true,
-	telebot.ErrKickedFromSuperGroup:  true,
-	telebot.ErrKickedFromChannel:     true,
-	telebot.ErrNotStartedByUser:      true,
+	telebot.ErrUnauthorized:         true,
+	telebot.ErrUserIsDeactivated:    true,
+	telebot.ErrNoRightsToSendPhoto:  true,
+	telebot.ErrChatNotFound:         true,
+	telebot.ErrNoRightsToSend:       true,
+	telebot.ErrKickedFromGroup:      true,
+	telebot.ErrBlockedByUser:        true,
+	telebot.ErrKickedFromSuperGroup: true,
+	telebot.ErrKickedFromChannel:    true,
+	telebot.ErrNotStartedByUser:     true,
 }
 
 // Chat implements gopkg.in/telebot.v3#Recipient interface.
@@ -119,7 +119,6 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 }
 
 func (sender *Sender) getChat(contactValue string) (*Chat, error) {
-
 	var chat *Chat
 	var err error
 
@@ -173,7 +172,6 @@ func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {
 }
 
 func (sender *Sender) setChat(message *telebot.Message) (*Chat, error) {
-
 	contactValue, err := sender.getContactValueByMessage(message)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get contact value from message: %s", err.Error())

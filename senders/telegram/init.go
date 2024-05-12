@@ -48,7 +48,6 @@ type Bot interface {
 	ChatByUsername(name string) (*telebot.Chat, error)
 }
 
-
 // Sender implements moira sender interface via telegram.
 type Sender struct {
 	DataBase moira.Database
