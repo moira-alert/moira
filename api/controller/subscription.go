@@ -36,7 +36,7 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 }
 
 // CreateSubscription create or update subscription.
-func CreateSubscription(dataBase moira.Database, userLogin, teamID string, subscription *dto.Subscription) *api.ErrorResponse {
+func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLogin, teamID string, subscription *dto.Subscription) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateSubscription: cannot create subscription when both userLogin and teamID specified"))
 	}
@@ -56,7 +56,10 @@ func CreateSubscription(dataBase moira.Database, userLogin, teamID string, subsc
 		}
 	}
 
-	subscription.User = userLogin
+	// Only admins are allowed to create subscriptions for other users 
+	if !auth.IsAdmin(userLogin) || subscription.User == "" {
+		subscription.User = userLogin
+	}
 	subscription.TeamID = teamID
 	data := moira.SubscriptionData(*subscription)
 	if err := dataBase.SaveSubscription(&data); err != nil {
