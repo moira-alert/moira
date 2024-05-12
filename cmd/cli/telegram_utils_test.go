@@ -11,6 +11,10 @@ import (
 )
 
 func TestUpdateTelegramUsersRecords(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
 	conf := getDefault()
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
 	if err != nil {
@@ -51,6 +55,10 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 }
 
 func TestDowngradeTelegramUsersRecords(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
 	conf := getDefault()
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
 	if err != nil {
