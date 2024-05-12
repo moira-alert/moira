@@ -162,13 +162,8 @@ func TestGetChat(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("For private chat with @ prefix should fetch info from Telegram", func() {
-			expectedChat := &telebot.Chat{
-				ID:       1,
-				Type:     telebot.ChatPrivate,
-				Username: "Pavel Durov",
-			}
-			bot.EXPECT().ChatByUsername("@durov").Return(expectedChat, nil)
+		Convey("For private chat should fetch from DB", func() {
+			dataBase.EXPECT().GetIDByUsername(messenger, "@durov").Return("{\"type\":\"private\",\"chatId\":1}", nil)
 
 			actual, err := sender.getChat("@durov")
 			expected := &Chat{
@@ -194,7 +189,7 @@ func TestGetChat(t *testing.T) {
 		})
 
 		Convey("For supergroup's main thread should fetch from DB", func() {
-			dataBase.EXPECT().GetIDByUsername(messenger, "somesupergroup / moira").Return("{\"type\":\"supergroup\",\"chatId\":-1001494975744}", nil)
+			dataBase.EXPECT().GetIDByUsername(messenger, "somesupergroup / moira").Return("{\"chatId\":-1001494975744,\"type\":\"supergroup\"}", nil)
 
 			actual, err := sender.getChat("somesupergroup / moira")
 			expected := &Chat{
@@ -207,12 +202,12 @@ func TestGetChat(t *testing.T) {
 		})
 
 		Convey("For supergroup's thread should fetch from DB", func() {
-			dataBase.EXPECT().GetIDByUsername(messenger, "-1001494975744/10").Return("{\"type\":\"supergroup\",\"chatId\":-1001494975744,\"threadId\":10}", nil)
+			dataBase.EXPECT().GetIDByUsername(messenger, "-1001494975744/10").Return("{\"chatId\":-1001494975744,\"type\":\"supergroup\",\"threadId\":10}", nil)
 
 			actual, err := sender.getChat("-1001494975744/10")
 			expected := &Chat{
-				ID:   -1001494975744,
-				Type: telebot.ChatSuperGroup,
+				ID:       -1001494975744,
+				Type:     telebot.ChatSuperGroup,
 				ThreadID: 10,
 			}
 

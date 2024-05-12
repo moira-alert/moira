@@ -132,10 +132,7 @@ func (sender *Sender) getChat(contactValue string) (*Chat, error) {
 	case strings.HasPrefix(contactValue, "#"):
 		contactValue = "@" + contactValue[1:]
 		chat, err = sender.getChatFromTelegram(contactValue)
-	// for private chats contactValue is fetched from telegram AS IS
-	case strings.HasPrefix(contactValue, "@"):
-		chat, err = sender.getChatFromTelegram(contactValue)
-	// for the rest of the cases (groups, supergroups), Chat data is stored in DB.
+	// for the rest of the cases (private chats, groups, supergroups), Chat data is stored in DB.
 	default:
 		chat, err = sender.getChatFromDb(contactValue)
 	}
