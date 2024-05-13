@@ -195,6 +195,8 @@ func TestCreateNewContact(t *testing.T) {
 		login := defaultLogin
 		testErr := errors.New("test error")
 
+		auth := &api.Authorization{Enabled: false}
+
 		newContactDto := &dto.Contact{
 			ID:     defaultContact,
 			Type:   "mail",
@@ -219,6 +221,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -250,6 +253,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -289,6 +293,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -319,6 +324,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -351,6 +357,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
