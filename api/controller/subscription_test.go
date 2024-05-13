@@ -279,6 +279,60 @@ func TestCreateSubscription(t *testing.T) {
 	})
 }
 
+func TestAdminsCreatesSubscription(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	const userLogin = "user"
+	const adminLogin = "admin"
+	auth := &api.Authorization{
+		Enabled:   true,
+		AdminList: map[string]struct{}{adminLogin: {}},
+	}
+
+	Convey("Create for user", t, func() {
+		Convey("For same user", func() {
+			subscription := dto.Subscription{
+				User: userLogin,
+			}
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			err := CreateSubscription(dataBase, auth, userLogin, "", &subscription)
+			So(err, ShouldBeNil)
+			So(subscription.User, ShouldEqual, userLogin)
+		})
+
+		Convey("For same admin", func() {
+			subscription := dto.Subscription{
+				User: adminLogin,
+			}
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			err := CreateSubscription(dataBase, auth, adminLogin, "", &subscription)
+			So(err, ShouldBeNil)
+			So(subscription.User, ShouldEqual, adminLogin)
+		})
+
+		Convey("User can not create subscription for other user", func() {
+			subscription := dto.Subscription{
+				User: adminLogin,
+			}
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			err := CreateSubscription(dataBase, auth, userLogin, "", &subscription)
+			So(err, ShouldBeNil)
+			So(subscription.User, ShouldEqual, userLogin)
+		})
+
+		Convey("Admin can create subscription for other user", func() {
+			subscription := dto.Subscription{
+				User: userLogin,
+			}
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			err := CreateSubscription(dataBase, auth, adminLogin, "", &subscription)
+			So(err, ShouldBeNil)
+			So(subscription.User, ShouldEqual, userLogin)
+		})
+	})
+}
+
 func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
