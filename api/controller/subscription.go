@@ -56,7 +56,7 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 		}
 	}
 
-	// Only admins are allowed to create subscriptions for other users 
+	// Only admins are allowed to create subscriptions for other users
 	if !auth.IsAdmin(userLogin) || subscription.User == "" {
 		subscription.User = userLogin
 	}
