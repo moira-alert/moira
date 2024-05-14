@@ -49,6 +49,9 @@ type RedisConfig struct {
 	MaxRetries int `yaml:"max_retries"`
 	// Enables read-only commands on slave nodes.
 	ReadOnly bool `yaml:"read_only"`
+	// Allows routing read-only commands to the closest master or slave node.
+	// It automatically enables ReadOnly.
+	RouteByLatency bool `yaml:"route_by_latency"`
 	// Allows routing read-only commands to the random master or slave node.
 	// It automatically enables ReadOnly.
 	RouteRandomly bool `yaml:"route_randomly"`

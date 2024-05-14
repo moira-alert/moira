@@ -16,6 +16,7 @@ type DatabaseConfig struct {
 	WriteTimeout     time.Duration
 	MaxRetries       int
 	ReadOnly         bool
+	RouteByLatency   bool
 	RouteRandomly    bool
 }
 
