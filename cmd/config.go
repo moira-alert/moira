@@ -60,17 +60,18 @@ type RedisConfig struct {
 // GetSettings returns redis config parsed from moira config files.
 func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 	return redis.DatabaseConfig{
-		MasterName:    config.MasterName,
-		Addrs:         strings.Split(config.Addrs, ","),
-		Username:      config.Username,
-		Password:      config.Password,
-		MaxRetries:    config.MaxRetries,
-		MetricsTTL:    to.Duration(config.MetricsTTL),
-		DialTimeout:   to.Duration(config.DialTimeout),
-		ReadTimeout:   to.Duration(config.ReadTimeout),
-		WriteTimeout:  to.Duration(config.WriteTimeout),
-		ReadOnly:      config.ReadOnly,
-		RouteRandomly: config.RouteRandomly,
+		MasterName:     config.MasterName,
+		Addrs:          strings.Split(config.Addrs, ","),
+		Username:       config.Username,
+		Password:       config.Password,
+		MaxRetries:     config.MaxRetries,
+		MetricsTTL:     to.Duration(config.MetricsTTL),
+		DialTimeout:    to.Duration(config.DialTimeout),
+		ReadTimeout:    to.Duration(config.ReadTimeout),
+		WriteTimeout:   to.Duration(config.WriteTimeout),
+		ReadOnly:       config.ReadOnly,
+		RouteByLatency: config.RouteByLatency,
+		RouteRandomly:  config.RouteRandomly,
 	}
 }
 
