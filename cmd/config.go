@@ -47,20 +47,31 @@ type RedisConfig struct {
 	WriteTimeout string `yaml:"write_timeout"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
+	// Enables read-only commands on slave nodes.
+	ReadOnly bool `yaml:"read_only"`
+	// Allows routing read-only commands to the **closest** master or slave node.
+	// It automatically enables ReadOnly.
+	RouteByLatency bool `yaml:"route_by_latency"`
+	// Allows routing read-only commands to the **random** master or slave node.
+	// It automatically enables ReadOnly.
+	RouteRandomly bool `yaml:"route_randomly"`
 }
 
 // GetSettings returns redis config parsed from moira config files.
 func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 	return redis.DatabaseConfig{
-		MasterName:   config.MasterName,
-		Addrs:        strings.Split(config.Addrs, ","),
-		Username:     config.Username,
-		Password:     config.Password,
-		MaxRetries:   config.MaxRetries,
-		MetricsTTL:   to.Duration(config.MetricsTTL),
-		DialTimeout:  to.Duration(config.DialTimeout),
-		ReadTimeout:  to.Duration(config.ReadTimeout),
-		WriteTimeout: to.Duration(config.WriteTimeout),
+		MasterName:     config.MasterName,
+		Addrs:          strings.Split(config.Addrs, ","),
+		Username:       config.Username,
+		Password:       config.Password,
+		MaxRetries:     config.MaxRetries,
+		MetricsTTL:     to.Duration(config.MetricsTTL),
+		DialTimeout:    to.Duration(config.DialTimeout),
+		ReadTimeout:    to.Duration(config.ReadTimeout),
+		WriteTimeout:   to.Duration(config.WriteTimeout),
+		ReadOnly:       config.ReadOnly,
+		RouteByLatency: config.RouteByLatency,
+		RouteRandomly:  config.RouteRandomly,
 	}
 }
 
