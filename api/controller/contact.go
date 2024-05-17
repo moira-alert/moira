@@ -47,14 +47,20 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 }
 
 // CreateContact creates new notification contact for current user.
-func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin, teamID string) *api.ErrorResponse {
+func CreateContact(dataBase moira.Database, auth *api.Authorization, contact *dto.Contact, userLogin, teamID string) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified"))
 	}
+
+	// Only admins are allowed to create contacts for other users
+	if !auth.IsAdmin(userLogin) || contact.User == "" {
+		contact.User = userLogin
+	}
+
 	contactData := moira.ContactData{
 		ID:    contact.ID,
 		Name:  contact.Name,
-		User:  userLogin,
+		User:  contact.User,
 		Team:  teamID,
 		Type:  contact.Type,
 		Value: contact.Value,
@@ -78,7 +84,7 @@ func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin, tea
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	contact.User = userLogin
+	contact.User = contactData.User
 	contact.ID = contactData.ID
 	contact.TeamID = contactData.Team
 	return nil

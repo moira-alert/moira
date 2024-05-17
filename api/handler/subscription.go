@@ -71,6 +71,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	userLogin := middleware.GetLogin(request)
+	auth := middleware.GetAuth(request)
 
 	if subscription.AnyTags && len(subscription.Tags) > 0 {
 		writer.WriteHeader(http.StatusBadRequest)
@@ -78,7 +79,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 			errors.New("if any_tags is true, then the tags must be empty")))
 		return
 	}
-	if err := controller.CreateSubscription(database, userLogin, "", subscription); err != nil {
+	if err := controller.CreateSubscription(database, auth, userLogin, "", subscription); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}

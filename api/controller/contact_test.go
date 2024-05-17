@@ -113,6 +113,7 @@ func TestCreateContact(t *testing.T) {
 	defer mockCtrl.Finish()
 	const userLogin = "user"
 	const teamID = "team"
+	auth := &api.Authorization{Enabled: false}
 
 	Convey("Create for user", t, func() {
 		Convey("Success", func() {
@@ -121,7 +122,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  "mail",
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 		})
@@ -140,7 +141,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
-			err := CreateContact(dataBase, &contact, userLogin, "")
+			err := CreateContact(dataBase, auth, &contact, userLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 			So(contact.ID, ShouldResemble, contact.ID)
@@ -153,7 +154,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  "mail",
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, nil)
-			err := CreateContact(dataBase, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists")))
 		})
 
@@ -165,7 +166,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, err)
-			expected := CreateContact(dataBase, contact, userLogin, "")
+			expected := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		})
 
@@ -176,7 +177,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(err)
-			expected := CreateContact(dataBase, contact, userLogin, "")
+			expected := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(expected, ShouldResemble, &api.ErrorResponse{
 				ErrorText:      err.Error(),
 				HTTPStatusCode: http.StatusInternalServerError,
@@ -193,7 +194,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  "mail",
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, contact, "", teamID)
+			err := CreateContact(dataBase, auth, contact, "", teamID)
 			So(err, ShouldBeNil)
 			So(contact.TeamID, ShouldResemble, teamID)
 		})
@@ -212,7 +213,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
-			err := CreateContact(dataBase, &contact, "", teamID)
+			err := CreateContact(dataBase, auth, &contact, "", teamID)
 			So(err, ShouldBeNil)
 			So(contact.TeamID, ShouldResemble, teamID)
 			So(contact.ID, ShouldResemble, contact.ID)
@@ -234,7 +235,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
-			err := CreateContact(dataBase, &contact, "", teamID)
+			err := CreateContact(dataBase, auth, &contact, "", teamID)
 			So(err, ShouldBeNil)
 			So(contact.TeamID, ShouldResemble, teamID)
 			So(contact.Name, ShouldResemble, expectedContact.Name)
@@ -247,7 +248,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  "mail",
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, nil)
-			err := CreateContact(dataBase, contact, "", teamID)
+			err := CreateContact(dataBase, auth, contact, "", teamID)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists")))
 		})
 
@@ -259,7 +260,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, err)
-			expected := CreateContact(dataBase, contact, "", teamID)
+			expected := CreateContact(dataBase, auth, contact, "", teamID)
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		})
 
@@ -270,7 +271,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(err)
-			expected := CreateContact(dataBase, contact, "", teamID)
+			expected := CreateContact(dataBase, auth, contact, "", teamID)
 			So(expected, ShouldResemble, &api.ErrorResponse{
 				ErrorText:      err.Error(),
 				HTTPStatusCode: http.StatusInternalServerError,
@@ -284,8 +285,70 @@ func TestCreateContact(t *testing.T) {
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
-		err := CreateContact(dataBase, contact, userLogin, teamID)
+		err := CreateContact(dataBase, auth, contact, userLogin, teamID)
 		So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified")))
+	})
+}
+
+func TestAdminsCreatesContact(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+	const userLogin = "user"
+	const adminLogin = "admin"
+	auth := &api.Authorization{
+		Enabled:   true,
+		AdminList: map[string]struct{}{adminLogin: {}},
+	}
+
+	Convey("Create for user", t, func() {
+		Convey("The same user", func() {
+			contact := &dto.Contact{
+				Value: "some@mail.com",
+				Type:  "mail",
+				User:  userLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, userLogin)
+		})
+
+		Convey("The same user by admin", func() {
+			contact := &dto.Contact{
+				Value: "some@mail.com",
+				Type:  "mail",
+				User:  adminLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, adminLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, adminLogin)
+		})
+
+		Convey("Non admin can not create contact for other user", func() {
+			contact := &dto.Contact{
+				Value: "some@mail.com",
+				Type:  "mail",
+				User:  adminLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, userLogin)
+		})
+
+		Convey("Admin can create contact for other user", func() {
+			contact := &dto.Contact{
+				Value: "some@mail.com",
+				Type:  "mail",
+				User:  userLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, adminLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, userLogin)
+		})
 	})
 }
 
