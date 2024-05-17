@@ -51,6 +51,7 @@ var (
 	cleanupTags           = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
 	cleanupMetrics        = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
 	cleanupPatternMetrics = flag.Bool("cleanup-pattern-metrics", false, "Delete outdated pattern metrics.")
+	cleanupFutureMetrics  = flag.Bool("cleanup-future-metrics", false, "Delete metrics with future timestamps.")
 	cleanupRetentions     = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
 	userDel               = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
 	fromUser              = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
@@ -261,6 +262,20 @@ func main() { //nolint
 		log.Info().Msg("Cleanup of outdated pattern metrics finished")
 	}
 
+	if *cleanupFutureMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-future-metrics")
+
+		log.Info().Msg("Cleanup of future metrics started")
+
+		if err := handleCleanUpFutureMetrics(confCleanup, database); err != nil {
+			log.Error().
+				Error(err).
+				Msg("Failed to cleanup future metrics")
+		}
+
+		log.Info().Msg("Cleanup of future metrics finished")
+	}
+
 	if *cleanupLastChecks {
 		log := logger.String(moira.LogFieldNameContext, "cleanup-last-checks")
 
@@ -441,7 +456,7 @@ func openFile(filePath string, mode int) (*os.File, error) {
 	if filePath == "" {
 		return nil, fmt.Errorf("file is not specified")
 	}
-	file, err := os.OpenFile(filePath, mode, 0666) //nolint:gofumpt,gomnd
+	file, err := os.OpenFile(filePath, mode, 0o666) //nolint:gofumpt,gomnd
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}
