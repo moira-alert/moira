@@ -33,6 +33,11 @@ type Sender struct {
 	client   Client
 }
 
+const (
+	messageMaxCharacters = 4_000
+	quotas               = "```"
+)
+
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
@@ -96,8 +101,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
-	const messageMaxCharacters = 4_000
-
 	var message strings.Builder
 
 	title := sender.buildTitle(events, trigger, throttled)
@@ -112,7 +115,6 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
-
 	if descLen != descNewLen {
 		desc = desc[:descNewLen] + "...\n"
 	}
@@ -163,19 +165,26 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	}
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
-	eventsString := "```"
+	eventsString := quotas
 	var tailString string
 
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
+		line := fmt.Sprintf(
+			"\n%s: %s = %s (%s to %s)",
+			event.FormatTimestamp(sender.location, moira.DefaultTimeFormat),
+			event.Metric,
+			event.GetMetricsValues(moira.DefaultNotificationSettings),
+			event.OldState,
+			event.State,
+		)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len([]rune("```")) + len([]rune(tailString))
+		tailStringLen := len([]rune(quotas)) + len([]rune(tailString))
 		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
@@ -184,7 +193,8 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 		eventsString += line
 		eventsPrinted++
 	}
-	eventsString += "```"
+	eventsString += "\n"
+	eventsString += quotas
 
 	if eventsLenLimitReached {
 		eventsString += tailString
