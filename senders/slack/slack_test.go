@@ -63,23 +63,6 @@ func TestUseDirectMessaging(t *testing.T) {
 	})
 }
 
-func TestGetStateEmoji(t *testing.T) {
-	sender := Sender{}
-	Convey("Use emoji is false", t, func() {
-		So(sender.getStateEmoji(moira.StateERROR), ShouldResemble, "")
-	})
-
-	Convey("Use emoji is true", t, func() {
-		sender := Sender{useEmoji: true}
-		So(sender.getStateEmoji(moira.StateOK), ShouldResemble, okEmoji)
-		So(sender.getStateEmoji(moira.StateWARN), ShouldResemble, warnEmoji)
-		So(sender.getStateEmoji(moira.StateERROR), ShouldResemble, errorEmoji)
-		So(sender.getStateEmoji(moira.StateNODATA), ShouldResemble, nodataEmoji)
-		So(sender.getStateEmoji(moira.StateEXCEPTION), ShouldResemble, exceptionEmoji)
-		So(sender.getStateEmoji(moira.StateTEST), ShouldResemble, testEmoji)
-	})
-}
-
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}

@@ -10,18 +10,12 @@ import (
 	slackdown "github.com/moira-alert/blackfriday-slack"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/senders/emoji_moderator"
 
 	slack_client "github.com/slack-go/slack"
 )
 
 const (
-	okEmoji        = ":moira-state-ok:"
-	warnEmoji      = ":moira-state-warn:"
-	errorEmoji     = ":moira-state-error:"
-	nodataEmoji    = ":moira-state-nodata:"
-	exceptionEmoji = ":moira-state-exception:"
-	testEmoji      = ":moira-state-test:"
-
 	messageMaxCharacters = 4000
 
 	// see errors https://api.slack.com/methods/chat.postMessage
@@ -30,15 +24,6 @@ const (
 	ErrorTextNotInChannel    = "not_in_channel"
 	quotes                   = "```"
 )
-
-var stateEmoji = map[moira.State]string{
-	moira.StateOK:        okEmoji,
-	moira.StateWARN:      warnEmoji,
-	moira.StateERROR:     errorEmoji,
-	moira.StateNODATA:    nodataEmoji,
-	moira.StateEXCEPTION: exceptionEmoji,
-	moira.StateTEST:      testEmoji,
-}
 
 // Structure that represents the Slack configuration in the YAML file.
 type config struct {
@@ -81,7 +66,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	useDirectMessaging := useDirectMessaging(contact.Value)
 
 	state := events.GetCurrentState(throttled)
-	emoji := sender.getStateEmoji(state)
+	emoji := emoji_moderator.GetStateEmoji(state, slack_client.DEFAULT_MESSAGE_ICON_EMOJI)
 
 	channelID, threadTimestamp, err := sender.sendMessage(message, contact.Value, trigger.ID, useDirectMessaging, emoji)
 	if err != nil {
@@ -250,16 +235,6 @@ func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, trig
 	}
 
 	return nil
-}
-
-// getStateEmoji returns corresponding state emoji.
-func (sender *Sender) getStateEmoji(subjectState moira.State) string {
-	if sender.useEmoji {
-		if emoji, ok := stateEmoji[subjectState]; ok {
-			return emoji
-		}
-	}
-	return slack_client.DEFAULT_MESSAGE_ICON_EMOJI
 }
 
 // useDirectMessaging returns true if user contact is provided.

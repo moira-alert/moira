@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/senders/emoji_moderator"
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mitchellh/mapstructure"
@@ -21,6 +22,7 @@ type config struct {
 	InsecureTLS bool   `mapstructure:"insecure_tls"`
 	APIToken    string `mapstructure:"api_token"`
 	FrontURI    string `mapstructure:"front_uri"`
+	UseEmoji    bool   `mapstructure:"use_emoji"`
 }
 
 // Sender posts messages to Mattermost chat.
@@ -28,6 +30,7 @@ type config struct {
 // You must call Init method before SendEvents method.
 type Sender struct {
 	frontURI string
+	useEmoji bool
 	logger   moira.Logger
 	location *time.Location
 	client   Client
@@ -72,6 +75,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
 	sender.frontURI = cfg.FrontURI
+	sender.useEmoji = cfg.UseEmoji
 	sender.location = location
 	sender.logger = logger
 
@@ -102,7 +106,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message strings.Builder
-
 	title := sender.buildTitle(events, trigger, throttled)
 	titleLen := len([]rune(title))
 
@@ -138,7 +141,12 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	state := events.GetCurrentState(throttled)
-	title := fmt.Sprintf("**%s**", state)
+	emoji := ""
+	if sender.useEmoji {
+		emoji = emoji_moderator.GetStateEmoji(state, "")
+	}
+
+	title := fmt.Sprintf("%s **%s**", emoji, state)
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" [%s](%s)", trigger.Name, triggerURI)
