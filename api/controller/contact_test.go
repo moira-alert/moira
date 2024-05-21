@@ -67,6 +67,7 @@ func TestGetContactById(t *testing.T) {
 	Convey("Get contact by id should be success", t, func() {
 		contact := moira.ContactData{
 			ID:    uuid.Must(uuid.NewV4()).String(),
+			Name:  "awesome_name",
 			Type:  "slack",
 			User:  "awesome_moira_user",
 			Value: "awesome_moira_user@gmail.com",
@@ -79,6 +80,7 @@ func TestGetContactById(t *testing.T) {
 			ShouldResemble,
 			&dto.Contact{
 				ID:    contact.ID,
+				Name:  contact.Name,
 				Type:  contact.Type,
 				User:  contact.User,
 				Value: contact.Value,
@@ -217,6 +219,28 @@ func TestCreateContact(t *testing.T) {
 			So(contact.ID, ShouldResemble, contact.ID)
 		})
 
+		Convey("Success with custom name", func() {
+			contact := dto.Contact{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Value: "some@mail.com",
+				Type:  "mail",
+				Name:  "some-name",
+			}
+			expectedContact := moira.ContactData{
+				ID:    contact.ID,
+				Value: contact.Value,
+				Type:  contact.Type,
+				Name:  contact.Name,
+				Team:  teamID,
+			}
+			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
+			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
+			err := CreateContact(dataBase, auth, &contact, "", teamID)
+			So(err, ShouldBeNil)
+			So(contact.TeamID, ShouldResemble, teamID)
+			So(contact.Name, ShouldResemble, expectedContact.Name)
+		})
+
 		Convey("Contact exists by id", func() {
 			contact := &dto.Contact{
 				ID:    uuid.Must(uuid.NewV4()).String(),
@@ -339,12 +363,14 @@ func TestUpdateContact(t *testing.T) {
 		Convey("Success", func() {
 			contactDTO := dto.Contact{
 				Value: "some@mail.com",
+				Name:  "some-name",
 				Type:  "mail",
 			}
 			contactID := uuid.Must(uuid.NewV4()).String()
 			contact := moira.ContactData{
 				Value: contactDTO.Value,
 				Type:  contactDTO.Type,
+				Name:  contactDTO.Name,
 				ID:    contactID,
 				User:  userLogin,
 			}
@@ -353,6 +379,7 @@ func TestUpdateContact(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(expectedContact.User, ShouldResemble, userLogin)
 			So(expectedContact.ID, ShouldResemble, contactID)
+			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
 		})
 
 		Convey("Error save", func() {

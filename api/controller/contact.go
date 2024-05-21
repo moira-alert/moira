@@ -36,6 +36,7 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 
 	contactToReturn := &dto.Contact{
 		ID:     contact.ID,
+		Name:   contact.Name,
 		User:   contact.User,
 		TeamID: contact.Team,
 		Type:   contact.Type,
@@ -58,6 +59,7 @@ func CreateContact(dataBase moira.Database, auth *api.Authorization, contact *dt
 
 	contactData := moira.ContactData{
 		ID:    contact.ID,
+		Name:  contact.Name,
 		User:  contact.User,
 		Team:  teamID,
 		Type:  contact.Type,
@@ -92,6 +94,7 @@ func CreateContact(dataBase moira.Database, auth *api.Authorization, contact *dt
 func UpdateContact(dataBase moira.Database, contactDTO dto.Contact, contactData moira.ContactData) (dto.Contact, *api.ErrorResponse) {
 	contactData.Type = contactDTO.Type
 	contactData.Value = contactDTO.Value
+	contactData.Name = contactDTO.Name
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return contactDTO, api.ErrorInternalServer(err)
 	}
