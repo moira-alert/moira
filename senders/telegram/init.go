@@ -109,11 +109,11 @@ func (sender *Sender) runTelebot(contactType string) {
 	worker.NewWorker(
 		workerName,
 		sender.logger,
-		sender.DataBase.NewLock(telegramLock(contactType), telegramLockTTL),
+		sender.DataBase.NewLock(telegramLockKey(contactType), telegramLockTTL),
 		workerAction,
 	).Run(nil)
 }
 
-func telegramLock(contactType string) string {
+func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
 }

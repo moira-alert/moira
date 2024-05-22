@@ -96,11 +96,11 @@ func (sender *Sender) runBot(contactType string) {
 	worker.NewWorker(
 		workerName,
 		sender.logger,
-		sender.DataBase.NewLock(discordLock(contactType), discordLockTTL),
+		sender.DataBase.NewLock(discordLockKey(contactType), discordLockTTL),
 		workerAction,
 	).Run(nil)
 }
 
-func discordLock(contactType string) string {
+func discordLockKey(contactType string) string {
 	return discordLockPrefix + contactType
 }
