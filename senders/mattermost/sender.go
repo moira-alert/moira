@@ -141,12 +141,12 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	state := events.GetCurrentState(throttled)
-	emoji := ""
+	title := ""
 	if sender.useEmoji {
-		emoji = emoji_moderator.GetStateEmoji(state, "")
+		title += emoji_moderator.GetStateEmoji(state, "") + " "
 	}
 
-	title := fmt.Sprintf("%s **%s**", emoji, state)
+	title += fmt.Sprintf("**%s**", state)
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" [%s](%s)", trigger.Name, triggerURI)
