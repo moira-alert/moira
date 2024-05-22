@@ -27,18 +27,24 @@ const (
 
 // Structure that represents the Slack configuration in the YAML file.
 type config struct {
-	APIToken string `mapstructure:"api_token"`
-	UseEmoji bool   `mapstructure:"use_emoji"`
-	FrontURI string `mapstructure:"front_uri"`
+	APIToken     string            `mapstructure:"api_token"`
+	UseEmoji     bool              `mapstructure:"use_emoji"`
+	FrontURI     string            `mapstructure:"front_uri"`
+	DefaultEmoji string            `mapstructure:"default_emoji"`
+	EmojiMap     map[string]string `mapstructure:"emoji_map"`
 }
 
 // Sender implements moira sender interface via slack.
 type Sender struct {
-	frontURI string
-	useEmoji bool
-	logger   moira.Logger
-	location *time.Location
-	client   *slack_client.Client
+	frontURI       string
+	useEmoji       bool
+	emojiModerator emojiModerator
+	logger         moira.Logger
+	location       *time.Location
+	client         *slack_client.Client
+}
+type emojiModerator interface {
+	GetStateEmoji(subjectState moira.State, defaultValue string) string
 }
 
 // Init read yaml config.
@@ -52,6 +58,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read slack api_token from config")
 	}
+	emojiModerator, err := emoji_moderator.NewEmojiModerator(cfg.DefaultEmoji, cfg.EmojiMap)
+	if err != nil {
+		return fmt.Errorf("cannot inicialize mattermost sender, err: %w", err)
+	}
+	sender.emojiModerator = emojiModerator
 	sender.useEmoji = cfg.UseEmoji
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI
@@ -66,7 +77,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	useDirectMessaging := useDirectMessaging(contact.Value)
 
 	state := events.GetCurrentState(throttled)
-	emoji := emoji_moderator.GetStateEmoji(state, slack_client.DEFAULT_MESSAGE_ICON_EMOJI)
+	emoji := sender.emojiModerator.GetStateEmoji(state, slack_client.DEFAULT_MESSAGE_ICON_EMOJI)
 
 	channelID, threadTimestamp, err := sender.sendMessage(message, contact.Value, trigger.ID, useDirectMessaging, emoji)
 	if err != nil {

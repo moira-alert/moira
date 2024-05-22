@@ -18,28 +18,35 @@ import (
 
 // Structure that represents the Mattermost configuration in the YAML file.
 type config struct {
-	Url         string `mapstructure:"url"`
-	InsecureTLS bool   `mapstructure:"insecure_tls"`
-	APIToken    string `mapstructure:"api_token"`
-	FrontURI    string `mapstructure:"front_uri"`
-	UseEmoji    bool   `mapstructure:"use_emoji"`
+	Url          string            `mapstructure:"url"`
+	InsecureTLS  bool              `mapstructure:"insecure_tls"`
+	APIToken     string            `mapstructure:"api_token"`
+	FrontURI     string            `mapstructure:"front_uri"`
+	UseEmoji     bool              `mapstructure:"use_emoji"`
+	DefaultEmoji string            `mapstructure:"default_emoji"`
+	EmojiMap     map[string]string `mapstructure:"emoji_map"`
 }
 
 // Sender posts messages to Mattermost chat.
 // It implements moira.Sender.
 // You must call Init method before SendEvents method.
 type Sender struct {
-	frontURI string
-	useEmoji bool
-	logger   moira.Logger
-	location *time.Location
-	client   Client
+	frontURI       string
+	useEmoji       bool
+	emojiModerator emojiModerator
+	logger         moira.Logger
+	location       *time.Location
+	client         Client
 }
 
 const (
 	messageMaxCharacters = 4_000
 	quotas               = "```"
 )
+
+type emojiModerator interface {
+	GetStateEmoji(subjectState moira.State, defaultValue string) string
+}
 
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
@@ -74,6 +81,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.FrontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
+
+	emojiModerator, err := emoji_moderator.NewEmojiModerator(cfg.DefaultEmoji, cfg.EmojiMap)
+	if err != nil {
+		return fmt.Errorf("cannot inicialize mattermost sender, err: %w", err)
+	}
+	sender.emojiModerator = emojiModerator
 	sender.frontURI = cfg.FrontURI
 	sender.useEmoji = cfg.UseEmoji
 	sender.location = location
@@ -143,7 +156,7 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 	state := events.GetCurrentState(throttled)
 	title := ""
 	if sender.useEmoji {
-		title += emoji_moderator.GetStateEmoji(state, "") + " "
+		title += sender.emojiModerator.GetStateEmoji(state, "") + " "
 	}
 
 	title += fmt.Sprintf("**%s**", state)
