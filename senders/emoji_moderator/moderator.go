@@ -2,8 +2,8 @@ package emoji_moderator
 
 import (
 	"fmt"
-
 	"github.com/moira-alert/moira"
+	"maps"
 )
 
 var defaultStateEmoji = map[moira.State]string{
@@ -23,7 +23,7 @@ type EmojiModerator struct {
 
 // NewEmojiModerator is construct for EmojiModerator.
 func NewEmojiModerator(defaultValue string, stateEmojiMap map[string]string) (*EmojiModerator, error) {
-	emojiMap := defaultStateEmoji
+	emojiMap := maps.Clone(defaultStateEmoji)
 
 	for state, emoji := range stateEmojiMap {
 		converted := moira.State(state)
