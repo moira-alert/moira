@@ -2,8 +2,9 @@ package emoji_moderator
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira"
 	"maps"
+
+	"github.com/moira-alert/moira"
 )
 
 var defaultStateEmoji = map[moira.State]string{
