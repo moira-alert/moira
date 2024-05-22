@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	telegramLockName = "moira-telegram-users:moira-bot-host"
-	workerName       = "Telebot"
-	messenger        = "telegram"
-	telegramLockTTL  = 30 * time.Second
-	hidden           = "[DATA DELETED]"
+	telegramLockPrefix = "moira-telegram-users:moira-bot-host:"
+	workerName         = "Telebot"
+	messenger          = "telegram"
+	telegramLockTTL    = 30 * time.Second
+	hidden             = "[DATA DELETED]"
 )
 
 var (
@@ -33,8 +33,9 @@ var (
 
 // Structure that represents the Telegram configuration in the YAML file.
 type config struct {
-	APIToken string `mapstructure:"api_token"`
-	FrontURI string `mapstructure:"front_uri"`
+	ContactType string `mapstructure:"contact_type"`
+	APIToken    string `mapstructure:"api_token"`
+	FrontURI    string `mapstructure:"front_uri"`
 }
 
 // Sender implements moira sender interface via telegram.
@@ -69,6 +70,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
+
 	sender.apiToken = cfg.APIToken
 	sender.frontURI = cfg.FrontURI
 	sender.logger = logger
@@ -88,13 +90,15 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				Msg("Error handling incoming message: %s")
 		}
 	})
-	go sender.runTelebot()
+
+	go sender.runTelebot(cfg.ContactType)
+
 	return nil
 }
 
 // runTelebot starts telegram bot and manages bot subscriptions
 // to make sure there is always only one working Poller.
-func (sender *Sender) runTelebot() {
+func (sender *Sender) runTelebot(contactType string) {
 	workerAction := func(stop <-chan struct{}) error {
 		sender.bot.Start()
 		<-stop
@@ -105,7 +109,11 @@ func (sender *Sender) runTelebot() {
 	worker.NewWorker(
 		workerName,
 		sender.logger,
-		sender.DataBase.NewLock(telegramLockName, telegramLockTTL),
+		sender.DataBase.NewLock(telegramLockKey(contactType), telegramLockTTL),
 		workerAction,
 	).Run(nil)
+}
+
+func telegramLockKey(contactType string) string {
+	return telegramLockPrefix + contactType
 }

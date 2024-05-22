@@ -49,11 +49,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.Url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
+
 	client := model.NewAPIv4Client(cfg.Url)
 
-	if err != nil {
-		return fmt.Errorf("can not parse insecure_tls: %w", err)
-	}
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -61,6 +59,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			},
 		},
 	}
+
 	sender.client = client
 
 	if cfg.APIToken == "" {

@@ -11,16 +11,17 @@ import (
 )
 
 const (
-	messenger       = "discord"
-	discordLockName = "moira-discord-users:moira-bot-host"
-	discordLockTTL  = 30 * time.Second
-	workerName      = "DiscordBot"
+	messenger         = "discord"
+	discordLockPrefix = "moira-discord-users:moira-bot-host:"
+	discordLockTTL    = 30 * time.Second
+	workerName        = "DiscordBot"
 )
 
 // Structure that represents the Discord configuration in the YAML file.
 type config struct {
-	Token    string `mapstructure:"token"`
-	FrontURI string `mapstructure:"front_uri"`
+	ContactType string `mapstructure:"contact_type"`
+	Token       string `mapstructure:"token"`
+	FrontURI    string `mapstructure:"front_uri"`
 }
 
 // Sender implements moira sender interface for discord.
@@ -48,6 +49,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("error creating discord session: %w", err)
 	}
+
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI
 	sender.location = location
@@ -70,11 +72,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	sender.session.AddHandler(handleMsg)
 
-	sender.runBot()
+	sender.runBot(cfg.ContactType)
+
 	return nil
 }
 
-func (sender *Sender) runBot() {
+func (sender *Sender) runBot(contactType string) {
 	err := sender.session.Open()
 	if err != nil {
 		sender.logger.Error().
@@ -93,7 +96,11 @@ func (sender *Sender) runBot() {
 	worker.NewWorker(
 		workerName,
 		sender.logger,
-		sender.DataBase.NewLock(discordLockName, discordLockTTL),
+		sender.DataBase.NewLock(discordLockKey(contactType), discordLockTTL),
 		workerAction,
 	).Run(nil)
+}
+
+func discordLockKey(contactType string) string {
+	return discordLockPrefix + contactType
 }
