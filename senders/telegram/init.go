@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	telegramLockKey = "moira-telegram-users:moira-bot-host:"
-	workerName      = "Telebot"
-	messenger       = "telegram"
-	telegramLockTTL = 30 * time.Second
-	hidden          = "[DATA DELETED]"
+	telegramLockPrefix = "moira-telegram-users:moira-bot-host:"
+	workerName         = "Telebot"
+	messenger          = "telegram"
+	telegramLockTTL    = 30 * time.Second
+	hidden             = "[DATA DELETED]"
 )
 
 var (
@@ -115,5 +115,5 @@ func (sender *Sender) runTelebot(contactType string) {
 }
 
 func telegramLock(contactType string) string {
-	return telegramLockKey + contactType
+	return telegramLockPrefix + contactType
 }

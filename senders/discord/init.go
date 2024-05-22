@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	messenger      = "discord"
-	discordLockKey = "moira-discord-users:moira-bot-host:"
-	discordLockTTL = 30 * time.Second
-	workerName     = "DiscordBot"
+	messenger         = "discord"
+	discordLockPrefix = "moira-discord-users:moira-bot-host:"
+	discordLockTTL    = 30 * time.Second
+	workerName        = "DiscordBot"
 )
 
 // Structure that represents the Discord configuration in the YAML file.
@@ -102,5 +102,5 @@ func (sender *Sender) runBot(contactType string) {
 }
 
 func discordLock(contactType string) string {
-	return discordLockKey + contactType
+	return discordLockPrefix + contactType
 }
