@@ -114,6 +114,6 @@ func (sender *Sender) runTelebot(contactType string) {
 	).Run(nil)
 }
 
-func telegramLock(name string) string {
-	return telegramLockKey + name
+func telegramLock(contactType string) string {
+	return telegramLockKey + contactType
 }

@@ -101,6 +101,6 @@ func (sender *Sender) runBot(contactType string) {
 	).Run(nil)
 }
 
-func discordLock(name string) string {
-	return discordLockKey + name
+func discordLock(contactType string) string {
+	return discordLockKey + contactType
 }
