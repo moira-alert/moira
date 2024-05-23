@@ -22,7 +22,7 @@ func TestNewEmojiModerator(t *testing.T) {
 			},
 		)
 		So(err, ShouldBeNil)
-		expected := &EmojiModerator{
+		expected := &emojiModerator{
 			defaultValue: "default",
 			stateEmojiMap: map[moira.State]string{
 				"OK":        "super_ok",
@@ -55,13 +55,13 @@ func TestNewEmojiModerator(t *testing.T) {
 
 func TestEmojiModerator_GetStateEmoji(t *testing.T) {
 	Convey("Check state emoji", t, func() {
-		em := &EmojiModerator{stateEmojiMap: defaultStateEmoji, defaultValue: "default_value"}
-		So(em.GetStateEmoji(moira.StateOK, ""), ShouldResemble, ":moira-state-ok:")
-		So(em.GetStateEmoji(moira.StateWARN, ""), ShouldResemble, ":moira-state-warn:")
-		So(em.GetStateEmoji(moira.StateERROR, ""), ShouldResemble, ":moira-state-error:")
-		So(em.GetStateEmoji(moira.StateNODATA, ""), ShouldResemble, ":moira-state-nodata:")
-		So(em.GetStateEmoji(moira.StateEXCEPTION, ""), ShouldResemble, ":moira-state-exception:")
-		So(em.GetStateEmoji(moira.StateTEST, ""), ShouldResemble, ":moira-state-test:")
-		So(em.GetStateEmoji("dfdfdf", "default_value"), ShouldResemble, "default_value")
+		em := &emojiModerator{stateEmojiMap: defaultStateEmoji, defaultValue: "default_value"}
+		So(em.GetStateEmoji(moira.StateOK), ShouldResemble, ":moira-state-ok:")
+		So(em.GetStateEmoji(moira.StateWARN), ShouldResemble, ":moira-state-warn:")
+		So(em.GetStateEmoji(moira.StateERROR), ShouldResemble, ":moira-state-error:")
+		So(em.GetStateEmoji(moira.StateNODATA), ShouldResemble, ":moira-state-nodata:")
+		So(em.GetStateEmoji(moira.StateEXCEPTION), ShouldResemble, ":moira-state-exception:")
+		So(em.GetStateEmoji(moira.StateTEST), ShouldResemble, ":moira-state-test:")
+		So(em.GetStateEmoji("dfdfdf"), ShouldResemble, "default_value")
 	})
 }

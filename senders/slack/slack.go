@@ -38,13 +38,10 @@ type config struct {
 type Sender struct {
 	frontURI       string
 	useEmoji       bool
-	emojiModerator emojiModerator
+	emojiModerator emoji_moderator.EmojiModeratorer
 	logger         moira.Logger
 	location       *time.Location
 	client         *slack_client.Client
-}
-type emojiModerator interface {
-	GetStateEmoji(subjectState moira.State, defaultValue string) string
 }
 
 // Init read yaml config.
@@ -60,7 +57,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	emojiModerator, err := emoji_moderator.NewEmojiModerator(cfg.DefaultEmoji, cfg.EmojiMap)
 	if err != nil {
-		return fmt.Errorf("cannot inicialize mattermost sender, err: %w", err)
+		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
 	}
 	sender.emojiModerator = emojiModerator
 	sender.useEmoji = cfg.UseEmoji
@@ -77,7 +74,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	useDirectMessaging := useDirectMessaging(contact.Value)
 
 	state := events.GetCurrentState(throttled)
-	emoji := sender.emojiModerator.GetStateEmoji(state, slack_client.DEFAULT_MESSAGE_ICON_EMOJI)
+	emoji := sender.emojiModerator.GetStateEmoji(state)
 
 	channelID, threadTimestamp, err := sender.sendMessage(message, contact.Value, trigger.ID, useDirectMessaging, emoji)
 	if err != nil {

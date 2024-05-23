@@ -33,7 +33,7 @@ type config struct {
 type Sender struct {
 	frontURI       string
 	useEmoji       bool
-	emojiModerator emojiModerator
+	emojiModerator emoji_moderator.EmojiModeratorer
 	logger         moira.Logger
 	location       *time.Location
 	client         Client
@@ -43,10 +43,6 @@ const (
 	messageMaxCharacters = 4_000
 	quotas               = "```"
 )
-
-type emojiModerator interface {
-	GetStateEmoji(subjectState moira.State, defaultValue string) string
-}
 
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
@@ -84,7 +80,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	emojiModerator, err := emoji_moderator.NewEmojiModerator(cfg.DefaultEmoji, cfg.EmojiMap)
 	if err != nil {
-		return fmt.Errorf("cannot inicialize mattermost sender, err: %w", err)
+		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
 	}
 	sender.emojiModerator = emojiModerator
 	sender.frontURI = cfg.FrontURI
@@ -156,7 +152,7 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 	state := events.GetCurrentState(throttled)
 	title := ""
 	if sender.useEmoji {
-		title += sender.emojiModerator.GetStateEmoji(state, "") + " "
+		title += sender.emojiModerator.GetStateEmoji(state) + " "
 	}
 
 	title += fmt.Sprintf("**%s**", state)
