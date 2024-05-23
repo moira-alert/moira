@@ -16,7 +16,7 @@ import (
 )
 
 // ErrNotAllowedContactType means that this type of contact is not allowed to be created.
-var ErrNotAllowedContactType = errors.New("CreateContact: cannot create contact with not allowed contact type")
+var ErrNotAllowedContactType = errors.New("cannot create contact with not allowed contact type")
 
 // GetAllContacts gets all moira contacts.
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
