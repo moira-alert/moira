@@ -39,7 +39,7 @@ prometheus_remote:
 checker:
   nodata_check_interval: 60s
   check_interval: 10s
-  stop_checking_interval: 3000s
+  stop_checking_interval: 30s
   lazy_triggers_check_interval: 60s
 log:
   log_file: stdout
