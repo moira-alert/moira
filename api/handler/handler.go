@@ -112,6 +112,7 @@ func NewHandler(
 			router.Route("/notification", notification)
 			router.Route("/teams", teams)
 			router.Route("/contact", func(router chi.Router) {
+				router.Use(moiramiddle.WebConfigurationContext(webConfig))
 				contact(router)
 				contactEvents(router)
 			})

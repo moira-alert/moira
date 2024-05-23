@@ -68,6 +68,8 @@ type WebConfig struct {
 	Contacts             []WebContact          `json:"contacts"`
 	FeatureFlags         FeatureFlags          `json:"featureFlags"`
 	Sentry               Sentry                `json:"sentry"`
+
+	AllowedContactTypes map[string]struct{} `json:"-"`
 }
 
 // MetricSourceCluster contains data about supported metric source cluster.

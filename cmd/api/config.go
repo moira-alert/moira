@@ -130,7 +130,9 @@ func (auth *authorization) toApiConfig() api.Authorization {
 }
 
 func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
+	allowedContactTypes := make(map[string]struct{}, len(config.ContactsTemplate))
 	webContacts := make([]api.WebContact, 0, len(config.ContactsTemplate))
+
 	for _, contactTemplate := range config.ContactsTemplate {
 		contact := api.WebContact{
 			ContactType:     contactTemplate.ContactType,
@@ -140,6 +142,8 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 			Placeholder:     contactTemplate.Placeholder,
 			Help:            contactTemplate.Help,
 		}
+
+		allowedContactTypes[contactTemplate.ContactType] = struct{}{}
 		webContacts = append(webContacts, contact)
 	}
 
@@ -172,6 +176,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		RemoteAllowed:        isRemoteEnabled,
 		MetricSourceClusters: clusters,
 		Contacts:             webContacts,
+		AllowedContactTypes:  allowedContactTypes,
 		FeatureFlags:         config.getFeatureFlags(),
 		Sentry:               config.Sentry.getSettings(),
 	}

@@ -277,3 +277,13 @@ func AuthorizationContext(auth *api.Authorization) func(next http.Handler) http.
 		})
 	}
 }
+
+// WebConfigurationContext sets given web configuration to request context.
+func WebConfigurationContext(webConfig *api.WebConfig) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), webConfigKey, webConfig)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}

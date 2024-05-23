@@ -39,6 +39,7 @@ var (
 	teamIDKey            ContextKey = "teamID"
 	teamUserIDKey        ContextKey = "teamUserIDKey"
 	authKey              ContextKey = "auth"
+	webConfigKey         ContextKey = "webConfig"
 	anonymousUser                   = "anonymous"
 )
 
@@ -161,4 +162,9 @@ func SetContextValueForTest(ctx context.Context, key string, value interface{}) 
 // GetAuth gets authorization configuration.
 func GetAuth(request *http.Request) *api.Authorization {
 	return request.Context().Value(authKey).(*api.Authorization)
+}
+
+// GetWebConfig gets web configuration.
+func GetWebConfig(request *http.Request) *api.WebConfig {
+	return request.Context().Value(webConfigKey).(*api.WebConfig)
 }
