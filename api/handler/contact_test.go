@@ -22,6 +22,7 @@ import (
 const (
 	ContactIDKey   = "contactID"
 	ContactKey     = "contact"
+	AuthKey        = "auth"
 	LoginKey       = "login"
 	defaultContact = "testContact"
 	defaultLogin   = "testLogin"
@@ -195,7 +196,12 @@ func TestCreateNewContact(t *testing.T) {
 		login := defaultLogin
 		testErr := errors.New("test error")
 
-		auth := &api.Authorization{Enabled: false}
+		auth := &api.Authorization{
+			Enabled: false,
+			AllowedContactTypes: map[string]struct{}{
+				"mail": {},
+			},
+		}
 
 		newContactDto := &dto.Contact{
 			ID:     defaultContact,
@@ -223,7 +229,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -413,6 +419,7 @@ func TestUpdateContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
+
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
 				ID:    contactID,
 				Name:  updatedContactDto.Name,
@@ -420,6 +427,12 @@ func TestUpdateContact(t *testing.T) {
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
 			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateContact(responseWriter, testRequest)
@@ -461,6 +474,12 @@ func TestUpdateContact(t *testing.T) {
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
 			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateContact(responseWriter, testRequest)

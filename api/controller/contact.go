@@ -15,6 +15,9 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
+// ErrNotAllowedContactType means that this type of contact is not allowed to be created.
+var ErrNotAllowedContactType = errors.New("cannot create contact with not allowed contact type")
+
 // GetAllContacts gets all moira contacts.
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
 	contacts, err := database.GetAllContacts()
@@ -47,9 +50,19 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 }
 
 // CreateContact creates new notification contact for current user.
-func CreateContact(dataBase moira.Database, auth *api.Authorization, contact *dto.Contact, userLogin, teamID string) *api.ErrorResponse {
+func CreateContact(
+	dataBase moira.Database,
+	auth *api.Authorization,
+	contact *dto.Contact,
+	userLogin,
+	teamID string,
+) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified"))
+	}
+
+	if !isAllowedContactType(auth, userLogin, contact.Type) {
+		return api.ErrorInvalidRequest(ErrNotAllowedContactType)
 	}
 
 	// Only admins are allowed to create contacts for other users
@@ -91,7 +104,16 @@ func CreateContact(dataBase moira.Database, auth *api.Authorization, contact *dt
 }
 
 // UpdateContact updates notification contact for current user.
-func UpdateContact(dataBase moira.Database, contactDTO dto.Contact, contactData moira.ContactData) (dto.Contact, *api.ErrorResponse) {
+func UpdateContact(
+	dataBase moira.Database,
+	auth *api.Authorization,
+	contactDTO dto.Contact,
+	contactData moira.ContactData,
+) (dto.Contact, *api.ErrorResponse) {
+	if !isAllowedContactType(auth, contactDTO.User, contactDTO.Type) {
+		return contactDTO, api.ErrorInvalidRequest(ErrNotAllowedContactType)
+	}
+
 	contactData.Type = contactDTO.Type
 	contactData.Value = contactDTO.Value
 	contactData.Name = contactDTO.Name
@@ -226,4 +248,12 @@ func isContactExists(dataBase moira.Database, contactID string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func isAllowedContactType(auth *api.Authorization, userLogin string, contactType string) bool {
+	isAdmin := auth.IsAdmin(userLogin)
+
+	_, isAllowedContact := auth.AllowedContactTypes[contactType]
+
+	return isAllowedContact || isAdmin
 }

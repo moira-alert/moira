@@ -19,6 +19,14 @@ func Test_apiConfig_getSettings(t *testing.T) {
 			moira.DefaultGraphiteRemoteCluster:                              24 * time.Hour,
 		}
 
+		webConfig := &webConfig{
+			ContactsTemplate: []webContact{
+				{
+					ContactType: "test",
+				},
+			},
+		}
+
 		apiConf := apiConfig{
 			Listen:     "0000",
 			EnableCORS: true,
@@ -31,10 +39,13 @@ func Test_apiConfig_getSettings(t *testing.T) {
 			Flags:      api.FeatureFlags{IsReadonlyEnabled: true},
 			Authorization: api.Authorization{
 				AdminList: make(map[string]struct{}),
+				AllowedContactTypes: map[string]struct{}{
+					"test": {},
+				},
 			},
 		}
 
-		result := apiConf.getSettings(metricTTLs, api.FeatureFlags{IsReadonlyEnabled: true})
+		result := apiConf.getSettings(metricTTLs, api.FeatureFlags{IsReadonlyEnabled: true}, webConfig)
 		So(result, ShouldResemble, expectedResult)
 	})
 }

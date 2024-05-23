@@ -37,6 +37,7 @@ func createNewTeamContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint:errcheck
 		return
 	}
+
 	teamID := middleware.GetTeamID(request)
 	auth := middleware.GetAuth(request)
 
