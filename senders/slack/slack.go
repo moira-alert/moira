@@ -10,7 +10,7 @@ import (
 	slackdown "github.com/moira-alert/blackfriday-slack"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
-	"github.com/moira-alert/moira/senders/emoji_moderator"
+	"github.com/moira-alert/moira/senders/emoji_provider"
 
 	slack_client "github.com/slack-go/slack"
 )
@@ -36,12 +36,12 @@ type config struct {
 
 // Sender implements moira sender interface via slack.
 type Sender struct {
-	frontURI       string
-	useEmoji       bool
-	emojiModerator emoji_moderator.EmojiModeratorer
-	logger         moira.Logger
-	location       *time.Location
-	client         *slack_client.Client
+	frontURI      string
+	useEmoji      bool
+	emojiProvider emoji_provider.GetStateEmojier
+	logger        moira.Logger
+	location      *time.Location
+	client        *slack_client.Client
 }
 
 // Init read yaml config.
@@ -55,11 +55,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read slack api_token from config")
 	}
-	emojiModerator, err := emoji_moderator.NewEmojiModerator(cfg.DefaultEmoji, cfg.EmojiMap)
+	emojiProvider, err := emoji_provider.NewEmojiProvider(cfg.DefaultEmoji, cfg.EmojiMap)
 	if err != nil {
 		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
 	}
-	sender.emojiModerator = emojiModerator
+	sender.emojiProvider = emojiProvider
 	sender.useEmoji = cfg.UseEmoji
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI
@@ -74,7 +74,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	useDirectMessaging := useDirectMessaging(contact.Value)
 
 	state := events.GetCurrentState(throttled)
-	emoji := sender.emojiModerator.GetStateEmoji(state)
+	emoji := sender.emojiProvider.GetStateEmoji(state)
 
 	channelID, threadTimestamp, err := sender.sendMessage(message, contact.Value, trigger.ID, useDirectMessaging, emoji)
 	if err != nil {

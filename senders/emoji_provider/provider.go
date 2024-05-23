@@ -1,4 +1,4 @@
-package emoji_moderator
+package emoji_provider
 
 import (
 	"fmt"
@@ -16,19 +16,19 @@ var defaultStateEmoji = map[moira.State]string{
 	moira.StateTEST:      ":moira-state-test:",
 }
 
-// emojiModerator is struct for get emoji by trigger State.
-type emojiModerator struct {
+// emojiProvider is struct for get emoji by trigger State.
+type emojiProvider struct {
 	defaultValue  string
 	stateEmojiMap map[moira.State]string
 }
 
-// EmojiModeratorer is interface for emojiModerator.
-type EmojiModeratorer interface {
+// GetStateEmojier is interface for emojiProvider.
+type GetStateEmojier interface {
 	GetStateEmoji(subjectState moira.State) string
 }
 
-// NewEmojiModerator is construct for emojiModerator.
-func NewEmojiModerator(defaultValue string, stateEmojiMap map[string]string) (EmojiModeratorer, error) {
+// NewEmojiProvider is construct for emojiProvider.
+func NewEmojiProvider(defaultValue string, stateEmojiMap map[string]string) (GetStateEmojier, error) {
 	emojiMap := maps.Clone(defaultStateEmoji)
 
 	for state, emoji := range stateEmojiMap {
@@ -39,14 +39,14 @@ func NewEmojiModerator(defaultValue string, stateEmojiMap map[string]string) (Em
 		emojiMap[converted] = emoji
 	}
 
-	return &emojiModerator{
+	return &emojiProvider{
 		defaultValue:  defaultValue,
 		stateEmojiMap: emojiMap,
 	}, nil
 }
 
 // GetStateEmoji returns corresponding state emoji.
-func (em *emojiModerator) GetStateEmoji(subjectState moira.State) string {
+func (em *emojiProvider) GetStateEmoji(subjectState moira.State) string {
 	if emoji, ok := em.stateEmojiMap[subjectState]; ok {
 		return emoji
 	}

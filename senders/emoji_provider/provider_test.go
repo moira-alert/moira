@@ -1,4 +1,4 @@
-package emoji_moderator
+package emoji_provider
 
 import (
 	"testing"
@@ -8,9 +8,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestNewEmojiModerator(t *testing.T) {
+func TestNewEmojiProvider(t *testing.T) {
 	Convey("Successful creation, no errors", t, func() {
-		em, err := NewEmojiModerator(
+		em, err := NewEmojiProvider(
 			"default",
 			map[string]string{
 				"OK":        "super_ok",
@@ -22,7 +22,7 @@ func TestNewEmojiModerator(t *testing.T) {
 			},
 		)
 		So(err, ShouldBeNil)
-		expected := &emojiModerator{
+		expected := &emojiProvider{
 			defaultValue: "default",
 			stateEmojiMap: map[moira.State]string{
 				"OK":        "super_ok",
@@ -37,7 +37,7 @@ func TestNewEmojiModerator(t *testing.T) {
 	})
 
 	Convey("Unsuccessful creation, has error", t, func() {
-		em, err := NewEmojiModerator(
+		em, err := NewEmojiProvider(
 			"default",
 			map[string]string{
 				"OK":        "super_ok",
@@ -53,9 +53,9 @@ func TestNewEmojiModerator(t *testing.T) {
 	})
 }
 
-func TestEmojiModerator_GetStateEmoji(t *testing.T) {
+func TestEmojiProvider_GetStateEmoji(t *testing.T) {
 	Convey("Check state emoji", t, func() {
-		em := &emojiModerator{stateEmojiMap: defaultStateEmoji, defaultValue: "default_value"}
+		em := &emojiProvider{stateEmojiMap: defaultStateEmoji, defaultValue: "default_value"}
 		So(em.GetStateEmoji(moira.StateOK), ShouldResemble, ":moira-state-ok:")
 		So(em.GetStateEmoji(moira.StateWARN), ShouldResemble, ":moira-state-warn:")
 		So(em.GetStateEmoji(moira.StateERROR), ShouldResemble, ":moira-state-error:")

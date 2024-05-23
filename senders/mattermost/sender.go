@@ -10,7 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
-	"github.com/moira-alert/moira/senders/emoji_moderator"
+	"github.com/moira-alert/moira/senders/emoji_provider"
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mitchellh/mapstructure"
@@ -31,12 +31,12 @@ type config struct {
 // It implements moira.Sender.
 // You must call Init method before SendEvents method.
 type Sender struct {
-	frontURI       string
-	useEmoji       bool
-	emojiModerator emoji_moderator.EmojiModeratorer
-	logger         moira.Logger
-	location       *time.Location
-	client         Client
+	frontURI      string
+	useEmoji      bool
+	emojiProvider emoji_provider.GetStateEmojier
+	logger        moira.Logger
+	location      *time.Location
+	client        Client
 }
 
 const (
@@ -78,11 +78,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
 
-	emojiModerator, err := emoji_moderator.NewEmojiModerator(cfg.DefaultEmoji, cfg.EmojiMap)
+	emojiProvider, err := emoji_provider.NewEmojiProvider(cfg.DefaultEmoji, cfg.EmojiMap)
 	if err != nil {
 		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
 	}
-	sender.emojiModerator = emojiModerator
+	sender.emojiProvider = emojiProvider
 	sender.frontURI = cfg.FrontURI
 	sender.useEmoji = cfg.UseEmoji
 	sender.location = location
@@ -152,7 +152,7 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 	state := events.GetCurrentState(throttled)
 	title := ""
 	if sender.useEmoji {
-		title += sender.emojiModerator.GetStateEmoji(state) + " "
+		title += sender.emojiProvider.GetStateEmoji(state) + " "
 	}
 
 	title += fmt.Sprintf("**%s**", state)
