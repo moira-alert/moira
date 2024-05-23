@@ -22,13 +22,13 @@ type emojiProvider struct {
 	stateEmojiMap map[moira.State]string
 }
 
-// GetStateEmojier is interface for emojiProvider.
-type GetStateEmojier interface {
+// StateEmojiGetter is interface for emojiProvider.
+type StateEmojiGetter interface {
 	GetStateEmoji(subjectState moira.State) string
 }
 
 // NewEmojiProvider is construct for emojiProvider.
-func NewEmojiProvider(defaultValue string, stateEmojiMap map[string]string) (GetStateEmojier, error) {
+func NewEmojiProvider(defaultValue string, stateEmojiMap map[string]string) (StateEmojiGetter, error) {
 	emojiMap := maps.Clone(defaultStateEmoji)
 
 	for state, emoji := range stateEmojiMap {

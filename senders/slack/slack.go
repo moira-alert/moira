@@ -38,7 +38,7 @@ type config struct {
 type Sender struct {
 	frontURI      string
 	useEmoji      bool
-	emojiProvider emoji_provider.GetStateEmojier
+	emojiProvider emoji_provider.StateEmojiGetter
 	logger        moira.Logger
 	location      *time.Location
 	client        *slack_client.Client
