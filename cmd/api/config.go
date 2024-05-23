@@ -108,29 +108,37 @@ type featureFlags struct {
 func (config *apiConfig) getSettings(
 	metricsTTL map[moira.ClusterKey]time.Duration,
 	flags api.FeatureFlags,
+	webConfig *webConfig,
 ) *api.Config {
 	return &api.Config{
 		EnableCORS:    config.EnableCORS,
 		Listen:        config.Listen,
 		MetricsTTL:    metricsTTL,
 		Flags:         flags,
-		Authorization: config.Authorization.toApiConfig(),
+		Authorization: config.Authorization.toApiConfig(webConfig),
 	}
 }
 
-func (auth *authorization) toApiConfig() api.Authorization {
+func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 	adminList := make(map[string]struct{}, len(auth.AdminList))
 	for _, admin := range auth.AdminList {
 		adminList[admin] = struct{}{}
 	}
+
+	allowedContactTypes := make(map[string]struct{}, len(webConfig.ContactsTemplate))
+
+	for _, contactTemplate := range webConfig.ContactsTemplate {
+		allowedContactTypes[contactTemplate.ContactType] = struct{}{}
+	}
+
 	return api.Authorization{
-		Enabled:   auth.Enabled,
-		AdminList: adminList,
+		Enabled:             auth.Enabled,
+		AdminList:           adminList,
+		AllowedContactTypes: allowedContactTypes,
 	}
 }
 
 func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
-	allowedContactTypes := make(map[string]struct{}, len(config.ContactsTemplate))
 	webContacts := make([]api.WebContact, 0, len(config.ContactsTemplate))
 
 	for _, contactTemplate := range config.ContactsTemplate {
@@ -143,7 +151,6 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 			Help:            contactTemplate.Help,
 		}
 
-		allowedContactTypes[contactTemplate.ContactType] = struct{}{}
 		webContacts = append(webContacts, contact)
 	}
 
@@ -176,7 +183,6 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		RemoteAllowed:        isRemoteEnabled,
 		MetricSourceClusters: clusters,
 		Contacts:             webContacts,
-		AllowedContactTypes:  allowedContactTypes,
 		FeatureFlags:         config.getFeatureFlags(),
 		Sentry:               config.Sentry.getSettings(),
 	}
