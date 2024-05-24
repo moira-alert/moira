@@ -47,6 +47,29 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 	return patterns, nil
 }
 
+func (connector *DbConnector) OldGetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
+	c := *connector.client
+	resultByMetrics := make([]*redis.ZSliceCmd, 0, len(metrics))
+
+	for _, metric := range metrics {
+		rng := &redis.ZRangeBy{Min: strconv.FormatInt(from, 10), Max: strconv.FormatInt(until, 10)}
+		result := c.ZRangeByScoreWithScores(connector.context, metricDataKey(metric), rng)
+		resultByMetrics = append(resultByMetrics, result)
+	}
+
+	res := make(map[string][]*moira.MetricValue, len(resultByMetrics))
+
+	for i, resultByMetric := range resultByMetrics {
+		metric := metrics[i]
+		metricsValues, err := reply.MetricValues(resultByMetric)
+		if err != nil {
+			return nil, err
+		}
+		res[metric] = metricsValues
+	}
+	return res, nil
+}
+
 // GetMetricsValues gets metrics values for given interval.
 func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
 	c := *connector.client
