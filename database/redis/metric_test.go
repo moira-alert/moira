@@ -72,7 +72,7 @@ func randStringBytesMaskImpr(n, letterIdxBits, letterIdxMax int, letterIdxMask i
 	return string(b)
 }
 
-func BenchmarkGetMetricValues(b *testing.B) {
+func BenchmarkGetMetricsValues(b *testing.B) {
 	const (
 		metricNameLen = 20
 		metricPattern = "random-pattern"
