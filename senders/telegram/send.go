@@ -144,13 +144,13 @@ func (sender *Sender) getChatFromDb(contactValue string) (*Chat, error) {
 
 	chatRaw, err := sender.DataBase.GetIDByUsername(messenger, contactValue)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get username uuid: %s", err.Error())
+		return nil, fmt.Errorf("failed to get username uuid: %w", err)
 	}
 
 	chat := Chat{}
 	err = json.Unmarshal([]byte(chatRaw), &chat)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal chat data %s: %s", chatRaw, err.Error())
+		return nil, fmt.Errorf("failed to unmarshal chat data %s: %w", chatRaw, err)
 	}
 	return &chat, nil
 }
@@ -161,7 +161,7 @@ func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {
 	telegramChat, err := sender.bot.ChatByUsername(username)
 	if err != nil {
 		err = sender.removeTokenFromError(err)
-		return nil, fmt.Errorf("can't find recipient %s: %s", username, err.Error())
+		return nil, fmt.Errorf("can't find recipient %s: %w", username, err)
 	}
 
 	chat := Chat{
@@ -174,7 +174,7 @@ func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {
 func (sender *Sender) setChat(message *telebot.Message) (*Chat, error) {
 	contactValue, err := sender.getContactValueByMessage(message)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get contact value from message: %s", err.Error())
+		return nil, fmt.Errorf("failed to get contact value from message: %w", err)
 	}
 
 	chat := &Chat{
@@ -185,7 +185,7 @@ func (sender *Sender) setChat(message *telebot.Message) (*Chat, error) {
 
 	chatString, err := json.Marshal(chat)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal chat: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal chat: %w", err)
 	}
 
 	err = sender.DataBase.SetUsernameID(messenger, contactValue, string(chatString))

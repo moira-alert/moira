@@ -37,7 +37,7 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 	case (message.Chat.Type == telebot.ChatSuperGroup || message.Chat.Type == telebot.ChatGroup) && strings.HasPrefix(message.Text, "/start"):
 		contactValue, err := sender.getContactValueByMessage(message)
 		if err != nil {
-			return "", fmt.Errorf("failed to get contact value from message: %s", err.Error())
+			return "", fmt.Errorf("failed to get contact value from message: %w", err)
 		}
 
 		_, err = sender.setChat(message)
