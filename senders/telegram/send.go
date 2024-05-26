@@ -33,6 +33,8 @@ var characterLimits = map[messageType]int{
 	Album:   albumCaptionMaxCharacters,
 }
 
+// Structure that represents chat metadata required to send message to recipient.
+// It implements gopkg.in/telebot.v3#Recipient interface and thus might be passed to telebot methods directly.
 type Chat struct {
 	ID       int64            `json:"chatId" example:"-1001234567890"`
 	Type     telebot.ChatType `json:"type" example:"supergroup"`
