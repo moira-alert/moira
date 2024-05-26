@@ -140,8 +140,6 @@ func (sender *Sender) getChat(contactValue string) (*Chat, error) {
 }
 
 func (sender *Sender) getChatFromDb(contactValue string) (*Chat, error) {
-	var err error
-
 	chatRaw, err := sender.DataBase.GetIDByUsername(messenger, contactValue)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get username uuid: %w", err)
@@ -156,8 +154,6 @@ func (sender *Sender) getChatFromDb(contactValue string) (*Chat, error) {
 }
 
 func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {
-	var err error
-
 	telegramChat, err := sender.bot.ChatByUsername(username)
 	if err != nil {
 		err = sender.removeTokenFromError(err)
