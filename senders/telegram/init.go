@@ -92,7 +92,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		if err = sender.handleMessage(ctx.Message()); err != nil {
 			sender.logger.Error().
 				Error(err).
-				Msg("Error handling incoming message: %s")
+				Msg("Error handling incoming message")
 			return err
 		}
 		return nil
