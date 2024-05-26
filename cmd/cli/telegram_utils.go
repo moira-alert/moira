@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -11,7 +10,10 @@ import (
 	"github.com/moira-alert/moira/senders/telegram"
 )
 
-var telegramUsersKey = "moira-telegram-users:"
+var (
+	telegramUsersKey = "moira-telegram-users:"
+	telegramLockName = "moira-telegram-users:moira-bot-host"
+)
 
 func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Start updateTelegramUsersRecords")
@@ -22,7 +24,7 @@ func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) er
 		iter := d.Client().Scan(d.Context(), 0, telegramUsersKey+"*", 0).Iterator()
 		for iter.Next(d.Context()) {
 			key := iter.Val()
-			if key == "moira-telegram-users:moira-bot-host" {
+			if key == telegramLockName {
 				continue
 			}
 
@@ -57,7 +59,7 @@ func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) er
 				return err
 			}
 
-			pipe.Set(context.Background(), key, string(chatBytes), 0)
+			pipe.Set(d.Context(), key, string(chatBytes), 0)
 		}
 		_, err := pipe.Exec(d.Context())
 		if err != nil {
@@ -81,11 +83,11 @@ func downgradeTelegramUsersRecords(logger moira.Logger, database moira.Database)
 		iter := d.Client().Scan(d.Context(), 0, telegramUsersKey+"*", 0).Iterator()
 		for iter.Next(d.Context()) {
 			key := iter.Val()
-			if key == "moira-telegram-users:moira-bot-host" {
+			if key == telegramLockName {
 				continue
 			}
 
-			oldValue, err := d.Client().Get(context.Background(), key).Result()
+			oldValue, err := d.Client().Get(d.Context(), key).Result()
 			if err != nil {
 				return err
 			}
@@ -103,7 +105,7 @@ func downgradeTelegramUsersRecords(logger moira.Logger, database moira.Database)
 			} else {
 				newValue = strconv.FormatInt(chat.ID, 10)
 			}
-			pipe.Set(context.Background(), key, string(newValue), 0)
+			pipe.Set(d.Context(), key, newValue, 0)
 		}
 		_, err := pipe.Exec(d.Context())
 		if err != nil {
