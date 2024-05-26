@@ -39,17 +39,17 @@ type Chat struct {
 	ThreadID int              `json:"threadId,omitempty" example:"10"`
 }
 
-var brokenContactAPIErrors = map[*telebot.Error]bool{
-	telebot.ErrUnauthorized:         true,
-	telebot.ErrUserIsDeactivated:    true,
-	telebot.ErrNoRightsToSendPhoto:  true,
-	telebot.ErrChatNotFound:         true,
-	telebot.ErrNoRightsToSend:       true,
-	telebot.ErrKickedFromGroup:      true,
-	telebot.ErrBlockedByUser:        true,
-	telebot.ErrKickedFromSuperGroup: true,
-	telebot.ErrKickedFromChannel:    true,
-	telebot.ErrNotStartedByUser:     true,
+var brokenContactAPIErrors = map[*telebot.Error]struct{}{
+	telebot.ErrUnauthorized:         {},
+	telebot.ErrUserIsDeactivated:    {},
+	telebot.ErrNoRightsToSendPhoto:  {},
+	telebot.ErrChatNotFound:         {},
+	telebot.ErrNoRightsToSend:       {},
+	telebot.ErrKickedFromGroup:      {},
+	telebot.ErrBlockedByUser:        {},
+	telebot.ErrKickedFromSuperGroup: {},
+	telebot.ErrKickedFromChannel:    {},
+	telebot.ErrNotStartedByUser:     {},
 }
 
 // Chat implements gopkg.in/telebot.v3#Recipient interface.
