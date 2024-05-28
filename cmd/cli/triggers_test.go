@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mocks "github.com/moira-alert/moira/mock/moira-alert"
 
@@ -24,7 +25,7 @@ func Test_deleteTriggers(t *testing.T) {
 		db.EXPECT().RemoveTrigger("trigger-2").Return(nil)
 
 		triggersToDelete := []string{"trigger-1", "trigger-2"}
-		err := deleteTriggers(logger, triggersToDelete, "trigger", db)
+		err := deleteTriggers(logger, triggersToDelete, db)
 		So(err, ShouldBeNil)
 	})
 
@@ -33,7 +34,7 @@ func Test_deleteTriggers(t *testing.T) {
 		db.EXPECT().RemoveTrigger("trigger-2").Return(errors.New("oops"))
 
 		triggersToDelete := []string{"trigger-1", "trigger-2"}
-		err := deleteTriggers(logger, triggersToDelete, "trigger", db)
+		err := deleteTriggers(logger, triggersToDelete, db)
 		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldResemble, "can't remove trigger with id trigger-2: oops")
 	})
@@ -99,5 +100,75 @@ func Test_handleRemoveUnusedTriggersStartWith(t *testing.T) {
 		err := handleRemoveUnusedTriggersStartWith(logger, db, "trigger")
 		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldResemble, "can't get unused trigger IDs; err: oops")
+	})
+}
+
+func Test_handleRemoveUnusedTriggersWithTTL(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	db := mocks.NewMockDatabase(mockCtrl)
+	delay = 1 * time.Millisecond
+	nowTime := time.Now()
+
+	Convey("Success delete triggers: updated at is set", t, func() {
+		updatedAt := nowTime.Add(-24 * time.Hour).Unix()
+		db.EXPECT().GetTrigger("trigger-1").Return(moira.Trigger{UpdatedAt: &updatedAt}, nil)
+		db.EXPECT().GetUnusedTriggerIDs().Return([]string{"trigger-1"}, nil)
+		db.EXPECT().RemoveTrigger("trigger-1").Return(nil)
+
+		ttl := int64(2 * time.Hour.Seconds())
+		err := handleRemoveUnusedTriggersWithTTL(logger, db, ttl)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success delete triggers: created at is set", t, func() {
+		createdAt := nowTime.Add(-24 * time.Hour).Unix()
+		db.EXPECT().GetTrigger("trigger-1").Return(moira.Trigger{CreatedAt: &createdAt}, nil)
+		db.EXPECT().GetUnusedTriggerIDs().Return([]string{"trigger-1"}, nil)
+		db.EXPECT().RemoveTrigger("trigger-1").Return(nil)
+
+		ttl := int64(2 * time.Hour.Seconds())
+		err := handleRemoveUnusedTriggersWithTTL(logger, db, ttl)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success delete triggers: created at and updated_at is no set", t, func() {
+		db.EXPECT().GetTrigger("trigger-1").Return(moira.Trigger{}, nil)
+		db.EXPECT().GetUnusedTriggerIDs().Return([]string{"trigger-1"}, nil)
+		db.EXPECT().RemoveTrigger("trigger-1").Return(nil)
+
+		ttl := int64(2 * time.Hour.Seconds())
+		err := handleRemoveUnusedTriggersWithTTL(logger, db, ttl)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Error delete triggers: error while getting unused triggers, has error", t, func() {
+		db.EXPECT().GetUnusedTriggerIDs().Return([]string{"trigger-1"}, errors.New("error"))
+
+		ttl := int64(2 * time.Hour.Seconds())
+		err := handleRemoveUnusedTriggersWithTTL(logger, db, ttl)
+		So(err, ShouldNotBeNil)
+		So(err.Error(), ShouldResemble, "can't get unused trigger IDs; err: error")
+	})
+
+	Convey("Error delete triggers: error while get one trigger, has no error", t, func() {
+		db.EXPECT().GetUnusedTriggerIDs().Return([]string{"trigger-1"}, nil)
+		db.EXPECT().GetTrigger("trigger-1").Return(moira.Trigger{}, errors.New("error"))
+
+		ttl := int64(2 * time.Hour.Seconds())
+		err := handleRemoveUnusedTriggersWithTTL(logger, db, ttl)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Error delete triggers: error while delete one trigger, has error", t, func() {
+		db.EXPECT().GetUnusedTriggerIDs().Return([]string{"trigger-1"}, nil)
+		db.EXPECT().GetTrigger("trigger-1").Return(moira.Trigger{}, nil)
+		db.EXPECT().RemoveTrigger("trigger-1").Return(errors.New("error"))
+
+		ttl := int64(2 * time.Hour.Seconds())
+		err := handleRemoveUnusedTriggersWithTTL(logger, db, ttl)
+		So(err, ShouldNotBeNil)
+		So(err.Error(), ShouldResemble, "can't remove trigger with id trigger-1: error")
 	})
 }

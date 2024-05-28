@@ -16,7 +16,7 @@ func handleRemoveTriggersStartWith(logger moira.Logger, database moira.Database,
 		return fmt.Errorf("can't get trigger IDs start with prefix %s: %w", prefix, err)
 	}
 
-	return deleteTriggers(logger, triggers, prefix, database)
+	return deleteTriggers(logger, triggers, database)
 }
 
 func handleRemoveUnusedTriggersStartWith(logger moira.Logger, database moira.Database, prefix string) error {
@@ -41,21 +41,63 @@ func handleRemoveUnusedTriggersStartWith(logger moira.Logger, database moira.Dat
 		}
 	}
 
-	return deleteTriggers(logger, triggersToDelete, prefix, database)
+	return deleteTriggers(logger, triggersToDelete, database)
 }
 
-func deleteTriggers(logger moira.Logger, triggers []string, prefix string, database moira.Database) error {
+func handleRemoveUnusedTriggersWithTTL(logger moira.Logger, database moira.Database, ttl int64) error {
+	unusedTriggers, err := database.GetUnusedTriggerIDs()
+	if err != nil {
+		return fmt.Errorf("can't get unused trigger IDs; err: %w", err)
+	}
+
+	triggersToDelete := make([]string, 0)
+	nowInSec := time.Now().Unix()
+	for _, id := range unusedTriggers {
+		unusedTrigger, err := database.GetTrigger(id)
+		if err != nil {
+			logger.Error().
+				String("trigger_id", id).
+				Error(err).
+				Msg("cannot get trigger")
+
+			continue
+		}
+
+		if needTriggerToDelete(unusedTrigger.UpdatedAt, nowInSec, ttl) {
+			triggersToDelete = append(triggersToDelete, id)
+			continue
+		}
+
+		if needTriggerToDelete(unusedTrigger.CreatedAt, nowInSec, ttl) {
+			triggersToDelete = append(triggersToDelete, id)
+			continue
+		}
+
+		triggersToDelete = append(triggersToDelete, id)
+	}
+
+	return deleteTriggers(logger, triggersToDelete, database)
+}
+
+func needTriggerToDelete(timestamp *int64, nowInSec, ttl int64) bool {
+	if timestamp != nil {
+		return *timestamp+ttl > nowInSec
+	}
+
+	return false
+}
+
+func deleteTriggers(logger moira.Logger, triggers []string, database moira.Database) error {
 	logger.Info().
 		Int("triggers_to_delete", len(triggers)).
-		String("prefix", prefix).
 		String("delay", delay.String()).
-		Msg("Triggers that start with given prefix would be removed after delay")
+		Msg("Triggers would be removed after delay")
+
 	logger.Info().Msg("You can cancel execution by Ctrl+C")
 	time.Sleep(delay)
 
 	logger.Info().
-		String("prefix", prefix).
-		Msg("Removing triggers start with given prefix has started")
+		Msg("Removing triggers start with has started")
 
 	deletedTriggersCount := 0
 	for _, id := range triggers {
@@ -66,7 +108,6 @@ func deleteTriggers(logger moira.Logger, triggers []string, prefix string, datab
 		deletedTriggersCount++
 	}
 	logger.Info().
-		String("prefix", prefix).
 		Int("deleted_triggers_count", len(triggers)).
 		Interface("deleted_triggers", triggers).
 		Msg("Removing triggers start with given prefix has finished")
