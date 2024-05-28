@@ -121,7 +121,7 @@ func TestCreateContact(t *testing.T) {
 	)
 
 	auth := &api.Authorization{
-		Enabled: false,
+		Enabled: true,
 		AllowedContactTypes: map[string]struct{}{
 			contactType: {},
 		},
@@ -191,6 +191,32 @@ func TestCreateContact(t *testing.T) {
 			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
 			err := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(err, ShouldResemble, expectedErr)
+		})
+
+		Convey("Successfully create not allowed contact with disabled auth", func() {
+			auth.Enabled = false
+			defer func() {
+				auth.Enabled = true
+			}()
+
+			contact := &dto.Contact{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Value: contactValue,
+				Type:  notAllowedContactType,
+			}
+
+			expectedContact := moira.ContactData{
+				ID:    contact.ID,
+				Value: contact.Value,
+				Type:  contact.Type,
+				User:  userLogin,
+			}
+
+			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
+			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
+
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			So(err, ShouldBeNil)
 		})
 
 		Convey("Error save contact", func() {
@@ -296,6 +322,32 @@ func TestCreateContact(t *testing.T) {
 			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
 			err := CreateContact(dataBase, auth, contact, "", teamID)
 			So(err, ShouldResemble, expectedErr)
+		})
+
+		Convey("Successfully create not allowed contact with disabled auth", func() {
+			auth.Enabled = false
+			defer func() {
+				auth.Enabled = true
+			}()
+
+			contact := &dto.Contact{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Value: contactValue,
+				Type:  notAllowedContactType,
+			}
+
+			expectedContact := moira.ContactData{
+				ID:    contact.ID,
+				Value: contact.Value,
+				Type:  contact.Type,
+				Team:  teamID,
+			}
+
+			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
+			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
+
+			err := CreateContact(dataBase, auth, contact, "", teamID)
+			So(err, ShouldBeNil)
 		})
 
 		Convey("Error save contact", func() {
@@ -423,7 +475,7 @@ func TestUpdateContact(t *testing.T) {
 	)
 
 	auth := &api.Authorization{
-		Enabled: false,
+		Enabled: true,
 		AllowedContactTypes: map[string]struct{}{
 			contactType: {},
 		},
@@ -463,6 +515,34 @@ func TestUpdateContact(t *testing.T) {
 			So(err, ShouldResemble, expectedErr)
 			So(expectedContact.User, ShouldResemble, contactDTO.User)
 			So(expectedContact.ID, ShouldResemble, contactDTO.ID)
+			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
+		})
+
+		Convey("Successfully update not allowed contact with disabled auth", func() {
+			auth.Enabled = false
+			defer func() {
+				auth.Enabled = true
+			}()
+
+			contactDTO := dto.Contact{
+				Value: contactValue,
+				Name:  "some-name",
+				Type:  notAllowedContactType,
+			}
+			contactID := uuid.Must(uuid.NewV4()).String()
+			contact := moira.ContactData{
+				Value: contactDTO.Value,
+				Type:  contactDTO.Type,
+				Name:  contactDTO.Name,
+				ID:    contactID,
+				User:  userLogin,
+			}
+
+			dataBase.EXPECT().SaveContact(&contact).Return(nil)
+			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			So(err, ShouldBeNil)
+			So(expectedContact.User, ShouldResemble, userLogin)
+			So(expectedContact.ID, ShouldResemble, contactID)
 			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
 		})
 
@@ -549,22 +629,34 @@ func TestIsAllowedContactType(t *testing.T) {
 
 	Convey("Test isAllowedContactType", t, func() {
 		Convey("Test with user and allowed contact type", func() {
-			isAllowed := isAllowedContactType(auth, user, allowedContactType)
+			isAllowed := isAllowedToUseContactType(auth, user, allowedContactType)
 			So(isAllowed, ShouldBeTrue)
 		})
 
 		Convey("Test with user and not allowed contact type", func() {
-			isAllowed := isAllowedContactType(auth, user, notAllowedContactType)
+			isAllowed := isAllowedToUseContactType(auth, user, notAllowedContactType)
 			So(isAllowed, ShouldBeFalse)
 		})
 
 		Convey("Test with admin and allowed contact type", func() {
-			isAllowed := isAllowedContactType(auth, admin, allowedContactType)
+			isAllowed := isAllowedToUseContactType(auth, admin, allowedContactType)
 			So(isAllowed, ShouldBeTrue)
 		})
 
 		Convey("Test with admin and not allowed contact type", func() {
-			isAllowed := isAllowedContactType(auth, admin, notAllowedContactType)
+			isAllowed := isAllowedToUseContactType(auth, admin, notAllowedContactType)
+			So(isAllowed, ShouldBeTrue)
+		})
+
+		Convey("Test with disabled auth and not allowed contact type", func() {
+			auth.Enabled = false
+			isAllowed := isAllowedToUseContactType(auth, admin, notAllowedContactType)
+			So(isAllowed, ShouldBeTrue)
+		})
+
+		Convey("Test with disabled auth and allowed contact type", func() {
+			auth.Enabled = false
+			isAllowed := isAllowedToUseContactType(auth, admin, allowedContactType)
 			So(isAllowed, ShouldBeTrue)
 		})
 	})

@@ -61,7 +61,7 @@ func CreateContact(
 		return api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified"))
 	}
 
-	if !isAllowedContactType(auth, userLogin, contact.Type) {
+	if !isAllowedToUseContactType(auth, userLogin, contact.Type) {
 		return api.ErrorInvalidRequest(ErrNotAllowedContactType)
 	}
 
@@ -110,7 +110,7 @@ func UpdateContact(
 	contactDTO dto.Contact,
 	contactData moira.ContactData,
 ) (dto.Contact, *api.ErrorResponse) {
-	if !isAllowedContactType(auth, contactDTO.User, contactDTO.Type) {
+	if !isAllowedToUseContactType(auth, contactDTO.User, contactDTO.Type) {
 		return contactDTO, api.ErrorInvalidRequest(ErrNotAllowedContactType)
 	}
 
@@ -250,10 +250,10 @@ func isContactExists(dataBase moira.Database, contactID string) (bool, error) {
 	return true, nil
 }
 
-func isAllowedContactType(auth *api.Authorization, userLogin string, contactType string) bool {
+func isAllowedToUseContactType(auth *api.Authorization, userLogin string, contactType string) bool {
+	isAuthEnabled := auth.IsEnabled()
 	isAdmin := auth.IsAdmin(userLogin)
+	_, isAllowedContactType := auth.AllowedContactTypes[contactType]
 
-	_, isAllowedContact := auth.AllowedContactTypes[contactType]
-
-	return isAllowedContact || isAdmin
+	return isAllowedContactType || isAdmin || !isAuthEnabled
 }
