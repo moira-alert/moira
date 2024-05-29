@@ -73,7 +73,7 @@ var (
 var (
 	removeTriggersStartWith       = flag.String("remove-triggers-start-with", "", "Remove triggers which have ID starting with string parameter")
 	removeUnusedTriggersStartWith = flag.String("remove-unused-triggers-start-with", "", "Remove unused triggers which have ID starting with string parameter")
-	removeUnusedTriggersWithTTL   = flag.String("remove-unused-triggers-with-ttl", "", "Remove unused triggers which have no subscription more that duration")
+	removeUnusedTriggersWithTTL   = flag.String("remove-unused-triggers-with-ttl", "", "Remove unused triggers which have no subscription and no modify more that duration")
 )
 
 func main() { //nolint
