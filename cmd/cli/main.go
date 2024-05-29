@@ -222,7 +222,7 @@ func main() { //nolint
 		if err := handleRemoveUnusedTriggersWithTTL(logger, database, ttl); err != nil {
 			log.Error().
 				Error(err).
-				Msg("Failed to remove unused triggers with")
+				Msg("Failed to remove unused triggers with ttl")
 		}
 	}
 

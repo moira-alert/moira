@@ -56,35 +56,28 @@ func handleRemoveUnusedTriggersWithTTL(logger moira.Logger, database moira.Datab
 		unusedTrigger, err := database.GetTrigger(id)
 		if err != nil {
 			logger.Error().
-				String("trigger_id", id).
+				String(moira.LogFieldNameTriggerID, id).
 				Error(err).
 				Msg("cannot get trigger")
 
 			continue
 		}
 
-		if needTriggerToDelete(unusedTrigger.UpdatedAt, nowInSec, ttl) {
+		if needDeleteTrigger(unusedTrigger.UpdatedAt, nowInSec, ttl) {
 			triggersToDelete = append(triggersToDelete, id)
 			continue
 		}
-
-		if needTriggerToDelete(unusedTrigger.CreatedAt, nowInSec, ttl) {
-			triggersToDelete = append(triggersToDelete, id)
-			continue
-		}
-
-		triggersToDelete = append(triggersToDelete, id)
 	}
 
 	return deleteTriggers(logger, triggersToDelete, database)
 }
 
-func needTriggerToDelete(timestamp *int64, nowInSec, ttl int64) bool {
+func needDeleteTrigger(timestamp *int64, nowInSec, ttl int64) bool {
 	if timestamp != nil {
-		return *timestamp+ttl > nowInSec
+		return *timestamp+ttl < nowInSec
 	}
 
-	return false
+	return true
 }
 
 func deleteTriggers(logger moira.Logger, triggers []string, database moira.Database) error {

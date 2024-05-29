@@ -122,18 +122,7 @@ func Test_handleRemoveUnusedTriggersWithTTL(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 
-	Convey("Success delete triggers: created at is set", t, func() {
-		createdAt := nowTime.Add(-24 * time.Hour).Unix()
-		db.EXPECT().GetTrigger("trigger-1").Return(moira.Trigger{CreatedAt: &createdAt}, nil)
-		db.EXPECT().GetUnusedTriggerIDs().Return([]string{"trigger-1"}, nil)
-		db.EXPECT().RemoveTrigger("trigger-1").Return(nil)
-
-		ttl := int64(2 * time.Hour.Seconds())
-		err := handleRemoveUnusedTriggersWithTTL(logger, db, ttl)
-		So(err, ShouldBeNil)
-	})
-
-	Convey("Success delete triggers: created at and updated_at is no set", t, func() {
+	Convey("Success delete triggers: updated_at is no set", t, func() {
 		db.EXPECT().GetTrigger("trigger-1").Return(moira.Trigger{}, nil)
 		db.EXPECT().GetUnusedTriggerIDs().Return([]string{"trigger-1"}, nil)
 		db.EXPECT().RemoveTrigger("trigger-1").Return(nil)
