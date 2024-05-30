@@ -61,6 +61,24 @@ func (auth *Authorization) IsAdmin(login string) bool {
 	return ok
 }
 
+type Role string
+
+var (
+	RoleUndefined Role = ""
+	RoleUser      Role = "user"
+	RoleAdmin     Role = "admin"
+)
+
+func (auth *Authorization) GetRole(login string) Role {
+	if !auth.IsEnabled() {
+		return RoleUndefined
+	}
+	if auth.IsAdmin(login) {
+		return RoleAdmin
+	}
+	return RoleUser
+}
+
 // WebConfig is container for web ui configuration parameters.
 type WebConfig struct {
 	SupportEmail         string                `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
