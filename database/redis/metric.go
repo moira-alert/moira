@@ -50,47 +50,25 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 // GetMetricsValues gets metrics values for given interval.
 func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
 	c := *connector.client
-	ctx := connector.context
-
-	pipe := c.TxPipeline()
-
-	for _, metric := range metrics {
-		rng := &redis.ZRangeBy{
-			Min: strconv.FormatInt(from, 10),
-			Max: strconv.FormatInt(until, 10),
-		}
-		pipe.ZRangeByScoreWithScores(connector.context, metricDataKey(metric), rng)
-	}
-
-	cmds, err := pipe.Exec(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to Exec in get metrics values: %w", err)
-	}
-
 	resultByMetrics := make([]*redis.ZSliceCmd, 0, len(metrics))
 
-	for _, cmd := range cmds {
-		res, ok := cmd.(*redis.ZSliceCmd)
-		if !ok {
-			return nil, fmt.Errorf("failed to convert cmd response to *ZSliceCmd in get metrics values")
-		}
-
-		resultByMetrics = append(resultByMetrics, res)
+	for _, metric := range metrics {
+		rng := &redis.ZRangeBy{Min: strconv.FormatInt(from, 10), Max: strconv.FormatInt(until, 10)}
+		result := c.ZRangeByScoreWithScores(connector.context, metricDataKey(metric), rng)
+		resultByMetrics = append(resultByMetrics, result)
 	}
 
-	result := make(map[string][]*moira.MetricValue, len(resultByMetrics))
+	res := make(map[string][]*moira.MetricValue, len(resultByMetrics))
 
 	for i, resultByMetric := range resultByMetrics {
 		metric := metrics[i]
 		metricsValues, err := reply.MetricValues(resultByMetric)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert ZSliceCmd to metric values in get metrics values: %w", err)
+			return nil, err
 		}
-
-		result[metric] = metricsValues
+		res[metric] = metricsValues
 	}
-
-	return result, nil
+	return res, nil
 }
 
 // GetMetricRetention gets given metric retention, if retention is empty then return default retention value(60).
