@@ -3,7 +3,6 @@ package redis
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"testing"
 	"time"
@@ -22,111 +21,6 @@ const (
 	toInf   = "+inf"
 	fromInf = "-inf"
 )
-
-func saveMetricsWithRandomValues(
-	connector *DbConnector,
-	metricNames []string,
-	metricPattern string,
-	pointNum int,
-) error {
-	for i := 0; i < pointNum; i++ {
-		matchedMetrics := make(map[string]*moira.MatchedMetric, len(metricNames))
-
-		for _, metricName := range metricNames {
-			matchedMetric := &moira.MatchedMetric{
-				Metric:             metricName,
-				Patterns:           []string{metricPattern},
-				Value:              rand.Float64(),
-				Timestamp:          int64(i),
-				RetentionTimestamp: int64(i),
-				Retention:          rand.Int(),
-			}
-
-			matchedMetrics[metricName] = matchedMetric
-		}
-
-		if err := connector.SaveMetrics(matchedMetrics); err != nil {
-			return fmt.Errorf("failed to save matched metrics: %w", err)
-		}
-	}
-
-	return nil
-}
-
-// randStringBytesMaskImpr function, which is needed for fast generation of random strings.
-func randStringBytesMaskImpr(n, letterIdxBits, letterIdxMax int, letterIdxMask int64, letterBytes []byte) string {
-	b := make([]byte, n)
-	// A rand.Int63() generates 63 random bits, enough for letterIdxMax letters!
-	for i, cache, remain := n-1, rand.Int63(), letterIdxMax; i >= 0; {
-		if remain == 0 {
-			cache, remain = rand.Int63(), letterIdxMax
-		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
-			i--
-		}
-		cache >>= letterIdxBits
-		remain--
-	}
-
-	return string(b)
-}
-
-func BenchmarkGetMetricsValues(b *testing.B) {
-	const (
-		metricNameLen = 20
-		metricPattern = "random-pattern"
-		letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		letterIdxBits = 6                    // 6 bits to represent a letter index
-		letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-		letterIdxMax  = 63 / letterIdxBits   // number of letter indices fitting in 63 bits
-		pointsNum     = 10
-	)
-
-	testcases := map[string]struct {
-		pointsNum  int
-		metricsNum int
-	}{
-		"100-metrics": {
-			pointsNum:  pointsNum,
-			metricsNum: 100,
-		},
-		"1000-metrics": {
-			pointsNum:  pointsNum,
-			metricsNum: 1000,
-		},
-		"1500-metrics": {
-			pointsNum:  pointsNum,
-			metricsNum: 1500,
-		},
-	}
-
-	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger)
-	database.Flush()
-
-	for testname, testcase := range testcases {
-		b.Run(testname, func(b *testing.B) {
-			randomMetrics := make([]string, 0, testcase.metricsNum)
-			for i := 0; i < testcase.metricsNum; i++ {
-				randomMetrics = append(randomMetrics, randStringBytesMaskImpr(metricNameLen, letterIdxBits, letterIdxMax, letterIdxMask, []byte(letterBytes)))
-			}
-
-			database.Flush()
-			if err := saveMetricsWithRandomValues(database, randomMetrics, metricPattern, testcase.pointsNum); err != nil {
-				b.Fatalf("failed to save metrics with random values: %s", err.Error())
-			}
-
-			b.ResetTimer()
-
-			for i := 0; i < b.N; i++ {
-				if _, err := database.GetMetricsValues(randomMetrics, 0, int64(testcase.pointsNum)); err != nil {
-					b.Fatalf("failed to get metrics values: %s", err.Error())
-				}
-			}
-		})
-	}
-}
 
 func TestMetricsStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
