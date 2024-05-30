@@ -69,6 +69,7 @@ var (
 	RoleAdmin     Role = "admin"
 )
 
+// Returns the role of the given user
 func (auth *Authorization) GetRole(login string) Role {
 	if !auth.IsEnabled() {
 		return RoleUndefined
