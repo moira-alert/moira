@@ -10,18 +10,12 @@ import (
 	slackdown "github.com/moira-alert/blackfriday-slack"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/senders/emoji_provider"
 
 	slack_client "github.com/slack-go/slack"
 )
 
 const (
-	okEmoji        = ":moira-state-ok:"
-	warnEmoji      = ":moira-state-warn:"
-	errorEmoji     = ":moira-state-error:"
-	nodataEmoji    = ":moira-state-nodata:"
-	exceptionEmoji = ":moira-state-exception:"
-	testEmoji      = ":moira-state-test:"
-
 	messageMaxCharacters = 4000
 
 	// see errors https://api.slack.com/methods/chat.postMessage
@@ -31,29 +25,23 @@ const (
 	quotes                   = "```"
 )
 
-var stateEmoji = map[moira.State]string{
-	moira.StateOK:        okEmoji,
-	moira.StateWARN:      warnEmoji,
-	moira.StateERROR:     errorEmoji,
-	moira.StateNODATA:    nodataEmoji,
-	moira.StateEXCEPTION: exceptionEmoji,
-	moira.StateTEST:      testEmoji,
-}
-
 // Structure that represents the Slack configuration in the YAML file.
 type config struct {
-	APIToken string `mapstructure:"api_token"`
-	UseEmoji bool   `mapstructure:"use_emoji"`
-	FrontURI string `mapstructure:"front_uri"`
+	APIToken     string            `mapstructure:"api_token"`
+	UseEmoji     bool              `mapstructure:"use_emoji"`
+	FrontURI     string            `mapstructure:"front_uri"`
+	DefaultEmoji string            `mapstructure:"default_emoji"`
+	EmojiMap     map[string]string `mapstructure:"emoji_map"`
 }
 
 // Sender implements moira sender interface via slack.
 type Sender struct {
-	frontURI string
-	useEmoji bool
-	logger   moira.Logger
-	location *time.Location
-	client   *slack_client.Client
+	frontURI      string
+	useEmoji      bool
+	emojiProvider emoji_provider.StateEmojiGetter
+	logger        moira.Logger
+	location      *time.Location
+	client        *slack_client.Client
 }
 
 // Init read yaml config.
@@ -67,6 +55,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read slack api_token from config")
 	}
+	emojiProvider, err := emoji_provider.NewEmojiProvider(cfg.DefaultEmoji, cfg.EmojiMap)
+	if err != nil {
+		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
+	}
+	sender.emojiProvider = emojiProvider
 	sender.useEmoji = cfg.UseEmoji
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI
@@ -81,7 +74,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	useDirectMessaging := useDirectMessaging(contact.Value)
 
 	state := events.GetCurrentState(throttled)
-	emoji := sender.getStateEmoji(state)
+	emoji := sender.emojiProvider.GetStateEmoji(state)
 
 	channelID, threadTimestamp, err := sender.sendMessage(message, contact.Value, trigger.ID, useDirectMessaging, emoji)
 	if err != nil {
@@ -250,16 +243,6 @@ func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, trig
 	}
 
 	return nil
-}
-
-// getStateEmoji returns corresponding state emoji.
-func (sender *Sender) getStateEmoji(subjectState moira.State) string {
-	if sender.useEmoji {
-		if emoji, ok := stateEmoji[subjectState]; ok {
-			return emoji
-		}
-	}
-	return slack_client.DEFAULT_MESSAGE_ICON_EMOJI
 }
 
 // useDirectMessaging returns true if user contact is provided.

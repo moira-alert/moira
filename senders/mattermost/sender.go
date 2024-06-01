@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/senders/emoji_provider"
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mitchellh/mapstructure"
@@ -17,21 +18,31 @@ import (
 
 // Structure that represents the Mattermost configuration in the YAML file.
 type config struct {
-	Url         string `mapstructure:"url"`
-	InsecureTLS bool   `mapstructure:"insecure_tls"`
-	APIToken    string `mapstructure:"api_token"`
-	FrontURI    string `mapstructure:"front_uri"`
+	Url          string            `mapstructure:"url"`
+	InsecureTLS  bool              `mapstructure:"insecure_tls"`
+	APIToken     string            `mapstructure:"api_token"`
+	FrontURI     string            `mapstructure:"front_uri"`
+	UseEmoji     bool              `mapstructure:"use_emoji"`
+	DefaultEmoji string            `mapstructure:"default_emoji"`
+	EmojiMap     map[string]string `mapstructure:"emoji_map"`
 }
 
 // Sender posts messages to Mattermost chat.
 // It implements moira.Sender.
 // You must call Init method before SendEvents method.
 type Sender struct {
-	frontURI string
-	logger   moira.Logger
-	location *time.Location
-	client   Client
+	frontURI      string
+	useEmoji      bool
+	emojiProvider emoji_provider.StateEmojiGetter
+	logger        moira.Logger
+	location      *time.Location
+	client        Client
 }
+
+const (
+	messageMaxCharacters = 4_000
+	quotas               = "```"
+)
 
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
@@ -44,11 +55,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.Url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
+
 	client := model.NewAPIv4Client(cfg.Url)
 
-	if err != nil {
-		return fmt.Errorf("can not parse insecure_tls: %w", err)
-	}
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -56,6 +65,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			},
 		},
 	}
+
 	sender.client = client
 
 	if cfg.APIToken == "" {
@@ -66,7 +76,14 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.FrontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
+
+	emojiProvider, err := emoji_provider.NewEmojiProvider(cfg.DefaultEmoji, cfg.EmojiMap)
+	if err != nil {
+		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
+	}
+	sender.emojiProvider = emojiProvider
 	sender.frontURI = cfg.FrontURI
+	sender.useEmoji = cfg.UseEmoji
 	sender.location = location
 	sender.logger = logger
 
@@ -96,10 +113,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
-	const messageMaxCharacters = 4_000
-
 	var message strings.Builder
-
 	title := sender.buildTitle(events, trigger, throttled)
 	titleLen := len([]rune(title))
 
@@ -112,7 +126,6 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
-
 	if descLen != descNewLen {
 		desc = desc[:descNewLen] + "...\n"
 	}
@@ -136,7 +149,12 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	state := events.GetCurrentState(throttled)
-	title := fmt.Sprintf("**%s**", state)
+	title := ""
+	if sender.useEmoji {
+		title += sender.emojiProvider.GetStateEmoji(state) + " "
+	}
+
+	title += fmt.Sprintf("**%s**", state)
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" [%s](%s)", trigger.Name, triggerURI)
@@ -163,19 +181,26 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	}
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
-	eventsString := "```"
+	eventsString := quotas
 	var tailString string
 
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
+		line := fmt.Sprintf(
+			"\n%s: %s = %s (%s to %s)",
+			event.FormatTimestamp(sender.location, moira.DefaultTimeFormat),
+			event.Metric,
+			event.GetMetricsValues(moira.DefaultNotificationSettings),
+			event.OldState,
+			event.State,
+		)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len([]rune("```")) + len([]rune(tailString))
+		tailStringLen := len([]rune(quotas)) + len([]rune(tailString))
 		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
@@ -184,7 +209,8 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 		eventsString += line
 		eventsPrinted++
 	}
-	eventsString += "```"
+	eventsString += "\n"
+	eventsString += quotas
 
 	if eventsLenLimitReached {
 		eventsString += tailString

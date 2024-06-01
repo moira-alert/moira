@@ -42,8 +42,9 @@ type Config struct {
 
 // Authorization contains authorization configuration.
 type Authorization struct {
-	AdminList map[string]struct{}
-	Enabled   bool
+	AdminList           map[string]struct{}
+	Enabled             bool
+	AllowedContactTypes map[string]struct{}
 }
 
 // IsEnabled returns true if auth is enabled and false otherwise.

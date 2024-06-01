@@ -463,7 +463,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*mo
 			var affected int
 			affected, err = connector.resaveNotifications(ctx, pipe, types.ToResaveOld, types.ToResaveNew)
 			if err != nil {
-				return fmt.Errorf("failed to resave notifications in transaction")
+				return fmt.Errorf("failed to resave notifications in transaction: %w", err)
 			}
 
 			if affected != len(types.ToResaveOld)+len(types.ToResaveNew) {

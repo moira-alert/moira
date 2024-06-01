@@ -18,13 +18,32 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
+var (
+	ErrCleanUpDurationLessThanZero    = errors.New("clean up duration value must be greater than zero, otherwise the current metrics may be deleted")
+	ErrCleanUpDurationGreaterThanZero = errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed")
+)
+
+func (connector *DbConnector) addPatterns(patterns ...string) error {
+	ctx := connector.context
+	client := *connector.client
+
+	if _, err := client.SAdd(ctx, patternsListKey, patterns).Result(); err != nil {
+		return fmt.Errorf("failed to add moira patterns, error: %w", err)
+	}
+
+	return nil
+}
+
 // GetPatterns gets updated patterns array.
 func (connector *DbConnector) GetPatterns() ([]string, error) {
-	c := *connector.client
-	patterns, err := c.SMembers(connector.context, patternsListKey).Result()
+	ctx := connector.context
+	client := *connector.client
+
+	patterns, err := client.SMembers(ctx, patternsListKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get moira patterns, error: %w", err)
 	}
+
 	return patterns, nil
 }
 
@@ -239,6 +258,7 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	if _, err := c.SAdd(connector.context, patternMetricsKey(pattern), metric).Result(); err != nil {
 		return fmt.Errorf("failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %w", pattern, metric, err)
 	}
+
 	return nil
 }
 
@@ -306,15 +326,17 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 	return nil
 }
 
-// RemoveMetricValues remove metric timestamps values from 0 to given time.
-func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) (int64, error) {
+// RemoveMetricValues remove values by metrics from the interval of passed parameters, if they are not in the metricsCache.
+// In from and to, expect either -inf, +inf, or timestamps as strings.
+func (connector *DbConnector) RemoveMetricValues(metric string, from, to string) (int64, error) {
 	if !connector.needRemoveMetrics(metric) {
 		return 0, nil
 	}
+
 	c := *connector.client
-	result, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result()
+	result, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), from, to).Result()
 	if err != nil {
-		return 0, fmt.Errorf("failed to remove metrics from -inf to %v, error: %w", toTime, err)
+		return 0, fmt.Errorf("failed to remove metrics from %s to %s, error: %w", from, to, err)
 	}
 
 	return result, nil
@@ -344,23 +366,25 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 	return err == nil
 }
 
-func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) error {
+func cleanUpMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, from, to string) error {
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
 	var count int64
 
 	for metricsIterator.Next(connector.context) {
 		key := metricsIterator.Val()
 		metric := strings.TrimPrefix(key, metricDataKey(""))
-		deletedCount, err := flushMetric(connector, metric, duration)
+
+		deletedCount, err := connector.RemoveMetricValues(metric, from, to)
 		if err != nil {
 			return err
 		}
+
 		count += deletedCount
 	}
 
 	connector.logger.Info().
 		Int64("count deleted metrics", count).
-		Msg("Cleaned up usefully metrics for trigger")
+		Msg("Cleaned up metrics")
 
 	return nil
 }
@@ -388,12 +412,104 @@ func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.
 
 func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) error {
 	if duration >= 0 {
-		return errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed")
+		return ErrCleanUpDurationGreaterThanZero
 	}
 
+	from := "-inf"
+	toTs := time.Now().UTC().Add(duration).Unix()
+	to := strconv.FormatInt(toTs, 10)
+
 	return connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
-		return cleanUpOutdatedMetricsOnRedisNode(connector, client, duration)
+		return cleanUpMetricsOnRedisNode(connector, client, from, to)
 	})
+}
+
+func (connector *DbConnector) CleanUpFutureMetrics(duration time.Duration) error {
+	if duration <= 0 {
+		return ErrCleanUpDurationLessThanZero
+	}
+
+	fromTs := connector.clock.Now().Add(duration).Unix()
+	from := strconv.FormatInt(fromTs, 10)
+	to := "+inf"
+
+	return connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
+		return cleanUpMetricsOnRedisNode(connector, client, from, to)
+	})
+}
+
+// CleanupOutdatedPatternMetrics removes already deleted metrics from the moira-pattern-metrics key.
+func (connector *DbConnector) CleanupOutdatedPatternMetrics() (int64, error) {
+	var count int64
+
+	ctx := connector.context
+	client := *connector.client
+
+	patterns, err := connector.GetPatterns()
+	if err != nil {
+		return count, fmt.Errorf("failed to get patterns: %w", err)
+	}
+
+	pipe := client.TxPipeline()
+
+	for _, pattern := range patterns {
+		nonExistentMetrics, err := connector.getNonExistentPatternMetrics(pattern)
+		if err != nil {
+			return count, fmt.Errorf("failed to get non existent metrics by pattern: %w", err)
+		}
+
+		for _, metric := range nonExistentMetrics {
+			pipe.SRem(ctx, patternMetricsKey(pattern), metric)
+			count++
+		}
+	}
+
+	if _, err := pipe.Exec(ctx); err != nil {
+		return count, fmt.Errorf("failed to remove outdated pattern metrics: %w", err)
+	}
+
+	return count, nil
+}
+
+func (connector *DbConnector) getNonExistentPatternMetrics(pattern string) ([]string, error) {
+	ctx := connector.context
+	client := *connector.client
+
+	metrics, err := connector.GetPatternMetrics(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pattern metrics: %w", err)
+	}
+
+	pipe := client.TxPipeline()
+
+	for _, metric := range metrics {
+		pipe.Exists(ctx, metricDataKey(metric))
+	}
+
+	exec, err := pipe.Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to Exec Exists metric by pattern: %w", err)
+	}
+
+	nonExistentMetrics := make([]string, 0)
+
+	for i, cmder := range exec {
+		cmd, ok := cmder.(*redis.IntCmd)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert cmder to intcmd result: %w", err)
+		}
+
+		res, err := cmd.Result()
+		if err != nil {
+			return nil, err
+		}
+
+		if res == 0 {
+			nonExistentMetrics = append(nonExistentMetrics, metrics[i])
+		}
+	}
+
+	return nonExistentMetrics, nil
 }
 
 // CleanUpAbandonedRetentions removes metric retention keys that have no corresponding metric data.
@@ -473,16 +589,6 @@ func removeAllMetricsOnRedisNode(connector *DbConnector, client redis.UniversalC
 // RemoveAllMetrics removes all metrics.
 func (connector *DbConnector) RemoveAllMetrics() error {
 	return connector.callFunc(removeAllMetricsOnRedisNode)
-}
-
-func flushMetric(database moira.Database, metric string, duration time.Duration) (int64, error) {
-	lastTs := time.Now().UTC()
-	toTs := lastTs.Add(duration).Unix()
-	deletedCount, err := database.RemoveMetricValues(metric, toTs)
-	if err != nil {
-		return deletedCount, err
-	}
-	return deletedCount, nil
 }
 
 var patternsListKey = "moira-pattern-list"

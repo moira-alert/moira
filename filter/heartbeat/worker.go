@@ -39,22 +39,23 @@ func (worker *Worker) Start() {
 			case <-checkTicker.C:
 				newCount := worker.metrics.TotalMetricsReceived.Count()
 				if newCount != count {
-					worker.logger.Debug().
-						Int64("from", count).
-						Int64("to", newCount).
-						Msg("Heartbeat was updated")
-
 					if err := worker.database.UpdateMetricsHeartbeat(); err != nil {
-						worker.logger.Info().
+						worker.logger.Error().
 							Error(err).
-							Msg("Save state failed")
+							Msg("Update metrics heartbeat failed")
 					} else {
+						worker.logger.Debug().
+							Int64("from", count).
+							Int64("to", newCount).
+							Msg("Heartbeat was updated")
+
 						count = newCount
 					}
 				}
 			}
 		}
 	})
+
 	worker.logger.Info().Msg("Moira Filter Heartbeat started")
 }
 

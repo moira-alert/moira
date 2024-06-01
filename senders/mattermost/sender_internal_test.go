@@ -111,7 +111,7 @@ func TestBuildMessage(t *testing.T) {
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
 				"```\n" +
-				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```"
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```"
 			So(msg, ShouldEqual, expected)
 		})
 
@@ -122,7 +122,7 @@ func TestBuildMessage(t *testing.T) {
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
 				"```\n" +
-				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```" + "\n" +
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```" + "\n" +
 				"Please, *fix your system or tune this trigger* to generate less events."
 			So(msg, ShouldEqual, expected)
 		})
@@ -134,7 +134,7 @@ func TestBuildMessage(t *testing.T) {
 				"```\n" +
 				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n" +
 				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n" +
-				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```"
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -168,7 +168,7 @@ func TestBuildMessage(t *testing.T) {
 					strings.Repeat("a", 2100) + "\n" +
 					"```\n" +
 					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 39) +
-					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```"
+					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```"
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -179,7 +179,7 @@ func TestBuildMessage(t *testing.T) {
 					desc + "\n" +
 					"```\n" +
 					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 43) +
-					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```"
+					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```"
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -189,7 +189,7 @@ func TestBuildMessage(t *testing.T) {
 					strings.Repeat("a", 1984) + "...\n" +
 					"```\n" +
 					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 40) +
-					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```\n" +
+					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```\n" +
 					"...and 3 more events."
 				So(actual, ShouldResemble, expected)
 			})

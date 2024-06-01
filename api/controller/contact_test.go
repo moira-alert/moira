@@ -67,6 +67,7 @@ func TestGetContactById(t *testing.T) {
 	Convey("Get contact by id should be success", t, func() {
 		contact := moira.ContactData{
 			ID:    uuid.Must(uuid.NewV4()).String(),
+			Name:  "awesome_name",
 			Type:  "slack",
 			User:  "awesome_moira_user",
 			Value: "awesome_moira_user@gmail.com",
@@ -79,6 +80,7 @@ func TestGetContactById(t *testing.T) {
 			ShouldResemble,
 			&dto.Contact{
 				ID:    contact.ID,
+				Name:  contact.Name,
 				Type:  contact.Type,
 				User:  contact.User,
 				Value: contact.Value,
@@ -109,17 +111,30 @@ func TestCreateContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
-	const userLogin = "user"
-	const teamID = "team"
+
+	const (
+		userLogin             = "user"
+		teamID                = "team"
+		contactType           = "mail"
+		notAllowedContactType = "mattermost"
+		contactValue          = "some@mail.com"
+	)
+
+	auth := &api.Authorization{
+		Enabled: true,
+		AllowedContactTypes: map[string]struct{}{
+			contactType: {},
+		},
+	}
 
 	Convey("Create for user", t, func() {
 		Convey("Success", func() {
 			contact := &dto.Contact{
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 		})
@@ -127,8 +142,8 @@ func TestCreateContact(t *testing.T) {
 		Convey("Success with id", func() {
 			contact := dto.Contact{
 				ID:    uuid.Must(uuid.NewV4()).String(),
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			expectedContact := moira.ContactData{
 				ID:    contact.ID,
@@ -138,7 +153,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
-			err := CreateContact(dataBase, &contact, userLogin, "")
+			err := CreateContact(dataBase, auth, &contact, userLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 			So(contact.ID, ShouldResemble, contact.ID)
@@ -147,34 +162,71 @@ func TestCreateContact(t *testing.T) {
 		Convey("Contact exists by id", func() {
 			contact := &dto.Contact{
 				ID:    uuid.Must(uuid.NewV4()).String(),
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, nil)
-			err := CreateContact(dataBase, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists")))
 		})
 
 		Convey("Error get contact", func() {
 			contact := &dto.Contact{
 				ID:    uuid.Must(uuid.NewV4()).String(),
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, err)
-			expected := CreateContact(dataBase, contact, userLogin, "")
+			expected := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
+		})
+
+		Convey("Error create now allowed contact", func() {
+			contact := &dto.Contact{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Value: contactValue,
+				Type:  notAllowedContactType,
+			}
+			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			So(err, ShouldResemble, expectedErr)
+		})
+
+		Convey("Successfully create not allowed contact with disabled auth", func() {
+			auth.Enabled = false
+			defer func() {
+				auth.Enabled = true
+			}()
+
+			contact := &dto.Contact{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Value: contactValue,
+				Type:  notAllowedContactType,
+			}
+
+			expectedContact := moira.ContactData{
+				ID:    contact.ID,
+				Value: contact.Value,
+				Type:  contact.Type,
+				User:  userLogin,
+			}
+
+			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
+			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
+
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			So(err, ShouldBeNil)
 		})
 
 		Convey("Error save contact", func() {
 			contact := &dto.Contact{
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(err)
-			expected := CreateContact(dataBase, contact, userLogin, "")
+			expected := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(expected, ShouldResemble, &api.ErrorResponse{
 				ErrorText:      err.Error(),
 				HTTPStatusCode: http.StatusInternalServerError,
@@ -187,11 +239,11 @@ func TestCreateContact(t *testing.T) {
 	Convey("Create for team", t, func() {
 		Convey("Success", func() {
 			contact := &dto.Contact{
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, contact, "", teamID)
+			err := CreateContact(dataBase, auth, contact, "", teamID)
 			So(err, ShouldBeNil)
 			So(contact.TeamID, ShouldResemble, teamID)
 		})
@@ -199,8 +251,8 @@ func TestCreateContact(t *testing.T) {
 		Convey("Success with id", func() {
 			contact := dto.Contact{
 				ID:    uuid.Must(uuid.NewV4()).String(),
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			expectedContact := moira.ContactData{
 				ID:    contact.ID,
@@ -210,43 +262,102 @@ func TestCreateContact(t *testing.T) {
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
-			err := CreateContact(dataBase, &contact, "", teamID)
+			err := CreateContact(dataBase, auth, &contact, "", teamID)
 			So(err, ShouldBeNil)
 			So(contact.TeamID, ShouldResemble, teamID)
 			So(contact.ID, ShouldResemble, contact.ID)
 		})
 
+		Convey("Success with custom name", func() {
+			contact := dto.Contact{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Value: contactValue,
+				Type:  contactType,
+				Name:  "some-name",
+			}
+			expectedContact := moira.ContactData{
+				ID:    contact.ID,
+				Value: contact.Value,
+				Type:  contact.Type,
+				Name:  contact.Name,
+				Team:  teamID,
+			}
+			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
+			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
+			err := CreateContact(dataBase, auth, &contact, "", teamID)
+			So(err, ShouldBeNil)
+			So(contact.TeamID, ShouldResemble, teamID)
+			So(contact.Name, ShouldResemble, expectedContact.Name)
+		})
+
 		Convey("Contact exists by id", func() {
 			contact := &dto.Contact{
 				ID:    uuid.Must(uuid.NewV4()).String(),
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, nil)
-			err := CreateContact(dataBase, contact, "", teamID)
+			err := CreateContact(dataBase, auth, contact, "", teamID)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists")))
 		})
 
 		Convey("Error get contact", func() {
 			contact := &dto.Contact{
 				ID:    uuid.Must(uuid.NewV4()).String(),
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, err)
-			expected := CreateContact(dataBase, contact, "", teamID)
+			expected := CreateContact(dataBase, auth, contact, "", teamID)
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
+		})
+
+		Convey("Error create not allowed contact", func() {
+			contact := &dto.Contact{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Value: contactValue,
+				Type:  notAllowedContactType,
+			}
+			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
+			err := CreateContact(dataBase, auth, contact, "", teamID)
+			So(err, ShouldResemble, expectedErr)
+		})
+
+		Convey("Successfully create not allowed contact with disabled auth", func() {
+			auth.Enabled = false
+			defer func() {
+				auth.Enabled = true
+			}()
+
+			contact := &dto.Contact{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Value: contactValue,
+				Type:  notAllowedContactType,
+			}
+
+			expectedContact := moira.ContactData{
+				ID:    contact.ID,
+				Value: contact.Value,
+				Type:  contact.Type,
+				Team:  teamID,
+			}
+
+			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
+			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
+
+			err := CreateContact(dataBase, auth, contact, "", teamID)
+			So(err, ShouldBeNil)
 		})
 
 		Convey("Error save contact", func() {
 			contact := &dto.Contact{
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(err)
-			expected := CreateContact(dataBase, contact, "", teamID)
+			expected := CreateContact(dataBase, auth, contact, "", teamID)
 			So(expected, ShouldResemble, &api.ErrorResponse{
 				ErrorText:      err.Error(),
 				HTTPStatusCode: http.StatusInternalServerError,
@@ -255,13 +366,98 @@ func TestCreateContact(t *testing.T) {
 			})
 		})
 	})
+
 	Convey("Error on create with both: userLogin and teamID specified", t, func() {
 		contact := &dto.Contact{
-			Value: "some@mail.com",
-			Type:  "mail",
+			Value: contactValue,
+			Type:  contactType,
 		}
-		err := CreateContact(dataBase, contact, userLogin, teamID)
+		err := CreateContact(dataBase, auth, contact, userLogin, teamID)
 		So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified")))
+	})
+}
+
+func TestAdminsCreatesContact(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
+	const (
+		userLogin             = "user"
+		adminLogin            = "admin"
+		contactType           = "mail"
+		notAllowedContactType = "mattermost"
+		contactValue          = "some@mail.com"
+	)
+
+	auth := &api.Authorization{
+		Enabled:   true,
+		AdminList: map[string]struct{}{adminLogin: {}},
+		AllowedContactTypes: map[string]struct{}{
+			contactType: {},
+		},
+	}
+
+	Convey("Create for user", t, func() {
+		Convey("The same user", func() {
+			contact := &dto.Contact{
+				Value: contactValue,
+				Type:  contactType,
+				User:  userLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, userLogin)
+		})
+
+		Convey("The same user by admin", func() {
+			contact := &dto.Contact{
+				Value: contactValue,
+				Type:  contactType,
+				User:  adminLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, adminLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, adminLogin)
+		})
+
+		Convey("Non admin can not create contact for other user", func() {
+			contact := &dto.Contact{
+				Value: contactValue,
+				Type:  contactType,
+				User:  adminLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, userLogin)
+		})
+
+		Convey("Admin can create contact for other user", func() {
+			contact := &dto.Contact{
+				Value: contactValue,
+				Type:  contactType,
+				User:  userLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, adminLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, userLogin)
+		})
+
+		Convey("Admin can create not allowed contact", func() {
+			contact := &dto.Contact{
+				Value: contactValue,
+				Type:  notAllowedContactType,
+				User:  userLogin,
+			}
+			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+			err := CreateContact(dataBase, auth, contact, adminLogin, "")
+			So(err, ShouldBeNil)
+			So(contact.User, ShouldResemble, userLogin)
+		})
 	})
 }
 
@@ -269,33 +465,91 @@ func TestUpdateContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
-	const userLogin = "user"
-	const teamID = "team"
+
+	const (
+		userLogin             = "user"
+		teamID                = "team"
+		contactType           = "mail"
+		contactValue          = "some@mail.com"
+		notAllowedContactType = "mattermost"
+	)
+
+	auth := &api.Authorization{
+		Enabled: true,
+		AllowedContactTypes: map[string]struct{}{
+			contactType: {},
+		},
+	}
 
 	Convey("User update", t, func() {
 		Convey("Success", func() {
 			contactDTO := dto.Contact{
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Name:  "some-name",
+				Type:  contactType,
 			}
 			contactID := uuid.Must(uuid.NewV4()).String()
 			contact := moira.ContactData{
 				Value: contactDTO.Value,
 				Type:  contactDTO.Type,
+				Name:  contactDTO.Name,
 				ID:    contactID,
 				User:  userLogin,
 			}
 			dataBase.EXPECT().SaveContact(&contact).Return(nil)
-			expectedContact, err := UpdateContact(dataBase, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
 			So(err, ShouldBeNil)
 			So(expectedContact.User, ShouldResemble, userLogin)
 			So(expectedContact.ID, ShouldResemble, contactID)
+			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
+		})
+
+		Convey("Error update not allowed contact", func() {
+			contactDTO := dto.Contact{
+				Value: contactValue,
+				Type:  notAllowedContactType,
+			}
+			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
+			contactID := uuid.Must(uuid.NewV4()).String()
+			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			So(err, ShouldResemble, expectedErr)
+			So(expectedContact.User, ShouldResemble, contactDTO.User)
+			So(expectedContact.ID, ShouldResemble, contactDTO.ID)
+			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
+		})
+
+		Convey("Successfully update not allowed contact with disabled auth", func() {
+			auth.Enabled = false
+			defer func() {
+				auth.Enabled = true
+			}()
+
+			contactDTO := dto.Contact{
+				Value: contactValue,
+				Name:  "some-name",
+				Type:  notAllowedContactType,
+			}
+			contactID := uuid.Must(uuid.NewV4()).String()
+			contact := moira.ContactData{
+				Value: contactDTO.Value,
+				Type:  contactDTO.Type,
+				Name:  contactDTO.Name,
+				ID:    contactID,
+				User:  userLogin,
+			}
+
+			dataBase.EXPECT().SaveContact(&contact).Return(nil)
+			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			So(err, ShouldBeNil)
+			So(expectedContact.User, ShouldResemble, userLogin)
+			So(expectedContact.ID, ShouldResemble, contactID)
+			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
 		})
 
 		Convey("Error save", func() {
 			contactDTO := dto.Contact{
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			contactID := uuid.Must(uuid.NewV4()).String()
 			contact := moira.ContactData{
@@ -306,17 +560,18 @@ func TestUpdateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops")
 			dataBase.EXPECT().SaveContact(&contact).Return(err)
-			expectedContact, actual := UpdateContact(dataBase, contactDTO, contact)
+			expectedContact, actual := UpdateContact(dataBase, auth, contactDTO, contact)
 			So(actual, ShouldResemble, api.ErrorInternalServer(err))
 			So(expectedContact.User, ShouldResemble, contactDTO.User)
 			So(expectedContact.ID, ShouldResemble, contactDTO.ID)
 		})
 	})
+
 	Convey("Team update", t, func() {
 		Convey("Success", func() {
 			contactDTO := dto.Contact{
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			contactID := uuid.Must(uuid.NewV4()).String()
 			contact := moira.ContactData{
@@ -326,7 +581,7 @@ func TestUpdateContact(t *testing.T) {
 				Team:  teamID,
 			}
 			dataBase.EXPECT().SaveContact(&contact).Return(nil)
-			expectedContact, err := UpdateContact(dataBase, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
+			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
 			So(err, ShouldBeNil)
 			So(expectedContact.TeamID, ShouldResemble, teamID)
 			So(expectedContact.ID, ShouldResemble, contactID)
@@ -334,8 +589,8 @@ func TestUpdateContact(t *testing.T) {
 
 		Convey("Error save", func() {
 			contactDTO := dto.Contact{
-				Value: "some@mail.com",
-				Type:  "mail",
+				Value: contactValue,
+				Type:  contactType,
 			}
 			contactID := uuid.Must(uuid.NewV4()).String()
 			contact := moira.ContactData{
@@ -346,10 +601,63 @@ func TestUpdateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops")
 			dataBase.EXPECT().SaveContact(&contact).Return(err)
-			expectedContact, actual := UpdateContact(dataBase, contactDTO, contact)
+			expectedContact, actual := UpdateContact(dataBase, auth, contactDTO, contact)
 			So(actual, ShouldResemble, api.ErrorInternalServer(err))
 			So(expectedContact.TeamID, ShouldResemble, contactDTO.TeamID)
 			So(expectedContact.ID, ShouldResemble, contactDTO.ID)
+		})
+	})
+}
+
+func TestIsAllowedContactType(t *testing.T) {
+	const (
+		admin                 = "admin"
+		user                  = "user"
+		allowedContactType    = "slack"
+		notAllowedContactType = "mattermost"
+	)
+
+	auth := &api.Authorization{
+		Enabled: true,
+		AdminList: map[string]struct{}{
+			admin: {},
+		},
+		AllowedContactTypes: map[string]struct{}{
+			allowedContactType: {},
+		},
+	}
+
+	Convey("Test isAllowedContactType", t, func() {
+		Convey("Test with user and allowed contact type", func() {
+			isAllowed := isAllowedToUseContactType(auth, user, allowedContactType)
+			So(isAllowed, ShouldBeTrue)
+		})
+
+		Convey("Test with user and not allowed contact type", func() {
+			isAllowed := isAllowedToUseContactType(auth, user, notAllowedContactType)
+			So(isAllowed, ShouldBeFalse)
+		})
+
+		Convey("Test with admin and allowed contact type", func() {
+			isAllowed := isAllowedToUseContactType(auth, admin, allowedContactType)
+			So(isAllowed, ShouldBeTrue)
+		})
+
+		Convey("Test with admin and not allowed contact type", func() {
+			isAllowed := isAllowedToUseContactType(auth, admin, notAllowedContactType)
+			So(isAllowed, ShouldBeTrue)
+		})
+
+		Convey("Test with disabled auth and not allowed contact type", func() {
+			auth.Enabled = false
+			isAllowed := isAllowedToUseContactType(auth, admin, notAllowedContactType)
+			So(isAllowed, ShouldBeTrue)
+		})
+
+		Convey("Test with disabled auth and allowed contact type", func() {
+			auth.Enabled = false
+			isAllowed := isAllowedToUseContactType(auth, admin, allowedContactType)
+			So(isAllowed, ShouldBeTrue)
 		})
 	})
 }
