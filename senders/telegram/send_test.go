@@ -163,7 +163,7 @@ func TestGetChat(t *testing.T) {
 		})
 
 		Convey("For private chat should fetch from DB", func() {
-			dataBase.EXPECT().GetIDByUsername(messenger, "@durov").Return("{\"type\":\"private\",\"chatId\":1}", nil)
+			dataBase.EXPECT().GetIDByUsername(messenger, "@durov").Return("{\"chatId\":1,\"type\":\"private\"}", nil)
 
 			actual, err := sender.getChat("@durov")
 			expected := &Chat{
@@ -176,7 +176,7 @@ func TestGetChat(t *testing.T) {
 		})
 
 		Convey("For group should fetch from DB", func() {
-			dataBase.EXPECT().GetIDByUsername(messenger, "somegroup / moira").Return("{\"type\":\"group\",\"chatId\":-1001494975744}", nil)
+			dataBase.EXPECT().GetIDByUsername(messenger, "somegroup / moira").Return("{\"chatId\":-1001494975744,\"type\":\"group\"}", nil)
 
 			actual, err := sender.getChat("somegroup / moira")
 			expected := &Chat{
@@ -218,7 +218,7 @@ func TestGetChat(t *testing.T) {
 		Convey("If no record exists in database for this contactValue", func() {
 			dataBase.EXPECT().GetIDByUsername(messenger, "-1001494975744/20").Return("", database.ErrNil)
 			actual, err := sender.getChat("-1001494975744/20")
-			So(err, ShouldResemble, fmt.Errorf("failed to get username uuid: nil returned"))
+			So(err.Error(), ShouldResemble, "failed to get username uuid: nil returned")
 			So(actual, ShouldBeNil)
 		})
 	})

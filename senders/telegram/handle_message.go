@@ -34,7 +34,7 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 			return "", err
 		}
 		return fmt.Sprintf("Okay, %s, your id is %s", strings.Trim(fmt.Sprintf("%s %s", message.Sender.FirstName, message.Sender.LastName), " "), chatID), nil
-	case (message.Chat.Type == telebot.ChatSuperGroup || message.Chat.Type == telebot.ChatGroup) && strings.HasPrefix(message.Text, "/start"):
+	case (message.Chat.Type == telebot.ChatSuperGroup || message.Chat.Type == telebot.ChatGroup):
 		contactValue, err := sender.getContactValueByMessage(message)
 		if err != nil {
 			return "", fmt.Errorf("failed to get contact value from message: %w", err)
@@ -44,7 +44,10 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", contactValue), nil
+		if strings.HasPrefix(message.Text, "/start") {
+			return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", contactValue), nil
+		}
+		return "", nil
 	}
 	return "I don't understand you :(", nil
 }
