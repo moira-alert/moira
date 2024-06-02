@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
@@ -12,7 +13,7 @@ import (
 
 var (
 	telegramUsersKey = "moira-telegram-users:"
-	telegramLockName = "moira-telegram-users:moira-bot-host"
+	telegramLockName = "moira-telegram-users:moira-bot-host:"
 )
 
 func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) error {
@@ -24,9 +25,9 @@ func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) er
 		iter := d.Client().Scan(d.Context(), 0, telegramUsersKey+"*", 0).Iterator()
 		for iter.Next(d.Context()) {
 			key := iter.Val()
-			if key == telegramLockName {
+			if strings.HasPrefix(key, telegramLockName) {
 				continue
-			}
+		}
 
 			oldValue, err := d.Client().Get(d.Context(), key).Result()
 			if err != nil {
@@ -83,9 +84,9 @@ func downgradeTelegramUsersRecords(logger moira.Logger, database moira.Database)
 		iter := d.Client().Scan(d.Context(), 0, telegramUsersKey+"*", 0).Iterator()
 		for iter.Next(d.Context()) {
 			key := iter.Val()
-			if key == telegramLockName {
+			if strings.HasPrefix(key, telegramLockName) {
 				continue
-			}
+		}
 
 			oldValue, err := d.Client().Get(d.Context(), key).Result()
 			if err != nil {
