@@ -13,7 +13,7 @@ import (
 	"github.com/moira-alert/moira/plotting"
 )
 
-// NotificationPackage represent sending data
+// NotificationPackage represent sending data.
 type NotificationPackage struct {
 	Events     []moira.NotificationEvent
 	Trigger    moira.TriggerData
@@ -24,12 +24,12 @@ type NotificationPackage struct {
 	DontResend bool
 }
 
-// String returns notification package summary
+// String returns notification package summary.
 func (pkg NotificationPackage) String() string {
 	return fmt.Sprintf("package of %d notifications to %s", len(pkg.Events), pkg.Contact.Value)
 }
 
-// GetWindow returns the earliest and the latest notification package timestamps
+// GetWindow returns the earliest and the latest notification package timestamps.
 func (pkg NotificationPackage) GetWindow() (from, to int64, err error) {
 	timeStamps := make([]int64, 0)
 	for _, event := range pkg.Events {
@@ -51,7 +51,7 @@ func (pkg NotificationPackage) GetWindow() (from, to int64, err error) {
 	return from, to, nil
 }
 
-// GetMetricNames returns all metric names found in package events
+// GetMetricNames returns all metric names found in package events.
 func (pkg NotificationPackage) GetMetricNames() []string {
 	metricNames := make([]string, 0)
 	for _, event := range pkg.Events {
@@ -62,7 +62,7 @@ func (pkg NotificationPackage) GetMetricNames() []string {
 	return metricNames
 }
 
-// Notifier implements notification functionality
+// Notifier implements notification functionality.
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
 	RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error
@@ -71,7 +71,7 @@ type Notifier interface {
 	GetReadBatchSize() int64
 }
 
-// StandardNotifier represent notification functionality
+// StandardNotifier represent notification functionality.
 type StandardNotifier struct {
 	waitGroup            sync.WaitGroup
 	senders              map[string]chan NotificationPackage
@@ -84,7 +84,7 @@ type StandardNotifier struct {
 	imageStores          map[string]moira.ImageStore
 }
 
-// NewNotifier is initializer for StandardNotifier
+// NewNotifier is initializer for StandardNotifier.
 func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore) *StandardNotifier {
 	return &StandardNotifier{
 		senders:              make(map[string]chan NotificationPackage),
@@ -98,11 +98,11 @@ func NewNotifier(database moira.Database, logger moira.Logger, config Config, me
 	}
 }
 
-// Send is realization of StandardNotifier Send functionality
+// Send is realization of StandardNotifier Send functionality.
 func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup) {
 	ch, found := notifier.senders[pkg.Contact.Type]
 	if !found {
-		notifier.reschedule(pkg, fmt.Sprintf("Unknown contact type '%s' [%s]", pkg.Contact.Type, pkg))
+		notifier.reschedule(pkg, fmt.Sprintf("Unknown sender contact type '%s' [%s]", pkg.Contact.Type, pkg))
 		return
 	}
 	waitGroup.Add(1)
@@ -123,7 +123,7 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 	}(pkg)
 }
 
-// GetSenders get hash of registered notifier senders
+// GetSenders get hash of registered notifier senders.
 func (notifier *StandardNotifier) GetSenders() map[string]bool {
 	hash := make(map[string]bool)
 	for key := range notifier.senders {
@@ -132,7 +132,7 @@ func (notifier *StandardNotifier) GetSenders() map[string]bool {
 	return hash
 }
 
-// GetReadBatchSize returns amount of messages notifier reads from Redis per iteration
+// GetReadBatchSize returns amount of messages notifier reads from Redis per iteration.
 func (notifier *StandardNotifier) GetReadBatchSize() int64 {
 	return notifier.config.ReadBatchSize
 }
@@ -191,7 +191,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		plots, err := notifier.buildNotificationPackagePlots(pkg, plottingLog)
 		if err != nil {
 			var event logging.EventBuilder
-			switch err.(type) {
+			switch err.(type) { // nolint:errorlint
 			case plotting.ErrNoPointsToRender:
 				event = plottingLog.Debug()
 			default:
@@ -215,7 +215,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			notifier.metrics.MarkSendersOkMetrics(pkg.Contact.Type)
 			continue
 		}
-		switch e := err.(type) {
+		switch e := err.(type) { // nolint:errorlint
 		case moira.SenderBrokenContactError:
 			log.Warning().
 				Error(e).

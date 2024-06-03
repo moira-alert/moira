@@ -28,19 +28,30 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
+    - decorder
     - dogsled
     - errcheck
+    - errorlint
+    - exportloopref
     - goconst
+    - gocheckcompilerdirectives
     - gocyclo
+    - goconst
+    - godot
     - gofmt
+    - gofumpt
+    - goheader
     - goimports
     - gomnd
     - gosimple
     - govet
+    - grouper
     - ineffassign
+    - loggercheck
     - makezero
     - misspell
     - nilerr
+    - noctx
     - prealloc
     - promlinter
     - staticcheck
@@ -55,8 +66,12 @@ issues:
     - path: _test\.go
       linters:
         - gomnd
+        - errcheck
+        - goconst
 
 run:
   timeout: 5m
+  skip-files:
+    - notifier/registrator.go
   skip-dirs:
     - vendor

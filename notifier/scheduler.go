@@ -8,13 +8,13 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// Scheduler implements event scheduling functionality
+// Scheduler implements event scheduling functionality.
 type Scheduler interface {
 	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
 		contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification
 }
 
-// StandardScheduler represents standard event scheduling
+// StandardScheduler represents standard event scheduling.
 type StandardScheduler struct {
 	database moira.Database
 	metrics  *metrics.NotifierMetrics
@@ -26,7 +26,7 @@ type throttlingLevel struct {
 	count    int64
 }
 
-// NewScheduler is initializer for StandardScheduler
+// NewScheduler is initializer for StandardScheduler.
 func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
@@ -34,9 +34,10 @@ func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics
 	}
 }
 
-// ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings
+// ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings.
 func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification {
+	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger,
+) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
@@ -72,7 +73,8 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 }
 
 func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.NotificationEvent,
-	logger moira.Logger) (time.Time, bool) {
+	logger moira.Logger,
+) (time.Time, bool) {
 	// if trigger switches more than .count times in .length seconds, delay next delivery for .delay seconds
 	// processing stops after first condition matches
 	throttlingLevels := []throttlingLevel{
@@ -154,7 +156,7 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
 	endOffset := time.Duration(schedule.EndOffset) * time.Minute
 	if schedule.EndOffset < schedule.StartOffset {
-		endOffset = endOffset + (time.Hour * 24)
+		endOffset += time.Hour * 24
 	}
 
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute

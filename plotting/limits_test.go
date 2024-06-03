@@ -12,10 +12,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// TestResolveLimits tests plot limits will be calculated correctly for any metricData array
+// TestResolveLimits tests plot limits will be calculated correctly for any metricData array.
 func TestResolveLimits(t *testing.T) {
-	var minValue = -1
-	var maxValue = 10000
+	minValue := -1
+	maxValue := 10000
 	stepTime := 60
 	elementsToUse := 10
 	startTime := time.Now().UTC().Unix()
@@ -81,7 +81,7 @@ func TestResolveLimits(t *testing.T) {
 	})
 }
 
-// TestGetThresholdAxisRange tests getThresholdAxisRange returns correct axis range
+// TestGetThresholdAxisRange tests getThresholdAxisRange returns correct axis range.
 func TestGetThresholdAxisRange(t *testing.T) {
 	testLimits := plotLimits{highest: 100, lowest: -100}
 	Convey("Revert area between threshold line and x axis if necessary", t, func() {
@@ -103,7 +103,7 @@ func TestGetThresholdAxisRange(t *testing.T) {
 	})
 }
 
-// TestFormsSetContaining tests formsSetContaining checks points correctly
+// TestFormsSetContaining tests formsSetContaining checks points correctly.
 func TestFormsSetContaining(t *testing.T) {
 	Convey("check if point belongs to a given set", t, func() {
 		testLimits := plotLimits{highest: 100, lowest: -100}

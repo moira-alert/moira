@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// Worker is heartbeat worker realization
+// Worker is heartbeat worker realization.
 type Worker struct {
 	database moira.Database
 	metrics  *metrics.FilterMetrics
@@ -17,7 +17,7 @@ type Worker struct {
 	tomb     tomb.Tomb
 }
 
-// NewHeartbeatWorker creates new worker
+// NewHeartbeatWorker creates new worker.
 func NewHeartbeatWorker(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger) *Worker {
 	return &Worker{
 		database: database,
@@ -26,7 +26,7 @@ func NewHeartbeatWorker(database moira.Database, metrics *metrics.FilterMetrics,
 	}
 }
 
-// Start every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking
+// Start every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking.
 func (worker *Worker) Start() {
 	worker.tomb.Go(func() error {
 		count := worker.metrics.TotalMetricsReceived.Count()
@@ -39,26 +39,27 @@ func (worker *Worker) Start() {
 			case <-checkTicker.C:
 				newCount := worker.metrics.TotalMetricsReceived.Count()
 				if newCount != count {
-					worker.logger.Debug().
-						Int64("from", count).
-						Int64("to", newCount).
-						Msg("Heartbeat was updated")
-
 					if err := worker.database.UpdateMetricsHeartbeat(); err != nil {
-						worker.logger.Info().
+						worker.logger.Error().
 							Error(err).
-							Msg("Save state failed")
+							Msg("Update metrics heartbeat failed")
 					} else {
+						worker.logger.Debug().
+							Int64("from", count).
+							Int64("to", newCount).
+							Msg("Heartbeat was updated")
+
 						count = newCount
 					}
 				}
 			}
 		}
 	})
+
 	worker.logger.Info().Msg("Moira Filter Heartbeat started")
 }
 
-// Stop heartbeat worker
+// Stop heartbeat worker.
 func (worker *Worker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()

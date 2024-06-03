@@ -4,6 +4,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/pkg/errors"
+
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
@@ -100,6 +102,7 @@ func TestTriggerTargetMetrics_Populate(t *testing.T) {
 		}
 	})
 }
+
 func TestNewTriggerMetricsWithCapacity(t *testing.T) {
 	Convey("NewTriggerMetricsWithCapacity", t, func() {
 		capacity := 10
@@ -307,10 +310,13 @@ func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 			So(filtered, ShouldBeEmpty)
 			So(alone, ShouldBeEmpty)
 			So(err, ShouldBeError)
-			So(err.(ErrUnexpectedAloneMetric).unexpected, ShouldContainKey, "t2")
-			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldHaveLength, 2)
-			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldContain, "metric.test.3")
-			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldContain, "metric.test.4")
+
+			var convertedErr ErrUnexpectedAloneMetric
+			errors.As(err, &convertedErr)
+			So(convertedErr.unexpected, ShouldContainKey, "t2")
+			So(convertedErr.unexpected["t2"], ShouldHaveLength, 2)
+			So(convertedErr.unexpected["t2"], ShouldContain, "metric.test.3")
+			So(convertedErr.unexpected["t2"], ShouldContain, "metric.test.4")
 		})
 		Convey("origin has targets that declared as alone metrics but it is empty", func() {
 			m := TriggerMetrics{

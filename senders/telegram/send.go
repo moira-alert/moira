@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -13,9 +14,9 @@ import (
 type messageType string
 
 const (
-	// Album type used if notification has plots
+	// Album type used if notification has plots.
 	Album messageType = "album"
-	// Message type used if notification has not plot
+	// Message type used if notification has not plot.
 	Message messageType = "message"
 )
 
@@ -30,7 +31,7 @@ var characterLimits = map[messageType]int{
 	Album:   albumCaptionMaxCharacters,
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	msgType := getMessageType(plots)
 	message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
@@ -118,7 +119,7 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 	return chat, nil
 }
 
-// talk processes one talk
+// talk processes one talk.
 func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, messageType messageType) error {
 	if messageType == Album {
 		sender.logger.Debug().Msg("talk as album")
@@ -146,7 +147,9 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 	if err == nil {
 		return nil
 	}
-	if e, ok := err.(*telebot.APIError); ok {
+
+	var e *telebot.APIError
+	if ok := errors.As(err, &e); ok {
 		logger.Debug().
 			Int("code", e.Code).
 			String("msg", e.Message).

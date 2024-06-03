@@ -3,14 +3,23 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	"github.com/patrickmn/go-cache"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 	"gopkg.in/tomb.v2"
+)
+
+const (
+	toInf   = "+inf"
+	fromInf = "-inf"
 )
 
 func TestMetricsStoring(t *testing.T) {
@@ -29,7 +38,7 @@ func TestMetricsStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		//But you still can add new metrics by this pattern
+		// But you still can add new metrics by this pattern
 		err = dataBase.AddPatternMetric(pattern, metric1)
 		So(err, ShouldBeNil)
 
@@ -44,7 +53,7 @@ func TestMetricsStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actualMetric, ShouldHaveLength, 2)
 
-		//And nothing to remove
+		// And nothing to remove
 		err = dataBase.RemovePattern(pattern)
 		So(err, ShouldBeNil)
 
@@ -52,14 +61,14 @@ func TestMetricsStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		//Now save trigger with this pattern
+		// Now save trigger with this pattern
 		dataBase.SaveTrigger(trigger.ID, &trigger) //nolint
 
 		actual, err = dataBase.GetPatterns()
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, trigger.Patterns)
 
-		//And you still can get metrics by this pattern
+		// And you still can get metrics by this pattern
 		actualMetric, err = dataBase.GetPatternMetrics(pattern)
 		So(err, ShouldBeNil)
 		So(actualMetric, ShouldHaveLength, 2)
@@ -68,7 +77,7 @@ func TestMetricsStoring(t *testing.T) {
 			err = dataBase.RemovePattern(pattern)
 			So(err, ShouldBeNil)
 
-			//But you still can get metrics by this pattern
+			// But you still can get metrics by this pattern
 			actualMetric, err = dataBase.GetPatternMetrics(pattern)
 			So(err, ShouldBeNil)
 			So(actualMetric, ShouldHaveLength, 2)
@@ -77,17 +86,17 @@ func TestMetricsStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("You can remove remove pattern with metrics in one request", func() {
+		Convey("You can remove pattern with metrics in one request", func() {
 			err = dataBase.RemovePatternWithMetrics(pattern)
 			So(err, ShouldBeNil)
 		})
 
-		//Now it have not patterns and metrics for this
+		// Now it have not patterns and metrics for this
 		actual, err = dataBase.GetPatterns()
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		//And you still can get metrics by this pattern
+		// And you still can get metrics by this pattern
 		actualMetric, err = dataBase.GetPatternMetrics(pattern)
 		So(err, ShouldBeNil)
 		So(actualMetric, ShouldBeEmpty)
@@ -173,11 +182,11 @@ func TestMetricsStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric1: {}})
 
-		//Save metric with changed retention
+		// Save metric with changed retention
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: val3})
 		So(err, ShouldBeNil)
 
-		//But retention still old, because cache
+		// But retention still old, because cache
 		actualRet, err = dataBase.GetMetricRetention(metric1)
 		So(err, ShouldBeNil)
 		So(actualRet, ShouldEqual, 10)
@@ -236,48 +245,51 @@ func TestRemoveMetricValues(t *testing.T) {
 	dataBase.metricsCache = cache.New(time.Second*2, time.Minute*60)
 	dataBase.Flush()
 	defer dataBase.Flush()
-	metric1 := "my.test.super.metric"
-	pattern := "my.test.*.metric*"
-	met1 := &moira.MatchedMetric{
-		Patterns:           []string{pattern},
-		Metric:             metric1,
-		Retention:          10,
-		RetentionTimestamp: 10,
-		Timestamp:          15,
-		Value:              1,
-	}
-	met2 := &moira.MatchedMetric{
-		Patterns:           []string{pattern},
-		Metric:             metric1,
-		Retention:          10,
-		RetentionTimestamp: 20,
-		Timestamp:          24,
-		Value:              2,
-	}
-	met3 := &moira.MatchedMetric{
-		Patterns:           []string{pattern},
-		Metric:             metric1,
-		Retention:          10,
-		RetentionTimestamp: 30,
-		Timestamp:          34,
-		Value:              3,
-	}
-	met4 := &moira.MatchedMetric{
-		Patterns:           []string{pattern},
-		Metric:             metric1,
-		Retention:          10,
-		RetentionTimestamp: 40,
-		Timestamp:          46,
-		Value:              4,
-	}
 
-	Convey("Test", t, func() {
+	Convey("Test that old metrics will be deleted", t, func() {
+		metric1 := "my.test.super.metric"
+		pattern := "my.test.*.metric*"
+		met1 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: 10,
+			Timestamp:          15,
+			Value:              1,
+		}
+		met2 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: 20,
+			Timestamp:          24,
+			Value:              2,
+		}
+		met3 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: 30,
+			Timestamp:          34,
+			Value:              3,
+		}
+		met4 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: 40,
+			Timestamp:          46,
+			Value:              4,
+		}
+
+		from := fromInf
+
 		err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1})
-		So(err, ShouldBeNil) //Save metric with changed retention
+		So(err, ShouldBeNil) // Save metric with changed retention
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met2})
-		So(err, ShouldBeNil) //Save metric with changed retention
+		So(err, ShouldBeNil) // Save metric with changed retention
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met3})
-		So(err, ShouldBeNil) //Save metric with changed retention
+		So(err, ShouldBeNil) // Save metric with changed retention
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met4})
 		So(err, ShouldBeNil)
 
@@ -292,7 +304,9 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		deletedCount, err := dataBase.RemoveMetricValues(metric1, 11)
+		var toTs int64 = 11
+		to := strconv.FormatInt(toTs, 10)
+		deletedCount, err := dataBase.RemoveMetricValues(metric1, from, to)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(1))
 
@@ -306,7 +320,9 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		deletedCount, err = dataBase.RemoveMetricValues(metric1, 22)
+		toTs = 22
+		to = strconv.FormatInt(toTs, 10)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(0))
 
@@ -333,7 +349,7 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		time.Sleep(time.Second * 2)
+		dataBase.metricsCache.Flush()
 
 		err = dataBase.RemoveMetricsValues([]string{metric1}, 22)
 		So(err, ShouldBeNil)
@@ -347,9 +363,11 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		time.Sleep(time.Second * 2)
+		dataBase.metricsCache.Flush()
 
-		deletedCount, err = dataBase.RemoveMetricValues(metric1, 30)
+		toTs = 30
+		to = strconv.FormatInt(toTs, 10)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(1))
 
@@ -361,9 +379,11 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		time.Sleep(time.Second * 2)
+		dataBase.metricsCache.Flush()
 
-		deletedCount, err = dataBase.RemoveMetricValues(metric1, 39)
+		toTs = 39
+		to = strconv.FormatInt(toTs, 10)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(0))
 
@@ -375,15 +395,226 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		time.Sleep(time.Second * 2)
+		dataBase.metricsCache.Flush()
 
-		deletedCount, err = dataBase.RemoveMetricValues(metric1, 49)
+		toTs = 49
+		to = strconv.FormatInt(toTs, 10)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, from, to)
 		So(err, ShouldBeNil)
 		So(deletedCount, ShouldResemble, int64(1))
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
 		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric1: {}})
+	})
+
+	Convey("Test remove metric values", t, func() {
+		metric := "metric1"
+
+		metric1 := &moira.MatchedMetric{
+			Metric:             metric,
+			RetentionTimestamp: 10,
+			Timestamp:          10,
+			Retention:          10,
+			Value:              1,
+		}
+
+		metric2 := &moira.MatchedMetric{
+			Metric:             metric,
+			RetentionTimestamp: 20,
+			Timestamp:          20,
+			Retention:          10,
+			Value:              2,
+		}
+
+		metric3 := &moira.MatchedMetric{
+			Metric:             metric,
+			RetentionTimestamp: 30,
+			Timestamp:          30,
+			Retention:          10,
+			Value:              3,
+		}
+
+		metric4 := &moira.MatchedMetric{
+			Metric:             metric,
+			RetentionTimestamp: 40,
+			Timestamp:          40,
+			Retention:          10,
+			Value:              4,
+		}
+
+		metric5 := &moira.MatchedMetric{
+			Metric:             metric,
+			RetentionTimestamp: 50,
+			Timestamp:          50,
+			Retention:          10,
+			Value:              5,
+		}
+
+		Convey("Deleting metrics over the entire interval (from -inf to +inf)", func() {
+			defer func() {
+				dataBase.metricsCache.Flush()
+			}()
+
+			from := fromInf
+			to := toInf
+
+			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric2})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric3})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric4})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric5})
+			So(err, ShouldBeNil)
+
+			dataBase.metricsCache.Flush()
+
+			actualValues, err := dataBase.GetMetricsValues([]string{metric}, 1, 99)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+				metric: {
+					&moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 1},
+					&moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 2},
+					&moira.MetricValue{Timestamp: 30, RetentionTimestamp: 30, Value: 3},
+					&moira.MetricValue{Timestamp: 40, RetentionTimestamp: 40, Value: 4},
+					&moira.MetricValue{Timestamp: 50, RetentionTimestamp: 50, Value: 5},
+				},
+			})
+
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to)
+			So(err, ShouldBeNil)
+			So(deletedMetrics, ShouldEqual, 5)
+
+			actualValues, err = dataBase.GetMetricsValues([]string{metric}, 1, 99)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric: {}})
+		})
+
+		Convey("Deletion of metrics on the interval up to the first metric (from -inf to 5)", func() {
+			defer func() {
+				dataBase.metricsCache.Flush()
+
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
+				So(err, ShouldBeNil)
+				So(deletedMetrics, ShouldEqual, 5)
+			}()
+
+			from := fromInf
+			to := "5"
+
+			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric2})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric3})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric4})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric5})
+			So(err, ShouldBeNil)
+
+			dataBase.metricsCache.Flush()
+
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to)
+			So(err, ShouldBeNil)
+			So(deletedMetrics, ShouldEqual, 0)
+
+			actualValues, err := dataBase.GetMetricsValues([]string{metric}, 1, 99)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+				metric: {
+					&moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 1},
+					&moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 2},
+					&moira.MetricValue{Timestamp: 30, RetentionTimestamp: 30, Value: 3},
+					&moira.MetricValue{Timestamp: 40, RetentionTimestamp: 40, Value: 4},
+					&moira.MetricValue{Timestamp: 50, RetentionTimestamp: 50, Value: 5},
+				},
+			})
+		})
+
+		Convey("Deleting metrics on the interval after the last metric (from 60 to +inf)", func() {
+			defer func() {
+				dataBase.metricsCache.Flush()
+
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
+				So(err, ShouldBeNil)
+				So(deletedMetrics, ShouldEqual, 5)
+			}()
+
+			from := "60"
+			to := toInf
+
+			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric2})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric3})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric4})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric5})
+			So(err, ShouldBeNil)
+
+			dataBase.metricsCache.Flush()
+
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to)
+			So(err, ShouldBeNil)
+			So(deletedMetrics, ShouldEqual, 0)
+
+			actualValues, err := dataBase.GetMetricsValues([]string{metric}, 1, 99)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+				metric: {
+					&moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 1},
+					&moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 2},
+					&moira.MetricValue{Timestamp: 30, RetentionTimestamp: 30, Value: 3},
+					&moira.MetricValue{Timestamp: 40, RetentionTimestamp: 40, Value: 4},
+					&moira.MetricValue{Timestamp: 50, RetentionTimestamp: 50, Value: 5},
+				},
+			})
+		})
+
+		Convey("Deleting metrics inside the metric interval (from 20 to 40)", func() {
+			defer func() {
+				dataBase.metricsCache.Flush()
+
+				deletedMetrics, err := dataBase.RemoveMetricValues(metric, fromInf, toInf)
+				So(err, ShouldBeNil)
+				So(deletedMetrics, ShouldEqual, 2)
+			}()
+
+			from := "20"
+			to := "40"
+
+			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric2})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric3})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric4})
+			So(err, ShouldBeNil)
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric5})
+			So(err, ShouldBeNil)
+
+			dataBase.metricsCache.Flush()
+
+			deletedMetrics, err := dataBase.RemoveMetricValues(metric, from, to)
+			So(err, ShouldBeNil)
+			So(deletedMetrics, ShouldEqual, 3)
+
+			actualValues, err := dataBase.GetMetricsValues([]string{metric}, 1, 99)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+				metric: {
+					&moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 1},
+					&moira.MetricValue{Timestamp: 50, RetentionTimestamp: 50, Value: 5},
+				},
+			})
+		})
 	})
 }
 
@@ -495,7 +726,10 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		err = dataBase.RemovePatternWithMetrics("123")
 		So(err, ShouldNotBeNil)
 
-		deletedCount, err := dataBase.RemoveMetricValues("123", 1)
+		from := fromInf
+		var toTs int64 = 1
+		to := strconv.FormatInt(toTs, 10)
+		deletedCount, err := dataBase.RemoveMetricValues("123", from, to)
 		So(err, ShouldNotBeNil)
 		So(deletedCount, ShouldResemble, int64(0))
 
@@ -657,6 +891,452 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 	})
 }
 
+func TestCleanupFutureMetrics(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockClock := mock_clock.NewMockClock(mockCtrl)
+
+	dataBase.clock = mockClock
+
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC)
+	testTimeUnix := testTime.Unix()
+
+	retention := 10
+
+	Convey("Test clean up future metrics", t, func() {
+		const (
+			metric1 = "metric1"
+			metric2 = "metric2"
+			metric3 = "metric3"
+		)
+
+		matchedMetric1 := &moira.MatchedMetric{
+			Metric:             metric1,
+			Value:              1,
+			Timestamp:          testTimeUnix,
+			RetentionTimestamp: testTimeUnix,
+			Retention:          retention,
+		}
+
+		matchedMetric2 := &moira.MatchedMetric{
+			Metric:             metric1,
+			Value:              2,
+			Timestamp:          testTimeUnix + int64(retention),
+			RetentionTimestamp: testTimeUnix + int64(retention),
+			Retention:          retention,
+		}
+
+		matchedMetric3 := &moira.MatchedMetric{
+			Metric:             metric2,
+			Value:              3,
+			Timestamp:          testTimeUnix,
+			RetentionTimestamp: testTimeUnix,
+			Retention:          retention,
+		}
+
+		matchedMetric4 := &moira.MatchedMetric{
+			Metric:             metric2,
+			Value:              4,
+			Timestamp:          testTimeUnix + int64(retention),
+			RetentionTimestamp: testTimeUnix + int64(retention),
+			Retention:          retention,
+		}
+
+		matchedMetric5 := &moira.MatchedMetric{
+			Metric:             metric3,
+			Value:              5,
+			Timestamp:          testTimeUnix,
+			RetentionTimestamp: testTimeUnix,
+			Retention:          retention,
+		}
+
+		Convey("Without future metrics", func() {
+			defer func() {
+				dataBase.metricsCache.Flush()
+			}()
+
+			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
+				metric1: matchedMetric1,
+				metric2: matchedMetric3,
+				metric3: matchedMetric5,
+			})
+			So(err, ShouldBeNil)
+
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
+				metric1: matchedMetric2,
+				metric2: matchedMetric4,
+			})
+			So(err, ShouldBeNil)
+
+			mockClock.EXPECT().Now().Return(testTime).Times(1)
+
+			err = dataBase.CleanUpFutureMetrics(time.Hour)
+			So(err, ShouldBeNil)
+
+			actualMetrics, err := dataBase.GetMetricsValues([]string{metric1, metric2, metric3}, testTimeUnix, testTimeUnix+int64(retention))
+			So(actualMetrics, ShouldResemble, map[string][]*moira.MetricValue{
+				metric1: {
+					{
+						RetentionTimestamp: testTimeUnix,
+						Timestamp:          testTimeUnix,
+						Value:              1,
+					},
+					{
+						RetentionTimestamp: testTimeUnix + int64(retention),
+						Timestamp:          testTimeUnix + int64(retention),
+						Value:              2,
+					},
+				},
+				metric2: {
+					{
+						RetentionTimestamp: testTimeUnix,
+						Timestamp:          testTimeUnix,
+						Value:              3,
+					},
+					{
+						RetentionTimestamp: testTimeUnix + int64(retention),
+						Timestamp:          testTimeUnix + int64(retention),
+						Value:              4,
+					},
+				},
+				metric3: {
+					{
+						RetentionTimestamp: testTimeUnix,
+						Timestamp:          testTimeUnix,
+						Value:              5,
+					},
+				},
+			})
+			So(err, ShouldBeNil)
+		})
+
+		Convey("With future metrics", func() {
+			defer func() {
+				dataBase.metricsCache.Flush()
+			}()
+
+			err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
+				metric1: matchedMetric1,
+				metric2: matchedMetric3,
+				metric3: matchedMetric5,
+			})
+			So(err, ShouldBeNil)
+
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
+				metric1: matchedMetric2,
+				metric2: matchedMetric4,
+			})
+			So(err, ShouldBeNil)
+
+			mockClock.EXPECT().Now().Return(testTime).Times(1)
+
+			err = dataBase.CleanUpFutureMetrics(5 * time.Second)
+			So(err, ShouldBeNil)
+
+			actualMetrics, err := dataBase.GetMetricsValues([]string{metric1, metric2, metric3}, testTimeUnix, testTimeUnix+int64(retention))
+			So(actualMetrics, ShouldResemble, map[string][]*moira.MetricValue{
+				metric1: {
+					{
+						RetentionTimestamp: testTimeUnix,
+						Timestamp:          testTimeUnix,
+						Value:              1,
+					},
+				},
+				metric2: {
+					{
+						RetentionTimestamp: testTimeUnix,
+						Timestamp:          testTimeUnix,
+						Value:              3,
+					},
+				},
+				metric3: {
+					{
+						RetentionTimestamp: testTimeUnix,
+						Timestamp:          testTimeUnix,
+						Value:              5,
+					},
+				},
+			})
+			So(err, ShouldBeNil)
+		})
+	})
+}
+
+func TestCleanupOutdatedPatternMetrics(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	const (
+		pattern1 = "pattern1"
+		pattern2 = "pattern2"
+		pattern3 = "pattern3"
+
+		metric1 = "metric1"
+		metric2 = "metric2"
+		metric3 = "metric3"
+		metric4 = "metric4"
+		metric5 = "metric5"
+	)
+
+	Convey("Test clean up outdated pattern metrics", t, func() {
+		Convey("Without outdated metrics", func() {
+			defer func() {
+				err := dataBase.RemovePatternWithMetrics(pattern1)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemovePatternWithMetrics(pattern2)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemovePatternWithMetrics(pattern3)
+				So(err, ShouldBeNil)
+			}()
+
+			matchedMetric1 := &moira.MatchedMetric{
+				Patterns: []string{pattern1},
+				Metric:   metric1,
+			}
+			matchedMetric2 := &moira.MatchedMetric{
+				Patterns: []string{pattern1},
+				Metric:   metric2,
+			}
+			matchedMetric3 := &moira.MatchedMetric{
+				Patterns: []string{pattern2},
+				Metric:   metric3,
+			}
+			matchedMetric4 := &moira.MatchedMetric{
+				Patterns: []string{pattern2},
+				Metric:   metric4,
+			}
+			matchedMetric5 := &moira.MatchedMetric{
+				Patterns: []string{pattern3},
+				Metric:   metric5,
+			}
+
+			err := dataBase.addPatterns(pattern1, pattern2, pattern3)
+			So(err, ShouldBeNil)
+
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
+				metric1: matchedMetric1,
+				metric2: matchedMetric2,
+				metric3: matchedMetric3,
+				metric4: matchedMetric4,
+				metric5: matchedMetric5,
+			})
+			So(err, ShouldBeNil)
+
+			count, err := dataBase.CleanupOutdatedPatternMetrics()
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 0)
+
+			pattern1Metrics, err := dataBase.GetPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern1Metrics, []string{metric1, metric2})
+
+			pattern2Metrics, err := dataBase.GetPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern2Metrics, []string{metric3, metric4})
+
+			pattern3Metrics, err := dataBase.GetPatternMetrics(pattern3)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern3Metrics, []string{metric5})
+		})
+
+		Convey("With outdated metrics", func() {
+			defer func() {
+				err := dataBase.RemovePatternWithMetrics(pattern1)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemovePatternWithMetrics(pattern2)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemovePatternWithMetrics(pattern3)
+				So(err, ShouldBeNil)
+			}()
+
+			matchedMetric1 := &moira.MatchedMetric{
+				Patterns: []string{pattern1},
+				Metric:   metric1,
+			}
+			matchedMetric3 := &moira.MatchedMetric{
+				Patterns: []string{pattern2},
+				Metric:   metric3,
+			}
+
+			err := dataBase.addPatterns(pattern1, pattern2, pattern3)
+			So(err, ShouldBeNil)
+
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
+				metric1: matchedMetric1,
+				metric3: matchedMetric3,
+			})
+			So(err, ShouldBeNil)
+
+			err = dataBase.AddPatternMetric(pattern1, metric2)
+			So(err, ShouldBeNil)
+
+			err = dataBase.AddPatternMetric(pattern2, metric4)
+			So(err, ShouldBeNil)
+
+			err = dataBase.AddPatternMetric(pattern3, metric5)
+			So(err, ShouldBeNil)
+
+			count, err := dataBase.CleanupOutdatedPatternMetrics()
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 3)
+
+			pattern1Metrics, err := dataBase.GetPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern1Metrics, []string{metric1})
+
+			pattern2Metrics, err := dataBase.GetPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern2Metrics, []string{metric3})
+
+			pattern3Metrics, err := dataBase.GetPatternMetrics(pattern3)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern3Metrics, []string{})
+		})
+	})
+}
+
+func TestGetNonExistentPatternMetrics(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	const (
+		pattern1 = "pattern1"
+		pattern2 = "pattern2"
+		pattern3 = "pattern3"
+
+		metric1 = "metric1"
+		metric2 = "metric2"
+		metric3 = "metric3"
+		metric4 = "metric4"
+		metric5 = "metric5"
+	)
+
+	Convey("Test get non existent pattern metrics", t, func() {
+		Convey("Without non existent metrics", func() {
+			defer func() {
+				err := dataBase.RemovePatternWithMetrics(pattern1)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemovePatternWithMetrics(pattern2)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemovePatternWithMetrics(pattern3)
+				So(err, ShouldBeNil)
+			}()
+
+			matchedMetric1 := &moira.MatchedMetric{
+				Patterns: []string{pattern1},
+				Metric:   metric1,
+			}
+			matchedMetric2 := &moira.MatchedMetric{
+				Patterns: []string{pattern1},
+				Metric:   metric2,
+			}
+			matchedMetric3 := &moira.MatchedMetric{
+				Patterns: []string{pattern2},
+				Metric:   metric3,
+			}
+			matchedMetric4 := &moira.MatchedMetric{
+				Patterns: []string{pattern2},
+				Metric:   metric4,
+			}
+			matchedMetric5 := &moira.MatchedMetric{
+				Patterns: []string{pattern3},
+				Metric:   metric5,
+			}
+
+			err := dataBase.addPatterns(pattern1, pattern2, pattern3)
+			So(err, ShouldBeNil)
+
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
+				metric1: matchedMetric1,
+				metric2: matchedMetric2,
+				metric3: matchedMetric3,
+				metric4: matchedMetric4,
+				metric5: matchedMetric5,
+			})
+			So(err, ShouldBeNil)
+
+			pattern1Metrics, err := dataBase.getNonExistentPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern1Metrics, []string{})
+
+			pattern2Metrics, err := dataBase.getNonExistentPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern2Metrics, []string{})
+
+			pattern3Metrics, err := dataBase.getNonExistentPatternMetrics(pattern3)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern3Metrics, []string{})
+		})
+
+		Convey("With outdated metrics", func() {
+			defer func() {
+				err := dataBase.RemovePatternWithMetrics(pattern1)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemovePatternWithMetrics(pattern2)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemovePatternWithMetrics(pattern3)
+				So(err, ShouldBeNil)
+			}()
+
+			matchedMetric1 := &moira.MatchedMetric{
+				Patterns: []string{pattern1},
+				Metric:   metric1,
+			}
+			matchedMetric3 := &moira.MatchedMetric{
+				Patterns: []string{pattern2},
+				Metric:   metric3,
+			}
+
+			err := dataBase.addPatterns(pattern1, pattern2, pattern3)
+			So(err, ShouldBeNil)
+
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{
+				metric1: matchedMetric1,
+				metric3: matchedMetric3,
+			})
+			So(err, ShouldBeNil)
+
+			err = dataBase.AddPatternMetric(pattern1, metric2)
+			So(err, ShouldBeNil)
+
+			err = dataBase.AddPatternMetric(pattern2, metric4)
+			So(err, ShouldBeNil)
+
+			err = dataBase.AddPatternMetric(pattern3, metric5)
+			So(err, ShouldBeNil)
+
+			pattern1Metrics, err := dataBase.getNonExistentPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern1Metrics, []string{metric2})
+
+			pattern2Metrics, err := dataBase.getNonExistentPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern2Metrics, []string{metric4})
+
+			pattern3Metrics, err := dataBase.getNonExistentPatternMetrics(pattern3)
+			So(err, ShouldBeNil)
+			assert.ElementsMatch(t, pattern3Metrics, []string{metric5})
+		})
+	})
+}
+
 func TestCleanupAbandonedRetention(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
@@ -757,7 +1437,8 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 						RetentionTimestamp: 10,
 						Timestamp:          5,
 						Value:              1,
-					}})
+					},
+				})
 			So(err, ShouldBeNil)
 		}
 
@@ -771,7 +1452,8 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 						RetentionTimestamp: 10,
 						Timestamp:          5,
 						Value:              1,
-					}})
+					},
+				})
 			So(err, ShouldBeNil)
 		}
 
@@ -822,7 +1504,8 @@ func TestRemoveAllMetrics(t *testing.T) {
 						RetentionTimestamp: 10,
 						Timestamp:          5,
 						Value:              1,
-					}})
+					},
+				})
 			So(err, ShouldBeNil)
 		}
 
@@ -836,7 +1519,8 @@ func TestRemoveAllMetrics(t *testing.T) {
 						RetentionTimestamp: 10,
 						Timestamp:          5,
 						Value:              1,
-					}})
+					},
+				})
 			So(err, ShouldBeNil)
 		}
 

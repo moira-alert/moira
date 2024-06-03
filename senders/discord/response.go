@@ -18,14 +18,14 @@ func (sender *Sender) getResponse(m *discordgo.MessageCreate, channel *discordgo
 		case discordgo.ChannelTypeDM:
 			err := sender.DataBase.SetUsernameID(messenger, "@"+m.Author.Username, channel.ID)
 			if err != nil {
-				return "", fmt.Errorf("error while setting the channel ID for user: %s", err)
+				return "", fmt.Errorf("error while setting the channel ID for user: %w", err)
 			}
 			msg := fmt.Sprintf("Okay, %s, your id is %s", m.Author.Username, channel.ID)
 			return msg, nil
 		case discordgo.ChannelTypeGuildText:
 			err := sender.DataBase.SetUsernameID(messenger, channel.Name, channel.ID)
 			if err != nil {
-				return "", fmt.Errorf("error while setting the channel ID for text channel: %s", err)
+				return "", fmt.Errorf("error while setting the channel ID for text channel: %w", err)
 			}
 			msg := fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", channel.Name)
 			return msg, nil

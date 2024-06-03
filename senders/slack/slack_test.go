@@ -8,7 +8,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	slack_client "github.com/slack-go/slack"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -25,26 +24,25 @@ func TestInit(t *testing.T) {
 
 		Convey("has api_token", func() {
 			senderSettings["api_token"] = "123"
-			client := slack_client.New("123")
 
 			Convey("use_emoji not set", func() {
 				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
-				So(sender, ShouldResemble, Sender{logger: logger, client: client})
+				So(sender.useEmoji, ShouldBeFalse)
 			})
 
 			Convey("use_emoji set to false", func() {
 				senderSettings["use_emoji"] = false
 				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
-				So(sender, ShouldResemble, Sender{logger: logger, client: client})
+				So(sender.useEmoji, ShouldBeFalse)
 			})
 
 			Convey("use_emoji set to true", func() {
 				senderSettings["use_emoji"] = true
 				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
-				So(sender, ShouldResemble, Sender{logger: logger, useEmoji: true, client: client})
+				So(sender.useEmoji, ShouldBeTrue)
 			})
 
 			Convey("use_emoji set to something wrong", func() {
@@ -62,23 +60,6 @@ func TestUseDirectMessaging(t *testing.T) {
 		So(useDirectMessaging("contact"), ShouldBeFalse)
 		So(useDirectMessaging("@contact"), ShouldBeTrue)
 		So(useDirectMessaging("#contact"), ShouldBeFalse)
-	})
-}
-
-func TestGetStateEmoji(t *testing.T) {
-	sender := Sender{}
-	Convey("Use emoji is false", t, func() {
-		So(sender.getStateEmoji(moira.StateERROR), ShouldResemble, "")
-	})
-
-	Convey("Use emoji is true", t, func() {
-		sender := Sender{useEmoji: true}
-		So(sender.getStateEmoji(moira.StateOK), ShouldResemble, okEmoji)
-		So(sender.getStateEmoji(moira.StateWARN), ShouldResemble, warnEmoji)
-		So(sender.getStateEmoji(moira.StateERROR), ShouldResemble, errorEmoji)
-		So(sender.getStateEmoji(moira.StateNODATA), ShouldResemble, nodataEmoji)
-		So(sender.getStateEmoji(moira.StateEXCEPTION), ShouldResemble, exceptionEmoji)
-		So(sender.getStateEmoji(moira.StateTEST), ShouldResemble, testEmoji)
 	})
 }
 

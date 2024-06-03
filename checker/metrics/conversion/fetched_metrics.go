@@ -51,7 +51,7 @@ func (m FetchedTargetMetrics) Deduplicate() (FetchedTargetMetrics, []string) {
 	return deduplicated, duplicates
 }
 
-// FetchedMetrics represent collections of metrics associated with target name
+// FetchedMetrics represent collections of metrics associated with target name.
 // There is a map where keys are target names and values are maps of metrics with metric names as keys.
 type FetchedMetrics map[string]FetchedTargetMetrics
 

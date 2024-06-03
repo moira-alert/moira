@@ -1,6 +1,7 @@
 package reply
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,11 +10,11 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// MetricValues converts redis DB reply struct "RetentionTimestamp Value" "Timestamp" to moira.MetricValue object
+// MetricValues converts redis DB reply struct "RetentionTimestamp Value" "Timestamp" to moira.MetricValue object.
 func MetricValues(values *redis.ZSliceCmd) ([]*moira.MetricValue, error) {
 	resultByMetricArr, err := values.Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]*moira.MetricValue, 0), nil
 		}
 		return nil, fmt.Errorf("failed to read metricValues: %s", err.Error())

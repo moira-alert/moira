@@ -178,6 +178,7 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 		})
 	})
 }
+
 func TestNotificationEvent_getSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
 		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}}
@@ -309,7 +310,7 @@ func TestScheduledNotification_GetState(t *testing.T) {
 			So(state, ShouldEqual, RemovedNotification)
 		})
 
-		Convey("Get Ignored state with metric on maintenance", func() {
+		Convey("Get Resaved state with metric on maintenance", func() {
 			state := notification.GetState(&CheckData{
 				Metrics: map[string]MetricState{
 					"test": {
@@ -317,14 +318,14 @@ func TestScheduledNotification_GetState(t *testing.T) {
 					},
 				},
 			})
-			So(state, ShouldEqual, IgnoredNotification)
+			So(state, ShouldEqual, ResavedNotification)
 		})
 
-		Convey("Get Ignored state with trigger on maintenance", func() {
+		Convey("Get Resaved state with trigger on maintenance", func() {
 			state := notification.GetState(&CheckData{
 				Maintenance: time.Now().Add(time.Hour).Unix(),
 			})
-			So(state, ShouldEqual, IgnoredNotification)
+			So(state, ShouldEqual, ResavedNotification)
 		})
 
 		Convey("Get Valid state with trigger without metrics", func() {
@@ -759,6 +760,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 		}
 	})
 }
+
 func TestBuildTriggerURL(t *testing.T) {
 	Convey("Sender has no moira uri", t, func() {
 		url := TriggerData{ID: "SomeID"}.GetTriggerURI("")
@@ -910,7 +912,7 @@ func testStopMaintenance(message string, actualInfo MaintenanceInfo, user string
 
 func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenance int64, user string, expectedInfo MaintenanceInfo) {
 	Convey(conveyMessage, func() {
-		var lastCheckTest = CheckData{
+		lastCheckTest := CheckData{
 			Maintenance: 1000,
 		}
 		lastCheckTest.MaintenanceInfo = actualInfo

@@ -13,26 +13,26 @@ var (
 	wildcardExprRegex     = regexp.MustCompile(`\{(.*?)\}`)
 )
 
-// ErrNotSeriesByTag is returned if the pattern is not seriesByTag
+// ErrNotSeriesByTag is returned if the pattern is not seriesByTag.
 var ErrNotSeriesByTag = fmt.Errorf("not seriesByTag pattern")
 
-// TagSpecOperator represents an operator and it is used to query metric by tag value
+// TagSpecOperator represents an operator and it is used to query metric by tag value.
 type TagSpecOperator string
 
 const (
-	// EqualOperator is a strict equality operator and it is used to query metric by tag's value
+	// EqualOperator is a strict equality operator and it is used to query metric by tag's value.
 	EqualOperator TagSpecOperator = "="
-	// NotEqualOperator is a strict non-equality operator and it is used to query metric by tag's value
+	// NotEqualOperator is a strict non-equality operator and it is used to query metric by tag's value.
 	NotEqualOperator TagSpecOperator = "!="
-	// MatchOperator is a match operator which helps to match metric by regex
+	// MatchOperator is a match operator which helps to match metric by regex.
 	MatchOperator TagSpecOperator = "=~"
-	// NotMatchOperator is a non-match operator which helps not to match metric by regex
+	// NotMatchOperator is a non-match operator which helps not to match metric by regex.
 	NotMatchOperator TagSpecOperator = "!=~"
 
 	correctLengthOfMatchedWildcardIndexesSlice = 4
 )
 
-// TagSpec is a filter expression inside seriesByTag pattern
+// TagSpec is a filter expression inside seriesByTag pattern.
 type TagSpec struct {
 	Name     string
 	Operator TagSpecOperator
@@ -40,7 +40,7 @@ type TagSpec struct {
 }
 
 func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
-	var isTransformed = false
+	isTransformed := false
 
 	result := strings.ReplaceAll(input, ".", "\\.")
 
@@ -62,6 +62,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 		for i := range slc {
 			slc[i] = strings.TrimSpace(slc[i])
 		}
+
 		regularExpression = strings.Join(slc, "|")
 		result = result[:matchedWildcardIndexes[0]] + regularExpression + result[matchedWildcardIndexes[1]:]
 		isTransformed = true
@@ -70,10 +71,11 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	if !isTransformed {
 		return input, false
 	}
+
 	return "^" + result + "$", true
 }
 
-// ParseSeriesByTag parses seriesByTag pattern and returns tags specs
+// ParseSeriesByTag parses seriesByTag pattern and returns tags specs.
 func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	matchedSeriesByTagIndexes := seriesByTagRegex.FindStringSubmatchIndex(input)
 	if len(matchedSeriesByTagIndexes) != 4 { //nolint
@@ -125,10 +127,10 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
-// MatchingHandler is a function for pattern matching
+// MatchingHandler is a function for pattern matching.
 type MatchingHandler func(string, map[string]string) bool
 
-// CreateMatchingHandlerForPattern creates function for matching by tag list
+// CreateMatchingHandlerForPattern creates function for matching by tag list.
 func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string
@@ -152,6 +154,7 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 				return false
 			}
 		}
+
 		return true
 	}
 
@@ -205,9 +208,11 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 		if spec.Name == "name" {
 			return matchingHandlerCondition(metric)
 		}
+
 		if value, found := labels[spec.Name]; found {
 			return matchingHandlerCondition(value)
 		}
+
 		return allowMatchEmpty && matchEmpty
 	}, nil
 }

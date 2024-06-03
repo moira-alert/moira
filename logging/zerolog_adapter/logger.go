@@ -21,12 +21,12 @@ const (
 	DefaultTimeFormat = "2006-01-02 15:04:05.000"
 )
 
-// ConfigureLog creates new logger based on github.com/rs/zerolog package
+// ConfigureLog creates new logger based on github.com/rs/zerolog package.
 func ConfigureLog(logFile, logLevel, module string, pretty bool) (*Logger, error) {
 	return newLog(logFile, logLevel, module, pretty, false)
 }
 
-// GetLogger need only for backward compatibility in tests
+// GetLogger need only for backward compatibility in tests.
 func GetLogger(module string) (moira.Logger, error) {
 	return newLog("stdout", "info", module, true, true)
 }
@@ -62,10 +62,10 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 	}
 
 	logDir := filepath.Dir(logFileName)
-	if err := os.MkdirAll(logDir, 0755); err != nil {
+	if err := os.MkdirAll(logDir, 0755); err != nil { //nolint:gofumpt,gomnd
 		return nil, fmt.Errorf("can't create log directories %s: %s", logDir, err.Error())
 	}
-	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644) //nolint:gofumpt,gomnd
 	if err != nil {
 		return nil, fmt.Errorf("can't open log file %s: %s", logFileName, err.Error())
 	}

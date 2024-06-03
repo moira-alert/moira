@@ -10,15 +10,15 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// StoreImage stores an image in aws s3 and returns the link to it
+// StoreImage stores an image in aws s3 and returns the link to it.
 func (imageStore *ImageStore) StoreImage(image []byte) (string, error) {
 	uploadInput, err := imageStore.buildUploadInput(image)
 	if err != nil {
-		return "", fmt.Errorf("error while creating upload input: %s", err)
+		return "", fmt.Errorf("error while creating upload input: %w", err)
 	}
 	result, err := imageStore.uploader.Upload(uploadInput)
 	if err != nil {
-		return "", fmt.Errorf("error while uploading to s3: %s", err)
+		return "", fmt.Errorf("error while uploading to s3: %w", err)
 	}
 
 	return result.Location, nil
@@ -27,7 +27,7 @@ func (imageStore *ImageStore) StoreImage(image []byte) (string, error) {
 func (imageStore *ImageStore) buildUploadInput(image []byte) (*s3manager.UploadInput, error) {
 	uuid, err := uuid.NewV4()
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate uuid: %s", err)
+		return nil, fmt.Errorf("failed to generate uuid: %w", err)
 	}
 	key := "moira-plots/" + uuid.String()
 	return &s3manager.UploadInput{

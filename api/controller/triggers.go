@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
@@ -17,7 +18,7 @@ const pageSizeUnlimited int64 = -1
 
 var idValidationPattern = regexp.MustCompile(`^[A-Za-z0-9._~-]+$`)
 
-// CreateTrigger creates new trigger
+// CreateTrigger creates new trigger.
 func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if trigger.ID == "" {
 		uuid4, err := uuid.NewV4()
@@ -44,7 +45,7 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 	return resp, err
 }
 
-// GetAllTriggers gets all moira triggers
+// GetAllTriggers gets all moira triggers.
 func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorResponse) {
 	triggerIDs, err := database.GetAllTriggerIDs()
 	if err != nil {
@@ -62,7 +63,7 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 	return triggersList, nil
 }
 
-// SearchTriggers gets trigger page and filter trigger by tags and search request terms
+// SearchTriggers gets trigger page and filter trigger by tags and search request terms.
 func SearchTriggers(database moira.Database, searcher moira.Searcher, options moira.SearchOptions) (*dto.TriggersList, *api.ErrorResponse) { //nolint
 	var searchResults []*moira.SearchResult
 	var total int64
@@ -204,7 +205,7 @@ func getTriggerChecks(database moira.Database, triggerIDs []string) ([]moira.Tri
 
 func triggerExists(database moira.Database, triggerID string) (bool, error) {
 	_, err := database.GetTrigger(triggerID)
-	if err == db.ErrNil {
+	if errors.Is(err, db.ErrNil) {
 		return false, nil
 	}
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 	"gopkg.in/tucnak/telebot.v2"
 )
 
-// handleMessage handles incoming messages to start sending events to subscribers chats
+// handleMessage handles incoming messages to start sending events to subscribers chats.
 func (sender *Sender) handleMessage(message *telebot.Message) error {
 	responseMessage, err := sender.getResponseMessage(message)
 	if err != nil {

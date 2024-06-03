@@ -36,11 +36,11 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	Convey("Success delete from last check", t, func() {
 		expectedLastCheck := lastCheck
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
 		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.TriggerSource)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.ClusterKey())
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
 		So(err, ShouldBeNil)
 		So(expectedLastCheck, ShouldResemble, emptyLastCheck)
@@ -49,11 +49,11 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	Convey("Success delete nothing to delete", t, func() {
 		expectedLastCheck := emptyLastCheck
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
 		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.TriggerSource)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.ClusterKey())
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
 		So(err, ShouldBeNil)
 		So(expectedLastCheck, ShouldResemble, emptyLastCheck)
@@ -67,7 +67,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 	Convey("No last check", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
@@ -84,7 +84,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	Convey("AcquireTriggerCheckLock error", t, func() {
 		expected := fmt.Errorf("acquire error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(expected)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
@@ -92,7 +92,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	Convey("GetTriggerLastCheck error", t, func() {
 		expected := fmt.Errorf("last check error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
@@ -102,7 +102,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	Convey("RemovePatternsMetrics error", t, func() {
 		expected := fmt.Errorf("removePatternsMetrics err")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
 		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(expected)
@@ -113,11 +113,11 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	Convey("SetTriggerLastCheck error", t, func() {
 		expected := fmt.Errorf("removePatternsMetrics err")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
 		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource).Return(expected)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()).Return(expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
@@ -171,11 +171,11 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	Convey("Success delete from last check, one NODATA", t, func() {
 		expectedLastCheck := lastCheckSingleNodata
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
 		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.TriggerSource)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.ClusterKey())
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(expectedLastCheck, ShouldResemble, emptyLastCheck)
@@ -184,11 +184,11 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	Convey("Success delete from last check, many NODATA", t, func() {
 		expectedLastCheck := lastCheckWithNodataOnly
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
 		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.TriggerSource)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.ClusterKey())
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(expectedLastCheck, ShouldResemble, emptyLastCheck)
@@ -197,11 +197,11 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	Convey("Success delete from last check, many NODATA + other statuses", t, func() {
 		expectedLastCheck := lastCheckWithManyStates
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
 		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheckWithoutNodata, trigger.TriggerSource)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheckWithoutNodata, trigger.ClusterKey())
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(expectedLastCheck, ShouldResemble, lastCheckWithoutNodata)
@@ -210,11 +210,11 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	Convey("Success delete nothing to delete", t, func() {
 		expectedLastCheck := emptyLastCheck
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
 		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.TriggerSource)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.ClusterKey())
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(expectedLastCheck, ShouldResemble, emptyLastCheck)
@@ -228,7 +228,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	Convey("No last check", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
@@ -245,7 +245,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	Convey("AcquireTriggerCheckLock error", t, func() {
 		expected := fmt.Errorf("acquire error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(expected)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
@@ -253,7 +253,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	Convey("GetTriggerLastCheck error", t, func() {
 		expected := fmt.Errorf("last check error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
@@ -269,7 +269,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
+	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
 
@@ -277,27 +277,16 @@ func TestGetTriggerMetrics(t *testing.T) {
 	var until int64 = 67
 	var retention int64 = 10
 
-	Convey("Trigger is remote but remote is not configured", t, func() {
-		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
+	Convey("Trigger is prometheus remote but prometheus remote is not in a registered source", t, func() {
+		trigger := moira.Trigger{
 			ID:            triggerID,
 			Targets:       []string{pattern},
-			TriggerSource: moira.GraphiteRemote,
-		}, nil)
-		remoteSource.EXPECT().IsConfigured().Return(false, nil)
+			TriggerSource: moira.PrometheusRemote,
+			ClusterId:     moira.DefaultCluster,
+		}
+		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
-		So(err, ShouldResemble, api.ErrorInternalServer(metricSource.ErrMetricSourceIsNotConfigured))
-		So(triggerMetrics, ShouldBeNil)
-	})
-
-	Convey("Trigger is remote but remote has bad config", t, func() {
-		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
-			ID:            triggerID,
-			Targets:       []string{pattern},
-			TriggerSource: moira.GraphiteRemote,
-		}, nil)
-		remoteSource.EXPECT().IsConfigured().Return(false, remote.ErrRemoteStorageDisabled)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
-		So(err, ShouldResemble, api.ErrorInternalServer(remote.ErrRemoteStorageDisabled))
+		So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("unknown metric source with cluster key `%s`", trigger.ClusterKey().String())))
 		So(triggerMetrics, ShouldBeNil)
 	})
 
@@ -306,8 +295,8 @@ func TestGetTriggerMetrics(t *testing.T) {
 			ID:            triggerID,
 			Targets:       []string{pattern},
 			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
 		}, nil)
-		localSource.EXPECT().IsConfigured().Return(true, nil)
 		localSource.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
 		fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
@@ -339,8 +328,8 @@ func TestGetTriggerMetrics(t *testing.T) {
 			ID:            triggerID,
 			Targets:       []string{pattern},
 			TriggerSource: moira.GraphiteRemote,
+			ClusterId:     moira.DefaultCluster,
 		}, nil)
-		remoteSource.EXPECT().IsConfigured().Return(true, nil)
 		remoteSource.EXPECT().Fetch(pattern, from, until, false).Return(nil, expectedError)
 
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)

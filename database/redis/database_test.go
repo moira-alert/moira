@@ -23,7 +23,7 @@ func TestNewDatabase(t *testing.T) {
 		defer database.Flush()
 
 		Convey("Redis client must be workable", func() {
-			var ctx = context.Background()
+			ctx := context.Background()
 
 			Convey("Can get the value of key that does not exists", func() {
 				err := (*database.client).Get(ctx, "key").Err()

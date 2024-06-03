@@ -6,7 +6,7 @@ import (
 
 const NotificationsLimitUnlimited = int64(-1)
 
-// Config is sending settings including log settings
+// Config is sending settings including log settings.
 type Config struct {
 	Enabled                       bool
 	SelfStateEnabled              bool

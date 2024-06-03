@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +10,7 @@ import (
 )
 
 // CreateAlertRequest the API request to be made to
-// create a victorops alert
+// create a victorops alert.
 type CreateAlertRequest struct {
 	MessageType       MessageType `json:"message_type,omitempty"`
 	EntityID          string      `json:"entity_id,omitempty"`
@@ -22,10 +23,10 @@ type CreateAlertRequest struct {
 	MonitoringTool    string      `json:"monitoring_tool,omitempty"`
 }
 
-// MessageType is the type of a victorops alert
+// MessageType is the type of a victorops alert.
 type MessageType string
 
-// Various possible MessageTypes
+// Various possible MessageTypes.
 const (
 	Critical        MessageType = "CRITICAL"
 	Warning         MessageType = "WARNING"
@@ -34,7 +35,7 @@ const (
 	Recovery        MessageType = "RECOVERY"
 )
 
-// CreateAlert creates a new alert in the victorops timeline
+// CreateAlert creates a new alert in the victorops timeline.
 func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) error {
 	if alert.MessageType == "" {
 		return fmt.Errorf("field MessageType cannot be empty")
@@ -42,9 +43,9 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 
 	body, err := json.Marshal(alert)
 	if err != nil {
-		return fmt.Errorf("error while encoding json: %s", err)
+		return fmt.Errorf("error while encoding json: %w", err)
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", client.routingURL, routingKey), bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/%s", client.routingURL, routingKey), bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
@@ -54,7 +55,7 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 
 	resp, err := client.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("error while making the request to victorops: %s", err)
+		return fmt.Errorf("error while making the request to victorops: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {

@@ -4,7 +4,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric
+// SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric.
 type SeriesByTagPatternIndex struct {
 	// namesPrefixTree stores MatchingHandler's for patterns that have name tag in prefix tree structure
 	namesPrefixTree *PrefixTree
@@ -14,7 +14,7 @@ type SeriesByTagPatternIndex struct {
 	compatibility Compatibility
 }
 
-// NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
+// NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag.
 func NewSeriesByTagPatternIndex(
 	logger moira.Logger,
 	tagSpecsByPattern map[string][]TagSpec,
@@ -25,9 +25,8 @@ func NewSeriesByTagPatternIndex(
 
 	for pattern, tagSpecs := range tagSpecsByPattern {
 		nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs, &compatibility)
-
 		if err != nil {
-			logger.Info().
+			logger.Error().
 				Error(err).
 				String("pattern", pattern).
 				Msg("Failed to create MatchingHandler for pattern")
@@ -48,7 +47,7 @@ func NewSeriesByTagPatternIndex(
 	}
 }
 
-// MatchPatterns allows to match patterns by metric name and its labels
+// MatchPatterns allows to match patterns by metric name and its labels.
 func (index *SeriesByTagPatternIndex) MatchPatterns(metricName string, labels map[string]string) []string {
 	matchedPatterns := make([]string, 0)
 

@@ -35,7 +35,7 @@ var (
 	plotTestFallingErrorThreshold = plotTestRisingWarnThreshold
 )
 
-// plotsHashDistancesTestCase is a single plot test case
+// plotsHashDistancesTestCase is a single plot test case.
 type plotsHashDistancesTestCase struct {
 	useHumanizedValues bool
 	stateOk            bool
@@ -47,7 +47,7 @@ type plotsHashDistancesTestCase struct {
 	expected           int
 }
 
-// getFilePath returns path to original or rendered plot file
+// getFilePath returns path to original or rendered plot file.
 func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string, error) {
 	examplesPath, err := filepath.Abs(plottingExamplesPath)
 	if err != nil {
@@ -74,7 +74,7 @@ func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string
 	return fmt.Sprintf("%s.png", filePrefix.String()), nil
 }
 
-// getTriggerName returns test trigger name using plot test case parameters
+// getTriggerName returns test trigger name using plot test case parameters.
 func (testCase *plotsHashDistancesTestCase) getTriggerName() string {
 	triggerName := bytes.NewBuffer([]byte("Test trigger ☺ ЁёЙй ("))
 	triggerName.WriteString(strings.ToUpper(string(testCase.plotTheme[0])))
@@ -103,7 +103,7 @@ func (testCase *plotsHashDistancesTestCase) getTriggerName() string {
 	return triggerName.String()
 }
 
-// plotsHashDistancesTestCases is a collection of plot test cases
+// plotsHashDistancesTestCases is a collection of plot test cases.
 var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 	{
 		name:               "DARK | EXPRESSION | No thresholds | Humanized values",
@@ -439,7 +439,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 	},
 }
 
-// generateTestMetricsData generates metricData array for tests
+// generateTestMetricsData generates metricData array for tests.
 func generateTestMetricsData(useHumanizedValues bool) []metricSource.MetricData {
 	metricsData := []metricSource.MetricData{
 		{
@@ -513,9 +513,13 @@ func generateTestMetricsData(useHumanizedValues bool) []metricSource.MetricData 
 	return metricsData
 }
 
-// renderTestMetricsDataToPNG renders and saves rendered plots to PNG
-func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
-	metricsData []metricSource.MetricData, filePath string) error {
+// renderTestMetricsDataToPNG renders and saves rendered plots to PNG.
+func renderTestMetricsDataToPNG(
+	trigger moira.Trigger,
+	plotTheme string,
+	metricsData []metricSource.MetricData,
+	filePath string,
+) error {
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate(plotTheme, location)
 	if err != nil {
@@ -537,7 +541,7 @@ func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
 	return nil
 }
 
-// calculateHashDistance returns calculated hash distance of two given pictures
+// calculateHashDistance returns calculated hash distance of two given pictures.
 func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) {
 	hash := ipare.NewHash()
 	original, err := util.Open(pathToOriginal)
@@ -552,7 +556,7 @@ func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) 
 	return &distance, nil
 }
 
-// generateRandomTestMetricsData returns random test MetricsData by given numbers of values
+// generateRandomTestMetricsData returns random test MetricsData by given numbers of values.
 func generateRandomTestMetricsData(numTotal int, numEmpty int) []metricSource.MetricData {
 	startTime := int64(0)
 	stepTime := int64(10)
@@ -576,7 +580,7 @@ func generateRandomTestMetricsData(numTotal int, numEmpty int) []metricSource.Me
 	}
 }
 
-// TestGetRenderable renders plots based on test data and compares test plots hashes with plot examples hashes
+// TestGetRenderable renders plots based on test data and compares test plots hashes with plot examples hashes.
 func TestGetRenderable(t *testing.T) {
 	Convey("Test plots hash distances", t, func() {
 		for _, testCase := range plotsHashDistancesTestCases {
@@ -588,14 +592,14 @@ func TestGetRenderable(t *testing.T) {
 				if testCase.errorValue != nil {
 					errorValue := testCase.errorValue.(float64)
 					if !testCase.useHumanizedValues {
-						errorValue = errorValue * plotTestOuterPointMultiplier
+						errorValue *= plotTestOuterPointMultiplier
 					}
 					trigger.ErrorValue = &errorValue
 				}
 				if testCase.warnValue != nil {
 					warnValue := testCase.warnValue.(float64)
 					if !testCase.useHumanizedValues {
-						warnValue = warnValue * plotTestOuterPointMultiplier
+						warnValue *= plotTestOuterPointMultiplier
 					}
 					trigger.WarnValue = &warnValue
 				}
@@ -623,7 +627,7 @@ func TestGetRenderable(t *testing.T) {
 	})
 }
 
-// TestErrNoPointsToRender_Error asserts conditions which leads to ErrNoPointsToRender
+// TestErrNoPointsToRender_Error asserts conditions which leads to ErrNoPointsToRender.
 func TestErrNoPointsToRender_Error(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate("", location)

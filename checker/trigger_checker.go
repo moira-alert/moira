@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"errors"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -9,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// TriggerChecker represents data, used for handling new trigger state
+// TriggerChecker represents data, used for handling new trigger state.
 type TriggerChecker struct {
 	database moira.Database
 	logger   moira.Logger
@@ -28,9 +29,9 @@ type TriggerChecker struct {
 	ttlState moira.TTLState
 }
 
-// MakeTriggerChecker initialize new triggerChecker data
-// if trigger does not exists then return ErrTriggerNotExists error
-// if trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
+// MakeTriggerChecker initialize new triggerChecker data.
+// If trigger does not exists then return ErrTriggerNotExists error.
+// If trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
 func MakeTriggerChecker(
 	triggerID string,
 	dataBase moira.Database,
@@ -42,7 +43,7 @@ func MakeTriggerChecker(
 	until := time.Now().Unix()
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil, ErrTriggerNotExists
 		}
 		return nil, err
@@ -60,18 +61,23 @@ func MakeTriggerChecker(
 
 	triggerLogger := logger.Clone().String(moira.LogFieldNameTriggerID, triggerID)
 	if logLevel, ok := config.LogTriggersToLevel[triggerID]; ok {
-		if _, err := triggerLogger.Level(logLevel); err != nil {
+		if _, err = triggerLogger.Level(logLevel); err != nil {
 			triggerLogger.Warning().
 				String("log_level", logLevel).
 				Msg("Incorrect log level")
 		}
 	}
 
+	triggerMetrics, err := metrics.GetCheckMetrics(&trigger)
+	if err != nil {
+		return nil, err
+	}
+
 	triggerChecker := &TriggerChecker{
 		database: dataBase,
 		logger:   triggerLogger,
 		config:   config,
-		metrics:  metrics.GetCheckMetrics(&trigger),
+		metrics:  triggerMetrics,
 		source:   source,
 
 		from:  calculateFrom(lastCheck.Timestamp, trigger.TTL),
@@ -89,11 +95,11 @@ func MakeTriggerChecker(
 
 func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimestamp int64) (*moira.CheckData, error) {
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
-	if err != nil && err != database.ErrNil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return nil, err
 	}
 
-	if err == database.ErrNil {
+	if errors.Is(err, database.ErrNil) {
 		lastCheck = moira.CheckData{
 			Metrics:   make(map[string]moira.MetricState),
 			State:     moira.StateOK,

@@ -247,13 +247,14 @@ func TestLocalSourceFetchMultipleMetrics(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "alive replicas",
-				StartTime: retentionFrom,
-				StopTime:  retentionUntil,
-				StepTime:  retention,
-				Values:    []float64{2, 2, 2, 2, 2},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "alive replicas",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention,
+					Values:    []float64{2, 2, 2, 2, 2},
+				},
 			},
 			Metrics:  metrics,
 			Patterns: []string{"apps.*.process.cpu.usage"},
@@ -295,12 +296,13 @@ func TestLocalSourceFetch(t *testing.T) {
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: retentionFrom,
-				StopTime:  retentionUntil,
-				StepTime:  retention, Values: []float64{0, 1, 2, 3, 4},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "metric",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention, Values: []float64{0, 1, 2, 3, 4},
+				},
 			},
 			Metrics:  []string{metric},
 			Patterns: []string{pattern},
@@ -310,9 +312,9 @@ func TestLocalSourceFetch(t *testing.T) {
 	Convey("Test enormous fetch interval", t, func() {
 		var fromPast int64 = 0
 		var toFuture int64 = 1e15
-		var ttl = 2*retention - 1
+		ttl := 2*retention - 1
 
-		var distantFutureDataList = map[string][]*moira.MetricValue{
+		distantFutureDataList := map[string][]*moira.MetricValue{
 			metric: {
 				{RetentionTimestamp: toFuture, Timestamp: toFuture, Value: 0},
 				{RetentionTimestamp: toFuture - retention, Timestamp: toFuture - retention, Value: 0},
@@ -328,13 +330,14 @@ func TestLocalSourceFetch(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: toFuture - retention,
-				StopTime:  toFuture + retention,
-				StepTime:  retention,
-				Values:    []float64{0, 0},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "metric",
+					StartTime: toFuture - retention,
+					StopTime:  toFuture + retention,
+					StepTime:  retention,
+					Values:    []float64{0, 0},
+				},
 			},
 			Metrics:  []string{metric},
 			Patterns: []string{pattern1},
@@ -398,12 +401,13 @@ func TestLocalSourceFetchNoRealTimeAlerting(t *testing.T) {
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, false)
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: retentionFrom,
-				StopTime:  retentionUntil,
-				StepTime:  retention, Values: []float64{0, 1, 2, 3},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "metric",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention, Values: []float64{0, 1, 2, 3},
+				},
 			},
 			Metrics:  []string{metric},
 			Patterns: []string{pattern},
@@ -461,13 +465,14 @@ func TestLocalSourceFetchWithMultiplePatterns(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: 20,
-				StopTime:  80,
-				StepTime:  20,
-				Values:    []float64{2.1, 5.1, 8.1},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "metric",
+					StartTime: 20,
+					StopTime:  80,
+					StepTime:  20,
+					Values:    []float64{2.1, 5.1, 8.1},
+				},
 			},
 			Metrics:  []string{metric1, metric2},
 			Patterns: []string{pattern1, pattern2},
@@ -486,19 +491,6 @@ func TestLocalMetricsTTL(t *testing.T) {
 		dataBase.EXPECT().GetMetricsTTLSeconds().Return(ttl)
 		actual := localSource.GetMetricsTTLSeconds()
 		So(actual, ShouldEqual, ttl)
-	})
-}
-
-func TestLocal_IsConfigured(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := Create(dataBase)
-
-	Convey("Always true", t, func() {
-		actual, err := localSource.IsConfigured()
-		So(err, ShouldBeNil)
-		So(actual, ShouldBeTrue)
 	})
 }
 

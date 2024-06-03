@@ -64,10 +64,18 @@ func TestParseMetric(t *testing.T) {
 			{"One.two.three;four= 123 1234567890", "One.two.three;four=", "One.two.three", map[string]string{"four": ""}, 123, 1234567890},
 			{"One.two.three;six=seven;four=five 123 1234567890", "One.two.three;four=five;six=seven", "One.two.three", map[string]string{"four": "five", "six": "seven"}, 123, 1234567890},
 			{"One.two.three;four=five;six=seven=eight 123 1234567890", "One.two.three;four=five;six=seven=eight", "One.two.three", map[string]string{"four": "five", "six": "seven=eight"}, 123, 1234567890},
-			{"One.two.three;four=five;six=seven=eight=nine 123 1234567890", "One.two.three;four=five;six=seven=eight=nine",
-				"One.two.three", map[string]string{"four": "five", "six": "seven=eight=nine"}, 123, 1234567890},
-			{"One.two.three;four=five;six=seven=eight=nine= 123 1234567890", "One.two.three;four=five;six=seven=eight=nine=",
-				"One.two.three", map[string]string{"four": "five", "six": "seven=eight=nine="}, 123, 1234567890},
+			{
+				"One.two.three;four=five;six=seven=eight=nine 123 1234567890", "One.two.three;four=five;six=seven=eight=nine",
+				"One.two.three",
+				map[string]string{"four": "five", "six": "seven=eight=nine"},
+				123, 1234567890,
+			},
+			{
+				"One.two.three;four=five;six=seven=eight=nine= 123 1234567890", "One.two.three;four=five;six=seven=eight=nine=",
+				"One.two.three",
+				map[string]string{"four": "five", "six": "seven=eight=nine="},
+				123, 1234567890,
+			},
 		}
 
 		for _, validMetric := range validMetrics {
@@ -205,22 +213,36 @@ func TestRestoreMetricStringByNameAndLabels(t *testing.T) {
 	})
 }
 
-func TestParsedMetric_IsTooOld(t *testing.T) {
+func TestParsedMetric_IsExpired(t *testing.T) {
 	now := time.Date(2022, 6, 16, 10, 0, 0, 0, time.UTC)
 	maxTTL := time.Hour
 
-	Convey("When metric is old, return true", t, func() {
-		metric := ParsedMetric{
-			Name:      "too old metric",
-			Timestamp: time.Date(2022, 6, 16, 8, 59, 0, 0, time.UTC).Unix(),
-		}
-		So(metric.IsTooOld(maxTTL, now), ShouldBeTrue)
-	})
-	Convey("When metric is young, return false", t, func() {
-		metric := ParsedMetric{
-			Name:      "too old metric",
-			Timestamp: time.Date(2022, 6, 16, 9, 00, 0, 0, time.UTC).Unix(),
-		}
-		So(metric.IsTooOld(maxTTL, now), ShouldBeFalse)
+	Convey("Test isExpired metric", t, func() {
+		Convey("Metric too old", func() {
+			metric := ParsedMetric{
+				Name:      "metric1",
+				Timestamp: now.Add(-2 * maxTTL).Unix(),
+			}
+
+			So(metric.IsExpired(maxTTL, now), ShouldBeTrue)
+		})
+
+		Convey("Metric far into the future", func() {
+			metric := ParsedMetric{
+				Name:      "metric2",
+				Timestamp: now.Add(2 * maxTTL).Unix(),
+			}
+
+			So(metric.IsExpired(maxTTL, now), ShouldBeTrue)
+		})
+
+		Convey("Metric in the maxTTL window", func() {
+			metric := ParsedMetric{
+				Name:      "metric3",
+				Timestamp: now.Unix(),
+			}
+
+			So(metric.IsExpired(maxTTL, now), ShouldBeFalse)
+		})
 	})
 }

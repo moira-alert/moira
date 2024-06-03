@@ -30,6 +30,8 @@ type filterConfig struct {
 	DropMetricsTTL string `yaml:"drop_metrics_ttl"`
 	// Flags for compatibility with different graphite behaviours
 	Compatibility compatibility `yaml:"graphite_compatibility"`
+	// Time after which the batch of metrics is forced to be saved, default is 1s
+	BatchForcedSaveTimeout string `yaml:"batch_forced_save_timeout"`
 }
 
 func getDefault() config {
@@ -45,12 +47,13 @@ func getDefault() config {
 			LogPrettyFormat: false,
 		},
 		Filter: filterConfig{
-			Listen:               ":2003",
-			RetentionConfig:      "/etc/moira/storage-schemas.conf",
-			CacheCapacity:        10, //nolint
-			MaxParallelMatches:   0,
-			PatternsUpdatePeriod: "1s",
-			DropMetricsTTL:       "1h",
+			Listen:                 ":2003",
+			RetentionConfig:        "/etc/moira/storage-schemas.conf",
+			CacheCapacity:          10, //nolint
+			MaxParallelMatches:     0,
+			PatternsUpdatePeriod:   "1s",
+			DropMetricsTTL:         "1h",
+			BatchForcedSaveTimeout: "1s",
 			Compatibility: compatibility{
 				AllowRegexLooseStartMatch: false,
 				AllowRegexMatchEmpty:      true,

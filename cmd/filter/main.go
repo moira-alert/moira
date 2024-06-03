@@ -31,7 +31,7 @@ var (
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )
 
-// Moira filter bin version
+// Moira filter bin version.
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
@@ -143,7 +143,8 @@ func main() {
 
 	// Start metrics matcher
 	cacheCapacity := config.Filter.CacheCapacity
-	metricsMatcher := matchedmetrics.NewMetricsMatcher(filterMetrics, logger, database, cacheStorage, cacheCapacity)
+	batchForcedSaveTimeout := to.Duration(config.Filter.BatchForcedSaveTimeout)
+	metricsMatcher := matchedmetrics.NewMetricsMatcher(filterMetrics, logger, database, cacheStorage, cacheCapacity, batchForcedSaveTimeout)
 	metricsMatcher.Start(metricsChan)
 	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events

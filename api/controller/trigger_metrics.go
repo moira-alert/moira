@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/moira-alert/moira"
@@ -11,7 +12,7 @@ import (
 )
 
 // GetTriggerEvaluationResult evaluates every target in trigger and returns
-// result, separated on main and additional targets metrics
+// result, separated on main and additional targets metrics.
 func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
@@ -36,22 +37,22 @@ func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *m
 	return triggerMetrics, &trigger, nil
 }
 
-// DeleteTriggerMetric deletes metric from last check and all trigger patterns metrics
+// DeleteTriggerMetric deletes metric from last check and all trigger patterns metrics.
 func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID string) *api.ErrorResponse {
 	return deleteTriggerMetrics(dataBase, metricName, triggerID, false)
 }
 
 // DeleteTriggerNodataMetrics deletes all metric from last check which are in NODATA state.
-// It also deletes all trigger patterns of those metrics
+// It also deletes all trigger patterns of those metrics.
 func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.ErrorResponse {
 	return deleteTriggerMetrics(dataBase, "", triggerID, true)
 }
 
-// GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now
+// GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now.
 func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string) (*dto.TriggerMetrics, *api.ErrorResponse) {
 	tts, _, err := GetTriggerEvaluationResult(dataBase, metricSourceProvider, from, to, triggerID, false)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
 		}
 		return nil, api.ErrorInternalServer(err)
@@ -79,7 +80,7 @@ func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSour
 func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID string, removeAllNodataMetrics bool) *api.ErrorResponse {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
 		}
 		return api.ErrorInternalServer(err)
@@ -92,7 +93,7 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return api.ErrorInvalidRequest(fmt.Errorf("trigger check not found"))
 		}
 		return api.ErrorInternalServer(err)
@@ -109,12 +110,15 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 			delete(lastCheck.Metrics, metricName)
 		}
 	}
+
 	lastCheck.UpdateScore()
 	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource); err != nil {
+
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }

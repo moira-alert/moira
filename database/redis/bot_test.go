@@ -76,6 +76,8 @@ func TestBotDataStoringErrorConnection(t *testing.T) {
 	})
 }
 
-var messenger1 = "messenger1"
-var messenger2 = "messenger2"
-var messenger3 = "messenger3"
+var (
+	messenger1 = "messenger1"
+	messenger2 = "messenger2"
+	messenger3 = "messenger3"
+)

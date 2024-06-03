@@ -2,7 +2,7 @@ package metrics
 
 import "time"
 
-// NotifierMetrics is a collection of metrics used in notifier
+// NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
 	SubsMalformed                  Meter
 	EventsReceived                 Meter
@@ -36,7 +36,7 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 	}
 }
 
-// UpdateFetchNotificationsDurationMs - counts how much time has passed since fetchNotificationsStartTime in ms and updates the metric
+// UpdateFetchNotificationsDurationMs - counts how much time has passed since fetchNotificationsStartTime in ms and updates the metric.
 func (metrics *NotifierMetrics) UpdateFetchNotificationsDurationMs(fetchNotificationsStartTime time.Time) {
 	metrics.fetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
 }

@@ -149,7 +149,7 @@ func TestBuildTitle(t *testing.T) {
 	Convey("Build title that exceeds the title limit", t, func() {
 		var reallyLongTag string
 		for i := 0; i < 30; i++ {
-			reallyLongTag = reallyLongTag + "randomstring"
+			reallyLongTag += "randomstring"
 		}
 
 		Convey("without throttling", func() {
@@ -174,13 +174,14 @@ func TestMakePushoverMessage(t *testing.T) {
 		logger:   logger,
 	}
 	Convey("Just build PushoverMessage", t, func() {
-		event := []moira.NotificationEvent{{
-			Values:    map[string]float64{"t1": 123},
-			Timestamp: 150000000,
-			Metric:    "Metric",
-			OldState:  moira.StateOK,
-			State:     moira.StateERROR,
-		},
+		event := []moira.NotificationEvent{
+			{
+				Values:    map[string]float64{"t1": 123},
+				Timestamp: 150000000,
+				Metric:    "Metric",
+				OldState:  moira.StateOK,
+				State:     moira.StateERROR,
+			},
 		}
 		trigger := moira.TriggerData{
 			ID:   "SomeID",

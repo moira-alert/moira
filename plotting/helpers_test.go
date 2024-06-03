@@ -2,7 +2,6 @@ package plotting
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -13,34 +12,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// TestSortByLen tests simple string array sorting by length
-func TestSortByLen(t *testing.T) {
-	labelsUnsorted := []string{
-		"CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"MetricPrefix.ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"CategoryCounterType.MetricName",
-		"MetricName",
-		"CategoryCounterName.CategoryCounterType.MetricName",
-		"HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-	}
-	labelsSorted := []string{
-		"MetricName",
-		"CategoryCounterType.MetricName",
-		"CategoryCounterName.CategoryCounterType.MetricName",
-		"CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		"MetricPrefix.ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-	}
-	Convey("Sort initial unsorted string array", t, func() {
-		sort.Sort(sortedByLen(labelsUnsorted))
-		So(len(labelsUnsorted), ShouldEqual, len(labelsSorted))
-		So(labelsUnsorted, ShouldResemble, labelsSorted)
-	})
-}
-
-// TestSanitizeLabelName tests simple label names shortener
+// TestSanitizeLabelName tests simple label names shortener.
 func TestSanitizeLabelName(t *testing.T) {
 	labelsCompleteForm := []string{
 		"MetricName",
@@ -78,7 +50,7 @@ func TestSanitizeLabelName(t *testing.T) {
 	})
 }
 
-// TestPercentsOfRange is a simple test of percentsOfRange method
+// TestPercentsOfRange is a simple test of percentsOfRange method.
 func TestPercentsOfRange(t *testing.T) {
 	Convey("Test nth percent is calculated correctly", t, func() {
 		for i := 0; i < 100; i++ {
@@ -89,7 +61,7 @@ func TestPercentsOfRange(t *testing.T) {
 	})
 }
 
-// TestTimeValueFormatter tests time.Time to formatted string converter
+// TestTimeValueFormatter tests time.Time to formatted string converter.
 func TestTimeValueFormatter(t *testing.T) {
 	dateTimeFormat, separator := "15:04", ":"
 	timeValue := moira.Int64ToTime(int64(1527330278))
@@ -113,7 +85,7 @@ func TestTimeValueFormatter(t *testing.T) {
 	})
 }
 
-// TestFloatToHumanizedValueFormatter tests custom value formatter based on go-humanize library
+// TestFloatToHumanizedValueFormatter tests custom value formatter based on go-humanize library.
 func TestFloatToHumanizedValueFormatter(t *testing.T) {
 	metricValues := []float64{
 		999,
@@ -140,7 +112,7 @@ func TestFloatToHumanizedValueFormatter(t *testing.T) {
 	})
 }
 
-// TestGetYAxisValuesFormatter tests all metric values will be formatted respectively with resolved plot limits
+// TestGetYAxisValuesFormatter tests all metric values will be formatted respectively with resolved plot limits.
 func TestGetYAxisValuesFormatter(t *testing.T) {
 	lowLimits := plotLimits{
 		lowest:  0,

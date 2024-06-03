@@ -10,7 +10,7 @@ import (
 
 const defaultIndexBatchSize = 1000
 
-// TriggerIndex is index for moira.TriggerChecks type
+// TriggerIndex is index for moira.TriggerChecks type.
 type TriggerIndex interface {
 	Search(options moira.SearchOptions) (searchResults []*moira.SearchResult, total int64, err error)
 	Write(checks []*moira.TriggerCheck) error
@@ -18,7 +18,7 @@ type TriggerIndex interface {
 	GetCount() (int64, error)
 }
 
-// Index represents Index for Bleve.Index type
+// Index represents Index for Bleve.Index type.
 type Index struct {
 	triggerIndex      TriggerIndex
 	logger            moira.Logger
@@ -30,7 +30,7 @@ type Index struct {
 	indexActualizedTS int64
 }
 
-// NewSearchIndex return new Index object
+// NewSearchIndex return new Index object.
 func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistry metrics.Registry) *Index {
 	var err error
 	newIndex := Index{
@@ -46,7 +46,7 @@ func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistr
 	return &newIndex
 }
 
-// Start initializes index. It creates new mapping and index all triggers from database
+// Start initializes index. It creates new mapping and index all triggers from database.
 func (index *Index) Start() error {
 	if index.inProgress || index.indexed {
 		return nil
@@ -68,12 +68,12 @@ func (index *Index) Start() error {
 	return nil
 }
 
-// IsReady returns boolean value which determines if index is ready to use
+// IsReady returns boolean value which determines if index is ready to use.
 func (index *Index) IsReady() bool {
 	return index.indexed
 }
 
-// Stop stops checks triggers
+// Stop stops checks triggers.
 func (index *Index) Stop() error {
 	index.logger.Info().Msg("Stop search index")
 	index.tomb.Kill(nil)

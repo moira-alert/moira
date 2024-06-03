@@ -176,12 +176,13 @@ func TestCreateSubscription(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	const login = "user"
 	const teamID = "testTeam"
+	auth := &api.Authorization{Enabled: false}
 
 	Convey("Create for user", t, func() {
 		Convey("Success create", func() {
 			subscription := dto.Subscription{ID: ""}
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, login, "", &subscription)
+			err := CreateSubscription(dataBase, auth, login, "", &subscription)
 			So(err, ShouldBeNil)
 		})
 
@@ -191,7 +192,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			dataBase.EXPECT().GetSubscription(sub.ID).Return(moira.SubscriptionData{}, database.ErrNil)
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, login, "", sub)
+			err := CreateSubscription(dataBase, auth, login, "", sub)
 			So(err, ShouldBeNil)
 			So(sub.User, ShouldResemble, login)
 			So(sub.ID, ShouldResemble, sub.ID)
@@ -202,7 +203,7 @@ func TestCreateSubscription(t *testing.T) {
 				ID: uuid.Must(uuid.NewV4()).String(),
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, nil)
-			err := CreateSubscription(dataBase, login, "", subscription)
+			err := CreateSubscription(dataBase, auth, login, "", subscription)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("subscription with this ID already exists")))
 		})
 
@@ -212,7 +213,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, err)
-			expected := CreateSubscription(dataBase, login, "", subscription)
+			expected := CreateSubscription(dataBase, auth, login, "", subscription)
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		})
 
@@ -220,7 +221,7 @@ func TestCreateSubscription(t *testing.T) {
 			subscription := dto.Subscription{ID: ""}
 			expected := fmt.Errorf("oooops! Can not create subscription")
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(expected)
-			err := CreateSubscription(dataBase, login, "", &subscription)
+			err := CreateSubscription(dataBase, auth, login, "", &subscription)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		})
 	})
@@ -228,7 +229,7 @@ func TestCreateSubscription(t *testing.T) {
 		Convey("Success create", func() {
 			subscription := dto.Subscription{ID: ""}
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, "", teamID, &subscription)
+			err := CreateSubscription(dataBase, auth, "", teamID, &subscription)
 			So(err, ShouldBeNil)
 		})
 
@@ -238,7 +239,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			dataBase.EXPECT().GetSubscription(sub.ID).Return(moira.SubscriptionData{}, database.ErrNil)
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, "", teamID, sub)
+			err := CreateSubscription(dataBase, auth, "", teamID, sub)
 			So(err, ShouldBeNil)
 			So(sub.TeamID, ShouldResemble, teamID)
 			So(sub.ID, ShouldResemble, sub.ID)
@@ -249,7 +250,7 @@ func TestCreateSubscription(t *testing.T) {
 				ID: uuid.Must(uuid.NewV4()).String(),
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, nil)
-			err := CreateSubscription(dataBase, "", teamID, subscription)
+			err := CreateSubscription(dataBase, auth, "", teamID, subscription)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("subscription with this ID already exists")))
 		})
 
@@ -259,7 +260,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, err)
-			expected := CreateSubscription(dataBase, "", teamID, subscription)
+			expected := CreateSubscription(dataBase, auth, "", teamID, subscription)
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		})
 
@@ -267,14 +268,68 @@ func TestCreateSubscription(t *testing.T) {
 			subscription := dto.Subscription{ID: ""}
 			expected := fmt.Errorf("oooops! Can not create subscription")
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(expected)
-			err := CreateSubscription(dataBase, "", teamID, &subscription)
+			err := CreateSubscription(dataBase, auth, "", teamID, &subscription)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		})
 	})
 	Convey("Error on create with both: userLogin and teamID specified", t, func() {
 		subscription := &dto.Subscription{}
-		err := CreateSubscription(dataBase, login, teamID, subscription)
+		err := CreateSubscription(dataBase, auth, login, teamID, subscription)
 		So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("CreateSubscription: cannot create subscription when both userLogin and teamID specified")))
+	})
+}
+
+func TestAdminsCreatesSubscription(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	const userLogin = "user"
+	const adminLogin = "admin"
+	auth := &api.Authorization{
+		Enabled:   true,
+		AdminList: map[string]struct{}{adminLogin: {}},
+	}
+
+	Convey("Create for user", t, func() {
+		Convey("For same user", func() {
+			subscription := dto.Subscription{
+				User: userLogin,
+			}
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			err := CreateSubscription(dataBase, auth, userLogin, "", &subscription)
+			So(err, ShouldBeNil)
+			So(subscription.User, ShouldEqual, userLogin)
+		})
+
+		Convey("For same admin", func() {
+			subscription := dto.Subscription{
+				User: adminLogin,
+			}
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			err := CreateSubscription(dataBase, auth, adminLogin, "", &subscription)
+			So(err, ShouldBeNil)
+			So(subscription.User, ShouldEqual, adminLogin)
+		})
+
+		Convey("User can not create subscription for other user", func() {
+			subscription := dto.Subscription{
+				User: adminLogin,
+			}
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			err := CreateSubscription(dataBase, auth, userLogin, "", &subscription)
+			So(err, ShouldBeNil)
+			So(subscription.User, ShouldEqual, userLogin)
+		})
+
+		Convey("Admin can create subscription for other user", func() {
+			subscription := dto.Subscription{
+				User: userLogin,
+			}
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			err := CreateSubscription(dataBase, auth, adminLogin, "", &subscription)
+			So(err, ShouldBeNil)
+			So(subscription.User, ShouldEqual, userLogin)
+		})
 	})
 }
 
@@ -285,10 +340,11 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	userLogin := uuid.Must(uuid.NewV4()).String()
 	teamID := uuid.Must(uuid.NewV4()).String()
 	id := uuid.Must(uuid.NewV4()).String()
+	auth := &api.Authorization{}
 
 	Convey("No subscription", t, func() {
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, database.ErrNil)
-		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("subscription with ID '%s' does not exists", id)))
 		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
@@ -296,7 +352,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	Convey("Different user", t, func() {
 		actualSub := moira.SubscriptionData{User: "diffUser"}
 		dataBase.EXPECT().GetSubscription(id).Return(actualSub, nil)
-		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorForbidden("you are not permitted"))
 		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
@@ -304,7 +360,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	Convey("Has subscription", t, func() {
 		actualSub := moira.SubscriptionData{ID: id, User: userLogin}
 		dataBase.EXPECT().GetSubscription(id).Return(actualSub, nil)
-		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 		So(expected, ShouldBeNil)
 		So(expectedSub, ShouldResemble, actualSub)
 	})
@@ -312,7 +368,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	Convey("Error get contact", t, func() {
 		err := fmt.Errorf("oooops! Can not read contact")
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, err)
-		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
@@ -322,14 +378,14 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 			expectedSub := moira.SubscriptionData{ID: id, TeamID: teamID}
 			dataBase.EXPECT().GetSubscription(id).Return(expectedSub, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(true, nil)
-			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expectedSub)
 		})
 		Convey("User is not in team", func() {
 			dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{ID: id, TeamID: teamID}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(false, nil)
-			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 			So(err, ShouldResemble, api.ErrorForbidden("you are not permitted"))
 			So(actual, ShouldResemble, moira.SubscriptionData{})
 		})
@@ -337,10 +393,45 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 			errReturned := errors.New("test error")
 			dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{ID: id, TeamID: teamID}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(false, errReturned)
-			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(errReturned))
 			So(actual, ShouldResemble, moira.SubscriptionData{})
 		})
+	})
+}
+
+func TestCheckAdminPermissionsForSubscription(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	teamID := uuid.Must(uuid.NewV4()).String()
+	id := uuid.Must(uuid.NewV4()).String()
+	adminLogin := "admin_login"
+	auth := &api.Authorization{Enabled: true, AdminList: map[string]struct{}{adminLogin: {}}}
+
+	Convey("Same user", t, func() {
+		expectedSub := moira.SubscriptionData{ID: id, User: adminLogin}
+		dataBase.EXPECT().GetSubscription(id).Return(expectedSub, nil)
+		actualContact, errorResponse := CheckUserPermissionsForSubscription(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedSub)
+	})
+
+	Convey("Different user", t, func() {
+		expectedSub := moira.SubscriptionData{ID: id, User: "diffUser"}
+		dataBase.EXPECT().GetSubscription(id).Return(expectedSub, nil)
+		actualContact, errorResponse := CheckUserPermissionsForSubscription(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedSub)
+	})
+
+	Convey("Team contact", t, func() {
+		expectedSub := moira.SubscriptionData{ID: id, TeamID: teamID}
+		dataBase.EXPECT().GetSubscription(id).Return(expectedSub, nil)
+		actualContact, errorResponse := CheckUserPermissionsForSubscription(dataBase, id, adminLogin, auth)
+		So(errorResponse, ShouldBeNil)
+		So(actualContact, ShouldResemble, expectedSub)
 	})
 }
 

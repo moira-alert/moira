@@ -18,7 +18,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// generateTestMetricsData generates metricsData map for tests
+// generateTestMetricsData generates metricsData map for tests.
 func generateTestMetricsData() map[string][]metricSource.MetricData {
 	metricData1 := metricSource.MetricData{
 		Name:      "MetricName",
@@ -49,7 +49,7 @@ func generateTestMetricsData() map[string][]metricSource.MetricData {
 		Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
 	}
 
-	var result = make(map[string][]metricSource.MetricData)
+	result := make(map[string][]metricSource.MetricData)
 
 	result["t1"] = []metricSource.MetricData{metricData1}
 	result["t2"] = []metricSource.MetricData{metricData2}
@@ -148,7 +148,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 	})
 }
 
-// TestGetMetricDataToShow tests to limited metricsData returns only necessary metricsData
+// TestGetMetricDataToShow tests to limited metricsData returns only necessary metricsData.
 func TestGetMetricDataToShow(t *testing.T) {
 	givenSeries := map[string][]metricSource.MetricData{
 		"t1": {
@@ -224,7 +224,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 
 		Convey("with error ErrEvaluateTargetFailedWithPanic and error again", func() {
 			var err error = local.ErrEvaluateTargetFailedWithPanic{}
-			var secondErr = errors.New("Test error")
+			secondErr := errors.New("test error")
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), false).Return(nil, secondErr).Times(1),
@@ -234,7 +234,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 		})
 
 		Convey("with unknown error", func() {
-			var err error = errors.New("Test error")
+			err := errors.New("test error")
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 			)
@@ -248,7 +248,6 @@ func TestBuildTriggerPlots(t *testing.T) {
 	Convey("Run buildTriggerPlots", t, func() {
 		triggerID := uuid.Must(uuid.NewV4()).String()
 		trigger := moira.Trigger{ID: triggerID}
-		location, _ := time.LoadLocation("UTC")
 		plotTemplate, _ := plotting.GetPlotTemplate("", location)
 
 		Convey("without errors", func() {

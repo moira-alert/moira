@@ -22,9 +22,11 @@ import (
 const (
 	ContactIDKey   = "contactID"
 	ContactKey     = "contact"
+	AuthKey        = "auth"
 	LoginKey       = "login"
 	defaultContact = "testContact"
 	defaultLogin   = "testLogin"
+	defaultTeamID  = "testTeamID"
 )
 
 func TestGetAllContacts(t *testing.T) {
@@ -43,7 +45,7 @@ func TestGetAllContacts(t *testing.T) {
 					ID:    defaultContact,
 					Type:  "mail",
 					Value: "moira@skbkontur.ru",
-					User:  "moira",
+					User:  defaultLogin,
 					Team:  "",
 				},
 			}, nil).Times(1)
@@ -55,7 +57,7 @@ func TestGetAllContacts(t *testing.T) {
 						ID:    defaultContact,
 						Type:  "mail",
 						Value: "moira@skbkontur.ru",
-						User:  "moira",
+						User:  defaultLogin,
 						Team:  "",
 					},
 				},
@@ -120,7 +122,7 @@ func TestGetContactById(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
+				User:  defaultLogin,
 				Team:  "",
 			}, nil).Times(1)
 			database = mockDb
@@ -129,7 +131,7 @@ func TestGetContactById(t *testing.T) {
 				ID:     contactID,
 				Type:   "mail",
 				Value:  "moira@skbkontur.ru",
-				User:   "test",
+				User:   defaultLogin,
 				TeamID: "",
 			}
 
@@ -194,8 +196,16 @@ func TestCreateNewContact(t *testing.T) {
 		login := defaultLogin
 		testErr := errors.New("test error")
 
+		auth := &api.Authorization{
+			Enabled: false,
+			AllowedContactTypes: map[string]struct{}{
+				"mail": {},
+			},
+		}
+
 		newContactDto := &dto.Contact{
 			ID:     defaultContact,
+			Name:   "Mail Alerts",
 			Type:   "mail",
 			Value:  "moira@skbkontur.ru",
 			User:   login,
@@ -209,6 +219,7 @@ func TestCreateNewContact(t *testing.T) {
 			mockDb.EXPECT().GetContact(defaultContact).Return(moira.ContactData{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    newContactDto.ID,
+				Name:  newContactDto.Name,
 				Type:  newContactDto.Type,
 				Value: newContactDto.Value,
 				User:  newContactDto.User,
@@ -218,6 +229,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -249,6 +261,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -266,6 +279,7 @@ func TestCreateNewContact(t *testing.T) {
 			So(actual.Type, ShouldEqual, newContactDto.Type)
 			So(actual.User, ShouldEqual, newContactDto.User)
 			So(actual.Value, ShouldEqual, newContactDto.Value)
+			So(actual.Name, ShouldEqual, newContactDto.Name)
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
@@ -288,6 +302,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -318,6 +333,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -336,7 +352,7 @@ func TestCreateNewContact(t *testing.T) {
 		})
 
 		Convey("Trying to create a contact when both userLogin and teamID specified", func() {
-			newContactDto.TeamID = "test"
+			newContactDto.TeamID = defaultTeamID
 			defer func() {
 				newContactDto.TeamID = ""
 			}()
@@ -350,6 +366,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "auth", auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -381,9 +398,10 @@ func TestUpdateContact(t *testing.T) {
 		contactID := defaultContact
 		updatedContactDto := &dto.Contact{
 			ID:     contactID,
+			Name:   "Mail Alerts",
 			Type:   "mail",
 			Value:  "moira@skbkontur.ru",
-			User:   "test",
+			User:   defaultLogin,
 			TeamID: "",
 		}
 
@@ -393,6 +411,7 @@ func TestUpdateContact(t *testing.T) {
 
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    updatedContactDto.ID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
@@ -400,12 +419,20 @@ func TestUpdateContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
+
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
 				ID:    contactID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
 			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateContact(responseWriter, testRequest)
@@ -433,6 +460,7 @@ func TestUpdateContact(t *testing.T) {
 
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    updatedContactDto.ID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
@@ -446,6 +474,12 @@ func TestUpdateContact(t *testing.T) {
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
 			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateContact(responseWriter, testRequest)
@@ -502,7 +536,7 @@ func TestRemoveContact(t *testing.T) {
 		})
 
 		Convey("Successful deletion of a contact without team id and subscriptions", func() {
-			mockDb.EXPECT().GetUserSubscriptionIDs("test").Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
@@ -512,7 +546,7 @@ func TestRemoveContact(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
+				User:  defaultLogin,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -529,7 +563,7 @@ func TestRemoveContact(t *testing.T) {
 		})
 
 		Convey("Successful deletion of a contact without user id and subscriptions", func() {
-			mockDb.EXPECT().GetTeamSubscriptionIDs("test").Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
@@ -539,7 +573,7 @@ func TestRemoveContact(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				Team:  "test",
+				Team:  defaultTeamID,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -556,8 +590,8 @@ func TestRemoveContact(t *testing.T) {
 		})
 
 		Convey("Successful deletion of a contact without subscriptions", func() {
-			mockDb.EXPECT().GetUserSubscriptionIDs("test").Return([]string{}, nil).Times(1)
-			mockDb.EXPECT().GetTeamSubscriptionIDs("test").Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
@@ -567,8 +601,8 @@ func TestRemoveContact(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
-				Team:  "test",
+				User:  defaultLogin,
+				Team:  defaultTeamID,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -590,7 +624,7 @@ func TestRemoveContact(t *testing.T) {
 				ErrorText:  "this contact is being used in following subscriptions:  (tags: test)",
 			}
 
-			mockDb.EXPECT().GetUserSubscriptionIDs("test").Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test"}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -604,7 +638,7 @@ func TestRemoveContact(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
+				User:  defaultLogin,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -629,7 +663,7 @@ func TestRemoveContact(t *testing.T) {
 				ErrorText:  "this contact is being used in following subscriptions:  (tags: test)",
 			}
 
-			mockDb.EXPECT().GetTeamSubscriptionIDs("test").Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{"test"}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -643,7 +677,7 @@ func TestRemoveContact(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				Team:  "test",
+				Team:  defaultTeamID,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -668,8 +702,8 @@ func TestRemoveContact(t *testing.T) {
 				ErrorText:  "this contact is being used in following subscriptions:  (tags: test1),  (tags: test2)",
 			}
 
-			mockDb.EXPECT().GetUserSubscriptionIDs("test1").Return([]string{"test1"}, nil).Times(1)
-			mockDb.EXPECT().GetTeamSubscriptionIDs("test2").Return([]string{"test2"}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test1"}, nil).Times(1)
+			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{"test2"}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test1", "test2"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -687,8 +721,8 @@ func TestRemoveContact(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				Team:  "test2",
-				User:  "test1",
+				Team:  defaultTeamID,
+				User:  defaultLogin,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 

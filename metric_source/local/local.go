@@ -7,12 +7,12 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-// Local is implementation of MetricSource interface, which implements fetch metrics method from moira database installation
+// Local is implementation of MetricSource interface, which implements fetch metrics method from moira database installation.
 type Local struct {
 	database moira.Database
 }
 
-// Create configures local metric source
+// Create configures local metric source.
 func Create(dataBase moira.Database) metricSource.MetricSource {
 	// configure carbon-api functions
 	rewrite.New(make(map[string]string))
@@ -23,22 +23,22 @@ func Create(dataBase moira.Database) metricSource.MetricSource {
 	}
 }
 
-// GetMetricsTTLSeconds returns metrics lifetime in Redis
+// GetMetricsTTLSeconds returns metrics lifetime in Redis.
 func (local *Local) GetMetricsTTLSeconds() int64 {
 	return local.database.GetMetricsTTLSeconds()
 }
 
-// IsConfigured always returns true. It easy to configure local source =)
+// IsConfigured always returns true. It easy to configure local source =).
 func (local *Local) IsConfigured() (bool, error) {
 	return true, nil
 }
 
-// IsConfigured always returns true. It easy to configure local source =)
+// IsConfigured always returns true. It easy to configure local source =).
 func (local *Local) IsAvailable() (bool, error) {
 	return true, nil
 }
 
-// Fetch is analogue of evaluateTarget method in graphite-web, that gets target metrics value from DB and Evaluate it using carbon-api eval package
+// Fetch is analogue of evaluateTarget method in graphite-web, that gets target metrics value from DB and Evaluate it using carbon-api eval package.
 func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	// Don't fetch intervals larger than metrics TTL to prevent OOM errors
 	// See https://github.com/moira-alert/moira/pull/519

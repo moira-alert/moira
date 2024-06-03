@@ -123,7 +123,7 @@ func TestBuildTitle(t *testing.T) {
 	Convey("Build title that exceeds the title limit", t, func() {
 		var reallyLongTag string
 		for i := 0; i < 30; i++ {
-			reallyLongTag = reallyLongTag + "randomstring"
+			reallyLongTag += "randomstring"
 		}
 
 		Convey("without throttling", func() {
@@ -154,13 +154,14 @@ func TestMakeCreateAlertRequest(t *testing.T) {
 	}
 	imageStore.EXPECT().StoreImage([]byte(`test`)).Return("testlink", nil)
 	Convey("Build CreateAlertRequest", t, func() {
-		event := []moira.NotificationEvent{{
-			Values:    map[string]float64{"t1": 123},
-			Timestamp: 150000000,
-			Metric:    "Metric",
-			OldState:  moira.StateOK,
-			State:     moira.StateERROR,
-		},
+		event := []moira.NotificationEvent{
+			{
+				Values:    map[string]float64{"t1": 123},
+				Timestamp: 150000000,
+				Metric:    "Metric",
+				OldState:  moira.StateOK,
+				State:     moira.StateERROR,
+			},
 		}
 		trigger := moira.TriggerData{
 			ID:   "SomeID",

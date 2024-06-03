@@ -1,4 +1,4 @@
-// convert file to byte array and write to variable go file
+// convert file to byte array and write to variable go file.
 package main
 
 import (
@@ -13,7 +13,7 @@ func usage() {
 	fmt.Println("> ttf2GoFile <filename>")
 }
 
-// reade file to byte array
+// reade file to byte array.
 func fileBytes(filePath string) ([]byte, error) {
 	var err error
 	f, err := os.Open(filePath)
@@ -24,7 +24,7 @@ func fileBytes(filePath string) ([]byte, error) {
 	return io.ReadAll(f)
 }
 
-// write to variable go file
+// write to variable go file.
 func createGoFile(fileName string, dataTTF []byte) error {
 	f, err := os.Create(strings.ToLower(fileName) + ".go")
 	if err != nil {
@@ -43,6 +43,7 @@ func main() {
 		usage()
 		os.Exit(1)
 	}
+
 	file := os.Args[1]
 
 	fmt.Println(file[len(file)-5:])
@@ -54,7 +55,6 @@ func main() {
 	fmt.Printf("Reading %s\n", file)
 
 	dataTTF, err := fileBytes(file)
-
 	if err != nil {
 		fmt.Printf("Error opening file: %v\n", err)
 		os.Exit(1)

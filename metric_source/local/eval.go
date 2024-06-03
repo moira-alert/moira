@@ -199,7 +199,7 @@ func (ectx *evalCtx) rewriteExpr(parsedExpr parser.Expr, metrics *fetchedMetrics
 		metrics.metricsMap,
 	)
 
-	if err != nil && err != parser.ErrMissingTimeseries {
+	if err != nil && !errors.Is(err, parser.ErrMissingTimeseries) {
 		return false, nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 	}
 	return rewritten, newTargets, nil

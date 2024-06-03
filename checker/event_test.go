@@ -406,7 +406,6 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", secondState, firstState)
 			So(err, ShouldBeNil)
 			secondState.EventTimestamp = firstState.EventTimestamp
-			//secondState.SuppressedState = firstState.SuppressedState
 			So(actual, ShouldResemble, secondState)
 
 			Convey("Test state change state after suppressed", func() {
@@ -647,7 +646,7 @@ func TestTriggerMaintenance(t *testing.T) {
 
 func TestIsStateChanged(t *testing.T) {
 	Convey("isStateChanged tests", t, func() {
-		var lastCheckTest = moira.CheckData{
+		lastCheckTest := moira.CheckData{
 			Score:           6000,
 			State:           moira.StateOK,
 			Suppressed:      true,
@@ -656,7 +655,7 @@ func TestIsStateChanged(t *testing.T) {
 			Maintenance:     1000,
 		}
 
-		var currentCheckTest = moira.CheckData{
+		currentCheckTest := moira.CheckData{
 			State:     moira.StateWARN,
 			Timestamp: 1504509981,
 		}

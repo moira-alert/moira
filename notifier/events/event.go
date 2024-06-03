@@ -1,6 +1,7 @@
 package events
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
-// FetchEventsWorker checks for new events and new notifications based on it
+// FetchEventsWorker checks for new events and new notifications based on it.
 type FetchEventsWorker struct {
 	Logger    moira.Logger
 	Database  moira.Database
@@ -23,7 +24,7 @@ type FetchEventsWorker struct {
 	tomb      tomb.Tomb
 }
 
-// Start is a cycle that fetches events from database
+// Start is a cycle that fetches events from database.
 func (worker *FetchEventsWorker) Start() {
 	worker.tomb.Go(func() error {
 		for {
@@ -37,7 +38,7 @@ func (worker *FetchEventsWorker) Start() {
 				{
 					event, err := worker.Database.FetchNotificationEvent()
 					if err != nil {
-						if err != database.ErrNil {
+						if !errors.Is(err, database.ErrNil) {
 							worker.Metrics.EventsMalformed.Mark(1)
 							worker.Logger.Warning().
 								Error(err).
@@ -70,7 +71,7 @@ func (worker *FetchEventsWorker) Start() {
 	worker.Logger.Info().Msg("Moira Notifier Fetching events started")
 }
 
-// Stop stops new event fetching and wait for finish
+// Stop stops new event fetching and wait for finish.
 func (worker *FetchEventsWorker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()
@@ -180,7 +181,7 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
-			return nil, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error())
+			return nil, fmt.Errorf("error while read subscription %s: %w", *event.SubscriptionID, err)
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
@@ -211,7 +212,8 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 }
 
 func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData,
-	event moira.NotificationEvent, logger moira.Logger) bool {
+	event moira.NotificationEvent, logger moira.Logger,
+) bool {
 	if subscription == nil {
 		logger.Debug().Msg("Subscription is nil")
 		return false

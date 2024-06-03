@@ -279,7 +279,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		}
 
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
-		var subscriptionToIgnoreWarningsAndRecoverings = moira.SubscriptionData{
+		subscriptionToIgnoreWarningsAndRecoverings := moira.SubscriptionData{
 			ID:                "subscriptionID-00000000000003",
 			Enabled:           true,
 			Tags:              []string{"test-tag"},
@@ -539,7 +539,7 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(moira.SubscriptionData{}, err)
 		sub, expected := worker.getNotificationSubscriptions(event, logger)
 		So(sub, ShouldBeNil)
-		So(expected, ShouldResemble, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error()))
+		So(expected, ShouldResemble, fmt.Errorf("error while read subscription %s: %w", *event.SubscriptionID, err))
 	})
 
 	Convey("Error GetContact", t, func() {
@@ -608,8 +608,10 @@ func waitTestEnd(shutdown chan struct{}, worker *FetchEventsWorker) {
 	}
 }
 
-var warnValue float64 = 10
-var errorValue float64 = 20
+var (
+	warnValue  float64 = 10
+	errorValue float64 = 20
+)
 
 var triggerData = moira.TriggerData{
 	ID:         "triggerID-0000000000001",

@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,28 +14,29 @@ import (
 )
 
 const (
-	// defaultTimeShift is default time shift to fetch timeseries
+	// defaultTimeShift is default time shift to fetch timeseries.
 	defaultTimeShift = 1 * time.Minute
-	// defaultTimeRange is default time range to fetch timeseries
+	// defaultTimeRange is default time range to fetch timeseries.
 	defaultTimeRange = 30 * time.Minute
-	// defaultRetentionSeconds is the most common metric retention
+	// defaultRetentionSeconds is the most common metric retention.
 	defaultRetentionSeconds = 60
 )
 
-// errFetchAvailableSeriesFailed is used in cases when fetchAvailableSeries failed after retry
+// errFetchAvailableSeriesFailed is used in cases when fetchAvailableSeries failed after retry.
 type errFetchAvailableSeriesFailed struct {
 	realtimeErr string
 	storedErr   string
 }
 
-// Error is implementation of golang error interface for errFetchAvailableSeriesFailed struct
+// Error is implementation of golang error interface for errFetchAvailableSeriesFailed struct.
 func (err errFetchAvailableSeriesFailed) Error() string {
 	return fmt.Sprintf("Failed to fetch both realtime and stored data: [realtime]: %s, [stored]: %s", err.realtimeErr, err.storedErr)
 }
 
-// buildTriggerPlots returns bytes slices containing trigger plots
+// buildTriggerPlots returns bytes slices containing trigger plots.
 func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSource.MetricData,
-	plotTemplate *plotting.Plot) ([][]byte, error) {
+	plotTemplate *plotting.Plot,
+) ([][]byte, error) {
 	result := make([][]byte, 0)
 	for targetName, metrics := range metricsData {
 		renderable, err := plotTemplate.GetRenderable(targetName, trigger, metrics)
@@ -50,7 +52,7 @@ func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSo
 	return result, nil
 }
 
-// buildNotificationPackagePlots returns bytes slices containing package plots
+// buildNotificationPackagePlots returns bytes slices containing package plots.
 func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage, logger moira.Logger) ([][]byte, error) {
 	if !pkg.Plotting.Enabled {
 		return nil, nil
@@ -94,7 +96,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	return result, err
 }
 
-// resolveMetricsWindow returns from, to parameters depending on trigger type
+// resolveMetricsWindow returns from, to parameters depending on trigger type.
 func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg NotificationPackage) (int64, int64) {
 	// resolve default realtime window for any case
 	now := time.Now()
@@ -138,7 +140,7 @@ func roundToRetention(unixTime int64) int64 {
 	return moira.RoundToNearestRetention(unixTime, defaultRetentionSeconds)
 }
 
-// evaluateTriggerMetrics returns collection of MetricData
+// evaluateTriggerMetrics returns collection of MetricData.
 func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, triggerID string) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
 	trigger, err := notifier.database.GetTrigger(triggerID)
 	if err != nil {
@@ -148,7 +150,7 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 	if err != nil {
 		return nil, &trigger, err
 	}
-	var result = make(map[string][]metricSource.MetricData)
+	result := make(map[string][]metricSource.MetricData)
 	for i, target := range trigger.Targets {
 		i++ // Increase
 		targetName := fmt.Sprintf("t%d", i)
@@ -161,13 +163,14 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 	return result, &trigger, err
 }
 
-// fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
+// fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without.
 func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]metricSource.MetricData, error) {
 	realtimeFetchResult, realtimeErr := metricsSource.Fetch(target, from, to, true)
 	if realtimeErr == nil {
 		return realtimeFetchResult.GetMetricsData(), nil
 	}
-	if errFailedWithPanic, ok := realtimeErr.(local.ErrEvaluateTargetFailedWithPanic); ok {
+	var errFailedWithPanic local.ErrEvaluateTargetFailedWithPanic
+	if ok := errors.As(realtimeErr, &errFailedWithPanic); ok {
 		fetchResult, err := metricsSource.Fetch(target, from, to, false)
 		if err != nil {
 			return nil, errFetchAvailableSeriesFailed{realtimeErr: errFailedWithPanic.Error(), storedErr: err.Error()}
@@ -177,7 +180,7 @@ func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string
 	return nil, realtimeErr
 }
 
-// getMetricDataToShow returns MetricData limited by whitelist
+// getMetricDataToShow returns MetricData limited by whitelist.
 func getMetricDataToShow(metricsData map[string][]metricSource.MetricData, metricsWhitelist []string) map[string][]metricSource.MetricData {
 	result := make(map[string][]metricSource.MetricData)
 	if len(metricsWhitelist) == 0 {

@@ -2,12 +2,15 @@ package webhook
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"html"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/templating"
 )
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
@@ -16,21 +19,26 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 			String("potentially_dangerous_url", sender.url).
 			Msg("Found potentially dangerous url template, api contact validation is advised")
 	}
+
 	requestURL := buildRequestURL(sender.url, trigger, contact)
-	requestBody, err := buildRequestBody(events, contact, trigger, plots, throttled)
+	requestBody, err := sender.buildRequestBody(events, contact, trigger, plots, throttled)
 	if err != nil {
 		return nil, err
 	}
-	request, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(requestBody))
+
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return request, err
 	}
+
 	if sender.user != "" && sender.password != "" {
 		request.SetBasicAuth(sender.user, sender.password)
 	}
+
 	for k, v := range sender.headers {
 		request.Header.Set(k, v)
 	}
+
 	sender.log.Debug().
 		String("method", request.Method).
 		String("url", request.URL.String()).
@@ -40,7 +48,33 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	return request, nil
 }
 
-func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) ([]byte, error) {
+func (sender *Sender) buildRequestBody(
+	events moira.NotificationEvents,
+	contact moira.ContactData,
+	trigger moira.TriggerData,
+	plots [][]byte,
+	throttled bool,
+) ([]byte, error) {
+	if sender.body == "" {
+		return buildDefaultRequestBody(events, contact, trigger, plots, throttled)
+	}
+
+	webhookBodyPopulater := templating.NewWebhookBodyPopulater(contact.ToTemplateContact())
+	populatedBody, err := webhookBodyPopulater.Populate(sender.body)
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(html.UnescapeString(populatedBody)), nil
+}
+
+func buildDefaultRequestBody(
+	events moira.NotificationEvents,
+	contact moira.ContactData,
+	trigger moira.TriggerData,
+	plots [][]byte,
+	throttled bool,
+) ([]byte, error) {
 	encodedFirstPlot := ""
 	encodedPlots := make([]string, 0, len(plots))
 	for i, plot := range plots {
@@ -50,6 +84,7 @@ func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData
 			encodedFirstPlot = encodedPlot
 		}
 	}
+
 	requestPayload := payload{
 		Trigger: toTriggerData(trigger),
 		Events:  toEventsData(events),
@@ -64,6 +99,7 @@ func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData
 		Plots:     encodedPlots,
 		Throttled: throttled,
 	}
+
 	return json.Marshal(requestPayload)
 }
 
@@ -74,13 +110,15 @@ func buildRequestURL(template string, trigger moira.TriggerData, contact moira.C
 		moira.VariableContactType:  contact.Type,
 		moira.VariableTriggerID:    trigger.ID,
 	}
+
 	for k, v := range templateVariables {
 		value := url.PathEscape(v)
 		if k == moira.VariableContactValue &&
 			(strings.HasPrefix(v, "http://") || strings.HasPrefix(v, "https://")) {
 			value = v
 		}
-		template = strings.Replace(template, k, value, -1)
+		template = strings.ReplaceAll(template, k, value)
 	}
+
 	return template
 }

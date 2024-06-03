@@ -2,6 +2,7 @@ package msteams
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,15 +16,18 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
-const context = "http://schema.org/extensions"
-const messageType = "MessageCard"
-const summary = "Moira Alert"
-const teamsBaseURL = "https://outlook.office.com/webhook/"
-const teamsOKResponse = "1"
-const openURI = "OpenUri"
-const openURIMessage = "View in Moira"
-const openURIOsDefault = "default"
-const activityTitleText = "Description"
+const (
+	extensions        = "http://schema.org/extensions"
+	messageType       = "MessageCard"
+	summary           = "Moira Alert"
+	teamsBaseURL      = "https://outlook.office.com/webhook/"
+	teamsOKResponse   = "1"
+	openURI           = "OpenUri"
+	openURIMessage    = "View in Moira"
+	openURIOsDefault  = "default"
+	activityTitleText = "Description"
+	quotes            = "```"
+)
 
 var throttleWarningFact = Fact{
 	Name:  "Warning",
@@ -35,13 +39,13 @@ var headers = map[string]string{
 	"Content-Type": "application/json",
 }
 
-// Structure that represents the MSTeams configuration in the YAML file
+// Structure that represents the MSTeams configuration in the YAML file.
 type config struct {
 	FrontURI  string `mapstructure:"front_uri"`
 	MaxEvents int    `mapstructure:"max_events"`
 }
 
-// Sender implements moira sender interface via MS Teams
+// Sender implements moira sender interface via MS Teams.
 type Sender struct {
 	frontURI  string
 	maxEvents int
@@ -50,7 +54,7 @@ type Sender struct {
 	client    *http.Client
 }
 
-// Init initialises settings required for full functionality
+// Init initialises settings required for full functionality.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -68,7 +72,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
@@ -76,13 +80,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	request, err := sender.buildRequest(events, contact, trigger, throttled)
-
 	if err != nil {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
 	response, err := sender.client.Do(request)
-
 	if err != nil {
 		return fmt.Errorf("failed to perform request: %w", err)
 	}
@@ -94,7 +96,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	//handle non 2xx responses
+	// handle non 2xx responses
 	if response.StatusCode >= http.StatusBadRequest && response.StatusCode <= http.StatusNetworkAuthenticationRequired {
 		return fmt.Errorf("server responded with a non 2xx code: %d", response.StatusCode)
 	}
@@ -131,7 +133,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	state := events.GetCurrentState(throttled)
 
 	return MessageCard{
-		Context:     context,
+		Context:     extensions,
 		MessageType: messageType,
 		Summary:     summary,
 		ThemeColor:  getColourForState(state),
@@ -155,7 +157,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 		return nil, err
 	}
 
-	request, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return request, err
 	}
@@ -190,7 +192,7 @@ func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger 
 }
 
 // buildEventsFacts builds Facts from moira events
-// if n is negative buildEventsFacts does not limit the Facts array
+// if n is negative buildEventsFacts does not limit the Facts array.
 func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvents int, throttled bool) []Fact {
 	var facts []Fact //nolint
 
@@ -202,13 +204,13 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 		}
 		facts = append(facts, Fact{
 			Name:  event.FormatTimestamp(sender.location, moira.DefaultTimeFormat),
-			Value: "```" + line + "```",
+			Value: quotes + line + quotes,
 		})
 
 		if maxEvents != -1 && len(facts) > maxEvents {
 			facts = append(facts, Fact{
 				Name:  "Info",
-				Value: "```" + fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted) + "```",
+				Value: quotes + fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted) + quotes,
 			})
 			break
 		}
@@ -246,6 +248,6 @@ func getColourForState(state moira.State) string {
 	case moira.StateNODATA:
 		return Black
 	default:
-		return White //unhandled state
+		return White // unhandled state
 	}
 }

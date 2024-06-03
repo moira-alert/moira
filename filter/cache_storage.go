@@ -23,7 +23,7 @@ type retentionCacheItem struct {
 	timestamp int64
 }
 
-// Storage struct to store retention matchers
+// Storage struct to store retention matchers.
 type Storage struct {
 	metrics         *metrics.FilterMetrics
 	retentions      []retentionMatcher
@@ -32,7 +32,7 @@ type Storage struct {
 	logger          moira.Logger
 }
 
-// NewCacheStorage create new Storage
+// NewCacheStorage create new Storage.
 func NewCacheStorage(logger moira.Logger, metrics *metrics.FilterMetrics, reader io.Reader) (*Storage, error) {
 	storage := &Storage{
 		retentionsCache: make(map[string]*retentionCacheItem),
@@ -44,10 +44,11 @@ func NewCacheStorage(logger moira.Logger, metrics *metrics.FilterMetrics, reader
 	if err := storage.buildRetentions(bufio.NewScanner(reader)); err != nil {
 		return nil, err
 	}
+
 	return storage, nil
 }
 
-// EnrichMatchedMetric calculate retention and filter cached values
+// EnrichMatchedMetric calculate retention and filter cached values.
 func (storage *Storage) EnrichMatchedMetric(batch map[string]*moira.MatchedMetric, m *moira.MatchedMetric) {
 	m.Retention = storage.getRetention(m)
 	m.RetentionTimestamp = moira.RoundToNearestRetention(m.Timestamp, int64(m.Retention))
@@ -58,11 +59,12 @@ func (storage *Storage) EnrichMatchedMetric(batch map[string]*moira.MatchedMetri
 	batch[m.Metric] = m
 }
 
-// getRetention returns first matched retention for metric
+// getRetention returns first matched retention for metric.
 func (storage *Storage) getRetention(m *moira.MatchedMetric) int {
 	if item, ok := storage.retentionsCache[m.Metric]; ok && item.timestamp+60 > m.Timestamp {
 		return item.value
 	}
+
 	for _, matcher := range storage.retentions {
 		if matcher.pattern.MatchString(m.Metric) {
 			storage.retentionsCache[m.Metric] = &retentionCacheItem{
@@ -72,6 +74,7 @@ func (storage *Storage) getRetention(m *moira.MatchedMetric) int {
 			return matcher.retention
 		}
 	}
+
 	return defaultRetention
 }
 
@@ -98,6 +101,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 			storage.logger.Error().
 				String("pattern", patternString).
 				Msg("Invalid pattern found")
+
 			continue
 		}
 
@@ -112,6 +116,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 			retention: retention,
 		})
 	}
+
 	return retentionScanner.Err()
 }
 
