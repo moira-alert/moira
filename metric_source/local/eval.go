@@ -26,11 +26,13 @@ func (ectx *evalCtx) Fetch(ctx context.Context, exprs []parser.Expr, from, until
 		metrics:    make([]string, 0),
 		metricsMap: values,
 	}
+
 	for _, exp := range exprs {
 		if err := ectx.getMetricsData(ectx.database, exp.Metrics(0, 0), &fetchedMetrics); err != nil {
 			return nil, err
 		}
 	}
+
 	fetchedMetrics.metricsMap = helper.ScaleValuesToCommonStep(fetchedMetrics.metricsMap)
 
 	return fetchedMetrics.metricsMap, nil
@@ -42,24 +44,30 @@ func (ectx *evalCtx) Eval(ctx context.Context, exp parser.Expr, from, until int6
 	if err != nil {
 		return nil, err
 	}
+
 	if rewritten {
 		for _, target := range targets {
 			exp, _, err = parser.ParseExpr(target)
 			if err != nil {
 				return nil, err
 			}
+
 			targetValues, err := ectx.Fetch(ctx, []parser.Expr{exp}, from, until, values)
 			if err != nil {
 				return nil, err
 			}
+
 			result, err := ectx.Eval(ctx, exp, from, until, targetValues)
 			if err != nil {
 				return nil, err
 			}
+
 			results = append(results, result...)
 		}
+
 		return results, nil
 	}
+
 	return expr.EvalExpr(ctx, ectx, exp, from, until, values)
 }
 
@@ -93,6 +101,7 @@ func (ectx *evalCtx) fetchAndEval(target string, result *FetchResult) error {
 				return err
 			}
 		}
+
 		return nil
 	}
 
@@ -142,6 +151,7 @@ func (ectx *evalCtx) parse(target string) (parser.Expr, error) {
 			target:        target,
 		}
 	}
+
 	return parsedExpr, nil
 }
 
@@ -152,6 +162,7 @@ func (ectx *evalCtx) getMetricsData(database moira.Database, metricRequests []pa
 		if _, ok := result.metricsMap[mr]; ok {
 			continue
 		}
+
 		from := mr.From + ectx.from
 		until := mr.Until + ectx.until
 
@@ -170,6 +181,7 @@ func (ectx *evalCtx) getMetricsData(database moira.Database, metricRequests []pa
 		result.metricsMap[mr] = metricsData
 		result.metrics = append(result.metrics, metricNames.metrics...)
 	}
+
 	return nil
 }
 
@@ -202,6 +214,7 @@ func (ectx *evalCtx) rewriteExpr(parsedExpr parser.Expr, metrics *fetchedMetrics
 	if err != nil && !errors.Is(err, parser.ErrMissingTimeseries) {
 		return false, nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 	}
+
 	return rewritten, newTargets, nil
 }
 
@@ -273,5 +286,6 @@ func (m *fetchedMetrics) calculateCommonStep() int64 {
 			commonStep = helper.LCM(commonStep, metricData.StepTime)
 		}
 	}
+
 	return commonStep
 }

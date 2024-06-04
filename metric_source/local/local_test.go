@@ -64,8 +64,8 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	})
 
 	Convey("Error in fetch data", t, func() {
-		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil).Times(2)
-		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil).Times(2)
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil)
+		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil)
 		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(nil, metricErr)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
@@ -88,13 +88,13 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	})
 
 	Convey("Panic while evaluate target", t, func() {
-		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil).Times(2)
-		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil).Times(2)
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil)
+		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil)
 		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(dataList, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
-		result, err := localSource.Fetch("movingAverage(super.puper.pattern, -1)", from, until, true)
-		expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingAverage(super.puper.pattern, -1)"}.Error(), ":")[0]
+		result, err := localSource.Fetch("movingMedian(super.puper.pattern, -1)", from, until, true)
+		expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingMedian(super.puper.pattern, -1)"}.Error(), ":")[0]
 
 		So(err.Error(), ShouldStartWith, expectedErrSubstring)
 		So(result, ShouldBeNil)
