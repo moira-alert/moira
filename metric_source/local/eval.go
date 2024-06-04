@@ -28,7 +28,7 @@ func (ectx *evalCtx) Fetch(ctx context.Context, exprs []parser.Expr, from, until
 	}
 
 	for _, exp := range exprs {
-		if err := ectx.getMetricsData(ectx.database, exp.Metrics(0, 0), &fetchedMetrics); err != nil {
+		if err := ectx.getMetricsData(exp.Metrics(0, 0), &fetchedMetrics); err != nil {
 			return nil, err
 		}
 	}
@@ -82,7 +82,7 @@ func (ectx *evalCtx) fetchAndEval(target string, result *FetchResult) error {
 		metricsMap: make(map[parser.MetricRequest][]*types.MetricData),
 	}
 
-	if err := ectx.getMetricsData(ectx.database, exp.Metrics(0, 0), &fetchedMetrics); err != nil {
+	if err := ectx.getMetricsData(exp.Metrics(0, 0), &fetchedMetrics); err != nil {
 		return err
 	}
 
@@ -96,7 +96,7 @@ func (ectx *evalCtx) fetchAndEval(target string, result *FetchResult) error {
 
 	if rewritten {
 		for _, newTarget := range newTargets {
-			err = ectx.fetchAndEvalNoRewrite(ectx.database, newTarget, result)
+			err = ectx.fetchAndEvalNoRewrite(newTarget, result)
 			if err != nil {
 				return err
 			}
@@ -115,7 +115,7 @@ func (ectx *evalCtx) fetchAndEval(target string, result *FetchResult) error {
 	return nil
 }
 
-func (ectx *evalCtx) fetchAndEvalNoRewrite(database moira.Database, target string, result *FetchResult) error {
+func (ectx *evalCtx) fetchAndEvalNoRewrite(target string, result *FetchResult) error {
 	exp, err := ectx.parse(target)
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func (ectx *evalCtx) fetchAndEvalNoRewrite(database moira.Database, target strin
 		metricsMap: make(map[parser.MetricRequest][]*types.MetricData),
 	}
 
-	if err := ectx.getMetricsData(database, exp.Metrics(0, 0), &fetchedMetrics); err != nil {
+	if err := ectx.getMetricsData(exp.Metrics(0, 0), &fetchedMetrics); err != nil {
 		return err
 	}
 
@@ -155,8 +155,8 @@ func (ectx *evalCtx) parse(target string) (parser.Expr, error) {
 	return parsedExpr, nil
 }
 
-func (ectx *evalCtx) getMetricsData(database moira.Database, metricRequests []parser.MetricRequest, result *fetchedMetrics) error {
-	fetchData := fetchData{database}
+func (ectx *evalCtx) getMetricsData(metricRequests []parser.MetricRequest, result *fetchedMetrics) error {
+	fetchData := fetchData{ectx.database}
 
 	for _, mr := range metricRequests {
 		if _, ok := result.metricsMap[mr]; ok {
@@ -185,9 +185,9 @@ func (ectx *evalCtx) getMetricsData(database moira.Database, metricRequests []pa
 	return nil
 }
 
-func (ctx *evalCtx) scaleToCommonStep(retention int64, fetchedMetrics *fetchedMetrics) {
-	from, until := RoundTimestamps(ctx.from, ctx.until, retention)
-	ctx.from, ctx.until = from, until
+func (ectx *evalCtx) scaleToCommonStep(retention int64, fetchedMetrics *fetchedMetrics) {
+	from, until := RoundTimestamps(ectx.from, ectx.until, retention)
+	ectx.from, ectx.until = from, until
 
 	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
 	for metricRequest, metricData := range fetchedMetrics.metricsMap {
@@ -212,7 +212,7 @@ func (ectx *evalCtx) rewriteExpr(parsedExpr parser.Expr, metrics *fetchedMetrics
 	)
 
 	if err != nil && !errors.Is(err, parser.ErrMissingTimeseries) {
-		return false, nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
+		return false, nil, fmt.Errorf("failed to RewriteExpr: %w", err)
 	}
 
 	return rewritten, newTargets, nil
@@ -249,7 +249,7 @@ func (ectx *evalCtx) eval(target string, parsedExpr parser.Expr, metrics *fetche
 
 func (ectx *evalCtx) writeResult(exp parser.Expr, metrics *fetchedMetrics, metricsData []*types.MetricData, result *FetchResult) {
 	for _, metricData := range metricsData {
-		md := newMetricDataFromGraphit(metricData, metrics.hasWildcard())
+		md := newMetricDataFromGraphite(metricData, metrics.hasWildcard())
 		result.MetricsData = append(result.MetricsData, md)
 	}
 
@@ -259,7 +259,7 @@ func (ectx *evalCtx) writeResult(exp parser.Expr, metrics *fetchedMetrics, metri
 	}
 }
 
-func newMetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.MetricData {
+func newMetricDataFromGraphite(md *types.MetricData, wildcard bool) metricSource.MetricData {
 	return metricSource.MetricData{
 		Name:      md.Name,
 		StartTime: md.StartTime,
