@@ -22,20 +22,20 @@ type evalCtx struct {
 
 // Fetch fetch metrics (for compatibility with carbonapi Evaluator interface).
 func (ectx *evalCtx) Fetch(ctx context.Context, exprs []parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (map[parser.MetricRequest][]*types.MetricData, error) {
-	fetchedMetrics := fetchedMetrics{
+	res := fetchedMetrics{
 		metrics:    make([]string, 0),
 		metricsMap: values,
 	}
 
 	for _, exp := range exprs {
-		if err := ectx.getMetricsData(exp.Metrics(0, 0), &fetchedMetrics); err != nil {
+		if err := ectx.getMetricsData(exp.Metrics(0, 0), &res); err != nil {
 			return nil, err
 		}
 	}
 
-	fetchedMetrics.metricsMap = helper.ScaleValuesToCommonStep(fetchedMetrics.metricsMap)
+	res.metricsMap = helper.ScaleValuesToCommonStep(res.metricsMap)
 
-	return fetchedMetrics.metricsMap, nil
+	return res.metricsMap, nil
 }
 
 // Eval evaluates expressions (for compatibility with carbonapi Evaluator interface).
@@ -77,19 +77,19 @@ func (ectx *evalCtx) fetchAndEval(target string, result *FetchResult) error {
 		return err
 	}
 
-	fetchedMetrics := fetchedMetrics{
+	metrics := fetchedMetrics{
 		metrics:    make([]string, 0),
 		metricsMap: make(map[parser.MetricRequest][]*types.MetricData),
 	}
 
-	if err := ectx.getMetricsData(exp.Metrics(0, 0), &fetchedMetrics); err != nil {
+	if err = ectx.getMetricsData(exp.Metrics(0, 0), &metrics); err != nil {
 		return err
 	}
 
-	commonStep := fetchedMetrics.calculateCommonStep()
-	ectx.scaleToCommonStep(commonStep, &fetchedMetrics)
+	commonStep := metrics.calculateCommonStep()
+	ectx.scaleToCommonStep(commonStep, &metrics)
 
-	rewritten, newTargets, err := ectx.rewriteExpr(exp, &fetchedMetrics)
+	rewritten, newTargets, err := ectx.rewriteExpr(exp, &metrics)
 	if err != nil {
 		return err
 	}
@@ -105,12 +105,12 @@ func (ectx *evalCtx) fetchAndEval(target string, result *FetchResult) error {
 		return nil
 	}
 
-	metricsData, err := ectx.eval(target, exp, &fetchedMetrics)
+	metricsData, err := ectx.eval(target, exp, &metrics)
 	if err != nil {
 		return err
 	}
 
-	ectx.writeResult(exp, &fetchedMetrics, metricsData, result)
+	ectx.writeResult(exp, &metrics, metricsData, result)
 
 	return nil
 }
@@ -121,24 +121,24 @@ func (ectx *evalCtx) fetchAndEvalNoRewrite(target string, result *FetchResult) e
 		return err
 	}
 
-	fetchedMetrics := fetchedMetrics{
+	metrics := fetchedMetrics{
 		metrics:    make([]string, 0),
 		metricsMap: make(map[parser.MetricRequest][]*types.MetricData),
 	}
 
-	if err := ectx.getMetricsData(exp.Metrics(0, 0), &fetchedMetrics); err != nil {
+	if err = ectx.getMetricsData(exp.Metrics(0, 0), &metrics); err != nil {
 		return err
 	}
 
-	commonStep := fetchedMetrics.calculateCommonStep()
-	ectx.scaleToCommonStep(commonStep, &fetchedMetrics)
+	commonStep := metrics.calculateCommonStep()
+	ectx.scaleToCommonStep(commonStep, &metrics)
 
-	metricsData, err := ectx.eval(target, exp, &fetchedMetrics)
+	metricsData, err := ectx.eval(target, exp, &metrics)
 	if err != nil {
 		return err
 	}
 
-	ectx.writeResult(exp, &fetchedMetrics, metricsData, result)
+	ectx.writeResult(exp, &metrics, metricsData, result)
 
 	return nil
 }
