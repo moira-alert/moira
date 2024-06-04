@@ -55,13 +55,11 @@ require (
 )
 
 require (
-	bitbucket.org/tebeka/strftime v0.0.0-20140926081919-2194253a23c0 // indirect
 	github.com/JaderDias/movingmedian v0.0.0-20220813210630-d8c6b6de8835 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/RoaringBitmap/roaring v1.3.0 // indirect
 	github.com/aclements/go-moremath v0.0.0-20210112150236-f10218a38794 // indirect
 	github.com/ansel1/merry/v2 v2.1.1 // indirect
-	github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.8.0 // indirect
 	github.com/blend/go-sdk v2.0.0+incompatible // indirect
@@ -80,9 +78,7 @@ require (
 	github.com/blevesearch/zapx/v13 v13.3.8 // indirect
 	github.com/blevesearch/zapx/v14 v14.3.8 // indirect
 	github.com/blevesearch/zapx/v15 v15.3.11 // indirect
-	github.com/bradfitz/gomemcache v0.0.0-20221031212613-62deef7fc822 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dgryski/go-expirecache v0.0.0-20170314133854-743ef98b2adb // indirect
 	github.com/dgryski/go-onlinestats v0.0.0-20170612111826-1c7d19468768 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
@@ -126,7 +122,6 @@ require (
 	github.com/msaf1980/go-stringutils v0.1.4 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
-	github.com/natefinch/atomic v1.0.1 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
@@ -197,6 +192,7 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/swaggo/swag v1.8.12 // indirect
+	github.com/tebeka/strftime v0.1.5 // indirect
 	golang.org/x/tools v0.18.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/grpc v1.62.0 // indirect

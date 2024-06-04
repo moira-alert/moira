@@ -20,7 +20,7 @@ type evalCtx struct {
 	database moira.Database
 }
 
-// Fetch fetch metrics (for compability with carbonapi Evaluator interface).
+// Fetch fetch metrics (for compatibility with carbonapi Evaluator interface).
 func (ectx *evalCtx) Fetch(ctx context.Context, exprs []parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (map[parser.MetricRequest][]*types.MetricData, error) {
 	fetchedMetrics := fetchedMetrics{
 		metrics:    make([]string, 0),
@@ -38,7 +38,7 @@ func (ectx *evalCtx) Fetch(ctx context.Context, exprs []parser.Expr, from, until
 	return fetchedMetrics.metricsMap, nil
 }
 
-// Eval evaluates expressions (for compability with carbonapi Evaluator interface).
+// Eval evaluates expressions (for compatibility with carbonapi Evaluator interface).
 func (ectx *evalCtx) Eval(ctx context.Context, exp parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (results []*types.MetricData, err error) {
 	rewritten, targets, err := expr.RewriteExpr(ctx, ectx, exp, from, until, values)
 	if err != nil {
