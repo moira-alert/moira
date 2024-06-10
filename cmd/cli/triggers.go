@@ -65,7 +65,6 @@ func handleRemoveUnusedTriggersWithTTL(logger moira.Logger, database moira.Datab
 
 		if needDeleteTrigger(unusedTrigger.UpdatedAt, nowInSec, ttl) {
 			triggersToDelete = append(triggersToDelete, id)
-			continue
 		}
 	}
 
