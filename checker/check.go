@@ -142,9 +142,9 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			var comparingErr error
 			checkData, comparingErr = triggerChecker.compareTriggerStates(checkData)
 			if comparingErr != nil {
-				triggerChecker.logger.Warning().
+				triggerChecker.logger.Error().
 					Error(comparingErr).
-					String(triggerChecker.triggerID, triggerChecker.triggerID).
+					String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
 					Msg("cannot compare trigger states")
 			}
 		}
