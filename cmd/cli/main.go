@@ -14,6 +14,8 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/support"
 	_ "go.uber.org/automaxprocs"
+
+	"github.com/xiam/to"
 )
 
 // Moira version.
@@ -71,6 +73,7 @@ var (
 var (
 	removeTriggersStartWith       = flag.String("remove-triggers-start-with", "", "Remove triggers which have ID starting with string parameter")
 	removeUnusedTriggersStartWith = flag.String("remove-unused-triggers-start-with", "", "Remove unused triggers which have ID starting with string parameter")
+	removeUnusedTriggersWithTTL   = flag.String("remove-unused-triggers-with-ttl", "", "Remove unused triggers which have no subscription and no modify more that duration")
 )
 
 func main() { //nolint
@@ -210,6 +213,16 @@ func main() { //nolint
 			log.Error().
 				Error(err).
 				Msg("Failed to remove unused triggers by prefix")
+		}
+	}
+
+	if *removeUnusedTriggersWithTTL != "" {
+		log := logger.String(moira.LogFieldNameContext, "remove-unused-triggers-with-ttl")
+		ttl := int64(to.Duration(*removeUnusedTriggersWithTTL).Seconds())
+		if err := handleRemoveUnusedTriggersWithTTL(logger, database, ttl); err != nil {
+			log.Error().
+				Error(err).
+				Msg("Failed to remove unused triggers with ttl")
 		}
 	}
 
