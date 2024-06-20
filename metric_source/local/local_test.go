@@ -93,8 +93,8 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(dataList, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
-		result, err := localSource.Fetch("movingAverage(super.puper.pattern, -1)", from, until, true)
-		expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingAverage(super.puper.pattern, -1)"}.Error(), ":")[0]
+		result, err := localSource.Fetch("movingMedian(super.puper.pattern, -1)", from, until, true)
+		expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingMedian(super.puper.pattern, -1)"}.Error(), ":")[0]
 
 		So(err.Error(), ShouldStartWith, expectedErrSubstring)
 		So(result, ShouldBeNil)
