@@ -89,7 +89,7 @@ func restoreMetricStringByNameAndLabels(name string, labels map[string]string) s
 	builder.WriteString(name)
 
 	for _, key := range keys {
-		builder.WriteString(fmt.Sprintf(";%s=%s", key, labels[key]))
+		builder.WriteString(";" + key + "=" + labels[key])
 	}
 
 	return builder.String()
