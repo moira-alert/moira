@@ -129,10 +129,6 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
-type Matcher interface {
-	NewMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility)
-}
-
 // MatchingHandler is a function for pattern matching.
 type MatchingHandler func(string, map[string]string) bool
 
