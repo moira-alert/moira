@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/filter"
 )
 
 type config struct {
@@ -28,10 +29,23 @@ type filterConfig struct {
 	PatternsUpdatePeriod string `yaml:"patterns_update_period"`
 	// DropMetricsTTL this is time window how older metric we can get from now.
 	DropMetricsTTL string `yaml:"drop_metrics_ttl"`
-	// Flags for compatibility with different graphite behaviours
+	// Flags for compatibility with different graphite behaviours.
 	Compatibility compatibility `yaml:"graphite_compatibility"`
-	// Time after which the batch of metrics is forced to be saved, default is 1s
+	// Time after which the batch of metrics is forced to be saved, default is 1s.
 	BatchForcedSaveTimeout string `yaml:"batch_forced_save_timeout"`
+	// PatternStorageCfg defines the configuration for pattern storage.
+	PatternStorageCfg patternStorageConfig `yaml:"pattern_storage"`
+}
+
+type patternStorageConfig struct {
+	// TagsRegexCacheSize determines the size of the tags regex cache.
+	TagsRegexCacheSize int `yaml:"tags_regex_cache_size"`
+}
+
+func (cfg patternStorageConfig) toFilterPatternStorageConfig() filter.PatternStorageConfig {
+	return filter.PatternStorageConfig{
+		TagsRegexCacheSize: cfg.TagsRegexCacheSize,
+	}
 }
 
 func getDefault() config {
@@ -57,6 +71,9 @@ func getDefault() config {
 			Compatibility: compatibility{
 				AllowRegexLooseStartMatch: false,
 				AllowRegexMatchEmpty:      true,
+			},
+			PatternStorageCfg: patternStorageConfig{
+				TagsRegexCacheSize: 100,
 			},
 		},
 		Telemetry: cmd.TelemetryConfig{

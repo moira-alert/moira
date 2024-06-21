@@ -1,9 +1,11 @@
 package filter
 
 import (
+	"regexp"
 	"sort"
 	"testing"
 
+	lruCache "github.com/hashicorp/golang-lru/v2"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -114,7 +116,11 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		compatibility := Compatibility{
 			AllowRegexLooseStartMatch: true,
 		}
-		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility)
+
+		tagsRegexCache, err := lruCache.New[string, *regexp.Regexp](100)
+		So(err, ShouldBeNil)
+
+		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility, tagsRegexCache)
 		c.So(index.MatchPatterns("", nil), ShouldResemble, []string{})
 	})
 
@@ -162,7 +168,11 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			AllowRegexMatchEmpty:      false,
 			AllowRegexLooseStartMatch: true,
 		}
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility)
+
+		tagsRegexCache, err := lruCache.New[string, *regexp.Regexp](100)
+		So(err, ShouldBeNil)
+
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, tagsRegexCache)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
@@ -335,7 +345,11 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			AllowRegexLooseStartMatch: true,
 			AllowRegexMatchEmpty:      false,
 		}
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility)
+
+		tagsRegexCache, err := lruCache.New[string, *regexp.Regexp](100)
+		So(err, ShouldBeNil)
+
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, tagsRegexCache)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
@@ -344,7 +358,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 	})
 }
 
-func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
+func TestSeriesByTagPatternIndexCarbonCompatibility(t *testing.T) {
 	logger, _ := logging.GetLogger("SeriesByTag")
 
 	Convey("Given related patterns with tagspecs, should build index and match patterns", t, func(c C) {
@@ -510,7 +524,11 @@ func TestSeriesByTagPatternIndexCabonCompatibility(t *testing.T) {
 			AllowRegexLooseStartMatch: false,
 			AllowRegexMatchEmpty:      true,
 		}
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility)
+
+		tagsRegexCache, err := lruCache.New[string, *regexp.Regexp](100)
+		So(err, ShouldBeNil)
+
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, tagsRegexCache)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)

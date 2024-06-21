@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	lruCache "github.com/hashicorp/golang-lru/v2"
 )
 
 var (
@@ -127,11 +129,19 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
+type Matcher interface {
+	NewMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility)
+}
+
 // MatchingHandler is a function for pattern matching.
 type MatchingHandler func(string, map[string]string) bool
 
 // CreateMatchingHandlerForPattern creates function for matching by tag list.
-func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler, error) {
+func CreateMatchingHandlerForPattern(
+	tagSpecs []TagSpec,
+	compatibility *Compatibility,
+	tagsRegexCache *lruCache.Cache[string, *regexp.Regexp],
+) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string
 
@@ -139,7 +149,7 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
 			nameTagValue = tagSpec.Value
 		} else {
-			handler, err := createMatchingHandlerForOneTag(tagSpec, compatibility)
+			handler, err := createMatchingHandlerForOneTag(tagSpec, compatibility, tagsRegexCache)
 			if err != nil {
 				return "", nil, err
 			}
@@ -161,7 +171,11 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 	return nameTagValue, matchingHandler, nil
 }
 
-func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) (MatchingHandler, error) {
+func createMatchingHandlerForOneTag(
+	spec TagSpec,
+	compatibility *Compatibility,
+	tagsRegexCache *lruCache.Cache[string, *regexp.Regexp],
+) (MatchingHandler, error) {
 	var matchingHandlerCondition func(string) bool
 	allowMatchEmpty := false
 
@@ -178,7 +192,7 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 	case MatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchRegex, err := newMatchRegex(spec.Value, compatibility)
+		matchRegex, err := newMatchRegex(spec.Value, compatibility, tagsRegexCache)
 		if err != nil {
 			return nil, err
 		}
@@ -189,7 +203,7 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 	case NotMatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchRegex, err := newMatchRegex(spec.Value, compatibility)
+		matchRegex, err := newMatchRegex(spec.Value, compatibility, tagsRegexCache)
 		if err != nil {
 			return nil, err
 		}
@@ -217,16 +231,28 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 	}, nil
 }
 
-func newMatchRegex(value string, compatibility *Compatibility) (*regexp.Regexp, error) {
-	if value == "*" {
-		value = ".*"
+func newMatchRegex(
+	tagValue string,
+	compatibility *Compatibility,
+	tagsRegexCache *lruCache.Cache[string, *regexp.Regexp],
+) (matchRegex *regexp.Regexp, err error) {
+	if tagValue == "*" {
+		tagValue = ".*"
 	}
 
 	if !compatibility.AllowRegexLooseStartMatch {
-		value = "^" + value
+		tagValue = "^" + tagValue
 	}
 
-	matchRegex, err := regexp.Compile(value)
+	matchRegex, ok := tagsRegexCache.Get(tagValue)
+	if !ok {
+		matchRegex, err = regexp.Compile(tagValue)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compile regex: %w with tag value: %v", err, tagValue)
+		}
 
-	return matchRegex, err
+		tagsRegexCache.Add(tagValue, matchRegex)
+	}
+
+	return
 }
