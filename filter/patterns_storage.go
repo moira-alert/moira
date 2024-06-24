@@ -3,7 +3,6 @@ package filter
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"sync/atomic"
 	"time"
 
@@ -16,7 +15,12 @@ import (
 
 // PatternStorageConfig defines the configuration for pattern storage.
 type PatternStorageConfig struct {
-	TagsRegexCacheSize int
+	PatternMatchingCacheSize int
+}
+
+type patternMatchingCacheItem struct {
+	nameTagValue    string
+	matchingHandler MatchingHandler
 }
 
 // PatternStorage contains pattern tree.
@@ -28,7 +32,7 @@ type PatternStorage struct {
 	PatternIndex            atomic.Value
 	SeriesByTagPatternIndex atomic.Value
 	compatibility           Compatibility
-	tagsRegexCache          *lruCache.Cache[string, *regexp.Regexp]
+	patternMatchingCache    *lruCache.Cache[string, *patternMatchingCacheItem]
 }
 
 // NewPatternStorage creates new PatternStorage struct.
@@ -39,18 +43,18 @@ func NewPatternStorage(
 	logger moira.Logger,
 	compatibility Compatibility,
 ) (*PatternStorage, error) {
-	tagsRegexpCache, err := lruCache.New[string, *regexp.Regexp](cfg.TagsRegexCacheSize)
+	patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](cfg.PatternMatchingCacheSize)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new lru tags regexp cache: %w", err)
+		return nil, fmt.Errorf("failed to create new lru pattern matching cache: %w", err)
 	}
 
 	storage := &PatternStorage{
-		database:       database,
-		metrics:        metrics,
-		logger:         logger,
-		clock:          clock.NewSystemClock(),
-		compatibility:  compatibility,
-		tagsRegexCache: tagsRegexpCache,
+		database:             database,
+		metrics:              metrics,
+		logger:               logger,
+		clock:                clock.NewSystemClock(),
+		compatibility:        compatibility,
+		patternMatchingCache: patternMatchingCache,
 	}
 
 	if err = storage.Refresh(); err != nil {
@@ -79,7 +83,7 @@ func (storage *PatternStorage) Refresh() error {
 	}
 
 	storage.PatternIndex.Store(NewPatternIndex(storage.logger, patterns, storage.compatibility))
-	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(storage.logger, seriesByTagPatterns, storage.compatibility, storage.tagsRegexCache))
+	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(storage.logger, seriesByTagPatterns, storage.compatibility, storage.patternMatchingCache))
 
 	return nil
 }

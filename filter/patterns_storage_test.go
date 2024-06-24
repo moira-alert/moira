@@ -28,7 +28,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 
 	patternStorageCfg := PatternStorageConfig{
-		TagsRegexCacheSize: 100,
+		PatternMatchingCacheSize: 100,
 	}
 
 	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func() {

@@ -1,8 +1,6 @@
 package filter
 
 import (
-	"regexp"
-
 	lruCache "github.com/hashicorp/golang-lru/v2"
 	"github.com/moira-alert/moira"
 )
@@ -22,25 +20,37 @@ func NewSeriesByTagPatternIndex(
 	logger moira.Logger,
 	tagSpecsByPattern map[string][]TagSpec,
 	compatibility Compatibility,
-	tagsRegexCache *lruCache.Cache[string, *regexp.Regexp],
+	patternMatchingCache *lruCache.Cache[string, *patternMatchingCacheItem],
 ) *SeriesByTagPatternIndex {
 	namesPrefixTree := &PrefixTree{Logger: logger, Root: &PatternNode{}}
 	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
 
 	for pattern, tagSpecs := range tagSpecsByPattern {
-		nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs, &compatibility, tagsRegexCache)
-		if err != nil {
-			logger.Error().
-				Error(err).
-				String("pattern", pattern).
-				Msg("Failed to create MatchingHandler for pattern")
-			continue
+		var patternMatching *patternMatchingCacheItem
+
+		patternMatching, ok := patternMatchingCache.Get(pattern)
+		if !ok {
+			nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs, &compatibility)
+			if err != nil {
+				logger.Error().
+					Error(err).
+					String("pattern", pattern).
+					Msg("Failed to create MatchingHandler for pattern")
+				continue
+			}
+
+			patternMatching = &patternMatchingCacheItem{
+				nameTagValue:    nameTagValue,
+				matchingHandler: matchingHandler,
+			}
+
+			patternMatchingCache.Add(pattern, patternMatching)
 		}
 
-		if nameTagValue == "" {
-			withoutStrictNameTagPatternMatchers[pattern] = matchingHandler
+		if patternMatching.nameTagValue == "" {
+			withoutStrictNameTagPatternMatchers[pattern] = patternMatching.matchingHandler
 		} else {
-			namesPrefixTree.AddWithPayload(nameTagValue, pattern, matchingHandler)
+			namesPrefixTree.AddWithPayload(patternMatching.nameTagValue, pattern, patternMatching.matchingHandler)
 		}
 	}
 

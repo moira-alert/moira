@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"regexp"
 	"sort"
 	"testing"
 
@@ -117,10 +116,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			AllowRegexLooseStartMatch: true,
 		}
 
-		tagsRegexCache, err := lruCache.New[string, *regexp.Regexp](100)
+		patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
-		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility, tagsRegexCache)
+		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility, patternMatchingCache)
 		c.So(index.MatchPatterns("", nil), ShouldResemble, []string{})
 	})
 
@@ -169,10 +168,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			AllowRegexLooseStartMatch: true,
 		}
 
-		tagsRegexCache, err := lruCache.New[string, *regexp.Regexp](100)
+		patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, tagsRegexCache)
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
@@ -346,10 +345,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			AllowRegexMatchEmpty:      false,
 		}
 
-		tagsRegexCache, err := lruCache.New[string, *regexp.Regexp](100)
+		patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, tagsRegexCache)
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
@@ -525,10 +524,10 @@ func TestSeriesByTagPatternIndexCarbonCompatibility(t *testing.T) {
 			AllowRegexMatchEmpty:      true,
 		}
 
-		tagsRegexCache, err := lruCache.New[string, *regexp.Regexp](100)
+		patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, tagsRegexCache)
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)

@@ -39,12 +39,12 @@ type filterConfig struct {
 
 type patternStorageConfig struct {
 	// TagsRegexCacheSize determines the size of the tags regex cache.
-	TagsRegexCacheSize int `yaml:"tags_regex_cache_size"`
+	PatternMatchingCacheSize int `yaml:"pattern_matching_cache_size"`
 }
 
 func (cfg patternStorageConfig) toFilterPatternStorageConfig() filter.PatternStorageConfig {
 	return filter.PatternStorageConfig{
-		TagsRegexCacheSize: cfg.TagsRegexCacheSize,
+		PatternMatchingCacheSize: cfg.PatternMatchingCacheSize,
 	}
 }
 
@@ -73,7 +73,7 @@ func getDefault() config {
 				AllowRegexMatchEmpty:      true,
 			},
 			PatternStorageCfg: patternStorageConfig{
-				TagsRegexCacheSize: 100,
+				PatternMatchingCacheSize: 100,
 			},
 		},
 		Telemetry: cmd.TelemetryConfig{

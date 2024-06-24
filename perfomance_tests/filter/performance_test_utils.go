@@ -41,6 +41,7 @@ func loadPatterns(filename string) (*[]string, error) {
 		}
 		patterns = append(patterns, pattern[:len(pattern)-1])
 	}
+
 	return &patterns, nil
 }
 
@@ -53,7 +54,7 @@ func createPatternsStorage(patterns *[]string, b *testing.B) (*filter.PatternSto
 	logger, _ := logging.GetLogger("Benchmark")
 	compatibility := filter.Compatibility{AllowRegexLooseStartMatch: true}
 	patternStorageCfg := filter.PatternStorageConfig{
-		TagsRegexCacheSize: 100,
+		PatternMatchingCacheSize: 100,
 	}
 
 	patternsStorage, err := filter.NewPatternStorage(patternStorageCfg, database, filterMetrics, logger, compatibility)
