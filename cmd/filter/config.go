@@ -38,7 +38,7 @@ type filterConfig struct {
 }
 
 type patternStorageConfig struct {
-	// TagsRegexCacheSize determines the size of the tags regex cache.
+	// PatternMatchingCacheSize determines the size of the pattern matching cache.
 	PatternMatchingCacheSize int `yaml:"pattern_matching_cache_size"`
 }
 
