@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	lruCache "github.com/hashicorp/golang-lru/v2"
+	lrucache "github.com/hashicorp/golang-lru/v2"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -116,7 +116,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			AllowRegexLooseStartMatch: true,
 		}
 
-		patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](100)
+		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
 		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility, patternMatchingCache)
@@ -168,7 +168,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			AllowRegexLooseStartMatch: true,
 		}
 
-		patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](100)
+		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)
@@ -345,7 +345,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			AllowRegexMatchEmpty:      false,
 		}
 
-		patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](100)
+		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)
@@ -524,7 +524,7 @@ func TestSeriesByTagPatternIndexCarbonCompatibility(t *testing.T) {
 			AllowRegexMatchEmpty:      true,
 		}
 
-		patternMatchingCache, err := lruCache.New[string, *patternMatchingCacheItem](100)
+		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)

@@ -1,7 +1,7 @@
 package filter
 
 import (
-	lruCache "github.com/hashicorp/golang-lru/v2"
+	lrucache "github.com/hashicorp/golang-lru/v2"
 	"github.com/moira-alert/moira"
 )
 
@@ -20,7 +20,7 @@ func NewSeriesByTagPatternIndex(
 	logger moira.Logger,
 	tagSpecsByPattern map[string][]TagSpec,
 	compatibility Compatibility,
-	patternMatchingCache *lruCache.Cache[string, *patternMatchingCacheItem],
+	patternMatchingCache *lrucache.Cache[string, *patternMatchingCacheItem],
 ) *SeriesByTagPatternIndex {
 	namesPrefixTree := &PrefixTree{Logger: logger, Root: &PatternNode{}}
 	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
