@@ -66,7 +66,7 @@ func BenchmarkPatternStorageRefresh(b *testing.B) {
 
 			patternsStorage, err := filter.NewPatternStorage(patternStorageCfg, database, filterMetrics, logger, compatibility)
 			if err != nil {
-				logger.Fatal().Error(err)
+				b.Fatalf("failed to make new pattern storage: %s", err.Error())
 			}
 
 			b.ResetTimer()
