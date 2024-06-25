@@ -6,6 +6,7 @@ import (
 
 	lrucache "github.com/hashicorp/golang-lru/v2"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metrics"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -111,6 +112,8 @@ func TestParseSeriesByTag(t *testing.T) {
 
 func TestSeriesByTagPatternIndex(t *testing.T) {
 	logger, _ := logging.GetLogger("SeriesByTag")
+	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
+
 	Convey("Given empty patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		compatibility := Compatibility{
 			AllowRegexLooseStartMatch: true,
@@ -119,7 +122,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
-		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility, patternMatchingCache)
+		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility, patternMatchingCache, filterMetrics)
 		c.So(index.MatchPatterns("", nil), ShouldResemble, []string{})
 	})
 
@@ -171,7 +174,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache, filterMetrics)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
@@ -348,7 +351,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache, filterMetrics)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
@@ -359,6 +362,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 
 func TestSeriesByTagPatternIndexCarbonCompatibility(t *testing.T) {
 	logger, _ := logging.GetLogger("SeriesByTag")
+	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 
 	Convey("Given related patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		tagSpecsByPattern := map[string][]TagSpec{
@@ -527,7 +531,7 @@ func TestSeriesByTagPatternIndexCarbonCompatibility(t *testing.T) {
 		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
 		So(err, ShouldBeNil)
 
-		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache)
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache, filterMetrics)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)

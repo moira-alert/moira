@@ -17,6 +17,8 @@ filter:
   retention_config: /etc/moira/storage-schemas.conf
   cache_capacity: 10
   max_parallel_matches: 0
+  pattern_storage:
+    pattern_matching_cache_size: 1
 log:
   log_file: stdout
   log_level: debug
