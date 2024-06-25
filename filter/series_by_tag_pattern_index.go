@@ -27,6 +27,8 @@ func NewSeriesByTagPatternIndex(
 	namesPrefixTree := &PrefixTree{Logger: logger, Root: &PatternNode{}}
 	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
 
+	var patternMatchingEvicted int64
+
 	for pattern, tagSpecs := range tagSpecsByPattern {
 		var patternMatching *patternMatchingCacheItem
 
@@ -47,7 +49,7 @@ func NewSeriesByTagPatternIndex(
 			}
 
 			if evicted := patternMatchingCache.Add(pattern, patternMatching); evicted {
-				metrics.PatternMatchingCacheEvicted.Inc()
+				patternMatchingEvicted++
 			}
 		}
 
@@ -57,6 +59,8 @@ func NewSeriesByTagPatternIndex(
 			namesPrefixTree.AddWithPayload(patternMatching.nameTagValue, pattern, patternMatching.matchingHandler)
 		}
 	}
+
+	metrics.PatternMatchingCacheEvicted.Mark(patternMatchingEvicted)
 
 	return &SeriesByTagPatternIndex{
 		compatibility:                       compatibility,

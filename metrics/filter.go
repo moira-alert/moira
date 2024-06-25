@@ -5,7 +5,7 @@ type FilterMetrics struct {
 	TotalMetricsReceived        Counter
 	ValidMetricsReceived        Counter
 	MatchingMetricsReceived     Counter
-	PatternMatchingCacheEvicted Counter
+	PatternMatchingCacheEvicted Meter
 	MatchingTimer               Timer
 	SavingTimer                 Timer
 	BuildTreeTimer              Timer
@@ -19,7 +19,7 @@ func ConfigureFilterMetrics(registry Registry) *FilterMetrics {
 		TotalMetricsReceived:        registry.NewCounter("received", "total"),
 		ValidMetricsReceived:        registry.NewCounter("received", "valid"),
 		MatchingMetricsReceived:     registry.NewCounter("received", "matching"),
-		PatternMatchingCacheEvicted: registry.NewCounter("patternMatchingCache", "evicted"),
+		PatternMatchingCacheEvicted: registry.NewMeter("patternMatchingCache", "evicted"),
 		MatchingTimer:               registry.NewTimer("time", "match"),
 		SavingTimer:                 registry.NewTimer("time", "save"),
 		BuildTreeTimer:              registry.NewTimer("time", "buildtree"),
