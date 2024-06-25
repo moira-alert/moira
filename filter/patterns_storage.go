@@ -15,6 +15,7 @@ import (
 
 // PatternStorageConfig defines the configuration for pattern storage.
 type PatternStorageConfig struct {
+	// PatternMatchingCacheSize determines the size of the pattern matching cache.
 	PatternMatchingCacheSize int
 }
 
