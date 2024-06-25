@@ -27,3 +27,8 @@ func ConfigureFilterMetrics(registry Registry) *FilterMetrics {
 		LineChannelLen:              registry.NewHistogram("linesToMatch"),
 	}
 }
+
+// MarkPatternMatchingEvicted counts the number of evicted items in the pattern matching cache.
+func (metrics *FilterMetrics) MarkPatternMatchingEvicted(evicted int64) {
+	metrics.PatternMatchingCacheEvicted.Mark(evicted)
+}

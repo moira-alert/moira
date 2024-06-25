@@ -60,7 +60,7 @@ func NewSeriesByTagPatternIndex(
 		}
 	}
 
-	metrics.PatternMatchingCacheEvicted.Mark(patternMatchingEvicted)
+	metrics.MarkPatternMatchingEvicted(patternMatchingEvicted)
 
 	return &SeriesByTagPatternIndex{
 		compatibility:                       compatibility,
