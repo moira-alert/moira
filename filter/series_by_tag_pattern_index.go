@@ -1,7 +1,9 @@
 package filter
 
 import (
+	lrucache "github.com/hashicorp/golang-lru/v2"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric.
@@ -19,26 +21,46 @@ func NewSeriesByTagPatternIndex(
 	logger moira.Logger,
 	tagSpecsByPattern map[string][]TagSpec,
 	compatibility Compatibility,
+	patternMatchingCache *lrucache.Cache[string, *patternMatchingCacheItem],
+	metrics *metrics.FilterMetrics,
 ) *SeriesByTagPatternIndex {
 	namesPrefixTree := &PrefixTree{Logger: logger, Root: &PatternNode{}}
 	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
 
+	var patternMatchingEvicted int64
+
 	for pattern, tagSpecs := range tagSpecsByPattern {
-		nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs, &compatibility)
-		if err != nil {
-			logger.Error().
-				Error(err).
-				String("pattern", pattern).
-				Msg("Failed to create MatchingHandler for pattern")
-			continue
+		var patternMatching *patternMatchingCacheItem
+
+		patternMatching, ok := patternMatchingCache.Get(pattern)
+		if !ok {
+			nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs, &compatibility)
+			if err != nil {
+				logger.Error().
+					Error(err).
+					String("pattern", pattern).
+					Msg("Failed to create MatchingHandler for pattern")
+				continue
+			}
+
+			patternMatching = &patternMatchingCacheItem{
+				nameTagValue:    nameTagValue,
+				matchingHandler: matchingHandler,
+			}
+
+			if evicted := patternMatchingCache.Add(pattern, patternMatching); evicted {
+				patternMatchingEvicted++
+			}
 		}
 
-		if nameTagValue == "" {
-			withoutStrictNameTagPatternMatchers[pattern] = matchingHandler
+		if patternMatching.nameTagValue == "" {
+			withoutStrictNameTagPatternMatchers[pattern] = patternMatching.matchingHandler
 		} else {
-			namesPrefixTree.AddWithPayload(nameTagValue, pattern, matchingHandler)
+			namesPrefixTree.AddWithPayload(patternMatching.nameTagValue, pattern, patternMatching.matchingHandler)
 		}
 	}
+
+	metrics.MarkPatternMatchingEvicted(patternMatchingEvicted)
 
 	return &SeriesByTagPatternIndex{
 		compatibility:                       compatibility,

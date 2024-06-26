@@ -131,7 +131,10 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 type MatchingHandler func(string, map[string]string) bool
 
 // CreateMatchingHandlerForPattern creates function for matching by tag list.
-func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler, error) {
+func CreateMatchingHandlerForPattern(
+	tagSpecs []TagSpec,
+	compatibility *Compatibility,
+) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string
 
@@ -161,7 +164,10 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 	return nameTagValue, matchingHandler, nil
 }
 
-func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) (MatchingHandler, error) {
+func createMatchingHandlerForOneTag(
+	spec TagSpec,
+	compatibility *Compatibility,
+) (MatchingHandler, error) {
 	var matchingHandlerCondition func(string) bool
 	allowMatchEmpty := false
 
@@ -217,16 +223,22 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 	}, nil
 }
 
-func newMatchRegex(value string, compatibility *Compatibility) (*regexp.Regexp, error) {
-	if value == "*" {
-		value = ".*"
+func newMatchRegex(
+	tagValue string,
+	compatibility *Compatibility,
+) (*regexp.Regexp, error) {
+	if tagValue == "*" {
+		tagValue = ".*"
 	}
 
 	if !compatibility.AllowRegexLooseStartMatch {
-		value = "^" + value
+		tagValue = "^" + tagValue
 	}
 
-	matchRegex, err := regexp.Compile(value)
+	matchRegex, err := regexp.Compile(tagValue)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile regex: %w with tag value: %s", err, tagValue)
+	}
 
-	return matchRegex, err
+	return matchRegex, nil
 }
