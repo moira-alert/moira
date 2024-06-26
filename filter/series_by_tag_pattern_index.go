@@ -3,6 +3,7 @@ package filter
 import (
 	lrucache "github.com/hashicorp/golang-lru/v2"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric.
@@ -21,9 +22,12 @@ func NewSeriesByTagPatternIndex(
 	tagSpecsByPattern map[string][]TagSpec,
 	compatibility Compatibility,
 	patternMatchingCache *lrucache.Cache[string, *patternMatchingCacheItem],
+	metrics *metrics.FilterMetrics,
 ) *SeriesByTagPatternIndex {
 	namesPrefixTree := &PrefixTree{Logger: logger, Root: &PatternNode{}}
 	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
+
+	var patternMatchingEvicted int64
 
 	for pattern, tagSpecs := range tagSpecsByPattern {
 		var patternMatching *patternMatchingCacheItem
@@ -44,7 +48,9 @@ func NewSeriesByTagPatternIndex(
 				matchingHandler: matchingHandler,
 			}
 
-			patternMatchingCache.Add(pattern, patternMatching)
+			if evicted := patternMatchingCache.Add(pattern, patternMatching); evicted {
+				patternMatchingEvicted++
+			}
 		}
 
 		if patternMatching.nameTagValue == "" {
@@ -53,6 +59,8 @@ func NewSeriesByTagPatternIndex(
 			namesPrefixTree.AddWithPayload(patternMatching.nameTagValue, pattern, patternMatching.matchingHandler)
 		}
 	}
+
+	metrics.MarkPatternMatchingEvicted(patternMatchingEvicted)
 
 	return &SeriesByTagPatternIndex{
 		compatibility:                       compatibility,
