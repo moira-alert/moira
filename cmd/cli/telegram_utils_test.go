@@ -44,7 +44,7 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(result, ShouldEqual, "{\"chatId\":1,\"type\":\"private\"}")
 
-					result, err = client.Get(ctx, "moira-telegram-users:moira-bot-host").Result()
+					result, err = client.Get(ctx, "moira-telegram-users:moira-bot-host:123").Result()
 					So(err, ShouldBeNil)
 					So(result, ShouldEqual, "D4VdnzZDTS/xXF87THARWw==")
 				})
@@ -87,7 +87,7 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(result, ShouldEqual, "1")
 
-					result, err = client.Get(ctx, "moira-telegram-users:moira-bot-host").Result()
+					result, err = client.Get(ctx, "moira-telegram-users:moira-bot-host:123").Result()
 					So(err, ShouldBeNil)
 					So(result, ShouldEqual, "D4VdnzZDTS/xXF87THARWw==")
 				})
@@ -105,7 +105,7 @@ func createOldTelegramUserRecords(database moira.Database) {
 
 		client.Set(ctx, "moira-telegram-users:some telegram group", "-1001494975744", -1)
 		client.Set(ctx, "moira-telegram-users:@durov", "1", -1)
-		client.Set(ctx, "moira-telegram-users:moira-bot-host", "D4VdnzZDTS/xXF87THARWw==", -1)
+		client.Set(ctx, "moira-telegram-users:moira-bot-host:123", "D4VdnzZDTS/xXF87THARWw==", -1)
 	}
 }
 
@@ -118,6 +118,6 @@ func createNewTelegramUserRecords(database moira.Database) {
 
 		client.Set(ctx, "moira-telegram-users:some telegram group", "{\"type\":\"group\",\"chatId\":-1001494975744}", -1)
 		client.Set(ctx, "moira-telegram-users:@durov", "{\"type\":\"private\",\"chatId\":1}", -1)
-		client.Set(ctx, "moira-telegram-users:moira-bot-host", "D4VdnzZDTS/xXF87THARWw==", -1)
+		client.Set(ctx, "moira-telegram-users:moira-bot-host:123", "D4VdnzZDTS/xXF87THARWw==", -1)
 	}
 }
