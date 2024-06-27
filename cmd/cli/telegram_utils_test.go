@@ -117,7 +117,7 @@ func createNewTelegramUserRecords(database moira.Database) {
 		ctx := d.Context()
 
 		client.Set(ctx, "moira-telegram-users:some telegram group", `{"type":"group","chatId":-1001494975744}`, -1)
-		client.Set(ctx, "moira-telegram-users:@durov", `{"type":"private","chatId":1`, -1)
+		client.Set(ctx, "moira-telegram-users:@durov", `{"type":"private","chatId":1}`, -1)
 		client.Set(ctx, "moira-telegram-users:moira-bot-host:123", "D4VdnzZDTS/xXF87THARWw==", -1)
 	}
 }

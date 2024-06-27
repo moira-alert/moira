@@ -155,15 +155,15 @@ func (sender *Sender) getChatFromDb(contactValue string) (*Chat, error) {
 		return nil, fmt.Errorf("failed to get username chat: %w", err)
 	}
 
-	chat := Chat{}
-	if err := json.Unmarshal([]byte(chatRaw), &chat); err != nil {
+	chat := &Chat{}
+	if err := json.Unmarshal([]byte(chatRaw), chat); err != nil {
 		// For Moira < 2.12.0 compatibility
 		// Before 2.12.0 `moira-telegram-users:user` only stored telegram channel IDs
 		// After 2.12.0 `moira-telegram-users:user` stores Chat structure
 		if errors.As(err, &unmarshalTypeError) {
-			chatID, err := strconv.ParseInt(chatRaw, 10, 64)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse chatRaw: %s as int64: %w", chatRaw, err)
+			chatID, parseErr := strconv.ParseInt(chatRaw, 10, 64)
+			if parseErr != nil {
+				return nil, fmt.Errorf("failed to parse chatRaw: %s as int64: %w", chatRaw, parseErr)
 			}
 
 			return &Chat{
@@ -174,7 +174,7 @@ func (sender *Sender) getChatFromDb(contactValue string) (*Chat, error) {
 		return nil, fmt.Errorf("failed to unmarshal chat data %s: %w", chatRaw, err)
 	}
 
-	return &chat, nil
+	return chat, nil
 }
 
 func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {

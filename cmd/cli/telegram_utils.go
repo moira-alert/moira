@@ -95,9 +95,8 @@ func downgradeTelegramUsersRecords(logger moira.Logger, database moira.Database)
 
 			var newValue string
 
-			chat := telegram.Chat{}
-			err = json.Unmarshal([]byte(oldValue), &chat)
-			if err != nil {
+			chat := &telegram.Chat{}
+			if err = json.Unmarshal([]byte(oldValue), chat); err != nil {
 				return err
 			}
 
