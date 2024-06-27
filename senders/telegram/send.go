@@ -2,11 +2,13 @@ package telegram
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 
 	"github.com/moira-alert/moira"
 )
@@ -29,6 +31,32 @@ const (
 var characterLimits = map[messageType]int{
 	Message: messageMaxCharacters,
 	Album:   albumCaptionMaxCharacters,
+}
+
+// Structure that represents chat metadata required to send message to recipient.
+// It implements gopkg.in/telebot.v3#Recipient interface and thus might be passed to telebot methods directly.
+type Chat struct {
+	ID       int64            `json:"chatId" example:"-1001234567890"`
+	Type     telebot.ChatType `json:"type" example:"supergroup"`
+	ThreadID int              `json:"threadId,omitempty" example:"10"`
+}
+
+var brokenContactAPIErrors = map[*telebot.Error]struct{}{
+	telebot.ErrUnauthorized:         {},
+	telebot.ErrUserIsDeactivated:    {},
+	telebot.ErrNoRightsToSendPhoto:  {},
+	telebot.ErrChatNotFound:         {},
+	telebot.ErrNoRightsToSend:       {},
+	telebot.ErrKickedFromGroup:      {},
+	telebot.ErrBlockedByUser:        {},
+	telebot.ErrKickedFromSuperGroup: {},
+	telebot.ErrKickedFromChannel:    {},
+	telebot.ErrNotStartedByUser:     {},
+}
+
+// Chat implements gopkg.in/telebot.v3#Recipient interface.
+func (c *Chat) Recipient() string {
+	return strconv.FormatInt(c.ID, 10)
 }
 
 // SendEvents implements Sender interface Send.
@@ -92,35 +120,104 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	return buffer.String()
 }
 
-func (sender *Sender) getChatUID(username string) (string, error) {
-	var uid string
-	if strings.HasPrefix(username, "%") {
-		uid = "-100" + username[1:]
-	} else {
-		var err error
-		uid, err = sender.DataBase.GetIDByUsername(messenger, username)
-		if err != nil {
-			return "", fmt.Errorf("failed to get username uuid: %s", err.Error())
-		}
+func (sender *Sender) getChat(contactValue string) (*Chat, error) {
+	var chat *Chat
+	var err error
+
+	switch {
+	// for private channel contactValue is transformed to be able to fetch it from telegram
+	case strings.HasPrefix(contactValue, "%"):
+		contactValue = "-100" + contactValue[1:]
+		chat, err = sender.getChatFromTelegram(contactValue)
+	// for public channel contactValue is transformed to be able to fetch it from telegram
+	case strings.HasPrefix(contactValue, "#"):
+		contactValue = "@" + contactValue[1:]
+		chat, err = sender.getChatFromTelegram(contactValue)
+	// for the rest of the cases (private chats, groups, supergroups), Chat data is stored in DB.
+	default:
+		chat, err = sender.getChatFromDb(contactValue)
 	}
-	return uid, nil
+
+	return chat, err
 }
 
-func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
-	uid, err := sender.getChatUID(username)
+func (sender *Sender) getChatFromDb(contactValue string) (*Chat, error) {
+	chatRaw, err := sender.DataBase.GetIDByUsername(messenger, contactValue)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get username uuid: %w", err)
+	}
+
+	chat := Chat{}
+	err = json.Unmarshal([]byte(chatRaw), &chat)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal chat data %s: %w", chatRaw, err)
+	}
+	return &chat, nil
+}
+
+func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {
+	telegramChat, err := sender.bot.ChatByUsername(username)
+	if err != nil {
+		err = sender.removeTokenFromError(err)
+		return nil, fmt.Errorf("can't find recipient %s: %w", username, err)
+	}
+
+	chat := Chat{
+		Type: telegramChat.Type,
+		ID:   telegramChat.ID,
+	}
+	return &chat, nil
+}
+
+func (sender *Sender) setChat(message *telebot.Message) (*Chat, error) {
+	contactValue, err := sender.getContactValueByMessage(message)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get contact value from message: %w", err)
+	}
+
+	chat := &Chat{
+		Type:     message.Chat.Type,
+		ID:       message.Chat.ID,
+		ThreadID: message.ThreadID,
+	}
+
+	chatString, err := json.Marshal(chat)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal chat: %w", err)
+	}
+
+	err = sender.DataBase.SetUsernameID(messenger, contactValue, string(chatString))
 	if err != nil {
 		return nil, err
 	}
-	chat, err := sender.bot.ChatByID(uid)
-	if err != nil {
-		err = removeTokenFromError(err, sender.bot)
-		return nil, fmt.Errorf("can't find recipient %s: %s", uid, err.Error())
-	}
+
 	return chat, nil
 }
 
+func (sender *Sender) getContactValueByMessage(message *telebot.Message) (string, error) {
+	var contactValue string
+	var err error
+
+	switch {
+	case message.Chat.Type == telebot.ChatPrivate:
+		contactValue = "@" + message.Chat.Username
+	case message.Chat.Type == telebot.ChatSuperGroup && message.ThreadID != 0:
+		contactValue = fmt.Sprintf("%d/%d", message.Chat.ID, message.ThreadID)
+	case message.Chat.Type == telebot.ChatSuperGroup || message.Chat.Type == telebot.ChatGroup:
+		contactValue = message.Chat.Title
+	case message.Chat.Type == telebot.ChatChannel:
+		contactValue = "#" + message.Chat.Username
+	case message.Chat.Type == telebot.ChatChannelPrivate:
+		contactValue = strings.Replace(message.Chat.Recipient(), "-100", "%", -1)
+	default:
+		err = fmt.Errorf("unknown chat type")
+	}
+
+	return contactValue, err
+}
+
 // talk processes one talk.
-func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, messageType messageType) error {
+func (sender *Sender) talk(chat *Chat, message string, plots [][]byte, messageType messageType) error {
 	if messageType == Album {
 		sender.logger.Debug().Msg("talk as album")
 		return sender.sendAsAlbum(chat, plots, message)
@@ -129,10 +226,10 @@ func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, m
 	return sender.sendAsMessage(chat, message)
 }
 
-func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
-	_, err := sender.bot.Send(chat, message)
+func (sender *Sender) sendAsMessage(chat *Chat, message string) error {
+	_, err := sender.bot.Send(chat, message, &telebot.SendOptions{ThreadID: chat.ThreadID})
 	if err != nil {
-		err = removeTokenFromError(err, sender.bot)
+		err = sender.removeTokenFromError(err)
 		sender.logger.Debug().
 			String("message", message).
 			Int64("chat_id", chat.ID).
@@ -148,7 +245,7 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 		return nil
 	}
 
-	var e *telebot.APIError
+	var e *telebot.Error
 	if ok := errors.As(err, &e); ok {
 		logger.Debug().
 			Int("code", e.Code).
@@ -169,22 +266,9 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 	return err
 }
 
-func isBrokenContactAPIError(err *telebot.APIError) bool {
-	if err.Code == telebot.ErrUnauthorized.Code {
-		return true
-	}
-	if err.Code == telebot.ErrNoRightsToSendPhoto.Code &&
-		(err.Description == telebot.ErrNoRightsToSendPhoto.Description ||
-			err.Description == telebot.ErrChatNotFound.Description ||
-			err.Description == telebot.ErrNoRightsToSend.Description) {
-		return true
-	}
-	if err.Code == telebot.ErrBotKickedFromGroup.Code &&
-		(err.Description == telebot.ErrBotKickedFromGroup.Description ||
-			err.Description == telebot.ErrBotKickedFromSuperGroup.Description) {
-		return true
-	}
-	return false
+func isBrokenContactAPIError(err *telebot.Error) bool {
+	_, exists := brokenContactAPIErrors[err]
+	return exists
 }
 
 func prepareAlbum(plots [][]byte, caption string) telebot.Album {
@@ -197,12 +281,12 @@ func prepareAlbum(plots [][]byte, caption string) telebot.Album {
 	return album
 }
 
-func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption string) error {
+func (sender *Sender) sendAsAlbum(chat *Chat, plots [][]byte, caption string) error {
 	album := prepareAlbum(plots, caption)
 
-	_, err := sender.bot.SendAlbum(chat, album)
+	_, err := sender.bot.SendAlbum(chat, album, &telebot.SendOptions{ThreadID: chat.ThreadID})
 	if err != nil {
-		err = removeTokenFromError(err, sender.bot)
+		err = sender.removeTokenFromError(err)
 		sender.logger.Debug().
 			Int64("chat_id", chat.ID).
 			Error(err).

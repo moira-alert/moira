@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 )
 
 // handleMessage handles incoming messages to start sending events to subscribers chats.
@@ -15,8 +15,8 @@ func (sender *Sender) handleMessage(message *telebot.Message) error {
 		return err
 	}
 	if responseMessage != "" {
-		if _, err = sender.bot.Send(message.Chat, responseMessage); err != nil {
-			return removeTokenFromError(err, sender.bot)
+		if _, err = sender.bot.Reply(message, responseMessage); err != nil {
+			return sender.removeTokenFromError(err)
 		}
 	}
 	return nil
@@ -29,18 +29,23 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 		if message.Chat.Username == "" {
 			return "Username is empty. Please add username in Telegram.", nil
 		}
-		err := sender.DataBase.SetUsernameID(messenger, "@"+message.Chat.Username, chatID)
+		_, err := sender.setChat(message)
 		if err != nil {
 			return "", err
 		}
 		return fmt.Sprintf("Okay, %s, your id is %s", strings.Trim(fmt.Sprintf("%s %s", message.Sender.FirstName, message.Sender.LastName), " "), chatID), nil
-	case message.Chat.Type == telebot.ChatSuperGroup || message.Chat.Type == telebot.ChatGroup:
-		err := sender.DataBase.SetUsernameID(messenger, message.Chat.Title, chatID)
+	case (message.Chat.Type == telebot.ChatSuperGroup || message.Chat.Type == telebot.ChatGroup):
+		contactValue, err := sender.getContactValueByMessage(message)
+		if err != nil {
+			return "", fmt.Errorf("failed to get contact value from message: %w", err)
+		}
+
+		_, err = sender.setChat(message)
 		if err != nil {
 			return "", err
 		}
 		if strings.HasPrefix(message.Text, "/start") {
-			return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title), nil
+			return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", contactValue), nil
 		}
 		return "", nil
 	}

@@ -41,7 +41,6 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/h2non/gock.v1 v1.1.2
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
-	gopkg.in/tucnak/telebot.v2 v2.5.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -53,6 +52,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moira-alert/blackfriday-slack v0.1.2
 	github.com/swaggo/http-swagger v1.3.4
+	gopkg.in/telebot.v3 v3.2.1
 )
 
 require (
