@@ -156,7 +156,7 @@ func (sender *Sender) getChatFromDb(contactValue string) (*Chat, error) {
 	}
 
 	chat := Chat{}
-	if err = json.Unmarshal([]byte(chatRaw), &chat); err != nil {
+	if err := json.Unmarshal([]byte(chatRaw), &chat); err != nil {
 		// For Moira < 2.12.0 compatibility
 		// Before 2.12.0 `moira-telegram-users:user` only stored telegram channel IDs
 		// After 2.12.0 `moira-telegram-users:user` stores Chat structure
