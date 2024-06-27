@@ -62,10 +62,10 @@ func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) er
 
 			pipe.Set(d.Context(), key, string(chatBytes), 0)
 		}
-		_, err := pipe.Exec(d.Context())
-		if err != nil {
+		if _, err := pipe.Exec(d.Context()); err != nil {
 			return err
 		}
+
 	default:
 		return makeUnknownDBError(database)
 	}
@@ -106,12 +106,14 @@ func downgradeTelegramUsersRecords(logger moira.Logger, database moira.Database)
 			} else {
 				newValue = strconv.FormatInt(chat.ID, 10)
 			}
+
 			pipe.Set(d.Context(), key, newValue, 0)
 		}
-		_, err := pipe.Exec(d.Context())
-		if err != nil {
+
+		if _, err := pipe.Exec(d.Context()); err != nil {
 			return err
 		}
+
 	default:
 		return makeUnknownDBError(database)
 	}

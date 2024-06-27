@@ -192,10 +192,10 @@ func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {
 	return &chat, nil
 }
 
-func (sender *Sender) setChat(message *telebot.Message) (*Chat, error) {
+func (sender *Sender) setChat(message *telebot.Message) error {
 	contactValue, err := sender.getContactValueByMessage(message)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get contact value from message: %w", err)
+		return fmt.Errorf("failed to get contact value from message: %w", err)
 	}
 
 	chat := &Chat{
@@ -204,17 +204,16 @@ func (sender *Sender) setChat(message *telebot.Message) (*Chat, error) {
 		ThreadID: message.ThreadID,
 	}
 
-	chatString, err := json.Marshal(chat)
+	chatRaw, err := json.Marshal(chat)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal chat: %w", err)
+		return fmt.Errorf("failed to marshal chat: %w", err)
 	}
 
-	err = sender.DataBase.SetUsernameChat(messenger, contactValue, string(chatString))
-	if err != nil {
-		return nil, err
+	if err = sender.DataBase.SetUsernameChat(messenger, contactValue, string(chatRaw)); err != nil {
+		return fmt.Errorf("failed to set username chat: %w", err)
 	}
 
-	return chat, nil
+	return nil
 }
 
 func (sender *Sender) getContactValueByMessage(message *telebot.Message) (string, error) {

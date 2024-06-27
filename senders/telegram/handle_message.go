@@ -32,8 +32,7 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 			return "Username is empty. Please add username in Telegram.", nil
 		}
 
-		_, err := sender.setChat(message)
-		if err != nil {
+		if err := sender.setChat(message); err != nil {
 			return "", err
 		}
 
@@ -44,8 +43,7 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 			return "", fmt.Errorf("failed to get contact value from message: %w", err)
 		}
 
-		_, err = sender.setChat(message)
-		if err != nil {
+		if err = sender.setChat(message); err != nil {
 			return "", err
 		}
 
