@@ -66,7 +66,7 @@ func TestGetResponseMessage(t *testing.T) {
 				Convey("error while save username", func() {
 					dataBase.EXPECT().SetUsernameChat(messenger, "@User", "{\"chatId\":123,\"type\":\"private\"}").Return(fmt.Errorf("error =("))
 					response, err := sender.getResponseMessage(message)
-					So(err, ShouldResemble, fmt.Errorf("error =("))
+					So(err.Error(), ShouldResemble, "failed to set username chat: error =(")
 					So(response, ShouldBeEmpty)
 				})
 
@@ -102,7 +102,7 @@ func TestGetResponseMessage(t *testing.T) {
 				for _, message := range messages {
 					dataBase.EXPECT().SetUsernameChat(messenger, message.Chat.Title, fmt.Sprintf("{\"chatId\":%d,\"type\":\"%s\"}", message.Chat.ID, message.Chat.Type)).Return(fmt.Errorf("error"))
 					response, err := sender.getResponseMessage(message)
-					So(err, ShouldResemble, fmt.Errorf("error"))
+					So(err.Error(), ShouldResemble, "failed to set username chat: error")
 					So(response, ShouldBeEmpty)
 				}
 			})
