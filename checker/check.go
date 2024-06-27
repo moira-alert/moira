@@ -138,8 +138,17 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 		if timeSinceLastSuccessfulCheck >= triggerChecker.ttl {
 			checkData.State = moira.StateEXCEPTION
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
-			checkData, err = triggerChecker.compareTriggerStates(checkData)
+
+			var comparingErr error
+			checkData, comparingErr = triggerChecker.compareTriggerStates(checkData)
+			if comparingErr != nil {
+				triggerChecker.logger.Error().
+					Error(comparingErr).
+					String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
+					Msg("cannot compare trigger states")
+			}
 		}
+
 		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	case local.ErrUnknownFunction, local.ErrEvalExpr:
 		checkData.State = moira.StateEXCEPTION

@@ -105,7 +105,8 @@ func main() {
 			Msg("Failed to initialize cache storage with given config")
 	}
 
-	patternStorage, err := filter.NewPatternStorage(database, filterMetrics, logger, compatibility)
+	filterPatternStorageCfg := config.Filter.PatternStorageCfg.toFilterPatternStorageConfig()
+	patternStorage, err := filter.NewPatternStorage(filterPatternStorageCfg, database, filterMetrics, logger, compatibility)
 	if err != nil {
 		logger.Fatal().
 			Error(err).

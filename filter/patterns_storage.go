@@ -8,9 +8,21 @@ import (
 
 	"github.com/moira-alert/moira/clock"
 
+	lrucache "github.com/hashicorp/golang-lru/v2"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
 )
+
+// PatternStorageConfig defines the configuration for pattern storage.
+type PatternStorageConfig struct {
+	// PatternMatchingCacheSize determines the size of the pattern matching cache.
+	PatternMatchingCacheSize int
+}
+
+type patternMatchingCacheItem struct {
+	nameTagValue    string
+	matchingHandler MatchingHandler
+}
 
 // PatternStorage contains pattern tree.
 type PatternStorage struct {
@@ -21,24 +33,36 @@ type PatternStorage struct {
 	PatternIndex            atomic.Value
 	SeriesByTagPatternIndex atomic.Value
 	compatibility           Compatibility
+	patternMatchingCache    *lrucache.Cache[string, *patternMatchingCacheItem]
 }
 
 // NewPatternStorage creates new PatternStorage struct.
 func NewPatternStorage(
+	cfg PatternStorageConfig,
 	database moira.Database,
 	metrics *metrics.FilterMetrics,
 	logger moira.Logger,
 	compatibility Compatibility,
 ) (*PatternStorage, error) {
-	storage := &PatternStorage{
-		database:      database,
-		metrics:       metrics,
-		logger:        logger,
-		clock:         clock.NewSystemClock(),
-		compatibility: compatibility,
+	patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](cfg.PatternMatchingCacheSize)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new lru pattern matching cache: %w", err)
 	}
-	err := storage.Refresh()
-	return storage, err
+
+	storage := &PatternStorage{
+		database:             database,
+		metrics:              metrics,
+		logger:               logger,
+		clock:                clock.NewSystemClock(),
+		compatibility:        compatibility,
+		patternMatchingCache: patternMatchingCache,
+	}
+
+	if err = storage.Refresh(); err != nil {
+		return nil, fmt.Errorf("failed to refresh pattern storage: %w", err)
+	}
+
+	return storage, nil
 }
 
 // Refresh builds pattern's indexes from redis data.
@@ -59,8 +83,20 @@ func (storage *PatternStorage) Refresh() error {
 		}
 	}
 
-	storage.PatternIndex.Store(NewPatternIndex(storage.logger, patterns, storage.compatibility))
-	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(storage.logger, seriesByTagPatterns, storage.compatibility))
+	storage.PatternIndex.Store(NewPatternIndex(
+		storage.logger,
+		patterns,
+		storage.compatibility,
+	))
+
+	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(
+		storage.logger,
+		seriesByTagPatterns,
+		storage.compatibility,
+		storage.patternMatchingCache,
+		storage.metrics,
+	))
+
 	return nil
 }
 
