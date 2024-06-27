@@ -52,6 +52,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moira-alert/blackfriday-slack v0.1.2
 	github.com/swaggo/http-swagger v1.3.4
+	go.uber.org/mock v0.4.0
 	gopkg.in/telebot.v3 v3.2.1
 )
 

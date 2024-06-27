@@ -9,24 +9,26 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// GetIDByUsername read ID of user by messenger username.
-func (connector *DbConnector) GetIDByUsername(messenger, username string) (string, error) {
+// GetChatByUsername read chat of user by messenger username.
+func (connector *DbConnector) GetChatByUsername(messenger, username string) (string, error) {
 	if strings.HasPrefix(username, "#") {
 		result := "@" + username[1:]
 		return result, nil
 	}
+
 	c := *connector.client
 	result, err := c.Get(connector.context, usernameKey(messenger, username)).Result()
 	if errors.Is(err, redis.Nil) {
 		return result, database.ErrNil
 	}
+
 	return result, err
 }
 
-// SetUsernameID store id of username.
-func (connector *DbConnector) SetUsernameID(messenger, username, id string) error {
+// SetUsernameChat store id of username.
+func (connector *DbConnector) SetUsernameChat(messenger, username, chatRow string) error {
 	c := *connector.client
-	err := c.Set(connector.context, usernameKey(messenger, username), id, redis.KeepTTL).Err()
+	err := c.Set(connector.context, usernameKey(messenger, username), chatRow, redis.KeepTTL).Err()
 	return err
 }
 

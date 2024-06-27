@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/golang/mock/gomock"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/remote"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"

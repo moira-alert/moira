@@ -46,10 +46,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) getChannelID(username string) (string, error) {
-	chid, err := sender.DataBase.GetIDByUsername(messenger, username)
+	chid, err := sender.DataBase.GetChatByUsername(messenger, username)
 	if err != nil {
 		return "", fmt.Errorf("failed to get channel ID: %s", err.Error())
 	}
+
 	return chid, nil
 }
 

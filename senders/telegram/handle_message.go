@@ -14,11 +14,13 @@ func (sender *Sender) handleMessage(message *telebot.Message) error {
 	if err != nil {
 		return err
 	}
+
 	if responseMessage != "" {
 		if _, err = sender.bot.Reply(message, responseMessage); err != nil {
 			return sender.removeTokenFromError(err)
 		}
 	}
+
 	return nil
 }
 
@@ -29,10 +31,12 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 		if message.Chat.Username == "" {
 			return "Username is empty. Please add username in Telegram.", nil
 		}
+
 		_, err := sender.setChat(message)
 		if err != nil {
 			return "", err
 		}
+
 		return fmt.Sprintf("Okay, %s, your id is %s", strings.Trim(fmt.Sprintf("%s %s", message.Sender.FirstName, message.Sender.LastName), " "), chatID), nil
 	case (message.Chat.Type == telebot.ChatSuperGroup || message.Chat.Type == telebot.ChatGroup):
 		contactValue, err := sender.getContactValueByMessage(message)
@@ -44,10 +48,13 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 		if err != nil {
 			return "", err
 		}
+
 		if strings.HasPrefix(message.Text, "/start") {
 			return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", contactValue), nil
 		}
+
 		return "", nil
 	}
+
 	return "I don't understand you :(", nil
 }

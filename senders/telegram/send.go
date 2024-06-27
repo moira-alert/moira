@@ -33,6 +33,8 @@ var characterLimits = map[messageType]int{
 	Album:   albumCaptionMaxCharacters,
 }
 
+var unmarshalTypeError *json.UnmarshalTypeError
+
 // Structure that represents chat metadata required to send message to recipient.
 // It implements gopkg.in/telebot.v3#Recipient interface and thus might be passed to telebot methods directly.
 type Chat struct {
@@ -72,9 +74,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err != nil {
 		return checkBrokenContactError(sender.logger, err)
 	}
+
 	if err := sender.talk(chat, message, plots, msgType); err != nil {
 		return checkBrokenContactError(sender.logger, err)
 	}
+
 	return nil
 }
 
@@ -96,11 +100,13 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
+
 		lineCharsCount := len([]rune(line))
 		if messageCharsCount+lineCharsCount > maxChars-additionalInfoCharactersCount {
 			messageLimitReached = true
 			break
 		}
+
 		buffer.WriteString(line)
 		messageCharsCount += lineCharsCount
 		printEventsCount++
@@ -109,6 +115,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if messageLimitReached {
 		buffer.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-printEventsCount))
 	}
+
 	url := trigger.GetTriggerURI(sender.frontURI)
 	if url != "" {
 		buffer.WriteString(fmt.Sprintf("\n\n%s\n", url))
@@ -117,6 +124,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if throttled {
 		buffer.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
 	}
+
 	return buffer.String()
 }
 
@@ -142,16 +150,31 @@ func (sender *Sender) getChat(contactValue string) (*Chat, error) {
 }
 
 func (sender *Sender) getChatFromDb(contactValue string) (*Chat, error) {
-	chatRaw, err := sender.DataBase.GetIDByUsername(messenger, contactValue)
+	chatRaw, err := sender.DataBase.GetChatByUsername(messenger, contactValue)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get username uuid: %w", err)
+		return nil, fmt.Errorf("failed to get username chat: %w", err)
 	}
 
 	chat := Chat{}
 	err = json.Unmarshal([]byte(chatRaw), &chat)
 	if err != nil {
+		// For Moira < 2.12.0 compatibility
+		// Before 2.12.0 `moira-telegram-users:user` only stored telegram channel IDs
+		// After 2.12.0 `moira-telegram-users:user` stores Chat structure
+		if errors.As(err, &unmarshalTypeError) {
+			chatID, err := strconv.ParseInt(chatRaw, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse chatRaw: %s as int64: %w", chatRaw, err)
+			}
+
+			return &Chat{
+				ID: chatID,
+			}, nil
+		}
+
 		return nil, fmt.Errorf("failed to unmarshal chat data %s: %w", chatRaw, err)
 	}
+
 	return &chat, nil
 }
 
@@ -166,6 +189,7 @@ func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {
 		Type: telegramChat.Type,
 		ID:   telegramChat.ID,
 	}
+
 	return &chat, nil
 }
 
@@ -186,7 +210,7 @@ func (sender *Sender) setChat(message *telebot.Message) (*Chat, error) {
 		return nil, fmt.Errorf("failed to marshal chat: %w", err)
 	}
 
-	err = sender.DataBase.SetUsernameID(messenger, contactValue, string(chatString))
+	err = sender.DataBase.SetUsernameChat(messenger, contactValue, string(chatString))
 	if err != nil {
 		return nil, err
 	}
@@ -222,6 +246,7 @@ func (sender *Sender) talk(chat *Chat, message string, plots [][]byte, messageTy
 		sender.logger.Debug().Msg("talk as album")
 		return sender.sendAsAlbum(chat, plots, message)
 	}
+
 	sender.logger.Debug().Msg("talk as send message")
 	return sender.sendAsMessage(chat, message)
 }
@@ -236,6 +261,7 @@ func (sender *Sender) sendAsMessage(chat *Chat, message string) error {
 			Error(err).
 			Msg("Can't send event message to telegram")
 	}
+
 	return err
 }
 
@@ -257,12 +283,14 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 			return moira.NewSenderBrokenContactError(err)
 		}
 	}
+
 	if strings.HasPrefix(err.Error(), "failed to get username uuid") {
 		logger.Debug().
 			Error(err).
 			Msg("It's error from getChat()")
 		return moira.NewSenderBrokenContactError(err)
 	}
+
 	return err
 }
 
@@ -278,6 +306,7 @@ func prepareAlbum(plots [][]byte, caption string) telebot.Album {
 		album = append(album, photo)
 		caption = "" // Caption should be defined only for first photo
 	}
+
 	return album
 }
 
@@ -292,6 +321,7 @@ func (sender *Sender) sendAsAlbum(chat *Chat, plots [][]byte, caption string) er
 			Error(err).
 			Msg("Can't send event plots to telegram chat")
 	}
+
 	return err
 }
 
@@ -299,5 +329,6 @@ func getMessageType(plots [][]byte) messageType {
 	if len(plots) > 0 {
 		return Album
 	}
+
 	return Message
 }

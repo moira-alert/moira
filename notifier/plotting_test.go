@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -16,6 +15,7 @@ import (
 	mockMetricSource "github.com/moira-alert/moira/mock/metric_source"
 	"github.com/moira-alert/moira/plotting"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 // generateTestMetricsData generates metricsData map for tests.

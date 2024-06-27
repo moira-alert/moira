@@ -11,10 +11,10 @@ import (
 
 	"github.com/moira-alert/moira"
 
-	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock "github.com/moira-alert/moira/mock/notifier/mattermost"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestSendEvents(t *testing.T) {

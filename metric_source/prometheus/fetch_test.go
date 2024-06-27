@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricsource "github.com/moira-alert/moira/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"go.uber.org/mock/gomock"
 
 	"github.com/prometheus/common/model"
 	. "github.com/smartystreets/goconvey/convey"

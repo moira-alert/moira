@@ -5,9 +5,9 @@ import (
 
 	"github.com/moira-alert/moira/metrics"
 
-	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/fixtures"

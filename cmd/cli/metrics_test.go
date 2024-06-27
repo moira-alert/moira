@@ -7,8 +7,8 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 	mocks "github.com/moira-alert/moira/mock/moira-alert"
 
-	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestCleanUpOutdatedMetrics(t *testing.T) {

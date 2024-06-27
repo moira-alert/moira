@@ -123,8 +123,8 @@ type Database interface {
 	ReleaseTriggerCheckLock(triggerID string)
 
 	// Bot data storing
-	GetIDByUsername(messenger, username string) (string, error)
-	SetUsernameID(messenger, username, id string) error
+	GetChatByUsername(messenger, username string) (string, error)
+	SetUsernameChat(messenger, username, chat string) error
 	RemoveUser(messenger, username string) error
 
 	// Triggers without subscription manipulation
