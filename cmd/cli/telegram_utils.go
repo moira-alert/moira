@@ -27,7 +27,7 @@ func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) er
 			key := iter.Val()
 			if strings.HasPrefix(key, telegramLockName) {
 				continue
-		}
+			}
 
 			oldValue, err := d.Client().Get(d.Context(), key).Result()
 			if err != nil {
@@ -86,7 +86,7 @@ func downgradeTelegramUsersRecords(logger moira.Logger, database moira.Database)
 			key := iter.Val()
 			if strings.HasPrefix(key, telegramLockName) {
 				continue
-		}
+			}
 
 			oldValue, err := d.Client().Get(d.Context(), key).Result()
 			if err != nil {
