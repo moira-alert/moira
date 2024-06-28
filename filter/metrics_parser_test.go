@@ -196,16 +196,17 @@ func TestRestoreMetricStringByNameAndLabels(t *testing.T) {
 	Convey("Test function restoreMetricStringByNameAndLabels", t, func() {
 		Convey("Given two metrics with the same labels but in a different order", func() {
 			testCases := []struct {
-				name   string
-				labels map[string]string
+				name            string
+				labels          map[string]string
+				metricBytesSize int
 			}{
-				{"One.two.three", map[string]string{"one": "two", "four": "five", "six": "seven"}},
-				{"One.two.three", map[string]string{"six": "seven", "four": "five", "one": "two"}},
+				{"One.two.three", map[string]string{"one": "two", "four": "five", "six": "seven"}, 35},
+				{"One.two.three", map[string]string{"six": "seven", "four": "five", "one": "two"}, 35},
 			}
 			expected := "One.two.three;four=five;one=two;six=seven"
 			Convey("Result of restored metric should be equal", func() {
 				for _, testCase := range testCases {
-					actual := restoreMetricStringByNameAndLabels(testCase.name, testCase.labels)
+					actual := restoreMetricStringByNameAndLabels(testCase.name, testCase.labels, testCase.metricBytesSize)
 					So(actual, ShouldEqual, expected)
 				}
 			})
