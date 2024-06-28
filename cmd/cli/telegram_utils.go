@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/senders/telegram"
@@ -34,15 +34,17 @@ func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) er
 				return err
 			}
 
-			var chatID int64
-			var chat *telegram.Chat
-			var chatBytes []byte
-
-			chatID, err = strconv.ParseInt(oldValue, 10, 64)
+			chatID, err := strconv.ParseInt(oldValue, 10, 64)
 			if err != nil {
-				return err
+				logger.Error().
+					String("old_value", oldValue).
+					Error(err).
+					Msg("failed to parse chatID as int")
+
+				continue
 			}
 
+			var chat *telegram.Chat
 			if chatID < 0 {
 				chat = &telegram.Chat{
 					Type: "group",
@@ -55,13 +57,14 @@ func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) er
 				}
 			}
 
-			chatBytes, err = json.Marshal(chat)
+			chatRaw, err := json.Marshal(chat)
 			if err != nil {
 				return err
 			}
 
-			pipe.Set(d.Context(), key, string(chatBytes), 0)
+			pipe.Set(d.Context(), key, string(chatRaw), goredis.KeepTTL)
 		}
+
 		if _, err := pipe.Exec(d.Context()); err != nil {
 			return err
 		}
@@ -93,20 +96,27 @@ func downgradeTelegramUsersRecords(logger moira.Logger, database moira.Database)
 				return err
 			}
 
-			var newValue string
-
 			chat := &telegram.Chat{}
 			if err = json.Unmarshal([]byte(oldValue), chat); err != nil {
-				return err
+				logger.Error().
+					String("old_value", oldValue).
+					Error(err).
+					Msg("failed to unmarshal old value chat json")
+
+				continue
 			}
 
+			var newValue string
 			if chat.ID == 0 {
-				return fmt.Errorf("chat ID is null")
+				logger.Error().
+					Msg("chat ID is null")
+
+				continue
 			} else {
 				newValue = strconv.FormatInt(chat.ID, 10)
 			}
 
-			pipe.Set(d.Context(), key, newValue, 0)
+			pipe.Set(d.Context(), key, newValue, goredis.KeepTTL)
 		}
 
 		if _, err := pipe.Exec(d.Context()); err != nil {
