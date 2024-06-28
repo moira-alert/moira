@@ -7,7 +7,7 @@ import (
 func updateFrom211(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Update 2.11 -> 2.12 was started")
 
-	if err := database.UpdateTelegramUsersRecords(); err != nil {
+	if err := updateTelegramUsersRecords(logger, database); err != nil {
 		return err
 	}
 
@@ -19,7 +19,7 @@ func updateFrom211(logger moira.Logger, database moira.Database) error {
 func downgradeTo211(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Downgrade 2.12 -> 2.11 started")
 
-	if err := database.DowngradeTelegramUsersRecords(); err != nil {
+	if err := downgradeTelegramUsersRecords(logger, database); err != nil {
 		return err
 	}
 

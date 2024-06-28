@@ -155,10 +155,6 @@ type Database interface {
 	CleanUpAbandonedRetentions() error
 	RemoveMetricsByPrefix(pattern string) error
 	RemoveAllMetrics() error
-
-	// Telegram migration
-	UpdateTelegramUsersRecords() error
-	DowngradeTelegramUsersRecords() error
 }
 
 // Lock implements lock abstraction.

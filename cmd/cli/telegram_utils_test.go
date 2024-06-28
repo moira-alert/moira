@@ -1,11 +1,13 @@
-package redis
+package main
 
 import (
-	"context"
 	"testing"
 
-	goredis "github.com/go-redis/redis/v8"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+
+	goredis "github.com/go-redis/redis/v8"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -14,9 +16,13 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 		t.Skip("skipping test in short mode.")
 	}
 
-	logger, _ := logging.GetLogger("database")
+	conf := getDefault()
+	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	database := NewTestDatabase(logger)
+	database := redis.NewTestDatabase(logger)
 	database.Flush()
 	defer database.Flush()
 
@@ -25,10 +31,10 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 
 	Convey("Test data migration forwards", t, func() {
 		Convey("Given old database", func() {
-			createOldTelegramUserRecords(ctx, client)
+			createOldTelegramUserRecords(database)
 
 			Convey("When migration was applied", func() {
-				err := database.UpdateTelegramUsersRecords()
+				err := updateTelegramUsersRecords(logger, database)
 				So(err, ShouldBeNil)
 
 				Convey("Database should be new", func() {
@@ -58,21 +64,24 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 		t.Skip("skipping test in short mode.")
 	}
 
-	logger, _ := logging.GetLogger("database")
+	conf := getDefault()
+	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	database := NewTestDatabase(logger)
+	database := redis.NewTestDatabase(logger)
 	database.Flush()
 	defer database.Flush()
-
 	client := database.Client()
 	ctx := database.Context()
 
 	Convey("Test data migration backwards", t, func() {
 		Convey("Given new database", func() {
-			createNewTelegramUserRecords(ctx, client)
+			createNewTelegramUserRecords(database)
 
 			Convey("When migration was applied", func() {
-				err := database.DowngradeTelegramUsersRecords()
+				err := downgradeTelegramUsersRecords(logger, database)
 				So(err, ShouldBeNil)
 
 				Convey("Database should be old", func() {
@@ -97,16 +106,30 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 	})
 }
 
-func createOldTelegramUserRecords(ctx context.Context, client goredis.UniversalClient) {
-	client.Set(ctx, "moira-telegram-users:some telegram group", "-1001494975744", goredis.KeepTTL)
-	client.Set(ctx, "moira-telegram-users:some telegram group failed migration", `{"chatId":-1001494975755,"type":"group"}`, goredis.KeepTTL)
-	client.Set(ctx, "moira-telegram-users:@durov", "1", goredis.KeepTTL)
-	client.Set(ctx, "moira-telegram-users:moira-bot-host:123", "D4VdnzZDTS/xXF87THARWw==", goredis.KeepTTL)
+func createOldTelegramUserRecords(database moira.Database) {
+	switch d := database.(type) {
+	case *redis.DbConnector:
+		d.Flush()
+		client := d.Client()
+		ctx := d.Context()
+
+		client.Set(ctx, "moira-telegram-users:some telegram group", "-1001494975744", goredis.KeepTTL)
+		client.Set(ctx, "moira-telegram-users:some telegram group failed migration", `{"chatId":-1001494975755,"type":"group"}`, goredis.KeepTTL)
+		client.Set(ctx, "moira-telegram-users:@durov", "1", goredis.KeepTTL)
+		client.Set(ctx, "moira-telegram-users:moira-bot-host:123", "D4VdnzZDTS/xXF87THARWw==", goredis.KeepTTL)
+	}
 }
 
-func createNewTelegramUserRecords(ctx context.Context, client goredis.UniversalClient) {
-	client.Set(ctx, "moira-telegram-users:some telegram group", `{"type":"group","chatId":-1001494975744}`, goredis.KeepTTL)
-	client.Set(ctx, "moira-telegram-users:@durov", `{"type":"private","chatId":1}`, goredis.KeepTTL)
-	client.Set(ctx, "moira-telegram-users:@failed_migration", `2`, goredis.KeepTTL)
-	client.Set(ctx, "moira-telegram-users:moira-bot-host:123", "D4VdnzZDTS/xXF87THARWw==", goredis.KeepTTL)
+func createNewTelegramUserRecords(database moira.Database) {
+	switch d := database.(type) {
+	case *redis.DbConnector:
+		d.Flush()
+		client := d.Client()
+		ctx := d.Context()
+
+		client.Set(ctx, "moira-telegram-users:some telegram group", `{"type":"group","chatId":-1001494975744}`, goredis.KeepTTL)
+		client.Set(ctx, "moira-telegram-users:@durov", `{"type":"private","chatId":1}`, goredis.KeepTTL)
+		client.Set(ctx, "moira-telegram-users:@failed_migration", `2`, goredis.KeepTTL)
+		client.Set(ctx, "moira-telegram-users:moira-bot-host:123", "D4VdnzZDTS/xXF87THARWw==", goredis.KeepTTL)
+	}
 }
