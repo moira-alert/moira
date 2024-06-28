@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -55,7 +56,6 @@ func updateTelegramUsersRecords(logger moira.Logger, database moira.Database) er
 func updateTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, client goredis.UniversalClient, logger moira.Logger) error {
 	ctx := connector.Context()
 	iter := client.Scan(ctx, 0, telegramUsersKey+"*", 0).Iterator()
-	pipe := client.TxPipeline()
 
 	for iter.Next(ctx) {
 		key := iter.Val()
@@ -65,7 +65,7 @@ func updateTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, client 
 
 		oldValue, err := client.Get(ctx, key).Result()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get value by key: %s, err: %w", key, err)
 		}
 
 		chatID, err := strconv.ParseInt(oldValue, 10, 64)
@@ -93,14 +93,12 @@ func updateTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, client 
 
 		chatRaw, err := json.Marshal(chat)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to marshal chat: %w", err)
 		}
 
-		pipe.Set(ctx, key, string(chatRaw), goredis.KeepTTL)
-	}
-
-	if _, err := pipe.Exec(ctx); err != nil {
-		return err
+		if err := client.Set(ctx, key, string(chatRaw), goredis.KeepTTL).Err(); err != nil {
+			return fmt.Errorf("failed to set %s with value: %s, err: %w", key, string(chatRaw), err)
+		}
 	}
 
 	return nil
@@ -129,7 +127,6 @@ func downgradeTelegramUsersRecords(logger moira.Logger, database moira.Database)
 func downgradeTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, client goredis.UniversalClient, logger moira.Logger) error {
 	ctx := connector.Context()
 	iter := client.Scan(ctx, 0, telegramUsersKey+"*", 0).Iterator()
-	pipe := client.TxPipeline()
 
 	for iter.Next(ctx) {
 		key := iter.Val()
@@ -139,7 +136,7 @@ func downgradeTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, clie
 
 		oldValue, err := client.Get(ctx, key).Result()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get value by key: %s, err: %w", key, err)
 		}
 
 		chat := &telegram.Chat{}
@@ -162,11 +159,9 @@ func downgradeTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, clie
 			newValue = strconv.FormatInt(chat.ID, 10)
 		}
 
-		pipe.Set(ctx, key, newValue, goredis.KeepTTL)
-	}
-
-	if _, err := pipe.Exec(ctx); err != nil {
-		return err
+		if err := client.Set(ctx, key, newValue, goredis.KeepTTL).Err(); err != nil {
+			return fmt.Errorf("failed to set %s with value: %s, err: %w", key, newValue, err)
+		}
 	}
 
 	return nil
