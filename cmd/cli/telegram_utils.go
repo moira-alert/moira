@@ -149,15 +149,19 @@ func downgradeTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, clie
 			continue
 		}
 
-		var newValue string
+		// Do not downgrade records with filled ThreadID, because without this field they will stop working.
+		if chat.ThreadID != 0 {
+			continue
+		}
+
 		if chat.ID == 0 {
 			logger.Error().
 				Msg("chat ID is null")
 
 			continue
-		} else {
-			newValue = strconv.FormatInt(chat.ID, 10)
 		}
+
+		newValue := strconv.FormatInt(chat.ID, 10)
 
 		if err := client.Set(ctx, key, newValue, goredis.KeepTTL).Err(); err != nil {
 			return fmt.Errorf("failed to set %s with value: %s, err: %w", key, newValue, err)

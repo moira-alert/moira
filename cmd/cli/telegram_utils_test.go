@@ -89,6 +89,10 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 					So(err, ShouldBeNil)
 					So(result, ShouldEqual, "-1001494975744")
 
+					result, err = client.Get(ctx, "moira-telegram-users:some telegram group with topic").Result()
+					So(err, ShouldBeNil)
+					So(result, ShouldEqual, `{"type":"group","chatId":-1001494975766,"threadId":1}`)
+
 					result, err = client.Get(ctx, "moira-telegram-users:@durov").Result()
 					So(err, ShouldBeNil)
 					So(result, ShouldEqual, "1")
@@ -128,6 +132,7 @@ func createNewTelegramUserRecords(database moira.Database) {
 		ctx := d.Context()
 
 		client.Set(ctx, "moira-telegram-users:some telegram group", `{"type":"group","chatId":-1001494975744}`, goredis.KeepTTL)
+		client.Set(ctx, "moira-telegram-users:some telegram group with topic", `{"type":"group","chatId":-1001494975766,"threadId":1}`, goredis.KeepTTL)
 		client.Set(ctx, "moira-telegram-users:@durov", `{"type":"private","chatId":1}`, goredis.KeepTTL)
 		client.Set(ctx, "moira-telegram-users:@failed_migration", `2`, goredis.KeepTTL)
 		client.Set(ctx, "moira-telegram-users:moira-bot-host:123", "D4VdnzZDTS/xXF87THARWw==", goredis.KeepTTL)
