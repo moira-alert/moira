@@ -267,6 +267,20 @@ func (mr *MockDatabaseMockRecorder) DeleteTriggersSearchResults(arg0 any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggersSearchResults), arg0)
 }
 
+// DowngradeTelegramUsersRecords mocks base method.
+func (m *MockDatabase) DowngradeTelegramUsersRecords() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DowngradeTelegramUsersRecords")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DowngradeTelegramUsersRecords indicates an expected call of DowngradeTelegramUsersRecords.
+func (mr *MockDatabaseMockRecorder) DowngradeTelegramUsersRecords() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DowngradeTelegramUsersRecords", reflect.TypeOf((*MockDatabase)(nil).DowngradeTelegramUsersRecords))
+}
+
 // FetchNotificationEvent mocks base method.
 func (m *MockDatabase) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	m.ctrl.T.Helper()
@@ -1584,4 +1598,18 @@ func (m *MockDatabase) UpdateMetricsHeartbeat() error {
 func (mr *MockDatabaseMockRecorder) UpdateMetricsHeartbeat() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricsHeartbeat", reflect.TypeOf((*MockDatabase)(nil).UpdateMetricsHeartbeat))
+}
+
+// UpdateTelegramUsersRecords mocks base method.
+func (m *MockDatabase) UpdateTelegramUsersRecords() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTelegramUsersRecords")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTelegramUsersRecords indicates an expected call of UpdateTelegramUsersRecords.
+func (mr *MockDatabaseMockRecorder) UpdateTelegramUsersRecords() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTelegramUsersRecords", reflect.TypeOf((*MockDatabase)(nil).UpdateTelegramUsersRecords))
 }
