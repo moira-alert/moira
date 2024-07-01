@@ -38,9 +38,8 @@ var unmarshalTypeError *json.UnmarshalTypeError
 // Structure that represents chat metadata required to send message to recipient.
 // It implements gopkg.in/telebot.v3#Recipient interface and thus might be passed to telebot methods directly.
 type Chat struct {
-	ID       int64            `json:"chatId" example:"-1001234567890"`
-	Type     telebot.ChatType `json:"type" example:"supergroup"`
-	ThreadID int              `json:"threadId,omitempty" example:"10"`
+	ID       int64 `json:"chat_id" example:"-1001234567890"`
+	ThreadID int   `json:"thread_id,omitempty" example:"10"`
 }
 
 var brokenContactAPIErrors = map[*telebot.Error]struct{}{
@@ -185,8 +184,7 @@ func (sender *Sender) getChatFromTelegram(username string) (*Chat, error) {
 	}
 
 	chat := Chat{
-		Type: telegramChat.Type,
-		ID:   telegramChat.ID,
+		ID: telegramChat.ID,
 	}
 
 	return &chat, nil
@@ -199,7 +197,6 @@ func (sender *Sender) setChat(message *telebot.Message) error {
 	}
 
 	chat := &Chat{
-		Type:     message.Chat.Type,
 		ID:       message.Chat.ID,
 		ThreadID: message.ThreadID,
 	}

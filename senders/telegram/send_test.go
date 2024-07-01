@@ -181,8 +181,7 @@ func TestGetChat(t *testing.T) {
 
 				actual, err := sender.getChat("%1494975744")
 				expected := &Chat{
-					ID:   -1001494975744,
-					Type: telebot.ChatPrivate,
+					ID: -1001494975744,
 				}
 
 				So(actual, ShouldResemble, expected)
@@ -200,8 +199,7 @@ func TestGetChat(t *testing.T) {
 
 				actual, err := sender.getChat("#MyPublicChannel")
 				expected := &Chat{
-					ID:   -1001494975744,
-					Type: telebot.ChatChannel,
+					ID: -1001494975744,
 				}
 
 				So(actual, ShouldResemble, expected)
@@ -209,12 +207,11 @@ func TestGetChat(t *testing.T) {
 			})
 
 			Convey("For private chat should fetch from DB", func() {
-				dataBase.EXPECT().GetChatByUsername(messenger, "@durov").Return("{\"chatId\":1,\"type\":\"private\"}", nil)
+				dataBase.EXPECT().GetChatByUsername(messenger, "@durov").Return(`{"chat_id":1}`, nil)
 
 				actual, err := sender.getChat("@durov")
 				expected := &Chat{
-					ID:   1,
-					Type: telebot.ChatPrivate,
+					ID: 1,
 				}
 
 				So(actual, ShouldResemble, expected)
@@ -222,12 +219,11 @@ func TestGetChat(t *testing.T) {
 			})
 
 			Convey("For group should fetch from DB", func() {
-				dataBase.EXPECT().GetChatByUsername(messenger, "somegroup / moira").Return("{\"chatId\":-1001494975744,\"type\":\"group\"}", nil)
+				dataBase.EXPECT().GetChatByUsername(messenger, "somegroup / moira").Return(`{"chat_id":-1001494975744}`, nil)
 
 				actual, err := sender.getChat("somegroup / moira")
 				expected := &Chat{
-					ID:   -1001494975744,
-					Type: telebot.ChatGroup,
+					ID: -1001494975744,
 				}
 
 				So(actual, ShouldResemble, expected)
@@ -235,12 +231,11 @@ func TestGetChat(t *testing.T) {
 			})
 
 			Convey("For supergroup's main thread should fetch from DB", func() {
-				dataBase.EXPECT().GetChatByUsername(messenger, "somesupergroup / moira").Return("{\"chatId\":-1001494975744,\"type\":\"supergroup\"}", nil)
+				dataBase.EXPECT().GetChatByUsername(messenger, "somesupergroup / moira").Return(`{"chat_id":-1001494975744}`, nil)
 
 				actual, err := sender.getChat("somesupergroup / moira")
 				expected := &Chat{
-					ID:   -1001494975744,
-					Type: telebot.ChatSuperGroup,
+					ID: -1001494975744,
 				}
 
 				So(actual, ShouldResemble, expected)
@@ -248,12 +243,11 @@ func TestGetChat(t *testing.T) {
 			})
 
 			Convey("For supergroup's thread should fetch from DB", func() {
-				dataBase.EXPECT().GetChatByUsername(messenger, "-1001494975744/10").Return("{\"chatId\":-1001494975744,\"type\":\"supergroup\",\"threadId\":10}", nil)
+				dataBase.EXPECT().GetChatByUsername(messenger, "-1001494975744/10").Return(`{"chat_id":-1001494975744,"thread_id":10}`, nil)
 
 				actual, err := sender.getChat("-1001494975744/10")
 				expected := &Chat{
 					ID:       -1001494975744,
-					Type:     telebot.ChatSuperGroup,
 					ThreadID: 10,
 				}
 

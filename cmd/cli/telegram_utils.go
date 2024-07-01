@@ -78,17 +78,8 @@ func updateTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, client 
 			continue
 		}
 
-		var chat *telegram.Chat
-		if chatID < 0 {
-			chat = &telegram.Chat{
-				Type: "group",
-				ID:   chatID,
-			}
-		} else {
-			chat = &telegram.Chat{
-				Type: "private",
-				ID:   chatID,
-			}
+		chat := &telegram.Chat{
+			ID: chatID,
 		}
 
 		chatRaw, err := json.Marshal(chat)
