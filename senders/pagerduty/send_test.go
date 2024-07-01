@@ -42,6 +42,7 @@ func TestBuildEvent(t *testing.T) {
 		baseExpected := pagerduty.V2Event{
 			RoutingKey: contact.Value,
 			Action:     "trigger",
+			DedupKey:   "TriggerID",
 			Payload: &pagerduty.V2Payload{
 				Summary:   "NODATA Trigger Name [tag1][tag2]",
 				Severity:  "warning",
