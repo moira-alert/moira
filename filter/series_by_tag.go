@@ -184,24 +184,36 @@ func createMatchingHandlerForOneTag(
 	case MatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchRegex, err := newMatchRegex(spec.Value, compatibility)
-		if err != nil {
-			return nil, err
-		}
+		if spec.Value == "*" {
+			matchingHandlerCondition = func(value string) bool {
+				return true
+			}
+		} else {
+			matchRegex, err := newMatchRegex(spec.Value, compatibility)
+			if err != nil {
+				return nil, err
+			}
 
-		matchingHandlerCondition = func(value string) bool {
-			return matchRegex.MatchString(value)
+			matchingHandlerCondition = func(value string) bool {
+				return matchRegex.MatchString(value)
+			}
 		}
 	case NotMatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchRegex, err := newMatchRegex(spec.Value, compatibility)
-		if err != nil {
-			return nil, err
-		}
+		if spec.Value == "*" {
+			matchingHandlerCondition = func(value string) bool {
+				return true
+			}
+		} else {
+			matchRegex, err := newMatchRegex(spec.Value, compatibility)
+			if err != nil {
+				return nil, err
+			}
 
-		matchingHandlerCondition = func(value string) bool {
-			return !matchRegex.MatchString(value)
+			matchingHandlerCondition = func(value string) bool {
+				return !matchRegex.MatchString(value)
+			}
 		}
 	default:
 		matchingHandlerCondition = func(_ string) bool {
@@ -227,10 +239,6 @@ func newMatchRegex(
 	tagValue string,
 	compatibility *Compatibility,
 ) (*regexp.Regexp, error) {
-	if tagValue == "*" {
-		tagValue = ".*"
-	}
-
 	if !compatibility.AllowRegexLooseStartMatch {
 		tagValue = "^" + tagValue
 	}
