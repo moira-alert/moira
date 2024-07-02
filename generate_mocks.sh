@@ -4,7 +4,7 @@
 
 rm -r ./mock/*
 
-go install github.com/golang/mock/mockgen@v1.6.0
+go install go.uber.org/mock/mockgen@v0.4.0
 
 mockgen -destination=mock/moira-alert/locks.go -package=mock_moira_alert github.com/moira-alert/moira Lock
 mockgen -destination=mock/moira-alert/mutex.go -package=mock_moira_alert github.com/moira-alert/moira Mutex
@@ -27,5 +27,6 @@ mockgen -destination=mock/moira-alert/metrics/meter.go -package=mock_moira_alert
 mockgen -destination=mock/moira-alert/prometheus_api.go -package=mock_moira_alert github.com/moira-alert/moira/metric_source/prometheus PrometheusApi
 
 mockgen -destination=mock/moira-alert/database_stats.go -package=mock_moira_alert github.com/moira-alert/moira/database/stats StatsReporter
+mockgen -destination=mock/notifier/telegram/bot.go -package=mock_telegram github.com/moira-alert/moira/senders/telegram Bot
 
 git add mock/*

@@ -3,8 +3,8 @@ package redis
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"go.uber.org/mock/gomock"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"

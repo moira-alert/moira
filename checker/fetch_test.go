@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mockmetricsource "github.com/moira-alert/moira/mock/metric_source"
 	mockmoiraalert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestFetchTriggerMetrics(t *testing.T) {

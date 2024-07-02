@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
-	"github.com/golang/mock/gomock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
