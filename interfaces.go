@@ -124,7 +124,7 @@ type Database interface {
 
 	// Bot data storing
 	GetChatByUsername(messenger, username string) (string, error)
-	SetUsernameChat(messenger, username, chat string) error
+	SetUsernameChat(messenger, username, chatRaw string) error
 	RemoveUser(messenger, username string) error
 
 	// Triggers without subscription manipulation

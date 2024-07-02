@@ -70,7 +70,7 @@ func updateTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, client 
 
 		chatID, err := strconv.ParseInt(oldValue, 10, 64)
 		if err != nil {
-			logger.Error().
+			logger.Warning().
 				String("old_value", oldValue).
 				Error(err).
 				Msg("failed to parse chatID as int")
@@ -132,7 +132,7 @@ func downgradeTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, clie
 
 		chat := &telegram.Chat{}
 		if err = json.Unmarshal([]byte(oldValue), chat); err != nil {
-			logger.Error().
+			logger.Warning().
 				String("old_value", oldValue).
 				Error(err).
 				Msg("failed to unmarshal old value chat json")
