@@ -873,3 +873,14 @@ func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance in
 	}
 	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
 }
+
+type SchedulerParams struct {
+	Now               time.Time
+	Event             NotificationEvent
+	Trigger           TriggerData
+	Contact           ContactData
+	Plotting          PlottingData
+	ThrottledOld      bool
+	SendFail          int
+	ReschedulingDelay time.Duration
+}

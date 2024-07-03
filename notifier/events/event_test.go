@@ -96,7 +96,8 @@ func TestEvent(t *testing.T) {
 		event2 := event
 		event2.SubscriptionID = &subID
 
-		params := notifier.SchedulerParams{
+		params := moira.SchedulerParams{
+			Now:               time.Now(),
 			Event:             event2,
 			Trigger:           moira.TriggerData{},
 			Contact:           contact,
@@ -106,7 +107,7 @@ func TestEvent(t *testing.T) {
 			ReschedulingDelay: time.Minute,
 		}
 
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Return(&notification)
+		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 		dataBase.EXPECT().AddNotification(&notification)
 
 		err := worker.processEvent(event)
@@ -342,7 +343,8 @@ func TestAddNotification(t *testing.T) {
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
-		params := notifier.SchedulerParams{
+		params := moira.SchedulerParams{
+			Now:               time.Now(),
 			Event:             event,
 			Trigger:           triggerData,
 			Contact:           contact,
@@ -355,7 +357,7 @@ func TestAddNotification(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil)
 
 		err := worker.processEvent(event)
@@ -390,7 +392,8 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 
 		notification2 := moira.ScheduledNotification{}
 
-		params := notifier.SchedulerParams{
+		params := moira.SchedulerParams{
+			Now:               time.Now(),
 			Event:             event,
 			Trigger:           triggerData,
 			Contact:           contact,
@@ -406,8 +409,8 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription, &subscription4}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(2).Return(contact, nil)
 
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Times(1).Return(&notification2)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params2, gomock.Any()).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(params2, gomock.Any()).Times(1).Return(&notification2)
 
 		dataBase.EXPECT().AddNotification(&notification2).Times(1).Return(nil)
 
@@ -611,7 +614,8 @@ func TestGoRoutine(t *testing.T) {
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
-		params := notifier.SchedulerParams{
+		params := moira.SchedulerParams{
+			Now:               time.Now(),
 			Event:             event,
 			Trigger:           triggerData,
 			Contact:           contact,
@@ -630,7 +634,7 @@ func TestGoRoutine(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 		worker.Start()

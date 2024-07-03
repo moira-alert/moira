@@ -10,17 +10,7 @@ import (
 
 // Scheduler implements event scheduling functionality.
 type Scheduler interface {
-	ScheduleNotification(now time.Time, params SchedulerParams, logger moira.Logger) *moira.ScheduledNotification
-}
-
-type SchedulerParams struct {
-	Event             moira.NotificationEvent
-	Trigger           moira.TriggerData
-	Contact           moira.ContactData
-	Plotting          moira.PlottingData
-	ThrottledOld      bool
-	SendFail          int
-	ReschedulingDelay time.Duration
+	ScheduleNotification(params moira.SchedulerParams, logger moira.Logger) *moira.ScheduledNotification
 }
 
 // StandardScheduler represents standard event scheduling.
@@ -44,21 +34,21 @@ func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics
 }
 
 // ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings.
-func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, params SchedulerParams, logger moira.Logger,
+func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerParams, logger moira.Logger,
 ) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
 	)
 	if params.SendFail > 0 {
-		next = now.Add(params.ReschedulingDelay)
+		next = params.Now.Add(params.ReschedulingDelay)
 		throttled = params.ThrottledOld
 	} else {
 		if params.Event.State == moira.StateTEST {
-			next = now
+			next = params.Now
 			throttled = false
 		} else {
-			next, throttled = scheduler.calculateNextDelivery(now, &params.Event, logger)
+			next, throttled = scheduler.calculateNextDelivery(params.Now, &params.Event, logger)
 		}
 	}
 	notification := &moira.ScheduledNotification{
@@ -68,14 +58,14 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, params S
 		Throttled: throttled,
 		SendFail:  params.SendFail,
 		Timestamp: next.Unix(),
-		CreatedAt: now.Unix(),
+		CreatedAt: params.Now.Unix(),
 		Plotting:  params.Plotting,
 	}
 
 	logger.Debug().
 		String("notification_timestamp", next.Format("2006/01/02 15:04:05")).
 		Int64("notification_timestamp_unix", next.Unix()).
-		Int64("notification_created_at_unix", now.Unix()).
+		Int64("notification_created_at_unix", params.Now.Unix()).
 		Msg("Scheduled notification")
 	return notification
 }
