@@ -29,6 +29,7 @@ prometheus_remote:
 notifier:
   sender_timeout: 10s
   resending_timeout: "1:00"
+  rescheduling_delay: 60s
   senders: []
   moira_selfstate:
     enabled: false

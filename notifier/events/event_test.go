@@ -95,7 +95,18 @@ func TestEvent(t *testing.T) {
 		}
 		event2 := event
 		event2.SubscriptionID = &subID
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, moira.TriggerData{}, contact, notification.Plotting, false, 0, gomock.Any()).Return(&notification)
+
+		params := notifier.SchedulerParams{
+			Event:             event2,
+			Trigger:           moira.TriggerData{},
+			Contact:           contact,
+			Plotting:          notification.Plotting,
+			ThrottledOld:      false,
+			SendFail:          0,
+			ReschedulingDelay: time.Minute,
+		}
+
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Return(&notification)
 		dataBase.EXPECT().AddNotification(&notification)
 
 		err := worker.processEvent(event)
@@ -331,11 +342,20 @@ func TestAddNotification(t *testing.T) {
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
+		params := notifier.SchedulerParams{
+			Event:             event,
+			Trigger:           triggerData,
+			Contact:           contact,
+			Plotting:          emptyNotification.Plotting,
+			ThrottledOld:      false,
+			SendFail:          0,
+			ReschedulingDelay: time.Minute,
+		}
 
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0, gomock.Any()).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil)
 
 		err := worker.processEvent(event)
@@ -370,12 +390,24 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 
 		notification2 := moira.ScheduledNotification{}
 
+		params := notifier.SchedulerParams{
+			Event:             event,
+			Trigger:           triggerData,
+			Contact:           contact,
+			Plotting:          notification2.Plotting,
+			ThrottledOld:      false,
+			SendFail:          0,
+			ReschedulingDelay: time.Minute,
+		}
+		params2 := params
+		params2.Event = event2
+
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription, &subscription4}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(2).Return(contact, nil)
 
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, notification2.Plotting, false, 0, gomock.Any()).Times(1).Return(&notification2)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, triggerData, contact, notification2.Plotting, false, 0, gomock.Any()).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params2, gomock.Any()).Times(1).Return(&notification2)
 
 		dataBase.EXPECT().AddNotification(&notification2).Times(1).Return(nil)
 
@@ -579,6 +611,15 @@ func TestGoRoutine(t *testing.T) {
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
+		params := notifier.SchedulerParams{
+			Event:             event,
+			Trigger:           triggerData,
+			Contact:           contact,
+			Plotting:          emptyNotification.Plotting,
+			ThrottledOld:      false,
+			SendFail:          0,
+			ReschedulingDelay: time.Minute,
+		}
 		shutdown := make(chan struct{})
 
 		dataBase.EXPECT().FetchNotificationEvent().Return(moira.NotificationEvent{}, fmt.Errorf("3433434")).Do(func() {
@@ -589,7 +630,7 @@ func TestGoRoutine(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0, gomock.Any()).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 		worker.Start()

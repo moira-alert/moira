@@ -13,6 +13,7 @@ type Config struct {
 	SelfStateContacts             []map[string]string
 	SendingTimeout                time.Duration
 	ResendingTimeout              time.Duration
+	ReschedulingDelay             time.Duration
 	Senders                       []map[string]interface{}
 	LogFile                       string
 	LogLevel                      string

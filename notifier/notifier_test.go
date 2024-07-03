@@ -103,8 +103,18 @@ func TestUnknownContactType(t *testing.T) {
 			Type: "unknown contact",
 		},
 	}
+	params := SchedulerParams{
+		Event:             event,
+		Trigger:           pkg.Trigger,
+		Contact:           pkg.Contact,
+		Plotting:          pkg.Plotting,
+		ThrottledOld:      pkg.Throttled,
+		SendFail:          pkg.FailCount + 1,
+		ReschedulingDelay: time.Minute,
+	}
 	notification := moira.ScheduledNotification{}
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, gomock.Any()).Return(&notification)
+
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
@@ -124,9 +134,19 @@ func TestFailSendEvent(t *testing.T) {
 			Type: "test_contact_type",
 		},
 	}
+	params := SchedulerParams{
+		Event:             event,
+		Trigger:           pkg.Trigger,
+		Contact:           pkg.Contact,
+		Plotting:          pkg.Plotting,
+		ThrottledOld:      pkg.Throttled,
+		SendFail:          pkg.FailCount + 1,
+		ReschedulingDelay: time.Minute,
+	}
 	notification := moira.ScheduledNotification{}
+
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, gomock.Any()).Return(&notification)
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
@@ -194,8 +214,17 @@ func TestTimeout(t *testing.T) {
 			Value: "fail contact",
 		},
 	}
+	params := SchedulerParams{
+		Event:             event,
+		Trigger:           pkg2.Trigger,
+		Contact:           pkg2.Contact,
+		Plotting:          pkg2.Plotting,
+		ThrottledOld:      pkg2.Throttled,
+		SendFail:          pkg2.FailCount + 1,
+		ReschedulingDelay: time.Minute,
+	}
 
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg.Plotting, pkg2.Throttled, pkg2.FailCount+1, gomock.Any()).Return(&notification)
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 	standardNotifier.Send(&pkg2, &wg)
