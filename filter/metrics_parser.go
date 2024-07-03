@@ -63,7 +63,7 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 	}
 
 	parsedMetric := &ParsedMetric{
-		restoreMetricStringByNameAndLabels(name, labels),
+		restoreMetricStringByNameAndLabels(name, labels, len(metricBytes)),
 		name,
 		labels,
 		value,
@@ -77,8 +77,10 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 	return parsedMetric, nil
 }
 
-func restoreMetricStringByNameAndLabels(name string, labels map[string]string) string {
+func restoreMetricStringByNameAndLabels(name string, labels map[string]string, metricBytesSize int) string {
 	var builder strings.Builder
+	builder.Grow(metricBytesSize)
+
 	keys := make([]string, 0, len(labels))
 	for key := range labels {
 		keys = append(keys, key)
@@ -134,10 +136,8 @@ func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 
 		labelValueBytes = labelBytesScanner.Next()
 		for labelBytesScanner.HasNext() {
-			var labelString strings.Builder
-			labelString.WriteString("=")
-			labelString.Write(labelBytesScanner.Next())
-			labelValueBytes = append(labelValueBytes, labelString.String()...)
+			labelValueBytes = append(labelValueBytes, '=')
+			labelValueBytes = append(labelValueBytes, labelBytesScanner.Next()...)
 		}
 
 		if len(labelNameBytes) == 0 {

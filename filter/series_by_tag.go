@@ -99,6 +99,7 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 		if len(matchedTagSpecIndexes) != 8 { //nolint
 			return nil, ErrNotSeriesByTag
 		}
+
 		if input[matchedTagSpecIndexes[0]] != input[matchedTagSpecIndexes[1]-1] {
 			return nil, ErrNotSeriesByTag
 		}
