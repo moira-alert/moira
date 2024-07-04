@@ -13,7 +13,7 @@ type Scheduler interface {
 	ScheduleNotification(params moira.SchedulerParams, logger moira.Logger) *moira.ScheduledNotification
 }
 
-// SchedulerConfig is a list of immutable params for Scheduler
+// SchedulerConfig is a list of immutable params for Scheduler.
 type SchedulerConfig struct {
 	ReschedulingDelay time.Duration
 }
