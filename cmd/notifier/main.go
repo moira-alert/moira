@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/moira-alert/moira/clock"
 	"os"
 	"os/signal"
 	"syscall"
@@ -91,6 +92,8 @@ func main() {
 
 	notifierConfig := config.Notifier.getSettings(logger)
 
+	systemClock := clock.NewSystemClock()
+
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
 	sender := notifier.NewNotifier(
 		database,
@@ -99,6 +102,7 @@ func main() {
 		notifierMetrics,
 		metricSourceProvider,
 		imageStoreMap,
+		systemClock,
 	)
 
 	// Register moira senders
@@ -141,7 +145,8 @@ func main() {
 			notifierMetrics,
 			notifier.SchedulerConfig{
 				ReschedulingDelay: notifierConfig.ReschedulingDelay,
-			}),
+			},
+			systemClock),
 		Metrics: notifierMetrics,
 		Config:  notifierConfig,
 	}

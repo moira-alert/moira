@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"fmt"
+	"github.com/moira-alert/moira/clock"
 	"testing"
 	"time"
 
@@ -120,6 +121,8 @@ func TestNotifier(t *testing.T) {
 
 	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(database), nil, nil)
 
+	systemClock := clock.NewSystemClock()
+
 	notifierInstance := notifier.NewNotifier(
 		database,
 		logger,
@@ -127,6 +130,7 @@ func TestNotifier(t *testing.T) {
 		notifierMetrics,
 		metricsSourceProvider,
 		map[string]moira.ImageStore{},
+		systemClock,
 	)
 
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
@@ -151,7 +155,8 @@ func TestNotifier(t *testing.T) {
 			notifierMetrics,
 			notifier.SchedulerConfig{
 				ReschedulingDelay: notifierConfig.ReschedulingDelay,
-			}),
+			},
+			systemClock),
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{

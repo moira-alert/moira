@@ -9,6 +9,7 @@ import (
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -49,11 +50,12 @@ func TestThrottling(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 	metrics2 := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
-	scheduler := NewScheduler(dataBase, logger, metrics2, SchedulerConfig{ReschedulingDelay: time.Minute})
 
 	now := time.Now()
+	systemClock := mock_clock.NewMockClock(mockCtrl)
+	scheduler := NewScheduler(dataBase, logger, metrics2, SchedulerConfig{ReschedulingDelay: time.Minute}, systemClock)
+
 	params := moira.SchedulerParams{
-		Now:          now,
 		Event:        event,
 		Trigger:      trigger,
 		Contact:      contact,
@@ -81,6 +83,7 @@ func TestThrottling(t *testing.T) {
 		expected2 := expected
 		expected2.SendFail = 1
 		expected2.Timestamp = now.Add(time.Minute).Unix()
+		systemClock.EXPECT().Now().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected2)
@@ -95,6 +98,7 @@ func TestThrottling(t *testing.T) {
 		expected2.SendFail = 3
 		expected2.Timestamp = now.Add(time.Minute).Unix()
 		expected2.Throttled = true
+		systemClock.EXPECT().Now().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected2)
@@ -115,6 +119,7 @@ func TestThrottling(t *testing.T) {
 
 		expected3 := expected
 		expected3.Event = testEvent
+		systemClock.EXPECT().Now().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected3)
@@ -125,6 +130,7 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(moira.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
 
 		params2 := params
+		systemClock.EXPECT().Now().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected)
@@ -154,7 +160,8 @@ func TestSubscriptionSchedule(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
-	scheduler := NewScheduler(dataBase, logger, notifierMetrics, SchedulerConfig{ReschedulingDelay: time.Minute})
+	systemClock := mock_clock.NewMockClock(mockCtrl)
+	scheduler := NewScheduler(dataBase, logger, notifierMetrics, SchedulerConfig{ReschedulingDelay: time.Minute}, systemClock)
 
 	Convey("Throttling disabled", t, func() {
 		now := time.Unix(1441187115, 0)

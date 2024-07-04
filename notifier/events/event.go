@@ -150,7 +150,6 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 				}
 				event.SubscriptionID = &subscription.ID
 				params := moira.SchedulerParams{
-					Now:          time.Now(),
 					Event:        event,
 					Trigger:      triggerData,
 					Contact:      contact,

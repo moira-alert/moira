@@ -14,6 +14,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
 )
@@ -105,7 +106,6 @@ func TestUnknownContactType(t *testing.T) {
 		},
 	}
 	params := moira.SchedulerParams{
-		Now:          time.Now(),
 		Event:        event,
 		Trigger:      pkg.Trigger,
 		Contact:      pkg.Contact,
@@ -136,7 +136,6 @@ func TestFailSendEvent(t *testing.T) {
 		},
 	}
 	params := moira.SchedulerParams{
-		Now:          time.Now(),
 		Event:        event,
 		Trigger:      pkg.Trigger,
 		Contact:      pkg.Contact,
@@ -216,7 +215,6 @@ func TestTimeout(t *testing.T) {
 		},
 	}
 	params := moira.SchedulerParams{
-		Now:          time.Now(),
 		Event:        event,
 		Trigger:      pkg2.Trigger,
 		Contact:      pkg2.Contact,
@@ -252,8 +250,9 @@ func configureNotifier(t *testing.T, config Config) {
 	scheduler = mock_scheduler.NewMockScheduler(mockCtrl)
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
 	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(dataBase), nil, nil)
+	systemClock := mock_clock.NewMockClock(mockCtrl)
 
-	standardNotifier = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
+	standardNotifier = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{}, systemClock)
 	standardNotifier.scheduler = scheduler
 	senderSettings := map[string]interface{}{
 		"sender_type":  "test_type",

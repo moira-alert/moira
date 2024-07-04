@@ -23,6 +23,7 @@ type StandardScheduler struct {
 	database moira.Database
 	metrics  *metrics.NotifierMetrics
 	config   SchedulerConfig
+	clock    moira.Clock
 }
 
 type throttlingLevel struct {
@@ -32,12 +33,13 @@ type throttlingLevel struct {
 }
 
 // NewScheduler is initializer for StandardScheduler.
-func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics, config SchedulerConfig,
+func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics, config SchedulerConfig, clock moira.Clock,
 ) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
 		metrics:  metrics,
 		config:   config,
+		clock:    clock,
 	}
 }
 
@@ -48,15 +50,16 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 		next      time.Time
 		throttled bool
 	)
+	now := scheduler.clock.Now()
 	if params.SendFail > 0 {
-		next = params.Now.Add(scheduler.config.ReschedulingDelay)
+		next = now.Add(scheduler.config.ReschedulingDelay)
 		throttled = params.ThrottledOld
 	} else {
 		if params.Event.State == moira.StateTEST {
-			next = params.Now
+			next = now
 			throttled = false
 		} else {
-			next, throttled = scheduler.calculateNextDelivery(params.Now, &params.Event, logger)
+			next, throttled = scheduler.calculateNextDelivery(now, &params.Event, logger)
 		}
 	}
 	notification := &moira.ScheduledNotification{
@@ -66,14 +69,14 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 		Throttled: throttled,
 		SendFail:  params.SendFail,
 		Timestamp: next.Unix(),
-		CreatedAt: params.Now.Unix(),
+		CreatedAt: now.Unix(),
 		Plotting:  params.Plotting,
 	}
 
 	logger.Debug().
 		String("notification_timestamp", next.Format("2006/01/02 15:04:05")).
 		Int64("notification_timestamp_unix", next.Unix()).
-		Int64("notification_created_at_unix", params.Now.Unix()).
+		Int64("notification_created_at_unix", now.Unix()).
 		Msg("Scheduled notification")
 	return notification
 }

@@ -85,12 +85,14 @@ type StandardNotifier struct {
 }
 
 // NewNotifier is initializer for StandardNotifier.
-func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore) *StandardNotifier {
+func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics,
+	metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore, clock moira.Clock,
+) *StandardNotifier {
 	return &StandardNotifier{
 		senders:              make(map[string]chan NotificationPackage),
 		logger:               logger,
 		database:             database,
-		scheduler:            NewScheduler(database, logger, metrics, SchedulerConfig{ReschedulingDelay: config.ReschedulingDelay}),
+		scheduler:            NewScheduler(database, logger, metrics, SchedulerConfig{ReschedulingDelay: config.ReschedulingDelay}, clock),
 		config:               config,
 		metrics:              metrics,
 		metricSourceProvider: metricSourceProvider,
@@ -165,7 +167,6 @@ func (notifier *StandardNotifier) reschedule(pkg *NotificationPackage, reason st
 		eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, subID)
 		SetLogLevelByConfig(notifier.config.LogSubscriptionsToLevel, subID, &eventLogger)
 		params := moira.SchedulerParams{
-			Now:          time.Now(),
 			Event:        event,
 			Trigger:      pkg.Trigger,
 			Contact:      pkg.Contact,
