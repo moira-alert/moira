@@ -158,7 +158,7 @@ func (notifier *StandardNotifier) reschedule(pkg *NotificationPackage, reason st
 	logger.Warning().
 		Int("number_of_retries", pkg.FailCount).
 		String("reason", reason).
-		Msg("Can't send message. Retry again in 1 min")
+		Msg(fmt.Sprintf("Can't send message. Retry again in %s", notifier.config.ReschedulingDelay))
 
 	for _, event := range pkg.Events {
 		subID := moira.UseString(event.SubscriptionID)
