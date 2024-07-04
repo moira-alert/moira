@@ -105,13 +105,12 @@ func TestUnknownContactType(t *testing.T) {
 		},
 	}
 	params := moira.SchedulerParams{
-		Event:             event,
-		Trigger:           pkg.Trigger,
-		Contact:           pkg.Contact,
-		Plotting:          pkg.Plotting,
-		ThrottledOld:      pkg.Throttled,
-		SendFail:          pkg.FailCount + 1,
-		ReschedulingDelay: standardNotifier.config.ReschedulingDelay,
+		Event:        event,
+		Trigger:      pkg.Trigger,
+		Contact:      pkg.Contact,
+		Plotting:     pkg.Plotting,
+		ThrottledOld: pkg.Throttled,
+		SendFail:     pkg.FailCount + 1,
 	}
 	notification := moira.ScheduledNotification{}
 
@@ -136,13 +135,12 @@ func TestFailSendEvent(t *testing.T) {
 		},
 	}
 	params := moira.SchedulerParams{
-		Event:             event,
-		Trigger:           pkg.Trigger,
-		Contact:           pkg.Contact,
-		Plotting:          pkg.Plotting,
-		ThrottledOld:      pkg.Throttled,
-		SendFail:          pkg.FailCount + 1,
-		ReschedulingDelay: standardNotifier.config.ReschedulingDelay,
+		Event:        event,
+		Trigger:      pkg.Trigger,
+		Contact:      pkg.Contact,
+		Plotting:     pkg.Plotting,
+		ThrottledOld: pkg.Throttled,
+		SendFail:     pkg.FailCount + 1,
 	}
 	notification := moira.ScheduledNotification{}
 
@@ -216,13 +214,12 @@ func TestTimeout(t *testing.T) {
 		},
 	}
 	params := moira.SchedulerParams{
-		Event:             event,
-		Trigger:           pkg2.Trigger,
-		Contact:           pkg2.Contact,
-		Plotting:          pkg2.Plotting,
-		ThrottledOld:      pkg2.Throttled,
-		SendFail:          pkg2.FailCount + 1,
-		ReschedulingDelay: standardNotifier.config.ReschedulingDelay,
+		Event:        event,
+		Trigger:      pkg2.Trigger,
+		Contact:      pkg2.Contact,
+		Plotting:     pkg2.Plotting,
+		ThrottledOld: pkg2.Throttled,
+		SendFail:     pkg2.FailCount + 1,
 	}
 
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), params, gomock.Any()).Return(&notification)

@@ -874,12 +874,13 @@ func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance in
 	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
 }
 
+// SchedulerParams is the parameters for notifier.Scheduler essential for scheduling notification
 type SchedulerParams struct {
-	Event             NotificationEvent
-	Trigger           TriggerData
-	Contact           ContactData
-	Plotting          PlottingData
-	ThrottledOld      bool
-	SendFail          int
-	ReschedulingDelay time.Duration
+	Event        NotificationEvent
+	Trigger      TriggerData
+	Contact      ContactData
+	Plotting     PlottingData
+	ThrottledOld bool
+	// SendFail is amount of failed send attempts
+	SendFail int
 }

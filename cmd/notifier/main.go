@@ -133,11 +133,17 @@ func main() {
 
 	// Start moira new events fetcher
 	fetchEventsWorker := &events.FetchEventsWorker{
-		Logger:    logger,
-		Database:  database,
-		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
-		Metrics:   notifierMetrics,
-		Config:    notifierConfig,
+		Logger:   logger,
+		Database: database,
+		Scheduler: notifier.NewScheduler(
+			database,
+			logger,
+			notifierMetrics,
+			notifier.SchedulerConfig{
+				ReschedulingDelay: notifierConfig.ReschedulingDelay,
+			}),
+		Metrics: notifierMetrics,
+		Config:  notifierConfig,
 	}
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)

@@ -142,10 +142,16 @@ func TestNotifier(t *testing.T) {
 	notifierInstance.RegisterSender(senderSettings, sender) //nolint
 
 	fetchEventsWorker := events.FetchEventsWorker{
-		Database:  database,
-		Logger:    logger,
-		Metrics:   notifierMetrics,
-		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
+		Database: database,
+		Logger:   logger,
+		Metrics:  notifierMetrics,
+		Scheduler: notifier.NewScheduler(
+			database,
+			logger,
+			notifierMetrics,
+			notifier.SchedulerConfig{
+				ReschedulingDelay: notifierConfig.ReschedulingDelay,
+			}),
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{

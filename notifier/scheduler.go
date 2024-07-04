@@ -13,10 +13,16 @@ type Scheduler interface {
 	ScheduleNotification(now time.Time, params moira.SchedulerParams, logger moira.Logger) *moira.ScheduledNotification
 }
 
+// SchedulerConfig is a list of immutable params for Scheduler
+type SchedulerConfig struct {
+	ReschedulingDelay time.Duration
+}
+
 // StandardScheduler represents standard event scheduling.
 type StandardScheduler struct {
 	database moira.Database
 	metrics  *metrics.NotifierMetrics
+	config   SchedulerConfig
 }
 
 type throttlingLevel struct {
@@ -26,10 +32,12 @@ type throttlingLevel struct {
 }
 
 // NewScheduler is initializer for StandardScheduler.
-func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics) *StandardScheduler {
+func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics, config SchedulerConfig,
+) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
 		metrics:  metrics,
+		config:   config,
 	}
 }
 
@@ -41,7 +49,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, params m
 		throttled bool
 	)
 	if params.SendFail > 0 {
-		next = now.Add(params.ReschedulingDelay)
+		next = now.Add(scheduler.config.ReschedulingDelay)
 		throttled = params.ThrottledOld
 	} else {
 		if params.Event.State == moira.StateTEST {

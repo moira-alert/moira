@@ -49,17 +49,16 @@ func TestThrottling(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 	metrics2 := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
-	scheduler := NewScheduler(dataBase, logger, metrics2)
+	scheduler := NewScheduler(dataBase, logger, metrics2, SchedulerConfig{ReschedulingDelay: time.Minute})
 
 	now := time.Now()
 	params := moira.SchedulerParams{
-		Event:             event,
-		Trigger:           trigger,
-		Contact:           contact,
-		Plotting:          plottingData,
-		ThrottledOld:      false,
-		SendFail:          0,
-		ReschedulingDelay: time.Minute,
+		Event:        event,
+		Trigger:      trigger,
+		Contact:      contact,
+		Plotting:     plottingData,
+		ThrottledOld: false,
+		SendFail:     0,
 	}
 
 	expected := moira.ScheduledNotification{
@@ -77,7 +76,6 @@ func TestThrottling(t *testing.T) {
 		params2 := params
 		params2.ThrottledOld = false
 		params2.SendFail = 1
-		params2.ReschedulingDelay = time.Minute
 
 		expected2 := expected
 		expected2.SendFail = 1
@@ -91,7 +89,6 @@ func TestThrottling(t *testing.T) {
 		params2 := params
 		params2.ThrottledOld = true
 		params2.SendFail = 3
-		params2.ReschedulingDelay = time.Minute
 
 		expected2 := expected
 		expected2.SendFail = 3
@@ -156,7 +153,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
-	scheduler := NewScheduler(dataBase, logger, notifierMetrics)
+	scheduler := NewScheduler(dataBase, logger, notifierMetrics, SchedulerConfig{ReschedulingDelay: time.Minute})
 
 	Convey("Throttling disabled", t, func() {
 		now := time.Unix(1441187115, 0)
