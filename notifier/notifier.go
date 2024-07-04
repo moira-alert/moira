@@ -165,6 +165,7 @@ func (notifier *StandardNotifier) reschedule(pkg *NotificationPackage, reason st
 		eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, subID)
 		SetLogLevelByConfig(notifier.config.LogSubscriptionsToLevel, subID, &eventLogger)
 		params := moira.SchedulerParams{
+			Now:          time.Now(),
 			Event:        event,
 			Trigger:      pkg.Trigger,
 			Contact:      pkg.Contact,
@@ -172,7 +173,7 @@ func (notifier *StandardNotifier) reschedule(pkg *NotificationPackage, reason st
 			ThrottledOld: pkg.Throttled,
 			SendFail:     pkg.FailCount + 1,
 		}
-		notification := notifier.scheduler.ScheduleNotification(time.Now(), params, eventLogger)
+		notification := notifier.scheduler.ScheduleNotification(params, eventLogger)
 		if err := notifier.database.AddNotification(notification); err != nil {
 			eventLogger.Error().
 				Error(err).

@@ -876,6 +876,7 @@ func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance in
 
 // SchedulerParams is the parameters for notifier.Scheduler essential for scheduling notification
 type SchedulerParams struct {
+	Now          time.Time
 	Event        NotificationEvent
 	Trigger      TriggerData
 	Contact      ContactData
