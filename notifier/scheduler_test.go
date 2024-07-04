@@ -53,7 +53,6 @@ func TestThrottling(t *testing.T) {
 
 	now := time.Now()
 	params := moira.SchedulerParams{
-		Now:               now,
 		Event:             event,
 		Trigger:           trigger,
 		Contact:           contact,
@@ -84,7 +83,7 @@ func TestThrottling(t *testing.T) {
 		expected2.SendFail = 1
 		expected2.Timestamp = now.Add(time.Minute).Unix()
 
-		notification := scheduler.ScheduleNotification(params2, logger)
+		notification := scheduler.ScheduleNotification(now, params2, logger)
 		So(notification, ShouldResemble, &expected2)
 	})
 
@@ -99,7 +98,7 @@ func TestThrottling(t *testing.T) {
 		expected2.Timestamp = now.Add(time.Minute).Unix()
 		expected2.Throttled = true
 
-		notification := scheduler.ScheduleNotification(params2, logger)
+		notification := scheduler.ScheduleNotification(now, params2, logger)
 		So(notification, ShouldResemble, &expected2)
 	})
 
@@ -118,7 +117,7 @@ func TestThrottling(t *testing.T) {
 		expected3 := expected
 		expected3.Event = testEvent
 
-		notification := scheduler.ScheduleNotification(params2, logger)
+		notification := scheduler.ScheduleNotification(now, params2, logger)
 		So(notification, ShouldResemble, &expected3)
 	})
 
@@ -128,7 +127,7 @@ func TestThrottling(t *testing.T) {
 
 		params2 := params
 
-		notification := scheduler.ScheduleNotification(params2, logger)
+		notification := scheduler.ScheduleNotification(now, params2, logger)
 		So(notification, ShouldResemble, &expected)
 	})
 }
