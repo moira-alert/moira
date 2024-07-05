@@ -22,6 +22,10 @@ var targetNameRegex = regexp.MustCompile("t(\\d+)")
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
 
+const (
+	DefaultTTL = 600
+)
+
 type TriggersList struct {
 	Page  *int64               `json:"page,omitempty" format:"int64" extensions:"x-nullable"`
 	Size  *int64               `json:"size,omitempty" format:"int64" extensions:"x-nullable"`
@@ -202,6 +206,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
+	if trigger.TTL == 0 {
+		trigger.TTL = DefaultTTL
+	}
 	if err := checkTTLSanity(trigger, metricsSource); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
@@ -216,6 +223,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		if pattern == asteriskPattern {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")}
 		}
+	}
+
+	if trigger.Schedule == nil {
+		trigger.Schedule = getDefaultScheduleData()
 	}
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
@@ -287,6 +298,23 @@ func resolvePatterns(trigger *Trigger, expressionValues *expression.TriggerExpre
 		targetNum++
 	}
 	return metricsDataNames, nil
+}
+
+func getDefaultScheduleData() *moira.ScheduleData {
+	return &moira.ScheduleData{
+		Days: []moira.ScheduleDataDay{
+			{Name: "Mon", Enabled: true},
+			{Name: "Tue", Enabled: true},
+			{Name: "Wed", Enabled: true},
+			{Name: "Thu", Enabled: true},
+			{Name: "Fri", Enabled: true},
+			{Name: "Sat", Enabled: true},
+			{Name: "Sun", Enabled: true},
+		},
+		TimezoneOffset: 0,
+		StartOffset:    0,
+		EndOffset:      0,
+	}
 }
 
 func checkWarnErrorExpression(trigger *Trigger) error {

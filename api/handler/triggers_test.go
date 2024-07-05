@@ -97,7 +97,10 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 
 		Convey("It should be parsed successfully", func() {
+			triggerDTO.TTL = dto.DefaultTTL
+
 			trigger, err := getTriggerFromRequest(request)
+
 			So(err, ShouldBeNil)
 			So(trigger, ShouldResemble, &triggerDTO)
 		})
