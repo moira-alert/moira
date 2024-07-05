@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/moira-alert/moira/clock"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/moira-alert/moira/clock"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"

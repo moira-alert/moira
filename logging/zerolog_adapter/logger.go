@@ -62,10 +62,10 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 	}
 
 	logDir := filepath.Dir(logFileName)
-	if err := os.MkdirAll(logDir, 0755); err != nil { //nolint:gofumpt,gomnd
+	if err := os.MkdirAll(logDir, 0o755); err != nil { //nolint:gofumpt,gomnd
 		return nil, fmt.Errorf("can't create log directories %s: %s", logDir, err.Error())
 	}
-	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644) //nolint:gofumpt,gomnd
+	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gofumpt,gomnd
 	if err != nil {
 		return nil, fmt.Errorf("can't open log file %s: %s", logFileName, err.Error())
 	}

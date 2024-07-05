@@ -2,9 +2,10 @@ package notifier
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira/clock"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira/clock"
 
 	"github.com/golang/mock/gomock"
 	metricSource "github.com/moira-alert/moira/metric_source"
