@@ -247,6 +247,23 @@ type ScheduleDataDay struct {
 	Name    string `json:"name,omitempty" example:"Mon"`
 }
 
+func GetDefaultScheduleData() *ScheduleData {
+	return &ScheduleData{
+		Days: []ScheduleDataDay{
+			{Name: "Mon", Enabled: true},
+			{Name: "Tue", Enabled: true},
+			{Name: "Wed", Enabled: true},
+			{Name: "Thu", Enabled: true},
+			{Name: "Fri", Enabled: true},
+			{Name: "Sat", Enabled: true},
+			{Name: "Sun", Enabled: true},
+		},
+		TimezoneOffset: 0,
+		StartOffset:    0,
+		EndOffset:      0,
+	}
+}
+
 // ScheduledNotification represent notification object.
 type ScheduledNotification struct {
 	Event     NotificationEvent `json:"event"`
@@ -354,6 +371,10 @@ type Trigger struct {
 	CreatedBy        string          `json:"created_by"`
 	UpdatedBy        string          `json:"updated_by"`
 }
+
+const (
+	DefaultTTL = 600
+)
 
 // ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
 func (trigger *Trigger) ClusterKey() ClusterKey {
