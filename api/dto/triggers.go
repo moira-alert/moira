@@ -94,8 +94,8 @@ type TriggerModel struct {
 }
 
 // ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
-func (trigger *TriggerModel) ClusterKey() moira.ClusterKey {
-	return moira.MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
+func (model *TriggerModel) ClusterKey() moira.ClusterKey {
+	return moira.MakeClusterKey(model.TriggerSource, model.ClusterId)
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger.
