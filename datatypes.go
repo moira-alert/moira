@@ -247,6 +247,7 @@ type ScheduleDataDay struct {
 	Name    string `json:"name,omitempty" example:"Mon"`
 }
 
+// GetDefaultScheduleData returns the default ScheduleData which can be used in Trigger
 func GetDefaultScheduleData() *ScheduleData {
 	return &ScheduleData{
 		Days: []ScheduleDataDay{
@@ -373,6 +374,7 @@ type Trigger struct {
 }
 
 const (
+	// DefaultTTL is a default value for Trigger.TTL.
 	DefaultTTL = 600
 )
 
