@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"fmt"
 	"sort"
 	"testing"
 
@@ -378,7 +377,6 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
-			fmt.Println(testCase.Name)
 			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
 		}
 	})
