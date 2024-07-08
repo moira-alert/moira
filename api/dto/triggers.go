@@ -20,7 +20,7 @@ import (
 var targetNameRegex = regexp.MustCompile("^t\\d+$")
 
 // ErrBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
-var ErrBadAloneMetricName = fmt.Errorf("alone metrics target name should be in pattern: ^t\\d+$")
+var ErrBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
