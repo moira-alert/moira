@@ -46,7 +46,7 @@ func TestTriggerValidation(t *testing.T) {
 			Tags:           tags,
 			TTLState:       &moira.TTLStateNODATA,
 			TTL:            600,
-			Schedule:       moira.GetDefaultScheduleData(),
+			Schedule:       moira.NewDefaultScheduleData(),
 			TriggerSource:  moira.GraphiteLocal,
 			ClusterId:      moira.DefaultCluster,
 			MuteNewMetrics: false,

@@ -248,16 +248,16 @@ type ScheduleDataDay struct {
 }
 
 const (
-	// DefaultTimezoneOffset is a default value for timezone offset for (GMT+3) used in GetDefaultScheduleData.
+	// DefaultTimezoneOffset is a default value for timezone offset for (GMT+3) used in NewDefaultScheduleData.
 	DefaultTimezoneOffset = -180
-	// DefaultStartOffset is a default value for start offset for (GMT+3) used in GetDefaultScheduleData.
+	// DefaultStartOffset is a default value for start offset for (GMT+3) used in NewDefaultScheduleData.
 	DefaultStartOffset = 0
-	// DefaultEndOffset is a default value for end offset for (GMT+3) used in GetDefaultScheduleData.
+	// DefaultEndOffset is a default value for end offset for (GMT+3) used in NewDefaultScheduleData.
 	DefaultEndOffset = 1439
 )
 
-// GetDefaultScheduleData returns the default ScheduleData which can be used in Trigger.
-func GetDefaultScheduleData() *ScheduleData {
+// NewDefaultScheduleData returns the default ScheduleData which can be used in Trigger.
+func NewDefaultScheduleData() *ScheduleData {
 	return &ScheduleData{
 		Days: []ScheduleDataDay{
 			{Name: "Mon", Enabled: true},

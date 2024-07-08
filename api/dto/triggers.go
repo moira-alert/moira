@@ -226,7 +226,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 
 	if trigger.Schedule == nil {
-		trigger.Schedule = moira.GetDefaultScheduleData()
+		trigger.Schedule = moira.NewDefaultScheduleData()
 	}
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
