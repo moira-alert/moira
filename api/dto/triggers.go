@@ -19,8 +19,8 @@ import (
 
 var targetNameRegex = regexp.MustCompile("^t\\d+$")
 
-// msgBadAloneMetricName is used for error constructing when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
-var msgBadAloneMetricName = "alone metrics target name should be in pattern: ^t\\d+$"
+// ErrBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
+var ErrBadAloneMetricName = fmt.Errorf("alone metrics target name should be in pattern: ^t\\d+$")
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
@@ -173,7 +173,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	for targetName := range trigger.AloneMetrics {
 		if !targetNameRegex.MatchString(targetName) {
-			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf(msgBadAloneMetricName)}
+			return api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName}
 		}
 
 		targetIndexStr := targetName[1:]

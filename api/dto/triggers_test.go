@@ -202,13 +202,13 @@ func TestTriggerValidation(t *testing.T) {
 				trigger.AloneMetrics = map[string]bool{"ttt": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf(msgBadAloneMetricName)})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName})
 			})
 			Convey("have more than 1 metric name but only 1 need", func() {
 				trigger.AloneMetrics = map[string]bool{"t1 t2": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf(msgBadAloneMetricName)})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName})
 			})
 			Convey("have target higher than total amount of targets", func() {
 				trigger.AloneMetrics = map[string]bool{"t3": true}
