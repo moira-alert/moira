@@ -17,7 +17,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-var targetNameRegex = regexp.MustCompile("t(\\d+)")
+var targetNameRegex = regexp.MustCompile("^t\\d+$")
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
@@ -170,10 +170,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	for targetName := range trigger.AloneMetrics {
 		if !targetNameRegex.MatchString(targetName) {
-			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")}
+			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: ^t\\d+$")}
 		}
 
-		targetIndexStr := targetNameRegex.FindStringSubmatch(targetName)[1]
+		targetIndexStr := targetName[1:]
 		targetIndex, err := strconv.Atoi(targetIndexStr)
 		if err != nil {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be valid number: %w", err)}

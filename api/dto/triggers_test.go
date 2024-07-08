@@ -202,7 +202,13 @@ func TestTriggerValidation(t *testing.T) {
 				trigger.AloneMetrics = map[string]bool{"ttt": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: ^t\\d+$")})
+			})
+			Convey("have more then 1 metric name", func() {
+				trigger.AloneMetrics = map[string]bool{"t1 t2": true}
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: ^t\\d+$")})
 			})
 			Convey("have target higher than total amount of targets", func() {
 				trigger.AloneMetrics = map[string]bool{"t3": true}
