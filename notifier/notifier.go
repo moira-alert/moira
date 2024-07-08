@@ -87,12 +87,13 @@ type StandardNotifier struct {
 // NewNotifier is initializer for StandardNotifier.
 func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics,
 	metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore, clock moira.Clock,
+	schedulerConfig SchedulerConfig,
 ) *StandardNotifier {
 	return &StandardNotifier{
 		senders:              make(map[string]chan NotificationPackage),
 		logger:               logger,
 		database:             database,
-		scheduler:            NewScheduler(database, logger, metrics, SchedulerConfig{ReschedulingDelay: config.ReschedulingDelay}, clock),
+		scheduler:            NewScheduler(database, logger, metrics, schedulerConfig, clock),
 		config:               config,
 		metrics:              metrics,
 		metricSourceProvider: metricSourceProvider,

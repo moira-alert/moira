@@ -94,6 +94,9 @@ func main() {
 	notifierConfig := config.Notifier.getSettings(logger)
 
 	systemClock := clock.NewSystemClock()
+	schedulerConfig := notifier.SchedulerConfig{
+		ReschedulingDelay: notifierConfig.ReschedulingDelay,
+	}
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
 	sender := notifier.NewNotifier(
@@ -104,6 +107,7 @@ func main() {
 		metricSourceProvider,
 		imageStoreMap,
 		systemClock,
+		schedulerConfig,
 	)
 
 	// Register moira senders
@@ -144,9 +148,7 @@ func main() {
 			database,
 			logger,
 			notifierMetrics,
-			notifier.SchedulerConfig{
-				ReschedulingDelay: notifierConfig.ReschedulingDelay,
-			},
+			schedulerConfig,
 			systemClock),
 		Metrics: notifierMetrics,
 		Config:  notifierConfig,

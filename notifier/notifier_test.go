@@ -252,7 +252,18 @@ func configureNotifier(t *testing.T, config Config) {
 	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(dataBase), nil, nil)
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 
-	standardNotifier = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{}, systemClock)
+	schedulerConfig := SchedulerConfig{ReschedulingDelay: config.ReschedulingDelay}
+
+	standardNotifier = NewNotifier(
+		dataBase,
+		logger,
+		config,
+		notifierMetrics,
+		metricsSourceProvider,
+		map[string]moira.ImageStore{},
+		systemClock,
+		schedulerConfig,
+	)
 	standardNotifier.scheduler = scheduler
 	senderSettings := map[string]interface{}{
 		"sender_type":  "test_type",

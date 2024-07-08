@@ -123,6 +123,7 @@ func TestNotifier(t *testing.T) {
 	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(database), nil, nil)
 
 	systemClock := clock.NewSystemClock()
+	schedulerConfig := notifier.SchedulerConfig{ReschedulingDelay: notifierConfig.ReschedulingDelay}
 
 	notifierInstance := notifier.NewNotifier(
 		database,
@@ -132,6 +133,7 @@ func TestNotifier(t *testing.T) {
 		metricsSourceProvider,
 		map[string]moira.ImageStore{},
 		systemClock,
+		schedulerConfig,
 	)
 
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
