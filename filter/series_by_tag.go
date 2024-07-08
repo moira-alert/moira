@@ -169,6 +169,7 @@ func createMatchingHandlerForOneTag(
 	compatibility *Compatibility,
 ) (MatchingHandler, error) {
 	var matchingHandlerCondition func(string) bool
+	var err error
 	allowMatchEmpty := false
 
 	switch spec.Operator {
@@ -184,36 +185,16 @@ func createMatchingHandlerForOneTag(
 	case MatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		if spec.Value == "*" {
-			matchingHandlerCondition = func(value string) bool {
-				return true
-			}
-		} else {
-			matchRegex, err := newMatchRegex(spec.Value, compatibility)
-			if err != nil {
-				return nil, err
-			}
-
-			matchingHandlerCondition = func(value string) bool {
-				return matchRegex.MatchString(value)
-			}
+		matchingHandlerCondition, err = handleRegexMatch(true, spec, compatibility)
+		if err != nil {
+			return nil, err
 		}
 	case NotMatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		if spec.Value == "*" {
-			matchingHandlerCondition = func(value string) bool {
-				return true
-			}
-		} else {
-			matchRegex, err := newMatchRegex(spec.Value, compatibility)
-			if err != nil {
-				return nil, err
-			}
-
-			matchingHandlerCondition = func(value string) bool {
-				return !matchRegex.MatchString(value)
-			}
+		matchingHandlerCondition, err = handleRegexMatch(false, spec, compatibility)
+		if err != nil {
+			return nil, err
 		}
 	default:
 		matchingHandlerCondition = func(_ string) bool {
@@ -232,6 +213,35 @@ func createMatchingHandlerForOneTag(
 		}
 
 		return allowMatchEmpty && matchEmpty
+	}, nil
+}
+
+func handleRegexMatch(
+	isMatchOperator bool,
+	spec TagSpec,
+	compatibility *Compatibility,
+) (func(string) bool, error) {
+	// We don't need to create a regular for the asterisk, because in such a tag
+	// it is the fact of the tag's presence that matters, not its value.
+	if spec.Value == "*" || spec.Value == ".*" {
+		return func(value string) bool {
+			return isMatchOperator
+		}, nil
+	}
+
+	matchRegex, err := newMatchRegex(spec.Value, compatibility)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new match regex: %w", err)
+	}
+
+	return func(value string) bool {
+		match := matchRegex.MatchString(value)
+
+		if isMatchOperator {
+			return match
+		}
+
+		return !match
 	}, nil
 }
 

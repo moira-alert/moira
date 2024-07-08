@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"fmt"
 	"sort"
 	"testing"
 
@@ -223,6 +224,15 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			"tag2=~.*": {
 				{"tag2", MatchOperator, ".*"},
 			},
+			"tag2!=~*": {
+				{"tag2", NotMatchOperator, "*"},
+			},
+			"tag2!=~.*": {
+				{"tag2", NotMatchOperator, ".*"},
+			},
+			"tag2!=~al2": {
+				{"tag2", NotMatchOperator, "al2"},
+			},
 			"tag1=val1;tag2=val2": {
 				{"tag1", EqualOperator, "val1"},
 				{"tag2", EqualOperator, "val2"},
@@ -293,6 +303,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=~cpu;tag1=val1",
 					"name=~test1",
 					"tag1=~al1",
+					"tag2!=~al2",
 					"tag2=~*",
 					"tag2=~.*",
 				},
@@ -318,6 +329,18 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=cpu.*.*",
 					"name=cpu.*.test2",
 					"name=cpu.*.test2;tag2=val2",
+					"tag2=~*",
+					"tag2=~.*",
+				},
+			},
+			{
+				"cpu.test1.test3",
+				map[string]string{"tag2": "val3"},
+				[]string{
+					"name=cpu.*.*",
+					"name=cpu.test1.*",
+					"name=~test1",
+					"tag2!=~al2",
 					"tag2=~*",
 					"tag2=~.*",
 				},
@@ -355,6 +378,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
+			fmt.Println(testCase.Name)
 			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
 		}
 	})
