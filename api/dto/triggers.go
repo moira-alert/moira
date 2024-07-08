@@ -184,6 +184,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		}
 	}
 
+	if trigger.TTLState == nil {
+		trigger.TTLState = &moira.TTLStateNODATA
+	}
+
 	triggerExpression := expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
 		WarnValue:               trigger.WarnValue,
