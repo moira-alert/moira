@@ -247,6 +247,15 @@ type ScheduleDataDay struct {
 	Name    string `json:"name,omitempty" example:"Mon"`
 }
 
+const (
+	// DefaultTimezoneOffset is a default value for timezone offset for (GMT+3) used in GetDefaultScheduleData.
+	DefaultTimezoneOffset = -180
+	// DefaultStartOffset is a default value for start offset for (GMT+3) used in GetDefaultScheduleData.
+	DefaultStartOffset = 0
+	// DefaultEndOffset is a default value for end offset for (GMT+3) used in GetDefaultScheduleData.
+	DefaultEndOffset = 1439
+)
+
 // GetDefaultScheduleData returns the default ScheduleData which can be used in Trigger.
 func GetDefaultScheduleData() *ScheduleData {
 	return &ScheduleData{
@@ -259,9 +268,9 @@ func GetDefaultScheduleData() *ScheduleData {
 			{Name: "Sat", Enabled: true},
 			{Name: "Sun", Enabled: true},
 		},
-		TimezoneOffset: 0,
-		StartOffset:    0,
-		EndOffset:      0,
+		TimezoneOffset: DefaultTimezoneOffset,
+		StartOffset:    DefaultStartOffset,
+		EndOffset:      DefaultEndOffset,
 	}
 }
 
