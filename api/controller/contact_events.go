@@ -15,7 +15,7 @@ func GetContactEventsByIdWithLimit(database moira.Database, contactID string, fr
 	}
 
 	eventsList := dto.ContactEventItemList{
-		List: make([]dto.ContactEventItem, 0),
+		List: make([]dto.ContactEventItem, 0, len(events)),
 	}
 	for _, i := range events {
 		contactEventItem := &dto.ContactEventItem{

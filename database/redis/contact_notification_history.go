@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -29,15 +30,26 @@ func getNotificationStruct(notificationString string) (moira.NotificationEventHi
 	return object, nil
 }
 
+func contactNotificationKeyWithID(contactID string) string {
+	builder := strings.Builder{}
+	builder.WriteString(contactNotificationKey)
+	builder.WriteString(":")
+	builder.WriteString(contactID)
+	return builder.String()
+}
+
 func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
 	var notifications []*moira.NotificationEventHistoryItem
 
-	notificationStings, err := c.ZRangeByScore(connector.context, contactNotificationKey, &redis.ZRangeBy{
-		Min:   strconv.FormatInt(from, 10),
-		Max:   strconv.FormatInt(to, 10),
-		Count: int64(connector.notificationHistory.NotificationHistoryQueryLimit),
-	}).Result()
+	notificationStings, err := c.ZRangeByScore(
+		connector.context,
+		contactNotificationKeyWithID(contactID),
+		&redis.ZRangeBy{
+			Min:   strconv.FormatInt(from, 10),
+			Max:   strconv.FormatInt(to, 10),
+			Count: int64(connector.notificationHistory.NotificationHistoryQueryLimit),
+		}).Result()
 	if err != nil {
 		return notifications, err
 	}
@@ -80,7 +92,7 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 
 	pipe.ZAdd(
 		connector.context,
-		contactNotificationKey,
+		contactNotificationKeyWithID(notificationItemToSave.ContactID),
 		&redis.Z{
 			Score:  float64(notification.Timestamp),
 			Member: notificationBytes,
@@ -88,7 +100,7 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 
 	pipe.ZRemRangeByScore(
 		connector.context,
-		contactNotificationKey,
+		contactNotificationKeyWithID(notificationItemToSave.ContactID),
 		"-inf",
 		strconv.Itoa(to),
 	)
