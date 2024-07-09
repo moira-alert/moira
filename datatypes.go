@@ -280,7 +280,7 @@ func (notification *ScheduledNotification) Less(other Comparable) (bool, error) 
 // IsDelayed checks if the notification is delayed, the difference between the send time and the creation time
 // is greater than the delayedTime.
 func (notification *ScheduledNotification) IsDelayed(delayedTime int64) bool {
-	return notification.CreatedAt != 0 && notification.Timestamp-notification.CreatedAt >= delayedTime
+	return notification.CreatedAt != 0 && notification.Timestamp-notification.CreatedAt > delayedTime
 }
 
 /*
