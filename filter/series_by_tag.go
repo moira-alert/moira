@@ -182,14 +182,7 @@ func createMatchingHandlerForOneTag(
 		matchingHandlerCondition = func(value string) bool {
 			return value != spec.Value
 		}
-	case MatchOperator:
-		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
-
-		matchingHandlerCondition, err = handleRegexMatch(spec, compatibility)
-		if err != nil {
-			return nil, err
-		}
-	case NotMatchOperator:
+	case MatchOperator, NotMatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
 		matchingHandlerCondition, err = handleRegexMatch(spec, compatibility)
