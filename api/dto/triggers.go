@@ -90,8 +90,8 @@ type TriggerModel struct {
 }
 
 // ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
-func (trigger *TriggerModel) ClusterKey() moira.ClusterKey {
-	return moira.MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
+func (model *TriggerModel) ClusterKey() moira.ClusterKey {
+	return moira.MakeClusterKey(model.TriggerSource, model.ClusterId)
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger.
@@ -184,6 +184,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		}
 	}
 
+	if trigger.TTLState == nil {
+		trigger.TTLState = &moira.TTLStateNODATA
+	}
+
 	triggerExpression := expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
 		WarnValue:               trigger.WarnValue,
@@ -202,6 +206,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
+	if trigger.TTL == 0 {
+		trigger.TTL = moira.DefaultTTL
+	}
 	if err := checkTTLSanity(trigger, metricsSource); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
@@ -216,6 +223,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		if pattern == asteriskPattern {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")}
 		}
+	}
+
+	if trigger.Schedule == nil {
+		trigger.Schedule = moira.NewDefaultScheduleData()
 	}
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)

@@ -247,6 +247,33 @@ type ScheduleDataDay struct {
 	Name    string `json:"name,omitempty" example:"Mon"`
 }
 
+const (
+	// DefaultTimezoneOffset is a default value for timezone offset for (GMT+3) used in NewDefaultScheduleData.
+	DefaultTimezoneOffset = -180
+	// DefaultStartOffset is a default value for start offset for (GMT+3) used in NewDefaultScheduleData.
+	DefaultStartOffset = 0
+	// DefaultEndOffset is a default value for end offset for (GMT+3) used in NewDefaultScheduleData.
+	DefaultEndOffset = 1439
+)
+
+// NewDefaultScheduleData returns the default ScheduleData which can be used in Trigger.
+func NewDefaultScheduleData() *ScheduleData {
+	return &ScheduleData{
+		Days: []ScheduleDataDay{
+			{Name: "Mon", Enabled: true},
+			{Name: "Tue", Enabled: true},
+			{Name: "Wed", Enabled: true},
+			{Name: "Thu", Enabled: true},
+			{Name: "Fri", Enabled: true},
+			{Name: "Sat", Enabled: true},
+			{Name: "Sun", Enabled: true},
+		},
+		TimezoneOffset: DefaultTimezoneOffset,
+		StartOffset:    DefaultStartOffset,
+		EndOffset:      DefaultEndOffset,
+	}
+}
+
 // ScheduledNotification represent notification object.
 type ScheduledNotification struct {
 	Event     NotificationEvent `json:"event"`
@@ -354,6 +381,11 @@ type Trigger struct {
 	CreatedBy        string          `json:"created_by"`
 	UpdatedBy        string          `json:"updated_by"`
 }
+
+const (
+	// DefaultTTL is a default value for Trigger.TTL.
+	DefaultTTL = 600
+)
 
 // ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
 func (trigger *Trigger) ClusterKey() ClusterKey {
