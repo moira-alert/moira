@@ -185,14 +185,14 @@ func createMatchingHandlerForOneTag(
 	case MatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchingHandlerCondition, err = handleRegexMatch(true, spec, compatibility)
+		matchingHandlerCondition, err = handleRegexMatch(spec, compatibility)
 		if err != nil {
 			return nil, err
 		}
 	case NotMatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchingHandlerCondition, err = handleRegexMatch(false, spec, compatibility)
+		matchingHandlerCondition, err = handleRegexMatch(spec, compatibility)
 		if err != nil {
 			return nil, err
 		}
@@ -217,10 +217,11 @@ func createMatchingHandlerForOneTag(
 }
 
 func handleRegexMatch(
-	isMatchOperator bool,
 	spec TagSpec,
 	compatibility *Compatibility,
 ) (func(string) bool, error) {
+	isMatchOperator := spec.Operator == MatchOperator
+
 	// We don't need to create a regular for the asterisk, because in such a tag
 	// it is the fact of the tag's presence that matters, not its value.
 	if spec.Value == "*" || spec.Value == ".*" {
