@@ -235,13 +235,10 @@ func handleRegexMatch(
 	}
 
 	return func(value string) bool {
-		match := matchRegex.MatchString(value)
+		matchRes := matchRegex.MatchString(value)
 
-		if isMatchOperator {
-			return match
-		}
-
-		return !match
+		// Invert the result depending on the match operator.
+		return isMatchOperator == matchRes
 	}, nil
 }
 
