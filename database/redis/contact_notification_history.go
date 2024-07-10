@@ -40,7 +40,6 @@ func contactNotificationKeyWithID(contactID string) string {
 
 func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
-	var notifications []*moira.NotificationEventHistoryItem
 
 	notificationStings, err := c.ZRangeByScore(
 		connector.context,
@@ -51,18 +50,17 @@ func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID str
 			Count: int64(connector.notificationHistory.NotificationHistoryQueryLimit),
 		}).Result()
 	if err != nil {
-		return notifications, err
+		return nil, err
 	}
+
+	notifications := make([]*moira.NotificationEventHistoryItem, 0, len(notificationStings))
 
 	for _, notification := range notificationStings {
 		notificationObj, err := getNotificationStruct(notification)
 		if err != nil {
 			return notifications, err
 		}
-
-		if notificationObj.ContactID == contactID {
-			notifications = append(notifications, &notificationObj)
-		}
+		notifications = append(notifications, &notificationObj)
 	}
 
 	return notifications, nil
