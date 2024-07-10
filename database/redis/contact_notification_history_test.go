@@ -63,6 +63,8 @@ var eventsShouldBeInDb = []*moira.NotificationEventHistoryItem{
 func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
+	var defaultPage int64 = 0
+	var defaultSize int64 = 100
 
 	Convey("Notification history items manipulation", t, func() {
 		dataBase.Flush()
@@ -72,7 +74,9 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			items, err := dataBase.GetNotificationsByContactIdWithLimit(
 				"id",
 				eventsShouldBeInDb[0].TimeStamp,
-				eventsShouldBeInDb[0].TimeStamp)
+				eventsShouldBeInDb[0].TimeStamp,
+				defaultPage,
+				defaultSize)
 
 			So(err, ShouldBeNil)
 			So(items, ShouldHaveLength, 0)
@@ -86,7 +90,9 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
-					eventsShouldBeInDb[0].TimeStamp+5)
+					eventsShouldBeInDb[0].TimeStamp+5,
+					defaultPage,
+					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
 			})
@@ -95,7 +101,9 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
-					eventsShouldBeInDb[0].TimeStamp)
+					eventsShouldBeInDb[0].TimeStamp,
+					defaultPage,
+					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
 			})
@@ -104,7 +112,9 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
-					eventsShouldBeInDb[0].TimeStamp+5)
+					eventsShouldBeInDb[0].TimeStamp+5,
+					defaultPage,
+					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
 			})
@@ -113,7 +123,9 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
-					eventsShouldBeInDb[0].TimeStamp)
+					eventsShouldBeInDb[0].TimeStamp,
+					defaultPage,
+					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
 			})
@@ -122,7 +134,9 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
 					eventsShouldBeInDb[0].ContactID,
 					928930626,
-					992089026)
+					992089026,
+					defaultPage,
+					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldNotResemble, eventsShouldBeInDb)
 			})
@@ -148,7 +162,9 @@ func TestPushNotificationToHistory(t *testing.T) {
 		dbContent, err3 := dataBase.GetNotificationsByContactIdWithLimit(
 			inputScheduledNotification.Contact.ID,
 			inputScheduledNotification.Timestamp,
-			inputScheduledNotification.Timestamp)
+			inputScheduledNotification.Timestamp,
+			0,
+			100)
 
 		So(err3, ShouldBeNil)
 		So(dbContent, ShouldHaveLength, 1)

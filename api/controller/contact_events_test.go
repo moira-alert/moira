@@ -76,12 +76,14 @@ func TestGetContactEventsByIdWithLimit(t *testing.T) {
 
 	defaultToParameter := now.Unix()
 	defaultFromParameter := defaultToParameter - int64((3 * time.Hour).Seconds())
+	defaultPage := int64(0)
+	defaultSize := int64(100)
 
 	Convey("Ensure that request with default parameters would return both event items (no url params specified)", t, func() {
 		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
-		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter, defaultToParameter).Return(items, nil)
+		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter, defaultToParameter, defaultPage, defaultSize).Return(items, nil)
 
-		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter, defaultToParameter)
+		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter, defaultToParameter, defaultPage, defaultSize)
 
 		So(err, ShouldBeNil)
 		So(actualEvents, ShouldResemble, &itemsExpected)
@@ -89,9 +91,9 @@ func TestGetContactEventsByIdWithLimit(t *testing.T) {
 
 	Convey("Ensure that request with only 'from' parameter given and 'to' default will return only one (newest) event", t, func() {
 		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
-		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter-20, defaultToParameter).Return(items[:1], nil)
+		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter-20, defaultToParameter, defaultPage, defaultSize).Return(items[:1], nil)
 
-		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter-20, defaultToParameter)
+		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter-20, defaultToParameter, defaultPage, defaultSize)
 		So(err, ShouldBeNil)
 		So(actualEvents, ShouldResemble, &dto.ContactEventItemList{
 			List: []dto.ContactEventItem{
@@ -102,9 +104,9 @@ func TestGetContactEventsByIdWithLimit(t *testing.T) {
 
 	Convey("Ensure that request with only 'to' parameter given and 'from' default will return only one (oldest) event", t, func() {
 		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
-		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter, defaultToParameter-30).Return(items[1:], nil)
+		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter, defaultToParameter-30, defaultPage, defaultSize).Return(items[1:], nil)
 
-		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter, defaultToParameter-30)
+		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter, defaultToParameter-30, defaultPage, defaultSize)
 		So(err, ShouldBeNil)
 		So(actualEvents, ShouldResemble, &dto.ContactEventItemList{
 			List: []dto.ContactEventItem{
