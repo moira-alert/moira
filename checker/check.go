@@ -179,6 +179,8 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 
 	triggerChecker.logger.Error().
 		String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
+		String("trigger.cluster_id", triggerChecker.trigger.ClusterId.String()).
+		String("trigger.source", triggerChecker.trigger.TriggerSource.String()).
 		Error(err).
 		Msg("Trigger check failed")
 
