@@ -170,6 +170,7 @@ func createMatchingHandlerForOneTag(
 	compatibility *Compatibility,
 ) (MatchingHandler, error) {
 	var matchingHandlerCondition func(string) bool
+	var err error
 	allowMatchEmpty := false
 
 	switch spec.Operator {
@@ -182,27 +183,12 @@ func createMatchingHandlerForOneTag(
 		matchingHandlerCondition = func(value string) bool {
 			return value != spec.Value
 		}
-	case MatchOperator:
+	case MatchOperator, NotMatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchRegex, err := newMatchRegex(spec.Value, compatibility)
+		matchingHandlerCondition, err = handleRegexMatch(spec, compatibility)
 		if err != nil {
 			return nil, err
-		}
-
-		matchingHandlerCondition = func(value string) bool {
-			return matchRegex.MatchString(value)
-		}
-	case NotMatchOperator:
-		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
-
-		matchRegex, err := newMatchRegex(spec.Value, compatibility)
-		if err != nil {
-			return nil, err
-		}
-
-		matchingHandlerCondition = func(value string) bool {
-			return !matchRegex.MatchString(value)
 		}
 	default:
 		matchingHandlerCondition = func(_ string) bool {
@@ -224,14 +210,37 @@ func createMatchingHandlerForOneTag(
 	}, nil
 }
 
+func handleRegexMatch(
+	spec TagSpec,
+	compatibility *Compatibility,
+) (func(string) bool, error) {
+	isMatchOperator := spec.Operator == MatchOperator
+
+	// We don't need to create a regular for the asterisk, because in such a tag
+	// it is the fact of the tag's presence that matters, not its value.
+	if spec.Value == "*" || spec.Value == ".*" {
+		return func(value string) bool {
+			return isMatchOperator
+		}, nil
+	}
+
+	matchRegex, err := newMatchRegex(spec.Value, compatibility)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new match regex: %w", err)
+	}
+
+	return func(value string) bool {
+		matchRes := matchRegex.MatchString(value)
+
+		// Invert the result depending on the match operator.
+		return isMatchOperator == matchRes
+	}, nil
+}
+
 func newMatchRegex(
 	tagValue string,
 	compatibility *Compatibility,
 ) (*regexp.Regexp, error) {
-	if tagValue == "*" {
-		tagValue = ".*"
-	}
-
 	if !compatibility.AllowRegexLooseStartMatch {
 		tagValue = "^" + tagValue
 	}
