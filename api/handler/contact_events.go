@@ -20,7 +20,10 @@ func contactEvents(router chi.Router) {
 	router.Route("/{contactId}/events", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
-		router.With(middleware.DateRange("-3hour", "now")).Get("/", getContactByIdWithEvents)
+		router.With(
+			middleware.DateRange("-3hour", "now"),
+			middleware.Paginate(0, 100),
+		).Get("/", getContactByIdWithEvents)
 	})
 }
 
@@ -30,9 +33,11 @@ func contactEvents(router chi.Router) {
 //	@id			get-contact-events-by-id
 //	@tags		contact
 //	@produce	json
-//	@param		contactID	path		string							true	"Contact ID"					default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		from		query		string							false	"Start time of the time range"	default(-3hour)
-//	@param		to			query		string							false	"End time of the time range"	default(now)
+//	@param		contactID		path		string							true	"Contact ID"					default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		from				query		string							false	"Start time of the time range"	default(-3hour)
+//	@param		to					query		string							false	"End time of the time range"	default(now)
+//	@param		size				query		int									false	"Number of items to return"									default(100)
+//	@param		p						query		int									false	"Defines the index of data portion (combined with size). E.g, p=2, size=100 will return records from 200 (including), to 300 (not including)"	default(0)
 //	@success	200			{object}	dto.ContactEventItemList		"Successfully received contact events"
 //	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
@@ -54,7 +59,16 @@ func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request)
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
 		return
 	}
-	contactWithEvents, err := controller.GetContactEventsByIdWithLimit(database, contactData.ID, from, to)
+
+	// TODO: validation of page and size
+
+	contactWithEvents, err := controller.GetContactEventsByIdWithLimit(
+		database,
+		contactData.ID,
+		from,
+		to,
+		middleware.GetPage(request),
+		middleware.GetSize(request))
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 	}

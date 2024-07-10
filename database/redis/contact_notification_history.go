@@ -38,16 +38,18 @@ func contactNotificationKeyWithID(contactID string) string {
 	return builder.String()
 }
 
-func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*moira.NotificationEventHistoryItem, error) {
+func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64, page int64, size int64,
+) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
 
 	notificationStings, err := c.ZRangeByScore(
 		connector.context,
 		contactNotificationKeyWithID(contactID),
 		&redis.ZRangeBy{
-			Min:   strconv.FormatInt(from, 10),
-			Max:   strconv.FormatInt(to, 10),
-			Count: int64(connector.notificationHistory.NotificationHistoryQueryLimit),
+			Min:    strconv.FormatInt(from, 10),
+			Max:    strconv.FormatInt(to, 10),
+			Offset: page * size,
+			Count:  size,
 		}).Result()
 	if err != nil {
 		return nil, err
