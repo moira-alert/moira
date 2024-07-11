@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -31,11 +30,7 @@ func getNotificationStruct(notificationString string) (moira.NotificationEventHi
 }
 
 func contactNotificationKeyWithID(contactID string) string {
-	builder := strings.Builder{}
-	builder.WriteString(contactNotificationKey)
-	builder.WriteString(":")
-	builder.WriteString(contactID)
-	return builder.String()
+	return contactNotificationKey + ":" + contactID
 }
 
 func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64, page int64, size int64,
