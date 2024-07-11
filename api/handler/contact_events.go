@@ -60,8 +60,6 @@ func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request)
 		return
 	}
 
-	// TODO: validation of page and size
-
 	contactWithEvents, err := controller.GetContactEventsByIdWithLimit(
 		database,
 		contactData.ID,
