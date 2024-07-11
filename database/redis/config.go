@@ -15,6 +15,9 @@ type DatabaseConfig struct {
 	ReadTimeout      time.Duration
 	WriteTimeout     time.Duration
 	MaxRetries       int
+	ReadOnly         bool
+	RouteByLatency   bool
+	RouteRandomly    bool
 }
 
 type NotificationHistoryConfig struct {

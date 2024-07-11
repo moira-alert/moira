@@ -70,9 +70,17 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 	database := middleware.GetDatabase(request)
 	userLogin := middleware.GetLogin(request)
 	teamID := middleware.GetTeamID(request)
+	auth := middleware.GetAuth(request)
+
 	if teamID == "" && subscription.TeamID != "" {
 		teamID = subscription.TeamID
 	}
+
+	// Only admins are allowed to create subscriptions for other users
+	if auth.IsAdmin(userLogin) && subscription.User != "" {
+		userLogin = subscription.User
+	}
+
 	if subscription.User != "" && teamID != "" {
 		return ErrSubscriptionContainsTeamAndUser{}
 	}

@@ -196,16 +196,17 @@ func TestRestoreMetricStringByNameAndLabels(t *testing.T) {
 	Convey("Test function restoreMetricStringByNameAndLabels", t, func() {
 		Convey("Given two metrics with the same labels but in a different order", func() {
 			testCases := []struct {
-				name   string
-				labels map[string]string
+				name            string
+				labels          map[string]string
+				metricBytesSize int
 			}{
-				{"One.two.three", map[string]string{"one": "two", "four": "five", "six": "seven"}},
-				{"One.two.three", map[string]string{"six": "seven", "four": "five", "one": "two"}},
+				{"One.two.three", map[string]string{"one": "two", "four": "five", "six": "seven"}, 35},
+				{"One.two.three", map[string]string{"six": "seven", "four": "five", "one": "two"}, 35},
 			}
 			expected := "One.two.three;four=five;one=two;six=seven"
 			Convey("Result of restored metric should be equal", func() {
 				for _, testCase := range testCases {
-					actual := restoreMetricStringByNameAndLabels(testCase.name, testCase.labels)
+					actual := restoreMetricStringByNameAndLabels(testCase.name, testCase.labels, testCase.metricBytesSize)
 					So(actual, ShouldEqual, expected)
 				}
 			})
@@ -213,22 +214,36 @@ func TestRestoreMetricStringByNameAndLabels(t *testing.T) {
 	})
 }
 
-func TestParsedMetric_IsTooOld(t *testing.T) {
+func TestParsedMetric_IsExpired(t *testing.T) {
 	now := time.Date(2022, 6, 16, 10, 0, 0, 0, time.UTC)
 	maxTTL := time.Hour
 
-	Convey("When metric is old, return true", t, func() {
-		metric := ParsedMetric{
-			Name:      "too old metric",
-			Timestamp: time.Date(2022, 6, 16, 8, 59, 0, 0, time.UTC).Unix(),
-		}
-		So(metric.IsTooOld(maxTTL, now), ShouldBeTrue)
-	})
-	Convey("When metric is young, return false", t, func() {
-		metric := ParsedMetric{
-			Name:      "too old metric",
-			Timestamp: time.Date(2022, 6, 16, 9, 0o0, 0, 0, time.UTC).Unix(),
-		}
-		So(metric.IsTooOld(maxTTL, now), ShouldBeFalse)
+	Convey("Test isExpired metric", t, func() {
+		Convey("Metric too old", func() {
+			metric := ParsedMetric{
+				Name:      "metric1",
+				Timestamp: now.Add(-2 * maxTTL).Unix(),
+			}
+
+			So(metric.IsExpired(maxTTL, now), ShouldBeTrue)
+		})
+
+		Convey("Metric far into the future", func() {
+			metric := ParsedMetric{
+				Name:      "metric2",
+				Timestamp: now.Add(2 * maxTTL).Unix(),
+			}
+
+			So(metric.IsExpired(maxTTL, now), ShouldBeTrue)
+		})
+
+		Convey("Metric in the maxTTL window", func() {
+			metric := ParsedMetric{
+				Name:      "metric3",
+				Timestamp: now.Unix(),
+			}
+
+			So(metric.IsExpired(maxTTL, now), ShouldBeFalse)
+		})
 	})
 }

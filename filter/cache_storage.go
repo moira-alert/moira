@@ -44,6 +44,7 @@ func NewCacheStorage(logger moira.Logger, metrics *metrics.FilterMetrics, reader
 	if err := storage.buildRetentions(bufio.NewScanner(reader)); err != nil {
 		return nil, err
 	}
+
 	return storage, nil
 }
 
@@ -63,6 +64,7 @@ func (storage *Storage) getRetention(m *moira.MatchedMetric) int {
 	if item, ok := storage.retentionsCache[m.Metric]; ok && item.timestamp+60 > m.Timestamp {
 		return item.value
 	}
+
 	for _, matcher := range storage.retentions {
 		if matcher.pattern.MatchString(m.Metric) {
 			storage.retentionsCache[m.Metric] = &retentionCacheItem{
@@ -72,6 +74,7 @@ func (storage *Storage) getRetention(m *moira.MatchedMetric) int {
 			return matcher.retention
 		}
 	}
+
 	return defaultRetention
 }
 
@@ -98,6 +101,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 			storage.logger.Error().
 				String("pattern", patternString).
 				Msg("Invalid pattern found")
+
 			continue
 		}
 
@@ -112,6 +116,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 			retention: retention,
 		})
 	}
+
 	return retentionScanner.Err()
 }
 

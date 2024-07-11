@@ -62,6 +62,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 		for i := range slc {
 			slc[i] = strings.TrimSpace(slc[i])
 		}
+
 		regularExpression = strings.Join(slc, "|")
 		result = result[:matchedWildcardIndexes[0]] + regularExpression + result[matchedWildcardIndexes[1]:]
 		isTransformed = true
@@ -70,6 +71,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	if !isTransformed {
 		return input, false
 	}
+
 	return "^" + result + "$", true
 }
 
@@ -97,6 +99,7 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 		if len(matchedTagSpecIndexes) != 8 { //nolint
 			return nil, ErrNotSeriesByTag
 		}
+
 		if input[matchedTagSpecIndexes[0]] != input[matchedTagSpecIndexes[1]-1] {
 			return nil, ErrNotSeriesByTag
 		}
@@ -129,7 +132,10 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 type MatchingHandler func(string, map[string]string) bool
 
 // CreateMatchingHandlerForPattern creates function for matching by tag list.
-func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatibility) (string, MatchingHandler, error) {
+func CreateMatchingHandlerForPattern(
+	tagSpecs []TagSpec,
+	compatibility *Compatibility,
+) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string
 
@@ -152,14 +158,19 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec, compatibility *Compatib
 				return false
 			}
 		}
+
 		return true
 	}
 
 	return nameTagValue, matchingHandler, nil
 }
 
-func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) (MatchingHandler, error) {
+func createMatchingHandlerForOneTag(
+	spec TagSpec,
+	compatibility *Compatibility,
+) (MatchingHandler, error) {
 	var matchingHandlerCondition func(string) bool
+	var err error
 	allowMatchEmpty := false
 
 	switch spec.Operator {
@@ -172,27 +183,12 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 		matchingHandlerCondition = func(value string) bool {
 			return value != spec.Value
 		}
-	case MatchOperator:
+	case MatchOperator, NotMatchOperator:
 		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
 
-		matchRegex, err := newMatchRegex(spec.Value, compatibility)
+		matchingHandlerCondition, err = handleRegexMatch(spec, compatibility)
 		if err != nil {
 			return nil, err
-		}
-
-		matchingHandlerCondition = func(value string) bool {
-			return matchRegex.MatchString(value)
-		}
-	case NotMatchOperator:
-		allowMatchEmpty = compatibility.AllowRegexMatchEmpty
-
-		matchRegex, err := newMatchRegex(spec.Value, compatibility)
-		if err != nil {
-			return nil, err
-		}
-
-		matchingHandlerCondition = func(value string) bool {
-			return !matchRegex.MatchString(value)
 		}
 	default:
 		matchingHandlerCondition = func(_ string) bool {
@@ -205,23 +201,54 @@ func createMatchingHandlerForOneTag(spec TagSpec, compatibility *Compatibility) 
 		if spec.Name == "name" {
 			return matchingHandlerCondition(metric)
 		}
+
 		if value, found := labels[spec.Name]; found {
 			return matchingHandlerCondition(value)
 		}
+
 		return allowMatchEmpty && matchEmpty
 	}, nil
 }
 
-func newMatchRegex(value string, compatibility *Compatibility) (*regexp.Regexp, error) {
-	if value == "*" {
-		value = ".*"
+func handleRegexMatch(
+	spec TagSpec,
+	compatibility *Compatibility,
+) (func(string) bool, error) {
+	isMatchOperator := spec.Operator == MatchOperator
+
+	// We don't need to create a regular for the asterisk, because in such a tag
+	// it is the fact of the tag's presence that matters, not its value.
+	if spec.Value == "*" || spec.Value == ".*" {
+		return func(value string) bool {
+			return isMatchOperator
+		}, nil
 	}
 
+	matchRegex, err := newMatchRegex(spec.Value, compatibility)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new match regex: %w", err)
+	}
+
+	return func(value string) bool {
+		matchRes := matchRegex.MatchString(value)
+
+		// Invert the result depending on the match operator.
+		return isMatchOperator == matchRes
+	}, nil
+}
+
+func newMatchRegex(
+	tagValue string,
+	compatibility *Compatibility,
+) (*regexp.Regexp, error) {
 	if !compatibility.AllowRegexLooseStartMatch {
-		value = "^" + value
+		tagValue = "^" + tagValue
 	}
 
-	matchRegex, err := regexp.Compile(value)
+	matchRegex, err := regexp.Compile(tagValue)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compile regex: %w with tag value: %s", err, tagValue)
+	}
 
-	return matchRegex, err
+	return matchRegex, nil
 }

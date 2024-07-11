@@ -61,6 +61,7 @@ func main() {
 	apiConfig := applicationConfig.API.getSettings(
 		applicationConfig.ClustersMetricTTL(),
 		applicationConfig.Web.getFeatureFlags(),
+		&applicationConfig.Web,
 	)
 
 	logger, err := logging.ConfigureLog(applicationConfig.Logger.LogFile, applicationConfig.Logger.LogLevel, serviceName, applicationConfig.Logger.LogPrettyFormat)

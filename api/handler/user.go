@@ -27,7 +27,12 @@ func user(router chi.Router) {
 //	@router		/user [get]
 func getUserName(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
-	if err := render.Render(writer, request, &dto.User{Login: userLogin}); err != nil {
+	auth := middleware.GetAuth(request)
+	if err := render.Render(writer, request, &dto.User{
+		Login:       userLogin,
+		Role:        auth.GetRole(userLogin),
+		AuthEnabled: auth.IsEnabled(),
+	}); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}

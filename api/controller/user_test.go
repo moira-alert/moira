@@ -64,7 +64,7 @@ func TestGetUserSettings(t *testing.T) {
 			settings, err := GetUserSettings(database, login, authFull)
 			So(err, ShouldBeNil)
 			So(settings, ShouldResemble, &dto.UserSettings{
-				User:          dto.User{Login: login, Role: dto.RoleUser, AuthEnabled: true},
+				User:          dto.User{Login: login, Role: api.RoleUser, AuthEnabled: true},
 				Contacts:      make([]moira.ContactData, 0),
 				Subscriptions: make([]moira.SubscriptionData, 0),
 			})
@@ -78,7 +78,7 @@ func TestGetUserSettings(t *testing.T) {
 			settings, err := GetUserSettings(database, adminLogin, authFull)
 			So(err, ShouldBeNil)
 			So(settings, ShouldResemble, &dto.UserSettings{
-				User:          dto.User{Login: adminLogin, Role: dto.RoleAdmin, AuthEnabled: true},
+				User:          dto.User{Login: adminLogin, Role: api.RoleAdmin, AuthEnabled: true},
 				Contacts:      make([]moira.ContactData, 0),
 				Subscriptions: make([]moira.SubscriptionData, 0),
 			})

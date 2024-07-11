@@ -98,9 +98,11 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
-	userLogin := middleware.GetLogin(request)
 
-	if err := controller.CreateContact(database, contact, userLogin, contact.TeamID); err != nil {
+	userLogin := middleware.GetLogin(request)
+	auth := middleware.GetAuth(request)
+
+	if err := controller.CreateContact(database, auth, contact, userLogin, contact.TeamID); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
@@ -149,13 +151,17 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
+
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 
-	contactDTO, err := controller.UpdateContact(database, contactDTO, contactData)
+	auth := middleware.GetAuth(request)
+
+	contactDTO, err := controller.UpdateContact(database, auth, contactDTO, contactData)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, &contactDTO); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
