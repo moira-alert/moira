@@ -140,6 +140,77 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldNotResemble, eventsShouldBeInDb)
 			})
+
+			Convey("Ensure that with negative page and positive size empty slice returned", func() {
+				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
+					eventsShouldBeInDb[0].ContactID,
+					eventsShouldBeInDb[0].TimeStamp,
+					eventsShouldBeInDb[0].TimeStamp,
+					-1,
+					1)
+				So(err, ShouldBeNil)
+				So(eventFromDb, ShouldHaveLength, 0)
+			})
+
+			Convey("Ensure that with positive page and negative size empty slice returned", func() {
+				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
+					eventsShouldBeInDb[0].ContactID,
+					eventsShouldBeInDb[0].TimeStamp,
+					eventsShouldBeInDb[0].TimeStamp,
+					1,
+					-1)
+				So(err, ShouldBeNil)
+				So(eventFromDb, ShouldHaveLength, 0)
+			})
+
+			otherScheduledNotification := inputScheduledNotification
+			otherScheduledNotification.Timestamp += 1
+			err = dataBase.PushContactNotificationToHistory(&otherScheduledNotification)
+			So(err, ShouldBeNil)
+
+			Convey("Ensure that with page=0 size=1 returns first event", func() {
+				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
+					eventsShouldBeInDb[0].ContactID,
+					eventsShouldBeInDb[0].TimeStamp-5,
+					eventsShouldBeInDb[0].TimeStamp+5,
+					0,
+					1)
+				So(err, ShouldBeNil)
+				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
+			})
+
+			otherEventShouldBeInDb := []*moira.NotificationEventHistoryItem{
+				{
+					TimeStamp: otherScheduledNotification.Timestamp,
+					Metric:    otherScheduledNotification.Event.Metric,
+					State:     otherScheduledNotification.Event.State,
+					OldState:  otherScheduledNotification.Event.OldState,
+					TriggerID: otherScheduledNotification.Trigger.ID,
+					ContactID: otherScheduledNotification.Contact.ID,
+				},
+			}
+
+			Convey("Ensure that with page=1 size=1 returns another event", func() {
+				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
+					eventsShouldBeInDb[0].ContactID,
+					eventsShouldBeInDb[0].TimeStamp-5,
+					eventsShouldBeInDb[0].TimeStamp+5,
+					1,
+					1)
+				So(err, ShouldBeNil)
+				So(eventFromDb, ShouldResemble, otherEventShouldBeInDb)
+			})
+
+			Convey("Ensure that with page=0 size=-1 returns all events", func() {
+				eventFromDb, err := dataBase.GetNotificationsByContactIdWithLimit(
+					otherEventShouldBeInDb[0].ContactID,
+					eventsShouldBeInDb[0].TimeStamp,
+					otherEventShouldBeInDb[0].TimeStamp,
+					0,
+					-1)
+				So(err, ShouldBeNil)
+				So(eventFromDb, ShouldHaveLength, 2)
+			})
 		})
 	})
 }
