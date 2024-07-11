@@ -10,14 +10,20 @@ import (
 
 // Scheduler implements event scheduling functionality.
 type Scheduler interface {
-	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-		contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification
+	ScheduleNotification(params moira.SchedulerParams, logger moira.Logger) *moira.ScheduledNotification
+}
+
+// SchedulerConfig is a list of immutable params for Scheduler.
+type SchedulerConfig struct {
+	ReschedulingDelay time.Duration
 }
 
 // StandardScheduler represents standard event scheduling.
 type StandardScheduler struct {
 	database moira.Database
 	metrics  *metrics.NotifierMetrics
+	config   SchedulerConfig
+	clock    moira.Clock
 }
 
 type throttlingLevel struct {
@@ -27,41 +33,44 @@ type throttlingLevel struct {
 }
 
 // NewScheduler is initializer for StandardScheduler.
-func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics) *StandardScheduler {
+func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics, config SchedulerConfig, clock moira.Clock,
+) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
 		metrics:  metrics,
+		config:   config,
+		clock:    clock,
 	}
 }
 
 // ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings.
-func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger,
+func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerParams, logger moira.Logger,
 ) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
 	)
-	if sendFail > 0 {
-		next = now.Add(time.Minute)
-		throttled = throttledOld
+	now := scheduler.clock.Now()
+	if params.SendFail > 0 {
+		next = now.Add(scheduler.config.ReschedulingDelay)
+		throttled = params.ThrottledOld
 	} else {
-		if event.State == moira.StateTEST {
+		if params.Event.State == moira.StateTEST {
 			next = now
 			throttled = false
 		} else {
-			next, throttled = scheduler.calculateNextDelivery(now, &event, logger)
+			next, throttled = scheduler.calculateNextDelivery(now, &params.Event, logger)
 		}
 	}
 	notification := &moira.ScheduledNotification{
-		Event:     event,
-		Trigger:   trigger,
-		Contact:   contact,
+		Event:     params.Event,
+		Trigger:   params.Trigger,
+		Contact:   params.Contact,
 		Throttled: throttled,
-		SendFail:  sendFail,
+		SendFail:  params.SendFail,
 		Timestamp: next.Unix(),
 		CreatedAt: now.Unix(),
-		Plotting:  plotting,
+		Plotting:  params.Plotting,
 	}
 
 	logger.Debug().

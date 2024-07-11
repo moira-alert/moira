@@ -14,6 +14,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
 )
@@ -34,10 +35,11 @@ var (
 	shutdown      = make(chan struct{})
 	location, _   = time.LoadLocation("UTC")
 	defaultConfig = Config{
-		SendingTimeout:   10 * time.Millisecond,
-		ResendingTimeout: time.Hour * 24,
-		Location:         location,
-		DateTimeFormat:   dateTimeFormat,
+		SendingTimeout:    10 * time.Millisecond,
+		ResendingTimeout:  time.Hour * 24,
+		ReschedulingDelay: time.Minute,
+		Location:          location,
+		DateTimeFormat:    dateTimeFormat,
 		Senders: []map[string]interface{}{
 			{
 				"sender_type":  "test_sender_type",
@@ -103,8 +105,17 @@ func TestUnknownContactType(t *testing.T) {
 			Type: "unknown contact",
 		},
 	}
+	params := moira.SchedulerParams{
+		Event:        event,
+		Trigger:      pkg.Trigger,
+		Contact:      pkg.Contact,
+		Plotting:     pkg.Plotting,
+		ThrottledOld: pkg.Throttled,
+		SendFail:     pkg.FailCount + 1,
+	}
 	notification := moira.ScheduledNotification{}
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, gomock.Any()).Return(&notification)
+
+	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
@@ -124,9 +135,18 @@ func TestFailSendEvent(t *testing.T) {
 			Type: "test_contact_type",
 		},
 	}
+	params := moira.SchedulerParams{
+		Event:        event,
+		Trigger:      pkg.Trigger,
+		Contact:      pkg.Contact,
+		Plotting:     pkg.Plotting,
+		ThrottledOld: pkg.Throttled,
+		SendFail:     pkg.FailCount + 1,
+	}
 	notification := moira.ScheduledNotification{}
+
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, gomock.Any()).Return(&notification)
+	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
@@ -194,8 +214,16 @@ func TestTimeout(t *testing.T) {
 			Value: "fail contact",
 		},
 	}
+	params := moira.SchedulerParams{
+		Event:        event,
+		Trigger:      pkg2.Trigger,
+		Contact:      pkg2.Contact,
+		Plotting:     pkg2.Plotting,
+		ThrottledOld: pkg2.Throttled,
+		SendFail:     pkg2.FailCount + 1,
+	}
 
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg.Plotting, pkg2.Throttled, pkg2.FailCount+1, gomock.Any()).Return(&notification)
+	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 	standardNotifier.Send(&pkg2, &wg)
@@ -222,8 +250,20 @@ func configureNotifier(t *testing.T, config Config) {
 	scheduler = mock_scheduler.NewMockScheduler(mockCtrl)
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
 	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(dataBase), nil, nil)
+	systemClock := mock_clock.NewMockClock(mockCtrl)
 
-	standardNotifier = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
+	schedulerConfig := SchedulerConfig{ReschedulingDelay: config.ReschedulingDelay}
+
+	standardNotifier = NewNotifier(
+		dataBase,
+		logger,
+		config,
+		notifierMetrics,
+		metricsSourceProvider,
+		map[string]moira.ImageStore{},
+		systemClock,
+		schedulerConfig,
+	)
 	standardNotifier.scheduler = scheduler
 	senderSettings := map[string]interface{}{
 		"sender_type":  "test_type",
