@@ -95,19 +95,36 @@ func toNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]by
 	return bytes, nil
 }
 
-func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database) error {
+func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database, fetchCount int64) error {
 	logger.Info().Msg("Start mergeNotificationHistory")
 
 	switch d := database.(type) {
 	case *moira_redis.DbConnector:
 		client := d.Client()
 
-		contactKeys, _, err := client.Scan(ctx, 0, contactNotificationKey+":*", -1).Result()
+		var contactIDs []string
+
+		contactKeys, cursor, err := client.Scan(ctx, 0, contactNotificationKey+":*", fetchCount).Result()
 		if err != nil {
 			return err
 		}
 
-		if len(contactKeys) == 0 {
+		for len(contactKeys) > 0 {
+			contactIDs = append(contactIDs, contactKeys...)
+
+			if cursor == 0 {
+				break
+			}
+
+			contactKeys, cursor, err = client.Scan(ctx, cursor, contactNotificationKey+":*", fetchCount).Result()
+			if err != nil {
+				return err
+			}
+		}
+
+		logger.Info().Int("contacts", len(contactIDs)).Msg("found contacts with notifications history")
+
+		if len(contactIDs) == 0 {
 			return nil
 		}
 
@@ -117,10 +134,10 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 			ctx,
 			contactNotificationKey,
 			&redis.ZStore{
-				Keys: append(contactKeys, contactNotificationKey),
+				Keys: append(contactIDs, contactNotificationKey),
 			})
 
-		pipe.Del(ctx, contactKeys...)
+		pipe.Del(ctx, contactIDs...)
 
 		_, err = pipe.Exec(ctx)
 		if err != nil {
