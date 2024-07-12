@@ -102,7 +102,7 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 	case *moira_redis.DbConnector:
 		client := d.Client()
 
-		contactKeys, err := client.Keys(ctx, contactNotificationKey+":*").Result()
+		contactKeys, _, err := client.Scan(ctx, 0, contactNotificationKey+":*", -1).Result()
 		if err != nil {
 			return err
 		}
