@@ -95,8 +95,8 @@ func toNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]by
 	return bytes, nil
 }
 
-func unionNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database) error {
-	logger.Info().Msg("Start unionNotificationHistory")
+func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database) error {
+	logger.Info().Msg("Start mergeNotificationHistory")
 
 	switch d := database.(type) {
 	case *moira_redis.DbConnector:
@@ -105,6 +105,10 @@ func unionNotificationHistory(ctx context.Context, logger moira.Logger, database
 		contactKeys, err := client.Keys(ctx, contactNotificationKey+":*").Result()
 		if err != nil {
 			return err
+		}
+
+		if len(contactKeys) == 0 {
+			return nil
 		}
 
 		pipe := client.TxPipeline()
@@ -126,7 +130,7 @@ func unionNotificationHistory(ctx context.Context, logger moira.Logger, database
 		return makeUnknownDBError(database)
 	}
 
-	logger.Info().Msg("Successfully finished unionNotificationHistory")
+	logger.Info().Msg("Successfully finished mergeNotificationHistory")
 
 	return nil
 }

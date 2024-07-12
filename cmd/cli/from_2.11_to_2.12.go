@@ -24,7 +24,7 @@ func downgradeTo211(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Downgrade 2.11 -> 2.12 started")
 
 	ctx := context.Background()
-	err := unionNotificationHistory(ctx, logger, database)
+	err := mergeNotificationHistory(ctx, logger, database)
 	if err != nil {
 		return err
 	}

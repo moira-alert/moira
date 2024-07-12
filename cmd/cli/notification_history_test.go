@@ -84,7 +84,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 	db.Flush()
 	defer db.Flush()
 
-	ctx := context.TODO()
+	ctx := context.Background()
 	client := db.Client()
 
 	eventsMap := eventsByKey(testNotificationHistoryEvents)
@@ -99,7 +99,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 			So(keys, ShouldHaveLength, 0)
 		})
 
-		toInsert, err := prepareItemsForInsert(testNotificationHistoryEvents)
+		toInsert, err := prepareNotSplitItemsToInsert(testNotificationHistoryEvents)
 		So(err, ShouldBeNil)
 
 		err = storeNotificationHistoryBySingleKey(ctx, db, toInsert)
@@ -140,16 +140,80 @@ func TestSplitNotificationHistory(t *testing.T) {
 	})
 }
 
-func prepareItemsForInsert(notificationEvents []*moira.NotificationEventHistoryItem) ([]*redis.Z, error) {
-	toInsert := make([]*redis.Z, 0, len(notificationEvents))
-	for _, event := range notificationEvents {
-		notificationBytes, err := toNotificationBytes(event)
+func TestMergeNotificationHistory(t *testing.T) {
+	conf := getDefault()
+	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
+	if err != nil {
+		t.Fatal(err)
+	}
+	db := moira_redis.NewTestDatabase(logger)
+	db.Flush()
+	defer db.Flush()
+
+	ctx := context.Background()
+	client := db.Client()
+
+	eventsMap := eventsByKey(testNotificationHistoryEvents)
+
+	Convey("Test merge notification history", t, func() {
+		Convey("with empty database", func() {
+			err = mergeNotificationHistory(ctx, logger, db)
+			So(err, ShouldBeNil)
+
+			keys, err := client.Keys(ctx, contactNotificationKey).Result()
+			So(err, ShouldBeNil)
+			So(keys, ShouldHaveLength, 0)
+		})
+
+		toInsertMap, err := prepareSplitItemsToInsert(eventsMap)
+		So(err, ShouldBeNil)
+
+		err = storeSplitNotifications(ctx, db, toInsertMap)
+		So(err, ShouldBeNil)
+
+		Convey("with split history", func() {
+			err = mergeNotificationHistory(ctx, logger, db)
+			So(err, ShouldBeNil)
+
+			gotEventsStrs, err := client.ZRangeByScore(
+				ctx,
+				contactNotificationKey,
+				&redis.ZRangeBy{
+					Min:    "-inf",
+					Max:    "+inf",
+					Offset: 0,
+					Count:  -1,
+				}).Result()
+			So(err, ShouldBeNil)
+			So(gotEventsStrs, ShouldHaveLength, len(testNotificationHistoryEvents))
+
+			for i, gotEventStr := range gotEventsStrs {
+				notificationEvent, err := toNotificationStruct(gotEventStr)
+				So(err, ShouldBeNil)
+				So(notificationEvent, ShouldResemble, *testNotificationHistoryEvents[i])
+			}
+		})
+	})
+}
+
+func prepareNotSplitItemsToInsert(notificationEvents []*moira.NotificationEventHistoryItem) ([]*redis.Z, error) {
+	resList := make([]*redis.Z, 0, len(notificationEvents))
+	for _, notificationEvent := range notificationEvents {
+		toInsert, err := toInsertableItem(notificationEvent)
 		if err != nil {
 			return nil, err
 		}
-		toInsert = append(toInsert, &redis.Z{Score: float64(event.TimeStamp), Member: notificationBytes})
+		resList = append(resList, toInsert)
 	}
-	return toInsert, nil
+	return resList, nil
+}
+
+func toInsertableItem(notificationEvent *moira.NotificationEventHistoryItem) (*redis.Z, error) {
+	notificationBytes, err := toNotificationBytes(notificationEvent)
+	if err != nil {
+		return nil, err
+	}
+	return &redis.Z{Score: float64(notificationEvent.TimeStamp), Member: notificationBytes}, nil
 }
 
 func storeNotificationHistoryBySingleKey(ctx context.Context, database moira.Database, toInsert []*redis.Z) error {
@@ -174,4 +238,43 @@ func eventsByKey(notificationEvents []*moira.NotificationEventHistoryItem) map[s
 		statistics[event.ContactID] = append(statistics[event.ContactID], event)
 	}
 	return statistics
+}
+
+func prepareSplitItemsToInsert(eventsMap map[string][]*moira.NotificationEventHistoryItem) (map[string][]*redis.Z, error) {
+	resMap := make(map[string][]*redis.Z, len(eventsMap))
+	for contactID, notificationEvents := range eventsMap {
+		for _, notificationEvent := range notificationEvents {
+			toInsert, err := toInsertableItem(notificationEvent)
+			if err != nil {
+				return nil, err
+			}
+			resMap[contactID] = append(resMap[contactID], toInsert)
+		}
+	}
+	return resMap, nil
+}
+
+func storeSplitNotifications(ctx context.Context, database moira.Database, toInsertMap map[string][]*redis.Z) error {
+	switch db := database.(type) {
+	case *moira_redis.DbConnector:
+		client := db.Client()
+
+		pipe := client.TxPipeline()
+
+		for contactID, insertItems := range toInsertMap {
+			key := contactNotificationKey + ":" + contactID
+			for _, z := range insertItems {
+				pipe.ZAdd(ctx, key, z)
+			}
+		}
+
+		_, err := pipe.Exec(ctx)
+		if err != nil {
+			return err
+		}
+	default:
+		return makeUnknownDBError(database)
+	}
+
+	return nil
 }
