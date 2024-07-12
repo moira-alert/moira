@@ -10,7 +10,7 @@ import (
 
 func GetContactEventsByIdWithLimit(database moira.Database, contactID string, from int64, to int64, page int64, size int64,
 ) (*dto.ContactEventItemList, *api.ErrorResponse) {
-	events, err := database.GetNotificationsByContactIdWithLimit(contactID, from, to, page, size)
+	events, err := database.GetNotificationsHistoryByContactId(contactID, from, to, page, size)
 	if err != nil {
 		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactEventsByIdWithLimit: can't get notifications for contact with id %v", contactID))
 	}

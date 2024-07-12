@@ -33,7 +33,7 @@ func contactNotificationKeyWithID(contactID string) string {
 	return contactNotificationKey + ":" + contactID
 }
 
-func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64, page int64, size int64,
+func (connector *DbConnector) GetNotificationsHistoryByContactId(contactID string, from int64, to int64, page int64, size int64,
 ) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
 
