@@ -501,7 +501,7 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifications", reflect.TypeOf((*MockDatabase)(nil).GetNotifications), arg0, arg1)
 }
 
-// GetNotificationsByContactIdWithLimit mocks base method.
+// GetNotificationsHistoryByContactId mocks base method.
 func (m *MockDatabase) GetNotificationsHistoryByContactId(arg0 string, arg1, arg2, arg3, arg4 int64) ([]*moira.NotificationEventHistoryItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotificationsHistoryByContactId", arg0, arg1, arg2, arg3, arg4)
@@ -510,8 +510,8 @@ func (m *MockDatabase) GetNotificationsHistoryByContactId(arg0 string, arg1, arg
 	return ret0, ret1
 }
 
-// GetNotificationsByContactIdWithLimit indicates an expected call of GetNotificationsByContactIdWithLimit.
-func (mr *MockDatabaseMockRecorder) GetNotificationsByContactIdWithLimit(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+// GetNotificationsHistoryByContactId indicates an expected call of GetNotificationsHistoryByContactId.
+func (mr *MockDatabaseMockRecorder) GetNotificationsHistoryByContactId(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationsHistoryByContactId", reflect.TypeOf((*MockDatabase)(nil).GetNotificationsHistoryByContactId), arg0, arg1, arg2, arg3, arg4)
 }
