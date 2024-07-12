@@ -43,7 +43,6 @@ notifier:
   date_time_format: "15:04 02.01.2006"
 notification_history:
   ttl: 48h
-  query_limit: 10000
 notification:
   delayed_time: 1m
   transaction_timeout: 100ms

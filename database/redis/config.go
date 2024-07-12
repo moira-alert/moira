@@ -21,8 +21,7 @@ type DatabaseConfig struct {
 }
 
 type NotificationHistoryConfig struct {
-	NotificationHistoryTTL        time.Duration
-	NotificationHistoryQueryLimit int
+	NotificationHistoryTTL time.Duration
 }
 
 // Notifier configuration in redis.

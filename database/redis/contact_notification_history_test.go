@@ -218,7 +218,6 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 func TestPushNotificationToHistory(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.notificationHistory.NotificationHistoryQueryLimit = 500
 
 	Convey("Ensure that event would not have duplicates", t, func() {
 		dataBase.Flush()
