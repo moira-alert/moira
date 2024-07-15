@@ -25,7 +25,7 @@ var (
 	GoVersion    = "unknown"
 )
 
-var moiraValidVersions = []string{"2.3", "2.6", "2.7", "2.9", "2.11"}
+var moiraValidVersions = []string{"2.3", "2.6", "2.7", "2.9", "2.12"}
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/cli.yml", "Path to configuration file")
@@ -110,12 +110,12 @@ func main() { //nolint
 					Error(err).
 					Msg("Fail to update from version 2.9")
 			}
-		case "2.11":
-			err := updateFrom211(logger, database)
+		case "2.12":
+			err := updateFrom212(logger, database)
 			if err != nil {
 				logger.Fatal().
 					Error(err).
-					Msg("Fail to update from version 2.11")
+					Msg("Fail to update from version 2.12")
 			}
 		}
 	}
@@ -151,12 +151,12 @@ func main() { //nolint
 					Error(err).
 					Msg("Fail to update to version 2.9")
 			}
-		case "2.11":
-			err := downgradeTo211(logger, database)
+		case "2.12":
+			err := downgradeTo212(logger, database)
 			if err != nil {
 				logger.Fatal().
 					Error(err).
-					Msg("Fail to update to version 2.11")
+					Msg("Fail to update to version 2.12")
 			}
 		}
 	}
