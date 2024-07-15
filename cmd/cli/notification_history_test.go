@@ -111,7 +111,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 			err = splitNotificationHistoryByContactId(ctx, logger, db, -1)
 			So(err, ShouldBeNil)
 
-			keys, err := client.Keys(ctx, contactNotificationKey+":*").Result()
+			keys, err := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
 			So(err, ShouldBeNil)
 			So(keys, ShouldHaveLength, 0)
 		})
@@ -169,7 +169,7 @@ func testSplitNotificationHistory(
 			Convey(fmt.Sprintf("check contact with id: %s", contactID), func() {
 				gotEvents, err := client.ZRangeByScore(
 					ctx,
-					contactNotificationKey+":"+contactID,
+					contactNotificationKeyWithID(contactID),
 					&redis.ZRangeBy{
 						Min:    "-inf",
 						Max:    "+inf",
@@ -283,7 +283,7 @@ func testMergeNotificationHistory(
 			So(notificationEvent, ShouldResemble, *eventsList[i])
 		}
 
-		contactKeys, err := client.Keys(ctx, contactNotificationKey+":*").Result()
+		contactKeys, err := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
 		So(err, ShouldBeNil)
 		So(contactKeys, ShouldHaveLength, 0)
 	})
@@ -355,7 +355,7 @@ func storeSplitNotifications(ctx context.Context, database moira.Database, toIns
 		pipe := client.TxPipeline()
 
 		for contactID, insertItems := range toInsertMap {
-			key := contactNotificationKey + ":" + contactID
+			key := contactNotificationKeyWithID(contactID)
 			for _, z := range insertItems {
 				pipe.ZAdd(ctx, key, z)
 			}

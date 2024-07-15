@@ -85,7 +85,7 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 
 		var contactIDs []string
 
-		contactKeys, cursor, err := client.Scan(ctx, 0, contactNotificationKey+":*", fetchCount).Result()
+		contactKeys, cursor, err := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), fetchCount).Result()
 		if err != nil {
 			return err
 		}
@@ -97,7 +97,7 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 				break
 			}
 
-			contactKeys, cursor, err = client.Scan(ctx, cursor, contactNotificationKey+":*", fetchCount).Result()
+			contactKeys, cursor, err = client.Scan(ctx, cursor, contactNotificationKeyWithID("*"), fetchCount).Result()
 			if err != nil {
 				return err
 			}
@@ -131,4 +131,8 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 	logger.Info().Msg("Successfully finished mergeNotificationHistory")
 
 	return nil
+}
+
+func contactNotificationKeyWithID(contactID string) string {
+	return contactNotificationKey + ":" + contactID
 }
