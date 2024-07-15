@@ -133,3 +133,11 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 func contactNotificationKeyWithID(contactID string) string {
 	return contactNotificationKey + ":" + contactID
 }
+
+func handleCleanupNotificationHistoryWithTTL(db moira.Database, ttl int64) error {
+	err := db.CleanUpOutdatedNotificationHistory(ttl)
+	if err != nil {
+		return fmt.Errorf("database error: %w", err)
+	}
+	return nil
+}

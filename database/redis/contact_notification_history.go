@@ -111,3 +111,33 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 
 	return nil
 }
+
+// CleanUpOutdatedNotificationHistory is used for deleting notification history events which have been created more than ttl ago.
+func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) error {
+	toDeleteFrom := "-inf"
+	toDeleteTo := strconv.Itoa(int(time.Now().Unix() - ttl))
+
+	client := connector.Client()
+	pipe := client.TxPipeline()
+
+	iterator := client.Scan(connector.context, 0, contactNotificationKeyWithID("*"), 0).Iterator()
+	for iterator.Next(connector.context) {
+		pipe.ZRemRangeByScore(
+			connector.context,
+			iterator.Val(),
+			toDeleteFrom,
+			toDeleteTo,
+		)
+	}
+
+	if err := iterator.Err(); err != nil {
+		return err
+	}
+
+	_, err := pipe.Exec(connector.context)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

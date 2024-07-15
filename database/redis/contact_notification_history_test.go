@@ -1,8 +1,11 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 
 	"github.com/moira-alert/moira"
 
@@ -10,11 +13,13 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const defaultTestMetric = "some_metric"
+
 var inputScheduledNotification = moira.ScheduledNotification{
 	Event: moira.NotificationEvent{
 		IsTriggerEvent: true,
 		Timestamp:      time.Now().Unix(),
-		Metric:         "some_metric",
+		Metric:         defaultTestMetric,
 		State:          moira.StateERROR,
 		OldState:       moira.StateOK,
 		TriggerID:      "1111-2222-33-4444-5555",
@@ -242,4 +247,143 @@ func TestPushNotificationToHistory(t *testing.T) {
 		So(err3, ShouldBeNil)
 		So(dbContent, ShouldHaveLength, 1)
 	})
+}
+
+var (
+	testTTL = int64(48 * time.Hour)
+	testNow = time.Now().Unix()
+)
+
+var outdatedEvents = []*moira.NotificationEventHistoryItem{
+	{
+		TimeStamp: testNow - testTTL - 1,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
+		OldState:  "",
+		TriggerID: "",
+		ContactID: "contact-id-1",
+	},
+	{
+		TimeStamp: testNow - testTTL,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
+		OldState:  "",
+		TriggerID: "",
+		ContactID: "contact-id-2",
+	},
+	{
+		TimeStamp: testNow - testTTL,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
+		OldState:  "",
+		TriggerID: "",
+		ContactID: "contact-id-1",
+	},
+	{
+		TimeStamp: testNow - testTTL,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
+		OldState:  "",
+		TriggerID: "",
+		ContactID: "contact-id-3",
+	},
+}
+
+var notOutdatedEvents = []*moira.NotificationEventHistoryItem{
+	{
+		TimeStamp: testNow,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
+		OldState:  "",
+		TriggerID: "",
+		ContactID: "contact-id-2",
+	},
+	{
+		TimeStamp: testNow,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
+		OldState:  "",
+		TriggerID: "",
+		ContactID: "contact-id-1",
+	},
+	{
+		TimeStamp: testNow,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
+		OldState:  "",
+		TriggerID: "",
+		ContactID: "contact-id-3",
+	},
+}
+
+func TestCleanUpOutdatedNotificationHistory(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	Convey("Test clean up notification history", t, func() {
+		Convey("with empty database", func() {
+			err := dataBase.CleanUpOutdatedNotificationHistory(testTTL)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("with prepared events", func() {
+			storeErr := storeOutdatedNotificationHistoryItems(dataBase, append(outdatedEvents, notOutdatedEvents...))
+			So(storeErr, ShouldBeNil)
+
+			err := dataBase.CleanUpOutdatedNotificationHistory(testTTL)
+			So(err, ShouldBeNil)
+
+			client := dataBase.Client()
+
+			contactIDs, errKeys := client.Keys(dataBase.context, contactNotificationKeyWithID("*")).Result()
+			So(errKeys, ShouldBeNil)
+			So(contactIDs, ShouldHaveLength, len(notOutdatedEvents))
+
+			eventsMap := toEventsMap(notOutdatedEvents)
+
+			for _, contactID := range contactIDs {
+				Convey(fmt.Sprintf("for contact with id: %s", contactID), func() {
+					events, errGet := dataBase.GetNotificationsHistoryByContactId(contactID, testNow-testTTL, testNow, 0, -1)
+					So(errGet, ShouldBeNil)
+					So(events, ShouldHaveLength, len(eventsMap[contactID]))
+
+					for i := range events {
+						So(events[i], ShouldResemble, eventsMap[contactID][i])
+					}
+				})
+			}
+		})
+	})
+}
+
+func storeOutdatedNotificationHistoryItems(connector *DbConnector, notificationEvents []*moira.NotificationEventHistoryItem) error {
+	client := connector.Client()
+
+	pipe := client.TxPipeline()
+	for _, notification := range notificationEvents {
+		notificationBytes, err := GetNotificationBytes(notification)
+		if err != nil {
+			return err
+		}
+		pipe.ZAdd(
+			connector.context,
+			contactNotificationKeyWithID(notification.ContactID),
+			&redis.Z{
+				Score:  float64(notification.TimeStamp),
+				Member: notificationBytes,
+			})
+	}
+
+	_, err := pipe.Exec(connector.context)
+	return err
+}
+
+func toEventsMap(events []*moira.NotificationEventHistoryItem) map[string][]*moira.NotificationEventHistoryItem {
+	m := make(map[string][]*moira.NotificationEventHistoryItem, len(events))
+	for _, event := range events {
+		m[event.ContactID] = append(m[event.ContactID], event)
+	}
+	return m
 }

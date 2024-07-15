@@ -94,6 +94,7 @@ type Database interface {
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 	PushContactNotificationToHistory(notification *ScheduledNotification) error
+	CleanUpOutdatedNotificationHistory(ttl int64) error
 
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
