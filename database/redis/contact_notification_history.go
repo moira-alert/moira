@@ -12,6 +12,7 @@ import (
 
 const contactNotificationKey = "moira-contact-notifications"
 
+// GetNotificationBytes marshals moira.NotificationHistoryItem to json.
 func GetNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]byte, error) {
 	bytes, err := json.Marshal(notification)
 	if err != nil {
@@ -20,6 +21,7 @@ func GetNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]b
 	return bytes, nil
 }
 
+// GetNotificationStruct unmarshals moira.NotificationEventHistoryItem from json represented by sting.
 func GetNotificationStruct(notificationString string) (moira.NotificationEventHistoryItem, error) {
 	var object moira.NotificationEventHistoryItem
 	err := json.Unmarshal([]byte(notificationString), &object)
