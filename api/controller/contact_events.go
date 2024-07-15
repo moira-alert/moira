@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 )
 
+// GetContactEventsHistoryById is a controller that fetches events from database by using moira.Database.GetNotificationsHistoryByContactId.
 func GetContactEventsHistoryById(database moira.Database, contactID string, from int64, to int64, page int64, size int64,
 ) (*dto.ContactEventItemList, *api.ErrorResponse) {
 	events, err := database.GetNotificationsHistoryByContactId(contactID, from, to, page, size)

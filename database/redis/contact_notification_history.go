@@ -12,19 +12,19 @@ import (
 
 const contactNotificationKey = "moira-contact-notifications"
 
-func getNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]byte, error) {
+func GetNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]byte, error) {
 	bytes, err := json.Marshal(notification)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal notification event: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal notification event: %w", err)
 	}
 	return bytes, nil
 }
 
-func getNotificationStruct(notificationString string) (moira.NotificationEventHistoryItem, error) {
+func GetNotificationStruct(notificationString string) (moira.NotificationEventHistoryItem, error) {
 	var object moira.NotificationEventHistoryItem
 	err := json.Unmarshal([]byte(notificationString), &object)
 	if err != nil {
-		return object, fmt.Errorf("failed to umarshall event: %s", err.Error())
+		return object, fmt.Errorf("failed to umarshal event: %w", err)
 	}
 	return object, nil
 }
@@ -33,7 +33,9 @@ func contactNotificationKeyWithID(contactID string) string {
 	return contactNotificationKey + ":" + contactID
 }
 
-func (connector *DbConnector) GetNotificationsHistoryByContactId(contactID string, from int64, to int64, page int64, size int64,
+// GetNotificationsHistoryByContactId returns `size` (or all if `size` is -1) notification events with timestamp between `from` and `to`.
+// The offset for fetching events may be changed by using `page` parameter, it is calculated as page * size.
+func (connector *DbConnector) GetNotificationsHistoryByContactId(contactID string, from, to, page, size int64,
 ) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
 
@@ -53,7 +55,7 @@ func (connector *DbConnector) GetNotificationsHistoryByContactId(contactID strin
 	notifications := make([]*moira.NotificationEventHistoryItem, 0, len(notificationStings))
 
 	for _, notification := range notificationStings {
-		notificationObj, err := getNotificationStruct(notification)
+		notificationObj, err := GetNotificationStruct(notification)
 		if err != nil {
 			return notifications, err
 		}
@@ -75,10 +77,10 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 		TimeStamp: notification.Timestamp,
 	}
 
-	notificationBytes, serializationErr := getNotificationBytes(notificationItemToSave)
+	notificationBytes, serializationErr := GetNotificationBytes(notificationItemToSave)
 
 	if serializationErr != nil {
-		return fmt.Errorf("failed to serialize notification to contact event history item: %s", serializationErr.Error())
+		return fmt.Errorf("failed to serialize notification to contact event history item: %w", serializationErr)
 	}
 
 	to := int(time.Now().Unix() - int64(connector.notificationHistory.NotificationHistoryTTL.Seconds()))
@@ -102,7 +104,7 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 
 	_, err := pipe.Exec(connector.Context())
 	if err != nil {
-		return fmt.Errorf("failed to push contact event history item: %s", err.Error())
+		return fmt.Errorf("failed to push contact event history item: %w", err)
 	}
 
 	return nil

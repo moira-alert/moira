@@ -180,7 +180,7 @@ func testSplitNotificationHistory(
 				So(gotEvents, ShouldHaveLength, len(expectedEvents))
 
 				for i, gotEventStr := range gotEvents {
-					notificationEvent, err := toNotificationStruct(gotEventStr)
+					notificationEvent, err := moira_redis.GetNotificationStruct(gotEventStr)
 					So(err, ShouldBeNil)
 					So(notificationEvent, ShouldResemble, *expectedEvents[i])
 				}
@@ -278,7 +278,7 @@ func testMergeNotificationHistory(
 		So(gotEventsStrs, ShouldHaveLength, len(eventsList))
 
 		for i, gotEventStr := range gotEventsStrs {
-			notificationEvent, err := toNotificationStruct(gotEventStr)
+			notificationEvent, err := moira_redis.GetNotificationStruct(gotEventStr)
 			So(err, ShouldBeNil)
 			So(notificationEvent, ShouldResemble, *eventsList[i])
 		}
@@ -302,7 +302,7 @@ func prepareNotSplitItemsToInsert(notificationEvents []*moira.NotificationEventH
 }
 
 func toInsertableItem(notificationEvent *moira.NotificationEventHistoryItem) (*redis.Z, error) {
-	notificationBytes, err := toNotificationBytes(notificationEvent)
+	notificationBytes, err := moira_redis.GetNotificationBytes(notificationEvent)
 	if err != nil {
 		return nil, err
 	}

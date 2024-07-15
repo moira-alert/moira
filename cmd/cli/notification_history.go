@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -32,12 +30,12 @@ func splitNotificationHistoryByContactId(ctx context.Context, logger moira.Logge
 			// events are like [NotificationHistoryItem, score, NotificationHistoryItem, score, ...]
 			// so we need to deserialize only even positions
 			for i := 0; i < len(events); i += 2 {
-				notification, err := toNotificationStruct(events[i])
+				notification, err := moira_redis.GetNotificationStruct(events[i])
 				if err != nil {
 					return err
 				}
 
-				notificationBytes, err := toNotificationBytes(&notification)
+				notificationBytes, err := moira_redis.GetNotificationBytes(&notification)
 				if err != nil {
 					return err
 				}
@@ -76,23 +74,6 @@ func splitNotificationHistoryByContactId(ctx context.Context, logger moira.Logge
 	logger.Info().Msg("Successfully finished splitNotificationHistoryByContactId")
 
 	return nil
-}
-
-func toNotificationStruct(notificationString string) (moira.NotificationEventHistoryItem, error) {
-	var object moira.NotificationEventHistoryItem
-	err := json.Unmarshal([]byte(notificationString), &object)
-	if err != nil {
-		return object, fmt.Errorf("failed to unmarshall event: %s", err.Error())
-	}
-	return object, nil
-}
-
-func toNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]byte, error) {
-	bytes, err := json.Marshal(notification)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal notification event: %s", err.Error())
-	}
-	return bytes, nil
 }
 
 func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database, fetchCount int64) error {
