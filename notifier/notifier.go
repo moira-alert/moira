@@ -85,12 +85,15 @@ type StandardNotifier struct {
 }
 
 // NewNotifier is initializer for StandardNotifier.
-func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore) *StandardNotifier {
+func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics,
+	metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore, clock moira.Clock,
+	schedulerConfig SchedulerConfig,
+) *StandardNotifier {
 	return &StandardNotifier{
 		senders:              make(map[string]chan NotificationPackage),
 		logger:               logger,
 		database:             database,
-		scheduler:            NewScheduler(database, logger, metrics),
+		scheduler:            NewScheduler(database, logger, metrics, schedulerConfig, clock),
 		config:               config,
 		metrics:              metrics,
 		metricSourceProvider: metricSourceProvider,
@@ -158,14 +161,21 @@ func (notifier *StandardNotifier) reschedule(pkg *NotificationPackage, reason st
 	logger.Warning().
 		Int("number_of_retries", pkg.FailCount).
 		String("reason", reason).
-		Msg("Can't send message. Retry again in 1 min")
+		Msg(fmt.Sprintf("Can't send message. Retry again in %s", notifier.config.ReschedulingDelay))
 
 	for _, event := range pkg.Events {
 		subID := moira.UseString(event.SubscriptionID)
 		eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, subID)
 		SetLogLevelByConfig(notifier.config.LogSubscriptionsToLevel, subID, &eventLogger)
-		notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
-			pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
+		params := moira.SchedulerParams{
+			Event:        event,
+			Trigger:      pkg.Trigger,
+			Contact:      pkg.Contact,
+			Plotting:     pkg.Plotting,
+			ThrottledOld: pkg.Throttled,
+			SendFail:     pkg.FailCount + 1,
+		}
+		notification := notifier.scheduler.ScheduleNotification(params, eventLogger)
 		if err := notifier.database.AddNotification(notification); err != nil {
 			eventLogger.Error().
 				Error(err).
@@ -239,5 +249,5 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 }
 
 func (notifier *StandardNotifier) needToStop(failCount int) bool {
-	return time.Duration(failCount)*time.Minute > notifier.config.ResendingTimeout
+	return time.Duration(failCount)*notifier.config.ReschedulingDelay > notifier.config.ResendingTimeout
 }

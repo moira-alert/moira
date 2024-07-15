@@ -255,7 +255,7 @@ func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSou
 	}
 }
 
-// GraphiteRemoteConfig is remote prometheus settings structure.
+// PrometheusRemoteConfig is remote prometheus settings structure.
 type PrometheusRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for prometheus api requests
@@ -274,7 +274,7 @@ func (config PrometheusRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
 	return &config.RemoteCommonConfig
 }
 
-// GetRemoteSourceSettings returns remote config parsed from moira config files.
+// GetPrometheusSourceSettings returns remote config parsed from moira config files.
 func (config *PrometheusRemoteConfig) GetPrometheusSourceSettings() *prometheusRemoteSource.Config {
 	return &prometheusRemoteSource.Config{
 		URL:            config.URL,
