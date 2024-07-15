@@ -21,8 +21,8 @@ func contactEvents(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
 		router.With(
-			middleware.DateRange("-3hour", "now"),
-			middleware.Paginate(0, 100),
+			middleware.DateRange(contactEventsDefaultFrom, contactEventsDefaultTo),
+			middleware.Paginate(contactEventsDefaultPage, contactEventsDefaultSize),
 		).Get("/", getContactEventHistoryById)
 	})
 }
@@ -36,7 +36,7 @@ func contactEvents(router chi.Router) {
 //	@param		contactID		path		string							true	"Contact ID"					default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param		from				query		string							false	"Start time of the time range"	default(-3hour)
 //	@param		to					query		string							false	"End time of the time range"	default(now)
-//	@param		size				query		int									false	"Number of items to return"									default(100)
+//	@param		size				query		int									false	"Number of items to return or all items if size == -1 (if size == -1 p should be zero for correct work)"									default(100)
 //	@param		p						query		int									false	"Defines the index of data portion (combined with size). E.g, p=2, size=100 will return records from 200 (including), to 300 (not including)"	default(0)
 //	@success	200			{object}	dto.ContactEventItemList		"Successfully received contact events"
 //	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
