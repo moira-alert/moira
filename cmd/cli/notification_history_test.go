@@ -13,61 +13,65 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var testTimeStamp = time.Now().Unix()
+var testTimestamp = time.Now().Unix()
+
+const (
+	defaultTestMetric = "test.notification.events"
+)
 
 var testNotificationHistoryEvents = []*moira.NotificationEventHistoryItem{
 	{
-		TimeStamp: testTimeStamp - 1,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp - 1,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-4",
 	},
 	{
-		TimeStamp: testTimeStamp,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-1",
 	},
 	{
-		TimeStamp: testTimeStamp + 1,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp + 1,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-2",
 	},
 	{
-		TimeStamp: testTimeStamp + 2,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp + 2,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-3",
 	},
 	{
-		TimeStamp: testTimeStamp + 3,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp + 3,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-3",
 	},
 	{
-		TimeStamp: testTimeStamp + 4,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp + 4,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-2",
 	},
 	{
-		TimeStamp: testTimeStamp + 5,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp + 5,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-3",
@@ -76,17 +80,17 @@ var testNotificationHistoryEvents = []*moira.NotificationEventHistoryItem{
 
 var additionalTestNotificationHistoryEvents = []*moira.NotificationEventHistoryItem{
 	{
-		TimeStamp: testTimeStamp + 6,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp + 6,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-4",
 	},
 	{
-		TimeStamp: testTimeStamp + 7,
-		Metric:    "test.notification.events",
-		State:     "TEST",
+		TimeStamp: testTimestamp + 7,
+		Metric:    defaultTestMetric,
+		State:     moira.StateTEST,
 		OldState:  "",
 		TriggerID: "",
 		ContactID: "contact-id-5",

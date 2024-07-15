@@ -131,10 +131,13 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			})
 
 			Convey("Ensure that we can't find event time borders don't fit event timestamp", func() {
+				veryOldFrom := int64(928930626) // 09.06.1999, 12:17:06
+				veryOldTo := int64(992089026)   // 09.06.2001, 12:17:06
+
 				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
 					eventsShouldBeInDb[0].ContactID,
-					928930626,
-					992089026,
+					veryOldFrom,
+					veryOldTo,
 					defaultPage,
 					defaultSize)
 				So(err, ShouldBeNil)
