@@ -6,13 +6,11 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-const contactFetchCount int64 = 10_000
-
 func updateFrom211(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Update 2.11 -> 2.12 was started")
 
 	ctx := context.Background()
-	err := splitNotificationHistoryByContactId(ctx, logger, database, contactFetchCount)
+	err := splitNotificationHistoryByContactId(ctx, logger, database)
 	if err != nil {
 		return err
 	}
@@ -25,7 +23,7 @@ func downgradeTo211(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Downgrade 2.11 -> 2.12 started")
 
 	ctx := context.Background()
-	err := mergeNotificationHistory(ctx, logger, database, contactFetchCount)
+	err := mergeNotificationHistory(ctx, logger, database)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -12,60 +14,61 @@ const (
 	contactNotificationKey = "moira-contact-notifications"
 )
 
-func splitNotificationHistoryByContactId(ctx context.Context, logger moira.Logger, database moira.Database, contactFetchCount int64) error {
+func splitNotificationHistoryByContactId(ctx context.Context, logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Start splitNotificationHistoryByContactId")
 
 	switch d := database.(type) {
 	case *moira_redis.DbConnector:
 		client := d.Client()
+		var splitCount int64
 
-		events, cursor, err := client.ZScan(ctx, contactNotificationKey, 0, "", contactFetchCount).Result()
-		if err != nil {
-			return err
+		pipe := client.TxPipeline()
+
+		iterator := client.ZScan(ctx, contactNotificationKey, 0, "", 0).Iterator()
+		for iterator.Next(ctx) {
+			eventStr := iterator.Val()
+
+			// On 1, 3, 5, ... indexes with have scores, not json
+			_, err := strconv.Atoi(eventStr)
+			if err == nil {
+				continue
+			}
+
+			notification, deserializeErr := moira_redis.GetNotificationStruct(eventStr)
+			if deserializeErr != nil {
+				return fmt.Errorf("failed to deserialize event: %w", deserializeErr)
+			}
+
+			notificationBytes, serializeErr := moira_redis.GetNotificationBytes(&notification)
+			if serializeErr != nil {
+				return fmt.Errorf("failed to serialize event: %w", serializeErr)
+			}
+
+			pipe.ZAdd(
+				ctx,
+				contactNotificationKeyWithID(notification.ContactID),
+				&redis.Z{
+					Score:  float64(notification.TimeStamp),
+					Member: notificationBytes,
+				})
+			splitCount += 1
 		}
 
-		for len(events) > 0 {
-			pipe := client.TxPipeline()
+		iterErr := iterator.Err()
+		if iterErr != nil {
+			return fmt.Errorf("error while iterating over notification history: %w", iterErr)
+		}
 
-			// events are like [NotificationHistoryItem, score, NotificationHistoryItem, score, ...]
-			// so we need to deserialize only even positions
-			for i := 0; i < len(events); i += 2 {
-				notification, err := moira_redis.GetNotificationStruct(events[i])
-				if err != nil {
-					return err
-				}
-
-				notificationBytes, err := moira_redis.GetNotificationBytes(&notification)
-				if err != nil {
-					return err
-				}
-
-				pipe.ZAdd(
-					ctx,
-					contactNotificationKey+":"+notification.ContactID,
-					&redis.Z{
-						Score:  float64(notification.TimeStamp),
-						Member: notificationBytes,
-					})
-			}
-
-			_, err = pipe.Exec(ctx)
-			if err != nil {
-				return err
-			}
-			logger.Info().Int("split", len(events)/2).Msg("splitting events...")
-
-			if cursor == 0 {
-				break
-			}
-
-			events, cursor, err = client.ZScan(ctx, contactNotificationKey, cursor, "", contactFetchCount).Result()
-			if err != nil {
-				return err
-			}
+		_, err := pipe.Exec(ctx)
+		if err != nil {
+			return fmt.Errorf("error while applying changes: %w", err)
 		}
 
 		client.Del(ctx, contactNotificationKey)
+
+		logger.Info().
+			Int64("split_events", splitCount).
+			Msg("Number of contact notifications divided into separate keys")
 
 	default:
 		return makeUnknownDBError(database)
@@ -76,7 +79,7 @@ func splitNotificationHistoryByContactId(ctx context.Context, logger moira.Logge
 	return nil
 }
 
-func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database, fetchCount int64) error {
+func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Start mergeNotificationHistory")
 
 	switch d := database.(type) {
@@ -85,25 +88,19 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 
 		var contactIDs []string
 
-		contactKeys, cursor, err := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), fetchCount).Result()
-		if err != nil {
-			return err
+		iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
+		for iterator.Next(ctx) {
+			contactIDs = append(contactIDs, iterator.Val())
 		}
 
-		for len(contactKeys) > 0 {
-			contactIDs = append(contactIDs, contactKeys...)
-
-			if cursor == 0 {
-				break
-			}
-
-			contactKeys, cursor, err = client.Scan(ctx, cursor, contactNotificationKeyWithID("*"), fetchCount).Result()
-			if err != nil {
-				return err
-			}
+		iterErr := iterator.Err()
+		if iterErr != nil {
+			return fmt.Errorf("error while iterating over notification history: %w", iterErr)
 		}
 
-		logger.Info().Int("contacts", len(contactIDs)).Msg("found contacts with notifications history")
+		logger.Info().
+			Int("contact_ids", len(contactIDs)).
+			Msg("Number of contacts in notifications history")
 
 		if len(contactIDs) == 0 {
 			return nil
@@ -120,9 +117,9 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 
 		pipe.Del(ctx, contactIDs...)
 
-		_, err = pipe.Exec(ctx)
+		_, err := pipe.Exec(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("error while applying changes: %w", err)
 		}
 	default:
 		return makeUnknownDBError(database)

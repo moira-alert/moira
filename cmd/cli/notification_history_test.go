@@ -112,7 +112,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 
 	Convey("Test split notification history", t, func() {
 		Convey("with empty contactNotificationKey", func() {
-			err = splitNotificationHistoryByContactId(ctx, logger, db, -1)
+			err = splitNotificationHistoryByContactId(ctx, logger, db)
 			So(err, ShouldBeNil)
 
 			keys, err := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
@@ -164,9 +164,7 @@ func testSplitNotificationHistory(
 	client := db.Client()
 
 	Convey("with prepared history", func() {
-		fetchCount := int64(len(eventsMap))
-
-		err := splitNotificationHistoryByContactId(ctx, logger, db, fetchCount)
+		err := splitNotificationHistoryByContactId(ctx, logger, db)
 		So(err, ShouldBeNil)
 
 		for contactID, expectedEvents := range eventsMap {
@@ -212,7 +210,7 @@ func TestMergeNotificationHistory(t *testing.T) {
 
 	Convey("Test merge notification history", t, func() {
 		Convey("with empty database", func() {
-			err = mergeNotificationHistory(ctx, logger, db, 2)
+			err = mergeNotificationHistory(ctx, logger, db)
 			So(err, ShouldBeNil)
 
 			keys, err := client.Keys(ctx, contactNotificationKey).Result()
@@ -266,7 +264,7 @@ func testMergeNotificationHistory(
 	client := db.Client()
 
 	Convey("with split history", func() {
-		err := mergeNotificationHistory(ctx, logger, db, 2)
+		err := mergeNotificationHistory(ctx, logger, db)
 		So(err, ShouldBeNil)
 
 		gotEventsStrs, err := client.ZRangeByScore(
