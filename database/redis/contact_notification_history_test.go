@@ -83,8 +83,8 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 		})
 
 		Convey("Write event and check for success write", func() {
-			err := dataBase.PushContactNotificationToHistory(&inputScheduledNotification)
-			So(err, ShouldBeNil)
+			errPushEvents := dataBase.PushContactNotificationToHistory(&inputScheduledNotification)
+			So(errPushEvents, ShouldBeNil)
 
 			Convey("Ensure that we can find event on +- 5 seconds interval", func() {
 				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
@@ -168,8 +168,8 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 
 			otherScheduledNotification := inputScheduledNotification
 			otherScheduledNotification.Timestamp += 1
-			err = dataBase.PushContactNotificationToHistory(&otherScheduledNotification)
-			So(err, ShouldBeNil)
+			errPushEvents = dataBase.PushContactNotificationToHistory(&otherScheduledNotification)
+			So(errPushEvents, ShouldBeNil)
 
 			Convey("Ensure that with page=0 size=1 returns first event", func() {
 				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(

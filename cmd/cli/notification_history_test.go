@@ -164,12 +164,12 @@ func testSplitNotificationHistory(
 	client := db.Client()
 
 	Convey("with prepared history", func() {
-		err := splitNotificationHistoryByContactId(ctx, logger, db)
-		So(err, ShouldBeNil)
+		errExists := splitNotificationHistoryByContactId(ctx, logger, db)
+		So(errExists, ShouldBeNil)
 
 		for contactID, expectedEvents := range eventsMap {
 			Convey(fmt.Sprintf("check contact with id: %s", contactID), func() {
-				gotEvents, err := client.ZRangeByScore(
+				gotEvents, errAfterZRange := client.ZRangeByScore(
 					ctx,
 					contactNotificationKeyWithID(contactID),
 					&redis.ZRangeBy{
@@ -178,7 +178,7 @@ func testSplitNotificationHistory(
 						Offset: 0,
 						Count:  -1,
 					}).Result()
-				So(err, ShouldBeNil)
+				So(errAfterZRange, ShouldBeNil)
 				So(gotEvents, ShouldHaveLength, len(expectedEvents))
 
 				for i, gotEventStr := range gotEvents {
@@ -189,8 +189,8 @@ func testSplitNotificationHistory(
 			})
 		}
 
-		res, err := client.Exists(ctx, contactNotificationKey).Result()
-		So(err, ShouldBeNil)
+		res, errExists := client.Exists(ctx, contactNotificationKey).Result()
+		So(errExists, ShouldBeNil)
 		So(res, ShouldEqual, 0)
 	})
 }
@@ -267,7 +267,7 @@ func testMergeNotificationHistory(
 		err := mergeNotificationHistory(ctx, logger, db)
 		So(err, ShouldBeNil)
 
-		gotEventsStrs, err := client.ZRangeByScore(
+		gotEventsStrs, errAfterZRange := client.ZRangeByScore(
 			ctx,
 			contactNotificationKey,
 			&redis.ZRangeBy{
@@ -276,17 +276,17 @@ func testMergeNotificationHistory(
 				Offset: 0,
 				Count:  -1,
 			}).Result()
-		So(err, ShouldBeNil)
+		So(errAfterZRange, ShouldBeNil)
 		So(gotEventsStrs, ShouldHaveLength, len(eventsList))
 
 		for i, gotEventStr := range gotEventsStrs {
-			notificationEvent, err := moira_redis.GetNotificationStruct(gotEventStr)
-			So(err, ShouldBeNil)
+			notificationEvent, errDeserialize := moira_redis.GetNotificationStruct(gotEventStr)
+			So(errDeserialize, ShouldBeNil)
 			So(notificationEvent, ShouldResemble, *eventsList[i])
 		}
 
-		contactKeys, err := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
-		So(err, ShouldBeNil)
+		contactKeys, errAfterKeys := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
+		So(errAfterKeys, ShouldBeNil)
 		So(contactKeys, ShouldHaveLength, 0)
 	})
 }
