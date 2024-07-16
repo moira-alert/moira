@@ -220,6 +220,13 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				Msg("Error populate description")
 		}
 
+		log.Info().
+			Int("events_count", len(pkg.Events)).
+			String(moira.LogFieldNameContactUser, pkg.Contact.User).
+			String(moira.LogFieldNameContactTeam, pkg.Contact.Team).
+			String(moira.LogFieldNameTriggerTags, pkg.Trigger.GetTags()).
+			Msg("Try to send events")
+
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 		if err == nil {
 			notifier.metrics.MarkSendersOkMetrics(pkg.Contact.Type)
