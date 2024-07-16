@@ -33,7 +33,7 @@ func TestBuildMessage(t *testing.T) {
 
 		trigger := moira.TriggerData{
 			Tags: []string{"tag1", "tag2"},
-			Name: "Name",
+			Name: "Trigger Name",
 			ID:   "TriggerID",
 		}
 
@@ -73,6 +73,8 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with one event and message", func() {
+			event.TriggerID = ""
+			trigger.ID = ""
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
@@ -102,7 +104,7 @@ Please, fix your system or tune this trigger to generate less events.`
 
 		events := make([]moira.NotificationEvent, 0)
 		Convey("Print moira message with 6 events and photo message length", func() {
-			for i := 0; i < 6; i++ {
+			for i := 0; i < 18; i++ {
 				events = append(events, event)
 			}
 			actual := sender.buildMessage(events, trigger, false, albumCaptionMaxCharacters)

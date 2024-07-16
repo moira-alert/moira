@@ -42,10 +42,10 @@ func BuildEventsString(events moira.NotificationEvents, charsForEvents int, thro
 	eventsPrinted := 0
 	for _, event := range events {
 		line := fmt.Sprintf(
-			"\n%s: %s = %v (%s to %s)",
-			event.FormatTimestamp(location, moira.DefaultDateTimeFormat),
+			"\n%s: %s = %s (%s to %s)",
+			event.FormatTimestamp(location, moira.DefaultTimeFormat),
 			event.Metric,
-			*event.Value,
+			event.GetMetricsValues(moira.DefaultNotificationSettings),
 			event.OldState,
 			event.State)
 		if msg := event.CreateMessage(location); len(msg) > 0 {
