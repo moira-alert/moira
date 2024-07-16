@@ -99,12 +99,14 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	var message strings.Builder
 
 	title := sender.buildTitle(events, trigger, throttled)
+	// OFFERED BY PR
+	//title := senders.BuildTitle(events, trigger, sender.frontURI, throttled)
 	titleLen := len([]rune(title))
 
 	desc := sender.buildDescription(trigger)
 	descLen := len([]rune(desc))
 
-	eventsString := sender.buildEventsString(events, -1, throttled)
+	eventsString := senders.BuildEventsString(events, -1, throttled, sender.location)
 	eventsStringLen := len([]rune(eventsString))
 
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
@@ -115,7 +117,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		desc = desc[:descNewLen] + "...\n"
 	}
 	if eventsNewLen != eventsStringLen {
-		eventsString = sender.buildEventsString(events, eventsNewLen, throttled)
+		eventsString = senders.BuildEventsString(events, eventsNewLen, throttled, sender.location)
 	}
 
 	message.WriteString(title)

@@ -28,7 +28,9 @@ const (
 )
 
 const (
-	format            = "15:04 02.01.2006"
+	// DefaultDateTimeFormat used for formatting timestamps.
+	DefaultDateTimeFormat = "15:04 02.01.2006"
+	// DefaultTimeFormat used for formatting time.
 	DefaultTimeFormat = "15:04"
 	remindMessage     = "This metric has been in bad state for more than %v hours - please, fix."
 	limit             = 1000
@@ -108,7 +110,7 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 		}
 		if event.MessageEventInfo.Maintenance.StartTime != nil {
 			messageBuffer.WriteString(" at ")
-			messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StartTime, 0).In(location).Format(format))
+			messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StartTime, 0).In(location).Format(DefaultDateTimeFormat))
 		}
 		if event.MessageEventInfo.Maintenance.StopUser != nil || event.MessageEventInfo.Maintenance.StopTime != nil {
 			messageBuffer.WriteString(" and removed")
@@ -118,7 +120,7 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 			}
 			if event.MessageEventInfo.Maintenance.StopTime != nil {
 				messageBuffer.WriteString(" at ")
-				messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StopTime, 0).In(location).Format(format))
+				messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StopTime, 0).In(location).Format(DefaultDateTimeFormat))
 			}
 		}
 		messageBuffer.WriteString(".")

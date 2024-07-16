@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/tucnak/telebot.v2"
-
 	"github.com/moira-alert/moira"
+	"gopkg.in/tucnak/telebot.v2"
 )
 
 type messageType string
@@ -24,6 +23,7 @@ const (
 	albumCaptionMaxCharacters     = 1024
 	messageMaxCharacters          = 4096
 	additionalInfoCharactersCount = 400
+	photoCaptionMaxCharacters     = 1024
 )
 
 var characterLimits = map[messageType]int{
@@ -51,6 +51,39 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
+	/*
+
+		OFFERED BY PR
+
+		 var message strings.Builder
+
+			title := senders.BuildTitle(events, trigger, sender.frontURI)
+			titleLen := len([]rune(title))
+
+			desc := sender.buildDescription(trigger)
+			descLen := len([]rune(desc))
+
+			eventsString := senders.BuildEventsString(events, -1, throttled, sender.location)
+			eventsStringLen := len([]rune(eventsString))
+
+			charsLeftAfterTitle := messageMaxCharacters - titleLen
+
+			descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
+
+			if descLen != descNewLen {
+				desc = desc[:descNewLen] + "...\n"
+			}
+			if eventsNewLen != eventsStringLen {
+				eventsString = senders.BuildEventsString(events, eventsNewLen, throttled, sender.location)
+			}
+
+			message.WriteString(title)
+			message.WriteString(desc)
+			message.WriteString(eventsString)
+			return message.String()
+	*/
+
+	// NOW
 	var buffer bytes.Buffer
 	state := events.GetCurrentState(throttled)
 	tags := trigger.GetTags()
@@ -90,6 +123,15 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		buffer.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
 	}
 	return buffer.String()
+}
+
+func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		desc = trigger.Desc
+		desc += "\n"
+	}
+	return desc
 }
 
 func (sender *Sender) getChatUID(username string) (string, error) {
