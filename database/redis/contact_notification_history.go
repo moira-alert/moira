@@ -131,12 +131,12 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 	}
 
 	if err := iterator.Err(); err != nil {
-		return fmt.Errorf("failed to iterate over notification history keys %w", err)
+		return fmt.Errorf("failed to iterate over notification history keys: %w", err)
 	}
 
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
-		return fmt.Errorf("failed to exec delete commands %w", err)
+		return fmt.Errorf("failed to exec delete commands: %w", err)
 	}
 
 	return nil
