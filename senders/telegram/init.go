@@ -3,6 +3,7 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"github.com/moira-alert/moira/senders/message_format"
 	"strings"
 	"time"
 
@@ -22,13 +23,6 @@ const (
 
 var (
 	pollerTimeout = 10 * time.Second
-	emojiStates   = map[moira.State]string{
-		moira.StateOK:     "\xe2\x9c\x85",
-		moira.StateWARN:   "\xe2\x9a\xa0",
-		moira.StateERROR:  "\xe2\xad\x95",
-		moira.StateNODATA: "\xf0\x9f\x92\xa3",
-		moira.StateTEST:   "\xf0\x9f\x98\x8a",
-	}
 )
 
 // Structure that represents the Telegram configuration in the YAML file.
@@ -40,12 +34,13 @@ type config struct {
 
 // Sender implements moira sender interface via telegram.
 type Sender struct {
-	DataBase moira.Database
-	logger   moira.Logger
-	apiToken string
-	frontURI string
-	bot      *telebot.Bot
-	location *time.Location
+	DataBase  moira.Database
+	logger    moira.Logger
+	apiToken  string
+	frontURI  string
+	bot       *telebot.Bot
+	location  *time.Location
+	formatter message_format.MessageFormatter
 }
 
 func removeTokenFromError(err error, bot *telebot.Bot) error {
@@ -71,6 +66,8 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
 
+	emojiProvider := telegramEmojiProvider{}
+
 	sender.apiToken = cfg.APIToken
 	sender.frontURI = cfg.FrontURI
 	sender.logger = logger
@@ -90,6 +87,27 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				Msg("Error handling incoming message: %s")
 		}
 	})
+
+	sender.formatter = message_format.HighlightSyntaxFormatter{
+		EmojiGetter: emojiProvider,
+		FrontURI:    cfg.FrontURI,
+		Location:    location,
+		UseEmoji:    false,
+		UriFormatter: func(triggerURI, triggerName string) string {
+			return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
+		},
+		DescriptionFormatter: func(trigger moira.TriggerData) string {
+			desc := trigger.Desc
+			if trigger.Desc != "" {
+				desc = trigger.Desc
+				desc += "\n"
+			}
+			return desc
+		},
+		BoldFormatter: func(str string) string {
+			return fmt.Sprintf("**%s**", str)
+		},
+	}
 
 	go sender.runTelebot(cfg.ContactType)
 
