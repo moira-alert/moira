@@ -198,7 +198,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 	for pkg := range ch {
 		log := getLogWithPackageContext(&notifier.logger, &pkg, &notifier.config)
 		plottingLog := log.Clone().String(moira.LogFieldNameContext, "plotting")
-		plots, err := notifier.buildNotificationPackagePlots(pkg, plottingLog)
+		plots, buildDuration, err := notifier.buildNotificationPackagePlots(pkg, plottingLog)
 		if err != nil {
 			var event logging.EventBuilder
 			switch err.(type) { // nolint:errorlint
@@ -220,11 +220,10 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				Msg("Error populate description")
 		}
 
+		if buildDuration != 0 {
+			log.Int64(moira.LogFieldNamePlotsBuildDuration, buildDuration)
+		}
 		log.Info().
-			Int(moira.LogFieldNameFailCount, pkg.FailCount).
-			Int(moira.LogFieldNameEventsCount, len(pkg.Events)).
-			String(moira.LogFieldNameContactUser, pkg.Contact.User).
-			String(moira.LogFieldNameContactTeam, pkg.Contact.Team).
 			Msg("Try to send events")
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
@@ -242,7 +241,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			if pkg.FailCount > notifier.config.MaxFailAttemptToSendAvailable {
 				log.Error().
 					Error(err).
-					Int("fail_count", pkg.FailCount).
+					Int(moira.LogFieldNameFailCount, pkg.FailCount).
 					Msg("Cannot send notification")
 			} else {
 				log.Warning().
