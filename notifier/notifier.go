@@ -224,7 +224,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			log.Int64(moira.LogFieldNamePlotsBuildDuration, buildDuration)
 		}
 		log.Info().
-			Msg("Try to send events")
+			Msg("Try to notification package")
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 		if err == nil {
