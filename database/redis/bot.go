@@ -26,9 +26,9 @@ func (connector *DbConnector) GetChatByUsername(messenger, username string) (str
 }
 
 // SetUsernameChat store id of username.
-func (connector *DbConnector) SetUsernameChat(messenger, username, chatRow string) error {
+func (connector *DbConnector) SetUsernameChat(messenger, username, chatRaw string) error {
 	c := *connector.client
-	err := c.Set(connector.context, usernameKey(messenger, username), chatRow, redis.KeepTTL).Err()
+	err := c.Set(connector.context, usernameKey(messenger, username), chatRaw, redis.KeepTTL).Err()
 	return err
 }
 

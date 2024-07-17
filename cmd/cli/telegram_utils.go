@@ -13,7 +13,7 @@ import (
 	"github.com/moira-alert/moira/senders/telegram"
 )
 
-var (
+const (
 	telegramUsersKey   = "moira-telegram-users:"
 	telegramLockPrefix = "moira-telegram-users:moira-bot-host:"
 )
@@ -92,6 +92,10 @@ func updateTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, client 
 		}
 	}
 
+	if err := iter.Err(); err != nil {
+		return fmt.Errorf("iterator error: %w", err)
+	}
+
 	return nil
 }
 
@@ -146,7 +150,8 @@ func downgradeTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, clie
 		}
 
 		if chat.ID == 0 {
-			logger.Error().
+			logger.Warning().
+				String("old_value", oldValue).
 				Msg("chat ID is null")
 
 			continue
@@ -157,6 +162,10 @@ func downgradeTelegramUsersRecordsOnRedisNode(connector *redis.DbConnector, clie
 		if err := client.Set(ctx, key, newValue, goredis.KeepTTL).Err(); err != nil {
 			return fmt.Errorf("failed to set %s with value: %s, err: %w", key, newValue, err)
 		}
+	}
+
+	if err := iter.Err(); err != nil {
+		return fmt.Errorf("iterator error: %w", err)
 	}
 
 	return nil

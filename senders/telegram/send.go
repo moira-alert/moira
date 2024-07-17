@@ -132,15 +132,15 @@ func (sender *Sender) getChat(contactValue string) (*Chat, error) {
 	var err error
 
 	switch {
-	// for private channel contactValue is transformed to be able to fetch it from telegram
+	// For private channel contactValue is transformed to be able to fetch it from telegram
 	case strings.HasPrefix(contactValue, "%"):
 		contactValue = "-100" + contactValue[1:]
 		chat, err = sender.getChatFromTelegram(contactValue)
-	// for public channel contactValue is transformed to be able to fetch it from telegram
+	// For public channel contactValue is transformed to be able to fetch it from telegram
 	case strings.HasPrefix(contactValue, "#"):
 		contactValue = "@" + contactValue[1:]
 		chat, err = sender.getChatFromTelegram(contactValue)
-	// for the rest of the cases (private chats, groups, supergroups), Chat data is stored in DB.
+	// For the rest of the cases (private chats, groups, supergroups), Chat data is stored in DB
 	default:
 		chat, err = sender.getChatFromDb(contactValue)
 	}
