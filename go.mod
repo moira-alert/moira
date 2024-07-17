@@ -29,7 +29,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
-	github.com/rs/cors v1.9.0
+	github.com/rs/cors v1.11.0
 	github.com/rs/zerolog v1.29.0
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/slack-go/slack v0.12.1
