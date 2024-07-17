@@ -15,7 +15,7 @@ type messageType string
 const (
 	// Album type used if notification has plots.
 	Album messageType = "album"
-	// Message type used if notification has not plot.
+	// Message type used if notification has no plot.
 	Message messageType = "message"
 )
 
@@ -23,7 +23,6 @@ const (
 	albumCaptionMaxCharacters     = 1024
 	messageMaxCharacters          = 4096
 	additionalInfoCharactersCount = 400
-	photoCaptionMaxCharacters     = 1024
 )
 
 var characterLimits = map[messageType]int{
