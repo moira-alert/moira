@@ -17,7 +17,10 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-var targetNameRegex = regexp.MustCompile("t(\\d+)")
+var targetNameRegex = regexp.MustCompile("^t\\d+$")
+
+// ErrBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
+var ErrBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
@@ -90,8 +93,8 @@ type TriggerModel struct {
 }
 
 // ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
-func (trigger *TriggerModel) ClusterKey() moira.ClusterKey {
-	return moira.MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
+func (model *TriggerModel) ClusterKey() moira.ClusterKey {
+	return moira.MakeClusterKey(model.TriggerSource, model.ClusterId)
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger.
@@ -170,10 +173,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	for targetName := range trigger.AloneMetrics {
 		if !targetNameRegex.MatchString(targetName) {
-			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")}
+			return api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName}
 		}
 
-		targetIndexStr := targetNameRegex.FindStringSubmatch(targetName)[1]
+		targetIndexStr := targetName[1:]
 		targetIndex, err := strconv.Atoi(targetIndexStr)
 		if err != nil {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be valid number: %w", err)}
@@ -182,6 +185,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		if targetIndex < 0 || targetIndex > len(trigger.Targets) {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")}
 		}
+	}
+
+	if trigger.TTLState == nil {
+		trigger.TTLState = &moira.TTLStateNODATA
 	}
 
 	triggerExpression := expression.TriggerExpression{
@@ -202,6 +209,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
+	if trigger.TTL == 0 {
+		trigger.TTL = moira.DefaultTTL
+	}
 	if err := checkTTLSanity(trigger, metricsSource); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
@@ -216,6 +226,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		if pattern == asteriskPattern {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")}
 		}
+	}
+
+	if trigger.Schedule == nil {
+		trigger.Schedule = moira.NewDefaultScheduleData()
 	}
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)

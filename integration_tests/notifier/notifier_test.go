@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/clock"
+
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"go.uber.org/mock/gomock"
@@ -30,11 +32,12 @@ var (
 )
 
 var notifierConfig = notifier.Config{
-	SendingTimeout:   time.Millisecond * 10,
-	ResendingTimeout: time.Hour * 24,
-	Location:         location,
-	DateTimeFormat:   dateTimeFormat,
-	ReadBatchSize:    notifier.NotificationsLimitUnlimited,
+	SendingTimeout:    time.Millisecond * 10,
+	ResendingTimeout:  time.Hour * 24,
+	ReschedulingDelay: time.Minute,
+	Location:          location,
+	DateTimeFormat:    dateTimeFormat,
+	ReadBatchSize:     notifier.NotificationsLimitUnlimited,
 }
 
 var shutdown = make(chan struct{})
@@ -119,6 +122,9 @@ func TestNotifier(t *testing.T) {
 
 	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(database), nil, nil)
 
+	systemClock := clock.NewSystemClock()
+	schedulerConfig := notifier.SchedulerConfig{ReschedulingDelay: notifierConfig.ReschedulingDelay}
+
 	notifierInstance := notifier.NewNotifier(
 		database,
 		logger,
@@ -126,6 +132,8 @@ func TestNotifier(t *testing.T) {
 		notifierMetrics,
 		metricsSourceProvider,
 		map[string]moira.ImageStore{},
+		systemClock,
+		schedulerConfig,
 	)
 
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
@@ -141,10 +149,17 @@ func TestNotifier(t *testing.T) {
 	notifierInstance.RegisterSender(senderSettings, sender) //nolint
 
 	fetchEventsWorker := events.FetchEventsWorker{
-		Database:  database,
-		Logger:    logger,
-		Metrics:   notifierMetrics,
-		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
+		Database: database,
+		Logger:   logger,
+		Metrics:  notifierMetrics,
+		Scheduler: notifier.NewScheduler(
+			database,
+			logger,
+			notifierMetrics,
+			notifier.SchedulerConfig{
+				ReschedulingDelay: notifierConfig.ReschedulingDelay,
+			},
+			systemClock),
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
