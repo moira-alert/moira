@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"go.uber.org/mock/gomock"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"

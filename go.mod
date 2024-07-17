@@ -21,7 +21,6 @@ require (
 	github.com/go-redsync/redsync/v4 v4.4.4
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
 	github.com/gregdel/pushover v1.1.0
@@ -41,7 +40,6 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/h2non/gock.v1 v1.1.2
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
-	gopkg.in/tucnak/telebot.v2 v2.5.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -53,6 +51,8 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moira-alert/blackfriday-slack v0.1.2
 	github.com/swaggo/http-swagger v1.3.4
+	go.uber.org/mock v0.4.0
+	gopkg.in/telebot.v3 v3.2.1
 )
 
 require (
