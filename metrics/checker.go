@@ -51,7 +51,7 @@ func ConfigureCheckerMetrics(registry Registry, sources []moira.ClusterKey) *Che
 }
 
 func configureCheckMetrics(registry Registry, clusterKey moira.ClusterKey) *CheckMetrics {
-	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId.String()
+	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterID.String()
 	return &CheckMetrics{
 		CheckError:           registry.NewMeter(source, id, "errors", "check"),
 		HandleError:          registry.NewMeter(source, id, "errors", "handle"),

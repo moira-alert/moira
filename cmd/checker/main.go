@@ -97,7 +97,7 @@ func main() {
 	}
 
 	cacheExpiration := checkerSettings.MetricEventTriggerCheckInterval
-	checkerWorkerManager := &worker.WorkerManager{
+	checkerWorkerManager := &worker.Manager{
 		Logger:            logger,
 		Database:          database,
 		Config:            checkerSettings,
@@ -146,7 +146,7 @@ func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics
 	os.Exit(0)
 }
 
-func stopChecker(service *worker.WorkerManager) {
+func stopChecker(service *worker.Manager) {
 	if err := service.Stop(); err != nil {
 		logger.Error().
 			Error(err).

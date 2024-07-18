@@ -41,7 +41,7 @@ type notifierConfig struct {
 	// Delay before performing one more send attempt
 	ReschedulingDelay string `yaml:"rescheduling_delay"`
 	// Senders configuration section. See https://moira.readthedocs.io/en/latest/installation/configuration.html for more explanation
-	Senders []map[string]interface{} `yaml:"senders"`
+	Senders []map[string]any `yaml:"senders"`
 	// Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
 	SelfState selfStateConfig `yaml:"moira_selfstate"`
 	// Web-UI uri prefix for trigger links in notifications. For example: with 'http://localhost' every notification will contain link like 'http://localhost/trigger/triggerId'
@@ -209,7 +209,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 func checkDateTimeFormat(format string) error {
 	fallbackTime := time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
 	parsedTime, err := time.Parse(format, time.Now().Format(format))
-	if err != nil || parsedTime == fallbackTime {
+	if err != nil || parsedTime.Equal(fallbackTime) {
 		return fmt.Errorf("could not parse date time format '%v', result: '%v', error: '%w'", format, parsedTime, err)
 	}
 	return nil

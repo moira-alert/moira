@@ -15,7 +15,7 @@ import (
 	notifier2 "github.com/moira-alert/moira/notifier"
 )
 
-var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry())
 
 func TestProcessScheduledEvent(t *testing.T) {
 	subID2 := "subscriptionID-00000000000002"
@@ -169,7 +169,7 @@ func TestGoRoutine(t *testing.T) {
 	shutdown := make(chan struct{})
 	dataBase.EXPECT().FetchNotifications(gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	dataBase.EXPECT().PushContactNotificationToHistory(&notification1).Return(nil).AnyTimes()
-	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(arg0, arg1 interface{}) { close(shutdown) })
+	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(_, _ interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
 	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 	dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)

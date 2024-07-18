@@ -18,7 +18,7 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
-var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry())
 
 func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -707,7 +707,7 @@ func TestGoRoutine(t *testing.T) {
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
 		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Times(1).Return(&emptyNotification)
-		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
+		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(_ ...interface{}) { close(shutdown) })
 
 		worker.Start()
 		waitTestEnd(shutdown, worker)

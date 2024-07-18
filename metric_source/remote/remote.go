@@ -81,7 +81,7 @@ func (remote *Remote) IsConfigured() (bool, error) {
 	return true, nil
 }
 
-// IsRemoteAvailable checks if graphite API is available and returns 200 response.
+// IsAvailable checks if remote API is available and returns 200 response.
 func (remote *Remote) IsAvailable() (bool, error) {
 	maxRetries := 3
 	until := time.Now().Unix()

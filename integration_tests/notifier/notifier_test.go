@@ -43,7 +43,7 @@ var notifierConfig = notifier.Config{
 var shutdown = make(chan struct{})
 
 var (
-	notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry())
 	logger, _       = logging.GetLogger("Notifier_Test")
 	mockCtrl        *gomock.Controller
 )
@@ -68,7 +68,7 @@ var trigger = moira.Trigger{
 	Targets:       []string{"test.target.1"},
 	Tags:          []string{"test-tag-1"},
 	TriggerSource: moira.GraphiteLocal,
-	ClusterId:     moira.DefaultCluster,
+	ClusterID:     moira.DefaultCluster,
 }
 
 var triggerData = moira.TriggerData{
@@ -141,7 +141,7 @@ func TestNotifier(t *testing.T) {
 	sender.EXPECT().
 		SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).
 		Return(nil).
-		Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
+		Do(func(_, _, _, _, _ interface{}) {
 			fmt.Print("SendEvents called. End test")
 			close(shutdown)
 		})

@@ -16,8 +16,8 @@ import (
 	"github.com/moira-alert/moira/checker"
 )
 
-// WorkerManager represents workers for periodically triggers checking based by new events.
-type WorkerManager struct {
+// Manager represents workers for periodically triggers checking based by new events.
+type Manager struct {
 	Logger   moira.Logger
 	Database moira.Database
 
@@ -34,7 +34,7 @@ type WorkerManager struct {
 }
 
 // StartWorkers start schedule new MetricEvents and check for NODATA triggers.
-func (manager *WorkerManager) StartWorkers() error {
+func (manager *Manager) StartWorkers() error {
 	var err error
 
 	err = manager.startLazyTriggers()
@@ -66,7 +66,7 @@ func (manager *WorkerManager) StartWorkers() error {
 	return nil
 }
 
-func (manager *WorkerManager) makeSourceValidator(clusterKey moira.ClusterKey) (func() error, error) {
+func (manager *Manager) makeSourceValidator(clusterKey moira.ClusterKey) (func() error, error) {
 	if clusterKey.TriggerSource == moira.GraphiteLocal {
 		return manager.validateGraphiteLocal, nil
 	}
@@ -84,7 +84,7 @@ func (manager *WorkerManager) makeSourceValidator(clusterKey moira.ClusterKey) (
 	}, nil
 }
 
-func (manager *WorkerManager) validateGraphiteLocal() error {
+func (manager *Manager) validateGraphiteLocal() error {
 	now := time.Now().UTC().Unix()
 
 	if manager.lastData+manager.Config.StopCheckingIntervalSeconds > now {
@@ -94,7 +94,7 @@ func (manager *WorkerManager) validateGraphiteLocal() error {
 	return fmt.Errorf("graphite local source invalid: no metrics for %d second", now-manager.lastData)
 }
 
-func (manager *WorkerManager) startCheckerWorker(w *scheduler) error {
+func (manager *Manager) startCheckerWorker(w *scheduler) error {
 	const maxParallelChecksMaxValue = 1024 * 8
 	if w.getMaxParallelChecks() > maxParallelChecksMaxValue {
 		return errors.New("MaxParallel" + w.name + "Checks value is too large")
@@ -103,7 +103,7 @@ func (manager *WorkerManager) startCheckerWorker(w *scheduler) error {
 	manager.tomb.Go(w.startTriggerScheduler)
 	manager.Logger.Info().Msg(w.name + " scheduler started")
 
-	triggerIdsToCheckChan := manager.pipeTriggerToCheckQueue(
+	triggerIDsToCheckChan := manager.pipeTriggerToCheckQueue(
 		w.getTriggersToCheck,
 		w.getMaxParallelChecks(),
 	)
@@ -111,7 +111,7 @@ func (manager *WorkerManager) startCheckerWorker(w *scheduler) error {
 	for i := 0; i < w.getMaxParallelChecks(); i++ {
 		manager.tomb.Go(func() error {
 			return manager.startTriggerHandler(
-				triggerIdsToCheckChan,
+				triggerIDsToCheckChan,
 				w.metrics,
 			)
 		})
@@ -120,7 +120,7 @@ func (manager *WorkerManager) startCheckerWorker(w *scheduler) error {
 	return nil
 }
 
-func (manager *WorkerManager) startLazyTriggers() error {
+func (manager *Manager) startLazyTriggers() error {
 	manager.lastData = time.Now().UTC().Unix()
 
 	manager.lazyTriggerIDs.Store(make(map[string]bool))
@@ -131,7 +131,7 @@ func (manager *WorkerManager) startLazyTriggers() error {
 	return nil
 }
 
-func (manager *WorkerManager) checkTriggersToCheckCount() error {
+func (manager *Manager) checkTriggersToCheckCount() error {
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
 	defer checkTicker.Stop()
 
@@ -162,7 +162,7 @@ func getTriggersToCheck(database moira.Database, clusterKey moira.ClusterKey) (i
 }
 
 // Stop stops checks triggers.
-func (manager *WorkerManager) Stop() error {
+func (manager *Manager) Stop() error {
 	manager.tomb.Kill(nil)
 	return manager.tomb.Wait()
 }

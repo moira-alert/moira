@@ -17,11 +17,11 @@ import (
 // GetAllTriggerIDs gets all moira triggerIDs.
 func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	c := *connector.client
-	triggerIds, err := c.SMembers(connector.context, allTriggersListKey).Result()
+	triggerIDs, err := c.SMembers(connector.context, allTriggersListKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all triggers-list: %s", err.Error())
 	}
-	return triggerIds, nil
+	return triggerIDs, nil
 }
 
 // GetTriggerIDs returns list of ids of triggers with given cluster key.
@@ -32,11 +32,11 @@ func (connector *DbConnector) GetTriggerIDs(clusterKey moira.ClusterKey) ([]stri
 		return nil, fmt.Errorf("failed to get triggers-list: %w", err)
 	}
 
-	triggerIds, err := c.SMembers(connector.context, key).Result()
+	triggerIDs, err := c.SMembers(connector.context, key).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get triggers-list: %w", err)
 	}
-	return triggerIds, nil
+	return triggerIDs, nil
 }
 
 func (connector *DbConnector) GetTriggerCount(clusterKeys []moira.ClusterKey) (map[moira.ClusterKey]int64, error) {
@@ -119,11 +119,11 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, error) {
 	c := *connector.client
 
-	triggerIds, err := c.SMembers(connector.context, patternTriggersKey(pattern)).Result()
+	triggerIDs, err := c.SMembers(connector.context, patternTriggersKey(pattern)).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve pattern triggers for pattern: %s, error: %s", pattern, err.Error())
 	}
-	return triggerIds, nil
+	return triggerIDs, nil
 }
 
 // RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern.
@@ -331,9 +331,9 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, fmt.Errorf("failed to EXEC: %w", err)
 	}
-	var slices [][]interface{}
+	var slices [][]any
 	for i := 0; i < len(rawResponse); i += 4 {
-		arr := make([]interface{}, 0, 5)
+		arr := make([]any, 0, 5)
 		arr = append(arr, triggerIDs[i/4])
 		arr = append(arr, rawResponse[i], rawResponse[i+1], rawResponse[i+2], rawResponse[i+3])
 		slices = append(slices, arr)
@@ -447,8 +447,8 @@ func makeTriggerListKey(clusterKey moira.ClusterKey) (string, error) {
 		return "", fmt.Errorf("unknown trigger source %s", clusterKey.TriggerSource)
 	}
 
-	if clusterKey.ClusterId != moira.DefaultCluster {
-		key = key + ":" + clusterKey.ClusterId.String()
+	if clusterKey.ClusterID != moira.DefaultCluster {
+		key = key + ":" + clusterKey.ClusterID.String()
 	}
 
 	return key, nil

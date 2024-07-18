@@ -47,14 +47,14 @@ func createKeyForLocalTriggers(ctx context.Context, logger moira.Logger, databas
 	case *redis.DbConnector:
 		client := d.Client()
 
-		localTriggerIds, err := client.SDiff(ctx, triggersListKey, remoteTriggersListKey, prometheusTriggersListKey).Result()
+		localTriggerIDs, err := client.SDiff(ctx, triggersListKey, remoteTriggersListKey, prometheusTriggersListKey).Result()
 		if err != nil {
 			return err
 		}
 
 		logger.Info().Msg("Finish getting local trigger IDs")
 
-		_, err = client.SAdd(ctx, localTriggersListKey, localTriggerIds).Result()
+		_, err = client.SAdd(ctx, localTriggersListKey, localTriggerIDs).Result()
 		if err != nil {
 			return err
 		}

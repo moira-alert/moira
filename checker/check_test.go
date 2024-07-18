@@ -1803,7 +1803,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 
 		trigger := &moira.Trigger{
 			TriggerSource: moira.GraphiteLocal,
-			ClusterId:     moira.DefaultCluster,
+			ClusterID:     moira.DefaultCluster,
 		}
 		triggerChecker := TriggerChecker{
 			triggerID: "test trigger",

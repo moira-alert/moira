@@ -93,7 +93,7 @@ func TestUnusedTriggers(t *testing.T) {
 			Patterns:      []string{"test.pattern.1"},
 			TriggerType:   moira.RisingTrigger,
 			TriggerSource: moira.GraphiteLocal,
-			ClusterId:     moira.DefaultCluster,
+			ClusterID:     moira.DefaultCluster,
 		}
 
 		trigger1Ver2 := &moira.Trigger{
@@ -104,7 +104,7 @@ func TestUnusedTriggers(t *testing.T) {
 			Patterns:      []string{"test.pattern.1"},
 			TriggerType:   moira.RisingTrigger,
 			TriggerSource: moira.GraphiteLocal,
-			ClusterId:     moira.DefaultCluster,
+			ClusterID:     moira.DefaultCluster,
 		}
 
 		trigger1Ver3 := &moira.Trigger{
@@ -115,7 +115,7 @@ func TestUnusedTriggers(t *testing.T) {
 			Patterns:      []string{"test.pattern.1"},
 			TriggerType:   moira.RisingTrigger,
 			TriggerSource: moira.GraphiteLocal,
-			ClusterId:     moira.DefaultCluster,
+			ClusterID:     moira.DefaultCluster,
 		}
 
 		subscription1Ver1 := &moira.SubscriptionData{
@@ -193,7 +193,7 @@ func TestUnusedTriggers(t *testing.T) {
 					Patterns:      []string{"test.pattern.1"},
 					TriggerType:   moira.RisingTrigger,
 					TriggerSource: moira.GraphiteLocal,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 				},
 				{
 					ID:            "new-trigger-2",
@@ -203,7 +203,7 @@ func TestUnusedTriggers(t *testing.T) {
 					Patterns:      []string{"test.pattern.1"},
 					TriggerType:   moira.RisingTrigger,
 					TriggerSource: moira.GraphiteLocal,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 				},
 				{
 					ID:            "new-trigger-3",
@@ -213,7 +213,7 @@ func TestUnusedTriggers(t *testing.T) {
 					Patterns:      []string{"test.pattern.1"},
 					TriggerType:   moira.RisingTrigger,
 					TriggerSource: moira.GraphiteLocal,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 				},
 				{
 					ID:            "new-trigger-4",
@@ -223,7 +223,7 @@ func TestUnusedTriggers(t *testing.T) {
 					Patterns:      []string{"test.pattern.1"},
 					TriggerType:   moira.RisingTrigger,
 					TriggerSource: moira.GraphiteLocal,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 				},
 				{
 					ID:            "new-trigger-5",
@@ -233,7 +233,7 @@ func TestUnusedTriggers(t *testing.T) {
 					Patterns:      []string{"test.pattern.1"},
 					TriggerType:   moira.RisingTrigger,
 					TriggerSource: moira.GraphiteLocal,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 				},
 				{
 					ID:            "new-trigger-6",
@@ -243,7 +243,7 @@ func TestUnusedTriggers(t *testing.T) {
 					Patterns:      []string{"test.pattern.1"},
 					TriggerType:   moira.RisingTrigger,
 					TriggerSource: moira.GraphiteLocal,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 				},
 			}
 			subscriptions := []*moira.SubscriptionData{

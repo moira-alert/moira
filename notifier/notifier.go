@@ -65,7 +65,7 @@ func (pkg NotificationPackage) GetMetricNames() []string {
 // Notifier implements notification functionality.
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
-	RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error
+	RegisterSender(senderSettings map[string]any, sender moira.Sender) error
 	StopSenders()
 	GetSenders() map[string]bool
 	GetReadBatchSize() int64
@@ -118,10 +118,8 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 
 		select {
 		case ch <- *pkg:
-			break
 		case <-time.After(notifier.config.SendingTimeout):
 			notifier.reschedule(pkg, fmt.Sprintf("Timeout sending %s", pkg))
-			break
 		}
 	}(pkg)
 }

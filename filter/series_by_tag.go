@@ -219,7 +219,7 @@ func handleRegexMatch(
 	// We don't need to create a regular for the asterisk, because in such a tag
 	// it is the fact of the tag's presence that matters, not its value.
 	if spec.Value == "*" || spec.Value == ".*" {
-		return func(value string) bool {
+		return func(_ string) bool {
 			return isMatchOperator
 		}, nil
 	}

@@ -12,7 +12,7 @@ import (
 const checkerLockTTL = time.Second * 15
 
 type scheduler struct {
-	manager           *WorkerManager
+	manager           *Manager
 	clusterKey        moira.ClusterKey
 	sourceCheckConfig checker.SourceCheckConfig
 	name              string
@@ -21,7 +21,7 @@ type scheduler struct {
 	metrics           *metrics.CheckMetrics
 }
 
-func newScheduler(manager *WorkerManager, clusterKey moira.ClusterKey, validateSource func() error) (*scheduler, error) {
+func newScheduler(manager *Manager, clusterKey moira.ClusterKey, validateSource func() error) (*scheduler, error) {
 	metrics, err := manager.Metrics.GetCheckMetricsBySource(clusterKey)
 	if err != nil {
 		return nil, err
@@ -95,12 +95,12 @@ func (ch *scheduler) scheduleTriggersToCheck() error {
 		String("cluster_key", ch.clusterKey.String()).
 		Msg("Scheduling triggers")
 
-	triggerIds, err := ch.manager.Database.GetTriggerIDs(ch.clusterKey)
+	triggerIDs, err := ch.manager.Database.GetTriggerIDs(ch.clusterKey)
 	if err != nil {
 		return err
 	}
 
-	err = ch.scheduleTriggerIDsIfNeeded(ch.clusterKey, triggerIds)
+	err = ch.scheduleTriggerIDsIfNeeded(ch.clusterKey, triggerIDs)
 	if err != nil {
 		return err
 	}

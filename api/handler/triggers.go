@@ -77,7 +77,10 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetUnusedTriggerIDs(database)
 	if errorResponse != nil {
-		render.Render(writer, request, errorResponse) //nolint
+		err := render.Render(writer, request, errorResponse)
+		if err != nil {
+			return
+		} //nolint
 		return
 	}
 

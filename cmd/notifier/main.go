@@ -98,7 +98,7 @@ func main() {
 		ReschedulingDelay: notifierConfig.ReschedulingDelay,
 	}
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics)
 	sender := notifier.NewNotifier(
 		database,
 		logger,

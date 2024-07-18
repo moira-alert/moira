@@ -8,8 +8,9 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 )
 
-func GetContactEventsByIdWithLimit(database moira.Database, contactID string, from int64, to int64) (*dto.ContactEventItemList, *api.ErrorResponse) {
-	events, err := database.GetNotificationsByContactIdWithLimit(contactID, from, to)
+// GetContactEventsByIDWithLimit func returns events by contact id with limit.
+func GetContactEventsByIDWithLimit(database moira.Database, contactID string, from int64, to int64) (*dto.ContactEventItemList, *api.ErrorResponse) {
+	events, err := database.GetNotificationsByContactIDWithLimit(contactID, from, to)
 	if err != nil {
 		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactEventsByIdWithLimit: can't get notifications for contact with id %v", contactID))
 	}

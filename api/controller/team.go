@@ -81,7 +81,7 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 	return teamModel, nil
 }
 
-// GetUserTeams is a controller function that returns a teams in which user is a member bu user ID.
+// GetUserTeams is a controller function that returns a teams in which user is a member by user ID.
 func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.ErrorResponse) {
 	teams, err := dataBase.GetUserTeams(userID)
 
@@ -406,7 +406,6 @@ func CheckUserPermissionsForTeam(
 	if auth.IsAdmin(userID) {
 		return nil
 	}
-
 	_, err := dataBase.GetTeam(teamID)
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {
@@ -426,19 +425,19 @@ func CheckUserPermissionsForTeam(
 }
 
 // GetTeamSettings gets team contacts and subscriptions.
-func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, *api.ErrorResponse) {
+func GetTeamSettings(dataBase moira.Database, teamID string) (dto.TeamSettings, *api.ErrorResponse) {
 	teamSettings := dto.TeamSettings{
 		TeamID:        teamID,
 		Contacts:      make([]moira.ContactData, 0),
 		Subscriptions: make([]moira.SubscriptionData, 0),
 	}
 
-	subscriptionIDs, err := database.GetTeamSubscriptionIDs(teamID)
+	subscriptionIDs, err := dataBase.GetTeamSubscriptionIDs(teamID)
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
 
-	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
+	subscriptions, err := dataBase.GetSubscriptions(subscriptionIDs)
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
@@ -447,12 +446,12 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 			teamSettings.Subscriptions = append(teamSettings.Subscriptions, *subscription)
 		}
 	}
-	contactIDs, err := database.GetTeamContactIDs(teamID)
+	contactIDs, err := dataBase.GetTeamContactIDs(teamID)
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
 
-	contacts, err := database.GetContacts(contactIDs)
+	contacts, err := dataBase.GetContacts(contactIDs)
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}

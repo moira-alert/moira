@@ -33,7 +33,7 @@ type scriptNotification struct {
 }
 
 // Init read yaml config.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings any, logger moira.Logger, _ *time.Location, _ string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -52,7 +52,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 }
 
 // SendEvents implements Sender interface Send.
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
 	scriptFile, args, scriptBody, err := sender.buildCommandData(events, contact, trigger, throttled)
 	if err != nil {
 		return err

@@ -55,7 +55,7 @@ type Sender struct {
 }
 
 // Init initialises settings required for full functionality.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings any, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -67,13 +67,13 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.frontURI = cfg.FrontURI
 	sender.maxEvents = cfg.MaxEvents
 	sender.client = &http.Client{
-		Timeout: time.Duration(30) * time.Second, //nolint
+		Timeout: time.Duration(30) * time.Second,
 	}
 	return nil
 }
 
 // SendEvents implements Sender interface Send.
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
 	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
 		return err

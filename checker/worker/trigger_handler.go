@@ -14,7 +14,7 @@ import (
 const sleepAfterCheckingError = time.Second * 2
 
 // startTriggerHandler is a blocking func.
-func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics) error {
+func (manager *Manager) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics) error {
 	for {
 		triggerID, ok := <-triggerIDsToCheck
 		if !ok {
@@ -35,7 +35,7 @@ func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan strin
 	}
 }
 
-func (manager *WorkerManager) handleTrigger(triggerID string, metrics *metrics.CheckMetrics) (err error) {
+func (manager *Manager) handleTrigger(triggerID string, metrics *metrics.CheckMetrics) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: '%s' stack: %s", r, debug.Stack())
@@ -45,7 +45,7 @@ func (manager *WorkerManager) handleTrigger(triggerID string, metrics *metrics.C
 	return err
 }
 
-func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics) error {
+func (manager *Manager) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics) error {
 	acquired, err := manager.Database.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *met
 	return err
 }
 
-func (manager *WorkerManager) checkTrigger(triggerID string) error {
+func (manager *Manager) checkTrigger(triggerID string) error {
 	triggerChecker, err := checker.MakeTriggerChecker(
 		triggerID,
 		manager.Database,

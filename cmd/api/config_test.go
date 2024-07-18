@@ -123,7 +123,7 @@ func Test_webConfig_getDefault(t *testing.T) {
 func Test_webConfig_getSettings(t *testing.T) {
 	metricSourceClustersDefault := []api.MetricSourceCluster{{
 		TriggerSource: moira.GraphiteLocal,
-		ClusterId:     moira.DefaultCluster,
+		ClusterID:     moira.DefaultCluster,
 		ClusterName:   "Graphite Local",
 	}}
 	remotesDefault := cmd.RemotesConfig{}
@@ -213,13 +213,13 @@ func Test_webConfig_getSettings(t *testing.T) {
 		remotes := cmd.RemotesConfig{
 			Graphite: []cmd.GraphiteRemoteConfig{{
 				RemoteCommonConfig: cmd.RemoteCommonConfig{
-					ClusterId:   "default",
+					ClusterID:   "default",
 					ClusterName: "Graphite Remote 123",
 				},
 			}},
 			Prometheus: []cmd.PrometheusRemoteConfig{{
 				RemoteCommonConfig: cmd.RemoteCommonConfig{
-					ClusterId:   "default",
+					ClusterID:   "default",
 					ClusterName: "Prometheus Remote 888",
 				},
 			}},
@@ -232,17 +232,17 @@ func Test_webConfig_getSettings(t *testing.T) {
 			MetricSourceClusters: []api.MetricSourceCluster{
 				{
 					TriggerSource: moira.GraphiteLocal,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 					ClusterName:   "Graphite Local",
 				},
 				{
 					TriggerSource: moira.GraphiteRemote,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 					ClusterName:   "Graphite Remote 123",
 				},
 				{
 					TriggerSource: moira.PrometheusRemote,
-					ClusterId:     moira.DefaultCluster,
+					ClusterID:     moira.DefaultCluster,
 					ClusterName:   "Prometheus Remote 888",
 				},
 			},

@@ -29,7 +29,7 @@ type triggerStorageElement struct {
 	TTL              string              `json:"ttl,omitempty"`
 	IsRemote         bool                `json:"is_remote"`
 	TriggerSource    moira.TriggerSource `json:"trigger_source,omitempty"`
-	ClusterId        moira.ClusterId     `json:"cluster_id,omitempty"`
+	ClusterID        moira.ClusterID     `json:"cluster_id,omitempty"`
 	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
 	AloneMetrics     map[string]bool     `json:"alone_metrics"`
 	CreatedAt        *int64              `json:"created_at"`
@@ -51,7 +51,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 
 	triggerSource := storageElement.TriggerSource.FillInIfNotSet(storageElement.IsRemote)
-	clusterId := storageElement.ClusterId.FillInIfNotSet()
+	clusterID := storageElement.ClusterID.FillInIfNotSet()
 	return moira.Trigger{
 		ID:               storageElement.ID,
 		Name:             storageElement.Name,
@@ -68,7 +68,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		Patterns:         storageElement.Patterns,
 		TTL:              getTriggerTTL(storageElement.TTL),
 		TriggerSource:    triggerSource,
-		ClusterId:        clusterId,
+		ClusterID:        clusterID,
 		MuteNewMetrics:   storageElement.MuteNewMetrics,
 		AloneMetrics:     storageElement.AloneMetrics,
 		CreatedAt:        storageElement.CreatedAt,
@@ -96,7 +96,7 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		TTL:              getTriggerTTLString(trigger.TTL),
 		IsRemote:         trigger.TriggerSource == moira.GraphiteRemote,
 		TriggerSource:    trigger.TriggerSource,
-		ClusterId:        trigger.ClusterId,
+		ClusterID:        trigger.ClusterID,
 		MuteNewMetrics:   trigger.MuteNewMetrics,
 		AloneMetrics:     trigger.AloneMetrics,
 		CreatedAt:        trigger.CreatedAt,

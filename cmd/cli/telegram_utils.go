@@ -25,7 +25,7 @@ func callFunc(connector *redis.DbConnector, fn func(connector *redis.DbConnector
 
 	switch c := client.(type) {
 	case *goredis.ClusterClient:
-		return c.ForEachMaster(ctx, func(ctx context.Context, shard *goredis.Client) error {
+		return c.ForEachMaster(ctx, func(_ context.Context, shard *goredis.Client) error {
 			return fn(connector, shard)
 		})
 	default:

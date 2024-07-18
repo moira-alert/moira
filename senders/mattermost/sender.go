@@ -18,7 +18,7 @@ import (
 
 // Structure that represents the Mattermost configuration in the YAML file.
 type config struct {
-	Url          string            `mapstructure:"url"`
+	URL          string            `mapstructure:"url"`
 	InsecureTLS  bool              `mapstructure:"insecure_tls"`
 	APIToken     string            `mapstructure:"api_token"`
 	FrontURI     string            `mapstructure:"front_uri"`
@@ -45,18 +45,18 @@ const (
 )
 
 // Init configures Sender.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
+func (sender *Sender) Init(senderSettings any, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
 	}
 
-	if cfg.Url == "" {
+	if cfg.URL == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
 
-	client := model.NewAPIv4Client(cfg.Url)
+	client := model.NewAPIv4Client(cfg.URL)
 
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{

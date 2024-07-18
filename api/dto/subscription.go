@@ -95,7 +95,7 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 		return err
 	}
 
-	contactIDsHash := make(map[string]interface{})
+	contactIDsHash := make(map[string]any)
 	for _, contactId := range contactIDs {
 		contactIDsHash[contactId] = true
 	}

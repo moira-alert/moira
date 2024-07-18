@@ -33,7 +33,7 @@ type throttlingLevel struct {
 }
 
 // NewScheduler is initializer for StandardScheduler.
-func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics, config SchedulerConfig, clock moira.Clock,
+func NewScheduler(database moira.Database, _ moira.Logger, metrics *metrics.NotifierMetrics, config SchedulerConfig, clock moira.Clock,
 ) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,

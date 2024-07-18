@@ -62,10 +62,10 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 	}
 
 	logDir := filepath.Dir(logFileName)
-	if err := os.MkdirAll(logDir, 0o755); err != nil { //nolint:gofumpt,gomnd
+	if err := os.MkdirAll(logDir, 0o755); err != nil { //nolint:gofumpt
 		return nil, fmt.Errorf("can't create log directories %s: %s", logDir, err.Error())
 	}
-	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gofumpt,gomnd
+	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gofumpt
 	if err != nil {
 		return nil, fmt.Errorf("can't open log file %s: %s", logFileName, err.Error())
 	}
@@ -107,7 +107,7 @@ func (l *Logger) Int64(key string, value int64) moira.Logger {
 	return l
 }
 
-func (l *Logger) Fields(fields map[string]interface{}) moira.Logger {
+func (l *Logger) Fields(fields map[string]any) moira.Logger {
 	l.logger = l.logger.With().Fields(fields).Logger()
 	return l
 }

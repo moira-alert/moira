@@ -30,8 +30,8 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	return &contactsList, nil
 }
 
-// GetContactById gets notification contact by its id string.
-func GetContactById(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
+// GetContactByID gets notification contact by its id string.
+func GetContactByID(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
 	contact, err := database.GetContact(contactID)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
@@ -160,6 +160,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 			if contact == contactID {
 				subscription.Contacts = append(subscription.Contacts[:i], subscription.Contacts[i+1:]...)
 				subscriptionsWithDeletingContact = append(subscriptionsWithDeletingContact, subscription)
+
 				break
 			}
 		}

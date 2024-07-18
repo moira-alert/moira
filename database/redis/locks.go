@@ -40,7 +40,7 @@ func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 			return nil, database.ErrLockAlreadyHeld
 		}
 
-		switch e := err.(type) { // nolint:errorlint
+		switch e := err.(type) { // nolint:errorlint,revive
 		case *database.ErrLockNotAcquired:
 			if !errors.Is(e.Err, redsync.ErrFailed) {
 				return nil, err

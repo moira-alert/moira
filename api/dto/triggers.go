@@ -77,7 +77,7 @@ type TriggerModel struct {
 	// Shows the type of source from where the metrics are fetched
 	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_local"`
 	// Shows the exact cluster from where the metrics are fetched
-	ClusterId moira.ClusterId `json:"cluster_id" example:"default"`
+	ClusterId moira.ClusterID `json:"cluster_id" example:"default"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics" example:"false"`
 	// A list of targets that have only alone metrics
@@ -114,7 +114,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Expression:     &model.Expression,
 		Patterns:       model.Patterns,
 		TriggerSource:  model.TriggerSource,
-		ClusterId:      model.ClusterId,
+		ClusterID:      model.ClusterId,
 		MuteNewMetrics: model.MuteNewMetrics,
 		AloneMetrics:   model.AloneMetrics,
 		UpdatedBy:      model.UpdatedBy,
@@ -139,7 +139,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Patterns:       trigger.Patterns,
 		IsRemote:       trigger.TriggerSource == moira.GraphiteRemote,
 		TriggerSource:  trigger.TriggerSource,
-		ClusterId:      trigger.ClusterId,
+		ClusterId:      trigger.ClusterID,
 		MuteNewMetrics: trigger.MuteNewMetrics,
 		AloneMetrics:   trigger.AloneMetrics,
 		CreatedAt:      getDateTime(trigger.CreatedAt),

@@ -25,11 +25,11 @@ func (imageStore *ImageStore) StoreImage(image []byte) (string, error) {
 }
 
 func (imageStore *ImageStore) buildUploadInput(image []byte) (*s3manager.UploadInput, error) {
-	uuid, err := uuid.NewV4()
+	plotUUID, err := uuid.NewV4()
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate uuid: %w", err)
+		return nil, fmt.Errorf("failed to generate plotUUID: %w", err)
 	}
-	key := "moira-plots/" + uuid.String()
+	key := "moira-plots/" + plotUUID.String()
 	return &s3manager.UploadInput{
 		Bucket:             aws.String(imageStore.bucket),
 		Key:                aws.String(key),

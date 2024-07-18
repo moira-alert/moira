@@ -14,13 +14,13 @@ type Sender struct {
 }
 
 // Init read yaml config.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(_ any, logger moira.Logger, _ *time.Location, _ string) error {
 	sender.logger = logger
 	return nil
 }
 
 // SendEvents implements Sender interface Send.
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, _ moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
 	selfState, err := sender.Database.GetNotifierState()
 	if err != nil {
 		return fmt.Errorf("failed to get notifier state: %s", err.Error())

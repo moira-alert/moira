@@ -140,7 +140,7 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 		Msg(entry.msg)
 }
 
-func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration, v interface{}, stack []byte) {
+func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration, v any, stack []byte) {
 	entry.logger.Error().
 		Int("http_status", status).
 		Int("http_content_length", bytes).

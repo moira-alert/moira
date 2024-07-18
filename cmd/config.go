@@ -186,16 +186,16 @@ func (remotes *RemotesConfig) Validate() error {
 func validateRemotes[T remoteCommon](remotes []T) []error {
 	errs := make([]error, 0)
 
-	keys := make(map[moira.ClusterId]int)
+	keys := make(map[moira.ClusterID]int)
 	for _, remote := range remotes {
 		common := remote.getRemoteCommon()
-		if common.ClusterId == moira.ClusterNotSet {
+		if common.ClusterID == moira.ClusterNotSet {
 			err := fmt.Errorf("cluster id must be set for remote source (name: `%s`, url: `%s`)",
 				common.ClusterName, common.URL,
 			)
 			errs = append(errs, err)
 		}
-		keys[common.ClusterId]++
+		keys[common.ClusterID]++
 	}
 
 	for key, count := range keys {
@@ -211,7 +211,7 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 // RemoteCommonConfig is designed to be embedded in remote configs, It contains fields that are similar for all remotes.
 type RemoteCommonConfig struct {
 	// Unique id of the cluster
-	ClusterId moira.ClusterId `yaml:"cluster_id"`
+	ClusterID moira.ClusterID `yaml:"cluster_id"`
 	// Human-readable name of the cluster
 	ClusterName string `yaml:"cluster_name"`
 	// graphite url e.g http://graphite/render
@@ -297,7 +297,7 @@ type ImageStoreConfig struct {
 }
 
 // ReadConfig parses config file by the given path into Moira-used type.
-func ReadConfig(configFileName string, config interface{}) error {
+func ReadConfig(configFileName string, config any) error {
 	configYaml, err := os.ReadFile(configFileName)
 	if err != nil {
 		return fmt.Errorf("can't read file [%s] [%s]", configFileName, err.Error())
@@ -310,7 +310,7 @@ func ReadConfig(configFileName string, config interface{}) error {
 }
 
 // PrintConfig prints config to stdout.
-func PrintConfig(config interface{}) {
+func PrintConfig(config any) {
 	d, _ := yaml.Marshal(&config)
 	fmt.Println(string(d))
 }

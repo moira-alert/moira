@@ -224,7 +224,7 @@ func TestTimeout(t *testing.T) {
 	}
 
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
-	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
+	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(_ ...interface{}) { close(shutdown) })
 
 	standardNotifier.Send(&pkg2, &wg)
 	wg.Wait()
@@ -242,7 +242,7 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T, config Config) {
-	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry())
 
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)

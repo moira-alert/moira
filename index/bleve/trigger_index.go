@@ -13,7 +13,7 @@ type TriggerIndex struct {
 
 // CreateTriggerIndex returns TriggerIndex by provided mapping.
 func CreateTriggerIndex(mapping mapping.IndexMapping) (*TriggerIndex, error) {
-	bleveIdx, err := bleve.NewUsing("", mapping, scorch.Name, scorch.Name, map[string]interface{}{})
+	bleveIdx, err := bleve.NewUsing("", mapping, scorch.Name, scorch.Name, map[string]any{})
 	if err != nil {
 		return nil, err
 	}

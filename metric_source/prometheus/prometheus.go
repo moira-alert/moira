@@ -24,12 +24,12 @@ type Config struct {
 }
 
 func Create(config *Config, logger moira.Logger) (metricSource.MetricSource, error) {
-	promApi, err := createPrometheusApi(config)
+	promAPI, err := createPrometheusAPI(config)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Prometheus{config: config, api: promApi, logger: logger}, nil
+	return &Prometheus{config: config, api: promAPI, logger: logger}, nil
 }
 
 type Prometheus struct {

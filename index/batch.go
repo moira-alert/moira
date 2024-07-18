@@ -14,10 +14,11 @@ func (index *Index) writeByBatches(triggerIDs []string, batchSize int) error {
 	return index.handleTriggerBatches(triggerChecksChan, errorsChan, len(triggerIDs))
 }
 
-func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (triggerChecksChan chan []*moira.TriggerCheck, errors chan error) {
+func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (chan []*moira.TriggerCheck, chan error) {
 	wg := sync.WaitGroup{}
-	triggerChecksChan = make(chan []*moira.TriggerCheck)
-	errors = make(chan error)
+	triggerChecksChan := make(chan []*moira.TriggerCheck, len(triggerIDsBatches))
+	errors := make(chan error, len(triggerIDsBatches))
+
 	for _, triggerIDsBatch := range triggerIDsBatches {
 		wg.Add(1)
 		go func(batch []string) {
@@ -36,12 +37,14 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 			triggerChecksChan <- newBatch
 		}(triggerIDsBatch)
 	}
+
 	go func() {
 		wg.Wait()
 		close(triggerChecksChan)
 		close(errors)
 	}()
-	return
+
+	return triggerChecksChan, errors
 }
 
 func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.TriggerCheck, error) {

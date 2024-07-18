@@ -269,7 +269,7 @@ func addSendSubscriptionRequest(context context.Context, pipe redis.Pipeliner, s
 	return nil
 }
 
-func (connector *DbConnector) getTriggersIdsByTags(tags []string) ([]string, error) {
+func (connector *DbConnector) getTriggersIDsByTags(tags []string) ([]string, error) {
 	if len(tags) == 0 {
 		return make([]string, 0), nil
 	}
@@ -293,7 +293,7 @@ func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.Subscr
 	if subscription == nil {
 		return make([]*moira.Trigger, 0), nil
 	}
-	triggersIDs, err := connector.getTriggersIdsByTags(subscription.Tags)
+	triggersIDs, err := connector.getTriggersIDsByTags(subscription.Tags)
 	if err != nil {
 		return nil, err
 	}

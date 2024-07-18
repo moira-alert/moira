@@ -44,7 +44,7 @@ type TriggerExpression struct {
 }
 
 // Get realizing govaluate.Parameters interface used in evaluable expression.
-func (triggerExpression TriggerExpression) Get(name string) (interface{}, error) {
+func (triggerExpression TriggerExpression) Get(name string) (any, error) {
 	name = strings.ToLower(name)
 
 	switch name {

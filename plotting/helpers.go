@@ -29,7 +29,7 @@ func percentsOfRange(min, max, percent float64) float64 {
 
 // getTimeValueFormatter returns a time formatter with a given format and timezone.
 func getTimeValueFormatter(location *time.Location, format string) chart.ValueFormatter {
-	return func(v interface{}) string {
+	return func(v any) string {
 		storage := &locationStorage{location: location}
 		return storage.formatTimeWithLocation(v, format)
 	}
@@ -42,7 +42,7 @@ type locationStorage struct {
 }
 
 // TimeValueFormatterWithFormat is a ValueFormatter for timestamps with a given format.
-func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat string) string {
+func (storage locationStorage) formatTimeWithLocation(v any, dateFormat string) string {
 	if typed, isTyped := v.(time.Time); isTyped {
 		return typed.In(storage.location).Format(dateFormat)
 	}
@@ -57,8 +57,8 @@ func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat 
 
 // getYAxisValuesFormatter returns value formatter
 // for values on yaxis and resolved maximal formatted value length.
-func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int) {
-	var formatter func(v interface{}) string
+func getYAxisValuesFormatter(limits plotLimits) (func(v any) string, int) {
+	var formatter func(v any) string
 	deltaLimits := int64(limits.highest) - int64(limits.lowest)
 	if deltaLimits > 10 { //nolint
 		formatter = floatToHumanizedValueFormatter
@@ -74,7 +74,7 @@ func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int
 }
 
 // floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot.
-func floatToHumanizedValueFormatter(v interface{}) string {
+func floatToHumanizedValueFormatter(v any) string {
 	if typed, isTyped := v.(float64); isTyped {
 		if math.Abs(typed) < 1000 { //nolint
 			return fmt.Sprintf("%.f", typed)

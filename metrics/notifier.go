@@ -19,7 +19,7 @@ type NotifierMetrics struct {
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
-func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics {
+func ConfigureNotifierMetrics(registry Registry) *NotifierMetrics {
 	return &NotifierMetrics{
 		SubsMalformed:                  registry.NewMeter("subs", "malformed"),
 		EventsReceived:                 registry.NewMeter("events", "received"),

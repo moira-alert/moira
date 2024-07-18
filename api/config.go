@@ -53,10 +53,10 @@ type WebConfig struct {
 // MetricSourceCluster contains data about supported metric source cluster.
 type MetricSourceCluster struct {
 	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_remote"`
-	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`
+	ClusterID     moira.ClusterID     `json:"cluster_id" example:"default"`
 	ClusterName   string              `json:"cluster_name" example:"Graphite Remote Prod"`
 }
 
-func (WebConfig) Render(w http.ResponseWriter, r *http.Request) error {
+func (WebConfig) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }

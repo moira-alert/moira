@@ -27,7 +27,7 @@ func TestTriggerValidation(t *testing.T) {
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
-		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
+		request, _ := http.NewRequest(http.MethodPut, "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")
 		ctx := request.Context()
 		ctx = context.WithValue(ctx, middleware.ContextKey("metricSourceProvider"), sourceProvider)
@@ -309,7 +309,7 @@ func TestTriggerModel_ToMoiraTrigger(t *testing.T) {
 			Expression:     &expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
-			ClusterId:      moira.DefaultCluster,
+			ClusterID:      moira.DefaultCluster,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,
@@ -351,7 +351,7 @@ func TestCreateTriggerModel(t *testing.T) {
 			Expression:     &expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
-			ClusterId:      moira.DefaultCluster,
+			ClusterID:      moira.DefaultCluster,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,

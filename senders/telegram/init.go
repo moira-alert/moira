@@ -40,12 +40,12 @@ type config struct {
 
 // Bot is abstraction over gopkg.in/telebot.v3#Bot.
 type Bot interface {
-	Handle(endpoint interface{}, h telebot.HandlerFunc, m ...telebot.MiddlewareFunc)
+	Handle(endpoint any, h telebot.HandlerFunc, m ...telebot.MiddlewareFunc)
 	Start()
 	Stop()
-	Send(to telebot.Recipient, what interface{}, opts ...interface{}) (*telebot.Message, error)
-	SendAlbum(to telebot.Recipient, a telebot.Album, opts ...interface{}) ([]telebot.Message, error)
-	Reply(to *telebot.Message, what interface{}, opts ...interface{}) (*telebot.Message, error)
+	Send(to telebot.Recipient, what any, opts ...any) (*telebot.Message, error)
+	SendAlbum(to telebot.Recipient, a telebot.Album, opts ...any) ([]telebot.Message, error)
+	Reply(to *telebot.Message, what any, opts ...any) (*telebot.Message, error)
 	ChatByUsername(name string) (*telebot.Chat, error)
 }
 
@@ -67,7 +67,7 @@ func (sender *Sender) removeTokenFromError(err error) error {
 }
 
 // Init loads yaml config, configures and starts telegram bot.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings any, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {

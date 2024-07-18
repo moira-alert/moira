@@ -163,7 +163,7 @@ func (connector *DbConnector) callFunc(fn func(connector *DbConnector, client re
 
 	switch c := client.(type) {
 	case *redis.ClusterClient:
-		return c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+		return c.ForEachMaster(connector.context, func(_ context.Context, shard *redis.Client) error {
 			return fn(connector, shard)
 		})
 	default:

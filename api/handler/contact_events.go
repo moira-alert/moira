@@ -20,7 +20,7 @@ func contactEvents(router chi.Router) {
 	router.Route("/{contactId}/events", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
-		router.With(middleware.DateRange("-3hour", "now")).Get("/", getContactByIdWithEvents)
+		router.With(middleware.DateRange("-3hour", "now")).Get("/", getContactByIDWithEvents)
 	})
 }
 
@@ -40,7 +40,7 @@ func contactEvents(router chi.Router) {
 //	@failure	422			{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact/{contactID}/events [get]
-func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request) {
+func getContactByIDWithEvents(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
@@ -54,7 +54,7 @@ func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request)
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
 		return
 	}
-	contactWithEvents, err := controller.GetContactEventsByIdWithLimit(database, contactData.ID, from, to)
+	contactWithEvents, err := controller.GetContactEventsByIDWithLimit(database, contactData.ID, from, to)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 	}

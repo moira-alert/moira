@@ -9,7 +9,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
 )
 
 func TestMakeMessage(t *testing.T) {
@@ -47,17 +47,17 @@ some other text _italics text_`,
 		logger:       logger,
 	}
 
-	Convey("Make message", t, func() {
+	convey.Convey("Make message", t, func() {
 		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, [][]byte{{1, 0, 1}}, true)
-		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
-		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
+		convey.So(message.GetHeader("From")[0], convey.ShouldEqual, sender.From)
+		convey.So(message.GetHeader("To")[0], convey.ShouldEqual, contact.Value)
 
 		messageStr := new(bytes.Buffer)
 		_, err := message.WriteTo(messageStr)
-		So(err, ShouldBeNil)
-		So(messageStr.String(), ShouldContainSubstring, "http://localhost/trigger/triggerID-0000000000001")
-		So(messageStr.String(), ShouldContainSubstring, "<em>italics text</em>")
-		So(messageStr.String(), ShouldContainSubstring, "<strong>bold text</strong>")
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(messageStr.String(), convey.ShouldContainSubstring, "http://localhost/trigger/triggerID-0000000000001")
+		convey.So(messageStr.String(), convey.ShouldContainSubstring, "<em>italics text</em>")
+		convey.So(messageStr.String(), convey.ShouldContainSubstring, "<strong>bold text</strong>")
 	})
 }
 
@@ -105,14 +105,14 @@ func TestEmptyTriggerID(t *testing.T) {
 		logger:       logger,
 	}
 
-	Convey("Make message", t, func() {
+	convey.Convey("Make message", t, func() {
 		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, [][]byte{{1, 0, 1}}, true)
-		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
-		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
+		convey.So(message.GetHeader("From")[0], convey.ShouldEqual, sender.From)
+		convey.So(message.GetHeader("To")[0], convey.ShouldEqual, contact.Value)
 		messageStr := new(bytes.Buffer)
 		_, err := message.WriteTo(messageStr)
-		So(err, ShouldBeNil)
-		So(messageStr.String(), ShouldNotContainSubstring, "http://localhost/trigger/")
-		So(messageStr.String(), ShouldNotContainSubstring, "<p><a href=3D\"\"></a></p>")
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(messageStr.String(), convey.ShouldNotContainSubstring, "http://localhost/trigger/")
+		convey.So(messageStr.String(), convey.ShouldNotContainSubstring, "<p><a href=3D\"\"></a></p>")
 	})
 }

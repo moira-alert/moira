@@ -32,14 +32,14 @@ func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
 	ctx := connector.context
 	c := *connector.client
 
-	triggerIds, err := c.SMembers(ctx, unusedTriggersKey).Result()
+	triggerIDs, err := c.SMembers(ctx, unusedTriggersKey).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return make([]string, 0), nil
 		}
 		return nil, fmt.Errorf("failed to get all unused triggers: %s", err.Error())
 	}
-	return triggerIds, nil
+	return triggerIDs, nil
 }
 
 // MarkTriggersAsUsed removes trigger IDs from Redis set.

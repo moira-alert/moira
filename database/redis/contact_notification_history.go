@@ -29,7 +29,7 @@ func getNotificationStruct(notificationString string) (moira.NotificationEventHi
 	return object, nil
 }
 
-func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*moira.NotificationEventHistoryItem, error) {
+func (connector *DbConnector) GetNotificationsByContactIDWithLimit(contactID string, from int64, to int64) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
 	var notifications []*moira.NotificationEventHistoryItem
 

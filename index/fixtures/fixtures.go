@@ -85,7 +85,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			},
 			triggerTags:      []string{"DND-generator", "common"},
 			triggerCreatedBy: "test",
-			triggerScore:     30, //nolint
+			triggerScore:     30,
 		},
 		{
 			triggerID: "SuperTrigger2",

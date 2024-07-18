@@ -282,7 +282,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 			ID:            triggerID,
 			Targets:       []string{pattern},
 			TriggerSource: moira.PrometheusRemote,
-			ClusterId:     moira.DefaultCluster,
+			ClusterID:     moira.DefaultCluster,
 		}
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
@@ -295,7 +295,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 			ID:            triggerID,
 			Targets:       []string{pattern},
 			TriggerSource: moira.GraphiteLocal,
-			ClusterId:     moira.DefaultCluster,
+			ClusterID:     moira.DefaultCluster,
 		}, nil)
 		localSource.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
 		fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
@@ -328,7 +328,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 			ID:            triggerID,
 			Targets:       []string{pattern},
 			TriggerSource: moira.GraphiteRemote,
-			ClusterId:     moira.DefaultCluster,
+			ClusterID:     moira.DefaultCluster,
 		}, nil)
 		remoteSource.EXPECT().Fetch(pattern, from, until, false).Return(nil, expectedError)
 

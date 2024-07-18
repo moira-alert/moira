@@ -33,7 +33,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			getTriggerError := fmt.Errorf("Oppps! Can't read trigger")
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
 				TriggerSource: moira.GraphiteLocal,
-				ClusterId:     moira.DefaultCluster,
+				ClusterID:     moira.DefaultCluster,
 			}, getTriggerError)
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
 			So(err, ShouldBeError)
@@ -43,7 +43,7 @@ func TestInitTriggerChecker(t *testing.T) {
 		Convey("No trigger error", func() {
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
 				TriggerSource: moira.GraphiteLocal,
-				ClusterId:     moira.DefaultCluster,
+				ClusterID:     moira.DefaultCluster,
 			}, database.ErrNil)
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
 			So(err, ShouldBeError)
@@ -55,7 +55,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
 				TriggerType:   moira.RisingTrigger,
 				TriggerSource: moira.GraphiteLocal,
-				ClusterId:     moira.DefaultCluster,
+				ClusterID:     moira.DefaultCluster,
 			}, nil)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, readLastCheckError)
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
@@ -80,7 +80,7 @@ func TestInitTriggerChecker(t *testing.T) {
 		Patterns:      []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
 		TTL:           ttl,
 		TriggerSource: moira.GraphiteLocal,
-		ClusterId:     moira.DefaultCluster,
+		ClusterID:     moira.DefaultCluster,
 	}
 
 	metrics, _ := checkerMetrics.GetCheckMetrics(&trigger)

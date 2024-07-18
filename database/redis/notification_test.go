@@ -308,7 +308,7 @@ func TestGetNotificationsInTxWithLimit(t *testing.T) {
 	ctx := database.context
 
 	Convey("Test getNotificationsInTxWithLimit", t, func() {
-		var limit int64 = 0
+		var limit int64
 		now = time.Now().Unix()
 		notificationNew := moira.ScheduledNotification{
 			SendFail:  1,
@@ -589,7 +589,7 @@ func TestFilterNotificationsByState(t *testing.T) {
 		})
 
 		Convey("With trigger on maintenance", func() {
-			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
+			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
 				triggerMaintenance = 0
@@ -732,7 +732,7 @@ func TestHandleNotifications(t *testing.T) {
 		})
 
 		Convey("With both delayed and not delayed valid notifications and trigger on maintenance", func() {
-			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
+			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
 				triggerMaintenance = 0
@@ -1066,7 +1066,7 @@ func TestFetchNotificationsDo(t *testing.T) {
 		})
 
 		Convey("Test delayed notifications with ts and trigger on maintenance", func() {
-			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
+			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			defer func() {
 				triggerMaintenance = 0

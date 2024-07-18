@@ -1,6 +1,5 @@
 linters-settings:
   govet:
-    check-shadowing: true
     settings:
       printf:
         funcs:
@@ -10,31 +9,103 @@ linters-settings:
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
   gocyclo:
     min-complexity: 15
-  maligned:
-    suggest-new: true
   unparam:
     check-exported: false
-  gomnd:
-    settings:
-      mnd:
-        checks: argument,case,condition,return
-        ignored-numbers: 1,2,3,5,10,60,64,100,600,0755,0644,0666
+  revive:
+    enable-all-rules: true
+    rules:
+      - name: unhandled-error
+        disabled: true
+      - name: unexported-return
+        disabled: true
+      - name: line-length-limit
+        disabled: true
+      - name: add-constant
+        disabled: true
+      - name:  cognitive-complexity
+        disabled: true
+      - name: cyclomatic
+        disabled: true
+      - name: flag-parameter
+        disabled: true
+      - name: unused-receiver
+        disabled: true
+      - name:  unchecked-type-assertion
+        disabled: true
+      - name: get-return
+        disabled: true
+      - name: function-length
+        disabled: true
+      - name: import-shadowing
+        disabled: true
+      - name: bare-return
+        disabled: true
+      - name: import-alias-naming
+        disabled: true
+      - name: function-result-limit
+        disabled: true
+      - name: confusing-naming
+        disabled: true
+      - name: receiver-naming
+        disabled: true
+      - name: var-naming
+        disabled: true
+      - name: confusing-results
+        disabled: true
+      - name: max-public-structs
+        disabled: true
+      - name: deep-exit
+        disabled: true
+      - name: modifies-value-receiver
+        disabled: true
+      - name: exported
+        disabled: true
+      - name: unnecessary-stmt
+        disabled: true
+
+  mnd:
+    checks:
+    - argument
+    - case
+    - condition
+    - return
+    ignored-numbers:
+    - '1'
+    - '2'
+    - '3'
+    - '5'
+    - '10'
+    - '30'
+    - '60'
+    - '64'
+    - '100'
+    - '600'
+    - '0755'
+    - '0644'
+    - '0666'
+    - '0o666'
+    - '0o644'
+    - '0o755'
 
 linters:
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
     - asasalint
     - asciicheck
     - bidichk
     - bodyclose
+    - contextcheck
     - decorder
     - dogsled
+    - durationcheck
     - errcheck
     - errorlint
     - exportloopref
-    - goconst
+    - fatcontext
+    - ginkgolinter
     - gocheckcompilerdirectives
+    - gochecksumtype
+    - goconst
     - gocyclo
     - goconst
     - godot
@@ -42,7 +113,6 @@ linters:
     - gofumpt
     - goheader
     - goimports
-    - gomnd
     - gosimple
     - govet
     - grouper
@@ -50,28 +120,45 @@ linters:
     - loggercheck
     - makezero
     - misspell
+    - mnd
     - nilerr
     - noctx
+    - nosprintfhostport
     - prealloc
+    - predeclared
     - promlinter
+    - protogetter
+    - reassign
+    - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
     - staticcheck
+    - testifylint
+    - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
+    - usestdlibvars
+    - wastedassign
     - whitespace
 
 issues:
+  exclude-dirs:
+    - vendor
+  exclude-files:
+    - notifier/registrator.go
   exclude-rules:
     - path: _test\.go
       linters:
-        - gomnd
+        - contextcheck
+        - mnd
+        - err113
         - errcheck
         - goconst
+        - revive
 
 run:
   timeout: 5m
-  skip-files:
-    - notifier/registrator.go
-  skip-dirs:
-    - vendor

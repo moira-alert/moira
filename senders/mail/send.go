@@ -115,8 +115,6 @@ func (sender *Sender) dialAndSend(message *gomail.Message) error {
 	if sender.Password != "" {
 		d.Auth = smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPHost)
 	}
-	if err := d.DialAndSend(message); err != nil {
-		return err
-	}
-	return nil
+
+	return d.DialAndSend(message)
 }

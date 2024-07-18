@@ -34,7 +34,7 @@ func (err ErrUnknownFunction) Error() string {
 
 // isErrUnknownFunction checks error for carbonapi.errUnknownFunction.
 func isErrUnknownFunction(err error) bool {
-	switch merry.Unwrap(err).(type) { // nolint:errorlint
+	switch merry.Unwrap(err).(type) { // nolint:errorlint,revive
 	case helper.ErrUnknownFunction:
 		return true
 	}
@@ -66,7 +66,7 @@ func (err ErrEvalExpr) Error() string {
 // ErrEvaluateTargetFailedWithPanic used to identify occurred error as a result of recover from panic.
 type ErrEvaluateTargetFailedWithPanic struct {
 	target         string
-	recoverMessage interface{}
+	recoverMessage any
 	stackRecord    []byte
 }
 

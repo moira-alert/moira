@@ -245,13 +245,13 @@ func populate(tmpl string, data any) (populatedTemplate string, err error) {
 
 	buffer := bytes.Buffer{}
 
-	template := template.New("populate-template").Funcs(sprigFuncMap).Funcs(funcMap)
+	templateFunc := template.New("populate-templateFunc").Funcs(sprigFuncMap).Funcs(funcMap)
 
-	if template, err = template.Parse(tmpl); err != nil {
+	if templateFunc, err = templateFunc.Parse(tmpl); err != nil {
 		return tmpl, err
 	}
 
-	if err = template.Execute(&buffer, data); err != nil {
+	if err = templateFunc.Execute(&buffer, data); err != nil {
 		return tmpl, err
 	}
 
