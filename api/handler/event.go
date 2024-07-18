@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"fmt"
+	"github.com/go-graphite/carbonapi/date"
+	"github.com/moira-alert/moira"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -11,7 +15,13 @@ import (
 )
 
 func event(router chi.Router) {
-	router.With(middleware.TriggerContext, middleware.Paginate(0, 100)).Get("/{triggerId}", getEventsList)
+	router.With(
+		middleware.TriggerContext,
+		middleware.Paginate(0, 100),
+		middleware.DateRange("-3hour", "now"),
+		middleware.MetricProvider("*"),
+		middleware.StateProvider("*"),
+	).Get("/{triggerId}", getEventsList)
 	router.With(middleware.AdminOnlyMiddleware()).Delete("/all", deleteAllEvents)
 }
 
@@ -34,7 +44,25 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	size := middleware.GetSize(request)
 	page := middleware.GetPage(request)
-	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size)
+	fromStr := middleware.GetFromStr(request)
+	toStr := middleware.GetToStr(request)
+	from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
+	if from == 0 {
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr))) //nolint
+		return
+	}
+	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
+	if to == 0 {
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
+		return
+	}
+	state := middleware.GetStateString(request)
+	if !moira.IsValidState(state) && state != "*" {
+		// TODO: better error description
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid state")))
+		return
+	}
+	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size, from, to, "", "")
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return

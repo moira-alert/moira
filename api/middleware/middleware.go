@@ -63,7 +63,7 @@ func GetTriggerID(request *http.Request) string {
 	return request.Context().Value(triggerIDKey).(string)
 }
 
-// GetLocalMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware.
+// GetMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware.
 func GetMetricTTL(request *http.Request) map[moira.ClusterKey]time.Duration {
 	return request.Context().Value(clustersMetricTTLKey).(map[moira.ClusterKey]time.Duration)
 }
@@ -118,7 +118,7 @@ func GetToStr(request *http.Request) string {
 	return request.Context().Value(toKey).(string)
 }
 
-// SetTimeSeriesNames sets to requests context timeSeriesNames from saved trigger.
+// SetTimeSeriesNames sets to request's context timeSeriesNames from saved trigger.
 func SetTimeSeriesNames(request *http.Request, timeSeriesNames map[string]bool) {
 	ctx := context.WithValue(request.Context(), timeSeriesNamesKey, timeSeriesNames)
 	*request = *request.WithContext(ctx)
@@ -161,4 +161,26 @@ func SetContextValueForTest(ctx context.Context, key string, value interface{}) 
 // GetAuth gets authorization configuration.
 func GetAuth(request *http.Request) *api.Authorization {
 	return request.Context().Value(authKey).(*api.Authorization)
+}
+
+type metricContextKeyType struct{}
+
+var metricContextKey metricContextKeyType
+
+// TODO: think about list of metrics or regular expression.
+
+// GetMetric is used to retrieve metric name.
+func GetMetric(request *http.Request) string {
+	return request.Context().Value(metricContextKey).(string)
+}
+
+type stateContextKeyType struct{}
+
+var stateContextKey stateContextKeyType
+
+// TODO: think about list of states or regular expression.
+
+// GetStateString is used to retrieve trigger state.
+func GetStateString(request *http.Request) string {
+	return request.Context().Value(stateContextKey).(string)
 }

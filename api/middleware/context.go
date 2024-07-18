@@ -277,3 +277,45 @@ func AuthorizationContext(auth *api.Authorization) func(next http.Handler) http.
 		})
 	}
 }
+
+// MetricProvider is a function that gets `metric` value from query string and places it in context. If query does not have value sets given value.
+func MetricProvider(defaultMetric string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			metric := urlValues.Get("metric")
+			if metric == "" {
+				metric = defaultMetric
+			}
+
+			ctx := context.WithValue(request.Context(), metricContextKey, metric)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// StateProvider is a function that gets `state` value from query string and places it in context. If query does not have value sets given value.
+func StateProvider(defaultState string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			stateStr := urlValues.Get("state")
+			if stateStr == "" {
+				stateStr = defaultState
+			}
+
+			ctx := context.WithValue(request.Context(), metricContextKey, stateStr)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}

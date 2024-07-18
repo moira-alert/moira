@@ -22,6 +22,15 @@ var (
 	StateTEST      State = "TEST"      // Use this only for test notifications
 )
 
+var validStates = map[string]struct{}{
+	string(StateOK):        {},
+	string(StateWARN):      {},
+	string(StateERROR):     {},
+	string(StateNODATA):    {},
+	string(StateEXCEPTION): {},
+	string(StateTEST):      {},
+}
+
 // Moira ttl states.
 var (
 	TTLStateOK     TTLState = "OK"
@@ -59,6 +68,11 @@ func (state State) ToSelfState() string {
 		return SelfStateERROR
 	}
 	return SelfStateOK
+}
+
+func IsValidState(strState string) bool {
+	_, ok := validStates[strState]
+	return ok
 }
 
 // ToMetricState is an auxiliary function to handle metric state properly.
