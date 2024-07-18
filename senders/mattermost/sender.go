@@ -4,9 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/moira-alert/moira/senders/message_format"
 	"net/http"
 	"time"
+
+	"github.com/moira-alert/moira/senders/message_format"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/emoji_provider"

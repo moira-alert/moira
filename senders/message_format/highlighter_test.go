@@ -2,11 +2,12 @@ package message_format
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders/emoji_provider"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/senders/emoji_provider"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -51,7 +52,7 @@ func TestFormat(t *testing.T) {
 
 		Convey("Message with one event", func() {
 			events, throttled := moira.NotificationEvents{event}, false
-			msg := formatter.Format(getParams(events, trigger, testMaxChars, throttled))
+			msg := formatter.Format(getParams(events, trigger, throttled))
 
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
@@ -62,7 +63,7 @@ func TestFormat(t *testing.T) {
 
 		Convey("Message with one event and throttled", func() {
 			events, throttled := moira.NotificationEvents{event}, true
-			msg := formatter.Format(getParams(events, trigger, testMaxChars, throttled))
+			msg := formatter.Format(getParams(events, trigger, throttled))
 
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
@@ -73,7 +74,7 @@ func TestFormat(t *testing.T) {
 		})
 
 		Convey("Moira message with 3 events", func() {
-			actual := formatter.Format(getParams([]moira.NotificationEvent{event, event, event}, trigger, testMaxChars, false))
+			actual := formatter.Format(getParams([]moira.NotificationEvent{event, event, event}, trigger, false))
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
 				"```\n" +
@@ -108,7 +109,7 @@ func TestFormat(t *testing.T) {
 					events = append(events, event)
 				}
 
-				actual := formatter.Format(getParams(events, moira.TriggerData{Desc: longDesc}, testMaxChars, false))
+				actual := formatter.Format(getParams(events, moira.TriggerData{Desc: longDesc}, false))
 				expected := "**NODATA**\n" +
 					strings.Repeat("a", 2100) + "\n" +
 					"```\n" +
@@ -119,7 +120,7 @@ func TestFormat(t *testing.T) {
 
 			Convey("Many events. eventString > msgLimit/2", func() {
 				desc := strings.Repeat("a", lessThanHalf)
-				actual := formatter.Format(getParams(longEvents, moira.TriggerData{Desc: desc}, testMaxChars, false))
+				actual := formatter.Format(getParams(longEvents, moira.TriggerData{Desc: desc}, false))
 				expected := "**NODATA**\n" +
 					desc + "\n" +
 					"```\n" +
@@ -129,7 +130,7 @@ func TestFormat(t *testing.T) {
 			})
 
 			Convey("Long description and many events. both desc and events > msgLimit/2", func() {
-				actual := formatter.Format(getParams(longEvents, moira.TriggerData{Desc: longDesc}, testMaxChars, false))
+				actual := formatter.Format(getParams(longEvents, moira.TriggerData{Desc: longDesc}, false))
 				expected := "**NODATA**\n" +
 					strings.Repeat("a", 1984) + "...\n" +
 					"```\n" +
@@ -158,11 +159,11 @@ func testUriFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
 }
 
-func getParams(events moira.NotificationEvents, trigger moira.TriggerData, messageMaxChars int, throttled bool) MessageFormatterParams {
+func getParams(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageFormatterParams {
 	return MessageFormatterParams{
 		Events:          events,
 		Trigger:         trigger,
-		MessageMaxChars: messageMaxChars,
+		MessageMaxChars: testMaxChars,
 		Throttled:       throttled,
 	}
 }

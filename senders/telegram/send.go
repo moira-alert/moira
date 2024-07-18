@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/moira-alert/moira/senders/message_format"
 	"strings"
+
+	"github.com/moira-alert/moira/senders/message_format"
 
 	"github.com/moira-alert/moira"
 	"gopkg.in/tucnak/telebot.v2"

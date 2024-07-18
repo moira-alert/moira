@@ -3,9 +3,10 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"github.com/moira-alert/moira/senders/message_format"
 	"strings"
 	"time"
+
+	"github.com/moira-alert/moira/senders/message_format"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
@@ -21,9 +22,7 @@ const (
 	hidden             = "[DATA DELETED]"
 )
 
-var (
-	pollerTimeout = 10 * time.Second
-)
+var pollerTimeout = 10 * time.Second
 
 // Structure that represents the Telegram configuration in the YAML file.
 type config struct {

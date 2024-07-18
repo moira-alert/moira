@@ -3,8 +3,9 @@ package slack
 import (
 	"bytes"
 	"fmt"
-	"github.com/moira-alert/moira/senders/message_format"
 	"time"
+
+	"github.com/moira-alert/moira/senders/message_format"
 
 	"github.com/mitchellh/mapstructure"
 	slackdown "github.com/moira-alert/blackfriday-slack"

@@ -3,8 +3,9 @@ package mattermost
 import (
 	"context"
 	"errors"
-	"github.com/mattermost/mattermost/server/public/model"
 	"testing"
+
+	"github.com/mattermost/mattermost/server/public/model"
 
 	"github.com/moira-alert/moira"
 

@@ -2,11 +2,12 @@ package message_format
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
 	"github.com/moira-alert/moira/senders/emoji_provider"
-	"strings"
-	"time"
 )
 
 const quotas = "```"
