@@ -8,6 +8,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
+	"github.com/moira-alert/moira/plotting"
 
 	"github.com/moira-alert/moira/image_store/s3"
 	prometheusRemoteSource "github.com/moira-alert/moira/metric_source/prometheus"
@@ -117,6 +118,29 @@ func (notificationConfig *NotificationConfig) GetSettings() redis.NotificationCo
 		TransactionMaxRetries:     notificationConfig.TransactionMaxRetries,
 		TransactionHeuristicLimit: notificationConfig.TransactionHeuristicLimit,
 		ResaveTime:                to.Duration(notificationConfig.ResaveTime),
+	}
+}
+
+// PlotConfig sets the configuration for the plots, such as size.
+type PlotConfig struct {
+	Width             int                  `yaml:"width"`
+	Height            int                  `yaml:"height"`
+	YAxisSecondaryCfg YAxisSecondaryConfig `yaml:"y_axis_secondary"`
+}
+
+// YAxisSecondaryConfig defines the setting for the secondary y-axis.
+type YAxisSecondaryConfig struct {
+	EnablePrettyTicks bool `yaml:"enable_pretty_ticks"`
+}
+
+// GetSettings returns plot configuration.
+func (pcfg PlotConfig) GetSettings() plotting.PlotConfig {
+	return plotting.PlotConfig{
+		Width:  pcfg.Width,
+		Height: pcfg.Height,
+		YAxisSecondaryCfg: plotting.YAxisSecondaryConfig{
+			EnablePrettyTicks: pcfg.YAxisSecondaryCfg.EnablePrettyTicks,
+		},
 	}
 }
 

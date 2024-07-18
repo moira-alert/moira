@@ -10,7 +10,6 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
-	"github.com/moira-alert/moira/plotting"
 )
 
 type config struct {
@@ -58,7 +57,7 @@ type notifierConfig struct {
 	// Specify log level by entities
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
 	// PlotCfg sets the configuration for the plots, such as size
-	PlotCfg plotConfig `yaml:"plot"`
+	PlotCfg cmd.PlotConfig `yaml:"plot"`
 }
 
 type selfStateConfig struct {
@@ -120,10 +119,10 @@ func getDefault() config {
 			Timezone:                      "UTC",
 			ReadBatchSize:                 int(notifier.NotificationsLimitUnlimited),
 			MaxFailAttemptToSendAvailable: 3,
-			PlotCfg: plotConfig{
+			PlotCfg: cmd.PlotConfig{
 				Width:  800,
 				Height: 400,
-				YAxisSecondaryCfg: yAxisSecondaryConfig{
+				YAxisSecondaryCfg: cmd.YAxisSecondaryConfig{
 					EnablePrettyTicks: false,
 				},
 			},
@@ -213,7 +212,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		MaxFailAttemptToSendAvailable: config.MaxFailAttemptToSendAvailable,
 		LogContactsToLevel:            contacts,
 		LogSubscriptionsToLevel:       subscriptions,
-		PlotCfg:                       config.PlotCfg.getSettings(),
+		PlotCfg:                       config.PlotCfg.GetSettings(),
 	}
 }
 
@@ -242,25 +241,5 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		CheckInterval:                  checkInterval,
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
-	}
-}
-
-type plotConfig struct {
-	Width             int                  `yaml:"width"`
-	Height            int                  `yaml:"height"`
-	YAxisSecondaryCfg yAxisSecondaryConfig `yaml:"y_axis_secondary"`
-}
-
-type yAxisSecondaryConfig struct {
-	EnablePrettyTicks bool `yaml:"enable_pretty_ticks"`
-}
-
-func (pcfg plotConfig) getSettings() plotting.PlotConfig {
-	return plotting.PlotConfig{
-		Width:  pcfg.Width,
-		Height: pcfg.Height,
-		YAxisSecondaryCfg: plotting.YAxisSecondaryConfig{
-			EnablePrettyTicks: pcfg.YAxisSecondaryCfg.EnablePrettyTicks,
-		},
 	}
 }

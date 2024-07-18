@@ -31,10 +31,10 @@ func Test_apiConfig_getSettings(t *testing.T) {
 		apiConf := apiConfig{
 			Listen:     "0000",
 			EnableCORS: true,
-			PlotCfg: plotConfig{
+			PlotCfg: cmd.PlotConfig{
 				Width:  800,
 				Height: 400,
-				YAxisSecondaryCfg: yAxisSecondaryConfig{
+				YAxisSecondaryCfg: cmd.YAxisSecondaryConfig{
 					EnablePrettyTicks: false,
 				},
 			},
@@ -103,10 +103,10 @@ func Test_webConfig_getDefault(t *testing.T) {
 			API: apiConfig{
 				Listen:     ":8081",
 				EnableCORS: false,
-				PlotCfg: plotConfig{
+				PlotCfg: cmd.PlotConfig{
 					Width:  800,
 					Height: 400,
-					YAxisSecondaryCfg: yAxisSecondaryConfig{
+					YAxisSecondaryCfg: cmd.YAxisSecondaryConfig{
 						EnablePrettyTicks: false,
 					},
 				},
