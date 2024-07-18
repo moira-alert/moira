@@ -11,7 +11,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/worker"
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 )
 
 const (
@@ -31,21 +31,29 @@ type config struct {
 	FrontURI    string `mapstructure:"front_uri"`
 }
 
+// Bot is abstraction over gopkg.in/telebot.v3#Bot.
+type Bot interface {
+	Handle(endpoint interface{}, h telebot.HandlerFunc, m ...telebot.MiddlewareFunc)
+	Start()
+	Stop()
+	Send(to telebot.Recipient, what interface{}, opts ...interface{}) (*telebot.Message, error)
+	SendAlbum(to telebot.Recipient, a telebot.Album, opts ...interface{}) ([]telebot.Message, error)
+	Reply(to *telebot.Message, what interface{}, opts ...interface{}) (*telebot.Message, error)
+	ChatByUsername(name string) (*telebot.Chat, error)
+}
+
 // Sender implements moira sender interface via telegram.
 type Sender struct {
 	DataBase  moira.Database
 	logger    moira.Logger
-	bot       *telebot.Bot
+	bot       Bot
 	formatter message_format.MessageFormatter
+	apiToken  string
 }
 
-func removeTokenFromError(err error, bot *telebot.Bot) error {
-	url := telebot.DefaultApiURL
-	if bot != nil {
-		url = bot.URL
-	}
-	if err != nil && strings.Contains(err.Error(), url) {
-		return errors.New(moira.ReplaceSubstring(err.Error(), "/bot", "/", hidden))
+func (sender *Sender) removeTokenFromError(err error) error {
+	if err != nil && strings.Contains(err.Error(), sender.apiToken) {
+		return errors.New(strings.Replace(err.Error(), sender.apiToken, hidden, -1))
 	}
 	return err
 }
@@ -61,6 +69,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
+	sender.apiToken = cfg.APIToken
 
 	emojiProvider := telegramEmojiProvider{}
 	sender.formatter = message_format.HighlightSyntaxFormatter{
@@ -90,15 +99,17 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
-		return removeTokenFromError(err, sender.bot)
+		return sender.removeTokenFromError(err)
 	}
 
-	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
-		if err = sender.handleMessage(message); err != nil {
+	sender.bot.Handle(telebot.OnText, func(ctx telebot.Context) error {
+		if err = sender.handleMessage(ctx.Message()); err != nil {
 			sender.logger.Error().
 				Error(err).
-				Msg("Error handling incoming message: %s")
+				Msg("Error handling incoming message")
+			return err
 		}
+		return nil
 	})
 
 	go sender.runTelebot(cfg.ContactType)

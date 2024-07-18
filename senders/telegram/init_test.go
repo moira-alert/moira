@@ -27,6 +27,7 @@ func TestInit(t *testing.T) {
 			}
 			sender.Init(senderSettings, logger, location, "15:04") //nolint
 			So(sender.logger, ShouldResemble, logger)
+			So(sender.apiToken, ShouldResemble, "123")
 		})
 	})
 }
