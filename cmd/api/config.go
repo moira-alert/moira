@@ -5,6 +5,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/plotting"
 
 	"github.com/xiam/to"
 
@@ -48,6 +49,7 @@ type apiConfig struct {
 	EnableCORS bool `yaml:"enable_cors"`
 	// Authorization contains authorization configuration.
 	Authorization authorization `yaml:"authorization"`
+	PlotCfg       plotConfig    `yaml:"plot"`
 }
 
 type authorization struct {
@@ -66,6 +68,26 @@ func (config *sentryConfig) getSettings() api.Sentry {
 	return api.Sentry{
 		DSN:      config.DSN,
 		Platform: config.Platform,
+	}
+}
+
+type plotConfig struct {
+	Width             int                  `yaml:"width"`
+	Height            int                  `yaml:"height"`
+	YAxisSecondaryCfg yAxisSecondaryConfig `yaml:"y_axis_secondary"`
+}
+
+type yAxisSecondaryConfig struct {
+	EnablePrettyTicks bool `yaml:"enable_pretty_ticks"`
+}
+
+func (pcfg plotConfig) getSettings() plotting.PlotConfig {
+	return plotting.PlotConfig{
+		Width:  pcfg.Width,
+		Height: pcfg.Height,
+		YAxisSecondaryCfg: plotting.YAxisSecondaryConfig{
+			EnablePrettyTicks: pcfg.YAxisSecondaryCfg.EnablePrettyTicks,
+		},
 	}
 }
 
@@ -116,6 +138,7 @@ func (config *apiConfig) getSettings(
 		MetricsTTL:    metricsTTL,
 		Flags:         flags,
 		Authorization: config.Authorization.toApiConfig(webConfig),
+		PlotCfg:       config.PlotCfg.getSettings(),
 	}
 }
 
@@ -217,6 +240,13 @@ func getDefault() config {
 		API: apiConfig{
 			Listen:     ":8081",
 			EnableCORS: false,
+			PlotCfg: plotConfig{
+				Width:  800,
+				Height: 400,
+				YAxisSecondaryCfg: yAxisSecondaryConfig{
+					EnablePrettyTicks: false,
+				},
+			},
 		},
 		Web: webConfig{
 			RemoteAllowed: false,

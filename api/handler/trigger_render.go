@@ -36,36 +36,40 @@ import (
 //	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
 //	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/trigger/{triggerID}/render [get]
-func renderTrigger(writer http.ResponseWriter, request *http.Request) {
-	sourceProvider, targetName, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(request)
-	if err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-		return
-	}
-	metricsData, trigger, err := evaluateTargetMetrics(sourceProvider, from, to, triggerID, fetchRealtimeData)
-	if err != nil {
-		if trigger == nil {
-			render.Render(writer, request, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", triggerID))) //nolint
-		} else {
-			render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
+func renderTrigger(plotCfg plotting.PlotConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sourceProvider, targetName, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(r)
+		if err != nil {
+			render.Render(w, r, api.ErrorInvalidRequest(err)) //nolint
+			return
 		}
-		return
-	}
 
-	targetMetrics, ok := metricsData[targetName]
-	if !ok {
-		render.Render(writer, request, api.ErrorNotFound(fmt.Sprintf("Cannot find target %s", targetName))) //nolint
-	}
+		metricsData, trigger, err := evaluateTargetMetrics(sourceProvider, from, to, triggerID, fetchRealtimeData)
+		if err != nil {
+			if trigger == nil {
+				render.Render(w, r, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", triggerID))) //nolint
+			} else {
+				render.Render(w, r, api.ErrorInternalServer(err)) //nolint
+			}
+			return
+		}
 
-	renderable, err := buildRenderable(request, trigger, targetMetrics, targetName)
-	if err != nil {
-		render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
-		return
-	}
-	writer.Header().Set("Content-Type", "image/png")
-	err = renderable.Render(chart.PNG, writer)
-	if err != nil {
-		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can not render plot %s", err.Error()))) //nolint
+		targetMetrics, ok := metricsData[targetName]
+		if !ok {
+			render.Render(w, r, api.ErrorNotFound(fmt.Sprintf("Cannot find target %s", targetName))) //nolint
+		}
+
+		renderable, err := buildRenderable(plotCfg, r, trigger, targetMetrics, targetName)
+		if err != nil {
+			render.Render(w, r, api.ErrorInternalServer(err)) //nolint
+			return
+		}
+
+		w.Header().Set("Content-Type", "image/png")
+		err = renderable.Render(chart.PNG, w)
+		if err != nil {
+			render.Render(w, r, api.ErrorInternalServer(fmt.Errorf("can not render plot %w", err))) //nolint
+		}
 	}
 }
 
@@ -113,7 +117,7 @@ func evaluateTargetMetrics(metricSourceProvider *metricSource.SourceProvider, fr
 	return tts, trigger, err
 }
 
-func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []metricSource.MetricData, targetName string) (*chart.Chart, error) {
+func buildRenderable(plotCfg plotting.PlotConfig, request *http.Request, trigger *moira.Trigger, metricsData []metricSource.MetricData, targetName string) (*chart.Chart, error) {
 	urlValues, err := url.ParseQuery(request.URL.RawQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse query string: %w", err)
@@ -126,7 +130,7 @@ func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData 
 	}
 
 	plotTheme := urlValues.Get("theme")
-	plotTemplate, err := plotting.GetPlotTemplate(plotTheme, location)
+	plotTemplate, err := plotting.GetPlotTemplate(plotCfg, plotTheme, location)
 	if err != nil {
 		return nil, fmt.Errorf("can not initialize plot theme %s", err.Error())
 	}

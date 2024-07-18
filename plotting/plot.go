@@ -23,28 +23,38 @@ func (err ErrNoPointsToRender) Error() string {
 	return fmt.Sprintf("no points found to render trigger: %s", err.triggerID)
 }
 
+type PlotConfig struct {
+	Width             int
+	Height            int
+	YAxisSecondaryCfg YAxisSecondaryConfig
+}
+
+type YAxisSecondaryConfig struct {
+	EnablePrettyTicks bool
+}
+
 // Plot represents plot structure to render.
 type Plot struct {
+	cfg      PlotConfig
 	theme    moira.PlotTheme
 	location *time.Location
-	width    int
-	height   int
 }
 
 // GetPlotTemplate returns plot template.
-func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
+func GetPlotTemplate(cfg PlotConfig, theme string, location *time.Location) (*Plot, error) {
 	plotTheme, err := getPlotTheme(theme)
 	if err != nil {
 		return nil, err
 	}
+
 	if location == nil {
 		return nil, fmt.Errorf("location not specified")
 	}
+
 	return &Plot{
+		cfg:      cfg,
 		theme:    plotTheme,
 		location: location,
-		width:    800, //nolint
-		height:   400, //nolint
 	}, nil
 }
 
@@ -52,14 +62,14 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 func (plot *Plot) GetRenderable(targetName string, trigger *moira.Trigger, metricsData []metricSource.MetricData) (chart.Chart, error) {
 	var renderable chart.Chart
 
-	plotSeries := make([]chart.Series, 0)
-
 	limits := resolveLimits(metricsData)
 
 	curveSeriesList := getCurveSeriesList(metricsData, plot.theme)
 	if len(curveSeriesList) == 0 {
 		return renderable, ErrNoPointsToRender{triggerID: trigger.ID}
 	}
+
+	plotSeries := make([]chart.Series, 0, len(curveSeriesList))
 
 	for _, curveSeries := range curveSeriesList {
 		plotSeries = append(plotSeries, curveSeries)
@@ -78,8 +88,8 @@ func (plot *Plot) GetRenderable(targetName string, trigger *moira.Trigger, metri
 		Title:      sanitizeLabelName(name, plotNameLen),
 		TitleStyle: plot.theme.GetTitleStyle(),
 
-		Width:  plot.width,
-		Height: plot.height,
+		Width:  plot.cfg.Width,
+		Height: plot.cfg.Height,
 
 		Canvas:     plot.theme.GetCanvasStyle(),
 		Background: plot.theme.GetBackgroundStyle(maxMarkLen),
@@ -113,14 +123,14 @@ func (plot *Plot) GetRenderable(targetName string, trigger *moira.Trigger, metri
 				Max: limits.highest,
 				Min: limits.lowest,
 			},
-			EnablePrettyTicks: true,
+			EnablePrettyTicks: plot.cfg.YAxisSecondaryCfg.EnablePrettyTicks,
 		},
 
 		Series: plotSeries,
 	}
 
 	renderable.Elements = []chart.Renderable{
-		getPlotLegend(&renderable, plot.theme.GetLegendStyle(), plot.width),
+		getPlotLegend(&renderable, plot.theme.GetLegendStyle(), plot.cfg.Width),
 	}
 
 	return renderable, nil

@@ -12,6 +12,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/moira-alert/moira/plotting"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -27,6 +28,8 @@ func TestRenderTrigger(t *testing.T) {
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
+		plotConfig := plotting.PlotConfig{}
+
 		Convey("with the wrong realtime parameter", func() {
 			testRequest := httptest.NewRequest(http.MethodGet, "/trigger/triggerID-0000000000001/render?realtime=test", nil)
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "triggerID", "triggerID-0000000000001"))
@@ -35,7 +38,8 @@ func TestRenderTrigger(t *testing.T) {
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "from", "-1hour"))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "to", "now"))
 
-			renderTrigger(responseWriter, testRequest)
+			render := renderTrigger(plotConfig)
+			render(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
@@ -68,7 +72,8 @@ func TestRenderTrigger(t *testing.T) {
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "from", "-1hour"))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "to", "now"))
 
-			renderTrigger(responseWriter, testRequest)
+			render := renderTrigger(plotConfig)
+			render(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
@@ -101,7 +106,8 @@ func TestRenderTrigger(t *testing.T) {
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "from", "-1hour"))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "to", "now"))
 
-			renderTrigger(responseWriter, testRequest)
+			render := renderTrigger(plotConfig)
+			render(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
@@ -122,7 +128,8 @@ func TestRenderTrigger(t *testing.T) {
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "from", "-1hour"))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "to", "now"))
 
-			renderTrigger(responseWriter, testRequest)
+			render := renderTrigger(plotConfig)
+			render(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()

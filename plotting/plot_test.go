@@ -521,23 +521,36 @@ func renderTestMetricsDataToPNG(
 	filePath string,
 ) error {
 	location, _ := time.LoadLocation("UTC")
-	plotTemplate, err := GetPlotTemplate(plotTheme, location)
+	plotCfg := PlotConfig{
+		Width:  800,
+		Height: 400,
+		YAxisSecondaryCfg: YAxisSecondaryConfig{
+			EnablePrettyTicks: true,
+		},
+	}
+
+	plotTemplate, err := GetPlotTemplate(plotCfg, plotTheme, location)
 	if err != nil {
 		return err
 	}
+
 	renderable, err := plotTemplate.GetRenderable("t1", &trigger, metricsData)
 	if err != nil {
 		return err
 	}
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
+
 	w := bufio.NewWriter(f)
 	if err := renderable.Render(chart.PNG, w); err != nil {
 		return err
 	}
+
 	w.Flush()
+
 	return nil
 }
 
@@ -548,11 +561,14 @@ func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) 
 	if err != nil {
 		return nil, err
 	}
+
 	rendered, err := util.Open(pathToRendered)
 	if err != nil {
 		return nil, err
 	}
+
 	distance := hash.Compare(original, rendered)
+
 	return &distance, nil
 }
 
@@ -589,6 +605,7 @@ func TestGetRenderable(t *testing.T) {
 					Name:        testCase.getTriggerName(),
 					TriggerType: testCase.triggerType,
 				}
+
 				if testCase.errorValue != nil {
 					errorValue := testCase.errorValue.(float64)
 					if !testCase.useHumanizedValues {
@@ -596,6 +613,7 @@ func TestGetRenderable(t *testing.T) {
 					}
 					trigger.ErrorValue = &errorValue
 				}
+
 				if testCase.warnValue != nil {
 					warnValue := testCase.warnValue.(float64)
 					if !testCase.useHumanizedValues {
@@ -603,23 +621,28 @@ func TestGetRenderable(t *testing.T) {
 					}
 					trigger.WarnValue = &warnValue
 				}
+
 				metricsData := generateTestMetricsData(testCase.useHumanizedValues)
 				pathToOriginal, err := testCase.getFilePath(true)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				pathToRendered, err := testCase.getFilePath(false)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				err = renderTestMetricsDataToPNG(trigger, testCase.plotTheme, metricsData, pathToRendered)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				hashDistance, err := calculateHashDistance(pathToOriginal, pathToRendered)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				os.Remove(pathToRendered)
 				So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
 			})
@@ -630,7 +653,12 @@ func TestGetRenderable(t *testing.T) {
 // TestErrNoPointsToRender_Error asserts conditions which leads to ErrNoPointsToRender.
 func TestErrNoPointsToRender_Error(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	plotTemplate, err := GetPlotTemplate("", location)
+	plotCfg := PlotConfig{
+		Width:  800,
+		Height: 400,
+	}
+
+	plotTemplate, err := GetPlotTemplate(plotCfg, "", location)
 	if err != nil {
 		t.Fatalf("Test initialization failed: %s", err.Error())
 	}

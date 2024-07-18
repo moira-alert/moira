@@ -6,6 +6,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/plotting"
 
 	"github.com/moira-alert/moira/api"
 
@@ -30,6 +31,13 @@ func Test_apiConfig_getSettings(t *testing.T) {
 		apiConf := apiConfig{
 			Listen:     "0000",
 			EnableCORS: true,
+			PlotCfg: plotConfig{
+				Width:  800,
+				Height: 400,
+				YAxisSecondaryCfg: yAxisSecondaryConfig{
+					EnablePrettyTicks: false,
+				},
+			},
 		}
 
 		expectedResult := &api.Config{
@@ -41,6 +49,13 @@ func Test_apiConfig_getSettings(t *testing.T) {
 				AdminList: make(map[string]struct{}),
 				AllowedContactTypes: map[string]struct{}{
 					"test": {},
+				},
+			},
+			PlotCfg: plotting.PlotConfig{
+				Width:  800,
+				Height: 400,
+				YAxisSecondaryCfg: plotting.YAxisSecondaryConfig{
+					EnablePrettyTicks: false,
 				},
 			},
 		}
@@ -88,6 +103,13 @@ func Test_webConfig_getDefault(t *testing.T) {
 			API: apiConfig{
 				Listen:     ":8081",
 				EnableCORS: false,
+				PlotCfg: plotConfig{
+					Width:  800,
+					Height: 400,
+					YAxisSecondaryCfg: yAxisSecondaryConfig{
+						EnablePrettyTicks: false,
+					},
+				},
 			},
 			Web: webConfig{
 				RemoteAllowed: false,

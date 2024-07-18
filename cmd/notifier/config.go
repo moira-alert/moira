@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/moira-alert/moira/plotting"
 )
 
 type config struct {
@@ -56,6 +57,8 @@ type notifierConfig struct {
 	MaxFailAttemptToSendAvailable int `yaml:"max_fail_attempt_to_send_available"`
 	// Specify log level by entities
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
+	//
+	PlotConfig plotConfig `yaml:"plot"`
 }
 
 type selfStateConfig struct {
@@ -117,6 +120,13 @@ func getDefault() config {
 			Timezone:                      "UTC",
 			ReadBatchSize:                 int(notifier.NotificationsLimitUnlimited),
 			MaxFailAttemptToSendAvailable: 3,
+			PlotConfig: plotConfig{
+				Width:  800,
+				Height: 400,
+				YAxisSecondaryCfg: yAxisSecondaryConfig{
+					EnablePrettyTicks: false,
+				},
+			},
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8093",
@@ -203,6 +213,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		MaxFailAttemptToSendAvailable: config.MaxFailAttemptToSendAvailable,
 		LogContactsToLevel:            contacts,
 		LogSubscriptionsToLevel:       subscriptions,
+		PlotConfig:                    config.PlotConfig.getSettings(),
 	}
 }
 
@@ -231,5 +242,25 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		CheckInterval:                  checkInterval,
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
+	}
+}
+
+type plotConfig struct {
+	Width             int                  `yaml:"width"`
+	Height            int                  `yaml:"height"`
+	YAxisSecondaryCfg yAxisSecondaryConfig `yaml:"y_axis_secondary"`
+}
+
+type yAxisSecondaryConfig struct {
+	EnablePrettyTicks bool `yaml:"enable_pretty_ticks"`
+}
+
+func (pcfg plotConfig) getSettings() plotting.PlotConfig {
+	return plotting.PlotConfig{
+		Width:  pcfg.Width,
+		Height: pcfg.Height,
+		YAxisSecondaryCfg: plotting.YAxisSecondaryConfig{
+			EnablePrettyTicks: pcfg.YAxisSecondaryCfg.EnablePrettyTicks,
+		},
 	}
 }

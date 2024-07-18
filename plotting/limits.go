@@ -30,7 +30,7 @@ type plotLimits struct {
 // resolveLimits returns common plot limits.
 func resolveLimits(metricsData []metricSource.MetricData) plotLimits {
 	allValues := make([]float64, 0)
-	allTimes := make([]time.Time, 0)
+	allTimes := make([]time.Time, 0, len(metricsData)*2)
 	for _, metricData := range metricsData {
 		for _, metricValue := range metricData.Values {
 			if moira.IsFiniteNumber(metricValue) {
@@ -40,19 +40,23 @@ func resolveLimits(metricsData []metricSource.MetricData) plotLimits {
 		allTimes = append(allTimes, moira.Int64ToTime(metricData.StartTime))
 		allTimes = append(allTimes, moira.Int64ToTime(metricData.StopTime))
 	}
+
 	from, to := util.Time.StartAndEnd(allTimes...)
 	lowest, highest := util.Math.MinAndMax(allValues...)
 	if highest == lowest {
 		highest += defaultRangeDelta / 2
 		lowest -= defaultRangeDelta / 2
 	}
+
 	yAxisIncrement := percentsOfRange(lowest, highest, defaultYAxisRangePercent)
 	if highest > 0 {
 		highest += yAxisIncrement
 	}
+
 	if lowest < 0 {
 		lowest -= yAxisIncrement
 	}
+
 	return plotLimits{
 		from:    from,
 		to:      to,

@@ -2,6 +2,8 @@ package notifier
 
 import (
 	"time"
+
+	"github.com/moira-alert/moira/plotting"
 )
 
 const NotificationsLimitUnlimited = int64(-1)
@@ -24,4 +26,5 @@ type Config struct {
 	MaxFailAttemptToSendAvailable int
 	LogContactsToLevel            map[string]string
 	LogSubscriptionsToLevel       map[string]string
+	PlotConfig                    plotting.PlotConfig
 }

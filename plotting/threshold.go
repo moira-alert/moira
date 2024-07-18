@@ -39,16 +39,19 @@ func newThreshold(triggerType, thresholdType string, thresholdValue, higherLimit
 
 // getThresholdSeriesList returns collection of thresholds and annotations.
 func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limits plotLimits) []chart.Series {
-	thresholdSeriesList := make([]chart.Series, 0)
 	if trigger.TriggerType == moira.ExpressionTrigger {
-		return thresholdSeriesList
+		return nil
 	}
+
 	plotThresholds := generateThresholds(trigger, limits)
+	thresholdSeriesList := make([]chart.Series, 0, len(plotThresholds))
+
 	for _, plotThreshold := range plotThresholds {
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(theme, limits))
 		// TODO: uncomment to use annotations if necessary, remove otherwise
 		// thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme, limits))
 	}
+
 	return thresholdSeriesList
 }
 
@@ -105,9 +108,11 @@ func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limit
 		XValues: []time.Time{limits.from, limits.to},
 		YValues: []float64{},
 	}
+
 	for j := 0; j < len(thresholdSeries.XValues); j++ {
 		thresholdSeries.YValues = append(thresholdSeries.YValues, threshold.yCoordinate)
 	}
+
 	return thresholdSeries
 }
 
