@@ -81,6 +81,7 @@ func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			return
 		} //nolint
+
 		return
 	}
 
@@ -169,6 +170,7 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 				String("status", response.StatusText).
 				Error(err).
 				Msg("Remote server unavailable")
+
 			return nil, response
 		case *json.UnmarshalTypeError:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
@@ -176,6 +178,7 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, api.ErrorInternalServer(err)
 		}
 	}
+
 	trigger.UpdatedBy = middleware.GetLogin(request)
 
 	return trigger, nil
@@ -229,6 +232,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 
 	if len(trigger.Targets) > 0 {
 		var err error
+
 		response.Targets, err = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
 		if err != nil {
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
@@ -317,7 +321,9 @@ func deletePager(writer http.ResponseWriter, request *http.Request) {
 
 func getRequestTags(request *http.Request) []string {
 	var filterTags []string
+
 	i := 0
+
 	for {
 		tag := request.FormValue(fmt.Sprintf("tags[%v]", i))
 		if tag == "" {
@@ -326,6 +332,7 @@ func getRequestTags(request *http.Request) []string {
 		filterTags = append(filterTags, tag)
 		i++
 	}
+
 	return filterTags
 }
 
@@ -335,6 +342,7 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 		onlyProblems, _ := strconv.ParseBool(onlyProblemsStr)
 		return onlyProblems
 	}
+
 	return false
 }
 
@@ -345,6 +353,7 @@ func getTriggerCreatedBy(request *http.Request) (string, bool) {
 	if createdBy, ok := request.Form["createdBy"]; ok {
 		return createdBy[0], true
 	}
+
 	return "", false
 }
 
@@ -352,5 +361,6 @@ func getSearchRequestString(request *http.Request) string {
 	searchText := request.FormValue("text")
 	searchText = strings.ToLower(searchText)
 	searchText, _ = url.PathUnescape(searchText)
+
 	return searchText
 }

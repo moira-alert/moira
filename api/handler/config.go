@@ -17,10 +17,10 @@ import (
 //	@failure	422	{object}	api.ErrorRenderExample	"Render error"
 //	@router		/config [get]
 func getWebConfig(webConfig *api.WebConfig) http.HandlerFunc {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
 		if err := render.Render(writer, request, webConfig); err != nil {
 			render.Render(writer, request, api.ErrorRender(err)) //nolint
 			return
 		}
-	})
+	}
 }

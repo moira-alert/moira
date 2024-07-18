@@ -21,34 +21,39 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 	var teamID string
 	if team.ID != "" { // if teamID is specified in request data then check that team with this id is not exist
 		teamID = team.ID
-		_, err := dataBase.GetTeam(teamID)
-		if err == nil {
-			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("team with ID you specified already exists %s", teamID))
-		}
-		if err != nil && !errors.Is(err, database.ErrNil) {
+
+		if _, err := dataBase.GetTeam(teamID); err != nil && !errors.Is(err, database.ErrNil) {
 			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot check id for team: %w", err))
 		}
-	} else { // on the other hand try to create an UUID for teamID
-		createdSuccessfully := false
-		for i := 0; i < teamIDCreateRetries; i++ { // trying three times to create an UUID and check if it exists
-			generatedUUID, err := uuid.NewV4()
-			if err != nil {
-				return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate id for team: %w", err))
-			}
-			teamID = generatedUUID.String()
-			_, err = dataBase.GetTeam(teamID)
-			if errors.Is(err, database.ErrNil) {
-				createdSuccessfully = true
-				break
-			}
-			if err != nil {
-				return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot check id for team: %w", err))
-			}
+
+		return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("team with ID you specified already exists %s", teamID))
+	}
+	// on the other hand try to create an UUID for teamID
+	createdSuccessfully := false
+
+	for i := 0; i < teamIDCreateRetries; i++ { // trying three times to create an UUID and check if it exists
+		generatedUUID, err := uuid.NewV4()
+		if err != nil {
+			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate id for team: %w", err))
 		}
-		if !createdSuccessfully {
-			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate unique id for team"))
+
+		teamID = generatedUUID.String()
+		_, err = dataBase.GetTeam(teamID)
+
+		if errors.Is(err, database.ErrNil) {
+			createdSuccessfully = true
+			break
+		}
+
+		if err != nil {
+			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot check id for team: %w", err))
 		}
 	}
+
+	if !createdSuccessfully {
+		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate unique id for team"))
+	}
+
 	err := dataBase.SaveTeam(teamID, team.ToMoiraTeam())
 	if err != nil {
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", err))
@@ -74,10 +79,12 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 		if errors.Is(err, database.ErrNil) {
 			return dto.TeamModel{}, api.ErrorNotFound(fmt.Sprintf("cannot find team: %s", teamID))
 		}
+
 		return dto.TeamModel{}, api.ErrorInternalServer(fmt.Errorf("cannot get team from database: %w", err))
 	}
 
 	teamModel := dto.NewTeamModel(team)
+
 	return teamModel, nil
 }
 
@@ -86,6 +93,7 @@ func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.E
 	teams, err := dataBase.GetUserTeams(userID)
 
 	result := []dto.TeamModel{}
+
 	if err != nil && !errors.Is(err, database.ErrNil) {
 		return dto.UserTeams{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 	}
@@ -95,6 +103,7 @@ func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.E
 		if err != nil {
 			return dto.UserTeams{}, api.ErrorInternalServer(fmt.Errorf("cannot retrieve team from database: %w", err))
 		}
+
 		teamModel := dto.NewTeamModel(team)
 		result = append(result, teamModel)
 	}
@@ -109,24 +118,29 @@ func GetTeamUsers(dataBase moira.Database, teamID string) (dto.TeamMembers, *api
 		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
+
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 	}
 
 	result := dto.TeamMembers{
 		Usernames: users,
 	}
+
 	return result, nil
 }
 
 func fillCurrentUsersTeamsMap(dataBase moira.Database, existingUsers []string) (map[string][]string, *api.ErrorResponse) {
 	result := map[string][]string{}
+
 	for _, userID := range existingUsers {
 		fetchedUserTeams, err := dataBase.GetUserTeams(userID)
 		if err != nil {
 			return nil, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 		}
+
 		result[userID] = fetchedUserTeams
 	}
+
 	return result, nil
 }
 
@@ -135,12 +149,15 @@ func removeDeletedUsers(teamID string, existingUsers []string, newUsers map[stri
 		if newUsers[userID] {
 			continue
 		}
+
 		userRemovedTeams, err := removeUserTeam(teamsMap[userID], teamID)
 		if err != nil {
 			return nil, api.ErrorInternalServer(fmt.Errorf("cannot remove team from user: %w", err))
 		}
+
 		teamsMap[userID] = userRemovedTeams
 	}
+
 	return teamsMap, nil
 }
 
@@ -150,13 +167,16 @@ func addTeamsForNewUsers(dataBase moira.Database, teamID string, newUsers map[st
 		if _, ok := teamsMap[userID]; ok {
 			continue
 		}
+
 		fetchedUserTeams, err := dataBase.GetUserTeams(userID)
 		if err != nil && !errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 		}
+
 		fetchedUserTeams = append(fetchedUserTeams, teamID)
 		teamsMap[userID] = fetchedUserTeams
 	}
+
 	return teamsMap, nil
 }
 
@@ -167,6 +187,7 @@ func SetTeamUsers(dataBase moira.Database, teamID string, allUsers []string) (dt
 		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
+
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 	}
 	/*
@@ -223,6 +244,7 @@ func SetTeamUsers(dataBase moira.Database, teamID string, allUsers []string) (dt
 	result := dto.TeamMembers{
 		Usernames: allUsers,
 	}
+
 	return result, nil
 }
 
@@ -232,7 +254,9 @@ func addUserTeam(teamID string, teams []string) ([]string, error) {
 			return []string{}, fmt.Errorf("team already exist in user teams: %s", teamID)
 		}
 	}
+
 	teams = append(teams, teamID)
+
 	return teams, nil
 }
 
@@ -243,6 +267,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
+
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 	}
 
@@ -255,8 +280,10 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 			if errors.Is(err, database.ErrNil) {
 				return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find user teams: %s", userID))
 			}
+
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 		}
+
 		teamsMap[userID] = userTeams
 		finalUsers = append(finalUsers, userID)
 	}
@@ -288,6 +315,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 	result := dto.TeamMembers{
 		Usernames: finalUsers,
 	}
+
 	return result, nil
 }
 
@@ -297,6 +325,7 @@ func UpdateTeam(dataBase moira.Database, teamID string, team dto.TeamModel) (dto
 	if err != nil {
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", err))
 	}
+
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
@@ -306,27 +335,34 @@ func DeleteTeam(dataBase moira.Database, teamID, userLogin string) (dto.SaveTeam
 	if err != nil {
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users: %w", err))
 	}
+
 	if len(teamUsers) > 1 {
 		return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have users: %s", strings.Join(teamUsers, ", ")))
 	}
+
 	teamContacts, err := dataBase.GetTeamContactIDs(teamID)
 	if err != nil {
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot get team contacts: %w", err))
 	}
+
 	if len(teamContacts) > 0 {
 		return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have contacts: %s", strings.Join(teamContacts, ", ")))
 	}
+
 	teamSubscriptions, err := dataBase.GetTeamSubscriptionIDs(teamID)
 	if err != nil {
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot get team subscriptions: %w", err))
 	}
+
 	if len(teamSubscriptions) > 0 {
 		return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have subscriptions: %s", strings.Join(teamSubscriptions, ", ")))
 	}
+
 	err = dataBase.DeleteTeam(teamID, userLogin)
 	if err != nil {
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot delete team: %w", err))
 	}
+
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
@@ -337,6 +373,7 @@ func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string)
 		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
+
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 	}
 
@@ -345,11 +382,13 @@ func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string)
 	}
 
 	userFound := false
+
 	for _, userID := range existingUsers {
 		if userID == removeUserID {
 			userFound = true
 		}
 	}
+
 	if !userFound {
 		return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("user that you specified not found in this team: %s", removeUserID))
 	}
@@ -363,8 +402,10 @@ func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string)
 			if errors.Is(err, database.ErrNil) {
 				return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find user teams: %s", userID))
 			}
+
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 		}
+
 		if userID == removeUserID {
 			userTeams, err = removeUserTeam(userTeams, teamID)
 			if err != nil {
@@ -373,6 +414,7 @@ func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string)
 		} else {
 			finalUsers = append(finalUsers, userID)
 		}
+
 		teamsMap[userID] = userTeams
 	}
 
@@ -384,17 +426,20 @@ func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string)
 	result := dto.TeamMembers{
 		Usernames: finalUsers,
 	}
+
 	return result, nil
 }
 
 func removeUserTeam(teams []string, teamID string) ([]string, error) {
 	for i, currentTeamID := range teams {
 		if teamID == currentTeamID {
-			teams[i] = teams[len(teams)-1]   // Copy last element to index i.
-			teams[len(teams)-1] = ""         // Erase last element (write zero value).
+			teams[i] = teams[len(teams)-1] // Copy last element to index i.
+			teams[len(teams)-1] = ""       // Erase last element (write zero value).
+
 			return teams[:len(teams)-1], nil // Truncate slice.
 		}
 	}
+
 	return []string{}, fmt.Errorf("cannot find team in user teams: %s", teamID)
 }
 
@@ -406,11 +451,13 @@ func CheckUserPermissionsForTeam(
 	if auth.IsAdmin(userID) {
 		return nil
 	}
+
 	_, err := dataBase.GetTeam(teamID)
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {
 			return api.ErrorNotFound(fmt.Sprintf("team with ID '%s' does not exists", teamID))
 		}
+
 		return api.ErrorInternalServer(err)
 	}
 
@@ -418,9 +465,11 @@ func CheckUserPermissionsForTeam(
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	if !userIsTeamMember {
 		return api.ErrorForbidden("you are not permitted to manipulate with this team")
 	}
+
 	return nil
 }
 
@@ -441,11 +490,13 @@ func GetTeamSettings(dataBase moira.Database, teamID string) (dto.TeamSettings, 
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
+
 	for _, subscription := range subscriptions {
 		if subscription != nil {
 			teamSettings.Subscriptions = append(teamSettings.Subscriptions, *subscription)
 		}
 	}
+
 	contactIDs, err := dataBase.GetTeamContactIDs(teamID)
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
@@ -455,10 +506,12 @@ func GetTeamSettings(dataBase moira.Database, teamID string) (dto.TeamSettings, 
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
+
 	for _, contact := range contacts {
 		if contact != nil {
 			teamSettings.Contacts = append(teamSettings.Contacts, *contact)
 		}
 	}
+
 	return teamSettings, nil
 }

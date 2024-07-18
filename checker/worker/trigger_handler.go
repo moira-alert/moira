@@ -41,7 +41,9 @@ func (manager *Manager) handleTrigger(triggerID string, metrics *metrics.CheckMe
 			err = fmt.Errorf("panic: '%s' stack: %s", r, debug.Stack())
 		}
 	}()
+
 	err = manager.handleTriggerInLock(triggerID, metrics)
+
 	return err
 }
 
@@ -87,8 +89,10 @@ func (manager *Manager) checkTrigger(triggerID string) error {
 	if errors.Is(err, checker.ErrTriggerNotExists) {
 		return nil
 	}
+
 	if err != nil {
 		return err
 	}
+
 	return triggerChecker.Check()
 }

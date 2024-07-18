@@ -12,6 +12,7 @@ func GetTriggerEvents(database moira.Database, triggerID string, page int64, siz
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	eventCount := database.GetNotificationEventCount(triggerID, -1)
 
 	eventsList := &dto.EventsList{
@@ -20,11 +21,13 @@ func GetTriggerEvents(database moira.Database, triggerID string, page int64, siz
 		Total: eventCount,
 		List:  make([]moira.NotificationEvent, 0),
 	}
+
 	for _, event := range events {
 		if event != nil {
 			eventsList.List = append(eventsList.List, *event)
 		}
 	}
+
 	return eventsList, nil
 }
 
@@ -33,5 +36,6 @@ func DeleteAllEvents(database moira.Database) *api.ErrorResponse {
 	if err := database.RemoveAllNotificationEvents(); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }
