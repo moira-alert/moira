@@ -30,8 +30,10 @@ func ReadImageStoreConfig(senderSettings any, imageStores map[string]moira.Image
 	if ok && imageStore.IsEnabled() {
 		return imageStoreIDStr, imageStore, true
 	}
+
 	logger.Warning().
 		String("image_store_id", imageStoreIDStr).
 		Msg("Image store specified has not been configured")
+
 	return "", nil, false
 }

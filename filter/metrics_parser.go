@@ -120,16 +120,19 @@ func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 
 	name := moira.UnsafeBytesToString(nameBytes)
 	labels := make(map[string]string)
+
 	for metricBytesScanner.HasNext() {
 		labelBytes := metricBytesScanner.Next()
 		labelBytesScanner := moira.NewBytesScanner(labelBytes, '=')
 
 		var labelNameBytes, labelValueBytes []byte
+
 		if !labelBytesScanner.HasNext() {
 			return "", nil, fmt.Errorf("too few equal-separated items: '%s'", labelBytes)
 		}
 
 		labelNameBytes = labelBytesScanner.Next()
+
 		if !labelBytesScanner.HasNext() {
 			return "", nil, fmt.Errorf("too few equal-separated items: '%s'", labelBytes)
 		}

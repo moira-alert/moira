@@ -24,10 +24,12 @@ func handleRemoveUnusedTriggersStartWith(logger moira.Logger, database moira.Dat
 	if err != nil {
 		return fmt.Errorf("can't get trigger IDs start with prefix %s: %w", prefix, err)
 	}
+
 	unusedTriggers, err := database.GetUnusedTriggerIDs()
 	if err != nil {
 		return fmt.Errorf("can't get unused trigger IDs; err: %w", err)
 	}
+
 	unusedTriggersMap := map[string]struct{}{}
 
 	for _, id := range unusedTriggers {
@@ -35,6 +37,7 @@ func handleRemoveUnusedTriggersStartWith(logger moira.Logger, database moira.Dat
 	}
 
 	triggersToDelete := make([]string, 0)
+
 	for _, id := range triggers {
 		if _, ok := unusedTriggersMap[id]; ok {
 			triggersToDelete = append(triggersToDelete, id)
@@ -52,6 +55,7 @@ func handleRemoveUnusedTriggersWithTTL(logger moira.Logger, database moira.Datab
 
 	triggersToDelete := make([]string, 0)
 	nowInSec := time.Now().Unix()
+
 	for _, id := range unusedTriggers {
 		unusedTrigger, err := database.GetTrigger(id)
 		if err != nil {
@@ -92,13 +96,16 @@ func deleteTriggers(logger moira.Logger, triggers []string, database moira.Datab
 		Msg("Removing triggers start with has started")
 
 	deletedTriggersCount := 0
+
 	for _, id := range triggers {
 		err := database.RemoveTrigger(id)
 		if err != nil {
 			return fmt.Errorf("can't remove trigger with id %s: %w", id, err)
 		}
+
 		deletedTriggersCount++
 	}
+
 	logger.Info().
 		Int("deleted_triggers_count", len(triggers)).
 		Interface("deleted_triggers", triggers).

@@ -11,12 +11,14 @@ func updateFrom29(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Update 2.9 -> 2.10 was started")
 
 	ctx := context.Background()
+
 	err := createKeyForLocalTriggers(ctx, logger, database)
 	if err != nil {
 		return err
 	}
 
 	logger.Info().Msg("Update 2.9 -> 2.10 was finished")
+
 	return nil
 }
 
@@ -24,12 +26,14 @@ func downgradeTo29(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Downgrade 2.10 -> 2.9 started")
 
 	ctx := context.Background()
+
 	err := revertCreateKeyForLocalTriggers(ctx, logger, database)
 	if err != nil {
 		return err
 	}
 
 	logger.Info().Msg("Downgrade 2.10 -> 2.9 was finished")
+
 	return nil
 }
 

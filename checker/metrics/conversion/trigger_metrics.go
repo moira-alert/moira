@@ -202,11 +202,13 @@ func (m TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set[string]) map
 		if declaredAloneMetrics.contains(targetName) {
 			continue
 		}
+
 		diff := metricsSet.diff(fullMetrics)
 		if len(diff) > 0 {
 			result[targetName] = diff
 		}
 	}
+
 	return result
 }
 

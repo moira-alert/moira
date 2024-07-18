@@ -6,6 +6,7 @@ import (
 
 func (index *Index) checkIndexedTriggersCount() error {
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
+
 	for {
 		select {
 		case <-index.tomb.Dying():
@@ -20,6 +21,7 @@ func (index *Index) checkIndexedTriggersCount() error {
 
 func (index *Index) checkIndexActualizationLag() error {
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
+
 	for {
 		select {
 		case <-index.tomb.Dying():

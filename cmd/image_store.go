@@ -13,6 +13,7 @@ const (
 // InitImageStores initializes the image storage provider with settings from the yaml config.
 func InitImageStores(imageStores ImageStoreConfig, logger moira.Logger) map[string]moira.ImageStore {
 	var err error
+
 	imageStoreMap := make(map[string]moira.ImageStore)
 
 	imageStore := &s3.ImageStore{}
@@ -27,6 +28,7 @@ func InitImageStores(imageStores ImageStoreConfig, logger moira.Logger) map[stri
 				Msg("Image store initialized")
 		}
 	}
+
 	imageStoreMap[s3ImageStore] = imageStore
 
 	return imageStoreMap
