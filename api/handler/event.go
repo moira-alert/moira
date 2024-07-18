@@ -34,11 +34,13 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	size := middleware.GetSize(request)
 	page := middleware.GetPage(request)
+
 	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, eventsList); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}

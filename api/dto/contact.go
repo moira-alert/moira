@@ -33,8 +33,10 @@ func (contact *Contact) Bind(r *http.Request) error {
 	if contact.Type == "" {
 		return fmt.Errorf("contact type can not be empty")
 	}
+
 	if contact.Value == "" {
 		return fmt.Errorf("contact value of type %s can not be empty", contact.Type)
 	}
+
 	return nil
 }

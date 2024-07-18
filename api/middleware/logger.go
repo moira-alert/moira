@@ -44,8 +44,10 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 			wrapWriter := middleware.NewWrapResponseWriter(&responseWriterWithBody{ResponseWriter: writer}, request.ProtoMajor)
 
 			t1 := time.Now()
+
 			defer func() {
 				rvr := recover()
+
 				entry.fillMsg(request)
 
 				if rvr != nil {
@@ -58,6 +60,7 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 
 			next.ServeHTTP(wrapWriter, WithLogEntry(request, entry))
 		}
+
 		return http.HandlerFunc(fn)
 	}
 }
@@ -65,6 +68,7 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 func getErrorResponseIfItHas(writer http.ResponseWriter) *api.ErrorResponse {
 	writerWithBody := writer.(*responseWriterWithBody)
 	errResp := &api.ErrorResponse{}
+
 	if err := json.NewDecoder(&writerWithBody.body).Decode(errResp); err != nil {
 		return &api.ErrorResponse{
 			HTTPStatusCode: http.StatusInternalServerError,
@@ -121,6 +125,7 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 	if status == 0 {
 		status = http.StatusOK
 	}
+
 	if status >= http.StatusInternalServerError {
 		event = entry.logger.Error()
 
@@ -158,8 +163,10 @@ type responseWriterWithBody struct {
 func (w *responseWriterWithBody) Write(buf []byte) (int, error) {
 	n, err := w.ResponseWriter.Write(buf)
 	_, err2 := w.body.Write(buf[:n])
+
 	if err == nil {
 		err = err2
 	}
+
 	return n, err
 }

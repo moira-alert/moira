@@ -124,6 +124,7 @@ func NewHandler(
 	if apiConfig.EnableCORS {
 		return cors.AllowAll().Handler(router)
 	}
+
 	return router
 }
 

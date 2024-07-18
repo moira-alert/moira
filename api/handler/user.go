@@ -28,6 +28,7 @@ func user(router chi.Router) {
 func getUserName(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	auth := middleware.GetAuth(request)
+
 	if err := render.Render(writer, request, &dto.User{
 		Login:       userLogin,
 		Role:        auth.GetRole(userLogin),
@@ -51,6 +52,7 @@ func getUserName(writer http.ResponseWriter, request *http.Request) {
 func getUserSettings(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	auth := middleware.GetAuth(request)
+
 	userSettings, err := controller.GetUserSettings(database, userLogin, auth)
 	if err != nil {
 		render.Render(writer, request, err) //nolint

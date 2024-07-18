@@ -27,5 +27,6 @@ func UpdateNotifierState(database moira.Database, state *dto.NotifierState) *api
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }

@@ -41,6 +41,7 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
+
 	from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
 	if from == 0 {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr))) //nolint

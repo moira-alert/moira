@@ -38,6 +38,7 @@ var (
 
 func main() {
 	flag.Parse()
+
 	if *printVersion {
 		fmt.Println("Moira Api")
 		fmt.Println("Version:", MoiraVersion)
@@ -148,11 +149,13 @@ func main() {
 	go func() {
 		server.Serve(listener) //nolint
 	}()
+
 	defer Stop(logger, server)
 
 	logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira Api Started")
+
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 
@@ -166,6 +169,7 @@ func main() {
 func Stop(logger moira.Logger, server *http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //nolint
 	defer cancel()
+
 	if err := server.Shutdown(ctx); err != nil {
 		logger.Error().
 			Error(err).

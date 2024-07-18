@@ -34,12 +34,15 @@ func (t TeamModel) Bind(*http.Request) error {
 	if t.Name == "" {
 		return fmt.Errorf("team name cannot be empty")
 	}
+
 	if utf8.RuneCountInString(t.Name) > teamNameLimit {
 		return fmt.Errorf("team name cannot be longer than %d characters", teamNameLimit)
 	}
+
 	if utf8.RuneCountInString(t.Description) > teamDescriptionLimit {
 		return fmt.Errorf("team description cannot be longer than %d characters", teamNameLimit)
 	}
+
 	return nil
 }
 
@@ -87,6 +90,7 @@ func (m TeamMembers) Bind(*http.Request) error {
 	if len(m.Usernames) == 0 {
 		return fmt.Errorf("at least one user should be specified")
 	}
+
 	return nil
 }
 

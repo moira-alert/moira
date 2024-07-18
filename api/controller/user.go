@@ -27,11 +27,13 @@ func GetUserSettings(database moira.Database, userLogin string, auth *api.Author
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	for _, subscription := range subscriptions {
 		if subscription != nil {
 			userSettings.Subscriptions = append(userSettings.Subscriptions, *subscription)
 		}
 	}
+
 	contactIDs, err := database.GetUserContactIDs(userLogin)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
@@ -41,10 +43,12 @@ func GetUserSettings(database moira.Database, userLogin string, auth *api.Author
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	for _, contact := range contacts {
 		if contact != nil {
 			userSettings.Contacts = append(userSettings.Contacts, *contact)
 		}
 	}
+
 	return userSettings, nil
 }

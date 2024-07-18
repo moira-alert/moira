@@ -17,7 +17,9 @@ func (auth *Authorization) IsAdmin(login string) bool {
 	if !auth.IsEnabled() {
 		return false
 	}
+
 	_, ok := auth.AdminList[login]
+
 	return ok
 }
 
@@ -35,8 +37,10 @@ func (auth *Authorization) GetRole(login string) Role {
 	if !auth.IsEnabled() {
 		return RoleUndefined
 	}
+
 	if auth.IsAdmin(login) {
 		return RoleAdmin
 	}
+
 	return RoleUser
 }

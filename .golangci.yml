@@ -62,7 +62,6 @@ linters-settings:
         disabled: true
       - name: unnecessary-stmt
         disabled: true
-
   mnd:
     checks:
     - argument
@@ -86,6 +85,8 @@ linters-settings:
     - '0o666'
     - '0o644'
     - '0o755'
+  wsl:
+    strict-append: false
 
 linters:
   disable-all: true
@@ -144,6 +145,7 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
+    - wsl
 
 issues:
   exclude-dirs:
@@ -151,6 +153,9 @@ issues:
   exclude-files:
     - notifier/registrator.go
   exclude-rules:
+    - path-except: 'api/*/*'
+      linters:
+        - wsl
     - path: _test\.go
       linters:
         - contextcheck
@@ -159,6 +164,7 @@ issues:
         - errcheck
         - goconst
         - revive
+        - wsl
 
 run:
   timeout: 5m

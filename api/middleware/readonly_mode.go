@@ -15,8 +15,10 @@ func ReadOnlyMiddleware(config *api.Config) func(next http.Handler) http.Handler
 				render.Render(w, r, api.ErrorForbidden("Moira is currently in read-only mode")) //nolint:errcheck
 				return
 			}
+
 			next.ServeHTTP(w, r)
 		}
+
 		return http.HandlerFunc(fn)
 	}
 }
