@@ -22,49 +22,51 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 	if team.ID != "" { // if teamID is specified in request data then check that team with this id is not exist
 		teamID = team.ID
 
-		if _, err := dataBase.GetTeam(teamID); err != nil && !errors.Is(err, database.ErrNil) {
+		_, err := dataBase.GetTeam(teamID)
+		if err == nil {
+			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("team with ID you specified already exists %s", teamID))
+		}
+
+		if err != nil && !errors.Is(err, database.ErrNil) {
 			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot check id for team: %w", err))
 		}
+	} else { // on the other hand try to create an UUID for teamID
+		createdSuccessfully := false
 
-		return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("team with ID you specified already exists %s", teamID))
-	}
-	// on the other hand try to create an UUID for teamID
-	createdSuccessfully := false
+		for i := 0; i < teamIDCreateRetries; i++ { // trying three times to create an UUID and check if it exists
+			generatedUUID, err := uuid.NewV4()
+			if err != nil {
+				return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate id for team: %w", err))
+			}
 
-	for i := 0; i < teamIDCreateRetries; i++ { // trying three times to create an UUID and check if it exists
-		generatedUUID, err := uuid.NewV4()
-		if err != nil {
-			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate id for team: %w", err))
+			teamID = generatedUUID.String()
+
+			_, err = dataBase.GetTeam(teamID)
+			if errors.Is(err, database.ErrNil) {
+				createdSuccessfully = true
+				break
+			}
+
+			if err != nil {
+				return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot check id for team: %w", err))
+			}
 		}
 
-		teamID = generatedUUID.String()
-		_, err = dataBase.GetTeam(teamID)
-
-		if errors.Is(err, database.ErrNil) {
-			createdSuccessfully = true
-			break
-		}
-
-		if err != nil {
-			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot check id for team: %w", err))
+		if !createdSuccessfully {
+			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate unique id for team"))
 		}
 	}
 
-	if !createdSuccessfully {
-		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate unique id for team"))
-	}
-
-	err := dataBase.SaveTeam(teamID, team.ToMoiraTeam())
-	if err != nil {
+	if err := dataBase.SaveTeam(teamID, team.ToMoiraTeam()); err != nil {
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", err))
 	}
 
 	teamsMap, apiErr := addTeamsForNewUsers(dataBase, teamID, map[string]bool{userID: true}, map[string][]string{})
-	if err != nil {
+	if apiErr != nil {
 		return dto.SaveTeamResponse{}, apiErr
 	}
 
-	err = dataBase.SaveTeamsAndUsers(teamID, []string{userID}, teamsMap)
+	err := dataBase.SaveTeamsAndUsers(teamID, []string{userID}, teamsMap)
 	if err != nil {
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot save team users: %w", err))
 	}
