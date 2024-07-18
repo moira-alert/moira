@@ -36,10 +36,7 @@ type config struct {
 type Sender struct {
 	DataBase  moira.Database
 	logger    moira.Logger
-	apiToken  string
-	frontURI  string
 	bot       *telebot.Bot
-	location  *time.Location
 	formatter message_format.MessageFormatter
 }
 
@@ -67,27 +64,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 
 	emojiProvider := telegramEmojiProvider{}
-
-	sender.apiToken = cfg.APIToken
-	sender.frontURI = cfg.FrontURI
-	sender.logger = logger
-	sender.location = location
-	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  sender.apiToken,
-		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
-	})
-	if err != nil {
-		return removeTokenFromError(err, sender.bot)
-	}
-
-	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
-		if err = sender.handleMessage(message); err != nil {
-			sender.logger.Error().
-				Error(err).
-				Msg("Error handling incoming message: %s")
-		}
-	})
-
 	sender.formatter = message_format.HighlightSyntaxFormatter{
 		EmojiGetter: emojiProvider,
 		FrontURI:    cfg.FrontURI,
@@ -105,9 +81,26 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			return desc
 		},
 		BoldFormatter: func(str string) string {
-			return fmt.Sprintf("**%s**", str)
+			return fmt.Sprintf("*%s*", str)
 		},
 	}
+
+	sender.logger = logger
+	sender.bot, err = telebot.NewBot(telebot.Settings{
+		Token:  cfg.APIToken,
+		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
+	})
+	if err != nil {
+		return removeTokenFromError(err, sender.bot)
+	}
+
+	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
+		if err = sender.handleMessage(message); err != nil {
+			sender.logger.Error().
+				Error(err).
+				Msg("Error handling incoming message: %s")
+		}
+	})
 
 	go sender.runTelebot(cfg.ContactType)
 

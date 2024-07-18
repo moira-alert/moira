@@ -53,10 +53,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	emojiProvider, err := emoji_provider.NewEmojiProvider(cfg.DefaultEmoji, cfg.EmojiMap)
 	if err != nil {
-		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
+		return fmt.Errorf("cannot initialize slack sender, err: %w", err)
 	}
 	sender.logger = logger
-	sender.client = slack_client.New(cfg.APIToken)
 	sender.emojiProvider = emojiProvider
 	sender.formatter = message_format.HighlightSyntaxFormatter{
 		EmojiGetter: emojiProvider,
@@ -71,6 +70,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			return fmt.Sprintf("*%s*", str)
 		},
 	}
+	sender.client = slack_client.New(cfg.APIToken)
 	return nil
 }
 

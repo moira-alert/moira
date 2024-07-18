@@ -26,10 +26,7 @@ func TestInit(t *testing.T) {
 				"front_uri": "http://moira.uri",
 			}
 			sender.Init(senderSettings, logger, location, "15:04") //nolint
-			So(sender.apiToken, ShouldResemble, "123")
-			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
-			So(sender.location, ShouldResemble, location)
 		})
 	})
 }

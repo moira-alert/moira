@@ -1,3 +1,5 @@
+// Package message_format provides MessageFormatter interface which may be used for formatting messages.
+// Also, it contains some realizations such as HighlightSyntaxFormatter.
 package message_format
 
 import (
