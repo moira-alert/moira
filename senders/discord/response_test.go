@@ -6,9 +6,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/golang/mock/gomock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGetResponseMessage(t *testing.T) {
@@ -42,7 +42,7 @@ func TestGetResponseMessage(t *testing.T) {
 		})
 
 		Convey("DM channel", func() {
-			dataBase.EXPECT().SetUsernameID(messenger, "@User", "456").Return(nil)
+			dataBase.EXPECT().SetUsernameChat(messenger, "@User", "456").Return(nil)
 			channel.Type = discordgo.ChannelTypeDM
 			channel.ID = "456"
 			message.Content = "!start"
@@ -54,7 +54,7 @@ func TestGetResponseMessage(t *testing.T) {
 		})
 
 		Convey("Guild Text channel", func() {
-			dataBase.EXPECT().SetUsernameID(messenger, "testchan", "456").Return(nil)
+			dataBase.EXPECT().SetUsernameChat(messenger, "testchan", "456").Return(nil)
 			channel.Type = discordgo.ChannelTypeGuildText
 			channel.ID = "456"
 			channel.Name = "testchan"
