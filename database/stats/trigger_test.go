@@ -3,12 +3,12 @@ package stats
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_metrics "github.com/moira-alert/moira/mock/moira-alert/metrics"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestTriggerStatsCheckTriggerCount(t *testing.T) {

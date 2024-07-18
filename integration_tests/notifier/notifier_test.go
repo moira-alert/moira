@@ -7,9 +7,9 @@ import (
 
 	"github.com/moira-alert/moira/clock"
 
-	"github.com/golang/mock/gomock"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
