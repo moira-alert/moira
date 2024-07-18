@@ -26,5 +26,5 @@ type Config struct {
 	MaxFailAttemptToSendAvailable int
 	LogContactsToLevel            map[string]string
 	LogSubscriptionsToLevel       map[string]string
-	PlotConfig                    plotting.PlotConfig
+	PlotCfg                       plotting.PlotConfig
 }

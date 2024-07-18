@@ -57,8 +57,8 @@ type notifierConfig struct {
 	MaxFailAttemptToSendAvailable int `yaml:"max_fail_attempt_to_send_available"`
 	// Specify log level by entities
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
-	//
-	PlotConfig plotConfig `yaml:"plot"`
+	// PlotCfg sets the configuration for the plots, such as size
+	PlotCfg plotConfig `yaml:"plot"`
 }
 
 type selfStateConfig struct {
@@ -120,7 +120,7 @@ func getDefault() config {
 			Timezone:                      "UTC",
 			ReadBatchSize:                 int(notifier.NotificationsLimitUnlimited),
 			MaxFailAttemptToSendAvailable: 3,
-			PlotConfig: plotConfig{
+			PlotCfg: plotConfig{
 				Width:  800,
 				Height: 400,
 				YAxisSecondaryCfg: yAxisSecondaryConfig{
@@ -213,7 +213,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		MaxFailAttemptToSendAvailable: config.MaxFailAttemptToSendAvailable,
 		LogContactsToLevel:            contacts,
 		LogSubscriptionsToLevel:       subscriptions,
-		PlotConfig:                    config.PlotConfig.getSettings(),
+		PlotCfg:                       config.PlotCfg.getSettings(),
 	}
 }
 

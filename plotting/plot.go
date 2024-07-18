@@ -23,12 +23,14 @@ func (err ErrNoPointsToRender) Error() string {
 	return fmt.Sprintf("no points found to render trigger: %s", err.triggerID)
 }
 
+// PlotConfig sets the configuration for plots, such as size.
 type PlotConfig struct {
 	Width             int
 	Height            int
 	YAxisSecondaryCfg YAxisSecondaryConfig
 }
 
+// YAxisSecondaryConfig defines the setting for the secondary y-axis.
 type YAxisSecondaryConfig struct {
 	EnablePrettyTicks bool
 }

@@ -49,7 +49,8 @@ type apiConfig struct {
 	EnableCORS bool `yaml:"enable_cors"`
 	// Authorization contains authorization configuration.
 	Authorization authorization `yaml:"authorization"`
-	PlotCfg       plotConfig    `yaml:"plot"`
+	// PlotCfg sets the configuration for the plots, such as size.
+	PlotCfg plotConfig `yaml:"plot"`
 }
 
 type authorization struct {
