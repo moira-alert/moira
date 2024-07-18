@@ -219,7 +219,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		}
 
 		logEvent := log.Info()
-		if plots == nil {
+		if plots != nil {
 			logEvent.Int64(moira.LogFieldNamePlotsBuildDuration, plotsBuildDuration)
 		}
 		logEvent.
