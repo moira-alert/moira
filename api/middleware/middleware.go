@@ -63,7 +63,7 @@ func GetTriggerID(request *http.Request) string {
 	return request.Context().Value(triggerIDKey).(string)
 }
 
-// GetLocalMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware.
+// GetMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware.
 func GetMetricTTL(request *http.Request) map[moira.ClusterKey]time.Duration {
 	return request.Context().Value(clustersMetricTTLKey).(map[moira.ClusterKey]time.Duration)
 }
@@ -154,7 +154,7 @@ func GetTeamUserID(request *http.Request) string {
 }
 
 // SetContextValueForTest is a helper function that is needed for testing purposes and sets context values with local ContextKey type.
-func SetContextValueForTest(ctx context.Context, key string, value interface{}) context.Context {
+func SetContextValueForTest(ctx context.Context, key string, value any) context.Context {
 	return context.WithValue(ctx, ContextKey(key), value)
 }
 

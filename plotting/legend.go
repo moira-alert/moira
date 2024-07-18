@@ -21,7 +21,7 @@ type plotLine struct {
 // getPlotLegend returns plot legend.
 func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart.Renderable {
 	// TODO: Simplify this method
-	return func(r chart.Renderer, cb chart.Box, chartDefaults chart.Style) {
+	return func(r chart.Renderer, _ chart.Box, _ chart.Style) {
 		foundLabels := make(map[string]bool)
 		lines := make([]plotLine, 0, maxLabelsCount)
 

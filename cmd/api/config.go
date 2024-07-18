@@ -29,12 +29,12 @@ func (config *config) ClustersMetricTTL() map[moira.ClusterKey]time.Duration {
 	result[moira.DefaultLocalCluster] = to.Duration(config.Redis.MetricsTTL)
 
 	for _, remote := range config.Remotes.Graphite {
-		key := moira.MakeClusterKey(moira.GraphiteRemote, remote.ClusterId)
+		key := moira.MakeClusterKey(moira.GraphiteRemote, remote.ClusterID)
 		result[key] = to.Duration(remote.MetricsTTL)
 	}
 
 	for _, remote := range config.Remotes.Prometheus {
-		key := moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterId)
+		key := moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterID)
 		result[key] = to.Duration(remote.MetricsTTL)
 	}
 
@@ -115,11 +115,11 @@ func (config *apiConfig) getSettings(
 		Listen:        config.Listen,
 		MetricsTTL:    metricsTTL,
 		Flags:         flags,
-		Authorization: config.Authorization.toApiConfig(webConfig),
+		Authorization: config.Authorization.toAPIConfig(webConfig),
 	}
 }
 
-func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
+func (auth *authorization) toAPIConfig(webConfig *webConfig) api.Authorization {
 	adminList := make(map[string]struct{}, len(auth.AdminList))
 	for _, admin := range auth.AdminList {
 		adminList[admin] = struct{}{}
@@ -156,14 +156,14 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 
 	clusters := []api.MetricSourceCluster{{
 		TriggerSource: moira.GraphiteLocal,
-		ClusterId:     moira.DefaultCluster,
+		ClusterID:     moira.DefaultCluster,
 		ClusterName:   "Graphite Local",
 	}}
 
 	for _, remote := range remotes.Graphite {
 		cluster := api.MetricSourceCluster{
 			TriggerSource: moira.GraphiteRemote,
-			ClusterId:     remote.ClusterId,
+			ClusterID:     remote.ClusterID,
 			ClusterName:   remote.ClusterName,
 		}
 		clusters = append(clusters, cluster)
@@ -172,7 +172,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 	for _, remote := range remotes.Prometheus {
 		cluster := api.MetricSourceCluster{
 			TriggerSource: moira.PrometheusRemote,
-			ClusterId:     remote.ClusterId,
+			ClusterID:     remote.ClusterID,
 			ClusterName:   remote.ClusterName,
 		}
 		clusters = append(clusters, cluster)

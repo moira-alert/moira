@@ -87,7 +87,7 @@ type Database interface {
 
 	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
-	GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*NotificationEventHistoryItem, error)
+	GetNotificationsByContactIDWithLimit(contactID string, from int64, to int64) ([]*NotificationEventHistoryItem, error)
 	RemoveNotification(notificationKey string) (int64, error)
 	RemoveAllNotifications() error
 	FetchNotifications(to int64, limit int64) ([]*ScheduledNotification, error)
@@ -159,7 +159,7 @@ type Database interface {
 
 // Lock implements lock abstraction.
 type Lock interface {
-	Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error)
+	Acquire(stop <-chan struct{}) (lost <-chan struct{}, err error)
 	Release()
 }
 
@@ -182,7 +182,7 @@ type Logger interface {
 	String(key, value string) Logger
 	Int(key string, value int) Logger
 	Int64(key string, value int64) Logger
-	Fields(fields map[string]interface{}) Logger
+	Fields(fields map[string]any) Logger
 
 	// Get child logger with the minimum accepted level
 	Level(string) (Logger, error)
@@ -194,7 +194,7 @@ type Logger interface {
 type Sender interface {
 	// TODO refactor: https://github.com/moira-alert/moira/issues/794
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot [][]byte, throttled bool) error
-	Init(senderSettings interface{}, logger Logger, location *time.Location, dateTimeFormat string) error
+	Init(senderSettings any, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
 // ImageStore is the interface for image storage providers.

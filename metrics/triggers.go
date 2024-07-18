@@ -13,7 +13,7 @@ type TriggersMetrics struct {
 func NewTriggersMetrics(registry Registry, clusterKeys []moira.ClusterKey) *TriggersMetrics {
 	meters := make(map[moira.ClusterKey]Meter, len(clusterKeys))
 	for _, key := range clusterKeys {
-		meters[key] = registry.NewMeter("triggers", key.TriggerSource.String(), key.ClusterId.String())
+		meters[key] = registry.NewMeter("triggers", key.TriggerSource.String(), key.ClusterID.String())
 	}
 
 	return &TriggersMetrics{

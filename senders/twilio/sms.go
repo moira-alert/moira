@@ -14,7 +14,7 @@ type twilioSenderSms struct {
 	twilioSender
 }
 
-func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
 	sender.logger.Debug().
 		String("phone", contact.Value).

@@ -15,7 +15,7 @@ type PrometheusApi interface {
 	QueryRange(ctx context.Context, query string, r promApi.Range, opts ...promApi.Option) (model.Value, promApi.Warnings, error)
 }
 
-func createPrometheusApi(config *Config) (promApi.API, error) {
+func createPrometheusAPI(config *Config) (promApi.API, error) {
 	roundTripper := api.DefaultRoundTripper
 
 	if config.User != "" && config.Password != "" {

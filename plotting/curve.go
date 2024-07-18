@@ -78,12 +78,12 @@ func resolveFirstPoint(metricData metricSource.MetricData) (int, int64) {
 	start := 0
 	startTime := metricData.StartTime
 	for _, metricVal := range metricData.Values {
-		if !moira.IsFiniteNumber(metricVal) {
-			start++
-			startTime += metricData.StepTime
-		} else {
+		if moira.IsFiniteNumber(metricVal) {
 			break
 		}
+
+		start++
+		startTime += metricData.StepTime
 	}
 	return start, startTime
 }

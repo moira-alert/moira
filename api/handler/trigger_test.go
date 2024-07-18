@@ -38,7 +38,7 @@ func TestGetTrigger(t *testing.T) {
 			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{
 				ID:            "triggerID-0000000000001",
 				TriggerSource: moira.GraphiteLocal,
-				ClusterId:     moira.DefaultCluster,
+				ClusterID:     moira.DefaultCluster,
 			}, nil)
 			mockDb.EXPECT().GetTriggerThrottling("triggerID-0000000000001").Return(throttlingTime, throttlingTime)
 			database = mockDb
@@ -68,7 +68,7 @@ func TestGetTrigger(t *testing.T) {
 						ID:            "triggerID-0000000000001",
 						CreatedAt:     &triggerTime,
 						TriggerSource: moira.GraphiteLocal,
-						ClusterId:     moira.DefaultCluster,
+						ClusterID:     moira.DefaultCluster,
 						UpdatedAt:     &triggerTime,
 					},
 					nil)
@@ -156,7 +156,7 @@ func TestUpdateTrigger(t *testing.T) {
 				ErrorValue:    &triggerErrorValue,
 				Targets:       []string{"my.metric"},
 				TriggerSource: moira.GraphiteLocal,
-				ClusterId:     moira.DefaultCluster,
+				ClusterID:     moira.DefaultCluster,
 			}
 			mockDb.EXPECT().GetTrigger(gomock.Any()).Return(trigger, nil)
 
@@ -399,15 +399,15 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 	database = db
 	defer func() { database = nil }()
 
-	const triggerId = "TestTriggerId"
+	const triggerID = "TestTriggerId"
 
 	Convey("Given database returns trigger with TriggerSource = GraphiteLocal", t, func() {
-		request := httptest.NewRequest("GET", "/trigger/"+triggerId, nil)
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
+		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerID, nil)
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
 
 		trigger := moira.Trigger{
-			ID:            triggerId,
+			ID:            triggerID,
 			WarnValue:     newFloat64(1.0),
 			ErrorValue:    newFloat64(2.0),
 			TriggerType:   moira.RisingTrigger,
@@ -418,10 +418,10 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 			TriggerSource: moira.GraphiteLocal,
 		}
 
-		db.EXPECT().GetTrigger(triggerId).Return(trigger, nil)
-		db.EXPECT().GetTriggerThrottling(triggerId)
-		db.EXPECT().GetNotificationEvents(triggerId, gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
-		db.EXPECT().GetNotificationEventCount(triggerId, gomock.Any()).Return(int64(0))
+		db.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		db.EXPECT().GetTriggerThrottling(triggerID)
+		db.EXPECT().GetNotificationEvents(triggerID, gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
+		db.EXPECT().GetNotificationEventCount(triggerID, gomock.Any()).Return(int64(0))
 
 		responseWriter := httptest.NewRecorder()
 		getTrigger(responseWriter, request)
@@ -446,12 +446,12 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given database returns trigger with TriggerSource = GraphiteRemote", t, func() {
-		request := httptest.NewRequest("GET", "/trigger/"+triggerId, nil)
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
+		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerID, nil)
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
 
 		trigger := moira.Trigger{
-			ID:            triggerId,
+			ID:            triggerID,
 			WarnValue:     newFloat64(1.0),
 			ErrorValue:    newFloat64(2.0),
 			TriggerType:   moira.RisingTrigger,
@@ -462,10 +462,10 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 			TriggerSource: moira.GraphiteRemote,
 		}
 
-		db.EXPECT().GetTrigger(triggerId).Return(trigger, nil)
-		db.EXPECT().GetTriggerThrottling(triggerId)
-		db.EXPECT().GetNotificationEvents(triggerId, gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
-		db.EXPECT().GetNotificationEventCount(triggerId, gomock.Any()).Return(int64(0))
+		db.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		db.EXPECT().GetTriggerThrottling(triggerID)
+		db.EXPECT().GetNotificationEvents(triggerID, gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
+		db.EXPECT().GetNotificationEventCount(triggerID, gomock.Any()).Return(int64(0))
 
 		responseWriter := httptest.NewRecorder()
 		getTrigger(responseWriter, request)
@@ -490,12 +490,12 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given database returns trigger with TriggerSource = PrometheusTrigger", t, func() {
-		request := httptest.NewRequest("GET", "/trigger/"+triggerId, nil)
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
+		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerID, nil)
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
 
 		trigger := moira.Trigger{
-			ID:            triggerId,
+			ID:            triggerID,
 			WarnValue:     newFloat64(1.0),
 			ErrorValue:    newFloat64(2.0),
 			TriggerType:   moira.RisingTrigger,
@@ -506,10 +506,10 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 			TriggerSource: moira.PrometheusRemote,
 		}
 
-		db.EXPECT().GetTrigger(triggerId).Return(trigger, nil)
-		db.EXPECT().GetTriggerThrottling(triggerId)
-		db.EXPECT().GetNotificationEvents(triggerId, gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
-		db.EXPECT().GetNotificationEventCount(triggerId, gomock.Any()).Return(int64(0))
+		db.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		db.EXPECT().GetTriggerThrottling(triggerID)
+		db.EXPECT().GetNotificationEvents(triggerID, gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
+		db.EXPECT().GetNotificationEventCount(triggerID, gomock.Any()).Return(int64(0))
 
 		responseWriter := httptest.NewRecorder()
 		getTrigger(responseWriter, request)

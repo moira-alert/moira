@@ -92,7 +92,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		}
 	}
 	if notifier.config.SelfStateEnabled {
-		selfStateSettings := map[string]interface{}{
+		selfStateSettings := map[string]any{
 			"sender_type":  selfStateSender,
 			"contact_type": selfStateSender,
 		}
@@ -113,7 +113,7 @@ func (notifier *StandardNotifier) registerMetrics(senderContactType string) {
 }
 
 // RegisterSender adds sender for notification type and registers metrics.
-func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error {
+func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]any, sender moira.Sender) error {
 	senderType, ok := senderSettings["sender_type"].(string)
 	if !ok {
 		return ErrMissingSenderType

@@ -14,6 +14,6 @@ type ContactEventItemList struct {
 	List []ContactEventItem `json:"list"`
 }
 
-func (*ContactEventItemList) Render(w http.ResponseWriter, r *http.Request) error {
+func (*ContactEventItemList) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }

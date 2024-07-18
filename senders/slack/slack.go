@@ -12,7 +12,7 @@ import (
 	"github.com/moira-alert/moira/senders"
 	"github.com/moira-alert/moira/senders/emoji_provider"
 
-	slack_client "github.com/slack-go/slack"
+	slackclient "github.com/slack-go/slack"
 )
 
 const (
@@ -41,11 +41,11 @@ type Sender struct {
 	emojiProvider emoji_provider.StateEmojiGetter
 	logger        moira.Logger
 	location      *time.Location
-	client        *slack_client.Client
+	client        *slackclient.Client
 }
 
 // Init read yaml config.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings any, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -64,7 +64,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI
 	sender.location = location
-	sender.client = slack_client.New(cfg.APIToken)
+	sender.client = slackclient.New(cfg.APIToken)
 	return nil
 }
 
@@ -198,8 +198,12 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) sendMessage(message string, contact string, triggerID string, useDirectMessaging bool, emoji string) (string, string, error) {
-	params := slack_client.PostMessageParameters{
+func (sender *Sender) sendMessage(
+	message, contact, triggerID string,
+	useDirectMessaging bool,
+	emoji string,
+) (string, string, error) {
+	params := slackclient.PostMessageParameters{
 		Username:  "Moira",
 		AsUser:    useDirectMessaging,
 		IconEmoji: emoji,
@@ -210,7 +214,7 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		String("message", message).
 		Msg("Calling slack")
 
-	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slack_client.MsgOptionText(message, false), slack_client.MsgOptionPostMessageParameters(params))
+	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slackclient.MsgOptionText(message, false), slackclient.MsgOptionPostMessageParameters(params))
 	if err != nil {
 		errorText := err.Error()
 		if errorText == ErrorTextChannelArchived || errorText == ErrorTextNotInChannel ||
@@ -227,7 +231,7 @@ func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, trig
 	filename := fmt.Sprintf("%s.png", triggerID)
 	for _, plot := range plots {
 		reader := bytes.NewReader(plot)
-		uploadParameters := slack_client.UploadFileV2Parameters{
+		uploadParameters := slackclient.UploadFileV2Parameters{
 			FileSize:        len(plot),
 			Reader:          reader,
 			Title:           filename,

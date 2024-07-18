@@ -14,7 +14,7 @@ type Config struct {
 	SendingTimeout                time.Duration
 	ResendingTimeout              time.Duration
 	ReschedulingDelay             time.Duration
-	Senders                       []map[string]interface{}
+	Senders                       []map[string]any
 	LogFile                       string
 	LogLevel                      string
 	FrontURL                      string

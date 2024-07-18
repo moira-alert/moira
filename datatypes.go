@@ -85,7 +85,8 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 		return ""
 	}
 
-	if event.MessageEventInfo.Interval != nil && event.MessageEventInfo.Maintenance == nil {
+	if event.MessageEventInfo.Interval != nil &&
+		event.MessageEventInfo.Maintenance == nil {
 		return fmt.Sprintf(remindMessage, *event.MessageEventInfo.Interval)
 	}
 
@@ -100,7 +101,8 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 		location = time.UTC
 	}
 
-	if event.MessageEventInfo.Maintenance.StartUser != nil || event.MessageEventInfo.Maintenance.StartTime != nil {
+	if event.MessageEventInfo.Maintenance.StartUser != nil ||
+		event.MessageEventInfo.Maintenance.StartTime != nil {
 		messageBuffer.WriteString(" Maintenance was set")
 		if event.MessageEventInfo.Maintenance.StartUser != nil {
 			messageBuffer.WriteString(" by ")
@@ -169,7 +171,7 @@ type TriggerData struct {
 	ErrorValue    float64       `json:"error_value" example:"1000"`
 	IsRemote      bool          `json:"is_remote" example:"false"`
 	TriggerSource TriggerSource `json:"trigger_source,omitempty" example:"graphite_local"`
-	ClusterId     ClusterId     `json:"cluster_id,omitempty" example:"default"`
+	ClusterID     ClusterID     `json:"cluster_id,omitempty" example:"default"`
 	Tags          []string      `json:"__notifier_trigger_tags" example:"server,disk"`
 }
 
@@ -373,7 +375,7 @@ type Trigger struct {
 	PythonExpression *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
 	Patterns         []string        `json:"patterns" example:""`
 	TriggerSource    TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
-	ClusterId        ClusterId       `json:"cluster_id,omitempty" example:"default"`
+	ClusterID        ClusterID       `json:"cluster_id,omitempty" example:"default"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
 	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
 	CreatedAt        *int64          `json:"created_at" format:"int64" extensions:"x-nullable"`
@@ -389,20 +391,20 @@ const (
 
 // ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
 func (trigger *Trigger) ClusterKey() ClusterKey {
-	return MakeClusterKey(trigger.TriggerSource, trigger.ClusterId)
+	return MakeClusterKey(trigger.TriggerSource, trigger.ClusterID)
 }
 
 // TriggerSource is a enum which values correspond to types of moira's metric sources.
 type TriggerSource string
 
 var (
-	TriggerSourceNotSet TriggerSource = ""
+	TriggerSourceNotSet TriggerSource
 	GraphiteLocal       TriggerSource = "graphite_local"
 	GraphiteRemote      TriggerSource = "graphite_remote"
 	PrometheusRemote    TriggerSource = "prometheus_remote"
 )
 
-func (s *TriggerSource) UnmarshalJSON(data []byte) error {
+func (ts *TriggerSource) UnmarshalJSON(data []byte) error {
 	var v string
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
@@ -410,54 +412,53 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 
 	source := TriggerSource(v)
 	if source != GraphiteLocal && source != GraphiteRemote && source != PrometheusRemote {
-		*s = TriggerSourceNotSet
+		*ts = TriggerSourceNotSet
 		return nil
 	}
 
-	*s = source
+	*ts = source
 	return nil
 }
 
-// Needed for backwards compatibility with moira versions that used only isRemote flag.
-func (triggerSource TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
-	if triggerSource == TriggerSourceNotSet {
+// FillInIfNotSet Needed for backwards compatibility with moira versions that used only isRemote flag.
+func (ts TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
+	if ts == TriggerSourceNotSet {
 		if isRemote {
 			return GraphiteRemote
-		} else {
-			return GraphiteLocal
 		}
+		return GraphiteLocal
 	}
-	return triggerSource
+	return ts
 }
 
-func (triggerSource TriggerSource) String() string {
-	return string(triggerSource)
+func (ts TriggerSource) String() string {
+	return string(ts)
 }
 
 // ClusterId represent the unique id for each cluster with the same TriggerSource.
-type ClusterId string
+type ClusterID string
 
 var (
-	ClusterNotSet  ClusterId = ""
-	DefaultCluster ClusterId = "default"
+	ClusterNotSet  ClusterID
+	DefaultCluster ClusterID = "default"
 )
 
 // FillInIfNotSet returns new ClusterId with value set to default if it was empty.
-func (clusterId ClusterId) FillInIfNotSet() ClusterId {
+func (clusterId ClusterID) FillInIfNotSet() ClusterID {
 	if clusterId == ClusterNotSet {
 		return DefaultCluster
 	}
 	return clusterId
 }
 
-func (clusterId ClusterId) String() string {
+func (clusterId ClusterID) String() string {
 	return string(clusterId)
 }
 
 // ClusterKey represents unique key of a metric source.
 type ClusterKey struct {
 	TriggerSource TriggerSource
-	ClusterId     ClusterId
+	ClusterID     ClusterID
 }
 
 var (
@@ -467,15 +468,15 @@ var (
 )
 
 // MakeClusterKey creates new cluster key with given trigger source and cluster id.
-func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey {
+func MakeClusterKey(triggerSource TriggerSource, clusterID ClusterID) ClusterKey {
 	return ClusterKey{
 		TriggerSource: triggerSource,
-		ClusterId:     clusterId,
+		ClusterID:     clusterID,
 	}
 }
 
 func (clusterKey ClusterKey) String() string {
-	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
+	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterID)
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp.
@@ -656,7 +657,7 @@ func (events NotificationEvents) getLastState() State {
 	return StateNODATA
 }
 
-// Returns the current state depending on the throttled parameter.
+// GetCurrentState Returns the current state depending on the throttled parameter.
 func (events NotificationEvents) GetCurrentState(throttled bool) State {
 	if throttled {
 		return events.getLastState()
@@ -751,7 +752,7 @@ func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettin
 		builder.WriteString(targetName)
 		builder.WriteString(": ")
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
-		switch settings {
+		switch settings { //nolint:revive
 		case SIFormatNumbers:
 			if event.Values[targetName] >= limit {
 				value = humanize.SIWithDigits(event.Values[targetName], 3, "")

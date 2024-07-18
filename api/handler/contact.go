@@ -20,7 +20,7 @@ func contact(router chi.Router) {
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
-		router.Get("/", getContactById)
+		router.Get("/", getContactByID)
 		router.Put("/", updateContact)
 		router.Delete("/", removeContact)
 		router.Post("/test", sendTestContactNotification)
@@ -63,10 +63,10 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 //	@failure	422			{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact/{contactID} [get]
-func getContactById(writer http.ResponseWriter, request *http.Request) {
+func getContactByID(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 
-	contact, apiErr := controller.GetContactById(database, contactData.ID)
+	contact, apiErr := controller.GetContactByID(database, contactData.ID)
 
 	if apiErr != nil {
 		render.Render(writer, request, apiErr) //nolint

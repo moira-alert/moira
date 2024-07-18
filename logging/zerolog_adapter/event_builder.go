@@ -43,14 +43,14 @@ func (e EventBuilder) Int64(key string, value int64) logging.EventBuilder {
 	return e
 }
 
-func (e EventBuilder) Interface(key string, value interface{}) logging.EventBuilder {
+func (e EventBuilder) Interface(key string, value any) logging.EventBuilder {
 	if e.event != nil {
 		e.event.Interface(key, value)
 	}
 	return e
 }
 
-func (e EventBuilder) Fields(fields map[string]interface{}) logging.EventBuilder {
+func (e EventBuilder) Fields(fields map[string]any) logging.EventBuilder {
 	if e.event != nil {
 		e.event.Fields(fields)
 	}

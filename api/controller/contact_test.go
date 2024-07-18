@@ -74,7 +74,7 @@ func TestGetContactById(t *testing.T) {
 		}
 
 		dataBase.EXPECT().GetContact(contact.ID).Return(contact, nil)
-		actual, err := GetContactById(dataBase, contact.ID)
+		actual, err := GetContactByID(dataBase, contact.ID)
 		So(err, ShouldBeNil)
 		So(actual,
 			ShouldResemble,
@@ -88,9 +88,9 @@ func TestGetContactById(t *testing.T) {
 	})
 
 	Convey("Get contact with invalid or unexisting guid id should be empty json", t, func() {
-		const invalidId = "invalidID"
-		dataBase.EXPECT().GetContact(invalidId).Return(moira.ContactData{}, nil)
-		actual, err := GetContactById(dataBase, invalidId)
+		const invalidID = "invalidID"
+		dataBase.EXPECT().GetContact(invalidID).Return(moira.ContactData{}, nil)
+		actual, err := GetContactByID(dataBase, invalidID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Contact{})
 	})
@@ -101,7 +101,7 @@ func TestGetContactById(t *testing.T) {
 		dbError := fmt.Errorf("some db internal error here")
 
 		dataBase.EXPECT().GetContact(contactID).Return(emptyContact, dbError)
-		contact, err := GetContactById(dataBase, contactID)
+		contact, err := GetContactByID(dataBase, contactID)
 		So(err, ShouldResemble, api.ErrorInternalServer(dbError))
 		So(contact, ShouldBeNil)
 	})

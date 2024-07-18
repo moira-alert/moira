@@ -62,11 +62,11 @@ func NewTriggerMetricsWithCapacity(capacity int) TriggerMetrics {
 // Populate is a function that takes TriggerMetrics and populate targets
 // that is missing metrics that appear in another targets except the targets that have
 // only alone metrics.
-func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, declaredAloneMetrics map[string]bool, from int64, to int64) TriggerMetrics {
+func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, declaredAloneMetrics map[string]bool, from int64, to int64) TriggerMetrics {
 	// This one have all metrics that should be in final TriggerMetrics.
 	// This structure filled with metrics from last check,
 	// current received metrics alone metrics from last check.
-	allMetrics := make(map[string]set[string], len(triggerMetrics))
+	allMetrics := make(map[string]set[string], len(m))
 
 	for metricName, metricState := range lastMetrics {
 		for targetName := range metricState.Values {
@@ -78,7 +78,7 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 		}
 	}
 
-	for targetName, metrics := range triggerMetrics {
+	for targetName, metrics := range m {
 		if _, ok := allMetrics[targetName]; !ok {
 			allMetrics[targetName] = make(set[string])
 		}
@@ -88,7 +88,7 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 		}
 	}
 
-	diff := triggerMetrics.FindMissingMetrics(newSet(declaredAloneMetrics))
+	diff := m.FindMissingMetrics(newSet(declaredAloneMetrics))
 
 	for targetName, metrics := range diff {
 		for metricName := range metrics {
@@ -102,7 +102,7 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 		// if declaredAloneMetrics[targetName] {
 		// 	continue
 		// }
-		targetMetrics, ok := triggerMetrics[targetName]
+		targetMetrics, ok := m[targetName]
 		if !ok {
 			targetMetrics = newTriggerTargetMetricsWithCapacity(len(metrics))
 		}
@@ -141,21 +141,21 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 //	{
 //	"t3": {metrics},
 //	}
-func (triggerMetrics TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool) (TriggerMetrics, AloneMetrics, error) {
+func (m TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool) (TriggerMetrics, AloneMetrics, error) {
 	if len(declaredAloneMetrics) == 0 {
-		return triggerMetrics, NewAloneMetricsWithCapacity(0), nil
+		return m, NewAloneMetricsWithCapacity(0), nil
 	}
 
-	metricCountUpperBound := len(triggerMetrics)
+	metricCountUpperBound := len(m)
 	result := NewTriggerMetricsWithCapacity(metricCountUpperBound)
 	aloneMetrics := NewAloneMetricsWithCapacity(metricCountUpperBound)
 
 	errorBuilder := newErrUnexpectedAloneMetricBuilder()
 	errorBuilder.setDeclared(declaredAloneMetrics)
 
-	for targetName, targetMetrics := range triggerMetrics {
+	for targetName, targetMetrics := range m {
 		if !declaredAloneMetrics[targetName] {
-			result[targetName] = triggerMetrics[targetName]
+			result[targetName] = m[targetName]
 			continue
 		}
 
@@ -180,16 +180,16 @@ func (triggerMetrics TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map
 
 // FindMissingMetrics is a function that returns a map of target names with metric names that are absent in
 // current target but appear in another targets.
-func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set[string]) map[string]set[string] {
+func (m TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set[string]) map[string]set[string] {
 	result := make(map[string]set[string])
 
-	if len(triggerMetrics) == 0 {
+	if len(m) == 0 {
 		return result
 	}
 
 	fullMetrics := make(set[string])
 
-	for targetName, targetMetrics := range triggerMetrics {
+	for targetName, targetMetrics := range m {
 		if declaredAloneMetrics.contains(targetName) {
 			continue
 		}
@@ -197,7 +197,7 @@ func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set
 		fullMetrics = fullMetrics.union(currentMetrics)
 	}
 
-	for targetName, targetMetrics := range triggerMetrics {
+	for targetName, targetMetrics := range m {
 		metricsSet := newSetFromTriggerTargetMetrics(targetMetrics)
 		if declaredAloneMetrics.contains(targetName) {
 			continue

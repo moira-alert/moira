@@ -12,7 +12,7 @@ const (
 	lazyTriggersWorkerTicker = time.Second * 10
 )
 
-func (manager *WorkerManager) lazyTriggersWorker() error {
+func (manager *Manager) lazyTriggersWorker() error {
 	localConfig, ok := manager.Config.SourceCheckConfigs[moira.DefaultLocalCluster]
 	if !ok {
 		return fmt.Errorf("can not initialize lazyTriggersWorker: default local source is not configured")
@@ -48,7 +48,7 @@ func (manager *WorkerManager) lazyTriggersWorker() error {
 	}
 }
 
-func (manager *WorkerManager) fillLazyTriggerIDs() error {
+func (manager *Manager) fillLazyTriggerIDs() error {
 	triggerIDs, err := manager.Database.GetUnusedTriggerIDs()
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (manager *WorkerManager) fillLazyTriggerIDs() error {
 	return nil
 }
 
-func (manager *WorkerManager) getRandomLazyCacheDuration() time.Duration {
+func (manager *Manager) getRandomLazyCacheDuration() time.Duration {
 	maxLazyCacheSeconds := manager.Config.LazyTriggersCheckInterval.Seconds()
 	min := maxLazyCacheSeconds / 2 //nolint
 	i := rand.Float64()*min + min

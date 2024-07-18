@@ -44,7 +44,7 @@ type Sender struct {
 }
 
 // Init read yaml config.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings any, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return err
 }
 
-func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) fillSettings(senderSettings any, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {

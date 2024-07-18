@@ -6,8 +6,8 @@ type EventBuilder interface {
 	Error(err error) EventBuilder
 	Int(key string, value int) EventBuilder
 	Int64(key string, value int64) EventBuilder
-	Interface(key string, value interface{}) EventBuilder
-	Fields(fields map[string]interface{}) EventBuilder
+	Interface(key string, value any) EventBuilder
+	Fields(fields map[string]any) EventBuilder
 
 	// Msg must be called after all tags were set
 	Msg(message string)

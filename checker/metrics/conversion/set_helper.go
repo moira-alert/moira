@@ -1,6 +1,6 @@
 package conversion
 
-var void struct{} = struct{}{}
+var void = struct{}{}
 
 // set[string] is a map that represents a set of strings with corresponding methods.
 type set[K comparable] map[K]struct{}

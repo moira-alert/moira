@@ -26,7 +26,7 @@ func InitMetricSources(remotes RemotesConfig, database moira.Database, logger mo
 		if err != nil {
 			return nil, err
 		}
-		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteRemote, graphite.ClusterId), source)
+		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteRemote, graphite.ClusterID), source)
 	}
 
 	for _, prom := range remotes.Prometheus {
@@ -35,7 +35,7 @@ func InitMetricSources(remotes RemotesConfig, database moira.Database, logger mo
 		if err != nil {
 			return nil, err
 		}
-		provider.RegisterSource(moira.MakeClusterKey(moira.PrometheusRemote, prom.ClusterId), source)
+		provider.RegisterSource(moira.MakeClusterKey(moira.PrometheusRemote, prom.ClusterID), source)
 	}
 
 	return provider, nil

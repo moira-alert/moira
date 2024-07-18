@@ -141,8 +141,8 @@ func makeTriggersToCheckKey(clusterKey moira.ClusterKey) (string, error) {
 		return "", fmt.Errorf("unknown trigger source `%s`", clusterKey.TriggerSource.String())
 	}
 
-	if clusterKey.ClusterId != moira.DefaultCluster {
-		key = key + ":" + clusterKey.ClusterId.String()
+	if clusterKey.ClusterID != moira.DefaultCluster {
+		key = key + ":" + clusterKey.ClusterID.String()
 	}
 
 	return key, nil

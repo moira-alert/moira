@@ -7,7 +7,7 @@ import (
 
 	"github.com/moira-alert/moira"
 
-	pushover_client "github.com/gregdel/pushover"
+	pushoverclient "github.com/gregdel/pushover"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -27,14 +27,14 @@ type config struct {
 type Sender struct {
 	logger   moira.Logger
 	location *time.Location
-	client   *pushover_client.Pushover
+	client   *pushoverclient.Pushover
 
 	apiToken string
 	frontURI string
 }
 
 // Init read yaml config.
-func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings any, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -45,7 +45,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if sender.apiToken == "" {
 		return fmt.Errorf("can not read pushover api_token from config")
 	}
-	sender.client = pushover_client.New(sender.apiToken)
+	sender.client = pushoverclient.New(sender.apiToken)
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI
 	sender.location = location
@@ -61,7 +61,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		String("message", pushoverMessage.Message).
 		Msg("Calling pushover with message title")
 
-	recipient := pushover_client.NewRecipient(contact.Value)
+	recipient := pushoverclient.NewRecipient(contact.Value)
 	_, err := sender.client.SendMessage(pushoverMessage, recipient)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
@@ -69,8 +69,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, trigger moira.TriggerData, plots [][]byte, throttled bool) *pushover_client.Message {
-	pushoverMessage := &pushover_client.Message{
+func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, trigger moira.TriggerData, plots [][]byte, throttled bool) *pushoverclient.Message {
+	pushoverMessage := &pushoverclient.Message{
 		Message:   sender.buildMessage(events, throttled),
 		Title:     sender.buildTitle(events, trigger, throttled),
 		Priority:  sender.getMessagePriority(events),
@@ -131,13 +131,13 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 }
 
 func (sender *Sender) getMessagePriority(events moira.NotificationEvents) int {
-	priority := pushover_client.PriorityNormal
+	priority := pushoverclient.PriorityNormal
 	for _, event := range events {
 		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
-			priority = pushover_client.PriorityEmergency
+			priority = pushoverclient.PriorityEmergency
 		}
-		if priority != pushover_client.PriorityEmergency && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
-			priority = pushover_client.PriorityHigh
+		if priority != pushoverclient.PriorityEmergency && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
+			priority = pushoverclient.PriorityHigh
 		}
 	}
 	return priority

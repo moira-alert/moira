@@ -12,11 +12,7 @@ func handleCleanUpOutdatedMetrics(config cleanupConfig, database moira.Database)
 		return err
 	}
 
-	if err = database.CleanUpOutdatedMetrics(duration); err != nil {
-		return err
-	}
-
-	return nil
+	return database.CleanUpOutdatedMetrics(duration)
 }
 
 func handleCleanUpFutureMetrics(config cleanupConfig, database moira.Database) error {
@@ -25,11 +21,7 @@ func handleCleanUpFutureMetrics(config cleanupConfig, database moira.Database) e
 		return err
 	}
 
-	if err = database.CleanUpFutureMetrics(duration); err != nil {
-		return err
-	}
-
-	return nil
+	return database.CleanUpFutureMetrics(duration)
 }
 
 func handleCleanUpAbandonedRetentions(database moira.Database) error {

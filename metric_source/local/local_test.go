@@ -310,7 +310,7 @@ func TestLocalSourceFetch(t *testing.T) {
 	})
 
 	Convey("Test enormous fetch interval", t, func() {
-		var fromPast int64 = 0
+		var fromPast int64
 		var toFuture int64 = 1e15
 		ttl := 2*retention - 1
 

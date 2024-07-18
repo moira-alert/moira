@@ -14,7 +14,7 @@ func updateFrom23(logger moira.Logger, dataBase moira.Database) error {
 	return nil
 }
 
-func downgradeTo23(logger moira.Logger, dataBase moira.Database) error {
+func downgradeTo23() error {
 	return nil
 }
 

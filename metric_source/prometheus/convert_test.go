@@ -17,11 +17,12 @@ func MakeSamplePair(time time.Time, value float64) model.SamplePair {
 }
 
 func TestConvertToFetchResult(t *testing.T) {
-	metric_1 := model.Metric{
+	metric1 := model.Metric{
 		"__name__": "name",
 		"label_1":  "value_1",
 	}
-	metric_2 := model.Metric{
+
+	metric2 := model.Metric{
 		"__name__": "name",
 		"label_1":  "value_2",
 	}
@@ -44,7 +45,7 @@ func TestConvertToFetchResult(t *testing.T) {
 		now := time.Now()
 
 		mat := model.Matrix{&model.SampleStream{
-			Metric: metric_1,
+			Metric: metric1,
 			Values: []model.SamplePair{},
 		}}
 
@@ -70,7 +71,7 @@ func TestConvertToFetchResult(t *testing.T) {
 		now := time.Now()
 
 		mat := model.Matrix{&model.SampleStream{
-			Metric: metric_1,
+			Metric: metric1,
 			Values: []model.SamplePair{MakeSamplePair(now, 1.0)},
 		}}
 
@@ -96,7 +97,7 @@ func TestConvertToFetchResult(t *testing.T) {
 		now := time.Now()
 
 		mat := model.Matrix{&model.SampleStream{
-			Metric: metric_1,
+			Metric: metric1,
 			Values: []model.SamplePair{
 				MakeSamplePair(now, 1.0),
 				MakeSamplePair(now.Add(60*time.Second), 2.0),
@@ -128,14 +129,14 @@ func TestConvertToFetchResult(t *testing.T) {
 
 		mat := model.Matrix{
 			&model.SampleStream{
-				Metric: metric_1,
+				Metric: metric1,
 				Values: []model.SamplePair{
 					MakeSamplePair(now, 1.0),
 					MakeSamplePair(now.Add(60*time.Second), 2.0),
 				},
 			},
 			&model.SampleStream{
-				Metric: metric_2,
+				Metric: metric2,
 				Values: []model.SamplePair{
 					MakeSamplePair(now, 3.0),
 					MakeSamplePair(now.Add(60*time.Second), 4.0),

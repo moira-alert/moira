@@ -25,12 +25,12 @@ func (auth *Authorization) IsAdmin(login string) bool {
 type Role string
 
 var (
-	RoleUndefined Role = ""
+	RoleUndefined Role
 	RoleUser      Role = "user"
 	RoleAdmin     Role = "admin"
 )
 
-// Returns the role of the given user.
+// GetRole Returns the role of the given user.
 func (auth *Authorization) GetRole(login string) Role {
 	if !auth.IsEnabled() {
 		return RoleUndefined

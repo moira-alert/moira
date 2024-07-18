@@ -327,7 +327,7 @@ func TestCleanUpAbandonedTriggerLastCheck(t *testing.T) {
 				TTLState:      &moira.TTLStateNODATA,
 				AloneMetrics:  map[string]bool{},
 				TriggerSource: moira.GraphiteLocal,
-				ClusterId:     moira.DefaultCluster,
+				ClusterID:     moira.DefaultCluster,
 			}
 			err := dataBase.SaveTrigger(trigger.ID, &trigger)
 			So(err, ShouldBeNil)
@@ -527,7 +527,7 @@ func TestGetTriggersLastCheck(t *testing.T) {
 		})
 
 		Convey("Test with deleted trigger", func() {
-			dataBase.RemoveTriggerLastCheck("test2") //nolint
+			dataBase.RemoveTriggerLastCheck("test2")
 			defer func() {
 				_ = dataBase.SetTriggerLastCheck("test2", &moira.CheckData{
 					Timestamp: 2,

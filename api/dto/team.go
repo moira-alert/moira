@@ -30,7 +30,7 @@ func NewTeamModel(team moira.Team) TeamModel {
 }
 
 // Bind is a method that implements Binder interface from chi and checks that validity of data in request.
-func (t TeamModel) Bind(request *http.Request) error {
+func (t TeamModel) Bind(*http.Request) error {
 	if t.Name == "" {
 		return fmt.Errorf("team name cannot be empty")
 	}
@@ -44,7 +44,7 @@ func (t TeamModel) Bind(request *http.Request) error {
 }
 
 // Render is a function that implements chi Renderer interface for TeamModel.
-func (TeamModel) Render(w http.ResponseWriter, r *http.Request) error {
+func (TeamModel) Render(_ http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
 
@@ -63,7 +63,7 @@ type SaveTeamResponse struct {
 }
 
 // Render is a function that implements chi Renderer interface for SaveTeamResponse.
-func (SaveTeamResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (SaveTeamResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
 
@@ -73,7 +73,7 @@ type UserTeams struct {
 }
 
 // Render is a function that implements chi Renderer interface for UserTeams.
-func (UserTeams) Render(w http.ResponseWriter, r *http.Request) error {
+func (UserTeams) Render(_ http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
 
@@ -83,7 +83,7 @@ type TeamMembers struct {
 }
 
 // Bind is a method that implements Binder interface from chi and checks that validity of data in request.
-func (m TeamMembers) Bind(request *http.Request) error {
+func (m TeamMembers) Bind(*http.Request) error {
 	if len(m.Usernames) == 0 {
 		return fmt.Errorf("at least one user should be specified")
 	}
@@ -91,7 +91,7 @@ func (m TeamMembers) Bind(request *http.Request) error {
 }
 
 // Render is a function that implements chi Renderer interface for TeamMembers.
-func (TeamMembers) Render(w http.ResponseWriter, r *http.Request) error {
+func (TeamMembers) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
@@ -101,6 +101,6 @@ type TeamSettings struct {
 	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
 }
 
-func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
+func (TeamSettings) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }

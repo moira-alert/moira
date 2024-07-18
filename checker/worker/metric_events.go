@@ -11,7 +11,7 @@ import (
 
 const defaultMetricEventPopBatchSize = 100
 
-func (manager *WorkerManager) startLocalMetricEvents() error {
+func (manager *Manager) startLocalMetricEvents() error {
 	if manager.Config.MetricEventPopBatchSize < 0 {
 		return errors.New("MetricEventPopBatchSize param was less than zero")
 	}
@@ -58,7 +58,7 @@ func (manager *WorkerManager) startLocalMetricEvents() error {
 	return nil
 }
 
-func (manager *WorkerManager) newMetricsHandler(metricEventsChannel <-chan *moira.MetricEvent) error {
+func (manager *Manager) newMetricsHandler(metricEventsChannel <-chan *moira.MetricEvent) error {
 	for {
 		metricEvent, ok := <-metricEventsChannel
 		if !ok {
@@ -75,42 +75,42 @@ func (manager *WorkerManager) newMetricsHandler(metricEventsChannel <-chan *moir
 	}
 }
 
-func (manager *WorkerManager) needHandlePattern(pattern string) bool {
+func (manager *Manager) needHandlePattern(pattern string) bool {
 	err := manager.PatternCache.Add(pattern, true, cache.DefaultExpiration)
 	return err == nil
 }
 
-func (manager *WorkerManager) handleMetricEvent(pattern string) error {
+func (manager *Manager) handleMetricEvent(pattern string) error {
 	start := time.Now()
 	defer manager.Metrics.MetricEventsHandleTime.UpdateSince(start)
 
 	now := time.Now().UTC().Unix()
 	manager.lastData = now
 
-	triggerIds, err := manager.Database.GetPatternTriggerIDs(pattern)
+	triggerIDs, err := manager.Database.GetPatternTriggerIDs(pattern)
 	if err != nil {
 		return err
 	}
 
 	// Cleanup pattern and its metrics if this pattern doesn't match to any trigger
-	if len(triggerIds) == 0 {
+	if len(triggerIDs) == 0 {
 		if err := manager.Database.RemovePatternWithMetrics(pattern); err != nil {
 			return err
 		}
 	}
 
-	manager.scheduleLocalTriggerIDsIfNeeded(triggerIds)
+	manager.scheduleLocalTriggerIDsIfNeeded(triggerIDs)
 	return nil
 }
 
-func (manager *WorkerManager) scheduleLocalTriggerIDsIfNeeded(triggerIDs []string) {
+func (manager *Manager) scheduleLocalTriggerIDsIfNeeded(triggerIDs []string) {
 	needToCheckTriggerIDs := manager.filterOutLazyTriggerIDs(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
 		manager.Database.AddTriggersToCheck(moira.DefaultLocalCluster, needToCheckTriggerIDs) //nolint
 	}
 }
 
-func (manager *WorkerManager) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
+func (manager *Manager) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
 	for {
 		select {

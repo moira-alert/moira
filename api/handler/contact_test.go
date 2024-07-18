@@ -139,7 +139,7 @@ func TestGetContactById(t *testing.T) {
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, contactID))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{ID: contactID}))
 
-			getContactById(responseWriter, testRequest)
+			getContactByID(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
@@ -168,7 +168,7 @@ func TestGetContactById(t *testing.T) {
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, contactID))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{ID: contactID}))
 
-			getContactById(responseWriter, testRequest)
+			getContactByID(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
