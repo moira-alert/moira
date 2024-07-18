@@ -39,6 +39,7 @@ var (
 
 func main() {
 	flag.Parse()
+
 	if *printVersion {
 		fmt.Println("Moira Notifier")
 		fmt.Println("Version:", MoiraVersion)
@@ -159,6 +160,7 @@ func main() {
 	logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira Notifier Started")
+
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info().Msg(fmt.Sprint(<-ch))

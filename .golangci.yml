@@ -153,7 +153,7 @@ issues:
   exclude-files:
     - notifier/registrator.go
   exclude-rules:
-    - path-except: 'api/*/*'
+    - path-except: 'api|clock|cmd|docs|expression|image_store|templating|support/*/*'
       linters:
         - wsl
     - path: _test\.go

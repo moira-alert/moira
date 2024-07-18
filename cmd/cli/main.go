@@ -196,6 +196,7 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to remove metrics by prefix")
 		}
+
 		log.Info().
 			String("prefix", *removeMetricsByPrefix).
 			Msg("Removing metrics by prefix finished")
@@ -204,11 +205,13 @@ func main() { //nolint
 	if *removeAllMetrics {
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
 		log.Info().Msg("Removing all metrics started")
+
 		if err := handleRemoveAllMetrics(database); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to remove all metrics")
 		}
+
 		log.Info().Msg("Removing all metrics finished")
 	}
 
@@ -233,6 +236,7 @@ func main() { //nolint
 	if *removeUnusedTriggersWithTTL != "" {
 		log := logger.String(moira.LogFieldNameContext, "remove-unused-triggers-with-ttl")
 		ttl := int64(to.Duration(*removeUnusedTriggersWithTTL).Seconds())
+
 		if err := handleRemoveUnusedTriggersWithTTL(logger, database, ttl); err != nil {
 			log.Error().
 				Error(err).
@@ -307,6 +311,7 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup-last-checks")
 
 		log.Info().Msg("Cleanup abandoned triggers last checks started")
+
 		err := handleCleanUpAbandonedTriggerLastCheck(database)
 		if err != nil {
 			log.Error().
@@ -320,12 +325,14 @@ func main() { //nolint
 	if *cleanupTags {
 		log := logger.String(moira.LogFieldNameContext, "cleanup-tags")
 		log.Info().Msg("Cleanup abandoned tags started")
+
 		count, err := handleCleanUpAbandonedTags(database)
 		if err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to cleanup abandoned tags")
 		}
+
 		log.Info().
 			Int("abandoned_tags_deleted", count).
 			Msg("Cleanup abandoned tags finished")
@@ -335,26 +342,31 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup-retentions")
 
 		log.Info().Msg("Cleanup of abandoned retentions started")
+
 		err := handleCleanUpAbandonedRetentions(database)
 		if err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to cleanup abandoned retentions")
 		}
+
 		log.Info().Msg("Cleanup of abandoned retentions finished")
 	}
 
 	if *pushTriggerDump {
 		logger.Info().Msg("Dump push started")
+
 		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
 		if err != nil {
 			logger.Fatal().
 				Error(err).
 				Msg("Failed to open triggerDumpFile")
 		}
+
 		defer closeFile(f, logger)
 
 		dump := &dto.TriggerDump{}
+
 		err = json.NewDecoder(f).Decode(dump)
 		if err != nil {
 			logger.Fatal().
@@ -363,16 +375,19 @@ func main() { //nolint
 		}
 
 		logger.Info().Msg(GetDumpBriefInfo(dump))
+
 		if err := support.HandlePushTrigger(logger, database, &dump.Trigger); err != nil {
 			logger.Fatal().
 				Error(err).
 				Msg("Failed to handle push trigger")
 		}
+
 		if err := support.HandlePushTriggerMetrics(logger, database, dump.Trigger.ID, dump.Metrics); err != nil {
 			logger.Fatal().
 				Error(err).
 				Msg("Failed to handle push trigger metrics")
 		}
+
 		if err := support.HandlePushTriggerLastCheck(
 			logger,
 			database,
@@ -384,11 +399,13 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to handle push trigger last check")
 		}
+
 		logger.Info().Msg("Dump was pushed")
 	}
 
 	if *removeSubscriptions != "" {
 		logger.Info().Msg("Start deletion of subscriptions")
+
 		subscriptionIDs := strings.Split(*removeSubscriptions, ";")
 		deleted := 0
 
@@ -402,8 +419,10 @@ func main() { //nolint
 					Error(err).
 					String("subscription_id", subscriptionID).
 					Msg("Failed to remove subscription")
+
 				continue
 			}
+
 			deleted++
 		}
 
@@ -424,6 +443,7 @@ func GetDumpBriefInfo(dump *dto.TriggerDump) string {
 
 func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	flag.Parse()
+
 	if *printVersion {
 		fmt.Println("Moira - alerting system based on graphite or prometheus data")
 		fmt.Println("Version:", MoiraVersion)
@@ -451,6 +471,7 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 
 	databaseSettings := config.Redis.GetSettings()
 	dataBase := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Cli)
+
 	return config.Cleanup, logger, dataBase
 }
 
@@ -467,6 +488,7 @@ func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate 
 			String("your_version", *updateFromVersion).
 			Msg("You must set valid flag")
 	}
+
 	return moira.UseString(updateFromVersion)
 }
 
@@ -476,6 +498,7 @@ func contains(s []string, e string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -483,10 +506,12 @@ func openFile(filePath string, mode int) (*os.File, error) {
 	if filePath == "" {
 		return nil, fmt.Errorf("file is not specified")
 	}
+
 	file, err := os.OpenFile(filePath, mode, 0o666) //nolint:gofumpt
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}
+
 	return file, nil
 }
 

@@ -22,19 +22,23 @@ func InitMetricSources(remotes RemotesConfig, database moira.Database, logger mo
 
 	for _, graphite := range remotes.Graphite {
 		config := graphite.GetRemoteSourceSettings()
+
 		source, err := remote.Create(config)
 		if err != nil {
 			return nil, err
 		}
+
 		provider.RegisterSource(moira.MakeClusterKey(moira.GraphiteRemote, graphite.ClusterID), source)
 	}
 
 	for _, prom := range remotes.Prometheus {
 		config := prom.GetPrometheusSourceSettings()
+
 		source, err := prometheus.Create(config, logger)
 		if err != nil {
 			return nil, err
 		}
+
 		provider.RegisterSource(moira.MakeClusterKey(moira.PrometheusRemote, prom.ClusterID), source)
 	}
 

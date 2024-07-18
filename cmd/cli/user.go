@@ -41,6 +41,7 @@ func transferUserSubscriptionsAndContacts(database moira.Database, from, to stri
 	}
 
 	subscriptions := make([]*moira.SubscriptionData, 0, len(subscriptionsTmp))
+
 	for _, subscription := range subscriptionsTmp {
 		if subscription != nil {
 			subscriptions = append(subscriptions, subscription)
@@ -98,10 +99,12 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 	}
 
 	usersMapLength := len(users) + len(config.Whitelist)
+
 	const usersMapMaxLength = 100000
 	if usersMapLength > usersMapMaxLength {
 		return errors.New("users count is too large")
 	}
+
 	usersMap := make(map[string]bool, usersMapLength)
 
 	for _, user := range append(users, config.Whitelist...) {
@@ -146,6 +149,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 			if err = deleteUser(database, user); err != nil {
 				return err
 			}
+
 			logger.Debug().
 				String("user", user).
 				Msg("User was deleted")

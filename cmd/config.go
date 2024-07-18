@@ -180,6 +180,7 @@ func (remotes *RemotesConfig) Validate() error {
 	if len(errs) == 0 {
 		return nil
 	}
+
 	return errors.Join(errs...)
 }
 
@@ -187,6 +188,7 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 	errs := make([]error, 0)
 
 	keys := make(map[moira.ClusterID]int)
+
 	for _, remote := range remotes {
 		common := remote.getRemoteCommon()
 		if common.ClusterID == moira.ClusterNotSet {
@@ -195,6 +197,7 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 			)
 			errs = append(errs, err)
 		}
+
 		keys[common.ClusterID]++
 	}
 
@@ -302,10 +305,12 @@ func ReadConfig(configFileName string, config any) error {
 	if err != nil {
 		return fmt.Errorf("can't read file [%s] [%s]", configFileName, err.Error())
 	}
+
 	err = yaml.Unmarshal(configYaml, config)
 	if err != nil {
 		return fmt.Errorf("can't parse config file [%s] [%s]", configFileName, err.Error())
 	}
+
 	return nil
 }
 

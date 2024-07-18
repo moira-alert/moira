@@ -60,11 +60,13 @@ func (triggerExpression TriggerExpression) Get(name string) (any, error) {
 		if triggerExpression.WarnValue == nil {
 			return nil, fmt.Errorf("no value with name WARN_VALUE")
 		}
+
 		return *triggerExpression.WarnValue, nil
 	case "error_value":
 		if triggerExpression.ErrorValue == nil {
 			return nil, fmt.Errorf("no value with name ERROR_VALUE")
 		}
+
 		return *triggerExpression.ErrorValue, nil
 	case "t1":
 		return triggerExpression.MainTargetValue, nil
@@ -75,6 +77,7 @@ func (triggerExpression TriggerExpression) Get(name string) (any, error) {
 		if !ok {
 			return nil, fmt.Errorf("no value with name %s", name)
 		}
+
 		return value, nil
 	}
 }
@@ -85,10 +88,12 @@ func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	if err != nil {
 		return "", ErrInvalidExpression{internalError: err}
 	}
+
 	result, err := expr.Eval(triggerExpression)
 	if err != nil {
 		return "", ErrInvalidExpression{internalError: err}
 	}
+
 	switch res := result.(type) {
 	case moira.State:
 		return res, nil
@@ -103,6 +108,7 @@ func validateUserExpression(triggerExpression *TriggerExpression, userExpression
 			return nil, fmt.Errorf("invalid variable value: %w", err)
 		}
 	}
+
 	return userExpression, nil
 }
 
@@ -119,6 +125,7 @@ func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableEx
 
 		return validateUserExpression(triggerExpression, userExpression)
 	}
+
 	return getSimpleExpression(triggerExpression)
 }
 
@@ -162,9 +169,11 @@ func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression
 		if strings.Contains(err.Error(), "Undefined function") {
 			return nil, fmt.Errorf("functions is forbidden")
 		}
+
 		return nil, err
 	}
 
 	exprCache.Add(triggerExpression, expr, cache.NoExpiration) //nolint
+
 	return expr, nil
 }
