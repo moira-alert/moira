@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker/metrics/conversion"
 	"github.com/moira-alert/moira/expression"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira/metrics"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"

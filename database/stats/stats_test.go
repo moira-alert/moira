@@ -3,9 +3,9 @@ package stats
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNewStatsManager(t *testing.T) {

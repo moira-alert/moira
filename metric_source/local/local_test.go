@@ -10,12 +10,12 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func init() {
