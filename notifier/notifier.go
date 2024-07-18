@@ -197,18 +197,16 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 	for pkg := range ch {
 		log := getLogWithPackageContext(&notifier.logger, &pkg, &notifier.config)
-		plottingLog := log.Clone().String(moira.LogFieldNameContext, "plotting")
-		plots, plotsBuildDuration, plotsBuildErr := notifier.buildNotificationPackagePlots(pkg, plottingLog)
+		plots, plotsBuildDuration, plotsBuildErr := notifier.buildNotificationPackagePlots(pkg, log)
 		if plotsBuildErr != nil {
 			var event logging.EventBuilder
 			switch plotsBuildErr.(type) { // nolint:errorlint
 			case plotting.ErrNoPointsToRender:
-				event = plottingLog.Debug()
+				event = log.Debug()
 			default:
-				event = plottingLog.Error()
+				event = log.Error()
 			}
 			event.
-				String(moira.LogFieldNameTriggerID, pkg.Trigger.ID).
 				Error(plotsBuildErr).
 				Msg("Can't build notification package plot for trigger")
 		}
@@ -225,7 +223,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			logEvent.Int64(moira.LogFieldNamePlotsBuildDuration, plotsBuildDuration)
 		}
 		logEvent.
-			Msg("Try to notification package")
+			Msg("Try to send notification package")
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 		if err == nil {
