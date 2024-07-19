@@ -18,6 +18,14 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+var defaultPlotCfg = plotting.PlotConfig{
+	Width:  800,
+	Height: 400,
+	YAxisSecondaryCfg: plotting.YAxisSecondaryConfig{
+		EnablePrettyTicks: false,
+	},
+}
+
 // generateTestMetricsData generates metricsData map for tests.
 func generateTestMetricsData() map[string][]metricSource.MetricData {
 	metricData1 := metricSource.MetricData{
@@ -248,10 +256,7 @@ func TestBuildTriggerPlots(t *testing.T) {
 	Convey("Run buildTriggerPlots", t, func() {
 		triggerID := uuid.Must(uuid.NewV4()).String()
 		trigger := moira.Trigger{ID: triggerID}
-		plotCfg := plotting.PlotConfig{
-			Width:  800,
-			Height: 400,
-		}
+		plotCfg := defaultPlotCfg
 
 		plotTemplate, _ := plotting.GetPlotTemplate(plotCfg, "", location)
 

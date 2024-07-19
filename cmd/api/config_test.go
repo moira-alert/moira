@@ -6,12 +6,19 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/plotting"
 
 	"github.com/moira-alert/moira/api"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+var defaultPlotCfg = cmd.PlotConfig{
+	Width:  800,
+	Height: 400,
+	YAxisSecondaryCfg: cmd.YAxisSecondaryConfig{
+		EnablePrettyTicks: false,
+	},
+}
 
 func Test_apiConfig_getSettings(t *testing.T) {
 	Convey("Settings successfully filled", t, func() {
@@ -31,13 +38,7 @@ func Test_apiConfig_getSettings(t *testing.T) {
 		apiConf := apiConfig{
 			Listen:     "0000",
 			EnableCORS: true,
-			PlotCfg: cmd.PlotConfig{
-				Width:  800,
-				Height: 400,
-				YAxisSecondaryCfg: cmd.YAxisSecondaryConfig{
-					EnablePrettyTicks: false,
-				},
-			},
+			PlotCfg:    defaultPlotCfg,
 		}
 
 		expectedResult := &api.Config{
@@ -51,13 +52,7 @@ func Test_apiConfig_getSettings(t *testing.T) {
 					"test": {},
 				},
 			},
-			PlotCfg: plotting.PlotConfig{
-				Width:  800,
-				Height: 400,
-				YAxisSecondaryCfg: plotting.YAxisSecondaryConfig{
-					EnablePrettyTicks: false,
-				},
-			},
+			PlotCfg: defaultPlotCfg.GetSettings(),
 		}
 
 		result := apiConf.getSettings(metricTTLs, api.FeatureFlags{IsReadonlyEnabled: true}, webConfig)
