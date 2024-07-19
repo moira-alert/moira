@@ -69,7 +69,7 @@ func TestFormat(t *testing.T) {
 				shortDesc + "\n" +
 				"```\n" +
 				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```" + "\n" +
-				"Please, *fix your system or tune this trigger* to generate less events."
+				"Please, **fix your system or tune this trigger** to generate less events."
 			So(msg, ShouldEqual, expected)
 		})
 
