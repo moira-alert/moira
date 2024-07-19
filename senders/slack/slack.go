@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/moira-alert/moira/senders/message_format"
+	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/mitchellh/mapstructure"
 	slackdown "github.com/moira-alert/blackfriday-slack"
@@ -38,7 +38,7 @@ type Sender struct {
 	emojiProvider emoji_provider.StateEmojiGetter
 	logger        moira.Logger
 	client        *slack_client.Client
-	formatter     message_format.MessageFormatter
+	formatter     msgformat.MessageFormatter
 }
 
 // Init read yaml config.
@@ -58,19 +58,18 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	sender.logger = logger
 	sender.emojiProvider = emojiProvider
-	sender.formatter = message_format.HighlightSyntaxFormatter{
-		EmojiGetter: emojiProvider,
-		FrontURI:    cfg.FrontURI,
-		Location:    location,
-		UseEmoji:    cfg.UseEmoji,
-		UriFormatter: func(triggerURI, triggerName string) string {
+	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+		emojiProvider,
+		cfg.UseEmoji,
+		cfg.FrontURI,
+		location,
+		func(triggerURI, triggerName string) string {
 			return fmt.Sprintf("<%s|%s>", triggerURI, triggerName)
 		},
-		DescriptionFormatter: buildDescription,
-		BoldFormatter: func(str string) string {
+		buildDescription,
+		func(str string) string {
 			return fmt.Sprintf("*%s*", str)
-		},
-	}
+		})
 	sender.client = slack_client.New(cfg.APIToken)
 	return nil
 }
@@ -103,7 +102,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
-	return sender.formatter.Format(message_format.MessageFormatterParams{
+	return sender.formatter.Format(msgformat.MessageFormatterParams{
 		Events:          events,
 		Trigger:         trigger,
 		MessageMaxChars: messageMaxCharacters,

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/moira-alert/moira/senders/message_format"
+	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/emoji_provider"
@@ -33,7 +33,7 @@ type config struct {
 type Sender struct {
 	logger    moira.Logger
 	client    Client
-	formatter message_format.MessageFormatter
+	formatter msgformat.MessageFormatter
 }
 
 const (
@@ -78,25 +78,24 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
 	}
 	sender.logger = logger
-	sender.formatter = message_format.HighlightSyntaxFormatter{
-		EmojiGetter: emojiProvider,
-		FrontURI:    cfg.FrontURI,
-		Location:    location,
-		UseEmoji:    cfg.UseEmoji,
-		UriFormatter: func(triggerURI, triggerName string) string {
+	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+		emojiProvider,
+		cfg.UseEmoji,
+		cfg.FrontURI,
+		location,
+		func(triggerURI, triggerName string) string {
 			return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
 		},
-		DescriptionFormatter: func(trigger moira.TriggerData) string {
+		func(trigger moira.TriggerData) string {
 			desc := trigger.Desc
 			if trigger.Desc != "" {
 				desc += "\n"
 			}
 			return desc
 		},
-		BoldFormatter: func(str string) string {
+		func(str string) string {
 			return fmt.Sprintf("**%s**", str)
-		},
-	}
+		})
 
 	return nil
 }
@@ -124,7 +123,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
-	return sender.formatter.Format(message_format.MessageFormatterParams{
+	return sender.formatter.Format(msgformat.MessageFormatterParams{
 		Events:          events,
 		Trigger:         trigger,
 		MessageMaxChars: messageMaxCharacters,

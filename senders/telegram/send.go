@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/moira-alert/moira/senders/message_format"
+	"github.com/moira-alert/moira/senders/msgformat"
 	"gopkg.in/telebot.v3"
 
 	"github.com/moira-alert/moira"
@@ -82,7 +82,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
-	return sender.formatter.Format(message_format.MessageFormatterParams{
+	return sender.formatter.Format(msgformat.MessageFormatterParams{
 		Events:          events,
 		Trigger:         trigger,
 		MessageMaxChars: maxChars,

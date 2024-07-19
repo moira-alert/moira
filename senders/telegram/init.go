@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/moira-alert/moira/senders/message_format"
+	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
@@ -47,7 +47,7 @@ type Sender struct {
 	DataBase  moira.Database
 	logger    moira.Logger
 	bot       Bot
-	formatter message_format.MessageFormatter
+	formatter msgformat.MessageFormatter
 	apiToken  string
 }
 
@@ -72,15 +72,15 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.apiToken = cfg.APIToken
 
 	emojiProvider := telegramEmojiProvider{}
-	sender.formatter = message_format.HighlightSyntaxFormatter{
-		EmojiGetter: emojiProvider,
-		FrontURI:    cfg.FrontURI,
-		Location:    location,
-		UseEmoji:    false,
-		UriFormatter: func(triggerURI, triggerName string) string {
+	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+		emojiProvider,
+		true,
+		cfg.FrontURI,
+		location,
+		func(triggerURI, triggerName string) string {
 			return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
 		},
-		DescriptionFormatter: func(trigger moira.TriggerData) string {
+		func(trigger moira.TriggerData) string {
 			desc := trigger.Desc
 			if trigger.Desc != "" {
 				desc = trigger.Desc
@@ -88,10 +88,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			}
 			return desc
 		},
-		BoldFormatter: func(str string) string {
+		func(str string) string {
 			return fmt.Sprintf("*%s*", str)
-		},
-	}
+		})
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{

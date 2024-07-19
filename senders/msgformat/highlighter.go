@@ -1,4 +1,4 @@
-package message_format
+package msgformat
 
 import (
 	"fmt"
@@ -12,31 +12,57 @@ import (
 
 const quotas = "```"
 
+// UriFormatter is used for formatting uris, for example for Markdown use something like
+// fmt.Sprintf("[%s](%s)", triggerName, triggerURI).
+type UriFormatter func(triggerURI, triggerName string) string
+
+// DescriptionFormatter is used to format trigger description to supported description.
+type DescriptionFormatter func(trigger moira.TriggerData) string
+
+// BoldFormatter makes str bold. For example in Markdown it should return **str**.
+type BoldFormatter func(str string) string
+
 // HighlightSyntaxFormatter formats message by using functions, emojis and some other highlight patterns.
 type HighlightSyntaxFormatter struct {
-	// EmojiGetter used in titles for better description.
-	EmojiGetter emoji_provider.StateEmojiGetter
-	FrontURI    string
-	Location    *time.Location
-	UseEmoji    bool
-	// UriFormatter is used for formatting uris, for example for Markdown use something like
-	// fmt.Sprintf("[%s](%s)", triggerName, triggerURI).
-	UriFormatter func(triggerURI, triggerName string) string
-	// DescriptionFormatter is used to format trigger description to supported description.
-	DescriptionFormatter func(trigger moira.TriggerData) string
-	// BoldFormatter makes str bold. For example in Markdown it should be **str**.
-	BoldFormatter func(str string) string
+	// emojiGetter used in titles for better description.
+	emojiGetter          emoji_provider.StateEmojiGetter
+	frontURI             string
+	location             *time.Location
+	useEmoji             bool
+	uriFormatter         UriFormatter
+	descriptionFormatter DescriptionFormatter
+	boldFormatter        func(str string) string
 }
 
-func (formatter HighlightSyntaxFormatter) Format(params MessageFormatterParams) string {
+func NewHighlightSyntaxFormatter(
+	emojiGetter emoji_provider.StateEmojiGetter,
+	useEmoji bool,
+	frontURI string,
+	location *time.Location,
+	uriFormatter UriFormatter,
+	descriptionFormatter DescriptionFormatter,
+	boldFormatter BoldFormatter,
+) MessageFormatter {
+	return &HighlightSyntaxFormatter{
+		emojiGetter:          emojiGetter,
+		frontURI:             frontURI,
+		location:             location,
+		useEmoji:             useEmoji,
+		uriFormatter:         uriFormatter,
+		descriptionFormatter: descriptionFormatter,
+		boldFormatter:        boldFormatter,
+	}
+}
+
+func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams) string {
 	var message strings.Builder
 	state := params.Events.GetCurrentState(params.Throttled)
-	emoji := formatter.EmojiGetter.GetStateEmoji(state)
+	emoji := formatter.emojiGetter.GetStateEmoji(state)
 
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
 	titleLen := len([]rune(title))
 
-	desc := formatter.DescriptionFormatter(params.Trigger)
+	desc := formatter.descriptionFormatter(params.Trigger)
 	descLen := len([]rune(desc))
 
 	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
@@ -58,17 +84,17 @@ func (formatter HighlightSyntaxFormatter) Format(params MessageFormatterParams) 
 	return message.String()
 }
 
-func (formatter HighlightSyntaxFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
+func (formatter *HighlightSyntaxFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
 	state := events.GetCurrentState(throttled)
 	title := ""
-	if formatter.UseEmoji {
+	if formatter.useEmoji {
 		title += emoji + " "
 	}
 
-	title += formatter.BoldFormatter(string(state))
-	triggerURI := trigger.GetTriggerURI(formatter.FrontURI)
+	title += formatter.boldFormatter(string(state))
+	triggerURI := trigger.GetTriggerURI(formatter.frontURI)
 	if triggerURI != "" {
-		title += fmt.Sprintf(" %s", formatter.UriFormatter(triggerURI, trigger.Name))
+		title += fmt.Sprintf(" %s", formatter.uriFormatter(triggerURI, trigger.Name))
 	} else if trigger.Name != "" {
 		title += " " + trigger.Name
 	}
@@ -84,9 +110,9 @@ func (formatter HighlightSyntaxFormatter) buildTitle(events moira.NotificationEv
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
 // if charsForEvents is negative buildEventsString does not limit the events string.
-func (formatter HighlightSyntaxFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
+func (formatter *HighlightSyntaxFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
-	throttleMsg := "\nPlease, *fix your system or tune this trigger* to generate less events."
+	throttleMsg := fmt.Sprintf("\nPlease, %s to generate less events.", formatter.boldFormatter(changeRecommendation))
 	if throttled {
 		charsForThrottleMsg = len([]rune(throttleMsg))
 	}
@@ -101,12 +127,12 @@ func (formatter HighlightSyntaxFormatter) buildEventsString(events moira.Notific
 	for _, event := range events {
 		line := fmt.Sprintf(
 			"\n%s: %s = %s (%s to %s)",
-			event.FormatTimestamp(formatter.Location, moira.DefaultTimeFormat),
+			event.FormatTimestamp(formatter.location, moira.DefaultTimeFormat),
 			event.Metric,
 			event.GetMetricsValues(moira.DefaultNotificationSettings),
 			event.OldState,
 			event.State)
-		if msg := event.CreateMessage(formatter.Location); len(msg) > 0 {
+		if msg := event.CreateMessage(formatter.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
 

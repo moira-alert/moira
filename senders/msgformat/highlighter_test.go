@@ -1,4 +1,4 @@
-package message_format
+package msgformat
 
 import (
 	"fmt"
@@ -23,15 +23,15 @@ func TestFormat(t *testing.T) {
 
 		provider, err := emoji_provider.NewEmojiProvider("", nil)
 		So(err, ShouldBeNil)
-		formatter := HighlightSyntaxFormatter{
-			EmojiGetter:          provider,
-			FrontURI:             "http://moira.url",
-			Location:             location,
-			UseEmoji:             false,
-			UriFormatter:         testUriFormatter,
-			DescriptionFormatter: testDescriptionFormatter,
-			BoldFormatter:        testBoldFormatter,
-		}
+		formatter := NewHighlightSyntaxFormatter(
+			provider,
+			false,
+			"http://moira.url",
+			location,
+			testUriFormatter,
+			testDescriptionFormatter,
+			testBoldFormatter,
+		)
 
 		event := moira.NotificationEvent{
 			TriggerID: "TriggerID",
