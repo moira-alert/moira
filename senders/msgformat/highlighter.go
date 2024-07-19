@@ -31,9 +31,10 @@ type HighlightSyntaxFormatter struct {
 	useEmoji             bool
 	uriFormatter         UriFormatter
 	descriptionFormatter DescriptionFormatter
-	boldFormatter        func(str string) string
+	boldFormatter        BoldFormatter
 }
 
+// NewHighlightSyntaxFormatter creates new HighlightSyntaxFormatter with given arguments.
 func NewHighlightSyntaxFormatter(
 	emojiGetter emoji_provider.StateEmojiGetter,
 	useEmoji bool,
@@ -54,6 +55,7 @@ func NewHighlightSyntaxFormatter(
 	}
 }
 
+// Format formats message using given params and formatter functions.
 func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams) string {
 	var message strings.Builder
 	state := params.Events.GetCurrentState(params.Throttled)
