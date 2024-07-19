@@ -83,7 +83,7 @@ func TestGetContactEventsByIdWithLimit(t *testing.T) {
 		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
 		dataBase.EXPECT().GetNotificationsHistoryByContactId(contact.ID, defaultFromParameter, defaultToParameter, defaultPage, defaultSize).Return(items, nil)
 
-		actualEvents, err := GetContactEventsHistoryById(dataBase, contact.ID, defaultFromParameter, defaultToParameter, defaultPage, defaultSize)
+		actualEvents, err := GetContactEventsHistoryByID(dataBase, contact.ID, defaultFromParameter, defaultToParameter, defaultPage, defaultSize)
 
 		So(err, ShouldBeNil)
 		So(actualEvents, ShouldResemble, &itemsExpected)
@@ -93,7 +93,7 @@ func TestGetContactEventsByIdWithLimit(t *testing.T) {
 		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
 		dataBase.EXPECT().GetNotificationsHistoryByContactId(contact.ID, defaultFromParameter-20, defaultToParameter, defaultPage, defaultSize).Return(items[:1], nil)
 
-		actualEvents, err := GetContactEventsHistoryById(dataBase, contact.ID, defaultFromParameter-20, defaultToParameter, defaultPage, defaultSize)
+		actualEvents, err := GetContactEventsHistoryByID(dataBase, contact.ID, defaultFromParameter-20, defaultToParameter, defaultPage, defaultSize)
 		So(err, ShouldBeNil)
 		So(actualEvents, ShouldResemble, &dto.ContactEventItemList{
 			List: []dto.ContactEventItem{
@@ -106,7 +106,7 @@ func TestGetContactEventsByIdWithLimit(t *testing.T) {
 		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
 		dataBase.EXPECT().GetNotificationsHistoryByContactId(contact.ID, defaultFromParameter, defaultToParameter-30, defaultPage, defaultSize).Return(items[1:], nil)
 
-		actualEvents, err := GetContactEventsHistoryById(dataBase, contact.ID, defaultFromParameter, defaultToParameter-30, defaultPage, defaultSize)
+		actualEvents, err := GetContactEventsHistoryByID(dataBase, contact.ID, defaultFromParameter, defaultToParameter-30, defaultPage, defaultSize)
 		So(err, ShouldBeNil)
 		So(actualEvents, ShouldResemble, &dto.ContactEventItemList{
 			List: []dto.ContactEventItem{

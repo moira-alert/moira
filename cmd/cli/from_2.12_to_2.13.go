@@ -10,7 +10,7 @@ func updateFrom212(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Update 2.11 -> 2.12 was started")
 
 	ctx := context.Background()
-	err := splitNotificationHistoryByContactId(ctx, logger, database)
+	err := splitNotificationHistoryByContactID(ctx, logger, database)
 	if err != nil {
 		return err
 	}

@@ -112,7 +112,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 
 	Convey("Test split notification history", t, func() {
 		Convey("with empty contactNotificationKey", func() {
-			err = splitNotificationHistoryByContactId(ctx, logger, db)
+			err = splitNotificationHistoryByContactID(ctx, logger, db)
 			So(err, ShouldBeNil)
 
 			keys, err := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
@@ -164,7 +164,7 @@ func testSplitNotificationHistory(
 	client := db.Client()
 
 	Convey("with prepared history", func() {
-		errExists := splitNotificationHistoryByContactId(ctx, logger, db)
+		errExists := splitNotificationHistoryByContactID(ctx, logger, db)
 		So(errExists, ShouldBeNil)
 
 		for contactID, expectedEvents := range eventsMap {

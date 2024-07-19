@@ -14,8 +14,8 @@ const (
 	contactNotificationKey = "moira-contact-notifications"
 )
 
-func splitNotificationHistoryByContactId(ctx context.Context, logger moira.Logger, database moira.Database) error {
-	logger.Info().Msg("Start splitNotificationHistoryByContactId")
+func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logger, database moira.Database) error {
+	logger.Info().Msg("Start splitNotificationHistoryByContactID")
 
 	switch d := database.(type) {
 	case *moira_redis.DbConnector:
@@ -74,7 +74,7 @@ func splitNotificationHistoryByContactId(ctx context.Context, logger moira.Logge
 		return makeUnknownDBError(database)
 	}
 
-	logger.Info().Msg("Successfully finished splitNotificationHistoryByContactId")
+	logger.Info().Msg("Successfully finished splitNotificationHistoryByContactID")
 
 	return nil
 }

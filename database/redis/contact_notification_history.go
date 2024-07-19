@@ -37,7 +37,7 @@ func contactNotificationKeyWithID(contactID string) string {
 
 // GetNotificationsHistoryByContactId returns `size` (or all if `size` is -1) notification events with timestamp between `from` and `to`.
 // The offset for fetching events may be changed by using `page` parameter, it is calculated as page * size.
-func (connector *DbConnector) GetNotificationsHistoryByContactId(contactID string, from, to, page, size int64,
+func (connector *DbConnector) GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64,
 ) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
 

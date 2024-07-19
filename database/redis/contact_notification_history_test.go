@@ -76,7 +76,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 		defer dataBase.Flush()
 
 		Convey("While no data then notification items should be empty", func() {
-			items, err := dataBase.GetNotificationsHistoryByContactId(
+			items, err := dataBase.GetNotificationsHistoryByContactID(
 				"id",
 				eventsShouldBeInDb[0].TimeStamp,
 				eventsShouldBeInDb[0].TimeStamp,
@@ -92,7 +92,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			So(errPushEvents, ShouldBeNil)
 
 			Convey("Ensure that we can find event on +- 5 seconds interval", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
 					eventsShouldBeInDb[0].TimeStamp+5,
@@ -103,7 +103,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			})
 
 			Convey("Ensure that we can find event exactly by its timestamp", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					eventsShouldBeInDb[0].TimeStamp,
@@ -114,7 +114,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			})
 
 			Convey("Ensure that we can find event if 'from' border equals its timestamp", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					eventsShouldBeInDb[0].TimeStamp+5,
@@ -125,7 +125,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			})
 
 			Convey("Ensure that we can find event if 'to' border equals its timestamp", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
 					eventsShouldBeInDb[0].TimeStamp,
@@ -139,7 +139,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 				veryOldFrom := int64(928930626) // 09.06.1999, 12:17:06
 				veryOldTo := int64(992089026)   // 09.06.2001, 12:17:06
 
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					veryOldFrom,
 					veryOldTo,
@@ -150,7 +150,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			})
 
 			Convey("Ensure that with negative page and positive size empty slice returned", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					eventsShouldBeInDb[0].TimeStamp,
@@ -161,7 +161,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			})
 
 			Convey("Ensure that with positive page and negative size empty slice returned", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					eventsShouldBeInDb[0].TimeStamp,
@@ -177,7 +177,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			So(errPushEvents, ShouldBeNil)
 
 			Convey("Ensure that with page=0 size=1 returns first event", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
 					eventsShouldBeInDb[0].TimeStamp+5,
@@ -199,7 +199,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			}
 
 			Convey("Ensure that with page=1 size=1 returns another event", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
 					eventsShouldBeInDb[0].TimeStamp+5,
@@ -210,7 +210,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 			})
 
 			Convey("Ensure that with page=0 size=-1 returns all events", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactId(
+				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
 					otherEventShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					otherEventShouldBeInDb[0].TimeStamp,
@@ -237,7 +237,7 @@ func TestPushNotificationToHistory(t *testing.T) {
 		err2 := dataBase.PushContactNotificationToHistory(&inputScheduledNotification)
 		So(err2, ShouldBeNil)
 
-		dbContent, err3 := dataBase.GetNotificationsHistoryByContactId(
+		dbContent, err3 := dataBase.GetNotificationsHistoryByContactID(
 			inputScheduledNotification.Contact.ID,
 			inputScheduledNotification.Timestamp,
 			inputScheduledNotification.Timestamp,
