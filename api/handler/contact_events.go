@@ -23,7 +23,7 @@ func contactEvents(router chi.Router) {
 		router.With(
 			middleware.DateRange(contactEventsDefaultFrom, contactEventsDefaultTo),
 			middleware.Paginate(contactEventsDefaultPage, contactEventsDefaultSize),
-		).Get("/", getContactEventHistoryById)
+		).Get("/", getContactEventHistoryByID)
 	})
 }
 
@@ -45,7 +45,7 @@ func contactEvents(router chi.Router) {
 //	@failure	422			{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact/{contactID}/events [get]
-func getContactEventHistoryById(writer http.ResponseWriter, request *http.Request) {
+func getContactEventHistoryByID(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
@@ -60,7 +60,7 @@ func getContactEventHistoryById(writer http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	contactWithEvents, err := controller.GetContactEventsHistoryById(
+	contactWithEvents, err := controller.GetContactEventsHistoryByID(
 		database,
 		contactData.ID,
 		from,
