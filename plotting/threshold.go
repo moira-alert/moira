@@ -40,7 +40,7 @@ func newThreshold(triggerType, thresholdType string, thresholdValue, higherLimit
 // getThresholdSeriesList returns collection of thresholds and annotations.
 func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limits plotLimits) []chart.Series {
 	if trigger.TriggerType == moira.ExpressionTrigger {
-		return nil
+		return []chart.Series{}
 	}
 
 	plotThresholds := generateThresholds(trigger, limits)
