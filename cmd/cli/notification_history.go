@@ -79,48 +79,57 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 	return nil
 }
 
+func mergeNotificationHistoryOnRedisNode(connector *moira_redis.DbConnector, client redis.UniversalClient, logger moira.Logger) error {
+	ctx := connector.Context()
+	var contactIDs []string
+
+	iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
+	for iterator.Next(ctx) {
+		contactIDs = append(contactIDs, iterator.Val())
+	}
+
+	iterErr := iterator.Err()
+	if iterErr != nil {
+		return fmt.Errorf("error while iterating over notification history: %w", iterErr)
+	}
+
+	logger.Info().
+		Int("contact_ids", len(contactIDs)).
+		Msg("Number of contacts in notifications history")
+
+	if len(contactIDs) == 0 {
+		return nil
+	}
+
+	pipe := client.TxPipeline()
+
+	pipe.ZUnionStore(
+		ctx,
+		contactNotificationKey,
+		&redis.ZStore{
+			Keys: append(contactIDs, contactNotificationKey),
+		})
+
+	pipe.Del(ctx, contactIDs...)
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("error while applying changes: %w", err)
+	}
+	return nil
+}
+
 func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Start mergeNotificationHistory")
 
 	switch d := database.(type) {
 	case *moira_redis.DbConnector:
-		client := d.Client()
-
-		var contactIDs []string
-
-		iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
-		for iterator.Next(ctx) {
-			contactIDs = append(contactIDs, iterator.Val())
+		if err := callFunc(d, func(connector *moira_redis.DbConnector, client redis.UniversalClient) error {
+			return mergeNotificationHistoryOnRedisNode(connector, client, logger)
+		}); err != nil {
+			return err
 		}
 
-		iterErr := iterator.Err()
-		if iterErr != nil {
-			return fmt.Errorf("error while iterating over notification history: %w", iterErr)
-		}
-
-		logger.Info().
-			Int("contact_ids", len(contactIDs)).
-			Msg("Number of contacts in notifications history")
-
-		if len(contactIDs) == 0 {
-			return nil
-		}
-
-		pipe := client.TxPipeline()
-
-		pipe.ZUnionStore(
-			ctx,
-			contactNotificationKey,
-			&redis.ZStore{
-				Keys: append(contactIDs, contactNotificationKey),
-			})
-
-		pipe.Del(ctx, contactIDs...)
-
-		_, err := pipe.Exec(ctx)
-		if err != nil {
-			return fmt.Errorf("error while applying changes: %w", err)
-		}
 	default:
 		return makeUnknownDBError(database)
 	}
