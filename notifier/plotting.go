@@ -52,31 +52,30 @@ func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSo
 	return result, nil
 }
 
-// buildNotificationPackagePlots returns bytes slices containing package plots.
-func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage, logger moira.Logger) ([][]byte, error) {
+// buildNotificationPackagePlots returns bytes slices containing package plots and plots build duration (in ms).
+func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage, logger moira.Logger) ([][]byte, int64, error) {
 	if !pkg.Plotting.Enabled {
-		return nil, nil
+		return nil, 0, nil
 	}
 	if pkg.Trigger.ID == "" {
-		return nil, nil
+		return nil, 0, nil
 	}
 
-	logger.Info().Msg("Start build plots for package")
 	startTime := time.Now()
 	metricsToShow := pkg.GetMetricNames()
 	if len(metricsToShow) == 0 {
-		return nil, nil
+		return nil, 0, nil
 	}
 	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, notifier.config.Location)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	from, to := resolveMetricsWindow(logger, pkg.Trigger, pkg)
 	evaluateTriggerStartTime := time.Now()
 	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	notifier.metrics.PlotsEvaluateTriggerDurationMs.Update(time.Since(evaluateTriggerStartTime).Milliseconds())
 
@@ -89,11 +88,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
 	notifier.metrics.PlotsBuildDurationMs.Update(time.Since(buildPlotStartTime).Milliseconds())
 
-	logger.Info().
-		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
-		Msg("Finished build plots for package")
-
-	return result, err
+	return result, time.Since(startTime).Milliseconds(), err
 }
 
 // resolveMetricsWindow returns from, to parameters depending on trigger type.
