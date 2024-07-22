@@ -65,7 +65,7 @@ var eventsShouldBeInDb = []*moira.NotificationEventHistoryItem{
 	},
 }
 
-func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
+func TestGetNotificationsHistoryByContactID(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	var defaultPage int64 = 0
