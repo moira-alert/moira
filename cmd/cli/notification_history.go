@@ -101,7 +101,7 @@ func mergeNotificationHistoryOnRedisNode(connector *moira_redis.DbConnector, cli
 		return nil
 	}
 
-	pipe := client.TxPipeline()
+	pipe := connector.Client().TxPipeline()
 
 	pipe.ZUnionStore(
 		ctx,
