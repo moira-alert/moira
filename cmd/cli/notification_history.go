@@ -101,9 +101,7 @@ func mergeNotificationHistoryOnRedisNode(connector *moira_redis.DbConnector, cli
 		return nil
 	}
 
-	pipe := connector.Client().TxPipeline()
-
-	unionErr := pipe.ZUnionStore(
+	unionErr := connector.Client().ZUnionStore(
 		ctx,
 		contactNotificationKey,
 		&redis.ZStore{
@@ -113,15 +111,11 @@ func mergeNotificationHistoryOnRedisNode(connector *moira_redis.DbConnector, cli
 		return fmt.Errorf("error while unioning history: %w", unionErr)
 	}
 
-	delErr := pipe.Del(ctx, contactIDs...).Err()
+	delErr := client.Del(ctx, contactIDs...).Err()
 	if delErr != nil {
 		return fmt.Errorf("error while deleting history: %w", delErr)
 	}
 
-	_, err := pipe.Exec(ctx)
-	if err != nil {
-		return fmt.Errorf("error while applying changes: %w", err)
-	}
 	return nil
 }
 
