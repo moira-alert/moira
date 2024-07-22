@@ -210,7 +210,7 @@ func TestMergeNotificationHistory(t *testing.T) {
 
 	Convey("Test merge notification history", t, func() {
 		Convey("with empty database", func() {
-			err = mergeNotificationHistory(ctx, logger, db)
+			err = mergeNotificationHistory(logger, db)
 			So(err, ShouldBeNil)
 
 			keys, err := client.Keys(ctx, contactNotificationKey).Result()
@@ -264,7 +264,7 @@ func testMergeNotificationHistory(
 	client := db.Client()
 
 	Convey("with split history", func() {
-		err := mergeNotificationHistory(ctx, logger, db)
+		err := mergeNotificationHistory(logger, db)
 		So(err, ShouldBeNil)
 
 		gotEventsStrs, errAfterZRange := client.ZRangeByScore(

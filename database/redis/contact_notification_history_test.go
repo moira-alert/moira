@@ -345,7 +345,7 @@ func TestCleanUpOutdatedNotificationHistory(t *testing.T) {
 
 			for _, contactID := range contactIDs {
 				Convey(fmt.Sprintf("for contact with id: %s", contactID), func() {
-					events, errGet := dataBase.GetNotificationsHistoryByContactId(contactID, testNow-testTTL, testNow, 0, -1)
+					events, errGet := dataBase.GetNotificationsHistoryByContactID(contactID, testNow-testTTL, testNow, 0, -1)
 					So(errGet, ShouldBeNil)
 					So(events, ShouldHaveLength, len(eventsMap[contactID]))
 

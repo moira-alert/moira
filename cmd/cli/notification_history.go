@@ -79,53 +79,57 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 	return nil
 }
 
-func mergeNotificationHistoryOnRedisNode(connector *moira_redis.DbConnector, client redis.UniversalClient, logger moira.Logger) error {
-	ctx := connector.Context()
-	var contactIDs []string
-
-	iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
-	for iterator.Next(ctx) {
-		contactIDs = append(contactIDs, iterator.Val())
-	}
-
-	iterErr := iterator.Err()
-	if iterErr != nil {
-		return fmt.Errorf("error while iterating over notification history: %w", iterErr)
-	}
-
-	logger.Info().
-		Int("contact_ids", len(contactIDs)).
-		Msg("Number of contacts in notifications history")
-
-	if len(contactIDs) == 0 {
-		return nil
-	}
-
-	unionErr := client.ZUnionStore(
-		ctx,
-		contactNotificationKey,
-		&redis.ZStore{
-			Keys: append(contactIDs, contactNotificationKey),
-		}).Err()
-	if unionErr != nil {
-		return fmt.Errorf("error while unioning history: %w", unionErr)
-	}
-
-	delErr := client.Del(ctx, contactIDs...).Err()
-	if delErr != nil {
-		return fmt.Errorf("error while deleting history: %w", delErr)
-	}
-
-	return nil
-}
-
-func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database moira.Database) error {
+func mergeNotificationHistory(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Start mergeNotificationHistory")
 
 	switch d := database.(type) {
 	case *moira_redis.DbConnector:
 		if err := callFunc(d, func(connector *moira_redis.DbConnector, client redis.UniversalClient) error {
-			return mergeNotificationHistoryOnRedisNode(connector, client, logger)
+			contactIDs, err := scanContactIDs(connector.Context(), client)
+			if err != nil {
+				return err
+			}
+
+			if len(contactIDs) == 0 {
+				return nil
+			}
+
+			events, fetchErr := fetchNotificationHistoryFromRedisNode(connector, client, logger, contactIDs)
+			if fetchErr != nil {
+				return fetchErr
+			}
+
+			pipe := d.Client().TxPipeline()
+
+			for _, event := range events {
+				eventBytes, err := moira_redis.GetNotificationBytes(&event)
+				if err != nil {
+					return fmt.Errorf("failed to serialize notification event: %w", err)
+				}
+				pipe.ZAdd(d.Context(), contactNotificationKey, &redis.Z{
+					Score:  float64(event.TimeStamp),
+					Member: eventBytes,
+				})
+			}
+
+			logger.Info().
+				Msg("successfully added history")
+
+			_, execErr := pipe.Exec(d.Context())
+			if execErr != nil {
+				return fmt.Errorf("failed to exec adding notification history: %w", execErr)
+			}
+
+			delCount, delErr := client.Del(connector.Context(), contactIDs...).Result()
+			if delErr != nil {
+				return fmt.Errorf("failed to delete notification history on node: %w", delErr)
+			}
+
+			logger.Info().
+				Int64("delete_count", delCount).
+				Msg("Number of deleted notification history events from node")
+
+			return nil
 		}); err != nil {
 			return err
 		}
@@ -139,6 +143,50 @@ func mergeNotificationHistory(ctx context.Context, logger moira.Logger, database
 	return nil
 }
 
+func fetchNotificationHistoryFromRedisNode(connector *moira_redis.DbConnector, client redis.UniversalClient, logger moira.Logger, contactIDs []string) ([]moira.NotificationEventHistoryItem, error) {
+	ctx := connector.Context()
+
+	logger.Info().
+		Int("contact_ids", len(contactIDs)).
+		Msg("Number of contacts in notifications history")
+
+	if len(contactIDs) == 0 {
+		return make([]moira.NotificationEventHistoryItem, 0), nil
+	}
+
+	eventStrings, unionErr := client.ZUnion(
+		ctx,
+		redis.ZStore{
+			Keys: contactIDs,
+		}).Result()
+	if unionErr != nil {
+		return nil, fmt.Errorf("error while fetching history from node: %w", unionErr)
+	}
+
+	notificationEvents, err := deserializeEvents(eventStrings)
+	if err != nil {
+		return nil, err
+	}
+
+	return notificationEvents, nil
+}
+
+func scanContactIDs(ctx context.Context, client redis.UniversalClient) ([]string, error) {
+	var contactIDs []string
+
+	iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
+	for iterator.Next(ctx) {
+		contactIDs = append(contactIDs, iterator.Val())
+	}
+
+	iterErr := iterator.Err()
+	if iterErr != nil {
+		return nil, fmt.Errorf("error while iterating over notification history: %w", iterErr)
+	}
+
+	return contactIDs, nil
+}
+
 func contactNotificationKeyWithID(contactID string) string {
 	return contactNotificationKey + ":" + contactID
 }
@@ -149,4 +197,17 @@ func handleCleanupNotificationHistoryWithTTL(db moira.Database, ttl int64) error
 		return fmt.Errorf("database error: %w", err)
 	}
 	return nil
+}
+
+func deserializeEvents(eventStrings []string) ([]moira.NotificationEventHistoryItem, error) {
+	notificationEvents := make([]moira.NotificationEventHistoryItem, 0, len(eventStrings))
+	for _, str := range eventStrings {
+		notification, err := moira_redis.GetNotificationStruct(str)
+		if err != nil {
+			return nil, fmt.Errorf("failed to deserialize notification events: %w", err)
+		}
+
+		notificationEvents = append(notificationEvents, notification)
+	}
+	return notificationEvents, nil
 }
