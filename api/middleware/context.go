@@ -328,7 +328,7 @@ func StatesProvider(defaultStates map[string]struct{}) func(next http.Handler) h
 				}
 			}
 
-			ctx := context.WithValue(request.Context(), metricContextKey, states)
+			ctx := context.WithValue(request.Context(), stateContextKey, states)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
