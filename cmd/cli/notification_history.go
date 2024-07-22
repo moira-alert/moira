@@ -101,7 +101,7 @@ func mergeNotificationHistoryOnRedisNode(connector *moira_redis.DbConnector, cli
 		return nil
 	}
 
-	unionErr := connector.Client().ZUnionStore(
+	unionErr := client.ZUnionStore(
 		ctx,
 		contactNotificationKey,
 		&redis.ZStore{
