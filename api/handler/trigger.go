@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -179,7 +180,9 @@ func checkingTemplateFilling(request *http.Request, trigger dto.Trigger) *api.Er
 		return nil
 	}
 
-	eventsList, err := controller.GetTriggerEvents(database, trigger.ID, 0, 3)
+	allMetrics := "*"
+	metricPattern := regexp.MustCompile(allMetrics)
+	eventsList, err := controller.GetTriggerEvents(database, trigger.ID, 0, 3, 1, time.Now().Unix(), metricPattern, nil)
 	if err != nil {
 		return err
 	}

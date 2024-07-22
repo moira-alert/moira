@@ -3,8 +3,8 @@ package handler
 import (
 	"fmt"
 	"github.com/go-graphite/carbonapi/date"
-	"github.com/moira-alert/moira"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -20,7 +20,7 @@ func event(router chi.Router) {
 		middleware.Paginate(0, 100),
 		middleware.DateRange("-3hour", "now"),
 		middleware.MetricProvider("*"),
-		middleware.StateProvider("*"),
+		middleware.StatesProvider(nil),
 	).Get("/{triggerId}", getEventsList)
 	router.With(middleware.AdminOnlyMiddleware()).Delete("/all", deleteAllEvents)
 }
@@ -32,8 +32,12 @@ func event(router chi.Router) {
 //	@tags		event
 //	@produce	json
 //	@param		triggerID	path		string							true	"The ID of updated trigger"														default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		size		query		int								false	"Number of items to be displayed on one page"									default(100)
-//	@param		p			query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	default(0)
+//	@param		size			query		int									false	"Number of items to be displayed on one page"									default(100)
+//	@param		p					query		int									false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	default(0)
+//	@param		from			query		string							false	"Start time of the time range"	default(-3hour)
+//	@param		to				query		string							false	"End time of the time range"	default(now)
+//	@param		metric		query		string							false	"Regular expression that will be used to filter events"	default(*)
+//	@param		states		query		string							false "String of ',' separated state names. If empty then all states will be used." default()
 //	@success	200			{object}	dto.EventsList					"Events fetched successfully"
 //	@Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@Failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
@@ -46,23 +50,29 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	page := middleware.GetPage(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
+
 	from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
 	if from == 0 {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr))) //nolint
 		return
 	}
+
 	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
 		return
 	}
-	state := middleware.GetStateString(request)
-	if !moira.IsValidState(state) && state != "*" {
-		// TODO: better error description
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid state")))
+
+	metricStr := middleware.GetMetric(request)
+	metricPattern, errParseRegex := regexp.Compile(metricStr)
+	if errParseRegex != nil {
+		_ = render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse metric \"%s\": %w", metricStr, errParseRegex)))
 		return
 	}
-	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size, from, to, "", "")
+
+	states := middleware.GetStates(request)
+
+	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size, from, to, metricPattern, states)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return

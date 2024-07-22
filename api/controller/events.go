@@ -4,11 +4,13 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
+	"regexp"
 )
 
-// GetTriggerEvents gets trigger event from current page and all trigger event count.
-func GetTriggerEvents(database moira.Database, triggerID string, page, size, from, to int64, metric string, state moira.State) (*dto.EventsList, *api.ErrorResponse) {
-	events, err := database.GetNotificationEvents(triggerID, page*size, size, from, to, metric, state)
+// GetTriggerEvents gets trigger event from current page and all trigger event count. Events list is filtered by time range
+// (`from` and `to` params), metric (regular expression) and states. If `states` map is empty or nil then all states are accepted.
+func GetTriggerEvents(database moira.Database, triggerID string, page, size, from, to int64, metric *regexp.Regexp, states map[string]struct{}) (*dto.EventsList, *api.ErrorResponse) {
+	events, err := database.GetNotificationEvents(triggerID, page*size, size, from, to, metric, states)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -18,7 +20,7 @@ func GetTriggerEvents(database moira.Database, triggerID string, page, size, fro
 		Size:  size,
 		Page:  page,
 		Total: eventCount,
-		List:  make([]moira.NotificationEvent, 0),
+		List:  make([]moira.NotificationEvent, 0, len(events)),
 	}
 	for _, event := range events {
 		if event != nil {

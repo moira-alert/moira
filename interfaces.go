@@ -1,6 +1,7 @@
 package moira
 
 import (
+	"regexp"
 	"time"
 
 	"github.com/moira-alert/go-chart"
@@ -60,7 +61,7 @@ type Database interface {
 	DeleteTriggerThrottling(triggerID string) error
 
 	// NotificationEvent storing
-	GetNotificationEvents(triggerID string, start, size, from, to int64, metric string, state State) ([]*NotificationEvent, error)
+	GetNotificationEvents(triggerID string, start, size, from, to int64, metric *regexp.Regexp, states map[string]struct{}) ([]*NotificationEvent, error)
 	PushNotificationEvent(event *NotificationEvent, ui bool) error
 	GetNotificationEventCount(triggerID string, from int64) int64
 	FetchNotificationEvent() (NotificationEvent, error)

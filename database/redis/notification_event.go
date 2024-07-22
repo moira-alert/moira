@@ -1,8 +1,10 @@
 package redis
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -14,28 +16,81 @@ import (
 
 var eventsTTL int64 = 3600 * 24 * 30
 
-// GetNotificationEvents gets NotificationEvents by given triggerID and interval.
-func (connector *DbConnector) GetNotificationEvents(triggerID string, start, size, from, to int64, metric string, state moira.State) ([]*moira.NotificationEvent, error) {
+// GetNotificationEvents gets NotificationEvents by given triggerID and interval. The events are filtered by time range
+// (`from`, `to` params), by metric (regular expression) and by states. If `states` is empty or nil then all states are accepted.
+func (connector *DbConnector) GetNotificationEvents(triggerID string, start, size, from, to int64, metric *regexp.Regexp, states map[string]struct{},
+) ([]*moira.NotificationEvent, error) {
 	ctx := connector.context
 	client := connector.Client()
 
-	// TODO: add conditions for filter parameters (metric, state, from, to)
+	fromStr := strconv.FormatInt(from, 10)
+	toStr := strconv.FormatInt(to, 10)
 
+	// if size < 0 fetch all events
+	if size < 0 {
+		eventsData, err := fetchNotificationEvents(ctx, client, triggerID, start, size, fromStr, toStr)
+		if err != nil {
+			return nil, err
+		}
+
+		return filterNotificationEvents(eventsData, metric, states), nil
+	}
+
+	notificationEvents := make([]*moira.NotificationEvent, 0, size)
+	var count int64
+
+	for int64(len(notificationEvents)) < size {
+		eventsData, err := fetchNotificationEvents(ctx, client, triggerID, start+size*count, size, fromStr, toStr)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(eventsData) == 0 {
+			break
+		}
+
+		notificationEvents = append(notificationEvents, filterNotificationEvents(eventsData, metric, states)...)
+		count += 1
+	}
+
+	return notificationEvents, nil
+}
+
+func fetchNotificationEvents(ctx context.Context, client redis.UniversalClient, triggerID string, start, size int64, from, to string,
+) ([]*moira.NotificationEvent, error) {
 	eventsData, err := reply.Events(client.ZRevRangeByScore(ctx, triggerEventsKey(triggerID), &redis.ZRangeBy{
-		Min:    strconv.FormatInt(from, 10),
-		Max:    strconv.FormatInt(to, 10),
+		Min:    from,
+		Max:    to,
 		Offset: start,
 		Count:  size,
 	}))
-	//eventsData, err := reply.Events(client.ZRevRange(ctx, triggerEventsKey(triggerID), start, start+size))
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
-		return nil, fmt.Errorf("failed to get range for trigger events, triggerID: %s, error: %s", triggerID, err.Error())
+		return nil, fmt.Errorf("failed to get range of trigger events, triggerID: %s, error: %w", triggerID, err)
+	}
+	return eventsData, nil
+}
+
+func filterNotificationEvents(eventsData []*moira.NotificationEvent, metric *regexp.Regexp, states map[string]struct{}) []*moira.NotificationEvent {
+	notificationEvents := make([]*moira.NotificationEvent, 0)
+
+	for _, event := range eventsData {
+		if metric.MatchString(event.Metric) {
+			if len(states) == 0 {
+				notificationEvents = append(notificationEvents, event)
+				continue
+			}
+
+			if _, ok := states[string(event.State)]; ok {
+				notificationEvents = append(notificationEvents, event)
+				continue
+			}
+		}
 	}
 
-	return eventsData, nil
+	return notificationEvents
 }
 
 // PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days.
@@ -93,7 +148,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	}
 
 	if err != nil {
-		return event, fmt.Errorf("failed to fetch event: %s", err.Error())
+		return event, fmt.Errorf("failed to fetch event: %w", err)
 	}
 
 	event, _ = reply.BRPopToEvent(response)
@@ -116,13 +171,13 @@ func (connector *DbConnector) RemoveAllNotificationEvents() error {
 	c := *connector.client
 
 	if _, err := c.Del(ctx, notificationEventsList).Result(); err != nil {
-		return fmt.Errorf("failed to remove %s: %s", notificationEventsList, err.Error())
+		return fmt.Errorf("failed to remove %s: %w", notificationEventsList, err)
 	}
 
 	return nil
 }
 
-var (
+const (
 	notificationEventsList   = "moira-trigger-events"
 	notificationEventsUIList = "moira-trigger-events-ui"
 )

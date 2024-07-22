@@ -163,24 +163,22 @@ func GetAuth(request *http.Request) *api.Authorization {
 	return request.Context().Value(authKey).(*api.Authorization)
 }
 
-type metricContextKeyType struct{}
+type (
+	metricContextKeyType struct{}
+	stateContextKeyType  struct{}
+)
 
-var metricContextKey metricContextKeyType
-
-// TODO: think about list of metrics or regular expression.
+var (
+	metricContextKey metricContextKeyType
+	stateContextKey  stateContextKeyType
+)
 
 // GetMetric is used to retrieve metric name.
 func GetMetric(request *http.Request) string {
 	return request.Context().Value(metricContextKey).(string)
 }
 
-type stateContextKeyType struct{}
-
-var stateContextKey stateContextKeyType
-
-// TODO: think about list of states or regular expression.
-
-// GetStateString is used to retrieve trigger state.
-func GetStateString(request *http.Request) string {
-	return request.Context().Value(stateContextKey).(string)
+// GetStates is used to retrieve trigger state.
+func GetStates(request *http.Request) map[string]struct{} {
+	return request.Context().Value(stateContextKey).(map[string]struct{})
 }

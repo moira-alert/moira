@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -299,8 +300,10 @@ func MetricProvider(defaultMetric string) func(next http.Handler) http.Handler {
 	}
 }
 
-// StateProvider is a function that gets `state` value from query string and places it in context. If query does not have value sets given value.
-func StateProvider(defaultState string) func(next http.Handler) http.Handler {
+const statesArraySeparator = ","
+
+// StatesProvider is a function that gets `states` value from query string and places it in context. If query does not have value sets given value.
+func StatesProvider(defaultStates map[string]struct{}) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			urlValues, err := url.ParseQuery(request.URL.RawQuery)
@@ -309,12 +312,23 @@ func StateProvider(defaultState string) func(next http.Handler) http.Handler {
 				return
 			}
 
-			stateStr := urlValues.Get("state")
-			if stateStr == "" {
-				stateStr = defaultState
+			var states map[string]struct{}
+
+			statesStr := urlValues.Get("states")
+			if statesStr == "" {
+				states = defaultStates
+			} else {
+				statesList := strings.Split(statesStr, statesArraySeparator)
+				for _, state := range statesList {
+					if !moira.IsValidState(state) {
+						_ = render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("bad state in query parameter: %s", state)))
+						return
+					}
+					states[state] = struct{}{}
+				}
 			}
 
-			ctx := context.WithValue(request.Context(), metricContextKey, stateStr)
+			ctx := context.WithValue(request.Context(), metricContextKey, states)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
