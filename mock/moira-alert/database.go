@@ -182,6 +182,20 @@ func (mr *MockDatabaseMockRecorder) CleanUpOutdatedMetrics(arg0 any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedMetrics), arg0)
 }
 
+// CleanUpOutdatedNotificationHistory mocks base method.
+func (m *MockDatabase) CleanUpOutdatedNotificationHistory(arg0 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanUpOutdatedNotificationHistory", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CleanUpOutdatedNotificationHistory indicates an expected call of CleanUpOutdatedNotificationHistory.
+func (mr *MockDatabaseMockRecorder) CleanUpOutdatedNotificationHistory(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedNotificationHistory", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedNotificationHistory), arg0)
+}
+
 // CleanupOutdatedPatternMetrics mocks base method.
 func (m *MockDatabase) CleanupOutdatedPatternMetrics() (int64, error) {
 	m.ctrl.T.Helper()
