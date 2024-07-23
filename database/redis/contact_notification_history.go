@@ -21,7 +21,7 @@ func GetNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]b
 	return bytes, nil
 }
 
-// GetNotificationStruct unmarshals moira.NotificationEventHistoryItem from json represented by sting.
+// GetNotificationStruct unmarshals moira.NotificationEventHistoryItem from json represented by string.
 func GetNotificationStruct(notificationString string) (moira.NotificationEventHistoryItem, error) {
 	var object moira.NotificationEventHistoryItem
 	err := json.Unmarshal([]byte(notificationString), &object)
