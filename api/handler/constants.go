@@ -8,5 +8,5 @@ const (
 
 	// default values for middleware.Paginate.
 	contactEventsDefaultPage = 0
-	contactEventsDefaultSize = 100
+	contactEventsDefaultSize = -1
 )

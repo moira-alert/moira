@@ -116,13 +116,18 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 			logger.Info().
 				Msg("successfully added history")
 
-			delCount, delErr := client.Del(connector.Context(), contactIDs...).Result()
-			if delErr != nil {
-				return fmt.Errorf("failed to delete notification history on node: %w", delErr)
+			var totalDelCount int64
+
+			for _, id := range contactIDs {
+				delCount, delErr := client.Del(connector.Context(), id).Result()
+				if delErr != nil {
+					return fmt.Errorf("failed to delete notification history for contact %s on node: %w", id, delErr)
+				}
+				totalDelCount += delCount
 			}
 
 			logger.Info().
-				Int64("delete_count", delCount).
+				Int64("delete_count", totalDelCount).
 				Msg("Number of deleted notification history events from node")
 
 			return nil
