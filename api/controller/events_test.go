@@ -2,7 +2,9 @@ package controller
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
@@ -13,6 +15,11 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+var (
+	allMetrics = regexp.MustCompile("")
+	allStates  map[string]struct{}
+)
+
 func TestGetEvents(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -20,12 +27,24 @@ func TestGetEvents(t *testing.T) {
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	var page int64 = 10
 	var size int64 = 100
+	var from int64 = 0
+	var to = time.Now().Unix()
 
 	Convey("Test has events", t, func() {
 		var total int64 = 6000000
-		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size-1).Return([]*moira.NotificationEvent{{State: moira.StateNODATA, OldState: moira.StateOK}, {State: moira.StateOK, OldState: moira.StateNODATA}}, nil)
+		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size, from, to, allMetrics, allStates).
+			Return([]*moira.NotificationEvent{
+				{
+					State:    moira.StateNODATA,
+					OldState: moira.StateOK,
+				},
+				{
+					State:    moira.StateOK,
+					OldState: moira.StateNODATA,
+				},
+			}, nil)
 		dataBase.EXPECT().GetNotificationEventCount(triggerID, int64(-1)).Return(total)
-		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
+		list, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, allMetrics, allStates)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.EventsList{
 			List:  []moira.NotificationEvent{{State: moira.StateNODATA, OldState: moira.StateOK}, {State: moira.StateOK, OldState: moira.StateNODATA}},
@@ -37,9 +56,9 @@ func TestGetEvents(t *testing.T) {
 
 	Convey("Test no events", t, func() {
 		var total int64
-		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size-1).Return(make([]*moira.NotificationEvent, 0), nil)
+		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size, from, to, allMetrics, allStates).Return(make([]*moira.NotificationEvent, 0), nil)
 		dataBase.EXPECT().GetNotificationEventCount(triggerID, int64(-1)).Return(total)
-		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
+		list, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, allMetrics, allStates)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.EventsList{
 			List:  make([]moira.NotificationEvent, 0),
@@ -51,8 +70,8 @@ func TestGetEvents(t *testing.T) {
 
 	Convey("Test error", t, func() {
 		expected := fmt.Errorf("oooops! Can not get all contacts")
-		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size-1).Return(nil, expected)
-		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
+		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size, from, to, allMetrics, allStates).Return(nil, expected)
+		list, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, allMetrics, allStates)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
 	})
