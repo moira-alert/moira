@@ -302,8 +302,8 @@ func MetricProvider(defaultMetric string) func(next http.Handler) http.Handler {
 
 const statesArraySeparator = ","
 
-// StatesProvider is a function that gets `states` value from query string and places it in context. If query does not have value sets given value.
-func StatesProvider(defaultStates map[string]struct{}) func(next http.Handler) http.Handler {
+// StatesProvider is a function that gets `states` value from query string and places it in context. If query does not have value empty map will be used.
+func StatesProvider() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			urlValues, err := url.ParseQuery(request.URL.RawQuery)
@@ -312,12 +312,10 @@ func StatesProvider(defaultStates map[string]struct{}) func(next http.Handler) h
 				return
 			}
 
-			var states map[string]struct{}
+			states := make(map[string]struct{}, 0)
 
 			statesStr := urlValues.Get("states")
-			if statesStr == "" {
-				states = defaultStates
-			} else {
+			if statesStr != "" {
 				statesList := strings.Split(statesStr, statesArraySeparator)
 				for _, state := range statesList {
 					if !moira.IsValidState(state) {

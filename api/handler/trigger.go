@@ -180,7 +180,6 @@ func checkingTemplateFilling(request *http.Request, trigger dto.Trigger) *api.Er
 		return nil
 	}
 
-	allMetrics := "*"
 	metricPattern := regexp.MustCompile(allMetrics)
 	eventsList, err := controller.GetTriggerEvents(database, trigger.ID, 0, 3, 1, time.Now().Unix(), metricPattern, nil)
 	if err != nil {

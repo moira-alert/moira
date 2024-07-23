@@ -14,13 +14,15 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
+const allMetrics = ".*"
+
 func event(router chi.Router) {
 	router.With(
 		middleware.TriggerContext,
 		middleware.Paginate(0, 100),
 		middleware.DateRange("-3hour", "now"),
-		middleware.MetricProvider("*"),
-		middleware.StatesProvider(nil),
+		middleware.MetricProvider(allMetrics),
+		middleware.StatesProvider(),
 	).Get("/{triggerId}", getEventsList)
 	router.With(middleware.AdminOnlyMiddleware()).Delete("/all", deleteAllEvents)
 }
@@ -36,7 +38,7 @@ func event(router chi.Router) {
 //	@param		p					query		int									false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	default(0)
 //	@param		from			query		string							false	"Start time of the time range"	default(-3hour)
 //	@param		to				query		string							false	"End time of the time range"	default(now)
-//	@param		metric		query		string							false	"Regular expression that will be used to filter events"	default(*)
+//	@param		metric		query		string							false	"Regular expression that will be used to filter events"	default(.*)
 //	@param		states		query		string							false "String of ',' separated state names. If empty then all states will be used." default()
 //	@success	200			{object}	dto.EventsList					"Events fetched successfully"
 //	@Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
