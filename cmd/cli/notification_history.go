@@ -150,13 +150,25 @@ func fetchNotificationHistoryFromRedisNode(connector *moira_redis.DbConnector, c
 		return make([]moira.NotificationEventHistoryItem, 0), nil
 	}
 
-	eventStrings, unionErr := client.ZUnion(
-		ctx,
-		redis.ZStore{
-			Keys: contactIDs,
-		}).Result()
-	if unionErr != nil {
-		return nil, fmt.Errorf("error while fetching history from node: %w", unionErr)
+	var eventStrings []string
+
+	for _, id := range contactIDs {
+		iterator := client.ZScan(ctx, id, 0, "", 0).Iterator()
+		for iterator.Next(ctx) {
+			eventStr := iterator.Val()
+
+			// On 1, 3, 5, ... indexes with have scores, not json
+			_, err := strconv.Atoi(eventStr)
+			if err == nil {
+				continue
+			}
+
+			eventStrings = append(eventStrings, eventStr)
+		}
+
+		if err := iterator.Err(); err != nil {
+			return nil, fmt.Errorf("error while iterating over contact with id: %s, error: %w", id, err)
+		}
 	}
 
 	notificationEvents, err := deserializeEvents(eventStrings)
