@@ -7,7 +7,7 @@ import (
 )
 
 func updateFrom212(logger moira.Logger, database moira.Database) error {
-	logger.Info().Msg("Update 2.11 -> 2.12 was started")
+	logger.Info().Msg("Update 2.12 -> 2.13 was started")
 
 	ctx := context.Background()
 	err := splitNotificationHistoryByContactID(ctx, logger, database)
@@ -15,18 +15,18 @@ func updateFrom212(logger moira.Logger, database moira.Database) error {
 		return err
 	}
 
-	logger.Info().Msg("Update 2.11 -> 2.12 was finished")
+	logger.Info().Msg("Update 2.12 -> 2.13 was finished")
 	return nil
 }
 
 func downgradeTo212(logger moira.Logger, database moira.Database) error {
-	logger.Info().Msg("Downgrade 2.11 -> 2.12 started")
+	logger.Info().Msg("Downgrade 2.13 -> 2.12 started")
 
 	err := mergeNotificationHistory(logger, database)
 	if err != nil {
 		return err
 	}
 
-	logger.Info().Msg("Downgrade 2.11 -> 2.12 was finished")
+	logger.Info().Msg("Downgrade 2.13 -> 2.12 was finished")
 	return nil
 }
