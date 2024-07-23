@@ -119,25 +119,26 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 		to := strconv.Itoa(int(time.Now().Unix() - ttl))
 
 		ctx := dbConn.Context()
-		pipe := client.TxPipeline()
 
-		iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
-		for iterator.Next(ctx) {
-			pipe.ZRemRangeByScore(
-				ctx,
-				iterator.Val(),
-				from,
-				to,
-			)
-		}
+		_, err := client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+			iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
+			for iterator.Next(ctx) {
+				pipe.ZRemRangeByScore(
+					ctx,
+					iterator.Val(),
+					from,
+					to,
+				)
+			}
 
-		if err := iterator.Err(); err != nil {
-			return fmt.Errorf("failed to iterate over notification history keys: %w", err)
-		}
+			if err := iterator.Err(); err != nil {
+				return fmt.Errorf("failed to iterate over notification history keys: %w", err)
+			}
 
-		_, err := pipe.Exec(ctx)
+			return nil
+		})
 		if err != nil {
-			return fmt.Errorf("failed to exec delete commands: %w", err)
+			return fmt.Errorf("failed to pipeline deleting: %w", err)
 		}
 
 		return nil
