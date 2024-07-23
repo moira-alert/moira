@@ -14,8 +14,11 @@ func RoundTimestamps(startTime, stopTime, retention int64) (roundedStart, rounde
 
 // Creates new timer rounding start and stop time in a specific manner requered by carbonapi.
 // Timers should be created only with this function.
-func NewTimerRoundingTimestamps(startTime int64, stopTime int64, retention int64) Timer {
-	startTime, stopTime = RoundTimestamps(startTime, stopTime, retention)
+func NewTimerRoundingTimestamps(startTime int64, stopTime int64, retention int64, isRefetch bool) Timer {
+	if !isRefetch {
+		startTime, stopTime = RoundTimestamps(startTime, stopTime, retention)
+	}
+
 	return Timer{
 		startTime: startTime,
 		stopTime:  stopTime,

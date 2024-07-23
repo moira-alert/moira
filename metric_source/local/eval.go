@@ -22,20 +22,24 @@ type evalCtx struct {
 
 // Fetch fetch metrics (for compatibility with carbonapi Evaluator interface).
 func (ectx *evalCtx) Fetch(ctx context.Context, exprs []parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (map[parser.MetricRequest][]*types.MetricData, error) {
-	res := fetchedMetrics{
+	result := &fetchedMetrics{
 		metrics:    make([]string, 0),
 		metricsMap: values,
 	}
 
+	ectx.from = from
+	ectx.until = until
+
 	for _, exp := range exprs {
-		if err := ectx.getMetricsData(exp.Metrics(0, 0), &res); err != nil {
+		if err := ectx.getMetricsData(exp.Metrics(0, 0), result, true); err != nil {
 			return nil, err
 		}
 	}
 
-	res.metricsMap = helper.ScaleValuesToCommonStep(res.metricsMap)
+	commonStep := result.calculateCommonStep()
+	ectx.scaleToCommonStep(commonStep, result)
 
-	return res.metricsMap, nil
+	return result.metricsMap, nil
 }
 
 // Eval evaluates expressions (for compatibility with carbonapi Evaluator interface).
@@ -82,11 +86,12 @@ func (ectx *evalCtx) fetchAndEval(target string, result *FetchResult) error {
 		metricsMap: make(map[parser.MetricRequest][]*types.MetricData),
 	}
 
-	if err = ectx.getMetricsData(exp.Metrics(0, 0), &metrics); err != nil {
+	if err = ectx.getMetricsData(exp.Metrics(ectx.from, ectx.until), &metrics, false); err != nil {
 		return err
 	}
 
 	commonStep := metrics.calculateCommonStep()
+	ectx.roundTimestamps(commonStep)
 	ectx.scaleToCommonStep(commonStep, &metrics)
 
 	rewritten, newTargets, err := ectx.rewriteExpr(exp, &metrics)
@@ -126,11 +131,12 @@ func (ectx *evalCtx) fetchAndEvalNoRewrite(target string, result *FetchResult) e
 		metricsMap: make(map[parser.MetricRequest][]*types.MetricData),
 	}
 
-	if err = ectx.getMetricsData(exp.Metrics(0, 0), &metrics); err != nil {
+	if err = ectx.getMetricsData(exp.Metrics(ectx.from, ectx.until), &metrics, false); err != nil {
 		return err
 	}
 
 	commonStep := metrics.calculateCommonStep()
+	ectx.roundTimestamps(commonStep)
 	ectx.scaleToCommonStep(commonStep, &metrics)
 
 	metricsData, err := ectx.eval(target, exp, &metrics)
@@ -155,23 +161,32 @@ func (ectx *evalCtx) parse(target string) (parser.Expr, error) {
 	return parsedExpr, nil
 }
 
-func (ectx *evalCtx) getMetricsData(metricRequests []parser.MetricRequest, result *fetchedMetrics) error {
-	fetchData := fetchData{ectx.database}
+func (ectx *evalCtx) getMetricsData(metricRequests []parser.MetricRequest, result *fetchedMetrics, isRefetch bool) error {
+	fetchData := &fetchData{
+		database: ectx.database,
+	}
 
 	for _, mr := range metricRequests {
 		if _, ok := result.metricsMap[mr]; ok {
 			continue
 		}
 
-		from := mr.From + ectx.from
-		until := mr.Until + ectx.until
+		from := ectx.from
+		if mr.From != 0 {
+			from = mr.From
+		}
+
+		until := ectx.until
+		if mr.Until != 0 {
+			until = mr.Until
+		}
 
 		metricNames, err := fetchData.fetchMetricNames(mr.Metric)
 		if err != nil {
 			return err
 		}
 
-		timer := NewTimerRoundingTimestamps(from, until, metricNames.retention)
+		timer := NewTimerRoundingTimestamps(from, until, metricNames.retention, isRefetch)
 
 		metricsData, err := fetchData.fetchMetricValues(mr.Metric, metricNames, timer)
 		if err != nil {
@@ -185,14 +200,20 @@ func (ectx *evalCtx) getMetricsData(metricRequests []parser.MetricRequest, resul
 	return nil
 }
 
-func (ectx *evalCtx) scaleToCommonStep(retention int64, fetchedMetrics *fetchedMetrics) {
+func (ectx *evalCtx) roundTimestamps(retention int64) {
 	from, until := RoundTimestamps(ectx.from, ectx.until, retention)
 	ectx.from, ectx.until = from, until
+}
 
+func (ectx *evalCtx) scaleToCommonStep(retention int64, fetchedMetrics *fetchedMetrics) {
 	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
 	for metricRequest, metricData := range fetchedMetrics.metricsMap {
-		metricRequest.From += from
-		metricRequest.Until += until
+		if metricRequest.From == 0 && metricRequest.Until == 0 {
+			metricRequest.From = ectx.from
+			metricRequest.Until = ectx.until
+		} else {
+			metricRequest.Until = ectx.until
+		}
 
 		metricData = helper.ScaleToCommonStep(metricData, retention)
 		metricMap[metricRequest] = metricData

@@ -18,7 +18,7 @@ func BenchmarkUnpackMetricsValues(b *testing.B) {
 	var until int64 = 1317
 	var retention int64 = 10
 
-	timer := NewTimerRoundingTimestamps(from, until, retention)
+	timer := NewTimerRoundingTimestamps(from, until, retention, false)
 
 	metricsCount := 7300
 
@@ -47,7 +47,7 @@ func BenchmarkUnpackMetricValues(b *testing.B) {
 	var until int64 = 317
 	var retention int64 = 10
 
-	timer := NewTimerRoundingTimestamps(from, until, retention)
+	timer := NewTimerRoundingTimestamps(from, until, retention, false)
 
 	metricsValues := make([]*moira.MetricValue, 0)
 
@@ -75,7 +75,7 @@ func TestFetchDataErrors(t *testing.T) {
 	pattern := "super-puper-pattern"
 	metric := "super-puper-metric"
 
-	timer := NewTimerRoundingTimestamps(17, 67, 10)
+	timer := NewTimerRoundingTimestamps(17, 67, 10, false)
 
 	retentionErr := fmt.Errorf("Ooops, retention error")
 	patternErr := fmt.Errorf("Ooops, pattern error")
@@ -145,7 +145,7 @@ func TestFetchData(t *testing.T) {
 	var from int64 = 17
 	var until int64 = 67
 	var retention int64 = 10
-	timer := NewTimerRoundingTimestamps(from, until, retention)
+	timer := NewTimerRoundingTimestamps(from, until, retention, false)
 
 	Convey("Test no metrics", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
@@ -153,7 +153,7 @@ func TestFetchData(t *testing.T) {
 		metrics, err := fetchedData.fetchMetricNames(pattern)
 		So(err, ShouldBeNil)
 
-		timerNoMetrics := NewTimerRoundingTimestamps(from, until, metrics.retention)
+		timerNoMetrics := NewTimerRoundingTimestamps(from, until, metrics.retention, false)
 		metricValues, err := fetchedData.fetchMetricValues(pattern, metrics, timerNoMetrics)
 
 		So(metricValues[0], shouldEqualIfNaNsEqual, &types.MetricData{
@@ -235,28 +235,28 @@ func TestUnpackMetricValuesNoData(t *testing.T) {
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
 	Convey("From 1 until 1", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 1, retention)
+		timer := NewTimerRoundingTimestamps(1, 1, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 		expected := []float64{}
 		So(val["metric"], shouldEqualIfNaNsEqual, expected)
 	})
 
 	Convey("From 0 until 0", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 0, retention)
+		timer := NewTimerRoundingTimestamps(0, 0, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 		expected := []float64{math.NaN()}
 		So(val["metric"], shouldEqualIfNaNsEqual, expected)
 	})
 
 	Convey("From 0 until 10", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 10, retention)
+		timer := NewTimerRoundingTimestamps(0, 10, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 		expected := []float64{math.NaN(), math.NaN()}
 		So(val["metric"], shouldEqualIfNaNsEqual, expected)
 	})
 
 	Convey("From 1 until 11", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 11, retention)
+		timer := NewTimerRoundingTimestamps(1, 11, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 		expected := []float64{math.NaN()}
 		So(val["metric"], shouldEqualIfNaNsEqual, expected)
@@ -273,49 +273,49 @@ func TestUnpackMetricValues(t *testing.T) {
 	}}
 
 	Convey("From 1 until 1", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 1, retention)
+		timer := NewTimerRoundingTimestamps(1, 1, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{})
 	})
 
 	Convey("From 0 until 0", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 0, retention)
+		timer := NewTimerRoundingTimestamps(0, 0, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{100.0})
 	})
 
 	Convey("From 1 until 11", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 11, retention)
+		timer := NewTimerRoundingTimestamps(1, 11, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{200.0})
 	})
 
 	Convey("From 0 until 10", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 10, retention)
+		timer := NewTimerRoundingTimestamps(0, 10, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{100.00, 200.0})
 	})
 
 	Convey("From 0 until 11", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 11, retention)
+		timer := NewTimerRoundingTimestamps(0, 11, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{100.00, 200.00})
 	})
 
 	Convey("From 0 until 19", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 19, retention)
+		timer := NewTimerRoundingTimestamps(0, 19, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{100.00, 200.00})
 	})
 
 	Convey("From 1 until 30", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 30, retention)
+		timer := NewTimerRoundingTimestamps(1, 30, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{200.00, 300.00, math.NaN()})
@@ -330,7 +330,7 @@ func TestMultipleSeriesNoData(t *testing.T) {
 	}
 
 	Convey("From 1 until 1", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 1, retention)
+		timer := NewTimerRoundingTimestamps(1, 1, retention, false)
 
 		val := unpackMetricsValues(metricData, timer)
 		So(val["metric1"], shouldEqualIfNaNsEqual, []float64{})
@@ -338,7 +338,7 @@ func TestMultipleSeriesNoData(t *testing.T) {
 	})
 
 	Convey("From 0 until 0", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 0, retention)
+		timer := NewTimerRoundingTimestamps(0, 0, retention, false)
 
 		val := unpackMetricsValues(metricData, timer)
 		So(val["metric1"], shouldEqualIfNaNsEqual, []float64{math.NaN()})
@@ -346,7 +346,7 @@ func TestMultipleSeriesNoData(t *testing.T) {
 	})
 
 	Convey("From 1 until 5", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 5, retention)
+		timer := NewTimerRoundingTimestamps(1, 5, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{})
@@ -354,7 +354,7 @@ func TestMultipleSeriesNoData(t *testing.T) {
 	})
 
 	Convey("From 0 until 5", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 5, retention)
+		timer := NewTimerRoundingTimestamps(0, 5, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{math.NaN()})
@@ -362,7 +362,7 @@ func TestMultipleSeriesNoData(t *testing.T) {
 	})
 
 	Convey("From 5 until 30", t, func() {
-		timer := NewTimerRoundingTimestamps(5, 30, retention)
+		timer := NewTimerRoundingTimestamps(5, 30, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{math.NaN(), math.NaN(), math.NaN()})
@@ -387,7 +387,7 @@ func TestMultipleSeries(t *testing.T) {
 	}
 
 	Convey("From 1 until 1", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 1, retention)
+		timer := NewTimerRoundingTimestamps(1, 1, retention, false)
 
 		val := unpackMetricsValues(metricData, timer)
 		So(val["metric1"], shouldEqualIfNaNsEqual, []float64{})
@@ -395,7 +395,7 @@ func TestMultipleSeries(t *testing.T) {
 	})
 
 	Convey("From 0 until 0", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 0, retention)
+		timer := NewTimerRoundingTimestamps(0, 0, retention, false)
 
 		val := unpackMetricsValues(metricData, timer)
 		So(val["metric1"], shouldEqualIfNaNsEqual, []float64{100.0})
@@ -403,7 +403,7 @@ func TestMultipleSeries(t *testing.T) {
 	})
 
 	Convey("From 1 until 5", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 5, retention)
+		timer := NewTimerRoundingTimestamps(1, 5, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{})
@@ -411,7 +411,7 @@ func TestMultipleSeries(t *testing.T) {
 	})
 
 	Convey("From 0 until 5", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 5, retention)
+		timer := NewTimerRoundingTimestamps(0, 5, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{100.0})
@@ -419,7 +419,7 @@ func TestMultipleSeries(t *testing.T) {
 	})
 
 	Convey("From 0 until 9", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 9, retention)
+		timer := NewTimerRoundingTimestamps(0, 9, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{100.00})
@@ -427,7 +427,7 @@ func TestMultipleSeries(t *testing.T) {
 	})
 
 	Convey("From 0 until 10", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 10, retention)
+		timer := NewTimerRoundingTimestamps(0, 10, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{100.00, 200.00})
@@ -435,7 +435,7 @@ func TestMultipleSeries(t *testing.T) {
 	})
 
 	Convey("From 1 until 11", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 11, retention)
+		timer := NewTimerRoundingTimestamps(1, 11, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{200.00})
@@ -443,7 +443,7 @@ func TestMultipleSeries(t *testing.T) {
 	})
 
 	Convey("From 0 until 30", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 30, retention)
+		timer := NewTimerRoundingTimestamps(0, 30, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{100.00, 200.00, 300.00, math.NaN()})
@@ -451,7 +451,7 @@ func TestMultipleSeries(t *testing.T) {
 	})
 
 	Convey("From 5 until 30", t, func() {
-		timer := NewTimerRoundingTimestamps(5, 30, retention)
+		timer := NewTimerRoundingTimestamps(5, 30, retention, false)
 
 		val1 := unpackMetricsValues(metricData, timer)
 		So(val1["metric1"], shouldEqualIfNaNsEqual, []float64{200.00, 300.00, math.NaN()})
@@ -468,49 +468,49 @@ func TestShiftedSeries(t *testing.T) {
 	}}
 
 	Convey("From 1 until 1", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 1, retention)
+		timer := NewTimerRoundingTimestamps(1, 1, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{})
 	})
 
 	Convey("From 0 until 0", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 0, retention)
+		timer := NewTimerRoundingTimestamps(0, 0, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{100.0})
 	})
 
 	Convey("From 1 until 11", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 11, retention)
+		timer := NewTimerRoundingTimestamps(1, 11, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{200.0})
 	})
 
 	Convey("From 0 until 10", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 10, retention)
+		timer := NewTimerRoundingTimestamps(0, 10, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{100.00, 200.0})
 	})
 
 	Convey("From 0 until 11", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 11, retention)
+		timer := NewTimerRoundingTimestamps(0, 11, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{100.00, 200.00})
 	})
 
 	Convey("From 0 until 19", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 19, retention)
+		timer := NewTimerRoundingTimestamps(0, 19, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{100.00, 200.00})
 	})
 
 	Convey("From 1 until 30", t, func() {
-		timer := NewTimerRoundingTimestamps(1, 30, retention)
+		timer := NewTimerRoundingTimestamps(1, 30, retention, false)
 		val := unpackMetricsValues(metricData, timer)
 
 		So(val["metric"], shouldEqualIfNaNsEqual, []float64{200.00, 300.00, math.NaN()})
