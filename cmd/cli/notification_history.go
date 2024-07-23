@@ -99,7 +99,7 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 				return fetchErr
 			}
 
-			_, err = d.Client().Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
+			cmds, err := d.Client().Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
 				for _, event := range events {
 					eventBytes, err := moira_redis.GetNotificationBytes(&event)
 					if err != nil {
@@ -119,14 +119,26 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 			logger.Info().
 				Msg("successfully added history")
 
-			var totalDelCount int64
-
-			for _, id := range contactIDs {
-				delCount, delErr := client.Del(connector.Context(), id).Result()
-				if delErr != nil {
-					return fmt.Errorf("failed to delete notification history for contact %s on node: %w", id, delErr)
+			cmds, err = client.Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
+				for _, id := range contactIDs {
+					pipe.Del(connector.Context(), id)
 				}
-				totalDelCount += delCount
+				return nil
+			})
+			if err != nil {
+				return fmt.Errorf("failed to delete previous notification history: %w", err)
+			}
+
+			var totalDelCount int64
+			for i, cmd := range cmds {
+				deleted, err := cmd.(*redis.IntCmd).Result()
+				if err != nil {
+					logger.Warning().
+						String("fail_contact_key", contactIDs[i]).
+						Error(err).
+						Msg("failed to delete")
+				}
+				totalDelCount += deleted
 			}
 
 			logger.Info().
