@@ -216,3 +216,92 @@ func TestTargetNameMiddleware(t *testing.T) {
 		})
 	})
 }
+
+func TestMetricProviderMiddleware(t *testing.T) {
+	Convey("checking correctness of parameter", t, func() {
+		responseWriter := httptest.NewRecorder()
+		defaultMetric := ".*"
+
+		Convey("with correct parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?metric=test%5C.metric.*", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := MetricProvider(defaultMetric)
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("with wrong url query parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?metric%=test", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := MetricProvider(defaultMetric)
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, _ := io.ReadAll(response.Body)
+			contents := string(contentBytes)
+
+			So(contents, ShouldEqual, expectedBadRequest)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+	})
+}
+
+func TestStatesProviderMiddleware(t *testing.T) {
+	Convey("checking correctness of parameter", t, func() {
+		responseWriter := httptest.NewRecorder()
+
+		Convey("with correct parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?states=OK%2CERROR", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := StatesProvider()
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("with incorrect parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?states=OK%2CERROR%2Cwarn", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := StatesProvider()
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("with wrong url query parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?states%=test", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := StatesProvider()
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, _ := io.ReadAll(response.Body)
+			contents := string(contentBytes)
+
+			So(contents, ShouldEqual, expectedBadRequest)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+	})
+}
