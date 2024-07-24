@@ -318,7 +318,7 @@ func StatesProvider() func(next http.Handler) http.Handler {
 			if statesStr != "" {
 				statesList := strings.Split(statesStr, statesArraySeparator)
 				for _, state := range statesList {
-					if !moira.IsValidState(state) {
+					if !moira.State(state).IsValid() {
 						_ = render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("bad state in query parameter: %s", state)))
 						return
 					}
