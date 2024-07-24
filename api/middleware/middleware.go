@@ -39,6 +39,8 @@ var (
 	teamIDKey            ContextKey = "teamID"
 	teamUserIDKey        ContextKey = "teamUserIDKey"
 	authKey              ContextKey = "auth"
+	metricContextKey     ContextKey = "metric"
+	statesContextKey     ContextKey = "states"
 	anonymousUser                   = "anonymous"
 )
 
@@ -163,16 +165,6 @@ func GetAuth(request *http.Request) *api.Authorization {
 	return request.Context().Value(authKey).(*api.Authorization)
 }
 
-type (
-	metricContextKeyType struct{}
-	stateContextKeyType  struct{}
-)
-
-var (
-	metricContextKey metricContextKeyType
-	stateContextKey  stateContextKeyType
-)
-
 // GetMetric is used to retrieve metric name.
 func GetMetric(request *http.Request) string {
 	return request.Context().Value(metricContextKey).(string)
@@ -180,5 +172,5 @@ func GetMetric(request *http.Request) string {
 
 // GetStates is used to retrieve trigger state.
 func GetStates(request *http.Request) map[string]struct{} {
-	return request.Context().Value(stateContextKey).(map[string]struct{})
+	return request.Context().Value(statesContextKey).(map[string]struct{})
 }

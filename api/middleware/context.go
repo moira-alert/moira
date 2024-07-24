@@ -326,7 +326,7 @@ func StatesProvider() func(next http.Handler) http.Handler {
 				}
 			}
 
-			ctx := context.WithValue(request.Context(), stateContextKey, states)
+			ctx := context.WithValue(request.Context(), statesContextKey, states)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
