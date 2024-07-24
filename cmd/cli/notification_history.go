@@ -99,10 +99,10 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 				return fetchErr
 			}
 
-			cmds, err := d.Client().Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
+			_, err = d.Client().Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
 				for _, event := range events {
-					eventBytes, err := moira_redis.GetNotificationBytes(&event)
-					if err != nil {
+					eventBytes, errGet := moira_redis.GetNotificationBytes(&event)
+					if errGet != nil {
 						return fmt.Errorf("failed to serialize notification event: %w", err)
 					}
 					pipe.ZAdd(d.Context(), contactNotificationKey, &redis.Z{
@@ -119,13 +119,13 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 			logger.Info().
 				Msg("successfully added history")
 
-			cmds, err = client.Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
+			cmds, pipelinedErr := client.Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
 				for _, id := range contactIDs {
 					pipe.Del(connector.Context(), id)
 				}
 				return nil
 			})
-			if err != nil {
+			if pipelinedErr != nil {
 				return fmt.Errorf("failed to delete previous notification history: %w", err)
 			}
 

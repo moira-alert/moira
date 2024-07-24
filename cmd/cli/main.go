@@ -432,6 +432,9 @@ func main() { //nolint
 			Msg("Start cleaning up of notification history")
 
 		ttl := int64(to.Duration(confCleanup.CleanupNotificationHistoryDuration).Seconds())
+		logger.Info().
+			Int64("cleanup_notification_history_duration", ttl).
+			Msg("cleaning history older then")
 
 		if err := handleCleanupNotificationHistoryWithTTL(database, ttl); err != nil {
 			logger.Error().
