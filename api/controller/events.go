@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/moira-alert/moira"
@@ -56,12 +57,18 @@ func getFilteredNotificationEvents(
 			return nil, err
 		}
 
+		fmt.Printf("len(eventsData) = %v\n", len(eventsData))
+
 		if len(eventsData) == 0 {
 			break
 		}
 
 		filtered = append(filtered, filterNotificationEvents(eventsData, metricRegexp, states)...)
 		count += 1
+
+		if int64(len(eventsData)) < size {
+			break
+		}
 	}
 
 	return filtered, nil

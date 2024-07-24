@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	allMetrics = regexp.MustCompile("")
+	allMetrics = regexp.MustCompile(``)
 	allStates  map[string]struct{}
 )
 
@@ -44,6 +44,7 @@ func TestGetEvents(t *testing.T) {
 				},
 			}, nil)
 		dataBase.EXPECT().GetNotificationEventCount(triggerID, int64(-1)).Return(total)
+
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, allMetrics, allStates)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.EventsList{
@@ -103,10 +104,14 @@ func TestGetEvents(t *testing.T) {
 					},
 				}
 				firstPortion := append(make([]*moira.NotificationEvent, 0), notFiltered[0], filtered[0])
-				dataBase.EXPECT().GetNotificationEvents(triggerID, page, size, from, to).Return(firstPortion, nil)
+				firstCall := dataBase.EXPECT().GetNotificationEvents(triggerID, page, size, from, to).Return(firstPortion, nil)
 
 				secondPortion := append(make([]*moira.NotificationEvent, 0), filtered[1], notFiltered[1])
-				dataBase.EXPECT().GetNotificationEvents(triggerID, page+1, size, from, to).Return(secondPortion, nil)
+				secondCall := dataBase.EXPECT().GetNotificationEvents(triggerID, page+1, size, from, to).Return(secondPortion, nil)
+
+				gomock.InOrder(
+					firstCall,
+					secondCall)
 
 				actual, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, regexp.MustCompile(`metric\.test\.event`), allStates)
 				So(err, ShouldBeNil)
