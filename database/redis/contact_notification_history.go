@@ -120,7 +120,7 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 
 		ctx := dbConn.Context()
 
-		_, err := client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+		cmds, err := client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 			iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
 			for iterator.Next(ctx) {
 				pipe.ZRemRangeByScore(
@@ -140,6 +140,22 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 		if err != nil {
 			return fmt.Errorf("failed to pipeline deleting: %w", err)
 		}
+
+		var totalDelCount int64
+
+		for _, cmd := range cmds {
+			count, cmdErr := cmd.(*redis.IntCmd).Result()
+			if cmdErr != nil {
+				connector.logger.Info().
+					Error(cmdErr).
+					Msg("failed to remove outdated")
+			}
+			totalDelCount += count
+		}
+
+		connector.logger.Info().
+			Int64("delete_count", totalDelCount).
+			Msg("Cleaned up notification history")
 
 		return nil
 	})

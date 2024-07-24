@@ -431,7 +431,7 @@ func main() { //nolint
 		logger.Info().
 			Msg("Start cleaning up of notification history")
 
-		ttl := int64(to.Duration(confCleanup.CleanupNotificationHistoryDuration))
+		ttl := int64(to.Duration(confCleanup.CleanupNotificationHistoryDuration).Seconds())
 		logger.Info().
 			Int64("cleanup_notification_history_duration", ttl).
 			Msg("cleaning history older then")
