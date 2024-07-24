@@ -2,10 +2,11 @@ package handler
 
 import (
 	"fmt"
-	"github.com/go-graphite/carbonapi/date"
 	"net/http"
 	"regexp"
 	"time"
+
+	"github.com/go-graphite/carbonapi/date"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"

@@ -1,10 +1,8 @@
 package redis
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -16,52 +14,16 @@ import (
 
 var eventsTTL int64 = 3600 * 24 * 30
 
-// GetNotificationEvents gets NotificationEvents by given triggerID and interval. The events are filtered by time range
-// (`from`, `to` params), by metric (regular expression) and by states. If `states` is empty or nil then all states are accepted.
-func (connector *DbConnector) GetNotificationEvents(triggerID string, start, size, from, to int64, metric *regexp.Regexp, states map[string]struct{},
-) ([]*moira.NotificationEvent, error) {
-	ctx := connector.context
+// GetNotificationEvents gets NotificationEvents by given triggerID and interval. The events are also filtered by time range
+// (`from`, `to` params).
+func (connector *DbConnector) GetNotificationEvents(triggerID string, page, size, from, to int64) ([]*moira.NotificationEvent, error) {
+	ctx := connector.Context()
 	client := connector.Client()
 
-	fromStr := strconv.FormatInt(from, 10)
-	toStr := strconv.FormatInt(to, 10)
-
-	// if size < 0 fetch all events
-	if size < 0 {
-		eventsData, err := fetchNotificationEvents(ctx, client, triggerID, start, size, fromStr, toStr)
-		if err != nil {
-			return nil, err
-		}
-
-		return filterNotificationEvents(eventsData, metric, states), nil
-	}
-
-	notificationEvents := make([]*moira.NotificationEvent, 0, size)
-	var count int64
-
-	for int64(len(notificationEvents)) < size {
-		eventsData, err := fetchNotificationEvents(ctx, client, triggerID, start+size*count, size, fromStr, toStr)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(eventsData) == 0 {
-			break
-		}
-
-		notificationEvents = append(notificationEvents, filterNotificationEvents(eventsData, metric, states)...)
-		count += 1
-	}
-
-	return notificationEvents, nil
-}
-
-func fetchNotificationEvents(ctx context.Context, client redis.UniversalClient, triggerID string, start, size int64, from, to string,
-) ([]*moira.NotificationEvent, error) {
 	eventsData, err := reply.Events(client.ZRevRangeByScore(ctx, triggerEventsKey(triggerID), &redis.ZRangeBy{
-		Min:    from,
-		Max:    to,
-		Offset: start,
+		Min:    strconv.FormatInt(from, 10),
+		Max:    strconv.FormatInt(to, 10),
+		Offset: page * size,
 		Count:  size,
 	}))
 	if err != nil {
@@ -71,22 +33,6 @@ func fetchNotificationEvents(ctx context.Context, client redis.UniversalClient, 
 		return nil, fmt.Errorf("failed to get range of trigger events, triggerID: %s, error: %w", triggerID, err)
 	}
 	return eventsData, nil
-}
-
-func filterNotificationEvents(notificationEvents []*moira.NotificationEvent, metric *regexp.Regexp, states map[string]struct{}) []*moira.NotificationEvent {
-	filteredNotificationEvents := make([]*moira.NotificationEvent, 0)
-
-	for _, event := range notificationEvents {
-		if metric.MatchString(event.Metric) {
-			_, ok := states[string(event.State)]
-			if len(states) == 0 || ok {
-				filteredNotificationEvents = append(filteredNotificationEvents, event)
-				continue
-			}
-		}
-	}
-
-	return filteredNotificationEvents
 }
 
 // PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days.
