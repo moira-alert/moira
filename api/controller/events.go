@@ -9,8 +9,8 @@ import (
 
 // GetTriggerEvents gets trigger event from current page and all trigger event count. Events list is filtered by time range
 // (`from` and `to` params), metric (regular expression) and states. If `states` map is empty or nil then all states are accepted.
-func GetTriggerEvents(database moira.Database, triggerID string, page, size, from, to int64, metric *regexp.Regexp, states map[string]struct{}) (*dto.EventsList, *api.ErrorResponse) {
-	events, err := database.GetNotificationEvents(triggerID, page*size, size, from, to, metric, states)
+func GetTriggerEvents(database moira.Database, triggerID string, page, size, from, to int64, metricRegexp *regexp.Regexp, states map[string]struct{}) (*dto.EventsList, *api.ErrorResponse) {
+	events, err := database.GetNotificationEvents(triggerID, page*size, size, from, to, metricRegexp, states)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}

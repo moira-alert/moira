@@ -73,24 +73,20 @@ func fetchNotificationEvents(ctx context.Context, client redis.UniversalClient, 
 	return eventsData, nil
 }
 
-func filterNotificationEvents(eventsData []*moira.NotificationEvent, metric *regexp.Regexp, states map[string]struct{}) []*moira.NotificationEvent {
-	notificationEvents := make([]*moira.NotificationEvent, 0)
+func filterNotificationEvents(notificationEvents []*moira.NotificationEvent, metric *regexp.Regexp, states map[string]struct{}) []*moira.NotificationEvent {
+	filteredNotificationEvents := make([]*moira.NotificationEvent, 0)
 
-	for _, event := range eventsData {
+	for _, event := range notificationEvents {
 		if metric.MatchString(event.Metric) {
-			if len(states) == 0 {
-				notificationEvents = append(notificationEvents, event)
-				continue
-			}
-
-			if _, ok := states[string(event.State)]; ok {
-				notificationEvents = append(notificationEvents, event)
+			_, ok := states[string(event.State)]
+			if len(states) == 0 || ok {
+				filteredNotificationEvents = append(filteredNotificationEvents, event)
 				continue
 			}
 		}
 	}
 
-	return notificationEvents
+	return filteredNotificationEvents
 }
 
 // PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days.
