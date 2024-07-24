@@ -79,46 +79,93 @@ func TestGetEvents(t *testing.T) {
 
 	Convey("Test filtering", t, func() {
 		Convey("by metric regex", func() {
-			now := time.Now().Unix()
 			page = 0
 			size = 2
-			Convey("with same prefix", func() {
+			Convey("with same pattern", func() {
 				filtered := []*moira.NotificationEvent{
-					{
-						Timestamp: now,
-						Metric:    "metric.test.event1",
-					},
-					{
-						Timestamp: now,
-						Metric:    "metric.test.event2",
-					},
+					{Metric: "metric.test.event1"},
+					{Metric: "a.metric.test.event2"},
 				}
 				notFiltered := []*moira.NotificationEvent{
-					{
-						Timestamp: now,
-						Metric:    "another.metric.test.event",
-					},
-					{
-						Timestamp: now,
-						Metric:    "metric.test",
-					},
+					{Metric: "another.mEtric.test.event"},
+					{Metric: "metric.test"},
 				}
 				firstPortion := append(make([]*moira.NotificationEvent, 0), notFiltered[0], filtered[0])
-				firstCall := dataBase.EXPECT().GetNotificationEvents(triggerID, page, size, from, to).Return(firstPortion, nil)
+				dataBase.EXPECT().GetNotificationEvents(triggerID, page, size, from, to).Return(firstPortion, nil)
 
 				secondPortion := append(make([]*moira.NotificationEvent, 0), filtered[1], notFiltered[1])
-				secondCall := dataBase.EXPECT().GetNotificationEvents(triggerID, page+1, size, from, to).Return(secondPortion, nil)
+				dataBase.EXPECT().GetNotificationEvents(triggerID, page+1, size, from, to).Return(secondPortion, nil)
 
-				gomock.InOrder(
-					firstCall,
-					secondCall)
+				total := int64(len(firstPortion) + len(secondPortion))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID, int64(-1)).Return(total)
 
 				actual, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, regexp.MustCompile(`metric\.test\.event`), allStates)
 				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, filtered)
+				So(actual, ShouldResemble, &dto.EventsList{
+					Page:  page,
+					Size:  size,
+					Total: total,
+					List:  toDTOList(filtered),
+				})
+			})
+		})
+		page = 0
+		size = -1
+
+		Convey("by state", func() {
+			filtered := []*moira.NotificationEvent{
+				{State: moira.StateOK},
+				{State: moira.StateTEST},
+				{State: moira.StateEXCEPTION},
+			}
+			notFiltered := []*moira.NotificationEvent{
+				{State: moira.StateWARN},
+				{State: moira.StateNODATA},
+				{State: moira.StateERROR},
+			}
+			Convey("with empty map all allowed", func() {
+				total := int64(len(filtered) + len(notFiltered))
+				dataBase.EXPECT().GetNotificationEvents(triggerID, page, size, from, to).Return(append(filtered, notFiltered...), nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID, int64(-1)).Return(total)
+
+				actual, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, allMetrics, allStates)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, &dto.EventsList{
+					Page:  page,
+					Size:  size,
+					Total: total,
+					List:  toDTOList(append(filtered, notFiltered...)),
+				})
+			})
+
+			Convey("with given states", func() {
+				total := int64(len(filtered) + len(notFiltered))
+				dataBase.EXPECT().GetNotificationEvents(triggerID, page, size, from, to).Return(append(filtered, notFiltered...), nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID, int64(-1)).Return(total)
+
+				actual, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, allMetrics, map[string]struct{}{
+					string(moira.StateOK):        {},
+					string(moira.StateEXCEPTION): {},
+					string(moira.StateTEST):      {},
+				})
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, &dto.EventsList{
+					Page:  page,
+					Size:  size,
+					Total: total,
+					List:  toDTOList(filtered),
+				})
 			})
 		})
 	})
+}
+
+func toDTOList(eventPtrs []*moira.NotificationEvent) []moira.NotificationEvent {
+	events := make([]moira.NotificationEvent, 0, len(eventPtrs))
+	for _, ptr := range eventPtrs {
+		events = append(events, *ptr)
+	}
+	return events
 }
 
 func TestDeleteAllNotificationEvents(t *testing.T) {

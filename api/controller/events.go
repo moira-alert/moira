@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/moira-alert/moira"
@@ -56,8 +55,6 @@ func getFilteredNotificationEvents(
 		if err != nil {
 			return nil, err
 		}
-
-		fmt.Printf("len(eventsData) = %v\n", len(eventsData))
 
 		if len(eventsData) == 0 {
 			break
