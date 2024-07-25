@@ -63,12 +63,12 @@ func (state State) ToSelfState() string {
 
 // IsValid checks if  valid State.
 func (state State) IsValid() bool {
-	switch state {
-	case StateOK, StateWARN, StateERROR, StateNODATA, StateEXCEPTION, StateTEST:
-		return true
-	default:
-		return false
+	for _, allowedState := range eventStatesPriority {
+		if state == allowedState {
+			return true
+		}
 	}
+	return false
 }
 
 // ToMetricState is an auxiliary function to handle metric state properly.

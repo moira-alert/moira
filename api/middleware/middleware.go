@@ -126,7 +126,7 @@ func SetTimeSeriesNames(request *http.Request, timeSeriesNames map[string]bool) 
 	*request = *request.WithContext(ctx)
 }
 
-// GetTimeSeriesNames gets from requests context timeSeriesNames from saved trigger.
+// GetTimeSeriesNames gets from request's context timeSeriesNames from saved trigger.
 func GetTimeSeriesNames(request *http.Request) map[string]bool {
 	return request.Context().Value(timeSeriesNamesKey).(map[string]bool)
 }

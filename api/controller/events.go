@@ -39,14 +39,17 @@ func getFilteredNotificationEvents(
 	metricRegexp *regexp.Regexp,
 	states map[string]struct{},
 ) ([]*moira.NotificationEvent, error) {
+	// fetch all events
 	if size < 0 {
 		events, err := database.GetNotificationEvents(triggerID, page, size, from, to)
 		if err != nil {
 			return nil, err
 		}
+
 		return filterNotificationEvents(events, metricRegexp, states), nil
 	}
 
+	// fetch at most `size` events
 	filtered := make([]*moira.NotificationEvent, 0, size)
 	var count int64
 

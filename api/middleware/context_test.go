@@ -218,11 +218,11 @@ func TestTargetNameMiddleware(t *testing.T) {
 }
 
 func TestMetricProviderMiddleware(t *testing.T) {
-	Convey("checking correctness of parameter", t, func() {
+	Convey("Check metric provider", t, func() {
 		responseWriter := httptest.NewRecorder()
 		defaultMetric := ".*"
 
-		Convey("with correct parameter", func() {
+		Convey("status ok with correct query paramete", func() {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?metric=test%5C.metric.*", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
@@ -236,7 +236,7 @@ func TestMetricProviderMiddleware(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
-		Convey("with wrong url query parameter", func() {
+		Convey("status bad request with wrong url query parameter", func() {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?metric%=test", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
@@ -256,10 +256,10 @@ func TestMetricProviderMiddleware(t *testing.T) {
 }
 
 func TestStatesProviderMiddleware(t *testing.T) {
-	Convey("checking correctness of parameter", t, func() {
+	Convey("Checking states provide", t, func() {
 		responseWriter := httptest.NewRecorder()
 
-		Convey("with correct parameter", func() {
+		Convey("ok with correct states list", func() {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?states=OK%2CERROR", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
@@ -273,7 +273,7 @@ func TestStatesProviderMiddleware(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
-		Convey("with incorrect parameter", func() {
+		Convey("bad request with bad states list", func() {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?states=OK%2CERROR%2Cwarn", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
@@ -287,7 +287,7 @@ func TestStatesProviderMiddleware(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("with wrong url query parameter", func() {
+		Convey("bad request with wrong url query parameter", func() {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?states%=test", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 

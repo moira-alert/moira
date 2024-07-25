@@ -180,12 +180,17 @@ func checkingTemplateFilling(request *http.Request, trigger dto.Trigger) *api.Er
 		return nil
 	}
 
-	var page int64 = 0
-	var size int64 = 3
-	var from int64 = 0
-	to := time.Now().Unix()
-	metricRegexp := regexp.MustCompile(allMetricsPattern)
-	eventsList, err := controller.GetTriggerEvents(database, trigger.ID, page, size, from, to, metricRegexp, nil)
+	const (
+		page = 0
+		size = 3
+		from = 0
+	)
+	var (
+		to              = time.Now().Unix()
+		allMetricRegexp = regexp.MustCompile(allMetricsPattern)
+		allStates       map[string]struct{}
+	)
+	eventsList, err := controller.GetTriggerEvents(database, trigger.ID, page, size, from, to, allMetricRegexp, allStates)
 	if err != nil {
 		return err
 	}
