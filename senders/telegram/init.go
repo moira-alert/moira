@@ -94,8 +94,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  cfg.APIToken,
-		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
+		Token:     cfg.APIToken,
+		Poller:    &telebot.LongPoller{Timeout: pollerTimeout},
+		ParseMode: telebot.ModeMarkdownV2,
 	})
 	if err != nil {
 		return sender.removeTokenFromError(err)
