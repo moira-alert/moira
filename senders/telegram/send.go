@@ -274,7 +274,10 @@ func prepareAlbum(plots [][]byte, caption string) telebot.Album {
 func (sender *Sender) sendAsAlbum(chat *Chat, plots [][]byte, caption string) error {
 	album := prepareAlbum(plots, caption)
 
-	_, err := sender.bot.SendAlbum(chat, album, &telebot.SendOptions{ThreadID: chat.ThreadID})
+	_, err := sender.bot.SendAlbum(chat, album, &telebot.SendOptions{
+		ThreadID:  chat.ThreadID,
+		ParseMode: telebot.ModeMarkdownV2,
+	})
 	if err != nil {
 		err = sender.removeTokenFromError(err)
 		sender.logger.Debug().
