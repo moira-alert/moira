@@ -210,7 +210,10 @@ func (sender *Sender) talk(chat *Chat, message string, plots [][]byte, messageTy
 }
 
 func (sender *Sender) sendAsMessage(chat *Chat, message string) error {
-	_, err := sender.bot.Send(chat, message, &telebot.SendOptions{ThreadID: chat.ThreadID})
+	_, err := sender.bot.Send(chat, message, &telebot.SendOptions{
+		ThreadID:  chat.ThreadID,
+		ParseMode: telebot.ModeMarkdownV2,
+	})
 	if err != nil {
 		err = sender.removeTokenFromError(err)
 		sender.logger.Debug().
