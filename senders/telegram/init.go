@@ -3,6 +3,7 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,6 +23,11 @@ const (
 	messenger          = "telegram"
 	telegramLockTTL    = 30 * time.Second
 	hidden             = "[DATA DELETED]"
+)
+
+var (
+	startHeaderRegexp = regexp.MustCompile("<h[0-9]+>")
+	endHeaderRegexp   = regexp.MustCompile("</h[0-9]+>")
 )
 
 var pollerTimeout = 10 * time.Second
@@ -88,7 +94,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				desc = trigger.Desc
 				desc += "\n"
 			}
-			return string(blackfriday.Run([]byte(desc)))
+			htmlDescStr := string(blackfriday.Run([]byte(desc)))
+
+			htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
+			return endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
 		},
 		func(str string) string {
 			return fmt.Sprintf("<b>%s</b>", str)
