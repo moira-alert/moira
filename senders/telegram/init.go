@@ -97,7 +97,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			htmlDescStr := string(blackfriday.Run([]byte(desc)))
 
 			htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
-			return endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
+			withReplacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
+
+			replacer := strings.NewReplacer("<p>", "", "/p", "")
+			return replacer.Replace(withReplacedHeaders)
 		},
 		func(str string) string {
 			return fmt.Sprintf("<b>%s</b>", str)
