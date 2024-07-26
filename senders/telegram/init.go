@@ -3,9 +3,10 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"github.com/russross/blackfriday/v2"
 	"strings"
 	"time"
+
+	"github.com/russross/blackfriday/v2"
 
 	"github.com/moira-alert/moira/senders/msgformat"
 
