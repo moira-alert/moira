@@ -69,7 +69,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		buildDescription,
 		func(str string) string {
 			return fmt.Sprintf("*%s*", str)
-		})
+		},
+		"```",
+		"```")
 	sender.client = slack_client.New(cfg.APIToken)
 	return nil
 }

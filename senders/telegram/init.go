@@ -3,6 +3,7 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"github.com/russross/blackfriday/v2"
 	"strings"
 	"time"
 
@@ -78,7 +79,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		cfg.FrontURI,
 		location,
 		func(triggerURI, triggerName string) string {
-			return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
+			return fmt.Sprintf(`<a href="%s">%s</a>`, triggerURI, triggerName)
 		},
 		func(trigger moira.TriggerData) string {
 			desc := trigger.Desc
@@ -86,17 +87,18 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				desc = trigger.Desc
 				desc += "\n"
 			}
-			return desc
+			return string(blackfriday.Run([]byte(desc)))
 		},
 		func(str string) string {
-			return fmt.Sprintf("*%s*", str)
-		})
+			return fmt.Sprintf("<b>%s</b>", str)
+		},
+		"<pre>",
+		"</pre>")
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:     cfg.APIToken,
-		Poller:    &telebot.LongPoller{Timeout: pollerTimeout},
-		ParseMode: telebot.ModeMarkdownV2,
+		Token:  cfg.APIToken,
+		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
 		return sender.removeTokenFromError(err)

@@ -95,7 +95,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		},
 		func(str string) string {
 			return fmt.Sprintf("**%s**", str)
-		})
+		},
+		"```",
+		"```")
 
 	return nil
 }

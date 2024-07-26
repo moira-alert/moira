@@ -31,6 +31,8 @@ func TestFormat(t *testing.T) {
 			testUriFormatter,
 			testDescriptionFormatter,
 			testBoldFormatter,
+			"```",
+			"```",
 		)
 
 		event := moira.NotificationEvent{

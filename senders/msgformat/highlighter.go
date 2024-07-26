@@ -10,8 +10,6 @@ import (
 	"github.com/moira-alert/moira/senders/emoji_provider"
 )
 
-const quotas = "```"
-
 // UriFormatter is used for formatting uris, for example for Markdown use something like
 // fmt.Sprintf("[%s](%s)", triggerName, triggerURI).
 type UriFormatter func(triggerURI, triggerName string) string
@@ -32,6 +30,8 @@ type HighlightSyntaxFormatter struct {
 	uriFormatter         UriFormatter
 	descriptionFormatter DescriptionFormatter
 	boldFormatter        BoldFormatter
+	codeBlockStart       string
+	codeBlockEnd         string
 }
 
 // NewHighlightSyntaxFormatter creates new HighlightSyntaxFormatter with given arguments.
@@ -43,6 +43,8 @@ func NewHighlightSyntaxFormatter(
 	uriFormatter UriFormatter,
 	descriptionFormatter DescriptionFormatter,
 	boldFormatter BoldFormatter,
+	codeBlockStart string,
+	codeBlockEnd string,
 ) MessageFormatter {
 	return &HighlightSyntaxFormatter{
 		emojiGetter:          emojiGetter,
@@ -52,6 +54,8 @@ func NewHighlightSyntaxFormatter(
 		uriFormatter:         uriFormatter,
 		descriptionFormatter: descriptionFormatter,
 		boldFormatter:        boldFormatter,
+		codeBlockStart:       codeBlockStart,
+		codeBlockEnd:         codeBlockEnd,
 	}
 }
 
@@ -121,7 +125,7 @@ func (formatter *HighlightSyntaxFormatter) buildEventsString(events moira.Notifi
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
-	eventsString += quotas
+	eventsString += formatter.codeBlockStart
 	var tailString string
 
 	eventsLenLimitReached := false
@@ -139,7 +143,7 @@ func (formatter *HighlightSyntaxFormatter) buildEventsString(events moira.Notifi
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len([]rune(quotas)) + len([]rune(tailString))
+		tailStringLen := len([]rune(formatter.codeBlockEnd)) + len("\n") + len([]rune(tailString))
 		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
@@ -149,7 +153,7 @@ func (formatter *HighlightSyntaxFormatter) buildEventsString(events moira.Notifi
 		eventsPrinted++
 	}
 	eventsString += "\n"
-	eventsString += quotas
+	eventsString += formatter.codeBlockEnd
 
 	if eventsLenLimitReached {
 		eventsString += tailString
