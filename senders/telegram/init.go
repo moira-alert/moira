@@ -26,8 +26,13 @@ const (
 )
 
 var (
+	// startHeaderRegexp is used for removing start html header tag from description (which is converted from markdown to html).
+	// Because of not supporting it in telegram.
 	startHeaderRegexp = regexp.MustCompile("<h[0-9]+>")
-	endHeaderRegexp   = regexp.MustCompile("</h[0-9]+>")
+
+	// endHeaderRegexp is used for removing end html header tag from description (which is converted from markdown to html).
+	// Because of not supporting it in telegram.
+	endHeaderRegexp = regexp.MustCompile("</h[0-9]+>")
 )
 
 var pollerTimeout = 10 * time.Second
