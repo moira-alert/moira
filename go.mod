@@ -46,6 +46,7 @@ require (
 require github.com/prometheus/common v0.37.0
 
 require (
+	github.com/gomarkdown/markdown v0.0.0-20240723152757-afa4a469d4f9
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/mattermost/mattermost/server/public v0.1.1
 	github.com/mitchellh/mapstructure v1.5.0

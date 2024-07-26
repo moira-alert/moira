@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/russross/blackfriday/v2"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 
 	"github.com/moira-alert/moira/senders/msgformat"
 
@@ -94,13 +96,18 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				desc = trigger.Desc
 				desc += "\n"
 			}
-			htmlDescStr := string(blackfriday.Run([]byte(desc)))
 
-			// html headers are not supported by telegram html, so make them bold instead
+			p := parser.NewWithExtensions(parser.NoExtensions)
+			doc := p.Parse([]byte(desc))
+
+			renderer := html.NewRenderer(html.RendererOptions{Flags: html.FlagsNone})
+			htmlDescStr := string(markdown.Render(doc, renderer))
+
+			// html headers are not supported by telegram html, so make them bold instead.
 			htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
 			withReplacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
 
-			// html paragraphs are not supported by telegram html, so delete them
+			// html paragraphs are not supported by telegram html, so delete them.
 			replacer := strings.NewReplacer("<p>", "", "</p>", "")
 			return replacer.Replace(withReplacedHeaders)
 		},
