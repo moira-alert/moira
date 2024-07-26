@@ -118,7 +118,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				event.State)
 		},
 		"<blockquote expandable>",
-		"</blockquote expandable>")
+		"</blockquote>")
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
