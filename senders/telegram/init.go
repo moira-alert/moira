@@ -3,10 +3,11 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"github.com/russross/blackfriday/v2"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/russross/blackfriday/v2"
 
 	"github.com/moira-alert/moira/senders/msgformat"
 
@@ -107,8 +108,17 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		func(str string) string {
 			return fmt.Sprintf("<b>%s</b>", str)
 		},
-		"<pre>",
-		"</pre>")
+		func(event moira.NotificationEvent, loc *time.Location) string {
+			return fmt.Sprintf(
+				"%s: <code>%s</code> = %s (%s to %s)",
+				event.FormatTimestamp(loc, moira.DefaultTimeFormat),
+				event.Metric,
+				event.GetMetricsValues(moira.DefaultNotificationSettings),
+				event.OldState,
+				event.State)
+		},
+		"<blockquote expandable>",
+		"</blockquote expandable>")
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{

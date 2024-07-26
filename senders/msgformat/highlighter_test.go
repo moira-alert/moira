@@ -31,6 +31,7 @@ func TestFormat(t *testing.T) {
 			testUriFormatter,
 			testDescriptionFormatter,
 			testBoldFormatter,
+			testEventStringFormatter,
 			"```",
 			"```",
 		)
@@ -159,6 +160,16 @@ func testDescriptionFormatter(trigger moira.TriggerData) string {
 
 func testUriFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
+}
+
+func testEventStringFormatter(event moira.NotificationEvent, location *time.Location) string {
+	return fmt.Sprintf(
+		"%s: %s = %s (%s to %s)",
+		event.FormatTimestamp(location, moira.DefaultTimeFormat),
+		event.Metric,
+		event.GetMetricsValues(moira.DefaultNotificationSettings),
+		event.OldState,
+		event.State)
 }
 
 func getParams(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageFormatterParams {

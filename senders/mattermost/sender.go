@@ -96,6 +96,15 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		func(str string) string {
 			return fmt.Sprintf("**%s**", str)
 		},
+		func(event moira.NotificationEvent, loc *time.Location) string {
+			return fmt.Sprintf(
+				"%s: %s = %s (%s to %s)",
+				event.FormatTimestamp(loc, moira.DefaultTimeFormat),
+				event.Metric,
+				event.GetMetricsValues(moira.DefaultNotificationSettings),
+				event.OldState,
+				event.State)
+		},
 		"```",
 		"```")
 

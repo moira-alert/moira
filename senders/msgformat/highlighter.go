@@ -20,18 +20,22 @@ type DescriptionFormatter func(trigger moira.TriggerData) string
 // BoldFormatter makes str bold. For example in Markdown it should return **str**.
 type BoldFormatter func(str string) string
 
+// EventStringFormatter formats single event string.
+type EventStringFormatter func(event moira.NotificationEvent, location *time.Location) string
+
 // HighlightSyntaxFormatter formats message by using functions, emojis and some other highlight patterns.
 type HighlightSyntaxFormatter struct {
 	// emojiGetter used in titles for better description.
-	emojiGetter          emoji_provider.StateEmojiGetter
-	frontURI             string
-	location             *time.Location
-	useEmoji             bool
-	uriFormatter         UriFormatter
-	descriptionFormatter DescriptionFormatter
-	boldFormatter        BoldFormatter
-	codeBlockStart       string
-	codeBlockEnd         string
+	emojiGetter           emoji_provider.StateEmojiGetter
+	frontURI              string
+	location              *time.Location
+	useEmoji              bool
+	uriFormatter          UriFormatter
+	descriptionFormatter  DescriptionFormatter
+	boldFormatter         BoldFormatter
+	eventsStringFormatter EventStringFormatter
+	codeBlockStart        string
+	codeBlockEnd          string
 }
 
 // NewHighlightSyntaxFormatter creates new HighlightSyntaxFormatter with given arguments.
@@ -43,19 +47,21 @@ func NewHighlightSyntaxFormatter(
 	uriFormatter UriFormatter,
 	descriptionFormatter DescriptionFormatter,
 	boldFormatter BoldFormatter,
+	eventsStringFormatter EventStringFormatter,
 	codeBlockStart string,
 	codeBlockEnd string,
 ) MessageFormatter {
 	return &HighlightSyntaxFormatter{
-		emojiGetter:          emojiGetter,
-		frontURI:             frontURI,
-		location:             location,
-		useEmoji:             useEmoji,
-		uriFormatter:         uriFormatter,
-		descriptionFormatter: descriptionFormatter,
-		boldFormatter:        boldFormatter,
-		codeBlockStart:       codeBlockStart,
-		codeBlockEnd:         codeBlockEnd,
+		emojiGetter:           emojiGetter,
+		frontURI:              frontURI,
+		location:              location,
+		useEmoji:              useEmoji,
+		uriFormatter:          uriFormatter,
+		descriptionFormatter:  descriptionFormatter,
+		boldFormatter:         boldFormatter,
+		eventsStringFormatter: eventsStringFormatter,
+		codeBlockStart:        codeBlockStart,
+		codeBlockEnd:          codeBlockEnd,
 	}
 }
 
@@ -131,13 +137,7 @@ func (formatter *HighlightSyntaxFormatter) buildEventsString(events moira.Notifi
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf(
-			"\n%s: %s = %s (%s to %s)",
-			event.FormatTimestamp(formatter.location, moira.DefaultTimeFormat),
-			event.Metric,
-			event.GetMetricsValues(moira.DefaultNotificationSettings),
-			event.OldState,
-			event.State)
+		line := fmt.Sprintf("\n%s", formatter.eventsStringFormatter(event, formatter.location))
 		if msg := event.CreateMessage(formatter.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
