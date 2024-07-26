@@ -96,10 +96,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			}
 			htmlDescStr := string(blackfriday.Run([]byte(desc)))
 
+			// html headers are not supported by telegram html, so make them bold instead
 			htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
 			withReplacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
 
-			replacer := strings.NewReplacer("<p>", "", "/p", "")
+			// html paragraphs are not supported by telegram html, so delete them
+			replacer := strings.NewReplacer("<p>", "", "</p>", "")
 			return replacer.Replace(withReplacedHeaders)
 		},
 		func(str string) string {
