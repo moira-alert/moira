@@ -3,13 +3,10 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"github.com/russross/blackfriday/v2"
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/gomarkdown/markdown"
-	"github.com/gomarkdown/markdown/html"
-	"github.com/gomarkdown/markdown/parser"
 
 	"github.com/moira-alert/moira/senders/msgformat"
 
@@ -88,7 +85,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		cfg.FrontURI,
 		location,
 		func(triggerURI, triggerName string) string {
-			return fmt.Sprintf(`<a href="%s">%s</a>`, triggerURI, triggerName)
+			return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, triggerName)
 		},
 		func(trigger moira.TriggerData) string {
 			desc := trigger.Desc
@@ -97,11 +94,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 				desc += "\n"
 			}
 
-			p := parser.NewWithExtensions(parser.NoExtensions)
-			doc := p.Parse([]byte(desc))
-
-			renderer := html.NewRenderer(html.RendererOptions{Flags: html.FlagsNone})
-			htmlDescStr := string(markdown.Render(doc, renderer))
+			htmlDescStr := string(blackfriday.Run([]byte(desc)))
 
 			// html headers are not supported by telegram html, so make them bold instead.
 			htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
