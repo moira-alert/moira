@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/go-redis/redis/v8"
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
-	moira_redis "github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/database/redis"
 )
 
 const (
@@ -18,7 +18,7 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 	logger.Info().Msg("Start splitNotificationHistoryByContactID")
 
 	switch d := database.(type) {
-	case *moira_redis.DbConnector:
+	case *redis.DbConnector:
 		client := d.Client()
 		var splitCount int64
 
@@ -34,12 +34,12 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 				continue
 			}
 
-			notification, deserializeErr := moira_redis.GetNotificationStruct(eventStr)
+			notification, deserializeErr := redis.GetNotificationStruct(eventStr)
 			if deserializeErr != nil {
 				return fmt.Errorf("failed to deserialize event: %w", deserializeErr)
 			}
 
-			notificationBytes, serializeErr := moira_redis.GetNotificationBytes(&notification)
+			notificationBytes, serializeErr := redis.GetNotificationBytes(&notification)
 			if serializeErr != nil {
 				return fmt.Errorf("failed to serialize event: %w", serializeErr)
 			}
@@ -47,7 +47,7 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 			pipe.ZAdd(
 				ctx,
 				contactNotificationKeyWithID(notification.ContactID),
-				&redis.Z{
+				&goredis.Z{
 					Score:  float64(notification.TimeStamp),
 					Member: notificationBytes,
 				})
@@ -83,8 +83,8 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 	logger.Info().Msg("Start mergeNotificationHistory")
 
 	switch d := database.(type) {
-	case *moira_redis.DbConnector:
-		if err := callFunc(d, func(connector *moira_redis.DbConnector, client redis.UniversalClient) error {
+	case *redis.DbConnector:
+		if err := callFunc(d, func(connector *redis.DbConnector, client goredis.UniversalClient) error {
 			contactIDs, err := scanContactIDs(connector.Context(), client)
 			if err != nil {
 				return err
@@ -99,13 +99,13 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 				return fetchErr
 			}
 
-			_, err = d.Client().Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
+			_, err = d.Client().Pipelined(connector.Context(), func(pipe goredis.Pipeliner) error {
 				for _, event := range events {
-					eventBytes, errGet := moira_redis.GetNotificationBytes(&event)
+					eventBytes, errGet := redis.GetNotificationBytes(&event)
 					if errGet != nil {
 						return fmt.Errorf("failed to serialize notification event: %w", err)
 					}
-					pipe.ZAdd(d.Context(), contactNotificationKey, &redis.Z{
+					pipe.ZAdd(d.Context(), contactNotificationKey, &goredis.Z{
 						Score:  float64(event.TimeStamp),
 						Member: eventBytes,
 					})
@@ -119,7 +119,7 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 			logger.Info().
 				Msg("successfully added history")
 
-			cmds, pipelinedErr := client.Pipelined(connector.Context(), func(pipe redis.Pipeliner) error {
+			cmds, pipelinedErr := client.Pipelined(connector.Context(), func(pipe goredis.Pipeliner) error {
 				for _, id := range contactIDs {
 					pipe.Del(connector.Context(), id)
 				}
@@ -131,7 +131,7 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 
 			var totalDelCount int64
 			for i, cmd := range cmds {
-				deleted, err := cmd.(*redis.IntCmd).Result()
+				deleted, err := cmd.(*goredis.IntCmd).Result()
 				if err != nil {
 					logger.Warning().
 						String("fail_contact_key", contactIDs[i]).
@@ -159,7 +159,7 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 	return nil
 }
 
-func fetchNotificationHistoryFromRedisNode(connector *moira_redis.DbConnector, client redis.UniversalClient, logger moira.Logger, contactIDs []string) ([]moira.NotificationEventHistoryItem, error) {
+func fetchNotificationHistoryFromRedisNode(connector *redis.DbConnector, client goredis.UniversalClient, logger moira.Logger, contactIDs []string) ([]moira.NotificationEventHistoryItem, error) {
 	ctx := connector.Context()
 
 	logger.Info().
@@ -199,7 +199,7 @@ func fetchNotificationHistoryFromRedisNode(connector *moira_redis.DbConnector, c
 	return notificationEvents, nil
 }
 
-func scanContactIDs(ctx context.Context, client redis.UniversalClient) ([]string, error) {
+func scanContactIDs(ctx context.Context, client goredis.UniversalClient) ([]string, error) {
 	var contactIDs []string
 
 	iterator := client.Scan(ctx, 0, contactNotificationKeyWithID("*"), 0).Iterator()
@@ -230,7 +230,7 @@ func handleCleanupNotificationHistoryWithTTL(db moira.Database, ttl int64) error
 func deserializeEvents(eventStrings []string) ([]moira.NotificationEventHistoryItem, error) {
 	notificationEvents := make([]moira.NotificationEventHistoryItem, 0, len(eventStrings))
 	for _, str := range eventStrings {
-		notification, err := moira_redis.GetNotificationStruct(str)
+		notification, err := redis.GetNotificationStruct(str)
 		if err != nil {
 			return nil, fmt.Errorf("failed to deserialize notification events: %w", err)
 		}

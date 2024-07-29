@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
-	moira_redis "github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -103,7 +103,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	db := moira_redis.NewTestDatabase(logger)
+	db := redis.NewTestDatabase(logger)
 	db.Flush()
 	defer db.Flush()
 
@@ -157,7 +157,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 
 func testSplitNotificationHistory(
 	ctx context.Context,
-	db *moira_redis.DbConnector,
+	db *redis.DbConnector,
 	logger moira.Logger,
 	eventsMap map[string][]*moira.NotificationEventHistoryItem,
 ) {
@@ -172,7 +172,7 @@ func testSplitNotificationHistory(
 				gotEvents, errAfterZRange := client.ZRangeByScore(
 					ctx,
 					contactNotificationKeyWithID(contactID),
-					&redis.ZRangeBy{
+					&goredis.ZRangeBy{
 						Min:    "-inf",
 						Max:    "+inf",
 						Offset: 0,
@@ -182,7 +182,7 @@ func testSplitNotificationHistory(
 				So(gotEvents, ShouldHaveLength, len(expectedEvents))
 
 				for i, gotEventStr := range gotEvents {
-					notificationEvent, err := moira_redis.GetNotificationStruct(gotEventStr)
+					notificationEvent, err := redis.GetNotificationStruct(gotEventStr)
 					So(err, ShouldBeNil)
 					So(notificationEvent, ShouldResemble, *expectedEvents[i])
 				}
@@ -201,7 +201,7 @@ func TestMergeNotificationHistory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	db := moira_redis.NewTestDatabase(logger)
+	db := redis.NewTestDatabase(logger)
 	db.Flush()
 	defer db.Flush()
 
@@ -257,7 +257,7 @@ func TestMergeNotificationHistory(t *testing.T) {
 
 func testMergeNotificationHistory(
 	ctx context.Context,
-	db *moira_redis.DbConnector,
+	db *redis.DbConnector,
 	logger moira.Logger,
 	eventsList []*moira.NotificationEventHistoryItem,
 ) {
@@ -270,7 +270,7 @@ func testMergeNotificationHistory(
 		gotEventsStrs, errAfterZRange := client.ZRangeByScore(
 			ctx,
 			contactNotificationKey,
-			&redis.ZRangeBy{
+			&goredis.ZRangeBy{
 				Min:    "-inf",
 				Max:    "+inf",
 				Offset: 0,
@@ -280,7 +280,7 @@ func testMergeNotificationHistory(
 		So(gotEventsStrs, ShouldHaveLength, len(eventsList))
 
 		for i, gotEventStr := range gotEventsStrs {
-			notificationEvent, errDeserialize := moira_redis.GetNotificationStruct(gotEventStr)
+			notificationEvent, errDeserialize := redis.GetNotificationStruct(gotEventStr)
 			So(errDeserialize, ShouldBeNil)
 			So(notificationEvent, ShouldResemble, *eventsList[i])
 		}
@@ -291,8 +291,8 @@ func testMergeNotificationHistory(
 	})
 }
 
-func prepareNotSplitItemsToInsert(notificationEvents []*moira.NotificationEventHistoryItem) ([]*redis.Z, error) {
-	resList := make([]*redis.Z, 0, len(notificationEvents))
+func prepareNotSplitItemsToInsert(notificationEvents []*moira.NotificationEventHistoryItem) ([]*goredis.Z, error) {
+	resList := make([]*goredis.Z, 0, len(notificationEvents))
 	for _, notificationEvent := range notificationEvents {
 		toInsert, err := toInsertableItem(notificationEvent)
 		if err != nil {
@@ -303,17 +303,17 @@ func prepareNotSplitItemsToInsert(notificationEvents []*moira.NotificationEventH
 	return resList, nil
 }
 
-func toInsertableItem(notificationEvent *moira.NotificationEventHistoryItem) (*redis.Z, error) {
-	notificationBytes, err := moira_redis.GetNotificationBytes(notificationEvent)
+func toInsertableItem(notificationEvent *moira.NotificationEventHistoryItem) (*goredis.Z, error) {
+	notificationBytes, err := redis.GetNotificationBytes(notificationEvent)
 	if err != nil {
 		return nil, err
 	}
-	return &redis.Z{Score: float64(notificationEvent.TimeStamp), Member: notificationBytes}, nil
+	return &goredis.Z{Score: float64(notificationEvent.TimeStamp), Member: notificationBytes}, nil
 }
 
-func storeNotificationHistoryBySingleKey(ctx context.Context, database moira.Database, toInsert []*redis.Z) error {
+func storeNotificationHistoryBySingleKey(ctx context.Context, database moira.Database, toInsert []*goredis.Z) error {
 	switch db := database.(type) {
-	case *moira_redis.DbConnector:
+	case *redis.DbConnector:
 		client := db.Client()
 
 		_, err := client.ZAdd(ctx, contactNotificationKey, toInsert...).Result()
@@ -335,8 +335,8 @@ func eventsByKey(notificationEvents []*moira.NotificationEventHistoryItem) map[s
 	return statistics
 }
 
-func prepareSplitItemsToInsert(eventsMap map[string][]*moira.NotificationEventHistoryItem) (map[string][]*redis.Z, error) {
-	resMap := make(map[string][]*redis.Z, len(eventsMap))
+func prepareSplitItemsToInsert(eventsMap map[string][]*moira.NotificationEventHistoryItem) (map[string][]*goredis.Z, error) {
+	resMap := make(map[string][]*goredis.Z, len(eventsMap))
 	for contactID, notificationEvents := range eventsMap {
 		for _, notificationEvent := range notificationEvents {
 			toInsert, err := toInsertableItem(notificationEvent)
@@ -349,9 +349,9 @@ func prepareSplitItemsToInsert(eventsMap map[string][]*moira.NotificationEventHi
 	return resMap, nil
 }
 
-func storeSplitNotifications(ctx context.Context, database moira.Database, toInsertMap map[string][]*redis.Z) error {
+func storeSplitNotifications(ctx context.Context, database moira.Database, toInsertMap map[string][]*goredis.Z) error {
 	switch db := database.(type) {
-	case *moira_redis.DbConnector:
+	case *redis.DbConnector:
 		client := db.Client()
 
 		pipe := client.TxPipeline()
