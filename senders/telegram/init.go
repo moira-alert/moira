@@ -90,38 +90,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		true,
 		cfg.FrontURI,
 		location,
-		func(triggerURI, triggerName string) string {
-			return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, triggerName)
-		},
-		func(trigger moira.TriggerData) string {
-			desc := trigger.Desc
-			if trigger.Desc != "" {
-				desc = trigger.Desc
-				desc += "\n"
-			}
-
-			htmlDescStr := string(blackfriday.Run([]byte(desc)))
-
-			// html headers are not supported by telegram html, so make them bold instead.
-			htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
-			withReplacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
-
-			// html paragraphs are not supported by telegram html, so delete them.
-			replacer := strings.NewReplacer("<p>", "", "</p>", "")
-			return replacer.Replace(withReplacedHeaders)
-		},
-		func(str string) string {
-			return fmt.Sprintf("<b>%s</b>", str)
-		},
-		func(event moira.NotificationEvent, loc *time.Location) string {
-			return fmt.Sprintf(
-				"%s: <code>%s</code> = %s (%s to %s)",
-				event.FormatTimestamp(loc, moira.DefaultTimeFormat),
-				event.Metric,
-				event.GetMetricsValues(moira.DefaultNotificationSettings),
-				event.OldState,
-				event.State)
-		},
+		urlFormatter,
+		descriptionFormatter,
+		boldFormatter,
+		eventStringFormatter,
 		"<blockquote expandable>",
 		"</blockquote>")
 
@@ -169,4 +141,40 @@ func (sender *Sender) runTelebot(contactType string) {
 
 func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
+}
+
+func urlFormatter(triggerURI, triggerName string) string {
+	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, triggerName)
+}
+
+func descriptionFormatter(trigger moira.TriggerData) string {
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		desc = trigger.Desc
+		desc += "\n"
+	}
+
+	htmlDescStr := string(blackfriday.Run([]byte(desc)))
+
+	// html headers are not supported by telegram html, so make them bold instead.
+	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
+	withReplacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
+
+	// html paragraphs are not supported by telegram html, so delete them.
+	replacer := strings.NewReplacer("<p>", "", "</p>", "")
+	return replacer.Replace(withReplacedHeaders)
+}
+
+func boldFormatter(str string) string {
+	return fmt.Sprintf("<b>%s</b>", str)
+}
+
+func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
+	return fmt.Sprintf(
+		"%s: <code>%s</code> = %s (%s to %s)",
+		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
+		event.Metric,
+		event.GetMetricsValues(moira.DefaultNotificationSettings),
+		event.OldState,
+		event.State)
 }
