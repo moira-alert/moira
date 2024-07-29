@@ -28,20 +28,20 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 		for iterator.Next(ctx) {
 			eventStr := iterator.Val()
 
-			// On 1, 3, 5, ... indexes with have scores, not json
+			// On 1, 3, 5, ... indexes witch have scores, not json
 			_, err := strconv.Atoi(eventStr)
 			if err == nil {
 				continue
 			}
 
-			notification, deserializeErr := redis.GetNotificationStruct(eventStr)
-			if deserializeErr != nil {
-				return fmt.Errorf("failed to deserialize event: %w", deserializeErr)
+			notification, err := redis.GetNotificationStruct(eventStr)
+			if err != nil {
+				return fmt.Errorf("failed to deserialize event: %w", err)
 			}
 
-			notificationBytes, serializeErr := redis.GetNotificationBytes(&notification)
-			if serializeErr != nil {
-				return fmt.Errorf("failed to serialize event: %w", serializeErr)
+			notificationBytes, err := redis.GetNotificationBytes(&notification)
+			if err != nil {
+				return fmt.Errorf("failed to serialize event: %w", err)
 			}
 
 			pipe.ZAdd(
@@ -54,12 +54,12 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 			splitCount += 1
 		}
 
-		iterErr := iterator.Err()
-		if iterErr != nil {
-			return fmt.Errorf("error while iterating over notification history: %w", iterErr)
+		err := iterator.Err()
+		if err != nil {
+			return fmt.Errorf("error while iterating over notification history: %w", err)
 		}
 
-		_, err := pipe.Exec(ctx)
+		_, err = pipe.Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("error while applying changes: %w", err)
 		}
@@ -94,17 +94,20 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 				return nil
 			}
 
-			events, fetchErr := fetchNotificationHistoryFromRedisNode(connector, client, logger, contactIDs)
-			if fetchErr != nil {
-				return fetchErr
+			events, err := fetchNotificationHistoryFromRedisNode(connector, client, logger, contactIDs)
+			if err != nil {
+				return err
 			}
 
 			_, err = d.Client().Pipelined(connector.Context(), func(pipe goredis.Pipeliner) error {
 				for _, event := range events {
-					eventBytes, errGet := redis.GetNotificationBytes(&event)
-					if errGet != nil {
+					var eventBytes []byte
+
+					eventBytes, err = redis.GetNotificationBytes(&event)
+					if err != nil {
 						return fmt.Errorf("failed to serialize notification event: %w", err)
 					}
+
 					pipe.ZAdd(d.Context(), contactNotificationKey, &goredis.Z{
 						Score:  float64(event.TimeStamp),
 						Member: eventBytes,
@@ -119,13 +122,13 @@ func mergeNotificationHistory(logger moira.Logger, database moira.Database) erro
 			logger.Info().
 				Msg("successfully added history")
 
-			cmds, pipelinedErr := client.Pipelined(connector.Context(), func(pipe goredis.Pipeliner) error {
+			cmds, err := client.Pipelined(connector.Context(), func(pipe goredis.Pipeliner) error {
 				for _, id := range contactIDs {
 					pipe.Del(connector.Context(), id)
 				}
 				return nil
 			})
-			if pipelinedErr != nil {
+			if err != nil {
 				return fmt.Errorf("failed to delete previous notification history: %w", err)
 			}
 
@@ -177,7 +180,7 @@ func fetchNotificationHistoryFromRedisNode(connector *redis.DbConnector, client 
 		for iterator.Next(ctx) {
 			eventStr := iterator.Val()
 
-			// On 1, 3, 5, ... indexes with have scores, not json
+			// On 1, 3, 5, ... indexes witch have scores, not json
 			_, err := strconv.Atoi(eventStr)
 			if err == nil {
 				continue
@@ -207,9 +210,9 @@ func scanContactIDs(ctx context.Context, client goredis.UniversalClient) ([]stri
 		contactIDs = append(contactIDs, iterator.Val())
 	}
 
-	iterErr := iterator.Err()
-	if iterErr != nil {
-		return nil, fmt.Errorf("error while iterating over notification history: %w", iterErr)
+	err := iterator.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error while iterating over notification history: %w", err)
 	}
 
 	return contactIDs, nil

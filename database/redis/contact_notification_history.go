@@ -144,10 +144,10 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 		var totalDelCount int64
 
 		for _, cmd := range cmds {
-			count, cmdErr := cmd.(*redis.IntCmd).Result()
-			if cmdErr != nil {
+			count, err := cmd.(*redis.IntCmd).Result()
+			if err != nil {
 				connector.logger.Info().
-					Error(cmdErr).
+					Error(err).
 					Msg("failed to remove outdated")
 			}
 			totalDelCount += count
