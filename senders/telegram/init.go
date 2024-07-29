@@ -33,6 +33,9 @@ var (
 	// endHeaderRegexp is used for removing end html header tag from description (which is converted from markdown to html).
 	// Because of not supporting it in telegram.
 	endHeaderRegexp = regexp.MustCompile("</h[0-9]+>")
+
+	codeBlockStart = "<blockquote expandable>"
+	codeBlockEnd   = "</blockquote>"
 )
 
 var pollerTimeout = 10 * time.Second
@@ -94,8 +97,8 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		descriptionFormatter,
 		boldFormatter,
 		eventStringFormatter,
-		"<blockquote expandable>",
-		"</blockquote>")
+		codeBlockStart,
+		codeBlockEnd)
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
