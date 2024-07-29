@@ -10,7 +10,12 @@ import (
 
 // GetTriggerEvents gets trigger event from current page and all trigger event count. Events list is filtered by time range
 // (`from` and `to` params), metric (regular expression) and states. If `states` map is empty or nil then all states are accepted.
-func GetTriggerEvents(database moira.Database, triggerID string, page, size, from, to int64, metricRegexp *regexp.Regexp, states map[string]struct{},
+func GetTriggerEvents(
+	database moira.Database,
+	triggerID string,
+	page, size, from, to int64,
+	metricRegexp *regexp.Regexp,
+	states map[string]struct{},
 ) (*dto.EventsList, *api.ErrorResponse) {
 	events, err := getFilteredNotificationEvents(database, triggerID, page, size, from, to, metricRegexp, states)
 	if err != nil {
@@ -74,7 +79,11 @@ func getFilteredNotificationEvents(
 	return filtered, nil
 }
 
-func filterNotificationEvents(notificationEvents []*moira.NotificationEvent, metricRegexp *regexp.Regexp, states map[string]struct{}) []*moira.NotificationEvent {
+func filterNotificationEvents(
+	notificationEvents []*moira.NotificationEvent,
+	metricRegexp *regexp.Regexp,
+	states map[string]struct{},
+) []*moira.NotificationEvent {
 	filteredNotificationEvents := make([]*moira.NotificationEvent, 0)
 
 	for _, event := range notificationEvents {
@@ -82,7 +91,6 @@ func filterNotificationEvents(notificationEvents []*moira.NotificationEvent, met
 			_, ok := states[string(event.State)]
 			if len(states) == 0 || ok {
 				filteredNotificationEvents = append(filteredNotificationEvents, event)
-				continue
 			}
 		}
 	}
