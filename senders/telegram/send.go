@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/moira-alert/moira/senders/msgformat"
 	"gopkg.in/telebot.v3"
 
 	"github.com/moira-alert/moira"
@@ -18,14 +19,13 @@ type messageType string
 const (
 	// Album type used if notification has plots.
 	Album messageType = "album"
-	// Message type used if notification has not plot.
+	// Message type used if notification has no plot.
 	Message messageType = "message"
 )
 
 const (
-	albumCaptionMaxCharacters     = 1024
-	messageMaxCharacters          = 4096
-	additionalInfoCharactersCount = 400
+	albumCaptionMaxCharacters = 1024
+	messageMaxCharacters      = 4096
 )
 
 var characterLimits = map[messageType]int{
@@ -35,7 +35,7 @@ var characterLimits = map[messageType]int{
 
 var unmarshalTypeError *json.UnmarshalTypeError
 
-// Structure that represents chat metadata required to send message to recipient.
+// Chat is a structure that represents chat metadata required to send message to recipient.
 // It implements gopkg.in/telebot.v3#Recipient interface and thus might be passed to telebot methods directly.
 type Chat struct {
 	ID       int64 `json:"chat_id" example:"-1001234567890"`
@@ -55,7 +55,7 @@ var brokenContactAPIErrors = map[*telebot.Error]struct{}{
 	telebot.ErrNotStartedByUser:     {},
 }
 
-// Chat implements gopkg.in/telebot.v3#Recipient interface.
+// Recipient allow Chat implements gopkg.in/telebot.v3#Recipient interface.
 func (c *Chat) Recipient() string {
 	return strconv.FormatInt(c.ID, 10)
 }
@@ -82,49 +82,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
-	var buffer bytes.Buffer
-	state := events.GetCurrentState(throttled)
-	tags := trigger.GetTags()
-	emoji := emojiStates[state]
-
-	title := fmt.Sprintf("%s%s %s %s (%d)\n", emoji, state, trigger.Name, tags, len(events))
-	buffer.WriteString(title)
-
-	var messageCharsCount, printEventsCount int
-	messageCharsCount += len([]rune(title))
-	messageLimitReached := false
-
-	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
-		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
-			line += fmt.Sprintf(". %s", msg)
-		}
-
-		lineCharsCount := len([]rune(line))
-		if messageCharsCount+lineCharsCount > maxChars-additionalInfoCharactersCount {
-			messageLimitReached = true
-			break
-		}
-
-		buffer.WriteString(line)
-		messageCharsCount += lineCharsCount
-		printEventsCount++
-	}
-
-	if messageLimitReached {
-		buffer.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-printEventsCount))
-	}
-
-	url := trigger.GetTriggerURI(sender.frontURI)
-	if url != "" {
-		buffer.WriteString(fmt.Sprintf("\n\n%s\n", url))
-	}
-
-	if throttled {
-		buffer.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
-	}
-
-	return buffer.String()
+	return sender.formatter.Format(msgformat.MessageFormatterParams{
+		Events:          events,
+		Trigger:         trigger,
+		MessageMaxChars: maxChars,
+		Throttled:       throttled,
+	})
 }
 
 func (sender *Sender) getChat(contactValue string) (*Chat, error) {
@@ -247,7 +210,11 @@ func (sender *Sender) talk(chat *Chat, message string, plots [][]byte, messageTy
 }
 
 func (sender *Sender) sendAsMessage(chat *Chat, message string) error {
-	_, err := sender.bot.Send(chat, message, &telebot.SendOptions{ThreadID: chat.ThreadID})
+	_, err := sender.bot.Send(chat, message, &telebot.SendOptions{
+		ThreadID:              chat.ThreadID,
+		ParseMode:             telebot.ModeHTML,
+		DisableWebPagePreview: true,
+	})
 	if err != nil {
 		err = sender.removeTokenFromError(err)
 		sender.logger.Debug().
@@ -308,7 +275,11 @@ func prepareAlbum(plots [][]byte, caption string) telebot.Album {
 func (sender *Sender) sendAsAlbum(chat *Chat, plots [][]byte, caption string) error {
 	album := prepareAlbum(plots, caption)
 
-	_, err := sender.bot.SendAlbum(chat, album, &telebot.SendOptions{ThreadID: chat.ThreadID})
+	_, err := sender.bot.SendAlbum(chat, album, &telebot.SendOptions{
+		ThreadID:              chat.ThreadID,
+		ParseMode:             telebot.ModeHTML,
+		DisableWebPagePreview: true,
+	})
 	if err != nil {
 		err = sender.removeTokenFromError(err)
 		sender.logger.Debug().

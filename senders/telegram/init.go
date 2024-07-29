@@ -3,8 +3,13 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/russross/blackfriday/v2"
+
+	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
@@ -21,15 +26,19 @@ const (
 )
 
 var (
-	pollerTimeout = 10 * time.Second
-	emojiStates   = map[moira.State]string{
-		moira.StateOK:     "\xe2\x9c\x85",
-		moira.StateWARN:   "\xe2\x9a\xa0",
-		moira.StateERROR:  "\xe2\xad\x95",
-		moira.StateNODATA: "\xf0\x9f\x92\xa3",
-		moira.StateTEST:   "\xf0\x9f\x98\x8a",
-	}
+	// startHeaderRegexp is used for removing start html header tag from description (which is converted from markdown to html).
+	// Because of not supporting it in telegram.
+	startHeaderRegexp = regexp.MustCompile("<h[0-9]+>")
+
+	// endHeaderRegexp is used for removing end html header tag from description (which is converted from markdown to html).
+	// Because of not supporting it in telegram.
+	endHeaderRegexp = regexp.MustCompile("</h[0-9]+>")
+
+	codeBlockStart = "<blockquote expandable>"
+	codeBlockEnd   = "</blockquote>"
 )
+
+var pollerTimeout = 10 * time.Second
 
 // Structure that represents the Telegram configuration in the YAML file.
 type config struct {
@@ -51,12 +60,11 @@ type Bot interface {
 
 // Sender implements moira sender interface via telegram.
 type Sender struct {
-	DataBase moira.Database
-	logger   moira.Logger
-	apiToken string
-	frontURI string
-	bot      Bot
-	location *time.Location
+	DataBase  moira.Database
+	logger    moira.Logger
+	bot       Bot
+	formatter msgformat.MessageFormatter
+	apiToken  string
 }
 
 func (sender *Sender) removeTokenFromError(err error) error {
@@ -77,13 +85,24 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
-
 	sender.apiToken = cfg.APIToken
-	sender.frontURI = cfg.FrontURI
+
+	emojiProvider := telegramEmojiProvider{}
+	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+		emojiProvider,
+		true,
+		cfg.FrontURI,
+		location,
+		urlFormatter,
+		descriptionFormatter,
+		boldFormatter,
+		eventStringFormatter,
+		codeBlockStart,
+		codeBlockEnd)
+
 	sender.logger = logger
-	sender.location = location
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  sender.apiToken,
+		Token:  cfg.APIToken,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
@@ -125,4 +144,40 @@ func (sender *Sender) runTelebot(contactType string) {
 
 func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
+}
+
+func urlFormatter(triggerURI, triggerName string) string {
+	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, triggerName)
+}
+
+func descriptionFormatter(trigger moira.TriggerData) string {
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		desc = trigger.Desc
+		desc += "\n"
+	}
+
+	htmlDescStr := string(blackfriday.Run([]byte(desc)))
+
+	// html headers are not supported by telegram html, so make them bold instead.
+	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
+	withReplacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
+
+	// html paragraphs are not supported by telegram html, so delete them.
+	replacer := strings.NewReplacer("<p>", "", "</p>", "")
+	return replacer.Replace(withReplacedHeaders)
+}
+
+func boldFormatter(str string) string {
+	return fmt.Sprintf("<b>%s</b>", str)
+}
+
+func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
+	return fmt.Sprintf(
+		"%s: <code>%s</code> = %s (%s to %s)",
+		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
+		event.Metric,
+		event.GetMetricsValues(moira.DefaultNotificationSettings),
+		event.OldState,
+		event.State)
 }
