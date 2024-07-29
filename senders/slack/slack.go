@@ -24,6 +24,11 @@ const (
 	ErrorTextNotInChannel    = "not_in_channel"
 )
 
+var (
+	codeBlockStart = "```"
+	codeBlockEnd   = "```"
+)
+
 // Structure that represents the Slack configuration in the YAML file.
 type config struct {
 	APIToken     string            `mapstructure:"api_token"`
@@ -63,24 +68,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		cfg.UseEmoji,
 		cfg.FrontURI,
 		location,
-		func(triggerURI, triggerName string) string {
-			return fmt.Sprintf("<%s|%s>", triggerURI, triggerName)
-		},
-		buildDescription,
-		func(str string) string {
-			return fmt.Sprintf("*%s*", str)
-		},
-		func(event moira.NotificationEvent, loc *time.Location) string {
-			return fmt.Sprintf(
-				"%s: %s = %s (%s to %s)",
-				event.FormatTimestamp(loc, moira.DefaultTimeFormat),
-				event.Metric,
-				event.GetMetricsValues(moira.DefaultNotificationSettings),
-				event.OldState,
-				event.State)
-		},
-		"```",
-		"```")
+		uriFormatter,
+		descriptionFormatter,
+		boldFormatter,
+		eventStringFormatter,
+		codeBlockStart,
+		codeBlockEnd)
 	sender.client = slack_client.New(cfg.APIToken)
 	return nil
 }
@@ -121,13 +114,31 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	})
 }
 
-func buildDescription(trigger moira.TriggerData) string {
+func uriFormatter(triggerURI, triggerName string) string {
+	return fmt.Sprintf("<%s|%s>", triggerURI, triggerName)
+}
+
+func descriptionFormatter(trigger moira.TriggerData) string {
 	desc := trigger.Desc
 	if trigger.Desc != "" {
 		desc = string(slackdown.Run([]byte(desc)))
 		desc += "\n"
 	}
 	return desc
+}
+
+func boldFormatter(str string) string {
+	return fmt.Sprintf("*%s*", str)
+}
+
+func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
+	return fmt.Sprintf(
+		"%s: %s = %s (%s to %s)",
+		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
+		event.Metric,
+		event.GetMetricsValues(moira.DefaultNotificationSettings),
+		event.OldState,
+		event.State)
 }
 
 func (sender *Sender) sendMessage(message string, contact string, triggerID string, useDirectMessaging bool, emoji string) (string, string, error) {
