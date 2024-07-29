@@ -40,6 +40,11 @@ const (
 	messageMaxCharacters = 4_000
 )
 
+var (
+	codeBlockStart = "```"
+	codeBlockEnd   = "```"
+)
+
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
@@ -83,32 +88,40 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		cfg.UseEmoji,
 		cfg.FrontURI,
 		location,
-		func(triggerURI, triggerName string) string {
-			return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
-		},
-		func(trigger moira.TriggerData) string {
-			desc := trigger.Desc
-			if trigger.Desc != "" {
-				desc += "\n"
-			}
-			return desc
-		},
-		func(str string) string {
-			return fmt.Sprintf("**%s**", str)
-		},
-		func(event moira.NotificationEvent, loc *time.Location) string {
-			return fmt.Sprintf(
-				"%s: %s = %s (%s to %s)",
-				event.FormatTimestamp(loc, moira.DefaultTimeFormat),
-				event.Metric,
-				event.GetMetricsValues(moira.DefaultNotificationSettings),
-				event.OldState,
-				event.State)
-		},
-		"```",
-		"```")
+		uriFormatter,
+		descriptionFormatter,
+		boldFormatter,
+		eventStringFormatter,
+		codeBlockStart,
+		codeBlockEnd)
 
 	return nil
+}
+
+func uriFormatter(triggerURI, triggerName string) string {
+	return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
+}
+
+func descriptionFormatter(trigger moira.TriggerData) string {
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		desc += "\n"
+	}
+	return desc
+}
+
+func boldFormatter(str string) string {
+	return fmt.Sprintf("**%s**", str)
+}
+
+func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
+	return fmt.Sprintf(
+		"%s: %s = %s (%s to %s)",
+		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
+		event.Metric,
+		event.GetMetricsValues(moira.DefaultNotificationSettings),
+		event.OldState,
+		event.State)
 }
 
 // SendEvents implements moira.Sender interface.
