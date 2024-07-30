@@ -3,9 +3,10 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
-
+  
 	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/mitchellh/mapstructure"

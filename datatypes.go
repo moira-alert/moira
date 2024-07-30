@@ -188,6 +188,15 @@ func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 	return ""
 }
 
+// GetTags returns "[tag1][tag2]...[tagN]" string.
+func (trigger *TriggerData) GetTags() string {
+	var buffer bytes.Buffer
+	for _, tag := range trigger.Tags {
+		buffer.WriteString(fmt.Sprintf("[%s]", tag))
+	}
+	return buffer.String()
+}
+
 // Team is a structure that represents a group of users that share a subscriptions and contacts.
 type Team struct {
 	ID          string
@@ -664,15 +673,6 @@ func (events NotificationEvents) GetCurrentState(throttled bool) State {
 		return events.getLastState()
 	}
 	return events.getSubjectState()
-}
-
-// GetTags returns "[tag1][tag2]...[tagN]" string.
-func (trigger *TriggerData) GetTags() string {
-	var buffer bytes.Buffer
-	for _, tag := range trigger.Tags {
-		buffer.WriteString(fmt.Sprintf("[%s]", tag))
-	}
-	return buffer.String()
 }
 
 // GetKey return notification key to prevent duplication to the same contact.
