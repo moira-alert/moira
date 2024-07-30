@@ -38,7 +38,7 @@ func event(router chi.Router) {
 //	@param		from			query		string							false	"Start time of the time range"	default(-3hour)
 //	@param		to				query		string							false	"End time of the time range"	default(now)
 //	@param		metric		query		string							false	"Regular expression that will be used to filter events"	default(.*)
-//	@param		states		query		string							false "String of ',' separated state names. If empty then all states will be used." default()
+//	@param		states		query		[]string						false "String of ',' separated state names. If empty then all states will be used." collectionFormat(csv) default()
 //	@success	200			{object}	dto.EventsList					"Events fetched successfully"
 //	@Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@Failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
