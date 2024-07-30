@@ -212,7 +212,7 @@ func (sender *Sender) talk(chat *Chat, message string, plots [][]byte, messageTy
 func (sender *Sender) sendAsMessage(chat *Chat, message string) error {
 	_, err := sender.bot.Send(chat, message, &telebot.SendOptions{
 		ThreadID:              chat.ThreadID,
-		ParseMode:             telebot.ModeHTML,
+		ParseMode:             telebot.ModeDefault,
 		DisableWebPagePreview: true,
 	})
 	if err != nil {
@@ -277,7 +277,7 @@ func (sender *Sender) sendAsAlbum(chat *Chat, plots [][]byte, caption string) er
 
 	_, err := sender.bot.SendAlbum(chat, album, &telebot.SendOptions{
 		ThreadID:              chat.ThreadID,
-		ParseMode:             telebot.ModeHTML,
+		ParseMode:             telebot.ModeDefault,
 		DisableWebPagePreview: true,
 	})
 	if err != nil {
