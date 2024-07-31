@@ -33,6 +33,8 @@ var characterLimits = map[messageType]int{
 	Album:   albumCaptionMaxCharacters,
 }
 
+const telegramParseMode = telebot.ModeHTML
+
 var unmarshalTypeError *json.UnmarshalTypeError
 
 // Chat is a structure that represents chat metadata required to send message to recipient.
@@ -212,7 +214,7 @@ func (sender *Sender) talk(chat *Chat, message string, plots [][]byte, messageTy
 func (sender *Sender) sendAsMessage(chat *Chat, message string) error {
 	_, err := sender.bot.Send(chat, message, &telebot.SendOptions{
 		ThreadID:              chat.ThreadID,
-		ParseMode:             telebot.ModeHTML,
+		ParseMode:             telegramParseMode,
 		DisableWebPagePreview: true,
 	})
 	if err != nil {
@@ -277,7 +279,7 @@ func (sender *Sender) sendAsAlbum(chat *Chat, plots [][]byte, caption string) er
 
 	_, err := sender.bot.SendAlbum(chat, album, &telebot.SendOptions{
 		ThreadID:              chat.ThreadID,
-		ParseMode:             telebot.ModeHTML,
+		ParseMode:             telegramParseMode,
 		DisableWebPagePreview: true,
 	})
 	if err != nil {

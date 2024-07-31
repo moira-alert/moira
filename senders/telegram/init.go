@@ -3,11 +3,8 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
-
-	"github.com/russross/blackfriday/v2"
 
 	"github.com/moira-alert/moira/senders/msgformat"
 
@@ -26,14 +23,6 @@ const (
 )
 
 var (
-	// startHeaderRegexp is used for removing start html header tag from description (which is converted from markdown to html).
-	// Because of not supporting it in telegram.
-	startHeaderRegexp = regexp.MustCompile("<h[0-9]+>")
-
-	// endHeaderRegexp is used for removing end html header tag from description (which is converted from markdown to html).
-	// Because of not supporting it in telegram.
-	endHeaderRegexp = regexp.MustCompile("</h[0-9]+>")
-
 	codeBlockStart = "<blockquote expandable>"
 	codeBlockEnd   = "</blockquote>"
 )
@@ -94,7 +83,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		cfg.FrontURI,
 		location,
 		urlFormatter,
-		descriptionFormatter,
+		emptyDescriptionFormatter,
 		boldFormatter,
 		eventStringFormatter,
 		codeBlockStart,
@@ -150,22 +139,8 @@ func urlFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, triggerName)
 }
 
-func descriptionFormatter(trigger moira.TriggerData) string {
-	desc := trigger.Desc
-	if trigger.Desc != "" {
-		desc = trigger.Desc
-		desc += "\n"
-	}
-
-	htmlDescStr := string(blackfriday.Run([]byte(desc)))
-
-	// html headers are not supported by telegram html, so make them bold instead.
-	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
-	withReplacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
-
-	// html paragraphs are not supported by telegram html, so delete them.
-	replacer := strings.NewReplacer("<p>", "", "</p>", "")
-	return replacer.Replace(withReplacedHeaders)
+func emptyDescriptionFormatter(trigger moira.TriggerData) string {
+	return ""
 }
 
 func boldFormatter(str string) string {
