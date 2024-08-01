@@ -81,13 +81,16 @@ func GetSubscription(dataBase moira.Database, subscriptionID string) (*dto.Subsc
 // UpdateSubscription updates existing subscription.
 func UpdateSubscription(dataBase moira.Database, subscriptionID string, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
 	subscription.ID = subscriptionID
-	if subscription.TeamID == "" {
+	if subscription.TeamID == "" && subscription.User == "" {
 		subscription.User = userLogin
 	}
+
 	data := moira.SubscriptionData(*subscription)
+
 	if err := dataBase.SaveSubscription(&data); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }
 
@@ -131,21 +134,26 @@ func CheckUserPermissionsForSubscription(
 		}
 		return moira.SubscriptionData{}, api.ErrorInternalServer(err)
 	}
+
 	if auth.IsAdmin(userLogin) {
 		return subscription, nil
 	}
+
 	if subscription.TeamID != "" {
 		teamContainsUser, err := dataBase.IsTeamContainUser(subscription.TeamID, userLogin)
 		if err != nil {
 			return moira.SubscriptionData{}, api.ErrorInternalServer(err)
 		}
+
 		if teamContainsUser {
 			return subscription, nil
 		}
 	}
+
 	if subscription.User == userLogin {
 		return subscription, nil
 	}
+
 	return moira.SubscriptionData{}, api.ErrorForbidden("you are not permitted")
 }
 

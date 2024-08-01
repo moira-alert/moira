@@ -117,12 +117,25 @@ func UpdateContact(
 	contactData.Type = contactDTO.Type
 	contactData.Value = contactDTO.Value
 	contactData.Name = contactDTO.Name
+
+	if contactDTO.User != "" && contactDTO.TeamID == "" {
+		contactData.User = contactDTO.User
+		contactData.Team = contactDTO.TeamID
+	}
+
+	if contactDTO.TeamID != "" && contactDTO.User == "" {
+		contactData.Team = contactDTO.TeamID
+		contactData.User = contactDTO.User
+	}
+
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return contactDTO, api.ErrorInternalServer(err)
 	}
+
 	contactDTO.User = contactData.User
 	contactDTO.TeamID = contactData.Team
 	contactDTO.ID = contactData.ID
+
 	return contactDTO, nil
 }
 
@@ -221,9 +234,11 @@ func CheckUserPermissionsForContact(
 		}
 		return moira.ContactData{}, api.ErrorInternalServer(err)
 	}
+
 	if auth.IsAdmin(userLogin) {
 		return contactData, nil
 	}
+
 	if contactData.Team != "" {
 		teamContainsUser, err := dataBase.IsTeamContainUser(contactData.Team, userLogin)
 		if err != nil {
@@ -233,9 +248,11 @@ func CheckUserPermissionsForContact(
 			return contactData, nil
 		}
 	}
+
 	if contactData.User == userLogin {
 		return contactData, nil
 	}
+
 	return moira.ContactData{}, api.ErrorForbidden("you are not permitted")
 }
 
