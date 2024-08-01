@@ -37,10 +37,6 @@ prometheus_remote:
 api:
   listen: ":8081"
   enable_cors: false
-  authorization:
-    enabled: true
-    admin_list:
-      - anonymous
 web:
   contacts_template:
     - type: mail
