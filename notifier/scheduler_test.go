@@ -83,7 +83,7 @@ func TestThrottling(t *testing.T) {
 		expected2 := expected
 		expected2.SendFail = 1
 		expected2.Timestamp = now.Add(time.Minute).Unix()
-		systemClock.EXPECT().Now().Return(now).Times(1)
+		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected2)
@@ -98,7 +98,7 @@ func TestThrottling(t *testing.T) {
 		expected2.SendFail = 3
 		expected2.Timestamp = now.Add(time.Minute).Unix()
 		expected2.Throttled = true
-		systemClock.EXPECT().Now().Return(now).Times(1)
+		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected2)
@@ -119,7 +119,7 @@ func TestThrottling(t *testing.T) {
 
 		expected3 := expected
 		expected3.Event = testEvent
-		systemClock.EXPECT().Now().Return(now).Times(1)
+		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected3)
@@ -130,7 +130,7 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(moira.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
 
 		params2 := params
-		systemClock.EXPECT().Now().Return(now).Times(1)
+		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected)
