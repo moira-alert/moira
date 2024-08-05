@@ -59,8 +59,8 @@ func TestEvent(t *testing.T) {
 				SubscriptionID: event.SubscriptionID,
 			},
 			SendFail:  0,
-			Timestamp: systemClock.NowUnix(),
-			CreatedAt: systemClock.NowUnix(),
+			Timestamp: systemClock.NowUTC().Unix(),
+			CreatedAt: systemClock.NowUTC().Unix(),
 			Throttled: false,
 			Contact:   contact,
 		}
