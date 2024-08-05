@@ -36,5 +36,8 @@ func (contact *Contact) Bind(r *http.Request) error {
 	if contact.Value == "" {
 		return fmt.Errorf("contact value of type %s can not be empty", contact.Type)
 	}
+	if contact.User != "" && contact.TeamID != "" {
+		return fmt.Errorf("contact cannot have both the user field and the team_id field filled in")
+	}
 	return nil
 }

@@ -57,10 +57,6 @@ func CreateContact(
 	userLogin,
 	teamID string,
 ) *api.ErrorResponse {
-	if userLogin != "" && teamID != "" {
-		return api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified"))
-	}
-
 	if !isAllowedToUseContactType(auth, userLogin, contact.Type) {
 		return api.ErrorInvalidRequest(ErrNotAllowedContactType)
 	}
@@ -118,14 +114,12 @@ func UpdateContact(
 	contactData.Value = contactDTO.Value
 	contactData.Name = contactDTO.Name
 
-	if contactDTO.User != "" && contactDTO.TeamID == "" {
+	if contactDTO.User != "" {
 		contactData.User = contactDTO.User
-		contactData.Team = contactDTO.TeamID
 	}
 
-	if contactDTO.TeamID != "" && contactDTO.User == "" {
+	if contactDTO.TeamID != "" {
 		contactData.Team = contactDTO.TeamID
-		contactData.User = contactDTO.User
 	}
 
 	if err := dataBase.SaveContact(&contactData); err != nil {
