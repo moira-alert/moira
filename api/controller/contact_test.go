@@ -519,28 +519,6 @@ func TestUpdateContact(t *testing.T) {
 			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
 		})
 
-		// Convey("Failed to overwrite user with filled team id", func() {
-		// 	newUser := "testUser"
-		// 	contactDTO := dto.Contact{
-		// 		Value:  contactValue,
-		// 		Type:   contactType,
-		// 		TeamID: teamID,
-		// 		User:   newUser,
-		// 	}
-		// 	contactID := uuid.Must(uuid.NewV4()).String()
-		// 	contact := moira.ContactData{
-		// 		Value: contactDTO.Value,
-		// 		Type:  contactDTO.Type,
-		// 		ID:    contactID,
-		// 		Team:  teamID,
-		// 	}
-		// 	dataBase.EXPECT().SaveContact(&contact).Return(nil)
-		// 	expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
-		// 	So(err, ShouldBeNil)
-		// 	So(expectedContact.User, ShouldBeEmpty)
-		// 	So(expectedContact.ID, ShouldResemble, contactID)
-		// })
-
 		Convey("Error update not allowed contact", func() {
 			contactDTO := dto.Contact{
 				Value: contactValue,
@@ -644,28 +622,6 @@ func TestUpdateContact(t *testing.T) {
 			So(expectedContact.TeamID, ShouldResemble, newTeam)
 			So(expectedContact.ID, ShouldResemble, contactID)
 		})
-
-		// Convey("Failed to overwrite team with filled user", func() {
-		// 	newTeam := "testTeam"
-		// 	contactDTO := dto.Contact{
-		// 		Value:  contactValue,
-		// 		Type:   contactType,
-		// 		TeamID: newTeam,
-		// 		User:   userLogin,
-		// 	}
-		// 	contactID := uuid.Must(uuid.NewV4()).String()
-		// 	contact := moira.ContactData{
-		// 		Value: contactDTO.Value,
-		// 		Type:  contactDTO.Type,
-		// 		ID:    contactID,
-		// 		User:  userLogin,
-		// 	}
-		// 	dataBase.EXPECT().SaveContact(&contact).Return(nil)
-		// 	expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
-		// 	So(err, ShouldBeNil)
-		// 	So(expectedContact.TeamID, ShouldBeEmpty)
-		// 	So(expectedContact.ID, ShouldResemble, contactID)
-		// })
 
 		Convey("Error save", func() {
 			contactDTO := dto.Contact{
