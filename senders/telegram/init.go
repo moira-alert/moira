@@ -3,6 +3,7 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"html"
 	"strings"
 	"time"
 
@@ -136,7 +137,7 @@ func telegramLockKey(contactType string) string {
 }
 
 func urlFormatter(triggerURI, triggerName string) string {
-	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, triggerName)
+	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, html.EscapeString(triggerName))
 }
 
 func emptyDescriptionFormatter(trigger moira.TriggerData) string {
@@ -144,15 +145,15 @@ func emptyDescriptionFormatter(trigger moira.TriggerData) string {
 }
 
 func boldFormatter(str string) string {
-	return fmt.Sprintf("<b>%s</b>", str)
+	return fmt.Sprintf("<b>%s</b>", html.EscapeString(str))
 }
 
 func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
 	return fmt.Sprintf(
 		"%s: <code>%s</code> = %s (%s to %s)",
 		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
-		event.Metric,
-		event.GetMetricsValues(moira.DefaultNotificationSettings),
+		html.EscapeString(event.Metric),
+		html.EscapeString(event.GetMetricsValues(moira.DefaultNotificationSettings)),
 		event.OldState,
 		event.State)
 }
