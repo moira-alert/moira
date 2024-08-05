@@ -3,6 +3,7 @@ package checker
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
@@ -14,6 +15,11 @@ import (
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+)
+
+var (
+	hourInSec   = int64(time.Hour.Seconds())
+	tenMinInSec = int64((10 * time.Minute).Seconds())
 )
 
 func TestInitTriggerChecker(t *testing.T) {
@@ -158,13 +164,14 @@ func TestInitTriggerChecker(t *testing.T) {
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
 				State:     moira.StateOK,
-				Timestamp: actual.until - 3600,
+				Timestamp: actual.until - hourInSec,
 				Clock:     clock.NewSystemClock(),
 			},
-			from:    actual.until - 3600 - ttl,
+			from:    actual.until - hourInSec - ttl,
 			until:   actual.until,
 			metrics: metrics,
 		}
+
 		So(*actual, ShouldResemble, expected)
 	})
 
@@ -189,10 +196,10 @@ func TestInitTriggerChecker(t *testing.T) {
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
 				State:     moira.StateOK,
-				Timestamp: actual.until - 3600,
+				Timestamp: actual.until - hourInSec,
 				Clock:     clock.NewSystemClock(),
 			},
-			from:    actual.until - 3600 - 600,
+			from:    actual.until - hourInSec - tenMinInSec,
 			until:   actual.until,
 			metrics: metrics,
 		}
@@ -218,7 +225,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			ttl:       0,
 			ttlState:  moira.TTLStateNODATA,
 			lastCheck: &expectedLastCheck,
-			from:      lastCheck.Timestamp - 600,
+			from:      lastCheck.Timestamp - tenMinInSec,
 			until:     actual.until,
 			metrics:   metrics,
 		}
