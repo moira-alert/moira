@@ -17,10 +17,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var (
-	hourInSec   = int64(time.Hour.Seconds())
-	tenMinInSec = int64((10 * time.Minute).Seconds())
-)
+var hourInSec = int64(time.Hour.Seconds())
 
 func TestInitTriggerChecker(t *testing.T) {
 	mockCtrl := gomock.NewController(t)

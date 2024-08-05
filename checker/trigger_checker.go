@@ -11,6 +11,8 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
+var tenMinInSec = int64((10 * time.Minute).Seconds())
+
 // TriggerChecker represents data, used for handling new trigger state.
 type TriggerChecker struct {
 	database moira.Database
@@ -133,5 +135,5 @@ func calculateFrom(lastCheckTimestamp, triggerTTL int64) int64 {
 		return lastCheckTimestamp - triggerTTL
 	}
 
-	return lastCheckTimestamp - 600
+	return lastCheckTimestamp - tenMinInSec
 }
