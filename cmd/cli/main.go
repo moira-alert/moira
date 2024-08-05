@@ -25,7 +25,7 @@ var (
 	GoVersion    = "unknown"
 )
 
-var moiraValidVersions = []string{"2.3", "2.6", "2.7", "2.9"}
+var moiraValidVersions = []string{"2.3", "2.6", "2.7", "2.9", "2.11"}
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/cli.yml", "Path to configuration file")
@@ -110,6 +110,13 @@ func main() { //nolint
 					Error(err).
 					Msg("Fail to update from version 2.9")
 			}
+		case "2.11":
+			err := updateFrom211(logger, database)
+			if err != nil {
+				logger.Fatal().
+					Error(err).
+					Msg("Fail to update from version 2.11")
+			}
 		}
 	}
 
@@ -143,6 +150,13 @@ func main() { //nolint
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update to version 2.9")
+			}
+		case "2.11":
+			err := downgradeTo211(logger, database)
+			if err != nil {
+				logger.Fatal().
+					Error(err).
+					Msg("Fail to update to version 2.11")
 			}
 		}
 	}
@@ -469,7 +483,7 @@ func openFile(filePath string, mode int) (*os.File, error) {
 	if filePath == "" {
 		return nil, fmt.Errorf("file is not specified")
 	}
-	file, err := os.OpenFile(filePath, mode, 0666) //nolint:gofumpt,gomnd
+	file, err := os.OpenFile(filePath, mode, 0o666) //nolint:gofumpt,gomnd
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}

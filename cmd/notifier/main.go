@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/moira-alert/moira/clock"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
@@ -91,6 +93,11 @@ func main() {
 
 	notifierConfig := config.Notifier.getSettings(logger)
 
+	systemClock := clock.NewSystemClock()
+	schedulerConfig := notifier.SchedulerConfig{
+		ReschedulingDelay: notifierConfig.ReschedulingDelay,
+	}
+
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
 	sender := notifier.NewNotifier(
 		database,
@@ -99,6 +106,8 @@ func main() {
 		notifierMetrics,
 		metricSourceProvider,
 		imageStoreMap,
+		systemClock,
+		schedulerConfig,
 	)
 
 	// Register moira senders
@@ -133,11 +142,16 @@ func main() {
 
 	// Start moira new events fetcher
 	fetchEventsWorker := &events.FetchEventsWorker{
-		Logger:    logger,
-		Database:  database,
-		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
-		Metrics:   notifierMetrics,
-		Config:    notifierConfig,
+		Logger:   logger,
+		Database: database,
+		Scheduler: notifier.NewScheduler(
+			database,
+			logger,
+			notifierMetrics,
+			schedulerConfig,
+			systemClock),
+		Metrics: notifierMetrics,
+		Config:  notifierConfig,
 	}
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)

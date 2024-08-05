@@ -6,10 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/moira-alert/moira/senders/msgformat"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/worker"
-	"gopkg.in/tucnak/telebot.v2"
+	"gopkg.in/telebot.v3"
 )
 
 const (
@@ -21,15 +23,11 @@ const (
 )
 
 var (
-	pollerTimeout = 10 * time.Second
-	emojiStates   = map[moira.State]string{
-		moira.StateOK:     "\xe2\x9c\x85",
-		moira.StateWARN:   "\xe2\x9a\xa0",
-		moira.StateERROR:  "\xe2\xad\x95",
-		moira.StateNODATA: "\xf0\x9f\x92\xa3",
-		moira.StateTEST:   "\xf0\x9f\x98\x8a",
-	}
+	codeBlockStart = "<blockquote expandable>"
+	codeBlockEnd   = "</blockquote>"
 )
+
+var pollerTimeout = 10 * time.Second
 
 // Structure that represents the Telegram configuration in the YAML file.
 type config struct {
@@ -38,23 +36,29 @@ type config struct {
 	FrontURI    string `mapstructure:"front_uri"`
 }
 
-// Sender implements moira sender interface via telegram.
-type Sender struct {
-	DataBase moira.Database
-	logger   moira.Logger
-	apiToken string
-	frontURI string
-	bot      *telebot.Bot
-	location *time.Location
+// Bot is abstraction over gopkg.in/telebot.v3#Bot.
+type Bot interface {
+	Handle(endpoint interface{}, h telebot.HandlerFunc, m ...telebot.MiddlewareFunc)
+	Start()
+	Stop()
+	Send(to telebot.Recipient, what interface{}, opts ...interface{}) (*telebot.Message, error)
+	SendAlbum(to telebot.Recipient, a telebot.Album, opts ...interface{}) ([]telebot.Message, error)
+	Reply(to *telebot.Message, what interface{}, opts ...interface{}) (*telebot.Message, error)
+	ChatByUsername(name string) (*telebot.Chat, error)
 }
 
-func removeTokenFromError(err error, bot *telebot.Bot) error {
-	url := telebot.DefaultApiURL
-	if bot != nil {
-		url = bot.URL
-	}
-	if err != nil && strings.Contains(err.Error(), url) {
-		return errors.New(moira.ReplaceSubstring(err.Error(), "/bot", "/", hidden))
+// Sender implements moira sender interface via telegram.
+type Sender struct {
+	DataBase  moira.Database
+	logger    moira.Logger
+	bot       Bot
+	formatter msgformat.MessageFormatter
+	apiToken  string
+}
+
+func (sender *Sender) removeTokenFromError(err error) error {
+	if err != nil && strings.Contains(err.Error(), sender.apiToken) {
+		return errors.New(strings.Replace(err.Error(), sender.apiToken, hidden, -1))
 	}
 	return err
 }
@@ -70,25 +74,38 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.APIToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
-
 	sender.apiToken = cfg.APIToken
-	sender.frontURI = cfg.FrontURI
+
+	emojiProvider := telegramEmojiProvider{}
+	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+		emojiProvider,
+		true,
+		cfg.FrontURI,
+		location,
+		urlFormatter,
+		emptyDescriptionFormatter,
+		boldFormatter,
+		eventStringFormatter,
+		codeBlockStart,
+		codeBlockEnd)
+
 	sender.logger = logger
-	sender.location = location
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  sender.apiToken,
+		Token:  cfg.APIToken,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
-		return removeTokenFromError(err, sender.bot)
+		return sender.removeTokenFromError(err)
 	}
 
-	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
-		if err = sender.handleMessage(message); err != nil {
+	sender.bot.Handle(telebot.OnText, func(ctx telebot.Context) error {
+		if err = sender.handleMessage(ctx.Message()); err != nil {
 			sender.logger.Error().
 				Error(err).
-				Msg("Error handling incoming message: %s")
+				Msg("Error handling incoming message")
+			return err
 		}
+		return nil
 	})
 
 	go sender.runTelebot(cfg.ContactType)
@@ -116,4 +133,26 @@ func (sender *Sender) runTelebot(contactType string) {
 
 func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
+}
+
+func urlFormatter(triggerURI, triggerName string) string {
+	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, triggerName)
+}
+
+func emptyDescriptionFormatter(trigger moira.TriggerData) string {
+	return ""
+}
+
+func boldFormatter(str string) string {
+	return fmt.Sprintf("<b>%s</b>", str)
+}
+
+func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
+	return fmt.Sprintf(
+		"%s: <code>%s</code> = %s (%s to %s)",
+		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
+		event.Metric,
+		event.GetMetricsValues(moira.DefaultNotificationSettings),
+		event.OldState,
+		event.State)
 }

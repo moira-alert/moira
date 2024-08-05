@@ -5,13 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
 	"github.com/moira-alert/moira/notifier"
@@ -25,14 +26,23 @@ func TestEvent(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
+	systemClock := mock_clock.NewMockClock(mockCtrl)
+	systemClock.EXPECT().Now().Return(time.Now()).AnyTimes()
 
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics,
+				notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 		event := moira.NotificationEvent{
 			State:          moira.StateTEST,
@@ -49,8 +59,8 @@ func TestEvent(t *testing.T) {
 				SubscriptionID: event.SubscriptionID,
 			},
 			SendFail:  0,
-			Timestamp: time.Now().Unix(),
-			CreatedAt: time.Now().Unix(),
+			Timestamp: systemClock.Now().Unix(),
+			CreatedAt: systemClock.Now().Unix(),
 			Throttled: false,
 			Contact:   contact,
 		}
@@ -78,7 +88,7 @@ func TestEvent(t *testing.T) {
 		}
 		dataBase.EXPECT().GetContact(event.ContactID).Times(1).Return(contact, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		now := time.Now()
+		now := systemClock.Now()
 		notification := moira.ScheduledNotification{
 			Event: moira.NotificationEvent{
 				TriggerID:      "",
@@ -95,7 +105,17 @@ func TestEvent(t *testing.T) {
 		}
 		event2 := event
 		event2.SubscriptionID = &subID
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, moira.TriggerData{}, contact, notification.Plotting, false, 0, gomock.Any()).Return(&notification)
+
+		params := moira.SchedulerParams{
+			Event:        event2,
+			Trigger:      moira.TriggerData{},
+			Contact:      contact,
+			Plotting:     notification.Plotting,
+			ThrottledOld: false,
+			SendFail:     0,
+		}
+
+		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 		dataBase.EXPECT().AddNotification(&notification)
 
 		err := worker.processEvent(event)
@@ -109,13 +129,21 @@ func TestNoSubscription(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
+		systemClock := mock_clock.NewMockClock(mockCtrl)
 
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics,
+				notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -140,13 +168,21 @@ func TestDisabledNotification(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
 		eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
+		systemClock := mock_clock.NewMockClock(mockCtrl)
 
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics,
+				notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -185,6 +221,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 	eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
+	systemClock := mock_clock.NewMockClock(mockCtrl)
 
 	logger.EXPECT().Clone().Return(logger).AnyTimes()
 	logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
@@ -192,11 +229,17 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 	Convey("[TRUE] Do not send WARN notifications", t, func() {
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics, notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -228,11 +271,18 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 	})
 	Convey("[TRUE] Send notifications when triggers degraded only", t, func() {
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics,
+				notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -264,11 +314,18 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 	})
 	Convey("[TRUE] Do not send WARN notifications & [TRUE] Send notifications when triggers degraded only", t, func() {
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics,
+				notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -315,6 +372,7 @@ func TestAddNotification(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
+
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -331,11 +389,19 @@ func TestAddNotification(t *testing.T) {
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
+		params := moira.SchedulerParams{
+			Event:        event,
+			Trigger:      triggerData,
+			Contact:      contact,
+			Plotting:     emptyNotification.Plotting,
+			ThrottledOld: false,
+			SendFail:     0,
+		}
 
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0, gomock.Any()).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil)
 
 		err := worker.processEvent(event)
@@ -350,6 +416,7 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
+
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -370,12 +437,23 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 
 		notification2 := moira.ScheduledNotification{}
 
+		params := moira.SchedulerParams{
+			Event:        event,
+			Trigger:      triggerData,
+			Contact:      contact,
+			Plotting:     notification2.Plotting,
+			ThrottledOld: false,
+			SendFail:     0,
+		}
+		params2 := params
+		params2.Event = event2
+
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription, &subscription4}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(2).Return(contact, nil)
 
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, notification2.Plotting, false, 0, gomock.Any()).Times(1).Return(&notification2)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, triggerData, contact, notification2.Plotting, false, 0, gomock.Any()).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(params2, gomock.Any()).Times(1).Return(&notification2)
 
 		dataBase.EXPECT().AddNotification(&notification2).Times(1).Return(nil)
 
@@ -391,13 +469,21 @@ func TestFailReadContact(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
 		eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
+		systemClock := mock_clock.NewMockClock(mockCtrl)
 
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics,
+				notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -439,6 +525,7 @@ func TestEmptySubscriptions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 	eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
+	systemClock := mock_clock.NewMockClock(mockCtrl)
 
 	logger.EXPECT().Clone().Return(logger).AnyTimes()
 	logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
@@ -449,11 +536,18 @@ func TestEmptySubscriptions(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics,
+				notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -484,11 +578,18 @@ func TestEmptySubscriptions(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		worker := FetchEventsWorker{
-			Database:  dataBase,
-			Logger:    logger,
-			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-			Config:    emptyNotifierConfig,
+			Database: dataBase,
+			Logger:   logger,
+			Metrics:  notifierMetrics,
+			Scheduler: notifier.NewScheduler(
+				dataBase,
+				logger,
+				notifierMetrics,
+				notifier.SchedulerConfig{
+					ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+				},
+				systemClock),
+			Config: emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -521,13 +622,21 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	systemClock := mock_clock.NewMockClock(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
 	worker := FetchEventsWorker{
-		Database:  dataBase,
-		Logger:    logger,
-		Metrics:   notifierMetrics,
-		Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
-		Config:    emptyNotifierConfig,
+		Database: dataBase,
+		Logger:   logger,
+		Metrics:  notifierMetrics,
+		Scheduler: notifier.NewScheduler(
+			dataBase,
+			logger,
+			notifierMetrics,
+			notifier.SchedulerConfig{
+				ReschedulingDelay: emptyNotifierConfig.ReschedulingDelay,
+			},
+			systemClock),
+		Config: emptyNotifierConfig,
 	}
 
 	Convey("Error GetSubscription", t, func() {
@@ -579,6 +688,14 @@ func TestGoRoutine(t *testing.T) {
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
+		params := moira.SchedulerParams{
+			Event:        event,
+			Trigger:      triggerData,
+			Contact:      contact,
+			Plotting:     emptyNotification.Plotting,
+			ThrottledOld: false,
+			SendFail:     0,
+		}
 		shutdown := make(chan struct{})
 
 		dataBase.EXPECT().FetchNotificationEvent().Return(moira.NotificationEvent{}, fmt.Errorf("3433434")).Do(func() {
@@ -589,7 +706,7 @@ func TestGoRoutine(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0, gomock.Any()).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 		worker.Start()

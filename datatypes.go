@@ -28,7 +28,9 @@ const (
 )
 
 const (
-	format            = "15:04 02.01.2006"
+	// DefaultDateTimeFormat used for formatting timestamps.
+	DefaultDateTimeFormat = "15:04 02.01.2006"
+	// DefaultTimeFormat used for formatting time.
 	DefaultTimeFormat = "15:04"
 	remindMessage     = "This metric has been in bad state for more than %v hours - please, fix."
 	limit             = 1000
@@ -108,7 +110,7 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 		}
 		if event.MessageEventInfo.Maintenance.StartTime != nil {
 			messageBuffer.WriteString(" at ")
-			messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StartTime, 0).In(location).Format(format))
+			messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StartTime, 0).In(location).Format(DefaultDateTimeFormat))
 		}
 		if event.MessageEventInfo.Maintenance.StopUser != nil || event.MessageEventInfo.Maintenance.StopTime != nil {
 			messageBuffer.WriteString(" and removed")
@@ -118,7 +120,7 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 			}
 			if event.MessageEventInfo.Maintenance.StopTime != nil {
 				messageBuffer.WriteString(" at ")
-				messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StopTime, 0).In(location).Format(format))
+				messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StopTime, 0).In(location).Format(DefaultDateTimeFormat))
 			}
 		}
 		messageBuffer.WriteString(".")
@@ -184,6 +186,15 @@ func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 		return fmt.Sprintf("%s/trigger/%s", frontURI, trigger.ID)
 	}
 	return ""
+}
+
+// GetTags returns "[tag1][tag2]...[tagN]" string.
+func (trigger *TriggerData) GetTags() string {
+	var buffer bytes.Buffer
+	for _, tag := range trigger.Tags {
+		buffer.WriteString(fmt.Sprintf("[%s]", tag))
+	}
+	return buffer.String()
 }
 
 // Team is a structure that represents a group of users that share a subscriptions and contacts.
@@ -304,7 +315,7 @@ func (notification *ScheduledNotification) Less(other Comparable) (bool, error) 
 	return notification.Timestamp < otherNotification.Timestamp, nil
 }
 
-// IsDelayed checks if the notification is delayed, the difference between the send time and the create time
+// IsDelayed checks if the notification is delayed, the difference between the send time and the creation time
 // is greater than the delayedTime.
 func (notification *ScheduledNotification) IsDelayed(delayedTime int64) bool {
 	return notification.CreatedAt != 0 && notification.Timestamp-notification.CreatedAt > delayedTime
@@ -665,15 +676,6 @@ func (events NotificationEvents) GetCurrentState(throttled bool) State {
 	return events.getSubjectState()
 }
 
-// GetTags returns "[tag1][tag2]...[tagN]" string.
-func (trigger *TriggerData) GetTags() string {
-	var buffer bytes.Buffer
-	for _, tag := range trigger.Tags {
-		buffer.WriteString(fmt.Sprintf("[%s]", tag))
-	}
-	return buffer.String()
-}
-
 // GetKey return notification key to prevent duplication to the same contact.
 func (notification *ScheduledNotification) GetKey() string {
 	return fmt.Sprintf("%s:%s:%s:%s:%s:%d:%s:%d:%t:%d",
@@ -903,4 +905,15 @@ func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance in
 		}
 	}
 	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
+}
+
+// SchedulerParams is the parameters for notifier.Scheduler essential for scheduling notification.
+type SchedulerParams struct {
+	Event        NotificationEvent
+	Trigger      TriggerData
+	Contact      ContactData
+	Plotting     PlottingData
+	ThrottledOld bool
+	// SendFail is amount of failed send attempts
+	SendFail int
 }

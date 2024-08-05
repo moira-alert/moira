@@ -18,28 +18,28 @@ func TestBotDataStoring(t *testing.T) {
 	Convey("Messengers manipulation", t, func() {
 		Convey("Get-set usernames", func() {
 			Convey("Just set username to one of messengers", func() {
-				err := dataBase.SetUsernameID(messenger1, user1, "id1")
+				err := dataBase.SetUsernameChat(messenger1, user1, "id1")
 				So(err, ShouldBeNil)
 			})
 
 			Convey("Check it for existing", func() {
-				actual, err := dataBase.GetIDByUsername(messenger1, user1)
+				actual, err := dataBase.GetChatByUsername(messenger1, user1)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, "id1")
 			})
 
 			Convey("Check for not existing in two another messengers", func() {
-				actual, err := dataBase.GetIDByUsername(messenger2, user1)
+				actual, err := dataBase.GetChatByUsername(messenger2, user1)
 				So(err, ShouldResemble, database.ErrNil)
 				So(actual, ShouldBeEmpty)
 
-				actual, err = dataBase.GetIDByUsername(messenger3, user1)
+				actual, err = dataBase.GetChatByUsername(messenger3, user1)
 				So(err, ShouldResemble, database.ErrNil)
 				So(actual, ShouldBeEmpty)
 			})
 
 			Convey("Get username with # prefix should return @username", func() {
-				actual, err := dataBase.GetIDByUsername(messenger1, "#"+user1)
+				actual, err := dataBase.GetChatByUsername(messenger1, "#"+user1)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, "@"+user1)
 			})
@@ -50,7 +50,7 @@ func TestBotDataStoring(t *testing.T) {
 			})
 
 			Convey("Check it for unexisting", func() {
-				actual, err := dataBase.GetIDByUsername(messenger1, user1)
+				actual, err := dataBase.GetChatByUsername(messenger1, user1)
 				So(err, ShouldResemble, database.ErrNil)
 				So(actual, ShouldBeEmpty)
 			})
@@ -64,11 +64,11 @@ func TestBotDataStoringErrorConnection(t *testing.T) {
 	dataBase.Flush()
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
-		actual1, err := dataBase.GetIDByUsername(messenger1, user1)
+		actual1, err := dataBase.GetChatByUsername(messenger1, user1)
 		So(actual1, ShouldBeEmpty)
 		So(err, ShouldNotBeNil)
 
-		err = dataBase.SetUsernameID(messenger2, user1, "id1")
+		err = dataBase.SetUsernameChat(messenger2, user1, "id1")
 		So(err, ShouldNotBeNil)
 
 		err = dataBase.RemoveUser(messenger2, user1)
