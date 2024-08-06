@@ -256,7 +256,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		})
 	})
 
-	Convey("Test advanced schedule (e.g. 02:00 - 00:00)", t, func() {
+	Convey("Test advanced schedule during current day (e.g. 02:00 - 00:00)", t, func() {
 		// Schedule: 02:00 - 00:00 (GTM +3)
 		Convey("Time is out of range, nextTime should resemble now", func() {
 			// 2015-09-02, 14:00:00 GMT+03:00
@@ -342,6 +342,107 @@ func TestSubscriptionSchedule(t *testing.T) {
 			So(throttled, ShouldBeFalse)
 		})
 	})
+
+	Convey("Test advanced schedule between different days (e.g. 23:30 - 18:00)", t, func ()  {
+		// Schedule: 23:30 - 18:00 (GTM +3)
+		Convey("Time is out of range within the current day, nextTime should resemble now", func() {
+			// 2015-09-02, 23:45:00 GMT+03:00
+			now := time.Unix(1441140300, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule4
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
+			// 2015-09-02, 23:45:00 GMT+03:00
+			So(next, ShouldResemble, now)
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Time is out of range on the next day, nextTime should resemble now", func() {
+			// 2015-09-02, 00:35:00 GMT+03:00
+			now := time.Unix(1441143300, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule4
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
+			// 2015-09-02, 00:35:00 GMT+03:00
+			So(next, ShouldResemble, now)
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Time is in range, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 20:00:00 GMT+03:00
+			now := time.Unix(1441213200, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule4
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
+			// 2015-09-02, 23:30:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441225800, 0))
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Up border case, nextTime should resemble now", func() {
+			// 2015-09-02, 23:30:00 GMT+03:00
+			now := time.Unix(1441225800, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule4
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
+			// 2015-09-02, 23:30:00 GMT+03:00
+			So(next, ShouldResemble, now)
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Low border case, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 18:00:00 GMT+03:00
+			now := time.Unix(1441206000, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule4
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
+			// 2015-09-02, 23:30:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441225800, 0))
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Low border case - 1 minute, nextTime should resemble now", func() {
+			// 2015-09-01, 17:59:00 GMT+03:00
+			now := time.Unix(1441205940, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule4
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
+			// 2015-09-01, 17:59:00 GMT+03:00
+			So(next, ShouldResemble, now)
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Up border case - 1 minute, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 23:29:00 GMT+03:00
+			now := time.Unix(1441225740, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule4
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
+			// 2015-09-02, 23:30:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441225800, 0))
+			So(throttled, ShouldBeFalse)
+		})
+	})
 }
 
 var schedule1 = moira.ScheduleData{
@@ -377,6 +478,21 @@ var schedule2 = moira.ScheduleData{
 var schedule3 = moira.ScheduleData{
 	StartOffset:    120,  // 02:00
 	EndOffset:      0,    // 00:00
+	TimezoneOffset: -180, // (GMT +3)
+	Days: []moira.ScheduleDataDay{
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+	},
+}
+
+var schedule4 = moira.ScheduleData{
+	StartOffset:    1410, // 23:30
+	EndOffset:      1080, // 18:00
 	TimezoneOffset: -180, // (GMT +3)
 	Days: []moira.ScheduleDataDay{
 		{Enabled: true},

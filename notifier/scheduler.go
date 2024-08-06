@@ -162,16 +162,24 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	if len(schedule.Days) == 0 {
 		return nextTime, nil
 	}
+
 	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
 	endOffset := time.Duration(schedule.EndOffset) * time.Minute
-	if schedule.EndOffset < schedule.StartOffset {
-		endOffset += time.Hour * 24
-	}
 
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute
 	localNextTime := nextTime.Add(-tzOffset).Truncate(time.Minute)
 	localNextTimeDay := localNextTime.Truncate(24 * time.Hour) //nolint
 	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7  //nolint
+
+	if schedule.EndOffset < schedule.StartOffset {
+		// The condition can only be fulfilled if the begin offset should be on the past day and not on the current day.
+		// In other variants end offset must be on the next day
+		if localNextTime.Sub(localNextTimeDay) < beginOffset && localNextTime.Sub(localNextTimeDay) < endOffset {
+			beginOffset -= time.Hour * 24
+		} else {
+			endOffset += time.Hour * 24
+		}
+	}
 
 	if schedule.Days[localNextWeekday].Enabled &&
 		(localNextTime.Equal(localNextTimeDay.Add(beginOffset)) || localNextTime.After(localNextTimeDay.Add(beginOffset))) &&
@@ -186,9 +194,11 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 		if localNextTime.After(nextLocalDayBegin.Add(beginOffset)) {
 			continue
 		}
+
 		if !schedule.Days[nextLocalWeekDay].Enabled {
 			continue
 		}
+
 		return nextLocalDayBegin.Add(beginOffset + tzOffset), nil
 	}
 
