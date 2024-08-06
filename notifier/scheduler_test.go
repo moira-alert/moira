@@ -343,7 +343,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		})
 	})
 
-	Convey("Test advanced schedule between different days (e.g. 23:30 - 18:00)", t, func ()  {
+	Convey("Test advanced schedule between different days (e.g. 23:30 - 18:00)", t, func() {
 		// Schedule: 23:30 - 18:00 (GTM +3)
 		Convey("Time is out of range within the current day, nextTime should resemble now", func() {
 			// 2015-09-02, 23:45:00 GMT+03:00
