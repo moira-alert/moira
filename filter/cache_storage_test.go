@@ -249,6 +249,7 @@ func TestRetentions(t *testing.T) {
 			So(matchedMetric.Retention, ShouldEqual, 10)
 			So(matchedMetric.RetentionTimestamp, ShouldEqual, 150)
 		})
+
 		Convey("should be default 120sec", func() {
 			matchedMetric := moira.MatchedMetric{
 				Metric:             "my_super_metric;tag2=val2",

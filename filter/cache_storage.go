@@ -2,6 +2,7 @@ package filter
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -84,11 +85,18 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 			continue
 		}
 
-		_, after, _ := strings.Cut(line1, "=")
+		_, after, found := strings.Cut(line1, "=")
+		if !found {
+			storage.logger.Error().
+				String("pattern_line", line1).
+				Msg(`Invalid pattern format, it is correct to write in the format "pattern = regex"`)
+			continue
+		}
+
 		patternString := strings.TrimSpace(after)
 		pattern, err := regexp.Compile(patternString)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to compile regexp pattern '%s': %w", patternString, err)
 		}
 
 		retentionScanner.Scan()
@@ -97,15 +105,16 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 
 		if len(splitted) < 2 { //nolint
 			storage.logger.Error().
-				String("pattern", patternString).
-				Msg("Invalid pattern found")
+				String("pattern_line", line1).
+				String("retentions_line", line2).
+				Msg(`Invalid retentions format, it is correct to write in the format "retentions = timePerPoint:timeToStore, timePerPoint:timeToStore, ..."`)
 			continue
 		}
 
 		retentions := strings.TrimSpace(splitted[1])
 		retention, err := rawRetentionToSeconds(retentions[0:strings.Index(retentions, ":")])
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to convert raw retentions '%s' to seconds: %w", retentions, err)
 		}
 
 		storage.retentions = append(storage.retentions, retentionMatcher{
@@ -113,6 +122,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 			retention: retention,
 		})
 	}
+
 	return retentionScanner.Err()
 }
 
