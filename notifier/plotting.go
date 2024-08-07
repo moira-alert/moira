@@ -66,7 +66,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if len(metricsToShow) == 0 {
 		return nil, 0, nil
 	}
-	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, notifier.config.Location)
+	plotTemplate, err := plotting.GetPlotTemplate(notifier.config.PlotCfg, pkg.Plotting.Theme, notifier.config.Location)
 	if err != nil {
 		return nil, 0, err
 	}

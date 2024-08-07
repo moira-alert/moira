@@ -12,6 +12,14 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+var defaultPlotCfg = cmd.PlotConfig{
+	Width:  800,
+	Height: 400,
+	YAxisSecondaryCfg: cmd.YAxisSecondaryConfig{
+		EnablePrettyTicks: false,
+	},
+}
+
 func Test_apiConfig_getSettings(t *testing.T) {
 	Convey("Settings successfully filled", t, func() {
 		metricTTLs := map[moira.ClusterKey]time.Duration{
@@ -30,6 +38,7 @@ func Test_apiConfig_getSettings(t *testing.T) {
 		apiConf := apiConfig{
 			Listen:     "0000",
 			EnableCORS: true,
+			PlotCfg:    defaultPlotCfg,
 		}
 
 		expectedResult := &api.Config{
@@ -43,6 +52,7 @@ func Test_apiConfig_getSettings(t *testing.T) {
 					"test": {},
 				},
 			},
+			PlotCfg: defaultPlotCfg.GetSettings(),
 		}
 
 		result := apiConf.getSettings(metricTTLs, api.FeatureFlags{IsReadonlyEnabled: true}, webConfig)
@@ -88,6 +98,13 @@ func Test_webConfig_getDefault(t *testing.T) {
 			API: apiConfig{
 				Listen:     ":8081",
 				EnableCORS: false,
+				PlotCfg: cmd.PlotConfig{
+					Width:  800,
+					Height: 400,
+					YAxisSecondaryCfg: cmd.YAxisSecondaryConfig{
+						EnablePrettyTicks: false,
+					},
+				},
 			},
 			Web: webConfig{
 				RemoteAllowed: false,

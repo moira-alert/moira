@@ -12,22 +12,25 @@ import (
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
+	"github.com/moira-alert/moira/plotting"
 )
 
-func trigger(router chi.Router) {
-	router.Use(middleware.TriggerContext)
-	router.Put("/", updateTrigger)
-	router.With(middleware.TriggerContext, middleware.Populate(false)).Get("/", getTrigger)
-	router.Delete("/", removeTrigger)
-	router.Get("/state", getTriggerState)
-	router.Route("/throttling", func(router chi.Router) {
-		router.Get("/", getTriggerThrottling)
-		router.Delete("/", deleteThrottling)
-	})
-	router.Route("/metrics", triggerMetrics)
-	router.Put("/setMaintenance", setTriggerMaintenance)
-	router.With(middleware.DateRange("-1hour", "now")).With(middleware.TargetName("t1")).Get("/render", renderTrigger)
-	router.Get("/dump", triggerDump)
+func trigger(plotCfg plotting.PlotConfig) func(chi.Router) {
+	return func(router chi.Router) {
+		router.Use(middleware.TriggerContext)
+		router.Put("/", updateTrigger)
+		router.With(middleware.TriggerContext, middleware.Populate(false)).Get("/", getTrigger)
+		router.Delete("/", removeTrigger)
+		router.Get("/state", getTriggerState)
+		router.Route("/throttling", func(router chi.Router) {
+			router.Get("/", getTriggerThrottling)
+			router.Delete("/", deleteThrottling)
+		})
+		router.Route("/metrics", triggerMetrics)
+		router.Put("/setMaintenance", setTriggerMaintenance)
+		router.With(middleware.DateRange("-1hour", "now")).With(middleware.TargetName("t1")).Get("/render", renderTrigger(plotCfg))
+		router.Get("/dump", triggerDump)
+	}
 }
 
 // nolint: gofmt,goimports

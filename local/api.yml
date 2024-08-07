@@ -37,6 +37,11 @@ prometheus_remote:
 api:
   listen: ":8081"
   enable_cors: false
+  plot:
+    width: 800
+    height: 400
+    y_axis_secondary:
+      enable_pretty_ticks: false
 web:
   contacts_template:
     - type: mail

@@ -15,6 +15,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/plotting"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
@@ -23,7 +24,7 @@ import (
 	"github.com/moira-alert/moira/expression"
 )
 
-func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher) func(chi.Router) {
+func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher, plotCfg plotting.PlotConfig) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
@@ -33,7 +34,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
-		router.Route("/{triggerId}", trigger)
+		router.Route("/{triggerId}", trigger(plotCfg))
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
 		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
 		// ToDo: DEPRECATED method. Remove in Moira 2.6

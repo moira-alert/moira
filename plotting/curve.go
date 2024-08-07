@@ -16,19 +16,22 @@ type plotCurve struct {
 
 // getCurveSeriesList returns curve series list.
 func getCurveSeriesList(metricsData []metricSource.MetricData, theme moira.PlotTheme) []chart.TimeSeries {
-	curveSeriesList := make([]chart.TimeSeries, 0)
+	curveSeriesList := make([]chart.TimeSeries, 0, len(metricsData))
+
 	for metricDataInd := range metricsData {
 		curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
 		curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
 		curveSeriesList = append(curveSeriesList, curveSeries...)
 	}
+
 	return curveSeriesList
 }
 
 // generatePlotCurves returns go-chart timeseries to generate plot curves.
 func generatePlotCurves(metricData metricSource.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
 	curves := describePlotCurves(metricData)
-	curveSeries := make([]chart.TimeSeries, 0)
+	curveSeries := make([]chart.TimeSeries, 0, len(curves))
+
 	for _, curve := range curves {
 		var serieStyle chart.Style
 		switch len(curve.values) {
@@ -39,15 +42,18 @@ func generatePlotCurves(metricData metricSource.MetricData, curveStyle chart.Sty
 		default:
 			serieStyle = curveStyle
 		}
-		curveSerie := chart.TimeSeries{
+
+		curve := chart.TimeSeries{
 			Name:    metricData.Name,
 			YAxis:   chart.YAxisSecondary,
 			Style:   serieStyle,
 			XValues: curve.timeStamps,
 			YValues: curve.values,
 		}
-		curveSeries = append(curveSeries, curveSerie)
+
+		curveSeries = append(curveSeries, curve)
 	}
+
 	return curveSeries
 }
 
@@ -74,9 +80,9 @@ func describePlotCurves(metricData metricSource.MetricData) []plotCurve {
 }
 
 // resolveFirstPoint returns first point coordinates.
-func resolveFirstPoint(metricData metricSource.MetricData) (int, int64) {
-	start := 0
-	startTime := metricData.StartTime
+func resolveFirstPoint(metricData metricSource.MetricData) (start int, startTime int64) {
+	startTime = metricData.StartTime
+
 	for _, metricVal := range metricData.Values {
 		if !moira.IsFiniteNumber(metricVal) {
 			start++
@@ -85,5 +91,6 @@ func resolveFirstPoint(metricData metricSource.MetricData) (int, int64) {
 			break
 		}
 	}
+
 	return start, startTime
 }

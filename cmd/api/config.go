@@ -48,6 +48,8 @@ type apiConfig struct {
 	EnableCORS bool `yaml:"enable_cors"`
 	// Authorization contains authorization configuration.
 	Authorization authorization `yaml:"authorization"`
+	// PlotCfg sets the configuration for the plots, such as size.
+	PlotCfg cmd.PlotConfig `yaml:"plot"`
 }
 
 type authorization struct {
@@ -116,6 +118,7 @@ func (config *apiConfig) getSettings(
 		MetricsTTL:    metricsTTL,
 		Flags:         flags,
 		Authorization: config.Authorization.toApiConfig(webConfig),
+		PlotCfg:       config.PlotCfg.GetSettings(),
 	}
 }
 
@@ -217,6 +220,13 @@ func getDefault() config {
 		API: apiConfig{
 			Listen:     ":8081",
 			EnableCORS: false,
+			PlotCfg: cmd.PlotConfig{
+				Width:  800,
+				Height: 400,
+				YAxisSecondaryCfg: cmd.YAxisSecondaryConfig{
+					EnablePrettyTicks: false,
+				},
+			},
 		},
 		Web: webConfig{
 			RemoteAllowed: false,

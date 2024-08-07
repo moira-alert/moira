@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/plotting"
 )
 
 // WebContact is container for web ui contact validation.
@@ -38,6 +39,7 @@ type Config struct {
 	MetricsTTL    map[moira.ClusterKey]time.Duration
 	Flags         FeatureFlags
 	Authorization Authorization
+	PlotCfg       plotting.PlotConfig
 }
 
 // WebConfig is container for web ui configuration parameters.
