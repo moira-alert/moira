@@ -7,3 +7,6 @@ log_pretty_format: true
 cleanup:
   # Default cleanup duration according to max TTL for metrics = 7 days
   cleanup_metrics_duration: "-168h"
+  # Specifies the time from which metrics written to the future will be deleted
+  # Defaults to 1 hour
+  cleanup_future_metrics_duration: "60m"

@@ -13,7 +13,7 @@ func NewCompositeRegistry(registries ...Registry) *CompositeRegistry {
 }
 
 func (source *CompositeRegistry) NewMeter(path ...string) Meter {
-	var meters = make([]Meter, 0)
+	meters := make([]Meter, 0)
 	for _, registry := range source.registries {
 		meters = append(meters, registry.NewMeter(path...))
 	}
@@ -21,7 +21,7 @@ func (source *CompositeRegistry) NewMeter(path ...string) Meter {
 }
 
 func (source *CompositeRegistry) NewTimer(path ...string) Timer {
-	var timers = make([]Timer, 0)
+	timers := make([]Timer, 0)
 	for _, registry := range source.registries {
 		timers = append(timers, registry.NewTimer(path...))
 	}
@@ -29,7 +29,7 @@ func (source *CompositeRegistry) NewTimer(path ...string) Timer {
 }
 
 func (source *CompositeRegistry) NewHistogram(path ...string) Histogram {
-	var histograms = make([]Histogram, 0)
+	histograms := make([]Histogram, 0)
 	for _, registry := range source.registries {
 		histograms = append(histograms, registry.NewHistogram(path...))
 	}
@@ -37,7 +37,7 @@ func (source *CompositeRegistry) NewHistogram(path ...string) Histogram {
 }
 
 func (source *CompositeRegistry) NewCounter(path ...string) Counter {
-	var counters = make([]Counter, 0)
+	counters := make([]Counter, 0)
 	for _, registry := range source.registries {
 		counters = append(counters, registry.NewCounter(path...))
 	}

@@ -135,10 +135,12 @@ func TestPrefixTree(t *testing.T) {
 				MatchedPatterns map[string]MatchingHandler
 			}{
 				{"Simple.matching.pattern", map[string]MatchingHandler{
-					"Simple.matching.pattern;k1": trueHandler}},
+					"Simple.matching.pattern;k1": trueHandler,
+				}},
 				{"Simple.matching.pattern.*", map[string]MatchingHandler{
 					"Simple.matching.pattern.*;k1": trueHandler,
-					"Simple.matching.pattern.*;k2": falseHandler}},
+					"Simple.matching.pattern.*;k2": falseHandler,
+				}},
 			}
 			for _, testCase := range testCases {
 				matchedPatterns := prefixTree.MatchWithValue(testCase.Metric)

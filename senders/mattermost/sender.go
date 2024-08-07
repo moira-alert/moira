@@ -5,33 +5,45 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
+	"github.com/moira-alert/moira/senders/msgformat"
+
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/senders/emoji_provider"
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mitchellh/mapstructure"
 )
 
-// Structure that represents the Mattermost configuration in the YAML file
+// Structure that represents the Mattermost configuration in the YAML file.
 type config struct {
-	Url         string `mapstructure:"url"`
-	InsecureTLS bool   `mapstructure:"insecure_tls"`
-	APIToken    string `mapstructure:"api_token"`
-	FrontURI    string `mapstructure:"front_uri"`
+	Url          string            `mapstructure:"url"`
+	InsecureTLS  bool              `mapstructure:"insecure_tls"`
+	APIToken     string            `mapstructure:"api_token"`
+	FrontURI     string            `mapstructure:"front_uri"`
+	UseEmoji     bool              `mapstructure:"use_emoji"`
+	DefaultEmoji string            `mapstructure:"default_emoji"`
+	EmojiMap     map[string]string `mapstructure:"emoji_map"`
 }
 
 // Sender posts messages to Mattermost chat.
 // It implements moira.Sender.
 // You must call Init method before SendEvents method.
 type Sender struct {
-	frontURI string
-	logger   moira.Logger
-	location *time.Location
-	client   Client
+	logger    moira.Logger
+	client    Client
+	formatter msgformat.MessageFormatter
 }
+
+const (
+	messageMaxCharacters = 4_000
+)
+
+var (
+	codeBlockStart = "```"
+	codeBlockEnd   = "```"
+)
 
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
@@ -44,11 +56,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.Url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
+
 	client := model.NewAPIv4Client(cfg.Url)
 
-	if err != nil {
-		return fmt.Errorf("can not parse insecure_tls: %v", err)
-	}
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -56,6 +66,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			},
 		},
 	}
+
 	sender.client = client
 
 	if cfg.APIToken == "" {
@@ -66,11 +77,51 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if cfg.FrontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
-	sender.frontURI = cfg.FrontURI
-	sender.location = location
+
+	emojiProvider, err := emoji_provider.NewEmojiProvider(cfg.DefaultEmoji, cfg.EmojiMap)
+	if err != nil {
+		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
+	}
 	sender.logger = logger
+	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+		emojiProvider,
+		cfg.UseEmoji,
+		cfg.FrontURI,
+		location,
+		uriFormatter,
+		descriptionFormatter,
+		boldFormatter,
+		eventStringFormatter,
+		codeBlockStart,
+		codeBlockEnd)
 
 	return nil
+}
+
+func uriFormatter(triggerURI, triggerName string) string {
+	return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
+}
+
+func descriptionFormatter(trigger moira.TriggerData) string {
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		desc += "\n"
+	}
+	return desc
+}
+
+func boldFormatter(str string) string {
+	return fmt.Sprintf("**%s**", str)
+}
+
+func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
+	return fmt.Sprintf(
+		"%s: %s = %s (%s to %s)",
+		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
+		event.Metric,
+		event.GetMetricsValues(moira.DefaultNotificationSettings),
+		event.OldState,
+		event.State)
 }
 
 // SendEvents implements moira.Sender interface.
@@ -96,105 +147,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
-	const messageMaxCharacters = 4_000
-
-	var message strings.Builder
-
-	title := sender.buildTitle(events, trigger, throttled)
-	titleLen := len([]rune(title))
-
-	desc := sender.buildDescription(trigger)
-	descLen := len([]rune(desc))
-
-	eventsString := sender.buildEventsString(events, -1, throttled)
-	eventsStringLen := len([]rune(eventsString))
-
-	charsLeftAfterTitle := messageMaxCharacters - titleLen
-
-	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
-
-	if descLen != descNewLen {
-		desc = desc[:descNewLen] + "...\n"
-	}
-	if eventsNewLen != eventsStringLen {
-		eventsString = sender.buildEventsString(events, eventsNewLen, throttled)
-	}
-
-	message.WriteString(title)
-	message.WriteString(desc)
-	message.WriteString(eventsString)
-	return message.String()
-}
-
-func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
-	desc := trigger.Desc
-	if trigger.Desc != "" {
-		desc += "\n"
-	}
-	return desc
-}
-
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
-	state := events.GetCurrentState(throttled)
-	title := fmt.Sprintf("**%s**", state)
-	triggerURI := trigger.GetTriggerURI(sender.frontURI)
-	if triggerURI != "" {
-		title += fmt.Sprintf(" [%s](%s)", trigger.Name, triggerURI)
-	} else if trigger.Name != "" {
-		title += " " + trigger.Name
-	}
-
-	tags := trigger.GetTags()
-	if tags != "" {
-		title += " " + tags
-	}
-
-	title += "\n"
-	return title
-}
-
-// buildEventsString builds the string from moira events and limits it to charsForEvents.
-// if n is negative buildEventsString does not limit the events string
-func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
-	charsForThrottleMsg := 0
-	throttleMsg := "\nPlease, *fix your system or tune this trigger* to generate less events."
-	if throttled {
-		charsForThrottleMsg = len([]rune(throttleMsg))
-	}
-	charsLeftForEvents := charsForEvents - charsForThrottleMsg
-
-	var eventsString = "```"
-	var tailString string
-
-	eventsLenLimitReached := false
-	eventsPrinted := 0
-	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
-		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
-			line += fmt.Sprintf(". %s", msg)
-		}
-
-		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len([]rune("```")) + len([]rune(tailString))
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
-			eventsLenLimitReached = true
-			break
-		}
-
-		eventsString += line
-		eventsPrinted++
-	}
-	eventsString += "```"
-
-	if eventsLenLimitReached {
-		eventsString += tailString
-	}
-
-	if throttled {
-		eventsString += throttleMsg
-	}
-
-	return eventsString
+	return sender.formatter.Format(msgformat.MessageFormatterParams{
+		Events:          events,
+		Trigger:         trigger,
+		MessageMaxChars: messageMaxCharacters,
+		Throttled:       throttled,
+	})
 }
 
 func (sender *Sender) sendMessage(ctx context.Context, message string, contact string, triggerID string) (*model.Post, error) {
@@ -205,7 +163,7 @@ func (sender *Sender) sendMessage(ctx context.Context, message string, contact s
 
 	sentPost, _, err := sender.client.CreatePost(ctx, &post)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+		return nil, fmt.Errorf("failed to send %s event message to Mattermost [%s]: %w", triggerID, contact, err)
 	}
 
 	return sentPost, nil

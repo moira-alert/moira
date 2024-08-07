@@ -6,7 +6,7 @@ import (
 
 type AloneMetrics map[string]metricSource.MetricData
 
-// NewAloneMetricsWithCapacity is a constructor function for AloneMetrics
+// NewAloneMetricsWithCapacity is a constructor function for AloneMetrics.
 func NewAloneMetricsWithCapacity(capacity int) AloneMetrics {
 	return make(map[string]metricSource.MetricData, capacity)
 }
@@ -19,7 +19,7 @@ func NewAloneMetricsWithCapacity(capacity int) AloneMetrics {
 //		"t3": "metric.name.2",
 //	}
 //
-// and current alone metrics are
+// and current alone metrics are.
 //
 //	{
 //		"t2": metricSource.MetricData{Name: "metric.name.1"}
@@ -42,12 +42,18 @@ func (m AloneMetrics) Populate(lastCheckMetricsToTargetRelation map[string]strin
 		break
 	}
 
-	for targetName := range declaredAloneMetrics {
+	for targetName, isAlone := range declaredAloneMetrics {
+		// We don't need to populate metrics from not alone targets
+		if !isAlone {
+			continue
+		}
+
 		metricName, existInLastCheck := lastCheckMetricsToTargetRelation[targetName]
 		metric, existInCurrentAloneMetrics := m[targetName]
 		if !existInCurrentAloneMetrics && !existInLastCheck {
 			return AloneMetrics{}, NewErrEmptyAloneMetricsTarget(targetName)
 		}
+
 		if !existInCurrentAloneMetrics {
 			step := defaultStep
 			if len(m) > 0 && firstMetric.StepTime != 0 {
@@ -55,6 +61,7 @@ func (m AloneMetrics) Populate(lastCheckMetricsToTargetRelation map[string]strin
 			}
 			metric = *metricSource.MakeEmptyMetricData(metricName, step, from, to)
 		}
+
 		result[targetName] = metric
 	}
 

@@ -6,7 +6,7 @@ import (
 
 // ReadImageStoreConfig reads the image store config for a sender
 // from its settings and confirms whether that image store
-// is configured
+// is configured.
 func ReadImageStoreConfig(senderSettings interface{}, imageStores map[string]moira.ImageStore, logger moira.Logger) (string, moira.ImageStore, bool) {
 	settings, ok := senderSettings.(map[string]interface{})
 	if !ok {

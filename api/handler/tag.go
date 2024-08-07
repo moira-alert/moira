@@ -7,14 +7,17 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
+	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 )
 
 func tag(router chi.Router) {
+	router.Post("/", createTags)
 	router.Get("/", getAllTags)
 	router.Get("/stats", getAllTagsAndSubscriptions)
 	router.Route("/{tag}", func(router chi.Router) {
 		router.Use(middleware.TagContext)
+		router.Use(middleware.AdminOnlyMiddleware())
 		router.Delete("/", removeTag)
 	})
 }
@@ -39,6 +42,31 @@ func getAllTags(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Render(writer, request, tagData); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Create new tags
+//	@id			create-tags
+//	@tags		tag
+//	@accept		json
+//	@produce	json
+//	@param		tags	body	dto.TagsData	true	"Tags data"
+//	@success	200		"Create tags successfully"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/tag [post]
+func createTags(writer http.ResponseWriter, request *http.Request) {
+	tags := dto.TagsData{}
+	if err := render.Bind(request, &tags); err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint:errcheck
+		return
+	}
+
+	if err := controller.CreateTags(database, &tags); err != nil {
+		render.Render(writer, request, err) //nolint
 	}
 }
 

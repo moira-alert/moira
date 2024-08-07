@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Config is representation of self state worker settings like moira admins contacts and threshold values for checked services
+// Config is representation of self state worker settings like moira admins contacts and threshold values for checked services.
 type Config struct {
 	Enabled                        bool
 	RedisDisconnectDelaySeconds    int64

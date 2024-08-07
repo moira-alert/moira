@@ -44,6 +44,7 @@ func TestAloneMetrics_Populate(t *testing.T) {
 			So(populated["t2"].StepTime, ShouldResemble, int64(60))
 			So(populated["t2"].Values, ShouldHaveLength, 60)
 		})
+
 		Convey("Missing one metric and no other metrics provided. Use default values", func() {
 			m := AloneMetrics{}
 			lastCheckMetricsToTargetRelation := map[string]string{
@@ -54,6 +55,7 @@ func TestAloneMetrics_Populate(t *testing.T) {
 			}
 			const from = 0
 			const to = 3600
+
 			populated, err := m.Populate(lastCheckMetricsToTargetRelation, declaredAloneMetrics, from, to)
 			So(err, ShouldBeNil)
 			// We assume alone metrics to be like this
@@ -68,6 +70,7 @@ func TestAloneMetrics_Populate(t *testing.T) {
 			So(populated["t1"].StepTime, ShouldResemble, int64(60))
 			So(populated["t1"].Values, ShouldHaveLength, 60)
 		})
+
 		Convey("One declared alone metrics target do not have metrics and metrics in last check", func() {
 			m := AloneMetrics{}
 			lastCheckMetricsToTargetRelation := map[string]string{}
@@ -76,9 +79,33 @@ func TestAloneMetrics_Populate(t *testing.T) {
 			}
 			const from = 0
 			const to = 3600
+
 			populated, err := m.Populate(lastCheckMetricsToTargetRelation, declaredAloneMetrics, from, to)
 			So(err, ShouldResemble, ErrEmptyAloneMetricsTarget{targetName: "t1"})
 			So(populated, ShouldResemble, AloneMetrics{})
+		})
+
+		Convey("Checking that we're not trying to populate metrics from not alone targets that are in declaredAloneMetrics", func() {
+			m := AloneMetrics{}
+			lastCheckMetricsToTargetRelation := map[string]string{
+				"t2": "metric.test.2",
+			}
+			declaredAloneMetrics := map[string]bool{
+				"t1": false,
+				"t2": true,
+				"t3": false,
+			}
+			const from = 0
+			const to = 3600
+
+			populated, err := m.Populate(lastCheckMetricsToTargetRelation, declaredAloneMetrics, from, to)
+			So(err, ShouldBeNil)
+			So(populated, ShouldHaveLength, 1)
+			So(populated, ShouldContainKey, "t2")
+			So(populated["t2"].StartTime, ShouldResemble, int64(0))
+			So(populated["t2"].StopTime, ShouldResemble, int64(3600))
+			So(populated["t2"].StepTime, ShouldResemble, int64(60))
+			So(populated["t2"].Values, ShouldHaveLength, 60)
 		})
 	})
 }

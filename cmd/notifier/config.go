@@ -17,10 +17,10 @@ type config struct {
 	Logger              cmd.LoggerConfig              `yaml:"log"`
 	Notifier            notifierConfig                `yaml:"notifier"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
-	Remote              cmd.RemoteConfig              `yaml:"remote"`
-	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
+	Remotes             cmd.RemotesConfig             `yaml:",inline"`
 	ImageStores         cmd.ImageStoreConfig          `yaml:"image_store"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
+	Notification        cmd.NotificationConfig        `yaml:"notification"`
 }
 
 type entityLogConfig struct {
@@ -38,6 +38,8 @@ type notifierConfig struct {
 	SenderTimeout string `yaml:"sender_timeout"`
 	// Hard timeout to stop retrying to send notification after multiple failed attempts
 	ResendingTimeout string `yaml:"resending_timeout"`
+	// Delay before performing one more send attempt
+	ReschedulingDelay string `yaml:"rescheduling_delay"`
 	// Senders configuration section. See https://moira.readthedocs.io/en/latest/installation/configuration.html for more explanation
 	Senders []map[string]interface{} `yaml:"senders"`
 	// Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
@@ -93,9 +95,17 @@ func getDefault() config {
 			NotificationHistoryTTL:        "48h",
 			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
 		},
+		Notification: cmd.NotificationConfig{
+			DelayedTime:               "50s",
+			TransactionTimeout:        "100ms",
+			TransactionMaxRetries:     10,
+			TransactionHeuristicLimit: 10000,
+			ResaveTime:                "30s",
+		},
 		Notifier: notifierConfig{
-			SenderTimeout:    "10s",
-			ResendingTimeout: "1:00",
+			SenderTimeout:     "10s",
+			ResendingTimeout:  "1:00",
+			ReschedulingDelay: "60s",
 			SelfState: selfStateConfig{
 				Enabled:                 false,
 				RedisDisconnectDelay:    "30s",
@@ -119,16 +129,7 @@ func getDefault() config {
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
-		Remote: cmd.RemoteConfig{
-			Timeout:    "60s",
-			MetricsTTL: "24h",
-		},
-		Prometheus: cmd.PrometheusConfig{
-			Timeout:      "60s",
-			MetricsTTL:   "7d",
-			Retries:      1,
-			RetryTimeout: "10s",
-		},
+		Remotes:     cmd.RemotesConfig{},
 		ImageStores: cmd.ImageStoreConfig{},
 	}
 }
@@ -193,6 +194,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		SelfStateContacts:             config.SelfState.Contacts,
 		SendingTimeout:                to.Duration(config.SenderTimeout),
 		ResendingTimeout:              to.Duration(config.ResendingTimeout),
+		ReschedulingDelay:             to.Duration(config.ReschedulingDelay),
 		Senders:                       config.Senders,
 		FrontURL:                      config.FrontURI,
 		Location:                      location,

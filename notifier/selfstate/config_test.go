@@ -44,7 +44,8 @@ func TestConfigCheck(testing *testing.T) {
 				{
 					"type":  "admin-mail",
 					"value": "",
-				}}
+				},
+			}
 			actual := config.checkConfig(make(map[string]bool))
 			So(actual, ShouldBeNil)
 		})

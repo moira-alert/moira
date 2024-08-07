@@ -11,7 +11,7 @@ import (
 
 const triggersSearchResultsExpire = time.Second * 1800
 
-// SaveTriggersSearchResults is a function that takes an ID of pager and saves it to redis
+// SaveTriggersSearchResults is a function that takes an ID of pager and saves it to redis.
 func (connector *DbConnector) SaveTriggersSearchResults(searchResultsID string, searchResults []*moira.SearchResult) error {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
@@ -40,7 +40,7 @@ func (connector *DbConnector) SaveTriggersSearchResults(searchResultsID string, 
 	return nil
 }
 
-// GetTriggersSearchResults is a function that receives a saved pager from redis
+// GetTriggersSearchResults is a function that receives a saved pager from redis.
 func (connector *DbConnector) GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*moira.SearchResult, int64, error) {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
@@ -68,14 +68,13 @@ func (connector *DbConnector) GetTriggersSearchResults(searchResultsID string, p
 	return reply.SearchResults(rangeResult, lenResult)
 }
 
-// IsTriggersSearchResultsExist is a function that checks if there exists pager for triggers search by it's ID
+// IsTriggersSearchResultsExist is a function that checks if there exists pager for triggers search by it's ID.
 func (connector *DbConnector) IsTriggersSearchResultsExist(pagerID string) (bool, error) {
 	ctx := connector.context
 	c := *connector.client
 
 	pagerIDKey := triggersSearchResultsKey(pagerID)
 	response, err := c.Exists(ctx, pagerIDKey).Result()
-
 	if err != nil {
 		return false, fmt.Errorf("failed to check if pager exists: %w", err)
 	}
@@ -83,14 +82,13 @@ func (connector *DbConnector) IsTriggersSearchResultsExist(pagerID string) (bool
 	return response == 1, nil
 }
 
-// DeleteTriggersSearchResults is a function that checks if there exists pager for triggers search by it's ID
+// DeleteTriggersSearchResults is a function that checks if there exists pager for triggers search by it's ID.
 func (connector *DbConnector) DeleteTriggersSearchResults(pagerID string) error {
 	ctx := connector.context
 	c := *connector.client
 
 	pagerIDKey := triggersSearchResultsKey(pagerID)
 	err := c.Del(ctx, pagerIDKey).Err()
-
 	if err != nil {
 		return fmt.Errorf("failed to check if pager exists: %w", err)
 	}

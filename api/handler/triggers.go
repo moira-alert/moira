@@ -27,8 +27,10 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 	return func(router chi.Router) {
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
-		router.Get("/", getAllTriggers)
-		router.Get("/unused", getUnusedTriggers)
+
+		router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllTriggers)
+		router.With(middleware.AdminOnlyMiddleware()).Get("/unused", getUnusedTriggers)
+
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
@@ -151,7 +153,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorResponse) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
+		switch err.(type) { // nolint:errorlint
 		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))
 		case expression.ErrInvalidExpression:
@@ -177,21 +179,16 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 }
 
 // getMetricTTLByTrigger gets metric ttl duration time from request context for local or remote trigger.
-func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Duration {
-	var ttl time.Duration
+func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) (time.Duration, error) {
+	metricTTLs := middleware.GetMetricTTL(request)
+	key := trigger.ClusterKey()
 
-	switch trigger.TriggerSource {
-	case moira.GraphiteLocal:
-		ttl = middleware.GetLocalMetricTTL(request)
-
-	case moira.GraphiteRemote:
-		ttl = middleware.GetRemoteMetricTTL(request)
-
-	case moira.PrometheusRemote:
-		ttl = middleware.GetPrometheusMetricTTL(request)
+	ttl, ok := metricTTLs[key]
+	if !ok {
+		return 0, fmt.Errorf("can't get ttl: unknown cluster %s", key.String())
 	}
 
-	return ttl
+	return ttl, nil
 }
 
 // nolint: gofmt,goimports
@@ -211,7 +208,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	response := dto.TriggerCheckResponse{}
 
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
+		switch err.(type) { // nolint:errorlint
 		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			// TODO write comment, why errors are ignored, it is not obvious.
 			// In getTriggerFromRequest these types of errors lead to 400.
@@ -221,12 +218,15 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	ttl := getMetricTTLByTrigger(request, trigger)
+	ttl, err := getMetricTTLByTrigger(request, trigger)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
 
 	if len(trigger.Targets) > 0 {
 		var err error
 		response.Targets, err = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
-
 		if err != nil {
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
@@ -335,9 +335,9 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 	return false
 }
 
-// Checks if the createdBy field has been set:
-// if the field has been set, searches for triggers with a specific author createdBy
-// if the field has not been set, searches for triggers with any author
+// Checks if the createdBy field has been set.
+// If the field has been set, searches for triggers with a specific author createdBy.
+// If the field has not been set, searches for triggers with any author.
 func getTriggerCreatedBy(request *http.Request) (string, bool) {
 	if createdBy, ok := request.Form["createdBy"]; ok {
 		return createdBy[0], true

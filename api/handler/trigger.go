@@ -58,7 +58,6 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	var problems []dto.TreeOfProblems
 	if needValidate(request) {
 		problems, err = validateTargets(request, trigger)
-
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
@@ -95,9 +94,12 @@ func needValidate(request *http.Request) bool {
 // validateTargets checks targets of trigger.
 // Returns tree of problems if there is any invalid child, else returns nil.
 func validateTargets(request *http.Request, trigger *dto.Trigger) ([]dto.TreeOfProblems, *api.ErrorResponse) {
-	ttl := getMetricTTLByTrigger(request, trigger)
-	treesOfProblems, err := dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
+	ttl, err := getMetricTTLByTrigger(request, trigger)
+	if err != nil {
+		return nil, api.ErrorInvalidRequest(err)
+	}
 
+	treesOfProblems, err := dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
 	if err != nil {
 		return nil, api.ErrorInvalidRequest(err)
 	}

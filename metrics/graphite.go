@@ -70,7 +70,7 @@ func initPrefix(prefix string) (string, error) {
 		return prefix, err
 	}
 	short := strings.Split(hostname, ".")[0]
-	return strings.Replace(prefix, hostnameTmpl, short, -1), nil
+	return strings.ReplaceAll(prefix, hostnameTmpl, short), nil
 }
 
 type graphiteCounter struct {

@@ -27,6 +27,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run tests
-        run: make test
+        run: make ci-test
+
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)

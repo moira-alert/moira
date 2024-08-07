@@ -12,7 +12,7 @@ import (
 
 func event(router chi.Router) {
 	router.With(middleware.TriggerContext, middleware.Paginate(0, 100)).Get("/{triggerId}", getEventsList)
-	router.Delete("/all", deleteAllEvents)
+	router.With(middleware.AdminOnlyMiddleware()).Delete("/all", deleteAllEvents)
 }
 
 // nolint: gofmt,goimports

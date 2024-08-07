@@ -1,4 +1,4 @@
-package middleware_test
+package middleware
 
 import (
 	"io"
@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/moira-alert/moira/api/middleware"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -26,7 +25,7 @@ func TestPaginateMiddleware(t *testing.T) {
 				testRequest := httptest.NewRequest(http.MethodGet, "/test?"+param, nil)
 				handler := func(w http.ResponseWriter, r *http.Request) {}
 
-				middlewareFunc := middleware.Paginate(defaultPage, defaultSize)
+				middlewareFunc := Paginate(defaultPage, defaultSize)
 				wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 				wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -41,7 +40,7 @@ func TestPaginateMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?p=0%&size=100", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := middleware.Paginate(defaultPage, defaultSize)
+			middlewareFunc := Paginate(defaultPage, defaultSize)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -69,7 +68,7 @@ func TestPagerMiddleware(t *testing.T) {
 				testRequest := httptest.NewRequest(http.MethodGet, "/test?"+param, nil)
 				handler := func(w http.ResponseWriter, r *http.Request) {}
 
-				middlewareFunc := middleware.Pager(defaultCreatePager, defaultPagerID)
+				middlewareFunc := Pager(defaultCreatePager, defaultPagerID)
 				wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 				wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -84,7 +83,7 @@ func TestPagerMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?pagerID=test%&createPager=true", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := middleware.Pager(defaultCreatePager, defaultPagerID)
+			middlewareFunc := Pager(defaultCreatePager, defaultPagerID)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -108,7 +107,7 @@ func TestPopulateMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?populated=true", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := middleware.Populate(defaultPopulated)
+			middlewareFunc := Populate(defaultPopulated)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -122,7 +121,7 @@ func TestPopulateMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?populated%=true", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := middleware.Populate(defaultPopulated)
+			middlewareFunc := Populate(defaultPopulated)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -150,7 +149,7 @@ func TestDateRangeMiddleware(t *testing.T) {
 				testRequest := httptest.NewRequest(http.MethodGet, "/test?"+param, nil)
 				handler := func(w http.ResponseWriter, r *http.Request) {}
 
-				middlewareFunc := middleware.DateRange(defaultFrom, defaultTo)
+				middlewareFunc := DateRange(defaultFrom, defaultTo)
 				wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 				wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -165,7 +164,7 @@ func TestDateRangeMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?from=-2hours%&to=now", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := middleware.DateRange(defaultFrom, defaultTo)
+			middlewareFunc := DateRange(defaultFrom, defaultTo)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -189,7 +188,7 @@ func TestTargetNameMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?target=test", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := middleware.TargetName(defaultTargetName)
+			middlewareFunc := TargetName(defaultTargetName)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -203,7 +202,7 @@ func TestTargetNameMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?target%=test", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := middleware.TargetName(defaultTargetName)
+			middlewareFunc := TargetName(defaultTargetName)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)

@@ -1,9 +1,7 @@
-package mattermost_test
+package mattermost
 
 import (
 	"testing"
-
-	"github.com/moira-alert/moira/senders/mattermost"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -12,7 +10,7 @@ import (
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
-		sender := &mattermost.Sender{}
+		sender := &Sender{}
 
 		Convey("No url", func() {
 			senderSettings := map[string]interface{}{

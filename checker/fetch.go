@@ -18,6 +18,7 @@ func (triggerChecker *TriggerChecker) fetchTriggerMetrics() (map[string][]metric
 		if hasEmptyTargets, emptyTargets := conversion.HasEmptyTargets(triggerMetricsData); hasEmptyTargets {
 			return nil, ErrTriggerHasEmptyTargets{targets: emptyTargets}
 		}
+
 		if conversion.HasOnlyWildcards(triggerMetricsData) {
 			return triggerMetricsData, ErrTriggerHasOnlyWildcards{}
 		}

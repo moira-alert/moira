@@ -178,6 +178,7 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 		})
 	})
 }
+
 func TestNotificationEvent_getSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
 		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}}
@@ -296,6 +297,53 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 	})
 }
 
+func TestScheduledNotification_GetState(t *testing.T) {
+	Convey("Test get state of scheduled notifications", t, func() {
+		notification := ScheduledNotification{
+			Event: NotificationEvent{
+				Metric: "test",
+			},
+		}
+
+		Convey("Get Removed state with nil check data", func() {
+			state := notification.GetState(nil)
+			So(state, ShouldEqual, RemovedNotification)
+		})
+
+		Convey("Get Resaved state with metric on maintenance", func() {
+			state := notification.GetState(&CheckData{
+				Metrics: map[string]MetricState{
+					"test": {
+						Maintenance: time.Now().Add(time.Hour).Unix(),
+					},
+				},
+			})
+			So(state, ShouldEqual, ResavedNotification)
+		})
+
+		Convey("Get Resaved state with trigger on maintenance", func() {
+			state := notification.GetState(&CheckData{
+				Maintenance: time.Now().Add(time.Hour).Unix(),
+			})
+			So(state, ShouldEqual, ResavedNotification)
+		})
+
+		Convey("Get Valid state with trigger without metrics", func() {
+			state := notification.GetState(&CheckData{})
+			So(state, ShouldEqual, ValidNotification)
+		})
+
+		Convey("Get Valid state with trigger with test metric", func() {
+			state := notification.GetState(&CheckData{
+				Metrics: map[string]MetricState{
+					"test": {},
+				},
+			})
+			So(state, ShouldEqual, ValidNotification)
+		})
+	})
+}
+
 func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 	Convey("Test no metric", t, func() {
 		checkData := CheckData{
@@ -317,6 +365,76 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 			},
 		}
 		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, metricState)
+	})
+}
+
+func TestCheckData_RemoveDeadMetrics(t *testing.T) {
+	Convey("Test RemoveDeadMetrics", t, func() {
+		Convey("Test with nil map of metrics", func() {
+			checkData := CheckData{
+				Metrics: nil,
+			}
+			checkData.RemoveDeadMetrics()
+
+			var expected map[string]MetricState
+			So(checkData.Metrics, ShouldResemble, expected)
+		})
+
+		Convey("Test with empty map of metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{})
+		})
+
+		Convey("Test with all alive metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {},
+					"test2": {},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{
+				"test1": {},
+				"test2": {},
+			})
+		})
+
+		Convey("Test with all dead metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						DeletedButKept: true,
+					},
+					"test2": {
+						DeletedButKept: true,
+					},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{})
+		})
+
+		Convey("Test with alive and dead metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						DeletedButKept: true,
+					},
+					"test2": {},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{
+				"test2": {},
+			})
+		})
 	})
 }
 
@@ -370,6 +488,86 @@ func TestTrigger_IsSimple(t *testing.T) {
 		for _, trigger := range triggers {
 			So(trigger.IsSimple(), ShouldBeFalse)
 		}
+	})
+}
+
+func TestCheckData_IsTriggerOnMaintenance(t *testing.T) {
+	Convey("IsTriggerOnMaintenance manipulations", t, func() {
+		checkData := &CheckData{
+			Maintenance: time.Now().Add(time.Hour).Unix(),
+		}
+
+		Convey("Test with trigger check Maintenance more than time now", func() {
+			actual := checkData.IsTriggerOnMaintenance()
+			So(actual, ShouldBeTrue)
+		})
+
+		Convey("Test with trigger check Maintenance less than time now", func() {
+			checkData.Maintenance = time.Now().Add(-time.Hour).Unix()
+			defer func() {
+				checkData.Maintenance = time.Now().Add(time.Hour).Unix()
+			}()
+
+			actual := checkData.IsTriggerOnMaintenance()
+			So(actual, ShouldBeFalse)
+		})
+	})
+}
+
+func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
+	Convey("isMetricOnMaintenance manipulations", t, func() {
+		checkData := &CheckData{
+			Metrics: map[string]MetricState{
+				"test1": {
+					Maintenance: time.Now().Add(time.Hour).Unix(),
+				},
+				"test2": {},
+			},
+		}
+
+		Convey("Test with a metric that is not in the trigger", func() {
+			actual := checkData.IsMetricOnMaintenance("")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with metrics that are in the trigger but not on maintenance", func() {
+			actual := checkData.IsMetricOnMaintenance("test2")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with metrics that are in the trigger and on maintenance", func() {
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeTrue)
+		})
+
+		Convey("Test with the metric that is in the trigger, but the time now is more than Maintenance", func() {
+			metric := checkData.Metrics["test1"]
+			metric.Maintenance = time.Now().Add(-time.Hour).Unix()
+			checkData.Metrics["test1"] = metric
+			defer func() {
+				metric := checkData.Metrics["test1"]
+				metric.Maintenance = time.Now().Add(time.Hour).Unix()
+				checkData.Metrics["test1"] = metric
+			}()
+
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with trigger without metrics", func() {
+			checkData.Metrics = make(map[string]MetricState)
+			defer func() {
+				checkData.Metrics = map[string]MetricState{
+					"test1": {
+						Maintenance: time.Now().Add(time.Hour).Unix(),
+					},
+					"test2": {},
+				}
+			}()
+
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeFalse)
+		})
 	})
 }
 
@@ -562,6 +760,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 		}
 	})
 }
+
 func TestBuildTriggerURL(t *testing.T) {
 	Convey("Sender has no moira uri", t, func() {
 		url := TriggerData{ID: "SomeID"}.GetTriggerURI("")
@@ -713,7 +912,7 @@ func testStopMaintenance(message string, actualInfo MaintenanceInfo, user string
 
 func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenance int64, user string, expectedInfo MaintenanceInfo) {
 	Convey(conveyMessage, func() {
-		var lastCheckTest = CheckData{
+		lastCheckTest := CheckData{
 			Maintenance: 1000,
 		}
 		lastCheckTest.MaintenanceInfo = actualInfo
@@ -722,5 +921,60 @@ func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenan
 
 		So(lastCheckTest.MaintenanceInfo, ShouldResemble, expectedInfo)
 		So(lastCheckTest.Maintenance, ShouldEqual, maintenance)
+	})
+}
+
+func TestScheduledNotificationLess(t *testing.T) {
+	Convey("Test Scheduled notification Less function", t, func() {
+		notification := &ScheduledNotification{
+			Timestamp: 5,
+		}
+
+		Convey("Test Less with nil", func() {
+			actual, err := notification.Less(nil)
+			So(err, ShouldResemble, fmt.Errorf("cannot to compare ScheduledNotification with different type"))
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test Less with less notification :)", func() {
+			actual, err := notification.Less(&ScheduledNotification{Timestamp: 1})
+			So(err, ShouldBeNil)
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test Less with greater notification", func() {
+			actual, err := notification.Less(&ScheduledNotification{Timestamp: 10})
+			So(err, ShouldBeNil)
+			So(actual, ShouldBeTrue)
+		})
+	})
+}
+
+func TestScheduledNotificationIsDelayed(t *testing.T) {
+	Convey("Test Scheduled notification IsDelayed function", t, func() {
+		notification := &ScheduledNotification{
+			Timestamp: 5,
+		}
+
+		var delayedTime int64 = 2
+
+		Convey("Test notification with empty created at field", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeFalse)
+		})
+
+		notification.CreatedAt = 1
+
+		Convey("Test notification which is to be defined as delayed", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeTrue)
+		})
+
+		notification.CreatedAt = 4
+
+		Convey("Test notification which is to be defined as not delayed", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeFalse)
+		})
 	})
 }

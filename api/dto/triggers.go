@@ -17,9 +17,12 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-var targetNameRegex = regexp.MustCompile("t(\\d+)")
+var targetNameRegex = regexp.MustCompile("^t\\d+$")
 
-// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
+// ErrBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
+var ErrBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
+
+// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
 
 type TriggersList struct {
@@ -39,7 +42,7 @@ type Trigger struct {
 	Throttling int64 `json:"throttling" example:"0" format:"int64"`
 }
 
-// TriggerModel is moira.Trigger api representation
+// TriggerModel is moira.Trigger api representation.
 type TriggerModel struct {
 	// Trigger unique ID
 	ID string `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
@@ -71,8 +74,10 @@ type TriggerModel struct {
 	//
 	// Deprecated: Use TriggerSource field instead
 	IsRemote bool `json:"is_remote" example:"false"`
-	// Shows the source from where the metrics are fetched
+	// Shows the type of source from where the metrics are fetched
 	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_local"`
+	// Shows the exact cluster from where the metrics are fetched
+	ClusterId moira.ClusterId `json:"cluster_id" example:"default"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics" example:"false"`
 	// A list of targets that have only alone metrics
@@ -87,7 +92,12 @@ type TriggerModel struct {
 	UpdatedBy string `json:"updated_by"`
 }
 
-// ToMoiraTrigger transforms TriggerModel to moira.Trigger
+// ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
+func (model *TriggerModel) ClusterKey() moira.ClusterKey {
+	return moira.MakeClusterKey(model.TriggerSource, model.ClusterId)
+}
+
+// ToMoiraTrigger transforms TriggerModel to moira.Trigger.
 func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 	return &moira.Trigger{
 		ID:             model.ID,
@@ -104,13 +114,14 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Expression:     &model.Expression,
 		Patterns:       model.Patterns,
 		TriggerSource:  model.TriggerSource,
+		ClusterId:      model.ClusterId,
 		MuteNewMetrics: model.MuteNewMetrics,
 		AloneMetrics:   model.AloneMetrics,
 		UpdatedBy:      model.UpdatedBy,
 	}
 }
 
-// CreateTriggerModel transforms moira.Trigger to TriggerModel
+// CreateTriggerModel transforms moira.Trigger to TriggerModel.
 func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 	return TriggerModel{
 		ID:             trigger.ID,
@@ -128,6 +139,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Patterns:       trigger.Patterns,
 		IsRemote:       trigger.TriggerSource == moira.GraphiteRemote,
 		TriggerSource:  trigger.TriggerSource,
+		ClusterId:      trigger.ClusterId,
 		MuteNewMetrics: trigger.MuteNewMetrics,
 		AloneMetrics:   trigger.AloneMetrics,
 		CreatedAt:      getDateTime(trigger.CreatedAt),
@@ -142,30 +154,41 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if len(trigger.Targets) == 0 {
 		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("targets is required")}
 	}
+
 	if len(trigger.Tags) == 0 {
 		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("tags is required")}
 	}
+
 	if trigger.Name == "" {
 		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("trigger name is required")}
 	}
+
 	if err := checkWarnErrorExpression(trigger); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
+
 	if len(trigger.Targets) <= 1 { // we should have empty alone metrics dictionary when there is only one target
 		trigger.AloneMetrics = map[string]bool{}
 	}
+
 	for targetName := range trigger.AloneMetrics {
 		if !targetNameRegex.MatchString(targetName) {
-			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")}
+			return api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName}
 		}
-		targetIndexStr := targetNameRegex.FindStringSubmatch(targetName)[1]
+
+		targetIndexStr := targetName[1:]
 		targetIndex, err := strconv.Atoi(targetIndexStr)
 		if err != nil {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be valid number: %w", err)}
 		}
+
 		if targetIndex < 0 || targetIndex > len(trigger.Targets) {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")}
 		}
+	}
+
+	if trigger.TTLState == nil {
+		trigger.TTLState = &moira.TTLStateNODATA
 	}
 
 	triggerExpression := expression.TriggerExpression{
@@ -178,13 +201,17 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 
 	trigger.TriggerSource = trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
+	trigger.ClusterId = trigger.ClusterId.FillInIfNotSet()
 
 	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
-	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.TriggerSource)
+	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.ClusterKey())
 	if err != nil {
 		return err
 	}
 
+	if trigger.TTL == 0 {
+		trigger.TTL = moira.DefaultTTL
+	}
 	if err := checkTTLSanity(trigger, metricsSource); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
@@ -193,11 +220,16 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if err != nil {
 		return err
 	}
+
 	// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
 	for _, pattern := range trigger.Patterns {
 		if pattern == asteriskPattern {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")}
 		}
+	}
+
+	if trigger.Schedule == nil {
+		trigger.Schedule = moira.NewDefaultScheduleData()
 	}
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
@@ -364,8 +396,8 @@ func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) er
 		return nil
 	}
 
-	templatingEvents := moira.NotificationEventsToTemplatingEvents(events)
-	description, err := templating.Populate(trigger.Name, *trigger.Desc, templatingEvents)
+	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(trigger.Name, events.ToTemplateEvents())
+	description, err := triggerDescriptionPopulater.Populate(*trigger.Desc)
 	if err != nil {
 		return fmt.Errorf("you have an error in your Go template: %v", err)
 	}

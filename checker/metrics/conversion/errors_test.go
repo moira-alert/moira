@@ -1,6 +1,7 @@
 package conversion
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -65,11 +66,13 @@ func TestErrUnexpectedAloneMetricBuilder(t *testing.T) {
 				builder.setDeclared(map[string]bool{"t1": true})
 				builder.addUnexpected("t1", map[string]metricsource.MetricData{"metric.test.1": {Name: "metric.test.1"}, "metric.test.unexpected": {Name: "metric.test.unexpected"}})
 				err := builder.build()
-				So(err.(ErrUnexpectedAloneMetric).declared, ShouldResemble, map[string]bool{"t1": true})
-				So(err.(ErrUnexpectedAloneMetric).unexpected, ShouldContainKey, "t1")
-				So(err.(ErrUnexpectedAloneMetric).unexpected["t1"], ShouldHaveLength, 2)
-				So(err.(ErrUnexpectedAloneMetric).unexpected["t1"], ShouldContain, "metric.test.1")
-				So(err.(ErrUnexpectedAloneMetric).unexpected["t1"], ShouldContain, "metric.test.unexpected")
+				var convertedErr ErrUnexpectedAloneMetric
+				errors.As(err, &convertedErr)
+				So(convertedErr.declared, ShouldResemble, map[string]bool{"t1": true})
+				So(convertedErr.unexpected, ShouldContainKey, "t1")
+				So(convertedErr.unexpected["t1"], ShouldHaveLength, 2)
+				So(convertedErr.unexpected["t1"], ShouldContain, "metric.test.1")
+				So(convertedErr.unexpected["t1"], ShouldContain, "metric.test.unexpected")
 			})
 			Convey("nil returned", func() {
 				err := builder.build()

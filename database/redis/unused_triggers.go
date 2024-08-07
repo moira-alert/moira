@@ -1,13 +1,14 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 )
 
-// MarkTriggersAsUnused adds unused trigger IDs to Redis set
+// MarkTriggersAsUnused adds unused trigger IDs to Redis set.
 func (connector *DbConnector) MarkTriggersAsUnused(triggerIDs ...string) error {
 	if len(triggerIDs) == 0 {
 		return nil
@@ -26,14 +27,14 @@ func (connector *DbConnector) MarkTriggersAsUnused(triggerIDs ...string) error {
 	return nil
 }
 
-// GetUnusedTriggerIDs returns all unused trigger IDs
+// GetUnusedTriggerIDs returns all unused trigger IDs.
 func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
 	ctx := connector.context
 	c := *connector.client
 
 	triggerIds, err := c.SMembers(ctx, unusedTriggersKey).Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]string, 0), nil
 		}
 		return nil, fmt.Errorf("failed to get all unused triggers: %s", err.Error())
@@ -41,7 +42,7 @@ func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
-// MarkTriggersAsUsed removes trigger IDs from Redis set
+// MarkTriggersAsUsed removes trigger IDs from Redis set.
 func (connector *DbConnector) MarkTriggersAsUsed(triggerIDs ...string) error {
 	if len(triggerIDs) == 0 {
 		return nil
@@ -60,10 +61,10 @@ func (connector *DbConnector) MarkTriggersAsUsed(triggerIDs ...string) error {
 	return nil
 }
 
-// refreshUnusedTriggers gets two triggers lists: newTriggers and oldTriggers
+// refreshUnusedTriggers gets two triggers lists: newTriggers and oldTriggers.
 // It filters triggers which are presented in oldTriggers but not in newTriggers.
 // For every trigger in that diff-list it checks whether this trigger has any subscription and mark it unused if not.
-// At the end, refreshUnusedTriggers mark all newTriggers as used
+// At the end, refreshUnusedTriggers mark all newTriggers as used.
 func (connector *DbConnector) refreshUnusedTriggers(newTriggers, oldTriggers []*moira.Trigger) error {
 	unusedTriggerIDs := make([]string, 0)
 	usedTriggerIDs := make([]string, 0)

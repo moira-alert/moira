@@ -10,37 +10,40 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// MetricsMatcher make buffer of metrics and save it
+// MetricsMatcher make buffer of metrics and save it.
 type MetricsMatcher struct {
-	logger        moira.Logger
-	metrics       *metrics.FilterMetrics
-	database      moira.Database
-	cacheStorage  *filter.Storage
-	cacheCapacity int
-	waitGroup     *sync.WaitGroup
-	closeRequest  chan struct{}
+	logger                 moira.Logger
+	metrics                *metrics.FilterMetrics
+	database               moira.Database
+	cacheStorage           *filter.Storage
+	cacheCapacity          int
+	waitGroup              *sync.WaitGroup
+	closeRequest           chan struct{}
+	batchForcedSaveTimeout time.Duration
 }
 
-// NewMetricsMatcher creates new MetricsMatcher
+// NewMetricsMatcher creates new MetricsMatcher.
 func NewMetricsMatcher(
 	metrics *metrics.FilterMetrics,
 	logger moira.Logger,
 	database moira.Database,
 	cacheStorage *filter.Storage,
 	cacheCapacity int,
+	batchForcedSaveTimeout time.Duration,
 ) *MetricsMatcher {
 	return &MetricsMatcher{
-		metrics:       metrics,
-		logger:        logger,
-		database:      database,
-		cacheStorage:  cacheStorage,
-		cacheCapacity: cacheCapacity,
-		waitGroup:     &sync.WaitGroup{},
-		closeRequest:  make(chan struct{}),
+		metrics:                metrics,
+		logger:                 logger,
+		database:               database,
+		cacheStorage:           cacheStorage,
+		cacheCapacity:          cacheCapacity,
+		waitGroup:              &sync.WaitGroup{},
+		closeRequest:           make(chan struct{}),
+		batchForcedSaveTimeout: batchForcedSaveTimeout,
 	}
 }
 
-// Start process matched metrics from channel and save it in cache storage
+// Start process matched metrics from channel and save it in cache storage.
 func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetric) {
 	matcher.waitGroup.Add(1)
 	go func() {
@@ -63,7 +66,7 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 
 	go func() {
 		defer close(batchedMetrics)
-		batchTimer := time.NewTimer(time.Second)
+		batchTimer := time.NewTimer(matcher.batchForcedSaveTimeout)
 		defer batchTimer.Stop()
 		for {
 			batch := make(map[string]*moira.MatchedMetric, matcher.cacheCapacity)
@@ -85,13 +88,13 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 			case <-batchTimer.C:
 				batchedMetrics <- batch
 			}
-			batchTimer.Reset(time.Second)
+			batchTimer.Reset(matcher.batchForcedSaveTimeout)
 		}
 	}()
 	return batchedMetrics
 }
 
-// Wait waits for metric matcher instance will stop
+// Wait waits for metric matcher instance will stop.
 func (matcher *MetricsMatcher) Wait() {
 	close(matcher.closeRequest)
 	matcher.waitGroup.Wait()

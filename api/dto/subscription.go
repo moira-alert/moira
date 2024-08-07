@@ -10,22 +10,21 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-// ErrSubscriptionContainsTeamAndUser used when user try to save subscription team and user attributes specified
-type ErrSubscriptionContainsTeamAndUser struct {
-}
+// ErrSubscriptionContainsTeamAndUser used when user try to save subscription team and user attributes specified.
+type ErrSubscriptionContainsTeamAndUser struct{}
 
-// Error is an error interface implementation method
+// Error is an error interface implementation method.
 func (ErrSubscriptionContainsTeamAndUser) Error() string {
 	return "cannot create subscription that contains contact and team attributes"
 }
 
-// ErrProvidedContactsForbidden used when user try to save subscription with another users contacts
+// ErrProvidedContactsForbidden used when user try to save subscription with another users contacts.
 type ErrProvidedContactsForbidden struct {
 	contactIds   []string
 	contactNames []string
 }
 
-// Error is implementation of golang error interface for ErrProvidedContactsForbidden struct
+// Error is implementation of golang error interface for ErrProvidedContactsForbidden struct.
 func (err ErrProvidedContactsForbidden) Error() string {
 	if len(err.contactNames) == 1 {
 		return fmt.Sprintf("user not permitted to use contact '%s'", err.contactNames[0])
@@ -71,9 +70,17 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 	database := middleware.GetDatabase(request)
 	userLogin := middleware.GetLogin(request)
 	teamID := middleware.GetTeamID(request)
+	auth := middleware.GetAuth(request)
+
 	if teamID == "" && subscription.TeamID != "" {
 		teamID = subscription.TeamID
 	}
+
+	// Only admins are allowed to create subscriptions for other users
+	if auth.IsAdmin(userLogin) && subscription.User != "" {
+		userLogin = subscription.User
+	}
+
 	if subscription.User != "" && teamID != "" {
 		return ErrSubscriptionContainsTeamAndUser{}
 	}
@@ -123,7 +130,7 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 }
 
 func normalizeTags(tags []string) []string {
-	var normalized = make([]string, 0)
+	normalized := make([]string, 0)
 	for _, subTag := range tags {
 		if subTag != "" {
 			normalized = append(normalized, subTag)

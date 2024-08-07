@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/victorops/api"
+	"go.uber.org/mock/gomock"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -31,7 +31,8 @@ func TestInit(t *testing.T) {
 			So(sender, ShouldResemble, Sender{
 				ImageStores: map[string]moira.ImageStore{
 					"s3": imageStore,
-				}})
+				},
+			})
 		})
 
 		Convey("Has settings", func() {

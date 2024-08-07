@@ -43,7 +43,7 @@ func generateMetrics(patternStorage *filter.PatternStorage, count int) *[]string
 			if !matched && rand.Float64() < 0.2+level {
 				part = RandStringBytes(len(part))
 			}
-			parts = append(parts, strings.Replace(part, "*", "XXXXXXXXX", -1))
+			parts = append(parts, strings.ReplaceAll(part, "*", "XXXXXXXXX"))
 			if len(node.Children) == 0 {
 				break
 			}

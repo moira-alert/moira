@@ -10,12 +10,17 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
+	"github.com/moira-alert/moira/api/middleware"
 )
 
 func notification(router chi.Router) {
 	router.Get("/", getNotification)
-	router.Delete("/", deleteNotification)
-	router.Delete("/all", deleteAllNotifications)
+
+	router.Route("/", func(r chi.Router) {
+		r.Use(middleware.AdminOnlyMiddleware())
+		r.Delete("/", deleteNotification)
+		r.Delete("/all", deleteAllNotifications)
+	})
 }
 
 // nolint: gofmt,goimports
@@ -68,6 +73,7 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 //	@produce	json
 //	@success	200	{object}	dto.NotificationDeleteResponse	"Notification have been deleted"
 //	@failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/notification [delete]
@@ -95,6 +101,16 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// nolint: gofmt,goimports
+//
+//	@summary	Delete all notifications
+//	@id			delete-all-notifications
+//	@tags		notification
+//	@produce	json
+//	@success	200	{object}	dto.NotificationsList			"Notification have been deleted"
+//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/notification [delete]
 func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllNotifications(database); errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint

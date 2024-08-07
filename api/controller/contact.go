@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"time"
 
@@ -14,7 +15,10 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// GetAllContacts gets all moira contacts
+// ErrNotAllowedContactType means that this type of contact is not allowed to be created.
+var ErrNotAllowedContactType = errors.New("cannot create contact with not allowed contact type")
+
+// GetAllContacts gets all moira contacts.
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
 	contacts, err := database.GetAllContacts()
 	if err != nil {
@@ -26,7 +30,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	return &contactsList, nil
 }
 
-// GetContactById gets notification contact by its id string
+// GetContactById gets notification contact by its id string.
 func GetContactById(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
 	contact, err := database.GetContact(contactID)
 	if err != nil {
@@ -35,6 +39,7 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 
 	contactToReturn := &dto.Contact{
 		ID:     contact.ID,
+		Name:   contact.Name,
 		User:   contact.User,
 		TeamID: contact.Team,
 		Type:   contact.Type,
@@ -44,14 +49,31 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 	return contactToReturn, nil
 }
 
-// CreateContact creates new notification contact for current user
-func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin, teamID string) *api.ErrorResponse {
+// CreateContact creates new notification contact for current user.
+func CreateContact(
+	dataBase moira.Database,
+	auth *api.Authorization,
+	contact *dto.Contact,
+	userLogin,
+	teamID string,
+) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified"))
 	}
+
+	if !isAllowedToUseContactType(auth, userLogin, contact.Type) {
+		return api.ErrorInvalidRequest(ErrNotAllowedContactType)
+	}
+
+	// Only admins are allowed to create contacts for other users
+	if !auth.IsAdmin(userLogin) || contact.User == "" {
+		contact.User = userLogin
+	}
+
 	contactData := moira.ContactData{
 		ID:    contact.ID,
-		User:  userLogin,
+		Name:  contact.Name,
+		User:  contact.User,
 		Team:  teamID,
 		Type:  contact.Type,
 		Value: contact.Value,
@@ -75,16 +97,26 @@ func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin, tea
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	contact.User = userLogin
+	contact.User = contactData.User
 	contact.ID = contactData.ID
 	contact.TeamID = contactData.Team
 	return nil
 }
 
-// UpdateContact updates notification contact for current user
-func UpdateContact(dataBase moira.Database, contactDTO dto.Contact, contactData moira.ContactData) (dto.Contact, *api.ErrorResponse) {
+// UpdateContact updates notification contact for current user.
+func UpdateContact(
+	dataBase moira.Database,
+	auth *api.Authorization,
+	contactDTO dto.Contact,
+	contactData moira.ContactData,
+) (dto.Contact, *api.ErrorResponse) {
+	if !isAllowedToUseContactType(auth, contactDTO.User, contactDTO.Type) {
+		return contactDTO, api.ErrorInvalidRequest(ErrNotAllowedContactType)
+	}
+
 	contactData.Type = contactDTO.Type
 	contactData.Value = contactDTO.Value
+	contactData.Name = contactDTO.Name
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return contactDTO, api.ErrorInternalServer(err)
 	}
@@ -94,9 +126,9 @@ func UpdateContact(dataBase moira.Database, contactDTO dto.Contact, contactData 
 	return contactDTO, nil
 }
 
-// RemoveContact deletes notification contact for current user and remove contactID from all subscriptions
+// RemoveContact deletes notification contact for current user and remove contactID from all subscriptions.
 func RemoveContact(database moira.Database, contactID string, userLogin string, teamID string) *api.ErrorResponse { //nolint:gocyclo
-	subscriptionIDs := []string{}
+	subscriptionIDs := make([]string, 0)
 	if userLogin != "" {
 		userSubscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 		if err != nil {
@@ -159,7 +191,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 	return nil
 }
 
-// SendTestContactNotification push test notification to verify the correct contact settings
+// SendTestContactNotification push test notification to verify the correct contact settings.
 func SendTestContactNotification(dataBase moira.Database, contactID string) *api.ErrorResponse {
 	eventData := &moira.NotificationEvent{
 		ContactID: contactID,
@@ -175,14 +207,22 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 	return nil
 }
 
-// CheckUserPermissionsForContact checks contact for existence and permissions for given user
-func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, userLogin string) (moira.ContactData, *api.ErrorResponse) {
+// CheckUserPermissionsForContact checks contact for existence and permissions for given user.
+func CheckUserPermissionsForContact(
+	dataBase moira.Database,
+	contactID string,
+	userLogin string,
+	auth *api.Authorization,
+) (moira.ContactData, *api.ErrorResponse) {
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return moira.ContactData{}, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", contactID))
 		}
 		return moira.ContactData{}, api.ErrorInternalServer(err)
+	}
+	if auth.IsAdmin(userLogin) {
+		return contactData, nil
 	}
 	if contactData.Team != "" {
 		teamContainsUser, err := dataBase.IsTeamContainUser(contactData.Team, userLogin)
@@ -201,11 +241,19 @@ func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, u
 
 func isContactExists(dataBase moira.Database, contactID string) (bool, error) {
 	_, err := dataBase.GetContact(contactID)
-	if err == database.ErrNil {
+	if errors.Is(err, database.ErrNil) {
 		return false, nil
 	}
 	if err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+func isAllowedToUseContactType(auth *api.Authorization, userLogin string, contactType string) bool {
+	isAuthEnabled := auth.IsEnabled()
+	isAdmin := auth.IsAdmin(userLogin)
+	_, isAllowedContactType := auth.AllowedContactTypes[contactType]
+
+	return isAllowedContactType || isAdmin || !isAuthEnabled
 }

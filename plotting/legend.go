@@ -18,7 +18,7 @@ type plotLine struct {
 	style chart.Style
 }
 
-// getPlotLegend returns plot legend
+// getPlotLegend returns plot legend.
 func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart.Renderable {
 	// TODO: Simplify this method
 	return func(r chart.Renderer, cb chart.Box, chartDefaults chart.Style) {
@@ -89,7 +89,7 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 	}
 }
 
-// inheritFrom inherits style from initial to make sure marker will be added
+// inheritFrom inherits style from initial to make sure marker will be added.
 func inheritFrom(initial chart.Style) chart.Style {
 	if initial.StrokeColor.IsZero() {
 		initial.StrokeColor = initial.DotColor

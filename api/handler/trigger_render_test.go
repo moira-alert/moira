@@ -6,13 +6,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/middleware"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestRenderTrigger(t *testing.T) {
@@ -22,7 +22,7 @@ func TestRenderTrigger(t *testing.T) {
 
 		localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
-		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
+		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -53,8 +53,8 @@ func TestRenderTrigger(t *testing.T) {
 				ID:            "triggerID-0000000000001",
 				Targets:       []string{"t1"},
 				TriggerSource: moira.GraphiteLocal,
+				ClusterId:     moira.DefaultCluster,
 			}, nil).Times(1)
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes().Times(1)
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).Times(1)
@@ -86,8 +86,8 @@ func TestRenderTrigger(t *testing.T) {
 				ID:            "triggerID-0000000000001",
 				Targets:       []string{"t1"},
 				TriggerSource: moira.GraphiteLocal,
+				ClusterId:     moira.DefaultCluster,
 			}, nil).Times(1)
-			localSource.EXPECT().IsConfigured().Return(true, nil).Times(1)
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).Times(1)

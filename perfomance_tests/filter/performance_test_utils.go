@@ -1,3 +1,5 @@
+// Package filter
+// nolint
 package filter
 
 import (
@@ -10,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/filter"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"go.uber.org/mock/gomock"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyz"
@@ -39,6 +41,7 @@ func loadPatterns(filename string) (*[]string, error) {
 		}
 		patterns = append(patterns, pattern[:len(pattern)-1])
 	}
+
 	return &patterns, nil
 }
 
@@ -50,10 +53,15 @@ func createPatternsStorage(patterns *[]string, b *testing.B) (*filter.PatternSto
 	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 	logger, _ := logging.GetLogger("Benchmark")
 	compatibility := filter.Compatibility{AllowRegexLooseStartMatch: true}
-	patternsStorage, err := filter.NewPatternStorage(database, filterMetrics, logger, compatibility)
+	patternStorageCfg := filter.PatternStorageConfig{
+		PatternMatchingCacheSize: 100,
+	}
+
+	patternsStorage, err := filter.NewPatternStorage(patternStorageCfg, database, filterMetrics, logger, compatibility)
 	if err != nil {
 		return nil, err
 	}
+
 	return patternsStorage, nil
 }
 

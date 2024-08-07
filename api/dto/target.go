@@ -2,13 +2,14 @@ package dto
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/metadata"
-	"github.com/moira-alert/moira"
-
 	"github.com/go-graphite/carbonapi/pkg/parser"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/filter"
 )
 
 func init() {
@@ -181,7 +182,7 @@ func DoesAnyTreeHaveError(trees []TreeOfProblems) bool {
 
 // checkExpression validates expression.
 func checkExpression(expression parser.Expr, ttl time.Duration, triggerSource moira.TriggerSource) *ProblemOfTarget {
-	if !expression.IsFunc() {
+	if !expression.IsFunc() && !strings.HasPrefix(expression.Target(), "seriesByTag") {
 		return nil
 	}
 
@@ -204,7 +205,7 @@ func checkExpression(expression parser.Expr, ttl time.Duration, triggerSource mo
 	}
 
 	for position, argument := range expression.Args() {
-		if !argument.IsFunc() {
+		if !argument.IsFunc() && !strings.HasPrefix(argument.Target(), "seriesByTag") {
 			continue
 		}
 
@@ -225,6 +226,25 @@ func checkExpression(expression parser.Expr, ttl time.Duration, triggerSource mo
 func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemOfTarget {
 	if triggerSource != moira.GraphiteLocal {
 		return nil
+	}
+
+	if strings.HasPrefix(funcName, "seriesByTag") {
+		valid, err := validateSeriesByTag(funcName)
+		if err != nil {
+			return &ProblemOfTarget{
+				Argument:    funcName,
+				Type:        isBad,
+				Description: "Incorrect seriesByTag syntax.",
+			}
+		}
+		if !valid {
+			return &ProblemOfTarget{
+				Argument:    funcName,
+				Type:        isBad,
+				Description: "seriesByTag function requires at least one argument with strict equality.",
+			}
+		}
+		funcName = "seriesByTag"
 	}
 
 	if _, isUnstable := unstableFunctions[funcName]; isUnstable {
@@ -264,7 +284,7 @@ func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemO
 	return nil
 }
 
-// functionArgumentsInTheRangeTTL: Checking function arguments that they are in the range of TTL
+// functionArgumentsInTheRangeTTL: Checking function arguments that they are in the range of TTL.
 func functionArgumentsInTheRangeTTL(expression parser.Expr, ttl time.Duration) (string, bool) {
 	if _, ok := timedFunctions[expression.Target()]; ok && len(expression.Args()) > 1 {
 		argument, argumentDuration := positiveDuration(expression.Args()[1])
@@ -279,7 +299,26 @@ func funcIsSupported(funcName string) bool {
 	return ok || funcName == ""
 }
 
-// positiveDuration:
+// checks if a seriesByTag expression has at least one argument with a strict equality.
+func validateSeriesByTag(target string) (bool, error) {
+	tagArgs, err := filter.ParseSeriesByTag(target)
+	if err != nil {
+		return false, err
+	}
+
+	for _, arg := range tagArgs {
+		if arg.Operator == filter.EqualOperator && !hasWildcard(arg.Value) {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func hasWildcard(target string) bool {
+	return strings.ContainsAny(target, "[]{}*?")
+}
+
 func positiveDuration(argument parser.Expr) (string, time.Duration) {
 	var secondTimeDuration time.Duration
 	var value string

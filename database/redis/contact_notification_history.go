@@ -38,14 +38,12 @@ func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID str
 		Max:   strconv.FormatInt(to, 10),
 		Count: int64(connector.notificationHistory.NotificationHistoryQueryLimit),
 	}).Result()
-
 	if err != nil {
 		return notifications, err
 	}
 
 	for _, notification := range notificationStings {
 		notificationObj, err := getNotificationStruct(notification)
-
 		if err != nil {
 			return notifications, err
 		}
@@ -58,8 +56,8 @@ func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID str
 	return notifications, nil
 }
 
-// PushContactNotificationToHistory converts ScheduledNotification to NotificationEventHistoryItem and
-// saves it, and deletes items older than specified ttl
+// PushContactNotificationToHistory converts ScheduledNotification to NotificationEventHistoryItem and saves it,
+// and deletes items older than specified ttl.
 func (connector *DbConnector) PushContactNotificationToHistory(notification *moira.ScheduledNotification) error {
 	notificationItemToSave := &moira.NotificationEventHistoryItem{
 		Metric:    notification.Event.Metric,
@@ -85,7 +83,8 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 		contactNotificationKey,
 		&redis.Z{
 			Score:  float64(notification.Timestamp),
-			Member: notificationBytes})
+			Member: notificationBytes,
+		})
 
 	pipe.ZRemRangeByScore(
 		connector.context,
@@ -95,7 +94,6 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 	)
 
 	_, err := pipe.Exec(connector.Context())
-
 	if err != nil {
 		return fmt.Errorf("failed to push contact event history item: %s", err.Error())
 	}

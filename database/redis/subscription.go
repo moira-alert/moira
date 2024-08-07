@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -12,7 +13,7 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// GetSubscription returns subscription data by given id, if no value, return database.ErrNil error
+// GetSubscription returns subscription data by given id, if no value, return database.ErrNil error.
 func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData, error) {
 	c := *connector.client
 
@@ -28,7 +29,7 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 }
 
 // GetSubscriptions returns subscriptions data by given ids, len of subscriptionIDs is equal to len of returned values array.
-// If there is no object by current ID, then nil is returned
+// If there is no object by current ID, then nil is returned.
 func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moira.SubscriptionData, error) {
 	c := *connector.client
 	subscriptions := make([]*moira.SubscriptionData, 0, len(subscriptionIDs))
@@ -41,7 +42,7 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	}
 	_, err := pipe.Exec(connector.context)
 
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	for i, result := range results {
@@ -62,13 +63,13 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	return subscriptions, nil
 }
 
-// SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
+// SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions.
 func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionData) error {
 	var oldSubscription *moira.SubscriptionData
 
 	if subscription, err := connector.GetSubscription(subscription.ID); err == nil {
 		oldSubscription = &subscription
-	} else if err != database.ErrNil {
+	} else if !errors.Is(err, database.ErrNil) {
 		return err
 	}
 	oldTriggers, err := connector.getSubscriptionTriggers(oldSubscription)
@@ -97,7 +98,7 @@ func (connector *DbConnector) updateSubscription(newSubscription *moira.Subscrip
 	return nil
 }
 
-// SaveSubscriptions writes subscriptions, updates tags subscriptions and user subscriptions
+// SaveSubscriptions writes subscriptions, updates tags subscriptions and user subscriptions.
 func (connector *DbConnector) SaveSubscriptions(newSubscriptions []*moira.SubscriptionData) error {
 	ids := make([]string, len(newSubscriptions))
 	for i, subscription := range newSubscriptions {
@@ -138,11 +139,11 @@ func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.Subs
 	return nil
 }
 
-// RemoveSubscription deletes subscription data and removes subscriptionID from users and tags subscriptions
+// RemoveSubscription deletes subscription data and removes subscriptionID from users and tags subscriptions.
 func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 	subscription, err := connector.GetSubscription(subscriptionID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil
 		}
 		return err
@@ -177,7 +178,7 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 	return nil
 }
 
-// GetUserSubscriptionIDs returns subscriptions ids by given login
+// GetUserSubscriptionIDs returns subscriptions ids by given login.
 func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, error) {
 	c := *connector.client
 
@@ -188,7 +189,7 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 	return subscriptions, nil
 }
 
-// GetTeamSubscriptionIDs returns subscriptions ids by given team id
+// GetTeamSubscriptionIDs returns subscriptions ids by given team id.
 func (connector *DbConnector) GetTeamSubscriptionIDs(teamID string) ([]string, error) {
 	c := *connector.client
 
@@ -200,7 +201,7 @@ func (connector *DbConnector) GetTeamSubscriptionIDs(teamID string) ([]string, e
 }
 
 // GetTagsSubscriptions gets all subscriptionsIDs by given tag list and read subscriptions.
-// Len of subscriptionIDs is equal to len of returned values array. If there is no object by current ID, then nil is returned
+// Len of subscriptionIDs is equal to len of returned values array. If there is no object by current ID, then nil is returned.
 func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.SubscriptionData, error) {
 	subscriptionsIDs, err := connector.getSubscriptionsIDsByTags(tags)
 	if err != nil {

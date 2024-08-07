@@ -118,6 +118,53 @@ func TestTargetVerification(t *testing.T) {
 			So(problems[0].SyntaxOk, ShouldBeFalse)
 			So(problems[0].TreeOfProblems, ShouldBeNil)
 		})
+
+		Convey("Check seriesByTag target without non-regex args, regex has anchors", func() {
+			targets := []string{"seriesByTag('name=~^tag\\..*$')"}
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "seriesByTag('name=~^tag\\..*$')")
+			So(problems[0].TreeOfProblems.Type, ShouldEqual, isBad)
+		})
+
+		Convey("Check seriesByTag target with a wildcard argument", func() {
+			targets := []string{"seriesByTag('name=ab.bc.*.cd.*.ef')"}
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "seriesByTag('name=ab.bc.*.cd.*.ef')")
+			So(problems[0].TreeOfProblems.Type, ShouldEqual, isBad)
+		})
+
+		Convey("Check nested seriesByTag target without non-regex args", func() {
+			targets := []string{"aliasByTags(seriesByTag('name=~*'),'tag')"}
+
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Problems[0].Argument, ShouldEqual, "seriesByTag('name=~*')")
+			So(problems[0].TreeOfProblems.Problems[0].Type, ShouldEqual, isBad)
+		})
+
+		Convey("Check nested seriesByTag target without arguments that have strict equality", func() {
+			targets := []string{"aliasByTags(seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*'),'tag')"}
+
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Problems[0].Argument, ShouldEqual, "seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*')")
+			So(problems[0].TreeOfProblems.Problems[0].Type, ShouldEqual, isBad)
+		})
+
+		Convey("Check nested seriesByTag target with an argument that has strict equality", func() {
+			targets := []string{"aliasByTags(seriesByTag('name=~*', 'tag1=val1', 'tag2=val2', 'tag3=val3*'),'tag')"}
+
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems, ShouldBeNil)
+		})
 	})
 }
 

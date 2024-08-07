@@ -14,14 +14,14 @@ func convertToFetchResult(mat model.Matrix, from, until int64, allowRealTimeAler
 	}
 
 	for _, res := range mat {
-		resValues := TrimValuesIfNescesary(res.Values, allowRealTimeAlerting)
+		resValues := trimValuesIfNecessary(res.Values, allowRealTimeAlerting)
 
 		values := make([]float64, 0, len(resValues))
 		for _, v := range resValues {
 			values = append(values, float64(v.Value))
 		}
 
-		start, stop := StartStopFromValues(resValues, from, until)
+		start, stop := startStopFromValues(resValues, from, until)
 		data := metricSource.MetricData{
 			Name:      targetFromTags(res.Metric),
 			StartTime: start,
@@ -36,7 +36,7 @@ func convertToFetchResult(mat model.Matrix, from, until int64, allowRealTimeAler
 	return &result
 }
 
-func StartStopFromValues(values []model.SamplePair, from, until int64) (int64, int64) {
+func startStopFromValues(values []model.SamplePair, from, until int64) (int64, int64) {
 	start, stop := from, until
 	if len(values) != 0 {
 		start = values[0].Timestamp.Unix()
@@ -45,7 +45,7 @@ func StartStopFromValues(values []model.SamplePair, from, until int64) (int64, i
 	return start, stop
 }
 
-func TrimValuesIfNescesary(values []model.SamplePair, allowRealTimeAlerting bool) []model.SamplePair {
+func trimValuesIfNecessary(values []model.SamplePair, allowRealTimeAlerting bool) []model.SamplePair {
 	if allowRealTimeAlerting || len(values) == 0 {
 		return values
 	}

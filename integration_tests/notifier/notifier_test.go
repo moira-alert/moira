@@ -5,9 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira/clock"
+
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
@@ -20,29 +22,35 @@ import (
 )
 
 var senderSettings = map[string]interface{}{
-	"type": "mega-sender",
+	"sender_type":  "mega-sender",
+	"contact_type": "mega-contact",
 }
 
-var location, _ = time.LoadLocation("UTC")
-var dateTimeFormat = "15:04 02.01.2006"
+var (
+	location, _    = time.LoadLocation("UTC")
+	dateTimeFormat = "15:04 02.01.2006"
+)
 
 var notifierConfig = notifier.Config{
-	SendingTimeout:   time.Millisecond * 10,
-	ResendingTimeout: time.Hour * 24,
-	Location:         location,
-	DateTimeFormat:   dateTimeFormat,
-	ReadBatchSize:    notifier.NotificationsLimitUnlimited,
+	SendingTimeout:    time.Millisecond * 10,
+	ResendingTimeout:  time.Hour * 24,
+	ReschedulingDelay: time.Minute,
+	Location:          location,
+	DateTimeFormat:    dateTimeFormat,
+	ReadBatchSize:     notifier.NotificationsLimitUnlimited,
 }
 
 var shutdown = make(chan struct{})
 
-var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
-var logger, _ = logging.GetLogger("Notifier_Test")
-var mockCtrl *gomock.Controller
+var (
+	notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	logger, _       = logging.GetLogger("Notifier_Test")
+	mockCtrl        *gomock.Controller
+)
 
 var contact = moira.ContactData{
 	ID:    "ContactID-000000000000001",
-	Type:  "mega-sender",
+	Type:  "mega-contact",
 	Value: "mail1@example.com",
 }
 
@@ -55,10 +63,12 @@ var subscription = moira.SubscriptionData{
 }
 
 var trigger = moira.Trigger{
-	ID:      "triggerID-0000000000001",
-	Name:    "test trigger 1",
-	Targets: []string{"test.target.1"},
-	Tags:    []string{"test-tag-1"},
+	ID:            "triggerID-0000000000001",
+	Name:          "test trigger 1",
+	Targets:       []string{"test.target.1"},
+	Tags:          []string{"test-tag-1"},
+	TriggerSource: moira.GraphiteLocal,
+	ClusterId:     moira.DefaultCluster,
 }
 
 var triggerData = moira.TriggerData{
@@ -81,12 +91,39 @@ func TestNotifier(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	database := redis.NewTestDatabase(logger)
-	database.SaveContact(&contact)               //nolint
-	database.SaveSubscription(&subscription)     //nolint
-	database.SaveTrigger(trigger.ID, &trigger)   //nolint
-	database.PushNotificationEvent(&event, true) //nolint
 
-	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil, nil)
+	err := database.SaveContact(&contact)
+	if err != nil {
+		t.Fail()
+		fmt.Printf("Error occurred: %s\n", err.Error())
+		return
+	}
+
+	err = database.SaveSubscription(&subscription)
+	if err != nil {
+		t.Fail()
+		fmt.Printf("Error occurred: %s\n", err.Error())
+		return
+	}
+
+	err = database.SaveTrigger(trigger.ID, &trigger)
+	if err != nil {
+		t.Fail()
+		fmt.Printf("Error occurred: %s\n", err.Error())
+		return
+	}
+
+	err = database.PushNotificationEvent(&event, true)
+	if err != nil {
+		t.Fail()
+		fmt.Printf("Error occurred: %s\n", err.Error())
+		return
+	}
+
+	metricsSourceProvider := metricSource.CreateTestMetricSourceProvider(local.Create(database), nil, nil)
+
+	systemClock := clock.NewSystemClock()
+	schedulerConfig := notifier.SchedulerConfig{ReschedulingDelay: notifierConfig.ReschedulingDelay}
 
 	notifierInstance := notifier.NewNotifier(
 		database,
@@ -95,6 +132,8 @@ func TestNotifier(t *testing.T) {
 		notifierMetrics,
 		metricsSourceProvider,
 		map[string]moira.ImageStore{},
+		systemClock,
+		schedulerConfig,
 	)
 
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
@@ -110,15 +149,23 @@ func TestNotifier(t *testing.T) {
 	notifierInstance.RegisterSender(senderSettings, sender) //nolint
 
 	fetchEventsWorker := events.FetchEventsWorker{
-		Database:  database,
-		Logger:    logger,
-		Metrics:   notifierMetrics,
-		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
+		Database: database,
+		Logger:   logger,
+		Metrics:  notifierMetrics,
+		Scheduler: notifier.NewScheduler(
+			database,
+			logger,
+			notifierMetrics,
+			notifier.SchedulerConfig{
+				ReschedulingDelay: notifierConfig.ReschedulingDelay,
+			},
+			systemClock),
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
 		Database: database,
 		Logger:   logger,
+		Metrics:  notifierMetrics,
 		Notifier: notifierInstance,
 	}
 

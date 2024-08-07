@@ -15,7 +15,7 @@ import (
 )
 
 func contact(router chi.Router) {
-	router.Get("/", getAllContacts)
+	router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllContacts)
 	router.Put("/", createNewContact)
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
@@ -98,9 +98,11 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
-	userLogin := middleware.GetLogin(request)
 
-	if err := controller.CreateContact(database, contact, userLogin, contact.TeamID); err != nil {
+	userLogin := middleware.GetLogin(request)
+	auth := middleware.GetAuth(request)
+
+	if err := controller.CreateContact(database, auth, contact, userLogin, contact.TeamID); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
@@ -111,12 +113,13 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// contactFilter is middleware for check contact existence and user permissions
+// contactFilter is middleware for check contact existence and user permissions.
 func contactFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetContactID(request)
 		userLogin := middleware.GetLogin(request)
-		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
+		auth := middleware.GetAuth(request)
+		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
@@ -148,13 +151,17 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
+
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 
-	contactDTO, err := controller.UpdateContact(database, contactDTO, contactData)
+	auth := middleware.GetAuth(request)
+
+	contactDTO, err := controller.UpdateContact(database, auth, contactDTO, contactData)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, &contactDTO); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}

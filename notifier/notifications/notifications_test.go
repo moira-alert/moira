@@ -4,15 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metrics"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_notifier "github.com/moira-alert/moira/mock/notifier"
 	notifier2 "github.com/moira-alert/moira/notifier"
 )
+
+var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 
 func TestProcessScheduledEvent(t *testing.T) {
 	subID2 := "subscriptionID-00000000000002"
@@ -60,6 +63,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		Database: dataBase,
 		Logger:   logger,
 		Notifier: notifier,
+		Metrics:  notifierMetrics,
 	}
 
 	Convey("Two different notifications, should send two packages", t, func() {
@@ -159,6 +163,7 @@ func TestGoRoutine(t *testing.T) {
 		Database: dataBase,
 		Logger:   logger,
 		Notifier: notifier,
+		Metrics:  notifierMetrics,
 	}
 
 	shutdown := make(chan struct{})

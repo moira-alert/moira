@@ -55,6 +55,36 @@ func TestTagStoring(t *testing.T) {
 	})
 }
 
+func TestCreateTags(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	Convey("Test CreateTags", t, func() {
+		emptyTags := make([]string, 0)
+		tags := []string{"test1", "test2"}
+
+		Convey("Success with empty tags", func() {
+			err := dataBase.CreateTags(emptyTags)
+			So(err, ShouldBeNil)
+
+			allTags, err := dataBase.GetTagNames()
+			So(err, ShouldBeNil)
+			So(allTags, ShouldHaveLength, 0)
+		})
+
+		Convey("Success with many tags", func() {
+			err := dataBase.CreateTags(tags)
+			So(err, ShouldBeNil)
+
+			allTags, err := dataBase.GetTagNames()
+			So(err, ShouldBeNil)
+			So(allTags, ShouldHaveLength, 2)
+		})
+	})
+}
+
 func TestTagErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
