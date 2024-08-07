@@ -114,11 +114,8 @@ func UpdateContact(
 	contactData.Value = contactDTO.Value
 	contactData.Name = contactDTO.Name
 
-	if contactDTO.User != "" {
+	if contactDTO.User != "" || contactDTO.TeamID != "" {
 		contactData.User = contactDTO.User
-	}
-
-	if contactDTO.TeamID != "" {
 		contactData.Team = contactDTO.TeamID
 	}
 
