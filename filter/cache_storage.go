@@ -2,6 +2,7 @@ package filter
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -12,7 +13,12 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-var defaultRetention = 60
+var (
+	defaultRetention = 60
+
+	InvalidRetentionsFormatErr = errors.New("Invalid retentions format, it is correct to write in the format 'retentions = timePerPoint:timeToStore, timePerPoint:timeToStore, ...'")
+	InvalidPatternFormatErr    = errors.New("Invalid pattern format, it is correct to write in the format 'pattern = regex'")
+)
 
 type retentionMatcher struct {
 	pattern   *regexp.Regexp
@@ -83,16 +89,17 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 	storage.retentions = make([]retentionMatcher, 0, 100)
 
 	for retentionScanner.Scan() {
-		line1 := retentionScanner.Text()
-		if strings.HasPrefix(line1, "#") || strings.Count(line1, "=") < 1 {
+		patternLine := retentionScanner.Text()
+		if strings.HasPrefix(patternLine, "#") || strings.Count(patternLine, "=") < 1 {
 			continue
 		}
 
-		_, after, found := strings.Cut(line1, "=")
+		_, after, found := strings.Cut(patternLine, "=")
 		if !found {
 			storage.logger.Error().
-				String("pattern_line", line1).
-				Msg(`Invalid pattern format, it is correct to write in the format "pattern = regex"`)
+				Error(InvalidPatternFormatErr).
+				String("pattern_line", patternLine).
+				Msg("Invalid pattern format")
 			continue
 		}
 
@@ -103,14 +110,15 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 		}
 
 		retentionScanner.Scan()
-		line2 := retentionScanner.Text()
-		splitted := strings.Split(line2, "=")
+		retentionsLine := retentionScanner.Text()
+		splitted := strings.Split(retentionsLine, "=")
 
 		if len(splitted) < 2 { //nolint
 			storage.logger.Error().
-				String("pattern_line", line1).
-				String("retentions_line", line2).
-				Msg(`Invalid retentions format, it is correct to write in the format "retentions = timePerPoint:timeToStore, timePerPoint:timeToStore, ..."`)
+				Error(InvalidRetentionsFormatErr).
+				String("pattern_line", patternLine).
+				String("retentions_line", retentionsLine).
+				Msg("Invalid retentions format")
 			continue
 		}
 
