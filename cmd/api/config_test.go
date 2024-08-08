@@ -110,8 +110,7 @@ func Test_webConfig_getDefault(t *testing.T) {
 			},
 			Remotes: cmd.RemotesConfig{},
 			NotificationHistory: cmd.NotificationHistoryConfig{
-				NotificationHistoryTTL:        "48h",
-				NotificationHistoryQueryLimit: -1,
+				NotificationHistoryTTL: "48h",
 			},
 		}
 

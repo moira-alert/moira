@@ -10,3 +10,5 @@ cleanup:
   # Specifies the time from which metrics written to the future will be deleted
   # Defaults to 1 hour
   cleanup_future_metrics_duration: "60m"
+  # Default notification cleanup ttl (according to max ttl of notification history = 48h)
+  cleanup_notification_history_duration: "48h"
