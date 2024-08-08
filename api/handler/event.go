@@ -20,8 +20,8 @@ func event(router chi.Router) {
 		middleware.TriggerContext,
 		middleware.Paginate(eventDefaultPage, eventDefaultSize),
 		middleware.DateRange(eventDefaultFrom, eventDefaultTo),
-		middleware.MetricProvider(eventDefaultMetric),
-		middleware.StatesProvider(),
+		middleware.MetricContext(eventDefaultMetric),
+		middleware.StatesContext(),
 	).Get("/{triggerId}", getEventsList)
 	router.With(middleware.AdminOnlyMiddleware()).Delete("/all", deleteAllEvents)
 }

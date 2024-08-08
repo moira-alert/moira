@@ -279,8 +279,8 @@ func AuthorizationContext(auth *api.Authorization) func(next http.Handler) http.
 	}
 }
 
-// MetricProvider is a function that gets `metric` value from query string and places it in context. If query does not have value sets given value.
-func MetricProvider(defaultMetric string) func(next http.Handler) http.Handler {
+// MetricContext is a function that gets `metric` value from query string and places it in context. If query does not have value sets given value.
+func MetricContext(defaultMetric string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			urlValues, err := url.ParseQuery(request.URL.RawQuery)
@@ -302,8 +302,8 @@ func MetricProvider(defaultMetric string) func(next http.Handler) http.Handler {
 
 const statesArraySeparator = ","
 
-// StatesProvider is a function that gets `states` value from query string and places it in context. If query does not have value empty map will be used.
-func StatesProvider() func(next http.Handler) http.Handler {
+// StatesContext is a function that gets `states` value from query string and places it in context. If query does not have value empty map will be used.
+func StatesContext() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			urlValues, err := url.ParseQuery(request.URL.RawQuery)

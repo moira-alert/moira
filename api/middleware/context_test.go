@@ -226,7 +226,7 @@ func TestMetricProviderMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?metric=test%5C.metric.*", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := MetricProvider(defaultMetric)
+			middlewareFunc := MetricContext(defaultMetric)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -240,7 +240,7 @@ func TestMetricProviderMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?metric%=test", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := MetricProvider(defaultMetric)
+			middlewareFunc := MetricContext(defaultMetric)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -263,7 +263,7 @@ func TestStatesProviderMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?states=OK%2CERROR", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := StatesProvider()
+			middlewareFunc := StatesContext()
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -277,7 +277,7 @@ func TestStatesProviderMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?states=OK%2CERROR%2Cwarn", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := StatesProvider()
+			middlewareFunc := StatesContext()
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
@@ -291,7 +291,7 @@ func TestStatesProviderMiddleware(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/test?states%=test", nil)
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
-			middlewareFunc := StatesProvider()
+			middlewareFunc := StatesContext()
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
