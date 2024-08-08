@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/stretchr/testify/assert"
@@ -1257,14 +1258,17 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 				{
 					Timestamp:               1,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 				{
 					Timestamp:               1,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 				{
 					Timestamp:               2,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 			})
 
@@ -1283,7 +1287,7 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{notification1, notification2, notification3}
 			triggerChecks, err := database.getNotificationsTriggerChecks(notifications)
 			So(err, ShouldBeNil)
-			So(triggerChecks, ShouldResemble, []*moira.CheckData{nil, nil, {Timestamp: 2, MetricsToTargetRelation: map[string]string{}}})
+			So(triggerChecks, ShouldResemble, []*moira.CheckData{nil, nil, {Timestamp: 2, MetricsToTargetRelation: map[string]string{}, Clock: clock.NewSystemClock()}})
 
 			err = database.RemoveAllNotifications()
 			So(err, ShouldBeNil)

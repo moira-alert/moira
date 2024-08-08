@@ -429,7 +429,7 @@ func (connector *DbConnector) CleanUpFutureMetrics(duration time.Duration) error
 		return ErrCleanUpDurationLessThanZero
 	}
 
-	fromTs := connector.clock.Now().Add(duration).Unix()
+	fromTs := connector.clock.NowUTC().Add(duration).Unix()
 	from := strconv.FormatInt(fromTs, 10)
 	to := "+inf"
 

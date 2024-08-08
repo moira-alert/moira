@@ -50,7 +50,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 		next      time.Time
 		throttled bool
 	)
-	now := scheduler.clock.Now()
+	now := scheduler.clock.NowUTC()
 	if params.SendFail > 0 {
 		next = now.Add(scheduler.config.ReschedulingDelay)
 		throttled = params.ThrottledOld

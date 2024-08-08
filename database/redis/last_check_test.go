@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -303,6 +304,7 @@ func TestLastCheck(t *testing.T) {
 					},
 				},
 				MetricsToTargetRelation: map[string]string{},
+				Clock:                   clock.NewSystemClock(),
 			})
 		})
 	})
@@ -514,14 +516,17 @@ func TestGetTriggersLastCheck(t *testing.T) {
 				{
 					Timestamp:               1,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 				{
 					Timestamp:               2,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 				{
 					Timestamp:               3,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 			})
 		})
@@ -540,11 +545,13 @@ func TestGetTriggersLastCheck(t *testing.T) {
 				{
 					Timestamp:               1,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 				nil,
 				{
 					Timestamp:               3,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 			})
 		})
@@ -556,10 +563,12 @@ func TestGetTriggersLastCheck(t *testing.T) {
 				{
 					Timestamp:               1,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 				{
 					Timestamp:               2,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 				nil,
 			})
@@ -573,10 +582,12 @@ func TestGetTriggersLastCheck(t *testing.T) {
 				{
 					Timestamp:               2,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 				{
 					Timestamp:               3,
 					MetricsToTargetRelation: map[string]string{},
+					Clock:                   clock.NewSystemClock(),
 				},
 			})
 		})
@@ -726,6 +737,7 @@ var lastCheckTest = moira.CheckData{
 		},
 	},
 	MetricsToTargetRelation: map[string]string{},
+	Clock:                   clock.NewSystemClock(),
 }
 
 var lastCheckWithNoMetrics = moira.CheckData{
@@ -734,6 +746,7 @@ var lastCheckWithNoMetrics = moira.CheckData{
 	Timestamp:               1504509981,
 	Metrics:                 make(map[string]moira.MetricState),
 	MetricsToTargetRelation: map[string]string{},
+	Clock:                   clock.NewSystemClock(),
 }
 
 var lastCheckWithNoMetricsWithMaintenance = moira.CheckData{
@@ -743,4 +756,5 @@ var lastCheckWithNoMetricsWithMaintenance = moira.CheckData{
 	Maintenance:             1000,
 	Metrics:                 make(map[string]moira.MetricState),
 	MetricsToTargetRelation: map[string]string{},
+	Clock:                   clock.NewSystemClock(),
 }

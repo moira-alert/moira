@@ -5,10 +5,13 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics"
 )
+
+var tenMinInSec = int64((10 * time.Minute).Seconds())
 
 // TriggerChecker represents data, used for handling new trigger state.
 type TriggerChecker struct {
@@ -90,6 +93,7 @@ func MakeTriggerChecker(
 		ttl:      trigger.TTL,
 		ttlState: getTTLState(trigger.TTLState),
 	}
+
 	return triggerChecker, nil
 }
 
@@ -111,6 +115,10 @@ func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimes
 		lastCheck.Timestamp = emptyLastCheckTimestamp
 	}
 
+	if lastCheck.Clock == nil {
+		lastCheck.Clock = clock.NewSystemClock()
+	}
+
 	return &lastCheck, nil
 }
 
@@ -118,6 +126,7 @@ func getTTLState(triggerTTLState *moira.TTLState) moira.TTLState {
 	if triggerTTLState != nil {
 		return *triggerTTLState
 	}
+
 	return moira.TTLStateNODATA
 }
 
@@ -125,5 +134,6 @@ func calculateFrom(lastCheckTimestamp, triggerTTL int64) int64 {
 	if triggerTTL != 0 {
 		return lastCheckTimestamp - triggerTTL
 	}
-	return lastCheckTimestamp - 600
+
+	return lastCheckTimestamp - tenMinInSec
 }

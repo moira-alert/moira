@@ -114,7 +114,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 		return nil
 	}
 
-	if parsedMetric.IsExpired(maxTTL, storage.clock.Now()) {
+	if parsedMetric.IsExpired(maxTTL, storage.clock.NowUTC()) {
 		storage.logger.Debug().
 			String(moira.LogFieldNameMetricName, parsedMetric.Name).
 			String(moira.LogFieldNameMetricTimestamp, fmt.Sprint(parsedMetric.Timestamp)).
