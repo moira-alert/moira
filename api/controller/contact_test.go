@@ -366,15 +366,6 @@ func TestCreateContact(t *testing.T) {
 			})
 		})
 	})
-
-	Convey("Error on create with both: userLogin and teamID specified", t, func() {
-		contact := &dto.Contact{
-			Value: contactValue,
-			Type:  contactType,
-		}
-		err := CreateContact(dataBase, auth, contact, userLogin, teamID)
-		So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified")))
-	})
 }
 
 func TestAdminsCreatesContact(t *testing.T) {
@@ -504,6 +495,30 @@ func TestUpdateContact(t *testing.T) {
 			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
 		})
 
+		Convey("Success with rewrite user", func() {
+			newUser := "testUser"
+			contactDTO := dto.Contact{
+				Value: contactValue,
+				Name:  "some-name",
+				Type:  contactType,
+				User:  newUser,
+			}
+			contactID := uuid.Must(uuid.NewV4()).String()
+			contact := moira.ContactData{
+				Value: contactDTO.Value,
+				Type:  contactDTO.Type,
+				Name:  contactDTO.Name,
+				ID:    contactID,
+				User:  newUser,
+			}
+			dataBase.EXPECT().SaveContact(&contact).Return(nil)
+			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			So(err, ShouldBeNil)
+			So(expectedContact.User, ShouldResemble, newUser)
+			So(expectedContact.ID, ShouldResemble, contactID)
+			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
+		})
+
 		Convey("Error update not allowed contact", func() {
 			contactDTO := dto.Contact{
 				Value: contactValue,
@@ -584,6 +599,27 @@ func TestUpdateContact(t *testing.T) {
 			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
 			So(err, ShouldBeNil)
 			So(expectedContact.TeamID, ShouldResemble, teamID)
+			So(expectedContact.ID, ShouldResemble, contactID)
+		})
+
+		Convey("Success with rewrite team", func() {
+			newTeam := "testTeam"
+			contactDTO := dto.Contact{
+				Value:  contactValue,
+				Type:   contactType,
+				TeamID: newTeam,
+			}
+			contactID := uuid.Must(uuid.NewV4()).String()
+			contact := moira.ContactData{
+				Value: contactDTO.Value,
+				Type:  contactDTO.Type,
+				ID:    contactID,
+				Team:  newTeam,
+			}
+			dataBase.EXPECT().SaveContact(&contact).Return(nil)
+			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
+			So(err, ShouldBeNil)
+			So(expectedContact.TeamID, ShouldResemble, newTeam)
 			So(expectedContact.ID, ShouldResemble, contactID)
 		})
 
