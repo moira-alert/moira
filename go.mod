@@ -24,7 +24,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
 	github.com/gregdel/pushover v1.1.0
-	github.com/moira-alert/go-chart v0.0.0-20231107064049-444c44a558ef
+	github.com/moira-alert/go-chart v0.0.0-20240808151222-eba0c0585a02
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.13
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.14.0
