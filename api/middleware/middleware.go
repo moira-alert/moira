@@ -39,6 +39,8 @@ var (
 	teamIDKey            ContextKey = "teamID"
 	teamUserIDKey        ContextKey = "teamUserIDKey"
 	authKey              ContextKey = "auth"
+	metricContextKey     ContextKey = "metric"
+	statesContextKey     ContextKey = "states"
 	anonymousUser                   = "anonymous"
 )
 
@@ -63,7 +65,7 @@ func GetTriggerID(request *http.Request) string {
 	return request.Context().Value(triggerIDKey).(string)
 }
 
-// GetLocalMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware.
+// GetMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware.
 func GetMetricTTL(request *http.Request) map[moira.ClusterKey]time.Duration {
 	return request.Context().Value(clustersMetricTTLKey).(map[moira.ClusterKey]time.Duration)
 }
@@ -118,13 +120,13 @@ func GetToStr(request *http.Request) string {
 	return request.Context().Value(toKey).(string)
 }
 
-// SetTimeSeriesNames sets to requests context timeSeriesNames from saved trigger.
+// SetTimeSeriesNames sets to request's context timeSeriesNames from saved trigger.
 func SetTimeSeriesNames(request *http.Request, timeSeriesNames map[string]bool) {
 	ctx := context.WithValue(request.Context(), timeSeriesNamesKey, timeSeriesNames)
 	*request = *request.WithContext(ctx)
 }
 
-// GetTimeSeriesNames gets from requests context timeSeriesNames from saved trigger.
+// GetTimeSeriesNames gets from request's context timeSeriesNames from saved trigger.
 func GetTimeSeriesNames(request *http.Request) map[string]bool {
 	return request.Context().Value(timeSeriesNamesKey).(map[string]bool)
 }
@@ -161,4 +163,14 @@ func SetContextValueForTest(ctx context.Context, key string, value interface{}) 
 // GetAuth gets authorization configuration.
 func GetAuth(request *http.Request) *api.Authorization {
 	return request.Context().Value(authKey).(*api.Authorization)
+}
+
+// GetMetric is used to retrieve metric name.
+func GetMetric(request *http.Request) string {
+	return request.Context().Value(metricContextKey).(string)
+}
+
+// GetStates is used to retrieve trigger state.
+func GetStates(request *http.Request) map[string]struct{} {
+	return request.Context().Value(statesContextKey).(map[string]struct{})
 }
