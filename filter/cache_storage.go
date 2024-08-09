@@ -13,11 +13,11 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-var (
-	defaultRetention = 60
+const defaultRetention = 60
 
-	InvalidRetentionsFormatErr = errors.New("Invalid retentions format, it is correct to write in the format 'retentions = timePerPoint:timeToStore, timePerPoint:timeToStore, ...'")
-	InvalidPatternFormatErr    = errors.New("Invalid pattern format, it is correct to write in the format 'pattern = regex'")
+var (
+	invalidRetentionsFormatErr = errors.New("Invalid retentions format, it is correct to write in the format 'retentions = timePerPoint:timeToStore, timePerPoint:timeToStore, ...'")
+	invalidPatternFormatErr    = errors.New("Invalid pattern format, it is correct to write in the format 'pattern = regex'")
 )
 
 type retentionMatcher struct {
@@ -97,7 +97,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 		_, after, found := strings.Cut(patternLine, "=")
 		if !found {
 			storage.logger.Error().
-				Error(InvalidPatternFormatErr).
+				Error(invalidPatternFormatErr).
 				String("pattern_line", patternLine).
 				Msg("Invalid pattern format")
 			continue
@@ -115,7 +115,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 
 		if len(splitted) < 2 { //nolint
 			storage.logger.Error().
-				Error(InvalidRetentionsFormatErr).
+				Error(invalidRetentionsFormatErr).
 				String("pattern_line", patternLine).
 				String("retentions_line", retentionsLine).
 				Msg("Invalid retentions format")
