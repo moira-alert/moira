@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/notifier"
-
 	"github.com/xiam/to"
 
 	"github.com/moira-alert/moira/api"
@@ -206,8 +204,7 @@ func getDefault() config {
 			MaxRetries:  3,
 		},
 		NotificationHistory: cmd.NotificationHistoryConfig{
-			NotificationHistoryTTL:        "48h",
-			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
+			NotificationHistoryTTL: "48h",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",

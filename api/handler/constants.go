@@ -8,4 +8,10 @@ const (
 	eventDefaultFrom   = "-3hour"
 	eventDefaultTo     = "now"
 	eventDefaultMetric = allMetricsPattern
+
+const (
+	contactEventsDefaultFrom = "-3hour"
+	contactEventsDefaultTo   = "now"
+	contactEventsDefaultPage = 0
+	contactEventsDefaultSize = -1
 )

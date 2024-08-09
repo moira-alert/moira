@@ -92,8 +92,7 @@ func getDefault() config {
 			LogPrettyFormat: false,
 		},
 		NotificationHistory: cmd.NotificationHistoryConfig{
-			NotificationHistoryTTL:        "48h",
-			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
+			NotificationHistoryTTL: "48h",
 		},
 		Notification: cmd.NotificationConfig{
 			DelayedTime:               "50s",

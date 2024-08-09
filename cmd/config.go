@@ -80,15 +80,12 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 type NotificationHistoryConfig struct {
 	// Time which moira should store contacts and theirs events history
 	NotificationHistoryTTL string `yaml:"ttl"`
-	// Max count of events which moira may send as response of contact and its events history
-	NotificationHistoryQueryLimit int `yaml:"query_limit"`
 }
 
 // GetSettings returns notification history storage policy configuration.
 func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.NotificationHistoryConfig {
 	return redis.NotificationHistoryConfig{
-		NotificationHistoryTTL:        to.Duration(notificationHistoryConfig.NotificationHistoryTTL),
-		NotificationHistoryQueryLimit: notificationHistoryConfig.NotificationHistoryQueryLimit,
+		NotificationHistoryTTL: to.Duration(notificationHistoryConfig.NotificationHistoryTTL),
 	}
 }
 

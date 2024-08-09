@@ -25,7 +25,7 @@ var (
 	GoVersion    = "unknown"
 )
 
-var moiraValidVersions = []string{"2.3", "2.6", "2.7", "2.9", "2.11"}
+var moiraValidVersions = []string{"2.3", "2.6", "2.7", "2.9", "2.11", "2.12"}
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/cli.yml", "Path to configuration file")
@@ -48,16 +48,17 @@ var plotting = flag.Bool("plotting", false, "enable images in all notifications"
 var removeSubscriptions = flag.String("remove-subscriptions", "", "Remove given subscriptions separated by semicolons.")
 
 var (
-	cleanupUsers          = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
-	cleanupLastChecks     = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
-	cleanupTags           = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
-	cleanupMetrics        = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
-	cleanupPatternMetrics = flag.Bool("cleanup-pattern-metrics", false, "Delete outdated pattern metrics.")
-	cleanupFutureMetrics  = flag.Bool("cleanup-future-metrics", false, "Delete metrics with future timestamps.")
-	cleanupRetentions     = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
-	userDel               = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
-	fromUser              = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
-	toUser                = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+	cleanupUsers               = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
+	cleanupLastChecks          = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
+	cleanupTags                = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
+	cleanupMetrics             = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
+	cleanupPatternMetrics      = flag.Bool("cleanup-pattern-metrics", false, "Delete outdated pattern metrics.")
+	cleanupFutureMetrics       = flag.Bool("cleanup-future-metrics", false, "Delete metrics with future timestamps.")
+	cleanupRetentions          = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
+	cleanupNotificationHistory = flag.Bool("cleanup-notification-history", false, "Delete notifications which were created more then ttl ago from history for each contact (ttl is set in config)")
+	userDel                    = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
+	fromUser                   = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
+	toUser                     = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
 )
 
 var (
@@ -117,6 +118,13 @@ func main() { //nolint
 					Error(err).
 					Msg("Fail to update from version 2.11")
 			}
+		case "2.12":
+			err := updateFrom212(logger, database)
+			if err != nil {
+				logger.Fatal().
+					Error(err).
+					Msg("Fail to update from version 2.12")
+			}
 		}
 	}
 
@@ -157,6 +165,13 @@ func main() { //nolint
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update to version 2.11")
+			}
+		case "2.12":
+			err := downgradeTo212(logger, database)
+			if err != nil {
+				logger.Fatal().
+					Error(err).
+					Msg("Fail to update to version 2.12")
 			}
 		}
 	}
@@ -410,6 +425,25 @@ func main() { //nolint
 		logger.Info().
 			Int("deleted", deleted).
 			Msg("Deletion of subscriptions finished")
+	}
+
+	if *cleanupNotificationHistory {
+		logger.Info().
+			Msg("Start cleaning up of notification history")
+
+		ttl := int64(to.Duration(confCleanup.CleanupNotificationHistoryDuration).Seconds())
+		logger.Info().
+			Int64("cleanup_notification_history_duration", ttl).
+			Msg("cleaning history older then")
+
+		if err := handleCleanupNotificationHistoryWithTTL(database, ttl); err != nil {
+			logger.Error().
+				Error(err).
+				Msg("Failed to clean up notification history")
+		}
+
+		logger.Info().
+			Msg("Cleanup of notification history finished")
 	}
 }
 
