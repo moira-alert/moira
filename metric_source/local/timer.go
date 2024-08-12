@@ -9,7 +9,21 @@ type Timer struct {
 
 // Rounds start and stop time in a specific manner requered by carbonapi.
 func RoundTimestamps(startTime, stopTime, retention int64) (roundedStart, roundedStop int64) {
-	return ceilToMultiplier(startTime, retention), floorToMultiplier(stopTime, retention) + retention
+	// var until int64
+	// if stopTime%retention == 0 {
+	// 	until = stopTime
+	// } else {
+	until := floorToMultiplier(stopTime, retention) + retention
+	// }
+
+	// var from int64
+	// if startTime%retention == 0 {
+	// 	from = startTime
+	// } else {
+	from := ceilToMultiplier(startTime, retention)
+	// }
+
+	return from, until
 }
 
 // Creates new timer rounding start and stop time in a specific manner requered by carbonapi.

@@ -45,9 +45,9 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 	from = moira.MaxInt64(from, until-local.database.GetMetricsTTLSeconds())
 
 	result := CreateEmptyFetchResult()
-	ctx := evalCtx{from, until}
+	eval := evaluator{local.database, make([]string, 0)}
 
-	err := ctx.fetchAndEval(local.database, target, result)
+	err := eval.fetchAndEval(target, from, until, result)
 	if err != nil {
 		return nil, err
 	}
