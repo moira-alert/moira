@@ -12,6 +12,7 @@ type MetricData struct {
 	StopTime  int64
 	StepTime  int64
 	Values    []float64
+	// TODO(Tetrergeru) Wtf is a wildcard in this context
 	Wildcard  bool
 }
 

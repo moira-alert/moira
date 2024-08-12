@@ -124,14 +124,14 @@ func (eval *evaluator) Eval(
 }
 
 func (eval *evaluator) writeResult(exp parser.Expr, metricsData []*types.MetricData, result *FetchResult) {
-	for _, metricData := range metricsData {
-		md := newMetricDataFromGraphit(metricData, len(metricsData) > 0)
-		result.MetricsData = append(result.MetricsData, md)
-	}
-
 	result.Metrics = append(result.Metrics, eval.metrics...)
 	for _, mr := range exp.Metrics(0, 0) {
 		result.Patterns = append(result.Patterns, mr.Metric)
+	}
+
+	for _, metricData := range metricsData {
+		md := newMetricDataFromGraphit(metricData, len(result.Metrics) != len(result.Patterns))
+		result.MetricsData = append(result.MetricsData, md)
 	}
 }
 

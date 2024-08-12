@@ -87,6 +87,7 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	})
 
 	Convey("Panic while evaluate target", t, func() {
+		// TODO(Tetrergeru) It mustn't require two database requests
 		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil).Times(2)
 		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil).Times(2)
 		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(dataList, nil)
@@ -109,7 +110,6 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	pattern := pattern1
-	// pattern2 := pattern2
 
 	var metricsTTL int64 = 3600
 
@@ -154,46 +154,46 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 		})
 	})
 
-	// Convey("Single pattern, from 7 until 57", t, func() {
-	// 	database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
-	// 	database.EXPECT().GetPatternMetrics(pattern2).Return([]string{}, nil)
-	// 	database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+	Convey("Single pattern, from 7 until 57", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
-	// 	result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", 7, 57, true)
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", 7, 57, true)
 
-	// 	So(err, ShouldBeNil)
-	// 	So(result, shouldEqualIfNaNsEqual, &FetchResult{
-	// 		MetricsData: []metricSource.MetricData{{
-	// 			Name:      "pattern",
-	// 			StartTime: 60,
-	// 			StopTime:  60,
-	// 			StepTime:  60, Values: []float64{},
-	// 			Wildcard: true,
-	// 		}},
-	// 		Metrics:  []string{},
-	// 		Patterns: []string{pattern},
-	// 	})
-	// })
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "pattern",
+				StartTime: 60,
+				StopTime:  60,
+				StepTime:  60, Values: []float64{},
+				Wildcard: true,
+			}},
+			Metrics:  []string{},
+			Patterns: []string{pattern},
+		})
+	})
 
-	// Convey("Two patterns, from 17 until 67", t, func() {
-	// 	database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
-	// 	database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+	Convey("Two patterns, from 17 until 67", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		database.EXPECT().GetPatternMetrics(pattern2).Return([]string{}, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
-	// 	result, err := localSource.Fetch("alias(sum(super.puper.pattern, super.duper.pattern), 'pattern')", 17, 67, true)
+		result, err := localSource.Fetch("alias(sum(super.puper.pattern, super.duper.pattern), 'pattern')", 17, 67, true)
 
-	// 	So(err, ShouldBeNil)
-	// 	So(result, shouldEqualIfNaNsEqual, &FetchResult{
-	// 		MetricsData: []metricSource.MetricData{{
-	// 			Name:      "pattern",
-	// 			StartTime: 60,
-	// 			StopTime:  120,
-	// 			StepTime:  60, Values: []float64{math.NaN()},
-	// 			Wildcard: true,
-	// 		}},
-	// 		Metrics:  []string{},
-	// 		Patterns: []string{pattern, pattern2},
-	// 	})
-	// })
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "pattern",
+				StartTime: 60,
+				StopTime:  120,
+				StepTime:  60, Values: []float64{math.NaN()},
+				Wildcard: true,
+			}},
+			Metrics:  []string{},
+			Patterns: []string{pattern, pattern2},
+		})
+	})
 }
 
 func TestLocalSourceFetchMultipleMetrics(t *testing.T) {
@@ -255,6 +255,7 @@ func TestLocalSourceFetchMultipleMetrics(t *testing.T) {
 					StopTime:  retentionUntil,
 					StepTime:  retention,
 					Values:    []float64{2, 2, 2, 2, 2},
+					Wildcard:  true,
 				},
 			},
 			Metrics:  metrics,
@@ -495,6 +496,7 @@ func TestLocalMetricsTTL(t *testing.T) {
 	})
 }
 
+// TODO(Tetrergeru) rewrite this test
 // func TestLocal_evalExpr(t *testing.T) {
 // 	Convey("When everything is correct, we don't return any error", t, func() {
 // 		ctx := fetchCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
@@ -531,12 +533,12 @@ func TestLocalMetricsTTL(t *testing.T) {
 // 		ctx := fetchCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
 // 		target := `vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
 
-// 		expression, _ := ctx.parse(target)
-// 		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
-// 		So(err, ShouldBeError)
-// 		So(err.Error(), ShouldResemble, `Unknown graphite function: "vf"`)
-// 		So(res, ShouldBeNil)
-// 	})
+//		expression, _ := ctx.parse(target)
+//		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
+//		So(err, ShouldBeError)
+//		So(err.Error(), ShouldResemble, `Unknown graphite function: "vf"`)
+//		So(res, ShouldBeNil)
+//	})
 // }
 
 func shouldEqualIfNaNsEqual(actual interface{}, expected ...interface{}) string {
