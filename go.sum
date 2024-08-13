@@ -977,8 +977,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/moira-alert/blackfriday-slack v0.1.2 h1:W6VbDlHDBxoB7X+OJ+3xZZuzMcQ0qTcblhLLnm/xQ7U=
 github.com/moira-alert/blackfriday-slack v0.1.2/go.mod h1:tYMK3laTzU1wgxeOpUPdw36KHD3eTyQNDfxtg1nXLWI=
-github.com/moira-alert/go-chart v0.0.0-20231107064049-444c44a558ef h1:hSEQ/9B23MTYQCxx+GTRW5P1eWaqtgEMEqOxXs/YNKE=
-github.com/moira-alert/go-chart v0.0.0-20231107064049-444c44a558ef/go.mod h1:ktrkvZGboMQfYyBXAV05imlVxGIvVdeCn5vz91Fw1vE=
+github.com/moira-alert/go-chart v0.0.0-20240813052818-d1336bdacc19 h1:dV1yczr6ndr5fCnBvj2SjBJxJNtnBtfZye0gDwTrPLs=
+github.com/moira-alert/go-chart v0.0.0-20240813052818-d1336bdacc19/go.mod h1:ktrkvZGboMQfYyBXAV05imlVxGIvVdeCn5vz91Fw1vE=
 github.com/msaf1980/go-stringutils v0.1.4 h1:UwsIT0hplHVucqbknk3CoNqKkmIuSHhsbBldXxyld5U=
 github.com/msaf1980/go-stringutils v0.1.4/go.mod h1:AxmV/6JuQUAtZJg5XmYATB5ZwCWgtpruVHY03dswRf8=
 github.com/mschoch/smat v0.2.0 h1:8imxQsjDm8yFEAVBe7azKmKSgzSkZXDuKkSq9374khM=
