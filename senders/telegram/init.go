@@ -140,7 +140,7 @@ func urlFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, html.EscapeString(triggerName))
 }
 
-func emptyDescriptionFormatter(trigger moira.TriggerData) string {
+func emptyDescriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 	return ""
 }
 

@@ -118,13 +118,23 @@ func uriFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("<%s|%s>", triggerURI, triggerName)
 }
 
-func descriptionFormatter(trigger moira.TriggerData) string {
+func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
+	if maxSize == 0 {
+		return ""
+	}
+
 	desc := trigger.Desc
 	if trigger.Desc != "" {
 		desc = string(slackdown.Run([]byte(desc)))
 		desc += "\n"
 	}
-	return desc
+
+	if maxSize < 0 {
+		return desc
+	}
+
+	suffix := "...\n"
+	return desc[:maxSize-len(suffix)] + suffix
 }
 
 func boldFormatter(str string) string {

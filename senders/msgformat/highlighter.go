@@ -15,7 +15,9 @@ import (
 type UriFormatter func(triggerURI, triggerName string) string
 
 // DescriptionFormatter is used to format trigger description to supported description.
-type DescriptionFormatter func(trigger moira.TriggerData) string
+// If maxSize < 0 then no limits should be applied during formatting,
+// otherwise the formatted description should be at most maxSize bytes.
+type DescriptionFormatter func(trigger moira.TriggerData, maxSize int) string
 
 // BoldFormatter makes str bold. For example in Markdown it should return **str**.
 type BoldFormatter func(str string) string
@@ -74,7 +76,7 @@ func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams)
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
 	titleLen := len([]rune(title))
 
-	desc := formatter.descriptionFormatter(params.Trigger)
+	desc := formatter.descriptionFormatter(params.Trigger, -1)
 	descLen := len([]rune(desc))
 
 	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
@@ -84,7 +86,8 @@ func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams)
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
 	if descLen != descNewLen {
-		desc = desc[:descNewLen] + "...\n"
+		desc = formatter.descriptionFormatter(params.Trigger, descNewLen)
+		descLen = len([]rune(desc))
 	}
 	if eventsNewLen != eventsStringLen {
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
