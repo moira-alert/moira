@@ -3,7 +3,9 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"github.com/russross/blackfriday/v2"
 	"html"
+	"regexp"
 	"strings"
 	"time"
 
@@ -24,8 +26,10 @@ const (
 )
 
 var (
-	codeBlockStart = "<blockquote expandable>"
-	codeBlockEnd   = "</blockquote>"
+	startHeaderRegexp = regexp.MustCompile("<h[0-9]+>")
+	endHeaderRegexp   = regexp.MustCompile("</h[0-9]+>")
+	codeBlockStart    = "<blockquote expandable>"
+	codeBlockEnd      = "</blockquote>"
 )
 
 var pollerTimeout = 10 * time.Second
@@ -84,7 +88,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		cfg.FrontURI,
 		location,
 		urlFormatter,
-		emptyDescriptionFormatter,
+		descriptionFormatter,
 		boldFormatter,
 		eventStringFormatter,
 		codeBlockStart,
@@ -140,8 +144,34 @@ func urlFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, html.EscapeString(triggerName))
 }
 
-func emptyDescriptionFormatter(trigger moira.TriggerData, maxSize int) string {
-	return ""
+func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
+	if maxSize == 0 {
+		return ""
+	}
+
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		desc = trigger.Desc
+		desc += "\n"
+	}
+
+	htmlDescStr := string(blackfriday.Run([]byte(desc)))
+
+	// html headers are not supported by telegram html, so make them bold instead.
+	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
+	replacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
+
+	// html paragraphs are not supported by telegram html, so delete them.
+	replacer := strings.NewReplacer("<p>", "", "</p>", "")
+	replacedParagraphs := replacer.Replace(replacedHeaders)
+
+	if maxSize < 0 {
+		return replacedParagraphs
+	}
+
+	// TODO: cut and check for unclosed tags
+
+	return replacedParagraphs
 }
 
 func boldFormatter(str string) string {
