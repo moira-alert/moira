@@ -15,14 +15,14 @@ import (
 var eventsTTL int64 = 3600 * 24 * 30
 
 // GetNotificationEvents gets NotificationEvents by given triggerID and interval. The events are also filtered by time range
-// (`from`, `to` params).
-func (connector *DbConnector) GetNotificationEvents(triggerID string, page, size, from, to int64) ([]*moira.NotificationEvent, error) {
+// with `from`, `to` params (`from` and `to` should be "+inf", "-inf" or int64 converted to string).
+func (connector *DbConnector) GetNotificationEvents(triggerID string, page, size int64, from, to string) ([]*moira.NotificationEvent, error) {
 	ctx := connector.Context()
 	client := connector.Client()
 
 	eventsData, err := reply.Events(client.ZRevRangeByScore(ctx, triggerEventsKey(triggerID), &redis.ZRangeBy{
-		Min:    strconv.FormatInt(from, 10),
-		Max:    strconv.FormatInt(to, 10),
+		Min:    from,
+		Max:    to,
 		Offset: page * size,
 		Count:  size,
 	}))

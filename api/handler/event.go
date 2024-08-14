@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -33,10 +34,10 @@ func event(router chi.Router) {
 //	@tags		event
 //	@produce	json
 //	@param		triggerID	path		string							true	"The ID of updated trigger"														default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		size			query		int									false	"Number of items to be displayed on one page. if size = -1 then all events returned"	default(-1)
+//	@param		size			query		int									false	"Number of items to be displayed on one page. if size = -1 then all events returned"	default(100)
 //	@param		p					query		int									false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	default(0)
-//	@param		from			query		string							false	"Start time of the time range"	default(-3hour)
-//	@param		to				query		string							false	"End time of the time range"	default(now)
+//	@param		from			query		string							false	"Start time of the time range"	default(-inf)
+//	@param		to				query		string							false	"End time of the time range"	default(+inf)
 //	@param		metric		query		string							false	"Regular expression that will be used to filter events"	default(.*)
 //	@param		states		query		[]string						false "String of ',' separated state names. If empty then all states will be used." collectionFormat(csv)
 //	@success	200			{object}	dto.EventsList					"Events fetched successfully"
@@ -52,16 +53,22 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
 
-	from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
-	if from == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr))) //nolint
-		return
+	if fromStr != "-inf" && fromStr != "+inf" {
+		from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
+		if from == 0 {
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr))) //nolint
+			return
+		}
+		fromStr = strconv.FormatInt(from, 10)
 	}
 
-	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
-	if to == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
-		return
+	if toStr != "-inf" && toStr != "+inf" {
+		to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
+		if to == 0 {
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
+			return
+		}
+		toStr = strconv.FormatInt(to, 10)
 	}
 
 	metricStr := middleware.GetMetric(request)
@@ -73,7 +80,7 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 
 	states := middleware.GetStates(request)
 
-	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size, from, to, metricRegexp, states)
+	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size, fromStr, toStr, metricRegexp, states)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return

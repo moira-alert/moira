@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
@@ -25,10 +24,11 @@ func TestGetEvents(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
 	triggerID := uuid.Must(uuid.NewV4()).String()
+
 	var page int64 = 10
 	var size int64 = 100
-	var from int64 = 0
-	to := time.Now().Unix()
+	from := "-inf"
+	to := "+inf"
 
 	Convey("Test has events", t, func() {
 		var total int64 = 6000000

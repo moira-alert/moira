@@ -4,9 +4,9 @@ const allMetricsPattern = ".*"
 
 const (
 	eventDefaultPage   = 0
-	eventDefaultSize   = -1
-	eventDefaultFrom   = "-3hour"
-	eventDefaultTo     = "now"
+	eventDefaultSize   = 100
+	eventDefaultFrom   = "-inf"
+	eventDefaultTo     = "+inf"
 	eventDefaultMetric = allMetricsPattern
 )
 
