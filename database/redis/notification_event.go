@@ -14,19 +14,24 @@ import (
 
 var eventsTTL int64 = 3600 * 24 * 30
 
-// GetNotificationEvents gets NotificationEvents by given triggerID and interval.
-func (connector *DbConnector) GetNotificationEvents(triggerID string, start int64, size int64) ([]*moira.NotificationEvent, error) {
-	ctx := connector.context
-	c := *connector.client
+// GetNotificationEvents gets NotificationEvents by given triggerID and interval. The events are also filtered by time range
+// (`from`, `to` params).
+func (connector *DbConnector) GetNotificationEvents(triggerID string, page, size, from, to int64) ([]*moira.NotificationEvent, error) {
+	ctx := connector.Context()
+	client := connector.Client()
 
-	eventsData, err := reply.Events(c.ZRevRange(ctx, triggerEventsKey(triggerID), start, start+size))
+	eventsData, err := reply.Events(client.ZRevRangeByScore(ctx, triggerEventsKey(triggerID), &redis.ZRangeBy{
+		Min:    strconv.FormatInt(from, 10),
+		Max:    strconv.FormatInt(to, 10),
+		Offset: page * size,
+		Count:  size,
+	}))
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
-		return nil, fmt.Errorf("failed to get range for trigger events, triggerID: %s, error: %s", triggerID, err.Error())
+		return nil, fmt.Errorf("failed to get range of trigger events, triggerID: %s, error: %w", triggerID, err)
 	}
-
 	return eventsData, nil
 }
 
@@ -85,7 +90,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	}
 
 	if err != nil {
-		return event, fmt.Errorf("failed to fetch event: %s", err.Error())
+		return event, fmt.Errorf("failed to fetch event: %w", err)
 	}
 
 	event, _ = reply.BRPopToEvent(response)
@@ -108,13 +113,13 @@ func (connector *DbConnector) RemoveAllNotificationEvents() error {
 	c := *connector.client
 
 	if _, err := c.Del(ctx, notificationEventsList).Result(); err != nil {
-		return fmt.Errorf("failed to remove %s: %s", notificationEventsList, err.Error())
+		return fmt.Errorf("failed to remove %s: %w", notificationEventsList, err)
 	}
 
 	return nil
 }
 
-var (
+const (
 	notificationEventsList   = "moira-trigger-events"
 	notificationEventsUIList = "moira-trigger-events-ui"
 )
