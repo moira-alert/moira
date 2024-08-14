@@ -264,6 +264,143 @@ func TestLocalSourceFetchMultipleMetrics(t *testing.T) {
 	})
 }
 
+func TestLocalSourceMovingFunctions(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
+	defer mockCtrl.Finish()
+
+	var from int64 = 17
+	var until int64 = 67
+	var retentionFrom int64 = 20
+	var retentionUntil int64 = 70
+	var retention int64 = 10
+	var metricsTTL int64 = 3600
+
+	Convey("Test success evaluate multiple metrics with pow function", t, func() {
+		metrics := []string{
+			"apps.server1.process.cpu.usage",
+		}
+
+		metricList := make(map[string][]*moira.MetricValue)
+		metricList["apps.server1.process.cpu.usage"] = []*moira.MetricValue{
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0.5},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 0.4},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 0.5},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 0.5},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 0.5},
+		}
+
+		metricList2 := make(map[string][]*moira.MetricValue)
+		metricList2["apps.server1.process.cpu.usage"] = []*moira.MetricValue{
+			{RetentionTimestamp: 0, Timestamp: 3, Value: 0.5},
+			{RetentionTimestamp: 10, Timestamp: 13, Value: 0.4},
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0.5},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 0.4},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 0.5},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 0.5},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 0.5},
+		}
+
+		database.EXPECT().GetPatternMetrics("apps.*.process.cpu.usage").Return(metrics, nil)
+		database.EXPECT().GetMetricRetention(metrics[0]).Return(retention, nil)
+		// database.EXPECT().GetMetricsValues(metrics, retentionFrom, retentionUntil-1).Return(metricList, nil)
+		database.EXPECT().GetMetricsValues(metrics, int64(0), retentionUntil-1).Return(metricList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("alias(movingMin(apps.*.process.cpu.usage, '20s'), 'min')", from, until, true)
+
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "min",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention,
+					Values:    []float64{0.5, 0.4, 0.4, 0.5, 0.5},
+					Wildcard:  false,
+				},
+			},
+			Metrics:  metrics,
+			Patterns: []string{"apps.*.process.cpu.usage"},
+		})
+	})
+}
+
+func TestLocalSourceApplyByNode(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
+	defer mockCtrl.Finish()
+
+	var from int64 = 17
+	var until int64 = 67
+	var retentionFrom int64 = 20
+	var retentionUntil int64 = 70
+	var retention int64 = 10
+	var metricsTTL int64 = 3600
+
+	Convey("Test success evaluate multiple metrics with pow function", t, func() {
+		metrics := []string{
+			"my.pattern.foo",
+		}
+
+		metricList := make(map[string][]*moira.MetricValue)
+		metricList["my.pattern.foo"] = []*moira.MetricValue{
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0.5},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 0.4},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 0.5},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 0.5},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 0.5},
+		}
+
+		metrics2 := []string{
+			"your.my.pattern.foo",
+		}
+
+		metricList2 := make(map[string][]*moira.MetricValue)
+		metricList2["your.my.pattern.foo"] = []*moira.MetricValue{
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 1},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 2},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 3},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 4},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 5},
+		}
+
+		database.EXPECT().GetPatternMetrics("my.pattern.*").Return(metrics, nil)
+		database.EXPECT().GetMetricRetention(metrics[0]).Return(retention, nil)
+		database.EXPECT().GetMetricsValues(metrics, retentionFrom, retentionUntil-1).Return(metricList, nil)
+
+		database.EXPECT().GetPatternMetrics("your.my.pattern.foo").Return(metrics2, nil).AnyTimes()
+		database.EXPECT().GetMetricRetention(metrics2[0]).Return(retention, nil).AnyTimes()
+		database.EXPECT().GetMetricsValues(metrics2, retentionFrom, retentionUntil-1).Return(metricList2, nil)
+
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch(`alias(applyByNode(my.pattern.*, 2, "your.%"), 'min')`, from, until, true)
+
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "min",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention,
+					Values:    []float64{1, 2, 3, 4, 5},
+					Wildcard:  true,
+				},
+			},
+			Metrics: []string{
+				"my.pattern.foo",
+				"your.my.pattern.foo",
+			},
+			Patterns: []string{"my.pattern.*"},
+		})
+	})
+}
+
 func TestLocalSourceFetch(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
