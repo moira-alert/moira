@@ -48,7 +48,7 @@ func (m *MockScheduler) ScheduleNotification(arg0 moira.SchedulerParams, arg1 mo
 }
 
 // ScheduleNotification indicates an expected call of ScheduleNotification.
-func (mr *MockSchedulerMockRecorder) ScheduleNotification(arg0, arg1 any) *gomock.Call {
+func (mr *MockSchedulerMockRecorder) ScheduleNotification(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScheduleNotification", reflect.TypeOf((*MockScheduler)(nil).ScheduleNotification), arg0, arg1)
 }
