@@ -144,6 +144,10 @@ func urlFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, html.EscapeString(triggerName))
 }
 
+//const (
+//	endSuffix = "...\n"
+//)
+
 func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 	if maxSize == 0 {
 		return ""
@@ -162,7 +166,7 @@ func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 	replacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
 
 	// html paragraphs are not supported by telegram html, so delete them.
-	replacer := strings.NewReplacer("<p>", "", "</p>", "")
+	replacer := strings.NewReplacer("<p>", "", "</p>", "", "&ldquo;", "&quot;", "&rdquo;", "&quot;")
 	replacedParagraphs := replacer.Replace(replacedHeaders)
 
 	if maxSize < 0 {
