@@ -144,9 +144,9 @@ func urlFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, html.EscapeString(triggerName))
 }
 
-//const (
-//	endSuffix = "...\n"
-//)
+const (
+	endSuffix = "...\n"
+)
 
 func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 	if maxSize == 0 {
@@ -165,17 +165,26 @@ func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
 	replacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
 
-	// html paragraphs are not supported by telegram html, so delete them.
-	replacer := strings.NewReplacer("<p>", "", "</p>", "", "&ldquo;", "&quot;", "&rdquo;", "&quot;")
-	replacedParagraphs := replacer.Replace(replacedHeaders)
+	// some tags are not supported or too long, so replace them.
+	replacer := strings.NewReplacer(
+		"<p>", "",
+		"</p>", "",
+		"&ldquo;", "&quot;",
+		"&rdquo;", "&quot;",
+		"<strong>", "<b>",
+		"</strong>", "</b>",
+		"<em>", "<i>",
+		"</em>", "</i>",
+		"<del>", "<s>",
+		"</del>", "</s>")
+	withReplacedTags := replacer.Replace(replacedHeaders)
 
-	if maxSize < 0 {
-		return replacedParagraphs
+	descRunes := []rune(withReplacedTags)
+	if maxSize < 0 || len(descRunes) <= maxSize {
+		return withReplacedTags
 	}
 
-	// TODO: cut and check for unclosed tags
-
-	return replacedParagraphs
+	return cutDescription(descRunes, maxSize-len(endSuffix)) + endSuffix
 }
 
 func boldFormatter(str string) string {
@@ -190,4 +199,51 @@ func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) str
 		html.EscapeString(event.GetMetricsValues(moira.DefaultNotificationSettings)),
 		event.OldState,
 		event.State)
+}
+
+func cutDescription(fullDesc []rune, maxSize int) string {
+	stack := make([]struct {
+		tag   string
+		start int
+	}, 0)
+
+	var tag []rune
+	pos := -1
+	for i := 0; i < maxSize; i++ {
+		r := fullDesc[i]
+		if r == '<' || len(tag) != 0 {
+			tag = append(tag, r)
+
+			if r == '<' {
+				pos = i
+			}
+
+			if r == '>' {
+				if tag[1] == '/' {
+					// pop
+					stack = stack[:len(stack)-1]
+				} else {
+					// push
+					stack = append(stack, struct {
+						tag   string
+						start int
+					}{tag: string(tag), start: pos})
+				}
+
+				tag = []rune{}
+			}
+		}
+	}
+
+	if len(tag) != 0 {
+		// some tag on border
+		maxSize -= len(tag)
+	}
+
+	if len(stack) == 0 {
+		// no unclosed tags
+		return string(fullDesc[:maxSize])
+	}
+
+	return string(fullDesc)
 }

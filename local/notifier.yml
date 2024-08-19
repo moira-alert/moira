@@ -30,7 +30,12 @@ notifier:
   sender_timeout: 10s
   resending_timeout: "1:00"
   rescheduling_delay: 60s
-  senders: []
+  senders:
+    - sender: telegram
+
+      api_token: 7250944463:AAFPzPzkmEqBjk3uJbetcc38hTv2vUUZ2vE
+      sender_type: telegram
+      contact_type: telegram
   moira_selfstate:
     enabled: false
     remote_triggers_enabled: false

@@ -7,7 +7,7 @@ import (
 )
 
 func TestTelegramDescriptionFormatter(t *testing.T) {
-	const shortDesc = "# Моё описание\n\nсписок:\n- **жирный**\n- *курсив*\n- `код`\n\nif a > b do smth\nif c < d do another thing\ntrue && false = false\ntrue || false = true\n\"Hello everybody!\""
+	const shortDesc = "# Моё описание\n\nсписок:\n- **жирный**\n- *курсив*\n- `код`\n- <u>подчёркнутый</u>\n- ~~зачёркнутый~~\n\nif a > b do smth\nif c < d do another thing\ntrue && false = false\ntrue || false = true\n\"Hello everybody!\""
 	trigger := moira.TriggerData{
 		Tags: []string{"tag1", "tag2"},
 		Name: "Name",
@@ -17,7 +17,7 @@ func TestTelegramDescriptionFormatter(t *testing.T) {
 
 	Convey("Telegram description formatter", t, func() {
 		Convey("with short description", func() {
-			expected := "<b>Моё описание</b>\n\nсписок:\n- <strong>жирный</strong>\n- <em>курсив</em>\n- <code>код</code>\n\nif a &gt; b do smth\nif c &lt; d do another thing\ntrue &amp;&amp; false = false\ntrue || false = true\n&quot;Hello everybody!&quot;\n"
+			expected := "<b>Моё описание</b>\n\nсписок:\n- <b>жирный</b>\n- <i>курсив</i>\n- <code>код</code>\n- <u>подчёркнутый</u>\n- <s>зачёркнутый</s>\n\nif a &gt; b do smth\nif c &lt; d do another thing\ntrue &amp;&amp; false = false\ntrue || false = true\n&quot;Hello everybody!&quot;\n"
 
 			desc := descriptionFormatter(trigger, -1)
 
@@ -30,9 +30,9 @@ func TestTelegramDescriptionFormatter(t *testing.T) {
 		//		tagContent = "text."
 		//	)
 		//
-		//	markdownTags := []string{"**", "*", "`"}
-		//	htmlStartTags := []string{"<strong>", "<em>", "<code>"}
-		//	htmlEndTags := []string{"</strong>", "</em>", "</code>"}
+		//	markdownTags := []string{"**", "*", "`", "~~"}
+		//	htmlStartTags := []string{"<b>", "<i>", "<code>", "<s>"}
+		//	htmlEndTags := []string{"</b>", "</i>", "</code>", "</s>"}
 		//
 		//	for tagIndex := range markdownTags {
 		//		Convey(fmt.Sprintf("%s tag", htmlStartTags[tagIndex]), func() {
