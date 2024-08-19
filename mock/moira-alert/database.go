@@ -182,6 +182,20 @@ func (mr *MockDatabaseMockRecorder) CleanUpOutdatedMetrics(arg0 any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedMetrics), arg0)
 }
 
+// CleanUpOutdatedNotificationHistory mocks base method.
+func (m *MockDatabase) CleanUpOutdatedNotificationHistory(arg0 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanUpOutdatedNotificationHistory", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CleanUpOutdatedNotificationHistory indicates an expected call of CleanUpOutdatedNotificationHistory.
+func (mr *MockDatabaseMockRecorder) CleanUpOutdatedNotificationHistory(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedNotificationHistory", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedNotificationHistory), arg0)
+}
+
 // CleanupOutdatedPatternMetrics mocks base method.
 func (m *MockDatabase) CleanupOutdatedPatternMetrics() (int64, error) {
 	m.ctrl.T.Helper()
@@ -476,18 +490,18 @@ func (mr *MockDatabaseMockRecorder) GetNotificationEventCount(arg0, arg1 any) *g
 }
 
 // GetNotificationEvents mocks base method.
-func (m *MockDatabase) GetNotificationEvents(arg0 string, arg1, arg2 int64) ([]*moira.NotificationEvent, error) {
+func (m *MockDatabase) GetNotificationEvents(arg0 string, arg1, arg2 int64, arg3, arg4 string) ([]*moira.NotificationEvent, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotificationEvents", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetNotificationEvents", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]*moira.NotificationEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNotificationEvents indicates an expected call of GetNotificationEvents.
-func (mr *MockDatabaseMockRecorder) GetNotificationEvents(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetNotificationEvents(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEvents", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEvents), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEvents", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEvents), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetNotifications mocks base method.
@@ -506,19 +520,19 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifications", reflect.TypeOf((*MockDatabase)(nil).GetNotifications), arg0, arg1)
 }
 
-// GetNotificationsByContactIdWithLimit mocks base method.
-func (m *MockDatabase) GetNotificationsByContactIdWithLimit(arg0 string, arg1, arg2 int64) ([]*moira.NotificationEventHistoryItem, error) {
+// GetNotificationsHistoryByContactID mocks base method.
+func (m *MockDatabase) GetNotificationsHistoryByContactID(arg0 string, arg1, arg2, arg3, arg4 int64) ([]*moira.NotificationEventHistoryItem, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotificationsByContactIdWithLimit", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetNotificationsHistoryByContactID", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]*moira.NotificationEventHistoryItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetNotificationsByContactIdWithLimit indicates an expected call of GetNotificationsByContactIdWithLimit.
-func (mr *MockDatabaseMockRecorder) GetNotificationsByContactIdWithLimit(arg0, arg1, arg2 any) *gomock.Call {
+// GetNotificationsHistoryByContactID indicates an expected call of GetNotificationsHistoryByContactID.
+func (mr *MockDatabaseMockRecorder) GetNotificationsHistoryByContactID(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationsByContactIdWithLimit", reflect.TypeOf((*MockDatabase)(nil).GetNotificationsByContactIdWithLimit), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationsHistoryByContactID", reflect.TypeOf((*MockDatabase)(nil).GetNotificationsHistoryByContactID), arg0, arg1, arg2, arg3, arg4)
 }
 
 // GetNotifierState mocks base method.

@@ -60,7 +60,7 @@ type Database interface {
 	DeleteTriggerThrottling(triggerID string) error
 
 	// NotificationEvent storing
-	GetNotificationEvents(triggerID string, start, size int64) ([]*NotificationEvent, error)
+	GetNotificationEvents(triggerID string, start, size int64, from, to string) ([]*NotificationEvent, error)
 	PushNotificationEvent(event *NotificationEvent, ui bool) error
 	GetNotificationEventCount(triggerID string, from int64) int64
 	FetchNotificationEvent() (NotificationEvent, error)
@@ -87,13 +87,14 @@ type Database interface {
 
 	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
-	GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*NotificationEventHistoryItem, error)
+	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, error)
 	RemoveNotification(notificationKey string) (int64, error)
 	RemoveAllNotifications() error
 	FetchNotifications(to int64, limit int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 	PushContactNotificationToHistory(notification *ScheduledNotification) error
+	CleanUpOutdatedNotificationHistory(ttl int64) error
 
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
