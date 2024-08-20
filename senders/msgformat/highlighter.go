@@ -87,7 +87,6 @@ func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams)
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
 	if descLen != descNewLen {
 		desc = formatter.descriptionFormatter(params.Trigger, descNewLen)
-		descLen = len([]rune(desc))
 	}
 	if eventsNewLen != eventsStringLen {
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)

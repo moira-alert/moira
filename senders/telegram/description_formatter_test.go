@@ -1,13 +1,18 @@
 package telegram
 
 import (
+	"testing"
+
 	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestTelegramDescriptionFormatter(t *testing.T) {
-	const shortDesc = "# Моё описание\n\nсписок:\n- **жирный**\n- *курсив*\n- `код`\n- <u>подчёркнутый</u>\n- ~~зачёркнутый~~\n\nif a > b do smth\nif c < d do another thing\ntrue && false = false\ntrue || false = true\n\"Hello everybody!\""
+	const (
+		shortDesc    = "# Моё описание\n\nсписок:\n- **жирный**\n- *курсив*\n- `код`\n- <u>подчёркнутый</u>\n- ~~зачёркнутый~~\n\nif a > b do smth\nif c < d do another thing\ntrue && false = false\ntrue || false = true\n\"Hello everybody!\""
+		expectedDesc = "<b>Моё описание</b>\n\nсписок:\n- <b>жирный</b>\n- <i>курсив</i>\n- <code>код</code>\n- <u>подчёркнутый</u>\n- <s>зачёркнутый</s>\n\nif a &gt; b do smth\nif c &lt; d do another thing\ntrue &amp;&amp; false = false\ntrue || false = true\n&quot;Hello everybody!&quot;\n"
+	)
+
 	trigger := moira.TriggerData{
 		Tags: []string{"tag1", "tag2"},
 		Name: "Name",
@@ -17,7 +22,7 @@ func TestTelegramDescriptionFormatter(t *testing.T) {
 
 	Convey("Telegram description formatter", t, func() {
 		Convey("with short description", func() {
-			expected := "<b>Моё описание</b>\n\nсписок:\n- <b>жирный</b>\n- <i>курсив</i>\n- <code>код</code>\n- <u>подчёркнутый</u>\n- <s>зачёркнутый</s>\n\nif a &gt; b do smth\nif c &lt; d do another thing\ntrue &amp;&amp; false = false\ntrue || false = true\n&quot;Hello everybody!&quot;\n"
+			expected := expectedDesc
 
 			desc := descriptionFormatter(trigger, -1)
 
@@ -68,5 +73,70 @@ func TestTelegramDescriptionFormatter(t *testing.T) {
 		//		})
 		//	}
 		//})
+	})
+}
+
+func TestSplitDescriptionIntoNodes(t *testing.T) {
+	Convey("Split description", t, func() {
+		Convey("with no unclosed tags", func() {
+			desc := "<b>Моё описание</b>\nif a &gt; b do smth\n<a href=\"http://example.com\">текст ссылки</a>"
+			testMaxSize := len([]rune(desc))
+
+			expectedNodes := []descriptionNode{
+				{
+					content:  []rune("<b>"),
+					start:    0,
+					nodeType: openTag,
+				},
+				{
+					content:  []rune("Моё описание"),
+					start:    3,
+					nodeType: text,
+				},
+				{
+					content:  []rune("</b>"),
+					start:    15,
+					nodeType: closeTag,
+				},
+				{
+					content:  []rune("\nif a "),
+					start:    19,
+					nodeType: text,
+				},
+				{
+					content:  []rune("&gt;"),
+					start:    25,
+					nodeType: escapedSymbol,
+				},
+				{
+					content:  []rune(" b do smth\n"),
+					start:    29,
+					nodeType: text,
+				},
+				{
+					content:  []rune("<a href=\"http://example.com\">"),
+					start:    40,
+					nodeType: openTag,
+				},
+				{
+					content:  []rune("текст ссылки"),
+					start:    69,
+					nodeType: text,
+				},
+				{
+					content:  []rune("</a>"),
+					start:    81,
+					nodeType: closeTag,
+				},
+			}
+			expectedUnclosed := []int{}
+			expectedMaxSize := testMaxSize
+
+			nodes, unclosed, maxSize := splitDescriptionIntoNodes([]rune(desc), testMaxSize)
+
+			So(nodes, ShouldResemble, expectedNodes)
+			So(unclosed, ShouldResemble, expectedUnclosed)
+			So(maxSize, ShouldEqual, expectedMaxSize)
+		})
 	})
 }
