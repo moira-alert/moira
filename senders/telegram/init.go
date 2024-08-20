@@ -201,49 +201,308 @@ func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) str
 		event.State)
 }
 
-func cutDescription(fullDesc []rune, maxSize int) string {
-	stack := make([]struct {
-		tag   string
-		start int
-	}, 0)
+type descriptionNodeType int8
 
-	var tag []rune
-	pos := -1
+const (
+	undefined     descriptionNodeType = iota // if node type is undefined.
+	openTag                                  // for example <b>.
+	closeTag                                 // for example </b>.
+	text                                     // text with no tags or escaped symbols.
+	escapedSymbol                            // escaped symbols, for example '>' is turned into '&gt;'.
+)
+
+type descriptionNode struct {
+	content []rune
+	// start of content in the description
+	start    int
+	nodeType descriptionNodeType
+}
+
+func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode, []int, int) {
+	var nodes []descriptionNode
+	var stack []int
+
+	var nodeContent []rune
+	prevNodeType := undefined
+	startOfNode := 0
 	for i := 0; i < maxSize; i++ {
 		r := fullDesc[i]
-		if r == '<' || len(tag) != 0 {
-			tag = append(tag, r)
 
-			if r == '<' {
-				pos = i
+		// tagStarted
+		if r == '<' {
+			if len(nodeContent) != 0 {
+				nodes = append(nodes, descriptionNode{
+					content:  nodeContent,
+					start:    startOfNode,
+					nodeType: prevNodeType,
+				})
+				nodeContent = []rune{}
+			}
+			prevNodeType = openTag
+			startOfNode = i
+		}
+
+		if len(nodeContent) == 1 && nodeContent[0] == '<' && r == '/' {
+			prevNodeType = closeTag
+		}
+
+		// start of escaped symbol
+		if r == '&' && len(nodeContent) != 0 {
+			if len(nodeContent) != 0 {
+				nodes = append(nodes, descriptionNode{
+					content:  nodeContent,
+					start:    startOfNode,
+					nodeType: prevNodeType,
+				})
+				nodeContent = []rune{}
+			}
+			prevNodeType = escapedSymbol
+			startOfNode = i
+		}
+
+		nodeContent = append(nodeContent, r)
+
+		// tag ended
+		if r == '>' {
+			nodes = append(nodes, descriptionNode{
+				content:  nodeContent,
+				start:    startOfNode,
+				nodeType: prevNodeType,
+			})
+
+			if prevNodeType == openTag {
+				stack = append(stack, len(nodes)-1)
+			} else if prevNodeType == closeTag {
+				stack = stack[:len(stack)-1]
 			}
 
-			if r == '>' {
-				if tag[1] == '/' {
-					// pop
-					stack = stack[:len(stack)-1]
+			nodeContent = []rune{}
+			prevNodeType = undefined
+			startOfNode = i + 1
+			continue
+		}
+
+		// end of escaped symbol
+		if len(nodeContent) > 0 && nodeContent[0] == '&' && r == ';' {
+			nodes = append(nodes, descriptionNode{
+				content:  nodeContent,
+				start:    startOfNode,
+				nodeType: prevNodeType,
+			})
+			nodeContent = []rune{}
+			prevNodeType = undefined
+			startOfNode = i + 1
+			continue
+		}
+
+		// not the tag nor escaped symbol
+		if len(nodeContent) == 1 {
+			prevNodeType = text
+			startOfNode = i
+		}
+	}
+
+	if len(nodeContent) != 0 {
+		if nodeContent[0] == '<' || nodeContent[0] == '&' {
+			maxSize -= len(nodeContent)
+		} else {
+			nodes = append(nodes, descriptionNode{
+				content:  nodeContent,
+				start:    startOfNode,
+				nodeType: prevNodeType,
+			})
+		}
+	}
+
+	return nodes, stack, maxSize
+}
+
+func toString(nodes []descriptionNode) string {
+	var res string
+
+	for _, node := range nodes {
+		res += string(node.content)
+	}
+
+	return res
+}
+
+func lenContent(nodes []descriptionNode) int {
+	res := 0
+
+	for _, node := range nodes {
+		res += len(node.content)
+	}
+
+	return res
+}
+
+func cutDescription(fullDesc []rune, maxSize int) string {
+	var nodes []descriptionNode
+	var unclosed []int
+
+	nodes, unclosed, maxSize = splitDescriptionIntoNodes(fullDesc, maxSize)
+
+	if len(unclosed) == 0 {
+		return toString(nodes)
+	}
+
+	var reversedCloseTags []descriptionNode
+
+	for i, nodeIdx := range unclosed {
+		if string(nodes[nodeIdx].content) == "<pre>" {
+			// remove <pre> block
+
+			nodes = nodes[:nodeIdx]
+			unclosed = unclosed[:i]
+			break
+		} else if strings.HasPrefix(string(nodes[nodeIdx].content), "<a href=\"") {
+			// try to save link, but if there is no space for closing all tags remove it and try to close other tags
+
+			var noTagsNodes []descriptionNode
+			skippedLen := 0
+			textLen := 0
+
+			for j := nodeIdx + 1; j < len(nodes); j++ {
+				if nodes[j].nodeType == text || nodes[j].nodeType == escapedSymbol {
+					if len(noTagsNodes) > 0 && noTagsNodes[len(noTagsNodes)-1].nodeType == nodes[j].nodeType {
+						// merge nodes with the same types
+
+						noTagsNodes[len(noTagsNodes)-1].content = append(noTagsNodes[len(noTagsNodes)-1].content, nodes[j].content...)
+					} else {
+						noTagsNodes = append(noTagsNodes, nodes[j])
+					}
+
+					textLen += len(nodes[j].content)
 				} else {
-					// push
-					stack = append(stack, struct {
-						tag   string
-						start int
-					}{tag: string(tag), start: pos})
+					skippedLen += len(nodes[j].content)
+				}
+			}
+
+			linkCloseRunes := []rune("</a>")
+			lenReversedTags := lenContent(reversedCloseTags)
+			if skippedLen+textLen > len(linkCloseRunes)+lenReversedTags {
+				// we have enough space to close all tags and left the link
+
+				if skippedLen < len(linkCloseRunes)+lenReversedTags {
+					// we have enough space to close all tags, but we have to cut text inside of link
+
+					newTextLen := skippedLen + textLen - len(linkCloseRunes) - lenReversedTags
+
+					// cutting text
+					cutLen := 0
+					for noTagsNodesIdx := 0; noTagsNodesIdx < len(noTagsNodes); noTagsNodesIdx++ {
+						if cutLen+len(noTagsNodes[noTagsNodesIdx].content) < newTextLen {
+							cutLen += len(noTagsNodes[noTagsNodesIdx].content)
+						} else if cutLen+len(noTagsNodes[noTagsNodesIdx].content) == newTextLen {
+							cutLen += len(noTagsNodes[noTagsNodesIdx].content)
+							noTagsNodes = noTagsNodes[:noTagsNodesIdx+1]
+							break
+						} else {
+							if noTagsNodes[noTagsNodesIdx].nodeType == escapedSymbol {
+								noTagsNodes = noTagsNodes[:noTagsNodesIdx]
+								break
+							} else {
+								noTagsNodes[noTagsNodesIdx].content = noTagsNodes[noTagsNodesIdx].content[:newTextLen-cutLen]
+								noTagsNodes = noTagsNodes[:noTagsNodesIdx+1]
+								break
+							}
+						}
+					}
 				}
 
-				tag = []rune{}
+				nodes = append(nodes[:nodeIdx+1], noTagsNodes...)
+				nodes = append(nodes, descriptionNode{
+					content:  linkCloseRunes,
+					nodeType: closeTag,
+				})
+				nodes = append(nodes, reversedCloseTags...)
+				unclosed = []int{}
+				break
+			} else {
+				// there is no enough space for link, so remove it
+
+				nodes = nodes[:nodeIdx]
+				unclosed = unclosed[:i]
+				break
+			}
+		} else {
+			// if we have such unclosed tags: <b>, <i>, <s> then
+			// reversedCloseTags should be: </s>, </i>, </b>
+
+			var newContent []rune
+			newContent = append(newContent, nodes[nodeIdx].content[0], '/')
+			newContent = append(newContent, nodes[nodeIdx].content[1:]...)
+
+			if len(reversedCloseTags) == 0 {
+				reversedCloseTags = append(reversedCloseTags, descriptionNode{
+					content:  newContent,
+					nodeType: closeTag,
+				})
+			} else {
+				tail := reversedCloseTags
+				reversedCloseTags = []descriptionNode{}
+				reversedCloseTags = append(reversedCloseTags, descriptionNode{
+					content:  newContent,
+					nodeType: closeTag,
+				})
+				reversedCloseTags = append(reversedCloseTags, tail...)
 			}
 		}
 	}
 
-	if len(tag) != 0 {
-		// some tag on border
-		maxSize -= len(tag)
+	if len(unclosed) == 0 {
+		return toString(nodes)
 	}
 
-	if len(stack) == 0 {
-		// no unclosed tags
-		return string(fullDesc[:maxSize])
+	currentLen := lenContent(nodes)
+	lenCloseTags := lenContent(reversedCloseTags)
+
+	if maxSize < currentLen+lenCloseTags {
+		for i := len(nodes) - 1; i >= 0; i-- {
+			switch nodes[i].nodeType {
+			case escapedSymbol:
+				currentLen = lenContent(nodes[:i])
+			case text:
+				toCutLen := currentLen + lenCloseTags - maxSize
+
+				// if we can cut text to give us space for
+				if toCutLen >= len(nodes[i].content) {
+					currentLen = lenContent(nodes[:i])
+				} else {
+					nodes[i].content = nodes[i].content[:len(nodes[i].content)-toCutLen]
+					nodes = nodes[:i+1]
+					break
+				}
+			case closeTag:
+				tail := reversedCloseTags
+				reversedCloseTags = []descriptionNode{}
+				reversedCloseTags = append(reversedCloseTags, descriptionNode{
+					content:  nodes[i].content,
+					nodeType: closeTag,
+				})
+				reversedCloseTags = append(reversedCloseTags, tail...)
+				currentLen = lenContent(nodes[:i])
+				lenCloseTags = lenContent(reversedCloseTags)
+			case openTag:
+				if len(reversedCloseTags) == 1 {
+					nodes = nodes[:i]
+					reversedCloseTags = []descriptionNode{}
+					break
+				}
+				reversedCloseTags = reversedCloseTags[1:]
+				lenCloseTags = lenContent(reversedCloseTags)
+				currentLen = lenContent(nodes[:i])
+			}
+
+			if maxSize >= currentLen+lenCloseTags {
+				nodes = nodes[:i]
+				break
+			}
+		}
 	}
 
-	return string(fullDesc)
+	nodes = append(nodes, reversedCloseTags...)
+
+	return toString(nodes)
 }
