@@ -226,7 +226,7 @@ type descriptionNode struct {
 // will be split to nodes with such content:
 //
 // ["<b>", "Bold", "</b>", " ", "&gt;"].
-func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode, []int, int) {
+func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode, []int) {
 	var nodes []descriptionNode
 	var stack []int
 
@@ -316,22 +316,48 @@ func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode,
 		}
 	}
 
-	if len(nodeContent) != 0 {
-		if nodeContent[0] == '<' || nodeContent[0] == '&' {
-			maxSize -= len(nodeContent)
-		} else {
-			nodes = append(nodes, descriptionNode{
-				content:  nodeContent,
-				start:    startOfNode,
-				nodeType: prevNodeType,
-			})
-		}
+	if len(nodeContent) != 0 && nodeContent[0] != '<' && nodeContent[0] != '&' {
+		nodes = append(nodes, descriptionNode{
+			content:  nodeContent,
+			start:    startOfNode,
+			nodeType: prevNodeType,
+		})
 	}
 
-	return nodes, stack, maxSize
+	return nodes, stack
+}
+
+// removeEmptyTags remove tag pairs like <b></b> from nodes.
+func removeEmptyTags(nodes []descriptionNode) []descriptionNode {
+	for {
+		start := -1
+		end := -1
+		for i := 1; i < len(nodes); i++ {
+			if nodes[i-1].nodeType == openTag && nodes[i].nodeType == closeTag {
+				start = i - 1
+				end = i
+			}
+		}
+
+		if start == -1 && end == -1 {
+			break
+		}
+
+		var newNodes []descriptionNode
+		newNodes = append(newNodes, nodes[:start]...)
+		if end <= len(nodes)-1 {
+			newNodes = append(newNodes, nodes[end+1:]...)
+		}
+
+		nodes = newNodes
+	}
+
+	return nodes
 }
 
 func toString(nodes []descriptionNode) string {
+	nodes = removeEmptyTags(nodes)
+
 	var res string
 
 	for _, node := range nodes {
@@ -365,10 +391,7 @@ func appendToHead(reversedCloseTags []descriptionNode, newNode descriptionNode) 
 }
 
 func cutDescription(fullDesc []rune, maxSize int) string {
-	var nodes []descriptionNode
-	var unclosed []int
-
-	nodes, unclosed, maxSize = splitDescriptionIntoNodes(fullDesc, maxSize)
+	nodes, unclosed := splitDescriptionIntoNodes(fullDesc, maxSize)
 
 	if len(unclosed) == 0 {
 		return toString(nodes)
@@ -385,6 +408,7 @@ func cutDescription(fullDesc []rune, maxSize int) string {
 			break
 		} else if strings.HasPrefix(string(nodes[nodeIdx].content), "<a href=\"") {
 			nodes, reversedCloseTags, unclosed = cutLink(nodeIdx, nodes, reversedCloseTags, unclosed)
+			break
 		} else {
 			// if we have such unclosed tags: <b>, <i>, <s> then
 			// reversedCloseTags should be: </s>, </i>, </b>
@@ -421,7 +445,7 @@ func cutDescription(fullDesc []rune, maxSize int) string {
 				} else {
 					nodes[i].content = nodes[i].content[:len(nodes[i].content)-toCutLen]
 					nodes = nodes[:i+1]
-					break
+					goto cycleExited
 				}
 			case closeTag:
 				reversedCloseTags = appendToHead(reversedCloseTags, descriptionNode{
@@ -434,7 +458,7 @@ func cutDescription(fullDesc []rune, maxSize int) string {
 				if len(reversedCloseTags) == 1 {
 					nodes = nodes[:i]
 					reversedCloseTags = []descriptionNode{}
-					break
+					goto cycleExited
 				}
 				reversedCloseTags = reversedCloseTags[1:]
 				lenCloseTags = lenContent(reversedCloseTags)
@@ -448,6 +472,7 @@ func cutDescription(fullDesc []rune, maxSize int) string {
 		}
 	}
 
+cycleExited:
 	nodes = append(nodes, reversedCloseTags...)
 
 	return toString(nodes)
