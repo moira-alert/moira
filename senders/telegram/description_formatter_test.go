@@ -10,8 +10,8 @@ import (
 
 func TestTelegramDescriptionFormatter(t *testing.T) {
 	const (
-		shortDesc    = "# Моё описание\n\nсписок:\n- **жирный**\n- *курсив*\n- `код`\n- <u>подчёркнутый</u>\n- ~~зачёркнутый~~\n\nif a > b do smth\nif c < d do another thing\ntrue && false = false\ntrue || false = true\n\"Hello everybody!\""
-		expectedDesc = "<b>Моё описание</b>\n\nсписок:\n- <b>жирный</b>\n- <i>курсив</i>\n- <code>код</code>\n- <u>подчёркнутый</u>\n- <s>зачёркнутый</s>\n\nif a &gt; b do smth\nif c &lt; d do another thing\ntrue &amp;&amp; false = false\ntrue || false = true\n&quot;Hello everybody!&quot;\n"
+		shortDesc    = "# Моё описание\n\nсписок:\n- **жирный**\n- *курсив*\n- `код`\n- <u>подчёркнутый</u>\n- ~~зачёркнутый~~\n\n------\nif a > b do smth\nif c < d do another thing\ntrue && false = false\ntrue || false = true\n\"Hello everybody!\", 'another quots'"
+		expectedDesc = "<b>Моё описание</b>\n\nсписок:\n- <b>жирный</b>\n- <i>курсив</i>\n- <code>код</code>\n- <u>подчёркнутый</u>\n- <s>зачёркнутый</s>\n\n\n\nif a &gt; b do smth\nif c &lt; d do another thing\ntrue &amp;&amp; false = false\ntrue || false = true\n&quot;Hello everybody!&quot;, 'another quots'\n"
 	)
 
 	trigger := moira.TriggerData{
@@ -35,7 +35,7 @@ func TestTelegramDescriptionFormatter(t *testing.T) {
 func TestSplitDescriptionIntoNodes(t *testing.T) {
 	Convey("Split description", t, func() {
 		Convey("with no unclosed tags", func() {
-			desc := "<b>Моё описание</b>\nif a &gt; b do smth\n<a href=\"http://example.com\">текст ссылки</a>"
+			desc := "<b>Моё описание</b>\nif a &gt; b do smth\n<a href=\"http://example.com?a=1&amp;b=2\">текст ссылки</a>"
 			testMaxSize := len([]rune(desc))
 
 			expectedNodes := []descriptionNode{
@@ -64,7 +64,7 @@ func TestSplitDescriptionIntoNodes(t *testing.T) {
 					nodeType: text,
 				},
 				{
-					content:  []rune("<a href=\"http://example.com\">"),
+					content:  []rune("<a href=\"http://example.com?a=1&amp;b=2\">"),
 					nodeType: openTag,
 				},
 				{
@@ -83,6 +83,20 @@ func TestSplitDescriptionIntoNodes(t *testing.T) {
 			So(nodes, ShouldResemble, expectedNodes)
 			So(unclosed, ShouldResemble, expectedUnclosed)
 		})
+		//		Convey("with special", func() {
+		//			desc := `В namespace talk-webinar суммарные <b>limits</b> по <b>CPU</b> от подов приближаются к лимитам квоты.
+		//Вы можете уменьшить запросы ресурсов или запросить увеличение через <a href="https://bokrug.skbkontur.ru/">Bokrug</a>.
+		//
+		//<b><a href="https://k8s-dashboard.kontur.host/#/pod?namespace=talk-webinar">Kubernetes dashboard</a></b>
+		//
+		//Метрики:
+		//- <a href="https://grafana.skbkontur.ru/d/eUo8UWk7z/prometheus-kubernetes-universal?var-Cluster=k8s.production-cl1&amp;var-Namespace=talk-webinar&amp;viewPanel=11">Prometheus</a>
+		//- <a href="https://grafana.skbkontur.ru/d/kv2dOgi7k/graphite-kubernetes-universal?var-Cluster=k8s.production-cl1&amp;var-Namespace=talk-webinar&amp;viewPanel=44">Graphite</a>
+		//
+		//Не меняйте триггер руками! Он управляется <a href="https://git.skbkontur.ru/k8s/manage-moira-triggers">автоматикой.</a>`
+		//
+		//			nodes, unclosed :=
+		//		})
 	})
 }
 

@@ -31,7 +31,11 @@ func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 		desc += "\n"
 	}
 
-	htmlDescStr := string(blackfriday.Run([]byte(desc)))
+	htmlDescStr := string(blackfriday.Run([]byte(desc),
+		blackfriday.WithExtensions(
+			blackfriday.CommonExtensions &
+				^blackfriday.DefinitionLists &
+				^blackfriday.Tables)))
 
 	// html headers are not supported by telegram html, so make them bold instead.
 	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
@@ -43,12 +47,23 @@ func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 		"</p>", "",
 		"&ldquo;", "&quot;",
 		"&rdquo;", "&quot;",
+		"&lsquo;", "'",
+		"&rsquo;", "'",
 		"<strong>", "<b>",
 		"</strong>", "</b>",
 		"<em>", "<i>",
 		"</em>", "</i>",
 		"<del>", "<s>",
-		"</del>", "</s>")
+		"</del>", "</s>",
+		"<ul>", "",
+		"</ul>", "",
+		"<li>", "- ",
+		"</li>", "",
+		"<ol>", "",
+		"</ol>", "",
+		"<hr>", "",
+		"<hr />", "")
+
 	withReplacedTags := replacer.Replace(replacedHeaders)
 
 	descRunes := []rune(withReplacedTags)
@@ -113,14 +128,17 @@ func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode,
 
 		// start of escaped symbol
 		if r == '&' {
-			if len(nodeContent) != 0 {
+			// remember that '&' also can be in url
+			if len(nodeContent) != 0 && nodeContent[0] != '<' {
 				nodes = append(nodes, descriptionNode{
 					content:  nodeContent,
 					nodeType: prevNodeType,
 				})
 				nodeContent = []rune{}
 			}
-			prevNodeType = escapedSymbol
+			if len(nodeContent) == 0 {
+				prevNodeType = escapedSymbol
+			}
 			nodeContent = append(nodeContent, r)
 			continue
 		}
