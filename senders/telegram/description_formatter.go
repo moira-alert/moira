@@ -1,10 +1,11 @@
 package telegram
 
 import (
-	"github.com/moira-alert/moira"
-	"github.com/russross/blackfriday/v2"
 	"regexp"
 	"strings"
+
+	"github.com/moira-alert/moira"
+	"github.com/russross/blackfriday/v2"
 )
 
 const (
@@ -71,7 +72,6 @@ const (
 type descriptionNode struct {
 	content []rune
 	// start of content in the description
-	start    int
 	nodeType descriptionNodeType
 }
 
@@ -82,13 +82,12 @@ type descriptionNode struct {
 // will be split to nodes with such content:
 //
 // ["<b>", "Bold", "</b>", " smth ", "&gt;", " smth"].
-func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode, []int) {
+func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode, []int) { // nolint
 	var nodes []descriptionNode
 	var stack []int
 
 	var nodeContent []rune
 	prevNodeType := undefined
-	startOfNode := 0
 	for i := 0; i < maxSize; i++ {
 		r := fullDesc[i]
 
@@ -97,13 +96,11 @@ func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode,
 			if len(nodeContent) != 0 {
 				nodes = append(nodes, descriptionNode{
 					content:  nodeContent,
-					start:    startOfNode,
 					nodeType: prevNodeType,
 				})
 				nodeContent = []rune{}
 			}
 			prevNodeType = openTag
-			startOfNode = i
 			nodeContent = append(nodeContent, r)
 			continue
 		}
@@ -119,13 +116,11 @@ func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode,
 			if len(nodeContent) != 0 {
 				nodes = append(nodes, descriptionNode{
 					content:  nodeContent,
-					start:    startOfNode,
 					nodeType: prevNodeType,
 				})
 				nodeContent = []rune{}
 			}
 			prevNodeType = escapedSymbol
-			startOfNode = i
 			nodeContent = append(nodeContent, r)
 			continue
 		}
@@ -136,7 +131,6 @@ func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode,
 		if r == '>' {
 			nodes = append(nodes, descriptionNode{
 				content:  nodeContent,
-				start:    startOfNode,
 				nodeType: prevNodeType,
 			})
 
@@ -148,7 +142,6 @@ func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode,
 
 			nodeContent = []rune{}
 			prevNodeType = undefined
-			startOfNode = i + 1
 			continue
 		}
 
@@ -156,26 +149,22 @@ func splitDescriptionIntoNodes(fullDesc []rune, maxSize int) ([]descriptionNode,
 		if len(nodeContent) > 0 && nodeContent[0] == '&' && r == ';' {
 			nodes = append(nodes, descriptionNode{
 				content:  nodeContent,
-				start:    startOfNode,
 				nodeType: prevNodeType,
 			})
 			nodeContent = []rune{}
 			prevNodeType = undefined
-			startOfNode = i + 1
 			continue
 		}
 
 		// not the tag nor escaped symbol
 		if len(nodeContent) == 1 {
 			prevNodeType = text
-			startOfNode = i
 		}
 	}
 
 	if len(nodeContent) != 0 && nodeContent[0] != '<' && nodeContent[0] != '&' {
 		nodes = append(nodes, descriptionNode{
 			content:  nodeContent,
-			start:    startOfNode,
 			nodeType: prevNodeType,
 		})
 	}
@@ -212,7 +201,8 @@ func removeEmptyTags(nodes []descriptionNode) []descriptionNode {
 	return nodes
 }
 
-// toString converts
+// toString converts node list to string by concatenating nodes' content.
+// Before concatenating removeEmptyTags is called.
 func toString(nodes []descriptionNode) string {
 	nodes = removeEmptyTags(nodes)
 
@@ -225,6 +215,7 @@ func toString(nodes []descriptionNode) string {
 	return res
 }
 
+// lenContent returns sum of len(node.content) from nodes.
 func lenContent(nodes []descriptionNode) int {
 	res := 0
 
@@ -235,12 +226,13 @@ func lenContent(nodes []descriptionNode) int {
 	return res
 }
 
-func appendToHead(reversedCloseTags []descriptionNode, newNode descriptionNode) []descriptionNode {
+// appendToHead insert value to the front of the slice.
+func appendToHead[T any](reversedCloseTags []T, newNode T) []T {
 	if len(reversedCloseTags) == 0 {
 		reversedCloseTags = append(reversedCloseTags, newNode)
 	} else {
 		tail := reversedCloseTags
-		reversedCloseTags = []descriptionNode{}
+		reversedCloseTags = []T{}
 		reversedCloseTags = append(reversedCloseTags, newNode)
 		reversedCloseTags = append(reversedCloseTags, tail...)
 	}

@@ -29,82 +29,6 @@ func TestTelegramDescriptionFormatter(t *testing.T) {
 
 			So(desc, ShouldEqual, expected)
 		})
-
-		//Convey("with unclosed text formatting tags", func() {
-		//
-		//	introText := []rune("иntro ")
-		//	tagContent := []rune("tе&gt;ксt.")
-		//
-		//	markdownTags := []string{"**", "*", "`", "~~"}
-		//	htmlStartTags := []string{"<b>", "<i>", "<code>", "<s>"}
-		//	htmlEndTags := []string{"</b>", "</i>", "</code>", "</s>"}
-		//
-		//	lenEndSuffix := len([]rune(endSuffix))
-		//	lenIntroText := len(introText)
-		//	lenTagContent := len(tagContent)
-		//
-		//	for tagIndex := range markdownTags {
-		//		Convey(fmt.Sprintf("%s tag", htmlStartTags[tagIndex]), func() {
-		//			trigger.Desc = string(introText) + markdownTags[tagIndex] + string(tagContent) + markdownTags[tagIndex]
-		//			fullExpected := descriptionFormatter(trigger, -1)
-		//
-		//			for maxSize := len(fullExpected); maxSize >= len(introText); maxSize -= 1 {
-		//				Convey(fmt.Sprintf("with maxSize = %v", maxSize), func() {
-		//					desc := descriptionFormatter(trigger, maxSize)
-		//
-		//					expected := fullExpected
-		//					if maxSize != len([]rune(fullExpected)) {
-		//						maxSize -= lenEndSuffix
-		//						expectedNodes, unclosed, _ := splitDescriptionIntoNodes([]rune(fullExpected), maxSize)
-		//						if len(unclosed) == 0 {
-		//							expected = toString(expectedNodes)
-		//						} else {
-		//							switch expectedNodes[len(expectedNodes)-1].nodeType {
-		//							case openTag:
-		//								expected = toString(expectedNodes[:len(expectedNodes)-1])
-		//							case text:
-		//								lastNodeIdx := len(expectedNodes)-1
-		//								lastNodeContentLen := len(expectedNodes[lastNodeIdx].content)
-		//								lenEndHtmlTag := len(htmlEndTags[tagIndex])
-		//
-		//								if lastNodeContentLen > lenEndHtmlTag {
-		//									expectedNodes[lastNodeIdx].content = expectedNodes[lastNodeIdx].content[:lastNodeContentLen-lenEndHtmlTag]
-		//									expected = string(expectedNodes[lastNodeIdx].content) + htmlEndTags[tagIndex]
-		//								} else {
-		//
-		//								}
-		//							}
-		//						}
-		//						expected += endSuffix
-		//					}
-		//					//if maxSize != len(fullExpected) {
-		//					//	if maxSize <= len(introText)+len(htmlStartTags[tagIndex]) {
-		//					//		cutForSuffix := maxSize - len(introText) - len(endSuffix)
-		//					//		if cutForSuffix > 0 {
-		//					//			expected = introText[:len(introText)-cutForSuffix] + endSuffix
-		//					//		} else {
-		//					//			if maxSize < len(introText)+len(endSuffix) {
-		//					//				expected = introText[:maxSize-len(endSuffix)] + endSuffix
-		//					//			} else {
-		//					//				expected = introText + endSuffix
-		//					//			}
-		//					//		}
-		//					//	} else {
-		//					//		tailLen := maxSize - len(introText) - len(htmlStartTags[tagIndex])
-		//					//		if tailLen > len(htmlEndTags[tagIndex])+len(endSuffix) {
-		//					//			forTagContent := tailLen - len(htmlEndTags[tagIndex]) - len(endSuffix)
-		//					//			expected = introText + htmlStartTags[tagIndex] + tagContent[:forTagContent] + htmlEndTags[tagIndex] + endSuffix
-		//					//		} else {
-		//					//			expected = introText + endSuffix
-		//					//		}
-		//					//	}
-		//					//}
-		//					So(desc, ShouldEqual, expected)
-		//				})
-		//			}
-		//		})
-		//	}
-		//})
 	})
 }
 
@@ -117,47 +41,38 @@ func TestSplitDescriptionIntoNodes(t *testing.T) {
 			expectedNodes := []descriptionNode{
 				{
 					content:  []rune("<b>"),
-					start:    0,
 					nodeType: openTag,
 				},
 				{
 					content:  []rune("Моё описание"),
-					start:    3,
 					nodeType: text,
 				},
 				{
 					content:  []rune("</b>"),
-					start:    15,
 					nodeType: closeTag,
 				},
 				{
 					content:  []rune("\nif a "),
-					start:    19,
 					nodeType: text,
 				},
 				{
 					content:  []rune("&gt;"),
-					start:    25,
 					nodeType: escapedSymbol,
 				},
 				{
 					content:  []rune(" b do smth\n"),
-					start:    29,
 					nodeType: text,
 				},
 				{
 					content:  []rune("<a href=\"http://example.com\">"),
-					start:    40,
 					nodeType: openTag,
 				},
 				{
 					content:  []rune("текст ссылки"),
-					start:    69,
 					nodeType: text,
 				},
 				{
 					content:  []rune("</a>"),
-					start:    81,
 					nodeType: closeTag,
 				},
 			}
