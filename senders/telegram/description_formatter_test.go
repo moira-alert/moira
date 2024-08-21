@@ -83,20 +83,6 @@ func TestSplitDescriptionIntoNodes(t *testing.T) {
 			So(nodes, ShouldResemble, expectedNodes)
 			So(unclosed, ShouldResemble, expectedUnclosed)
 		})
-		//		Convey("with special", func() {
-		//			desc := `В namespace talk-webinar суммарные <b>limits</b> по <b>CPU</b> от подов приближаются к лимитам квоты.
-		//Вы можете уменьшить запросы ресурсов или запросить увеличение через <a href="https://bokrug.skbkontur.ru/">Bokrug</a>.
-		//
-		//<b><a href="https://k8s-dashboard.kontur.host/#/pod?namespace=talk-webinar">Kubernetes dashboard</a></b>
-		//
-		//Метрики:
-		//- <a href="https://grafana.skbkontur.ru/d/eUo8UWk7z/prometheus-kubernetes-universal?var-Cluster=k8s.production-cl1&amp;var-Namespace=talk-webinar&amp;viewPanel=11">Prometheus</a>
-		//- <a href="https://grafana.skbkontur.ru/d/kv2dOgi7k/graphite-kubernetes-universal?var-Cluster=k8s.production-cl1&amp;var-Namespace=talk-webinar&amp;viewPanel=44">Graphite</a>
-		//
-		//Не меняйте триггер руками! Он управляется <a href="https://git.skbkontur.ru/k8s/manage-moira-triggers">автоматикой.</a>`
-		//
-		//			nodes, unclosed :=
-		//		})
 	})
 }
 
