@@ -5,6 +5,7 @@ import (
 	"math"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -87,7 +88,7 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	})
 
 	Convey("Panic while evaluate target", t, func() {
-		// TODO(Tetrergeru) It mustn't require two database requests
+		// moving* functions with an integer second parameter require two metric fetches
 		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil).Times(2)
 		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil).Times(2)
 		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(dataList, nil)
@@ -633,50 +634,49 @@ func TestLocalMetricsTTL(t *testing.T) {
 	})
 }
 
-// TODO(Tetrergeru) rewrite this test
-// func TestLocal_evalExpr(t *testing.T) {
-// 	Convey("When everything is correct, we don't return any error", t, func() {
-// 		ctx := fetchCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
-// 		target := `seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
+func TestLocal_evalExpr(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
 
-// 		expression, err := ctx.parse(target)
-// 		So(err, ShouldBeNil)
-// 		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
-// 		So(err, ShouldBeNil)
-// 		So(res, ShouldBeNil)
-// 	})
+	Convey("When everything is correct, we don't return any error", t, func() {
+		target := `seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
 
-// 	Convey("When get panic, it should return error", t, func() {
-// 		ctx := fetchCtx{from: 0, until: 0}
+		_, err := evalWithNoMetricsHelper(mockCtrl, target, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix())
+		So(err, ShouldBeNil)
+	})
 
-// 		expression, _ := ctx.parse(`;fg`)
-// 		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
-// 		So(err.Error(), ShouldContainSubstring, "panic while evaluate target target: message: 'runtime error: invalid memory address or nil pointer dereference")
-// 		So(res, ShouldBeNil)
-// 	})
+	Convey("When get panic, it should return error", t, func() {
+		res, err := evalWithNoMetricsHelper(mockCtrl, `;fg`, 0, 0)
+		So(err.Error(), ShouldContainSubstring, "failed to parse target")
+		So(res.Metrics, ShouldBeEmpty)
+	})
 
-// 	Convey("When no metrics, should not return error", t, func() {
-// 		ctx := fetchCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
-// 		target := `alias( divideSeries( alias( sumSeries( exclude( groupByNode( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s, 9, "sum" ), "Ok" ) ), "bad" ), alias( sumSeries( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s ), "total" ) ), "Result" )`
+	Convey("When no metrics, should not return error", t, func() {
+		target := `alias( divideSeries( alias( sumSeries( exclude( groupByNode( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s, 9, "sum" ), "Ok" ) ), "bad" ), alias( sumSeries( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s ), "total" ) ), "Result" )`
 
-// 		expression, err := ctx.parse(target)
-// 		So(err, ShouldBeNil)
-// 		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: make(map[parser.MetricRequest][]*types.MetricData)})
-// 		So(err, ShouldBeNil)
-// 		So(res, ShouldBeEmpty)
-// 	})
+		res, err := evalWithNoMetricsHelper(mockCtrl, target, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix())
+		So(err, ShouldBeNil)
+		So(res.Metrics, ShouldBeEmpty)
+	})
 
-// 	Convey("When got unknown func, should return error", t, func() {
-// 		ctx := fetchCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
-// 		target := `vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
+	Convey("When got unknown func, should return error", t, func() {
+		target := `vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
 
-//		expression, _ := ctx.parse(target)
-//		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
-//		So(err, ShouldBeError)
-//		So(err.Error(), ShouldResemble, `Unknown graphite function: "vf"`)
-//		So(res, ShouldBeNil)
-//	})
-// }
+		res, err := evalWithNoMetricsHelper(mockCtrl, target, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix())
+		So(err.Error(), ShouldResemble, `Unknown graphite function: "vf"`)
+		So(res.Metrics, ShouldBeEmpty)
+	})
+}
+
+func evalWithNoMetricsHelper(mockCtrl *gomock.Controller, target string, from, until int64) (*FetchResult, error) {
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	database.EXPECT().GetPatternMetrics(gomock.Any()).Return([]string{}, nil).AnyTimes()
+	eval := evaluator{database, make([]string, 0)}
+
+	result := CreateEmptyFetchResult()
+	err := eval.fetchAndEval(target, from, until, result)
+
+	return result, err
+}
 
 func shouldEqualIfNaNsEqual(actual interface{}, expected ...interface{}) string {
 	allowUnexportedOption := cmp.AllowUnexported(types.MetricData{})
