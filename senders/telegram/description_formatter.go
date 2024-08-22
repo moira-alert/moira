@@ -35,7 +35,12 @@ func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 		blackfriday.WithExtensions(
 			blackfriday.CommonExtensions &
 				^blackfriday.DefinitionLists &
-				^blackfriday.Tables)))
+				^blackfriday.Tables),
+		blackfriday.WithRenderer(
+			blackfriday.NewHTMLRenderer(
+				blackfriday.HTMLRendererParameters{
+					Flags: blackfriday.UseXHTML,
+				}))))
 
 	// html headers are not supported by telegram html, so make them bold instead.
 	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
@@ -45,10 +50,6 @@ func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 	replacer := strings.NewReplacer(
 		"<p>", "",
 		"</p>", "",
-		"&ldquo;", "&quot;",
-		"&rdquo;", "&quot;",
-		"&lsquo;", "'",
-		"&rsquo;", "'",
 		"<strong>", "<b>",
 		"</strong>", "</b>",
 		"<em>", "<i>",
@@ -62,7 +63,8 @@ func descriptionFormatter(trigger moira.TriggerData, maxSize int) string {
 		"<ol>", "",
 		"</ol>", "",
 		"<hr>", "",
-		"<hr />", "")
+		"<hr />", "",
+		"<br>", "\n")
 
 	withReplacedTags := replacer.Replace(replacedHeaders)
 
