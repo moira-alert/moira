@@ -87,6 +87,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		location,
 		urlFormatter,
 		descriptionFormatter,
+		descriptionCutter,
 		boldFormatter,
 		eventStringFormatter,
 		codeBlockStart,
@@ -194,6 +195,18 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 		"<br>", "\n")
 
 	return tagReplacer.Replace(replacedHeaders)
+}
+
+const (
+	tooLongDescMessage = "\n[description is too long for telegram sender]\n"
+)
+
+func descriptionCutter(desc string, maxSize int) string {
+	if len([]rune(tooLongDescMessage)) < maxSize {
+		return tooLongDescMessage
+	}
+
+	return ""
 }
 
 func boldFormatter(str string) string {

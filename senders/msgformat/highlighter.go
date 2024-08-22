@@ -23,6 +23,9 @@ type BoldFormatter func(str string) string
 // EventStringFormatter formats single event string.
 type EventStringFormatter func(event moira.NotificationEvent, location *time.Location) string
 
+// DescriptionCutter cuts the given description to fit max size.
+type DescriptionCutter func(desc string, maxSize int) string
+
 // HighlightSyntaxFormatter formats message by using functions, emojis and some other highlight patterns.
 type HighlightSyntaxFormatter struct {
 	// emojiGetter used in titles for better description.
@@ -32,6 +35,7 @@ type HighlightSyntaxFormatter struct {
 	useEmoji              bool
 	uriFormatter          UriFormatter
 	descriptionFormatter  DescriptionFormatter
+	descriptionCutter     DescriptionCutter
 	boldFormatter         BoldFormatter
 	eventsStringFormatter EventStringFormatter
 	codeBlockStart        string
@@ -46,6 +50,7 @@ func NewHighlightSyntaxFormatter(
 	location *time.Location,
 	uriFormatter UriFormatter,
 	descriptionFormatter DescriptionFormatter,
+	descriptionCutter DescriptionCutter,
 	boldFormatter BoldFormatter,
 	eventsStringFormatter EventStringFormatter,
 	codeBlockStart string,
@@ -84,7 +89,7 @@ func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams)
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
 	if descLen != descNewLen {
-		desc = desc[:descNewLen] + "...\n"
+		desc = formatter.descriptionCutter(desc, descNewLen)
 	}
 	if eventsNewLen != eventsStringLen {
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
