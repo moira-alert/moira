@@ -118,10 +118,10 @@ func TestMessageFormatter_Format(t *testing.T) {
 				}
 				throttled := false
 
-				trigger.Desc = strings.Repeat("**ё** ", greaterThanHalf/2)
+				trigger.Desc = strings.Repeat("**ё**ж", greaterThanHalf/2)
 
 				expected := expectedFirstLine +
-					strings.Repeat("<strong>ё</strong> ", 306) + "\n" +
+					strings.Repeat("<strong>ё</strong>ж", 306) + "\n" +
 					eventsBlockStart + "\n" +
 					strings.Repeat(eventStr, 8) +
 					eventsBlockEnd
