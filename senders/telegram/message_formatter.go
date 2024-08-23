@@ -2,20 +2,21 @@ package telegram
 
 import (
 	"fmt"
+	"html"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
 	"github.com/moira-alert/moira/senders/emoji_provider"
 	"github.com/moira-alert/moira/senders/msgformat"
 	"github.com/russross/blackfriday/v2"
-	"html"
-	"regexp"
-	"strings"
-	"time"
 )
 
 const (
-	codeBlockStart = "<blockquote expandable>"
-	codeBlockEnd   = "</blockquote>"
+	eventsBlockStart = "<blockquote expandable>"
+	eventsBlockEnd   = "</blockquote>"
 )
 
 type messageFormatter struct {
@@ -56,6 +57,7 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(params.MessageMaxChars-titleLen, descLen, eventsStringLen)
 	if descLen != descNewLen {
+		fmt.Printf("\n\nPrev len = %v; new len = %v\n\n", descLen, descNewLen)
 		desc = descriptionCutter(desc, descNewLen)
 	}
 	if eventsNewLen != eventsStringLen {
@@ -114,18 +116,19 @@ func (formatter *messageFormatter) buildTitle(events moira.NotificationEvents, t
 	return title
 }
 
+var throttleMsg = fmt.Sprintf("\nPlease, %s to generate less events.", boldFormatter(msgformat.ChangeTriggerRecommendation))
+
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
 // if charsForEvents is negative buildEventsString does not limit the events string.
 func (formatter *messageFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
-	throttleMsg := fmt.Sprintf("\nPlease, %s to generate less events.", boldFormatter(msgformat.ChangeTriggerRecommendation))
 	if throttled {
 		charsForThrottleMsg = calcRunesCountWithoutHTML([]rune(throttleMsg))
 	}
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
-	eventsString += codeBlockStart
+	eventsString += eventsBlockStart
 	var tailString string
 
 	eventsLenLimitReached := false
@@ -147,7 +150,7 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 		eventsPrinted++
 	}
 	eventsString += "\n"
-	eventsString += codeBlockEnd
+	eventsString += eventsBlockEnd
 
 	if eventsLenLimitReached {
 		eventsString += tailString
