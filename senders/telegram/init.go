@@ -3,9 +3,6 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"github.com/russross/blackfriday/v2"
-	"html"
-	"regexp"
 	"strings"
 	"time"
 
@@ -23,11 +20,6 @@ const (
 	messenger          = "telegram"
 	telegramLockTTL    = 30 * time.Second
 	hidden             = "[DATA DELETED]"
-)
-
-var (
-	codeBlockStart = "<blockquote expandable>"
-	codeBlockEnd   = "</blockquote>"
 )
 
 var pollerTimeout = 10 * time.Second
@@ -80,18 +72,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.apiToken = cfg.APIToken
 
 	emojiProvider := telegramEmojiProvider{}
-	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+	sender.formatter = NewTelegramMessageFormatter(
 		emojiProvider,
 		true,
 		cfg.FrontURI,
-		location,
-		urlFormatter,
-		descriptionFormatter,
-		descriptionCutter,
-		boldFormatter,
-		eventStringFormatter,
-		codeBlockStart,
-		codeBlockEnd)
+		location)
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
@@ -137,88 +122,4 @@ func (sender *Sender) runTelebot(contactType string) {
 
 func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
-}
-
-func urlFormatter(triggerURI, triggerName string) string {
-	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, html.EscapeString(triggerName))
-}
-
-var (
-	startHeaderRegexp = regexp.MustCompile("<h[0-9]+>")
-	endHeaderRegexp   = regexp.MustCompile("</h[0-9]+>")
-)
-
-func descriptionFormatter(trigger moira.TriggerData) string {
-	desc := trigger.Desc
-	if trigger.Desc != "" {
-		desc += "\n"
-	} else {
-		return ""
-	}
-
-	// Sometimes in trigger description may be text constructions like <param>.
-	// blackfriday may recognise it as tag, so it won't be escaped.
-	// Then it is sent to telegram we will get error: Bad request, because telegram doesn't support such tag.
-	replacer := strings.NewReplacer(
-		"<", "&lt;",
-		">", "&gt;",
-	)
-	mdWithNoTags := replacer.Replace(desc)
-
-	htmlDescStr := string(blackfriday.Run([]byte(mdWithNoTags),
-		blackfriday.WithExtensions(
-			blackfriday.CommonExtensions &
-				^blackfriday.DefinitionLists &
-				^blackfriday.Tables),
-		blackfriday.WithRenderer(
-			blackfriday.NewHTMLRenderer(
-				blackfriday.HTMLRendererParameters{
-					Flags: blackfriday.UseXHTML,
-				}))))
-
-	// html headers are not supported by telegram html, so make them bold instead.
-	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
-	replacedHeaders := endHeaderRegexp.ReplaceAllString(htmlDescStr, "</b>")
-
-	// some tags are not supported, so replace them.
-	tagReplacer := strings.NewReplacer(
-		"<p>", "",
-		"</p>", "",
-		"<ul>", "",
-		"</ul>", "",
-		"<li>", "- ",
-		"</li>", "",
-		"<ol>", "",
-		"</ol>", "",
-		"<hr>", "",
-		"<hr />", "",
-		"<br>", "\n")
-
-	return tagReplacer.Replace(replacedHeaders)
-}
-
-const (
-	tooLongDescMessage = "\n[description is too long for telegram sender]\n"
-)
-
-func descriptionCutter(desc string, maxSize int) string {
-	if len([]rune(tooLongDescMessage)) < maxSize {
-		return tooLongDescMessage
-	}
-
-	return ""
-}
-
-func boldFormatter(str string) string {
-	return fmt.Sprintf("<b>%s</b>", html.EscapeString(str))
-}
-
-func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
-	return fmt.Sprintf(
-		"%s: <code>%s</code> = %s (%s to %s)",
-		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
-		html.EscapeString(event.Metric),
-		html.EscapeString(event.GetMetricsValues(moira.DefaultNotificationSettings)),
-		event.OldState,
-		event.State)
 }

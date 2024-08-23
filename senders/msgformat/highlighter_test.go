@@ -30,6 +30,7 @@ func TestFormat(t *testing.T) {
 			location,
 			testUriFormatter,
 			testDescriptionFormatter,
+			testDescriptionCutter,
 			testBoldFormatter,
 			testEventStringFormatter,
 			"```",
@@ -156,6 +157,10 @@ func testDescriptionFormatter(trigger moira.TriggerData) string {
 		desc += "\n"
 	}
 	return desc
+}
+
+func testDescriptionCutter(desc string, maxSize int) string {
+	return desc[:maxSize] + "...\n"
 }
 
 func testUriFormatter(triggerURI, triggerName string) string {

@@ -26,8 +26,8 @@ type EventStringFormatter func(event moira.NotificationEvent, location *time.Loc
 // DescriptionCutter cuts the given description to fit max size.
 type DescriptionCutter func(desc string, maxSize int) string
 
-// HighlightSyntaxFormatter formats message by using functions, emojis and some other highlight patterns.
-type HighlightSyntaxFormatter struct {
+// highlightSyntaxFormatter formats message by using functions, emojis and some other highlight patterns.
+type highlightSyntaxFormatter struct {
 	// emojiGetter used in titles for better description.
 	emojiGetter           emoji_provider.StateEmojiGetter
 	frontURI              string
@@ -42,7 +42,7 @@ type HighlightSyntaxFormatter struct {
 	codeBlockEnd          string
 }
 
-// NewHighlightSyntaxFormatter creates new HighlightSyntaxFormatter with given arguments.
+// NewHighlightSyntaxFormatter creates new highlightSyntaxFormatter with given arguments.
 func NewHighlightSyntaxFormatter(
 	emojiGetter emoji_provider.StateEmojiGetter,
 	useEmoji bool,
@@ -56,13 +56,14 @@ func NewHighlightSyntaxFormatter(
 	codeBlockStart string,
 	codeBlockEnd string,
 ) MessageFormatter {
-	return &HighlightSyntaxFormatter{
+	return &highlightSyntaxFormatter{
 		emojiGetter:           emojiGetter,
 		frontURI:              frontURI,
 		location:              location,
 		useEmoji:              useEmoji,
 		uriFormatter:          uriFormatter,
 		descriptionFormatter:  descriptionFormatter,
+		descriptionCutter:     descriptionCutter,
 		boldFormatter:         boldFormatter,
 		eventsStringFormatter: eventsStringFormatter,
 		codeBlockStart:        codeBlockStart,
@@ -71,7 +72,7 @@ func NewHighlightSyntaxFormatter(
 }
 
 // Format formats message using given params and formatter functions.
-func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams) string {
+func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams) string {
 	var message strings.Builder
 	state := params.Events.GetCurrentState(params.Throttled)
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
@@ -101,7 +102,7 @@ func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams)
 	return message.String()
 }
 
-func (formatter *HighlightSyntaxFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
+func (formatter *highlightSyntaxFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
 	state := events.GetCurrentState(throttled)
 	title := ""
 	if formatter.useEmoji {
@@ -127,9 +128,9 @@ func (formatter *HighlightSyntaxFormatter) buildTitle(events moira.NotificationE
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
 // if charsForEvents is negative buildEventsString does not limit the events string.
-func (formatter *HighlightSyntaxFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
+func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
-	throttleMsg := fmt.Sprintf("\nPlease, %s to generate less events.", formatter.boldFormatter(changeRecommendation))
+	throttleMsg := fmt.Sprintf("\nPlease, %s to generate less events.", formatter.boldFormatter(ChangeTriggerRecommendation))
 	if throttled {
 		charsForThrottleMsg = len([]rune(throttleMsg))
 	}

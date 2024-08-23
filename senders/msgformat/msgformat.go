@@ -1,12 +1,12 @@
 // Package msgformat provides MessageFormatter interface which may be used for formatting messages.
-// Also, it contains some realizations such as HighlightSyntaxFormatter.
+// Also, it contains some realizations such as highlightSyntaxFormatter.
 package msgformat
 
 import (
 	"github.com/moira-alert/moira"
 )
 
-const changeRecommendation = "fix your system or tune this trigger"
+const ChangeTriggerRecommendation = "fix your system or tune this trigger"
 
 // MessageFormatter is used for formatting messages to send via telegram, mattermost, etc.
 type MessageFormatter interface {
