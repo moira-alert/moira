@@ -358,8 +358,8 @@ func TestCreateNewContact(t *testing.T) {
 			}()
 
 			expected := &api.ErrorResponse{
-				StatusText: "Internal Server Error",
-				ErrorText:  "CreateContact: cannot create contact when both userLogin and teamID specified",
+				StatusText: "Invalid request",
+				ErrorText:  "contact cannot have both the user field and the team_id field filled in",
 			}
 			jsonContact, err := json.Marshal(newContactDto)
 			So(err, ShouldBeNil)
@@ -381,7 +381,7 @@ func TestCreateNewContact(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			So(actual, ShouldResemble, expected)
-			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 	})
 }
@@ -448,6 +448,51 @@ func TestUpdateContact(t *testing.T) {
 
 			So(actual, ShouldResemble, updatedContactDto)
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("Failed to update a contact with the specified user and team field", func() {
+			updatedContactDto.TeamID = defaultTeamID
+			defer func() {
+				updatedContactDto.TeamID = ""
+			}()
+
+			jsonContact, err := json.Marshal(updatedContactDto)
+			So(err, ShouldBeNil)
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
+
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+				ID:    contactID,
+				Name:  updatedContactDto.Name,
+				Type:  updatedContactDto.Type,
+				Value: updatedContactDto.Value,
+				User:  updatedContactDto.User,
+			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
+			testRequest.Header.Add("content-type", "application/json")
+
+			updateContact(responseWriter, testRequest)
+
+			expected := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "contact cannot have both the user field and the team_id field filled in",
+			}
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expected)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("Internal error when trying to update contact", func() {

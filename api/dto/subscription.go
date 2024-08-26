@@ -84,6 +84,7 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 	if subscription.User != "" && teamID != "" {
 		return ErrSubscriptionContainsTeamAndUser{}
 	}
+
 	var contactIDs []string
 	var err error
 	if teamID != "" {
@@ -112,6 +113,7 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 		if err != nil {
 			return ErrProvidedContactsForbidden{contactIds: subscriptionContactIDs}
 		}
+
 		anotherUserContactValues := make([]string, 0)
 		anotherUserContactIDs := make([]string, 0)
 		for i, contact := range contacts {
@@ -121,11 +123,13 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 				anotherUserContactValues = append(anotherUserContactValues, contact.Value)
 			}
 		}
+
 		return ErrProvidedContactsForbidden{
 			contactNames: anotherUserContactValues,
 			contactIds:   subscriptionContactIDs,
 		}
 	}
+
 	return nil
 }
 
