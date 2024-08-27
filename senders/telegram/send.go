@@ -62,8 +62,6 @@ var badMessageFormatErrors = map[*telebot.Error]struct{}{
 	telebot.ErrTooLongMessage: {},
 }
 
-const badFormatMessage = "[Bad trigger description for telegram sender. Please check trigger.]\n"
-
 // Recipient allow Chat implements gopkg.in/telebot.v3#Recipient interface.
 func (c *Chat) Recipient() string {
 	return strconv.FormatInt(c.ID, 10)
@@ -89,6 +87,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		var e moira.SenderBrokenContactError
 		if isBrokenContactErr := errors.As(err, &e); !isBrokenContactErr {
 			if _, ok := checkBadMessageError(err); ok {
+				// There are some problems with message formatting.
+				// For example, it is too long, or have unsupported tags and so on.
+				// Events should not be lost, so retry to send it without description.
+
 				sender.logger.Warning().
 					String(moira.LogFieldNameContactID, contact.ID).
 					String(moira.LogFieldNameContactType, contact.Type).
@@ -96,7 +98,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 					String(moira.LogFieldNameTriggerID, trigger.ID).
 					String(moira.LogFieldNameTriggerName, trigger.Name).
 					Error(err).
-					Msg("Failed to send alert because of bad description. Retrying...")
+					Msg("Failed to send alert because of bad description. Retrying now.")
 
 				trigger.Desc = badFormatMessage
 				message = sender.buildMessage(events, trigger, throttled, characterLimits[msgType])

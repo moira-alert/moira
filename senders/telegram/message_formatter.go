@@ -29,6 +29,8 @@ type messageFormatter struct {
 	useEmoji    bool
 }
 
+// NewTelegramMessageFormatter returns message formatter which is used in telegram sender.
+// The message will be formatted with html tags supported by telegram.
 func NewTelegramMessageFormatter(
 	emojiGetter emoji_provider.StateEmojiGetter,
 	useEmoji bool,
@@ -43,6 +45,7 @@ func NewTelegramMessageFormatter(
 	}
 }
 
+// Format formats message using given params and formatter functions.
 func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParams) string {
 	state := params.Events.GetCurrentState(params.Throttled)
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
@@ -191,6 +194,7 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 	// Sometimes in trigger description may be text constructions like <param>.
 	// blackfriday may recognise it as tag, so it won't be escaped.
 	// Then it is sent to telegram we will get error: 'Bad request', because telegram doesn't support such tag.
+	// So escaping them before blackfriday.Run.
 	replacer := strings.NewReplacer(
 		"<", "&lt;",
 		">", "&gt;",
@@ -230,7 +234,8 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 }
 
 const (
-	tooLongDescMessage = "[description is too long for telegram sender]\n"
+	tooLongDescMessage = "[Description is too long for telegram sender.]\n"
+	badFormatMessage   = "[Bad trigger description for telegram sender. Please check trigger.]\n"
 )
 
 func descriptionCutter(_ string, maxSize int) string {
