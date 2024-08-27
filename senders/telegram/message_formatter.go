@@ -228,14 +228,15 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 		"</ol>", "",
 		"<hr>", "",
 		"<hr />", "",
-		"<br>", "\n")
+		"<br>", "\n",
+		"<br />", "\n")
 
 	return tagReplacer.Replace(replacedHeaders)
 }
 
 const (
-	tooLongDescMessage = "[Description is too long for telegram sender.]\n"
-	badFormatMessage   = "[Bad trigger description for telegram sender. Please check trigger.]\n"
+	tooLongDescMessage = "\nDescription is too long for telegram sender.\n"
+	badFormatMessage   = "\nBad trigger description for telegram sender. Please check trigger.\n"
 )
 
 func descriptionCutter(_ string, maxSize int) string {
