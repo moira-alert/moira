@@ -227,3 +227,58 @@ func TestCheckBrokenContactError(t *testing.T) {
 		})
 	})
 }
+
+func TestCheckBadMessageError(t *testing.T) {
+	Convey("Check bad message error", t, func() {
+		Convey("nil error is nil", func() {
+			err, ok := checkBadMessageError(nil)
+
+			So(err, ShouldBeNil)
+			So(ok, ShouldBeFalse)
+		})
+
+		Convey("proper telebot errors is recognised", func() {
+			for givenErr := range badMessageFormatErrors {
+				err, ok := checkBadMessageError(givenErr)
+
+				So(err, ShouldEqual, givenErr)
+				So(ok, ShouldBeTrue)
+			}
+		})
+
+		Convey("other telebot errors are not recognised", func() {
+			otherErrors := []*telebot.Error{
+				telebot.ErrInternal,
+				telebot.ErrEmptyMessage,
+				telebot.ErrWrongFileID,
+				telebot.ErrNoRightsToDelete,
+				telebot.ErrCantRemoveOwner,
+				telebot.ErrUnauthorized,
+				telebot.ErrNoRightsToSendPhoto,
+				telebot.ErrChatNotFound,
+			}
+
+			for _, otherError := range otherErrors {
+				err, ok := checkBadMessageError(otherError)
+
+				So(err, ShouldEqual, otherError)
+				So(ok, ShouldBeFalse)
+			}
+		})
+
+		Convey("errors with proper message is recognised", func() {
+			givenErrors := []error{
+				fmt.Errorf("telegram: Bad Request: can't parse InputMedia: Can't parse entities: Unsupported start tag \"sup\" at byte offset 396 (400)"),
+				fmt.Errorf("telegram: Bad Request: message caption is too long (400)"),
+				fmt.Errorf("telegram: Bad Request: can't parse entities: Unsupported start tag \"container_name\" at byte offset 729 (400)"),
+			}
+
+			for _, givenErr := range givenErrors {
+				err, ok := checkBadMessageError(givenErr)
+
+				So(err, ShouldEqual, givenErr)
+				So(ok, ShouldBeTrue)
+			}
+		})
+	})
+}

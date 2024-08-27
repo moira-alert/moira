@@ -57,6 +57,13 @@ var brokenContactAPIErrors = map[*telebot.Error]struct{}{
 	telebot.ErrNotStartedByUser:     {},
 }
 
+var badMessageFormatErrors = map[*telebot.Error]struct{}{
+	telebot.ErrTooLarge:       {},
+	telebot.ErrTooLongMessage: {},
+}
+
+const badFormatMessage = "[Bad trigger description for telegram sender. Please check trigger.]\n"
+
 // Recipient allow Chat implements gopkg.in/telebot.v3#Recipient interface.
 func (c *Chat) Recipient() string {
 	return strconv.FormatInt(c.ID, 10)
@@ -77,7 +84,29 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if err := sender.talk(chat, message, plots, msgType); err != nil {
-		return checkBrokenContactError(sender.logger, err)
+		err = checkBrokenContactError(sender.logger, err)
+
+		var e moira.SenderBrokenContactError
+		if isBrokenContactErr := errors.As(err, &e); !isBrokenContactErr {
+			if _, ok := checkBadMessageError(err); ok {
+				sender.logger.Warning().
+					String(moira.LogFieldNameContactID, contact.ID).
+					String(moira.LogFieldNameContactType, contact.Type).
+					String(moira.LogFieldNameContactValue, contact.Value).
+					String(moira.LogFieldNameTriggerID, trigger.ID).
+					String(moira.LogFieldNameTriggerName, trigger.Name).
+					Error(err).
+					Msg("Failed to send alert because of bad description. Retrying...")
+
+				trigger.Desc = badFormatMessage
+				message = sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
+
+				err = sender.talk(chat, message, plots, msgType)
+				return checkBrokenContactError(sender.logger, err)
+			}
+		}
+
+		return err
 	}
 
 	return nil
@@ -299,4 +328,31 @@ func getMessageType(plots [][]byte) messageType {
 	}
 
 	return Message
+}
+
+func checkBadMessageError(err error) (error, bool) {
+	if err == nil {
+		return nil, false
+	}
+
+	var telebotErr *telebot.Error
+	if ok := errors.As(err, &telebotErr); ok {
+		if isBadMessageFormatError(telebotErr) {
+			return telebotErr, true
+		}
+	}
+
+	errMsg := err.Error()
+	if strings.HasPrefix(errMsg, "telegram: Bad Request: can't parse InputMedia: Can't parse entities: Unsupported start tag") ||
+		strings.HasPrefix(errMsg, "telegram: Bad Request: message caption is too long (400)") ||
+		strings.HasPrefix(errMsg, "telegram: Bad Request: can't parse entities: Unsupported start tag") {
+		return err, true
+	}
+
+	return err, false
+}
+
+func isBadMessageFormatError(e *telebot.Error) bool {
+	_, exists := badMessageFormatErrors[e]
+	return exists
 }
