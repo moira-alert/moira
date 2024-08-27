@@ -1,11 +1,13 @@
 package telegram
 
 import (
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders/msgformat"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/senders/msgformat"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -40,10 +42,10 @@ func TestMessageFormatter_Format(t *testing.T) {
 	}
 
 	expectedFirstLine := "💣 <b>NODATA</b> <a href=\"https://moira.uri/trigger/TriggerID\">Name</a> [tag1][tag2]\n"
-	//firstLineLen := len([]rune(expectedFirstLine)) - len([]rune("<b></b><a href=\"https://moira.uri/trigger/TriggerID\"></a>"))
+	lenFirstLine := len([]rune(expectedFirstLine)) - len([]rune("<b></b><a href=\"https://moira.uri/trigger/TriggerID\"></a>"))
 
 	eventStr := "02:40 (GMT+00:00): <code>Metric</code> = 123 (OK to NODATA)\n"
-	lenEventStr := len([]rune(eventStr)) - len([]rune("<code></code>"))
+	lenEventStr := len([]rune(eventStr)) - len([]rune("<code></code>")) // 60 - 13 = 47
 
 	Convey("TelegramMessageFormatter", t, func() {
 		Convey("message with one event", func() {
@@ -105,25 +107,93 @@ func TestMessageFormatter_Format(t *testing.T) {
 		})
 
 		Convey("with long messages", func() {
-			msgLimit := albumCaptionMaxCharacters
+			msgLimit := albumCaptionMaxCharacters - lenFirstLine
 			halfMsgLimit := msgLimit / 2
 			greaterThanHalf := halfMsgLimit + 100
 			lessThanHalf := halfMsgLimit - 100
 
 			Convey("text size of description > msgLimit / 2", func() {
 				var events moira.NotificationEvents
+				throttled := false
+
 				eventsCount := lessThanHalf / lenEventStr
 				for i := 0; i < eventsCount; i++ {
 					events = append(events, event)
 				}
-				throttled := false
 
 				trigger.Desc = strings.Repeat("**ё**ж", greaterThanHalf/2)
 
 				expected := expectedFirstLine +
-					strings.Repeat("<strong>ё</strong>ж", 306) + "\n" +
+					strings.Repeat("<strong>ё</strong>ж", greaterThanHalf/2) + "\n" +
 					eventsBlockStart + "\n" +
-					strings.Repeat(eventStr, 8) +
+					strings.Repeat(eventStr, eventsCount) +
+					eventsBlockEnd
+
+				msg := formatter.Format(getParams(events, trigger, throttled))
+
+				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				So(msg, ShouldEqual, expected)
+			})
+
+			Convey("text size of events block > msgLimit / 2", func() {
+				var events moira.NotificationEvents
+				throttled := false
+
+				eventsCount := greaterThanHalf / lenEventStr
+				for i := 0; i < eventsCount; i++ {
+					events = append(events, event)
+				}
+
+				trigger.Desc = strings.Repeat("**ё**ж", lessThanHalf/2)
+
+				expected := expectedFirstLine +
+					strings.Repeat("<strong>ё</strong>ж", lessThanHalf/2) + "\n" +
+					eventsBlockStart + "\n" +
+					strings.Repeat(eventStr, eventsCount) +
+					eventsBlockEnd
+
+				msg := formatter.Format(getParams(events, trigger, throttled))
+
+				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				So(msg, ShouldEqual, expected)
+			})
+
+			Convey("both description and events block have text size > msgLimit/2", func() {
+				var events moira.NotificationEvents
+				throttled := false
+
+				eventsCount := greaterThanHalf / lenEventStr
+				for i := 0; i < eventsCount; i++ {
+					events = append(events, event)
+				}
+
+				trigger.Desc = strings.Repeat("**ё**ж", greaterThanHalf/2)
+
+				eventsShouldBe := halfMsgLimit / lenEventStr
+
+				expected := expectedFirstLine +
+					tooLongDescMessage +
+					eventsBlockStart + "\n" +
+					strings.Repeat(eventStr, eventsShouldBe) +
+					eventsBlockEnd +
+					fmt.Sprintf("\n...and %d more events.", len(events)-eventsShouldBe)
+
+				msg := formatter.Format(getParams(events, trigger, throttled))
+
+				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				So(msg, ShouldEqual, expected)
+			})
+
+			Convey("with text size < msgLimit and total size > 9000", func() {
+				events := moira.NotificationEvents{event}
+				throttled := false
+
+				trigger.Desc = "[link](http://" + strings.Repeat("b", maxLenMsgWithEntities) + ")"
+
+				expected := expectedFirstLine +
+					tooLongDescMessage +
+					eventsBlockStart + "\n" +
+					eventStr +
 					eventsBlockEnd
 
 				msg := formatter.Format(getParams(events, trigger, throttled))

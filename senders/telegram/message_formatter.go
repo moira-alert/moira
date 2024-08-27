@@ -17,6 +17,8 @@ import (
 const (
 	eventsBlockStart = "<blockquote expandable>"
 	eventsBlockEnd   = "</blockquote>"
+
+	maxLenMsgWithEntities = 9000
 )
 
 type messageFormatter struct {
@@ -42,7 +44,6 @@ func NewTelegramMessageFormatter(
 }
 
 func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParams) string {
-	var message strings.Builder
 	state := params.Events.GetCurrentState(params.Throttled)
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
 
@@ -57,17 +58,20 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(params.MessageMaxChars-titleLen, descLen, eventsStringLen)
 	if descLen != descNewLen {
-		fmt.Printf("\n\nPrev len = %v; new len = %v\n\n", descLen, descNewLen)
 		desc = descriptionCutter(desc, descNewLen)
 	}
 	if eventsNewLen != eventsStringLen {
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
 
-	message.WriteString(title)
-	message.WriteString(desc)
-	message.WriteString(eventsString)
-	return message.String()
+	resMsg := title + desc + eventsString
+	if len([]rune(resMsg)) > maxLenMsgWithEntities {
+		desc = descriptionCutter(desc, len([]rune(tooLongDescMessage)))
+
+		resMsg = title + desc + eventsString
+	}
+
+	return resMsg
 }
 
 func calcRunesCountWithoutHTML(htmlText []rune) int {
@@ -133,6 +137,7 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 
 	eventsLenLimitReached := false
 	eventsPrinted := 0
+	eventsStringLen := 0
 	for _, event := range events {
 		line := fmt.Sprintf("\n%s", eventStringFormatter(event, formatter.location))
 		if msg := event.CreateMessage(formatter.location); len(msg) > 0 {
@@ -141,12 +146,15 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
 		tailStringLen := len("\n") + len([]rune(tailString))
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
+		lineLen := calcRunesCountWithoutHTML([]rune(line))
+
+		if charsForEvents >= 0 && eventsStringLen+lineLen > charsLeftForEvents-tailStringLen {
 			eventsLenLimitReached = true
 			break
 		}
 
 		eventsString += line
+		eventsStringLen += lineLen
 		eventsPrinted++
 	}
 	eventsString += "\n"
@@ -222,11 +230,11 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 }
 
 const (
-	tooLongDescMessage = "\n[description is too long for telegram sender]\n"
+	tooLongDescMessage = "[description is too long for telegram sender]\n"
 )
 
 func descriptionCutter(_ string, maxSize int) string {
-	if len([]rune(tooLongDescMessage)) < maxSize {
+	if len([]rune(tooLongDescMessage)) <= maxSize {
 		return tooLongDescMessage
 	}
 
