@@ -8,7 +8,12 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 )
 
-// GetTriggerEvents gets trigger event from current page and all trigger event count. Events list is filtered by time range
+const (
+	zeroPage      int64 = 0
+	allEventsSize int64 = -1
+)
+
+// GetTriggerEvents gets trigger events from current page and total count of filtered trigger events. Events list is filtered by time range
 // with `from` and `to` params (`from` and `to` should be "+inf", "-inf" or int64 converted to string),
 // by metric (regular expression) and by states. If `states` map is empty or nil then all states are accepted.
 func GetTriggerEvents(
@@ -19,11 +24,37 @@ func GetTriggerEvents(
 	metricRegexp *regexp.Regexp,
 	states map[string]struct{},
 ) (*dto.EventsList, *api.ErrorResponse) {
-	events, err := getFilteredNotificationEvents(database, triggerID, page, size, from, to, metricRegexp, states)
+	events, err := getFilteredNotificationEvents(database, triggerID, from, to, metricRegexp, states)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	eventCount := database.GetNotificationEventCount(triggerID, -1)
+
+	eventCount := int64(len(events))
+
+	if page >= 0 {
+		if size >= 0 {
+			start := page * size
+			end := start + size
+
+			if start >= eventCount {
+				events = []*moira.NotificationEvent{}
+			} else {
+				if end > eventCount {
+					end = eventCount
+				}
+
+				events = events[start:end]
+			}
+		}
+
+		if page > 0 && size < 0 {
+			events = []*moira.NotificationEvent{}
+		}
+
+		// if page == 0 and size < 0 return all events
+	} else {
+		events = []*moira.NotificationEvent{}
+	}
 
 	eventsList := &dto.EventsList{
 		Size:  size,
@@ -42,44 +73,16 @@ func GetTriggerEvents(
 func getFilteredNotificationEvents(
 	database moira.Database,
 	triggerID string,
-	page, size int64,
 	from, to string,
 	metricRegexp *regexp.Regexp,
 	states map[string]struct{},
 ) ([]*moira.NotificationEvent, error) {
-	// fetch all events
-	if size < 0 {
-		events, err := database.GetNotificationEvents(triggerID, page, size, from, to)
-		if err != nil {
-			return nil, err
-		}
-
-		return filterNotificationEvents(events, metricRegexp, states), nil
+	events, err := database.GetNotificationEvents(triggerID, zeroPage, allEventsSize, from, to)
+	if err != nil {
+		return nil, err
 	}
 
-	// fetch at most `size` events
-	filtered := make([]*moira.NotificationEvent, 0, size)
-	var count int64
-
-	for int64(len(filtered)) < size {
-		eventsData, err := database.GetNotificationEvents(triggerID, page+count, size, from, to)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(eventsData) == 0 {
-			break
-		}
-
-		filtered = append(filtered, filterNotificationEvents(eventsData, metricRegexp, states)...)
-		count += 1
-
-		if int64(len(eventsData)) < size {
-			break
-		}
-	}
-
-	return filtered, nil
+	return filterNotificationEvents(events, metricRegexp, states), nil
 }
 
 func filterNotificationEvents(
