@@ -169,6 +169,95 @@ func TestGetEvents(t *testing.T) {
 			})
 		})
 	})
+
+	Convey("test paginating", t, func() {
+		events := []*moira.NotificationEvent{
+			{
+				State:    moira.StateNODATA,
+				OldState: moira.StateOK,
+			},
+			{
+				State:    moira.StateOK,
+				OldState: moira.StateNODATA,
+			},
+			{
+				State:    moira.StateWARN,
+				OldState: moira.StateOK,
+			},
+			{
+				State:    moira.StateERROR,
+				OldState: moira.StateWARN,
+			},
+		}
+		total := int64(len(events))
+
+		type testCase struct {
+			description    string
+			expectedEvents []moira.NotificationEvent
+			givenPage      int64
+			givenSize      int64
+		}
+
+		testCases := []testCase{
+			{
+				description: "with page > 0 and size > 0",
+				givenPage:   1,
+				givenSize:   1,
+				expectedEvents: []moira.NotificationEvent{
+					*events[1],
+				},
+			},
+			{
+				description: "with page == 0 and size > 0",
+				givenPage:   0,
+				givenSize:   1,
+				expectedEvents: []moira.NotificationEvent{
+					*events[0],
+				},
+			},
+			{
+				description: "with page > 0, size > 0, page * size + size > events count",
+				givenPage:   1,
+				givenSize:   3,
+				expectedEvents: []moira.NotificationEvent{
+					*events[3],
+				},
+			},
+			{
+				description:    "with page = 0, size < 0 fetch all events",
+				givenPage:      0,
+				givenSize:      -10,
+				expectedEvents: toDTOList(events),
+			},
+			{
+				description:    "with page > 0, size < 0 return no events",
+				givenPage:      1,
+				givenSize:      -1,
+				expectedEvents: []moira.NotificationEvent{},
+			},
+			{
+				description:    "with page < 0 return no events",
+				givenPage:      -1,
+				givenSize:      1,
+				expectedEvents: []moira.NotificationEvent{},
+			},
+		}
+
+		for i := range testCases {
+			Convey(fmt.Sprintf("test case %d: %s", i+1, testCases[i].description), func() {
+				dataBase.EXPECT().GetNotificationEvents(triggerID, zeroPage, allEventsSize, from, to).Return(events, nil)
+
+				actual, err := GetTriggerEvents(dataBase, triggerID, testCases[i].givenPage, testCases[i].givenSize, from, to, allMetrics, allStates)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, &dto.EventsList{
+					Page:  testCases[i].givenPage,
+					Size:  testCases[i].givenSize,
+					Total: total,
+					List:  testCases[i].expectedEvents,
+				})
+			})
+		}
+	})
 }
 
 func toDTOList(eventPtrs []*moira.NotificationEvent) []moira.NotificationEvent {

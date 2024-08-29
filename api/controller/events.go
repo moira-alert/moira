@@ -31,29 +31,29 @@ func GetTriggerEvents(
 
 	eventCount := int64(len(events))
 
-	if page >= 0 {
-		if size >= 0 {
-			start := page * size
-			end := start + size
+	if page < 0 || (page > 0 && size < 0) {
+		return &dto.EventsList{
+			Size:  size,
+			Page:  page,
+			Total: eventCount,
+			List:  []moira.NotificationEvent{},
+		}, nil
+	}
 
-			if start >= eventCount {
-				events = []*moira.NotificationEvent{}
-			} else {
-				if end > eventCount {
-					end = eventCount
-				}
+	if page >= 0 && size >= 0 {
+		start := page * size
+		end := start + size
 
-				events = events[start:end]
-			}
-		}
-
-		if page > 0 && size < 0 {
+		if start >= eventCount {
 			events = []*moira.NotificationEvent{}
-		}
+			eventCount = 0
+		} else {
+			if end > eventCount {
+				end = eventCount
+			}
 
-		// if page == 0 and size < 0 return all events
-	} else {
-		events = []*moira.NotificationEvent{}
+			events = events[start:end]
+		}
 	}
 
 	eventsList := &dto.EventsList{
