@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
@@ -78,13 +79,13 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
 
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
-	titleLen := len([]rune(title))
+	titleLen := utf8.RuneCountInString(title)
 
 	desc := formatter.descriptionFormatter(params.Trigger)
-	descLen := len([]rune(desc))
+	descLen := utf8.RuneCountInString(desc)
 
 	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
-	eventsStringLen := len([]rune(eventsString))
+	eventsStringLen := utf8.RuneCountInString(eventsString)
 
 	charsLeftAfterTitle := params.MessageMaxChars - titleLen
 
@@ -132,7 +133,7 @@ func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.Notifi
 	charsForThrottleMsg := 0
 	throttleMsg := fmt.Sprintf("\nPlease, %s to generate less events.", formatter.boldFormatter(ChangeTriggerRecommendation))
 	if throttled {
-		charsForThrottleMsg = len([]rune(throttleMsg))
+		charsForThrottleMsg = utf8.RuneCountInString(throttleMsg)
 	}
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
@@ -149,8 +150,8 @@ func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.Notifi
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len([]rune(formatter.codeBlockEnd)) + len("\n") + len([]rune(tailString))
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
+		tailStringLen := utf8.RuneCountInString(formatter.codeBlockEnd) + len("\n") + utf8.RuneCountInString(tailString)
+		if !(charsForEvents < 0) && (utf8.RuneCountInString(eventsString)+utf8.RuneCountInString(line) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
 		}

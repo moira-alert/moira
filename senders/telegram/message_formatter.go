@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	eventsBlockStart = "<blockquote expandable>"
+	eventsBlockStart = "<blockquote>"
 	eventsBlockEnd   = "</blockquote>"
 )
 
@@ -59,10 +59,10 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	eventsStringLen := calcRunesCountWithoutHTML([]rune(eventsString))
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(params.MessageMaxChars-titleLen, descLen, eventsStringLen)
-	if descLen != descNewLen {
+	if descLen > descNewLen {
 		desc = descriptionCutter(desc, descNewLen)
 	}
-	if eventsNewLen != eventsStringLen {
+	if eventsStringLen > eventsNewLen {
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
 
