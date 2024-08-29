@@ -57,11 +57,6 @@ var brokenContactAPIErrors = map[*telebot.Error]struct{}{
 	telebot.ErrNotStartedByUser:     {},
 }
 
-var badMessageFormatErrors = map[*telebot.Error]struct{}{
-	telebot.ErrTooLarge:       {},
-	telebot.ErrTooLongMessage: {},
-}
-
 // Recipient allow Chat implements gopkg.in/telebot.v3#Recipient interface.
 func (c *Chat) Recipient() string {
 	return strconv.FormatInt(c.ID, 10)
@@ -84,31 +79,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err := sender.talk(chat, message, plots, msgType); err != nil {
 		err = checkBrokenContactError(sender.logger, err)
 
-		var e moira.SenderBrokenContactError
-		if isBrokenContactErr := errors.As(err, &e); !isBrokenContactErr {
-			if _, ok := checkBadMessageError(err); ok {
-				// There are some problems with message formatting.
-				// For example, it is too long, or have unsupported tags and so on.
-				// Events should not be lost, so retry to send it without description.
-
-				sender.logger.Warning().
-					String(moira.LogFieldNameContactID, contact.ID).
-					String(moira.LogFieldNameContactType, contact.Type).
-					String(moira.LogFieldNameContactValue, contact.Value).
-					String(moira.LogFieldNameTriggerID, trigger.ID).
-					String(moira.LogFieldNameTriggerName, trigger.Name).
-					Error(err).
-					Msg("Failed to send alert because of bad description. Retrying now.")
-
-				trigger.Desc = badFormatMessage
-				message = sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
-
-				err = sender.talk(chat, message, plots, msgType)
-				return checkBrokenContactError(sender.logger, err)
-			}
-		}
-
-		return err
+		return sender.retryIfBadMessageError(err, events, contact, trigger, plots, throttled, chat, msgType)
 	}
 
 	return nil
@@ -332,6 +303,54 @@ func getMessageType(plots [][]byte) messageType {
 	return Message
 }
 
+func (sender *Sender) retryIfBadMessageError(
+	err error,
+	events []moira.NotificationEvent,
+	contact moira.ContactData,
+	trigger moira.TriggerData,
+	plots [][]byte,
+	throttled bool,
+	chat *Chat,
+	msgType messageType,
+) error {
+	var e moira.SenderBrokenContactError
+	if isBrokenContactErr := errors.As(err, &e); !isBrokenContactErr {
+		if _, ok := checkBadMessageError(err); ok {
+			// There are some problems with message formatting.
+			// For example, it is too long, or have unsupported tags and so on.
+			// Events should not be lost, so retry to send it without description.
+
+			sender.logger.Warning().
+				String(moira.LogFieldNameContactID, contact.ID).
+				String(moira.LogFieldNameContactType, contact.Type).
+				String(moira.LogFieldNameContactValue, contact.Value).
+				String(moira.LogFieldNameTriggerID, trigger.ID).
+				String(moira.LogFieldNameTriggerName, trigger.Name).
+				Error(err).
+				Msg("Failed to send alert because of bad description. Retrying now.")
+
+			trigger.Desc = badFormatMessage
+			message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
+
+			err = sender.talk(chat, message, plots, msgType)
+			return checkBrokenContactError(sender.logger, err)
+		}
+	}
+
+	return err
+}
+
+var badMessageFormatErrors = map[*telebot.Error]struct{}{
+	telebot.ErrTooLarge:       {},
+	telebot.ErrTooLongMessage: {},
+}
+
+const (
+	errMsgPrefixCannotParseInputMedia = "telegram: Bad Request: can't parse InputMedia: Can't parse entities: Unsupported start tag"
+	errMsgPrefixCaptionTooLong        = "telegram: Bad Request: message caption is too long (400)"
+	errMsgPrefixCannotParseEntities   = "telegram: Bad Request: can't parse entities: Unsupported start tag"
+)
+
 func checkBadMessageError(err error) (error, bool) {
 	if err == nil {
 		return nil, false
@@ -345,9 +364,9 @@ func checkBadMessageError(err error) (error, bool) {
 	}
 
 	errMsg := err.Error()
-	if strings.HasPrefix(errMsg, "telegram: Bad Request: can't parse InputMedia: Can't parse entities: Unsupported start tag") ||
-		strings.HasPrefix(errMsg, "telegram: Bad Request: message caption is too long (400)") ||
-		strings.HasPrefix(errMsg, "telegram: Bad Request: can't parse entities: Unsupported start tag") {
+	if strings.HasPrefix(errMsg, errMsgPrefixCannotParseInputMedia) ||
+		strings.HasPrefix(errMsg, errMsgPrefixCaptionTooLong) ||
+		strings.HasPrefix(errMsg, errMsgPrefixCannotParseEntities) {
 		return err, true
 	}
 
