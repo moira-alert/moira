@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/msgformat"
@@ -42,10 +43,11 @@ func TestMessageFormatter_Format(t *testing.T) {
 	}
 
 	expectedFirstLine := "💣 <b>NODATA</b> <a href=\"https://moira.uri/trigger/TriggerID\">Name</a> [tag1][tag2]\n"
-	lenFirstLine := len([]rune(expectedFirstLine)) - len([]rune("<b></b><a href=\"https://moira.uri/trigger/TriggerID\"></a>"))
+	lenFirstLine := utf8.RuneCountInString(expectedFirstLine) -
+		utf8.RuneCountInString("<b></b><a href=\"https://moira.uri/trigger/TriggerID\"></a>")
 
 	eventStr := "02:40 (GMT+00:00): <code>Metric</code> = 123 (OK to NODATA)\n"
-	lenEventStr := len([]rune(eventStr)) - len([]rune("<code></code>")) // 60 - 13 = 47
+	lenEventStr := utf8.RuneCountInString(eventStr) - utf8.RuneCountInString("<code></code>") // 60 - 13 = 47
 
 	Convey("TelegramMessageFormatter", t, func() {
 		Convey("message with one event", func() {
@@ -177,24 +179,6 @@ func TestMessageFormatter_Format(t *testing.T) {
 					strings.Repeat(eventStr, eventsShouldBe) +
 					eventsBlockEnd +
 					fmt.Sprintf("\n...and %d more events.", len(events)-eventsShouldBe)
-
-				msg := formatter.Format(getParams(events, trigger, throttled))
-
-				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
-				So(msg, ShouldEqual, expected)
-			})
-
-			Convey("with text size < msgLimit and total size > 9000", func() {
-				events := moira.NotificationEvents{event}
-				throttled := false
-
-				trigger.Desc = "[link](http://" + strings.Repeat("b", maxLenMsgWithEntities) + ")"
-
-				expected := expectedFirstLine +
-					tooLongDescMessage +
-					eventsBlockStart + "\n" +
-					eventStr +
-					eventsBlockEnd
 
 				msg := formatter.Format(getParams(events, trigger, throttled))
 

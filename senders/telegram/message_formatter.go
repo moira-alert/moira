@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
@@ -17,8 +18,6 @@ import (
 const (
 	eventsBlockStart = "<blockquote expandable>"
 	eventsBlockEnd   = "</blockquote>"
-
-	maxLenMsgWithEntities = 9000
 )
 
 type messageFormatter struct {
@@ -67,14 +66,7 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
 
-	resMsg := title + desc + eventsString
-	if len([]rune(resMsg)) > maxLenMsgWithEntities {
-		desc = descriptionCutter(desc, len([]rune(tooLongDescMessage)))
-
-		resMsg = title + desc + eventsString
-	}
-
-	return resMsg
+	return title + desc + eventsString
 }
 
 func calcRunesCountWithoutHTML(htmlText []rune) int {
@@ -148,7 +140,7 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len("\n") + len([]rune(tailString))
+		tailStringLen := len("\n") + utf8.RuneCountInString(tailString)
 		lineLen := calcRunesCountWithoutHTML([]rune(line))
 
 		if charsForEvents >= 0 && eventsStringLen+lineLen > charsLeftForEvents-tailStringLen {
@@ -240,7 +232,7 @@ const (
 )
 
 func descriptionCutter(_ string, maxSize int) string {
-	if len([]rune(tooLongDescMessage)) <= maxSize {
+	if utf8.RuneCountInString(tooLongDescMessage) <= maxSize {
 		return tooLongDescMessage
 	}
 
