@@ -191,14 +191,14 @@ func TestGetEvents(t *testing.T) {
 		}
 		total := int64(len(events))
 
-		type testCase struct {
+		type testcase struct {
 			description    string
 			expectedEvents []moira.NotificationEvent
 			givenPage      int64
 			givenSize      int64
 		}
 
-		testCases := []testCase{
+		testcases := []testcase{
 			{
 				description: "with page > 0 and size > 0",
 				givenPage:   1,
@@ -243,17 +243,17 @@ func TestGetEvents(t *testing.T) {
 			},
 		}
 
-		for i := range testCases {
-			Convey(fmt.Sprintf("test case %d: %s", i+1, testCases[i].description), func() {
+		for i := range testcases {
+			Convey(fmt.Sprintf("test case %d: %s", i+1, testcases[i].description), func() {
 				dataBase.EXPECT().GetNotificationEvents(triggerID, zeroPage, allEventsSize, from, to).Return(events, nil)
 
-				actual, err := GetTriggerEvents(dataBase, triggerID, testCases[i].givenPage, testCases[i].givenSize, from, to, allMetrics, allStates)
+				actual, err := GetTriggerEvents(dataBase, triggerID, testcases[i].givenPage, testcases[i].givenSize, from, to, allMetrics, allStates)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, &dto.EventsList{
-					Page:  testCases[i].givenPage,
-					Size:  testCases[i].givenSize,
+					Page:  testcases[i].givenPage,
+					Size:  testcases[i].givenSize,
 					Total: total,
-					List:  testCases[i].expectedEvents,
+					List:  testcases[i].expectedEvents,
 				})
 			})
 		}
