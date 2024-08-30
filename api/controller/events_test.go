@@ -241,6 +241,12 @@ func TestGetEvents(t *testing.T) {
 				givenSize:      1,
 				expectedEvents: []moira.NotificationEvent{},
 			},
+			{
+				description:    "with page * size >= len(events)",
+				givenPage:      1,
+				givenSize:      int64(len(events)),
+				expectedEvents: []moira.NotificationEvent{},
+			},
 		}
 
 		for i := range testcases {

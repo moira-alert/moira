@@ -46,7 +46,6 @@ func GetTriggerEvents(
 
 		if start >= eventCount {
 			events = []*moira.NotificationEvent{}
-			eventCount = 0
 		} else {
 			if end > eventCount {
 				end = eventCount
