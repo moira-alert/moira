@@ -177,10 +177,10 @@ var (
 
 func descriptionFormatter(trigger moira.TriggerData) string {
 	desc := trigger.Desc
-	if trigger.Desc != "" {
-		desc += "\n"
-	} else {
+	if trigger.Desc == "" {
 		return ""
+	} else {
+		desc += "\n"
 	}
 
 	// Sometimes in trigger description may be text constructions like <param>.
