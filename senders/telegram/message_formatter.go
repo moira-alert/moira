@@ -176,12 +176,11 @@ var (
 )
 
 func descriptionFormatter(trigger moira.TriggerData) string {
-	desc := trigger.Desc
 	if trigger.Desc == "" {
 		return ""
-	} else {
-		desc += "\n"
 	}
+
+	desc := trigger.Desc + "\n"
 
 	// Sometimes in trigger description may be text constructions like <param>.
 	// blackfriday may recognise it as tag, so it won't be escaped.
