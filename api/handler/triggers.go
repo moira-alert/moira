@@ -174,7 +174,7 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 		case *prometheus.Error:
 			switch typedErr.Type {
 			case prometheus.ErrBadData:
-				return nil, api.ErrorInvalidRequest(fmt.Errorf("prometheus: %w", err))
+				return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", err))
 			default:
 				return nil, api.ErrorInternalServer(err)
 			}
@@ -226,7 +226,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 		case *prometheus.Error:
 			switch typedErr.Type {
 			case prometheus.ErrBadData:
-				render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("prometheus: %w", err))) //nolint
+				render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", err))) //nolint
 				return
 			default:
 				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
