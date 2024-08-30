@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	prometheus "github.com/prometheus/client_golang/api/prometheus/v1"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
@@ -153,7 +155,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorResponse) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) { // nolint:errorlint
+		switch typedErr := err.(type) { // nolint:errorlint
 		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))
 		case expression.ErrInvalidExpression:
@@ -169,6 +171,13 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, response
 		case *json.UnmarshalTypeError:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
+		case *prometheus.Error:
+			switch typedErr.Type {
+			case prometheus.ErrBadData:
+				return nil, api.ErrorInvalidRequest(fmt.Errorf("prometheus: %w", err))
+			default:
+				return nil, api.ErrorInternalServer(err)
+			}
 		default:
 			return nil, api.ErrorInternalServer(err)
 		}
@@ -208,10 +217,21 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	response := dto.TriggerCheckResponse{}
 
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) { // nolint:errorlint
+		switch typedErr := err.(type) { // nolint:errorlint
 		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
-			// TODO write comment, why errors are ignored, it is not obvious.
-			// In getTriggerFromRequest these types of errors lead to 400.
+			// TODO: move ErrInvalidExpression to separate case
+
+			// These errors are skipped because if there are error from local source then it will be caught in
+			// dto.TargetVerification and will be explained in detail.
+		case *prometheus.Error:
+			switch typedErr.Type {
+			case prometheus.ErrBadData:
+				render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("prometheus: %w", err))) //nolint
+				return
+			default:
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
