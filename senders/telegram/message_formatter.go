@@ -69,6 +69,9 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	return title + desc + eventsString
 }
 
+// calcRunesCountWithoutHTML is used for calculating symbols in text without html tags. Special symbols
+// like `&gt;`, `&lt;` etc. are counted not as one symbol, for example, len([]rune("&gt;")).
+// This precision is enough for us to evaluate size of message.
 func calcRunesCountWithoutHTML(htmlText []rune) int {
 	textLen := 0
 	isTag := false
