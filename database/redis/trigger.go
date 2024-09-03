@@ -254,7 +254,7 @@ func (connector *DbConnector) preSaveTrigger(newTrigger *moira.Trigger, oldTrigg
 		newTrigger.Patterns = make([]string, 0)
 	}
 
-	now := connector.clock.Now().Unix()
+	now := connector.clock.NowUnix()
 	newTrigger.UpdatedAt = &now
 	if oldTrigger != nil {
 		newTrigger.CreatedAt = oldTrigger.CreatedAt

@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	secondsInHour int64 = 3600
 	checkPointGap int64 = 120
 )
 
@@ -222,6 +221,7 @@ func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckD
 	newCheckData.Timestamp = checkTimeStamp
 	newCheckData.MetricsToTargetRelation = metricsToTargetRelation
 	newCheckData.Message = ""
+
 	return newCheckData
 }
 
@@ -465,34 +465,33 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	metrics map[string]metricSource.MetricData,
 	logger moira.Logger,
 ) (
-	last moira.MetricState,
-	current []moira.MetricState,
+	lastMetricState moira.MetricState,
+	newMetricStates []moira.MetricState,
 	err error,
 ) {
 	var startTime int64
 	var stepTime int64
 
 	for _, metric := range metrics { // Taking values from any metric
-		last = triggerChecker.lastCheck.GetOrCreateMetricState(
+		lastMetricState = triggerChecker.lastCheck.GetOrCreateMetricState(
 			metricName,
-			metric.StartTime-secondsInHour,
 			triggerChecker.trigger.MuteNewMetrics,
+			checkPointGap,
 		)
+
 		startTime = metric.StartTime
 		stepTime = metric.StepTime
 		break
 	}
 
-	checkPoint := last.GetCheckPoint(checkPointGap)
+	checkPoint := lastMetricState.GetCheckPoint(checkPointGap)
 	logger.Debug().
 		Int64(moira.LogFieldNameCheckpoint, checkPoint).
 		Msg("Checkpoint got")
 
-	current = make([]moira.MetricState, 0)
-
 	// DO NOT CHANGE
 	// Specific optimization magic
-	previousState := last
+	previousMetricState := lastMetricState
 	difference := moira.MaxInt64(checkPoint-startTime, 0)
 	stepsDifference := difference / stepTime
 	if (difference % stepTime) > 0 {
@@ -500,18 +499,24 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	}
 	valueTimestamp := startTime + stepTime*stepsDifference
 	endTimestamp := triggerChecker.until + stepTime
+
+	newMetricStates = make([]moira.MetricState, 0)
+
 	for ; valueTimestamp < endTimestamp; valueTimestamp += stepTime {
-		metricNewState, err := triggerChecker.getMetricDataState(metrics, &previousState, &valueTimestamp, &checkPoint, logger)
+		newMetricState, err := triggerChecker.getMetricDataState(metrics, &previousMetricState, &valueTimestamp, &checkPoint, logger)
 		if err != nil {
-			return last, current, err
+			return lastMetricState, newMetricStates, err
 		}
-		if metricNewState == nil {
+
+		if newMetricState == nil {
 			continue
 		}
-		previousState = *metricNewState
-		current = append(current, *metricNewState)
+
+		previousMetricState = *newMetricState
+		newMetricStates = append(newMetricStates, *newMetricState)
 	}
-	return last, current, nil
+
+	return lastMetricState, newMetricStates, nil
 }
 
 func (triggerChecker *TriggerChecker) getMetricDataState(
