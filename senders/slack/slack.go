@@ -70,7 +70,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		location,
 		uriFormatter,
 		descriptionFormatter,
-		descriptionCutter,
+		msgformat.DefaultDescriptionCutter,
 		boldFormatter,
 		eventStringFormatter,
 		codeBlockStart,
@@ -126,11 +126,6 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 		desc += "\n"
 	}
 	return desc
-}
-
-func descriptionCutter(desc string, maxSize int) string {
-	endSuffix := "...\n"
-	return desc[:maxSize-len(endSuffix)] + endSuffix
 }
 
 func boldFormatter(str string) string {

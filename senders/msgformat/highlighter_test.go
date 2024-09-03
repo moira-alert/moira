@@ -30,7 +30,7 @@ func TestFormat(t *testing.T) {
 			location,
 			testUriFormatter,
 			testDescriptionFormatter,
-			testDescriptionCutter,
+			DefaultDescriptionCutter,
 			testBoldFormatter,
 			testEventStringFormatter,
 			"```",
@@ -136,7 +136,7 @@ func TestFormat(t *testing.T) {
 			Convey("Long description and many events. both desc and events > msgLimit/2", func() {
 				actual := formatter.Format(getParams(longEvents, moira.TriggerData{Desc: longDesc}, false))
 				expected := "**NODATA**\n" +
-					strings.Repeat("a", 1984) + "...\n" +
+					strings.Repeat("a", 1980) + "...\n" +
 					"```\n" +
 					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 40) +
 					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```\n" +
@@ -157,10 +157,6 @@ func testDescriptionFormatter(trigger moira.TriggerData) string {
 		desc += "\n"
 	}
 	return desc
-}
-
-func testDescriptionCutter(desc string, maxSize int) string {
-	return desc[:maxSize] + "...\n"
 }
 
 func testUriFormatter(triggerURI, triggerName string) string {
