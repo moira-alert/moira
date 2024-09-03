@@ -65,12 +65,12 @@ func TestGetEmergencyContacts(t *testing.T) {
 	Convey("Test GetEmergencyContacts", t, func() {
 		Convey("Without emergency contacts", func() {
 			emergencyContacts, err := database.GetEmergencyContacts()
-			So(err, ShouldResemble, nil)
+			So(err, ShouldBeNil)
 			So(emergencyContacts, ShouldResemble, []*moira.EmergencyContact{})
 		})
 
 		Convey("With some emergency contacts", func() {
-			database.SaveEmergencyContacts([]moira.EmergencyContact{
+			database.saveEmergencyContacts([]moira.EmergencyContact{
 				testEmergencyContact,
 				testEmergencyContact2,
 				testEmergencyContact3,
@@ -83,8 +83,57 @@ func TestGetEmergencyContacts(t *testing.T) {
 			}
 
 			emergencyContacts, err := database.GetEmergencyContacts()
-			So(err, ShouldResemble, nil)
+			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContacts, expectedEmergencyContacts)
+		})
+	})
+}
+
+func TestGetEmergencyContactsByIDs(t *testing.T) {
+	logger, _ := logging.GetLogger("database")
+	database := NewTestDatabase(logger)
+	database.Flush()
+	defer database.Flush()
+
+	Convey("Test GetEmergencyContactsByIDs", t, func() {
+		Convey("With empty contact ids", func() {
+			contactIDs := []string{}
+			emergencyContacts, err := database.GetEmergencyContactsByIDs(contactIDs)
+			So(err, ShouldBeNil)
+			So(emergencyContacts, ShouldResemble, []*moira.EmergencyContact{})
+		})
+
+		Convey("With some saved contact ids", func() {
+			database.saveEmergencyContacts([]moira.EmergencyContact{
+				testEmergencyContact,
+				testEmergencyContact2,
+			})
+
+			expectedEmergencyContacts := []*moira.EmergencyContact{
+				&testEmergencyContact,
+				&testEmergencyContact2,
+			}
+
+			contactIDs := []string{testContactID, testContactID2}
+			emergencyContacts, err := database.GetEmergencyContactsByIDs(contactIDs)
+			So(err, ShouldBeNil)
+			So(emergencyContacts, ShouldResemble, expectedEmergencyContacts)
+		})
+
+		Convey("With one saved and one not saved contact ids", func() {
+			database.saveEmergencyContacts([]moira.EmergencyContact{
+				testEmergencyContact,
+			})
+
+			expectedEmergencyContacts := []*moira.EmergencyContact{
+				&testEmergencyContact,
+				nil,
+			}
+
+			contactIDs := []string{testContactID, testContactID2}
+			emergencyContacts, err := database.GetEmergencyContactsByIDs(contactIDs)
+			So(err, ShouldBeNil)
+			So(emergencyContacts, ShouldResemble, expectedEmergencyContacts)
 		})
 	})
 }
@@ -103,7 +152,7 @@ func TestGetEmergencyTypeContactIDs(t *testing.T) {
 		})
 
 		Convey("With some emergency contacts by type", func() {
-			database.SaveEmergencyContacts([]moira.EmergencyContact{
+			database.saveEmergencyContacts([]moira.EmergencyContact{
 				testEmergencyContact,
 				testEmergencyContact2,
 				testEmergencyContact3,
@@ -160,7 +209,7 @@ func TestSaveEmergencyContacts(t *testing.T) {
 	database.Flush()
 	defer database.Flush()
 
-	Convey("Test SaveEmergencyContacts", t, func() {
+	Convey("Test saveEmergencyContacts", t, func() {
 		Convey("With some emergency contacts", func() {
 			expectedEmergencyContacts := []*moira.EmergencyContact{&testEmergencyContact, &testEmergencyContact2, &testEmergencyContact3}
 			expectedEmergencyContactIDs := []string{testContactID, testContactID2}
@@ -169,7 +218,7 @@ func TestSaveEmergencyContacts(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(emergencyContacts, ShouldBeEmpty)
 
-			err = database.SaveEmergencyContacts([]moira.EmergencyContact{
+			err = database.saveEmergencyContacts([]moira.EmergencyContact{
 				testEmergencyContact,
 				testEmergencyContact2,
 				testEmergencyContact3,

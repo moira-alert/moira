@@ -13,7 +13,6 @@ import (
 
 func emergencyContact(router chi.Router) {
 	router.With(middleware.AdminOnlyMiddleware()).Get("/", getEmergencyContacts)
-	router.Post("/", createEmergencyContacts)
 	router.Post("/", createEmergencyContact)
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
@@ -54,7 +53,7 @@ func getEmergencyContacts(writer http.ResponseWriter, request *http.Request) {
 //	@tags		emergency-contact
 //	@produce	json
 //	@param		contactID	path		string							true	"Contact ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200			{object}	dto.Contact						"Successfully received contact"
+//	@success	200			{object}	dto.EmergencyContact						"Successfully received contact"
 //	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
 //	@failure	422			{object}	api.ErrorRenderExample			"Render error"
@@ -77,42 +76,13 @@ func getEmergencyContactByID(writer http.ResponseWriter, request *http.Request) 
 
 // nolint: gofmt,goimports
 //
-//	@summary	Creates a new emergency contacts for the current user
-//	@id			create-emergency-contacts
-//	@tags		emergency-contact
-//	@accept		json
-//	@produce	json
-//	@param		emergency-contacts	body		dto.EmergencyContacts						true	"Emergency contacts data"
-//	@success	200		{object}	dto.EmergencyContacts						"Emergency contacts created successfully"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/emergency-contact/bulk [post]
-func createEmergencyContacts(writer http.ResponseWriter, request *http.Request) {
-	emergencyContactsDTO := &dto.EmergencyContacts{}
-	if err := render.Bind(request, emergencyContactsDTO); err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-		return
-	}
-
-	userLogin := middleware.GetLogin(request)
-	auth := middleware.GetAuth(request)
-
-	if err := controller.CreateEmergencyContacts(database, auth, emergencyContactsDTO, userLogin); err != nil {
-		render.Render(writer, request, err) //nolint
-		return
-	}
-}
-
-// nolint: gofmt,goimports
-//
 //	@summary	Creates a new emergency contact for the current user
 //	@id			create-emergency-contact
 //	@tags		emergency-contact
 //	@accept		json
 //	@produce	json
-//	@param		emergency-contacts	body		dto.EmergencyContact						true	"Emergency contact data"
-//	@success	200		{object}	dto.EmergencyContacts						"Emergency contact created successfully"
+//	@param		emergency-contact	body		dto.EmergencyContact						true	"Emergency contact data"
+//	@success	200		{object} dto.SaveEmergencyContactResponse		"Emergency contact created successfully"
 //	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure	422		{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
@@ -127,8 +97,14 @@ func createEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	auth := middleware.GetAuth(request)
 
-	if err := controller.CreateEmergencyContact(database, auth, emergencyContactDTO, userLogin); err != nil {
+	response, err := controller.CreateEmergencyContact(database, auth, emergencyContactDTO, userLogin)
+	if err != nil {
 		render.Render(writer, request, err) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, response); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -142,7 +118,7 @@ func createEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 //	@produce	json
 //	@param		contactID	path		string							true	"ID of the contact to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param		emergency-contact		body		dto.EmergencyContact						true	"Updated emergency contact data"
-//	@success	200			{object}	dto.Emergency						"Updated emergency contact"
+//	@success	200		{object} dto.SaveEmergencyContactResponse					"Updated emergency contact"
 //	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
@@ -158,13 +134,13 @@ func updateEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 
 	contactID := middleware.GetContactID(request)
 
-	emergencyContactDTO, err := controller.UpdateEmergencyContact(database, contactID, emergencyContactDTO)
+	response, err := controller.UpdateEmergencyContact(database, contactID, emergencyContactDTO)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
 
-	if err := render.Render(writer, request, emergencyContactDTO); err != nil {
+	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}

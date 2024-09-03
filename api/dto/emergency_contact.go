@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	emptyEmergencyTypesErr     = errors.New("emergency types can not be empty")
-	emptyEmergencyContactIDErr = errors.New("emergency contact id can not be empty")
+	errEmptyEmergencyTypes     = errors.New("emergency types can not be empty")
 )
 
 type EmergencyContact struct {
@@ -21,9 +20,9 @@ func (*EmergencyContact) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (contact *EmergencyContact) Bind(r *http.Request) error {
-	if len(contact.EmergencyTypes) == 0 {
-		return emptyEmergencyTypesErr
+func (emergencyContact *EmergencyContact) Bind(r *http.Request) error {
+	if len(emergencyContact.EmergencyTypes) == 0 {
+		return errEmptyEmergencyTypes
 	}
 
 	return nil
@@ -34,24 +33,6 @@ type EmergencyContactList struct {
 }
 
 func (*EmergencyContactList) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-type EmergencyContacts struct {
-	Items []EmergencyContact `json:"emergency_contacts"`
-}
-
-func (emergencyContacts *EmergencyContacts) Bind(r *http.Request) error {
-	for _, emergencyContact := range emergencyContacts.Items {
-		if emergencyContact.ContactID == "" {
-			return emptyEmergencyContactIDErr
-		}
-
-		if len(emergencyContact.EmergencyTypes) == 0 {
-			return emptyEmergencyTypesErr
-		}
-	}
-
 	return nil
 }
 
@@ -67,4 +48,12 @@ func FromEmergencyContacts(emergencyContacts []*moira.EmergencyContact) *Emergen
 	}
 
 	return emergencyContactsDTO
+}
+
+type SaveEmergencyContactResponse struct {
+	ContactID string `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+}
+
+func (SaveEmergencyContactResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }

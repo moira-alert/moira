@@ -10,6 +10,8 @@ import (
 	moiradb "github.com/moira-alert/moira/database"
 )
 
+var errEmptyEmergencyContactID = errors.New("emergency contact id can not be empty")
+
 func GetEmergencyContacts(database moira.Database) (*dto.EmergencyContactList, *api.ErrorResponse) {
 	emergencyContacts, err := database.GetEmergencyContacts()
 	if err != nil {
@@ -42,7 +44,7 @@ func verifyEmergencyContactAccess(
 ) *api.ErrorResponse {
 	contact, err := database.GetContact(emergencyContact.ContactID)
 	if err != nil {
-		api.ErrorInternalServer(err)
+		return api.ErrorInternalServer(err)
 	}
 
 	// Only admins are allowed to create an emergency contacts for other users
@@ -53,73 +55,49 @@ func verifyEmergencyContactAccess(
 	return nil
 }
 
-func CreateEmergencyContacts(
-	database moira.Database,
-	auth *api.Authorization,
-	emergencyContactsDTO *dto.EmergencyContacts,
-	userLogin string,
-) *api.ErrorResponse {
-	if emergencyContactsDTO == nil {
-		return nil
-	}
-
-	emergencyContacts := make([]moira.EmergencyContact, 0, len(emergencyContactsDTO.Items))
-
-	for _, emergencyContactDTO := range emergencyContactsDTO.Items {
-		emergencyContact := moira.EmergencyContact(emergencyContactDTO)
-
-		if err := verifyEmergencyContactAccess(database, auth, emergencyContact, userLogin); err != nil {
-			return err
-		}
-
-		emergencyContacts = append(emergencyContacts, emergencyContact)
-	}
-
-	if err := database.SaveEmergencyContacts(emergencyContacts); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-
-	return nil
-}
-
 func CreateEmergencyContact(
 	database moira.Database,
 	auth *api.Authorization,
 	emergencyContactDTO *dto.EmergencyContact,
 	userLogin string,
-) *api.ErrorResponse {
+) (dto.SaveEmergencyContactResponse, *api.ErrorResponse) {
 	if emergencyContactDTO == nil {
-		return nil
+		return dto.SaveEmergencyContactResponse{}, nil
 	}
 
 	emergencyContact := moira.EmergencyContact(*emergencyContactDTO)
+	if emergencyContact.ContactID == "" {
+		return dto.SaveEmergencyContactResponse{}, api.ErrorInvalidRequest(errEmptyEmergencyContactID)
+	}
 
 	if err := verifyEmergencyContactAccess(database, auth, emergencyContact, userLogin); err != nil {
-		return err
+		return dto.SaveEmergencyContactResponse{}, err
 	}
 
 	if err := database.SaveEmergencyContact(emergencyContact); err != nil {
-		return api.ErrorInternalServer(err)
+		return dto.SaveEmergencyContactResponse{}, api.ErrorInternalServer(err)
 	}
 
-	return nil
+	return dto.SaveEmergencyContactResponse{
+		ContactID: emergencyContact.ContactID,
+	}, nil
 }
 
-func UpdateEmergencyContact(database moira.Database, contactID string, emergencyContactDTO *dto.EmergencyContact) (*dto.EmergencyContact, *api.ErrorResponse) {
+func UpdateEmergencyContact(database moira.Database, contactID string, emergencyContactDTO *dto.EmergencyContact) (dto.SaveEmergencyContactResponse, *api.ErrorResponse) {
 	if emergencyContactDTO == nil {
-		return nil, nil
+		return dto.SaveEmergencyContactResponse{}, nil
 	}
 
 	emergencyContact := moira.EmergencyContact(*emergencyContactDTO)
 	emergencyContact.ContactID = contactID
 
 	if err := database.SaveEmergencyContact(emergencyContact); err != nil {
-		return nil, api.ErrorInternalServer(err)
+		return dto.SaveEmergencyContactResponse{}, api.ErrorInternalServer(err)
 	}
 
-	updatedEmergencyContactDTO := dto.EmergencyContact(emergencyContact)
-
-	return &updatedEmergencyContactDTO, nil
+	return dto.SaveEmergencyContactResponse{
+		ContactID: emergencyContact.ContactID,
+	}, nil
 }
 
 func RemoveEmergencyContact(database moira.Database, contactID string) *api.ErrorResponse {

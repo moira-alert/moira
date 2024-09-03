@@ -21,7 +21,6 @@ var (
 	databaseKey          ContextKey = "database"
 	searcherKey          ContextKey = "searcher"
 	triggerIDKey         ContextKey = "triggerID"
-	userIDKey            ContextKey = "userID"
 	clustersMetricTTLKey ContextKey = "clustersMetricTTL"
 	populateKey          ContextKey = "populated"
 	contactIDKey         ContextKey = "contactID"
@@ -90,11 +89,6 @@ func GetSubscriptionID(request *http.Request) string {
 func GetContactID(request *http.Request) string {
 	return request.Context().Value(contactIDKey).(string)
 }
-
-func GetUserID(request *http.Request) string {
-	return request.Context().Value(userIDKey).(string)
-}
-
 
 // GetPage gets page value from request context, which was sets in Paginate middleware.
 func GetPage(request *http.Request) int64 {

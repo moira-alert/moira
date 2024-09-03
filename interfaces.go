@@ -77,9 +77,9 @@ type Database interface {
 
 	// EmergencyContact storing
 	GetEmergencyContacts() ([]*EmergencyContact, error)
+	GetEmergencyContactsByIDs(contactIDs []string) ([]*EmergencyContact, error)
 	GetEmergencyContact(contactID string) (EmergencyContact, error)
 	GetEmergencyTypeContactIDs(emergencyType EmergencyContactType) ([]string, error)
-	SaveEmergencyContacts(emergencyContacts []EmergencyContact) error
 	SaveEmergencyContact(emergencyContact EmergencyContact) error
 	RemoveEmergencyContact(contactID string) error
 

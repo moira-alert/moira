@@ -26,26 +26,29 @@ func (connector *DbConnector) GetEmergencyContact(contactID string) (moira.Emerg
 }
 
 func (connector *DbConnector) GetEmergencyContacts() ([]*moira.EmergencyContact, error) {
-	c := *connector.client
-	ctx := connector.context
-
 	emergencyContactIDs, err := connector.getEmergencyContactIDs()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get emergency contact IDs: %w", err)
 	}
 
+	return connector.GetEmergencyContactsByIDs(emergencyContactIDs)
+}
+
+func (connector *DbConnector) GetEmergencyContactsByIDs(contactIDs []string) ([]*moira.EmergencyContact, error) {
+	c := *connector.client
+	ctx := connector.context
+
 	pipe := c.TxPipeline()
-	for _, emergencyContactID := range emergencyContactIDs {
-		pipe.Get(ctx, emergencyContactsKey(emergencyContactID))
+	for _, contactID := range contactIDs {
+		pipe.Get(ctx, emergencyContactsKey(contactID))
 	}
 
 	cmds, err := pipe.Exec(ctx)
-	if err != nil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return nil, fmt.Errorf("failed to get emergency contacts by IDs: %w", err)
 	}
 
 	emergencyContactCmds := make([]*redis.StringCmd, 0, len(cmds))
-
 	for _, cmd := range cmds {
 		emergencyContactCmd, ok := cmd.(*redis.StringCmd)
 		if !ok {
@@ -69,7 +72,6 @@ func (connector *DbConnector) getEmergencyContactIDs() ([]string, error) {
 		key := iter.Val()
 
 		emergencyContactID := strings.TrimPrefix(key, emergencyContactsKey(""))
-
 		emergencyContactIDs = append(emergencyContactIDs, emergencyContactID)
 	}
 
@@ -92,7 +94,7 @@ func (connector *DbConnector) GetEmergencyTypeContactIDs(emergencyType moira.Eme
 	return contactIDs, nil
 }
 
-func (connector *DbConnector) SaveEmergencyContacts(emergencyContacts []moira.EmergencyContact) error {
+func (connector *DbConnector) saveEmergencyContacts(emergencyContacts []moira.EmergencyContact) error {
 	c := *connector.client
 	ctx := connector.context
 
@@ -121,7 +123,7 @@ func (connector *DbConnector) SaveEmergencyContact(emergencyContact moira.Emerge
 	}
 
 	if _, err := pipe.Exec(ctx); err != nil {
-		return fmt.Errorf("failed to save emergency contact: %w", err)
+		return fmt.Errorf("failed to save emergency contact '%s': %w", emergencyContact.ContactID, err)
 	}
 
 	return nil

@@ -45,18 +45,6 @@ func UserContext(next http.Handler) http.Handler {
 	})
 }
 
-func UserIDContext(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		userID := chi.URLParam(request, "userId")
-		if userID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("userID must be set"))) //nolint
-			return
-		}
-		ctx := context.WithValue(request.Context(), userIDKey, userID)
-		next.ServeHTTP(writer, request.WithContext(ctx))
-	})
-}
-
 // TriggerContext gets triggerId from parsed URI corresponding to trigger routes and set it to request context.
 func TriggerContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {

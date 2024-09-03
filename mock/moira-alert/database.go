@@ -446,6 +446,21 @@ func (mr *MockDatabaseMockRecorder) GetEmergencyContacts() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmergencyContacts", reflect.TypeOf((*MockDatabase)(nil).GetEmergencyContacts))
 }
 
+// GetEmergencyContactsByIDs mocks base method.
+func (m *MockDatabase) GetEmergencyContactsByIDs(arg0 []string) ([]*moira.EmergencyContact, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmergencyContactsByIDs", arg0)
+	ret0, _ := ret[0].([]*moira.EmergencyContact)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmergencyContactsByIDs indicates an expected call of GetEmergencyContactsByIDs.
+func (mr *MockDatabaseMockRecorder) GetEmergencyContactsByIDs(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmergencyContactsByIDs", reflect.TypeOf((*MockDatabase)(nil).GetEmergencyContactsByIDs), arg0)
+}
+
 // GetEmergencyTypeContactIDs mocks base method.
 func (m *MockDatabase) GetEmergencyTypeContactIDs(arg0 moira.EmergencyContactType) ([]string, error) {
 	m.ctrl.T.Helper()
@@ -1459,20 +1474,6 @@ func (m *MockDatabase) SaveEmergencyContact(arg0 moira.EmergencyContact) error {
 func (mr *MockDatabaseMockRecorder) SaveEmergencyContact(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveEmergencyContact", reflect.TypeOf((*MockDatabase)(nil).SaveEmergencyContact), arg0)
-}
-
-// SaveEmergencyContacts mocks base method.
-func (m *MockDatabase) SaveEmergencyContacts(arg0 []moira.EmergencyContact) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveEmergencyContacts", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SaveEmergencyContacts indicates an expected call of SaveEmergencyContacts.
-func (mr *MockDatabaseMockRecorder) SaveEmergencyContacts(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveEmergencyContacts", reflect.TypeOf((*MockDatabase)(nil).SaveEmergencyContacts), arg0)
 }
 
 // SaveMetrics mocks base method.
