@@ -129,7 +129,8 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 }
 
 func descriptionCutter(desc string, maxSize int) string {
-	return desc[:maxSize] + "...\n"
+	endSuffix := "...\n"
+	return desc[:maxSize-len(endSuffix)] + endSuffix
 }
 
 func boldFormatter(str string) string {
