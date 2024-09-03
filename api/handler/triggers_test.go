@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metric_source/remote"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -142,7 +144,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		})
 	})
 
-	Convey("With incorrect targets error", t, func() {
+	Convey("With incorrect targets errors", t, func() {
 		graphiteLocalSrc := mock_metric_source.NewMockMetricSource(mockCtrl)
 		graphiteRemoteSrc := mock_metric_source.NewMockMetricSource(mockCtrl)
 		prometheusSrc := mock_metric_source.NewMockMetricSource(mockCtrl)
@@ -180,11 +182,34 @@ func TestGetTriggerFromRequest(t *testing.T) {
 			},
 		}
 
+		Convey("for graphite remote", func() {
+			triggerDTO.TriggerSource = moira.GraphiteRemote
+			body, _ := json.Marshal(triggerDTO)
+
+			request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+			request.Header.Add("content-type", "application/json")
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+
+			testLogger, _ := logging.GetLogger("Test")
+
+			request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
+
+			var returnedErr error = remote.ErrRemoteTriggerResponse{
+				InternalError: fmt.Errorf(""),
+			}
+
+			graphiteRemoteSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(nil, returnedErr)
+
+			_, errRsp := getTriggerFromRequest(request)
+			So(errRsp, ShouldResemble, api.ErrorRemoteServerUnavailable(returnedErr))
+		})
+
 		Convey("for prometheus remote", func() {
 			triggerDTO.TriggerSource = moira.PrometheusRemote
 			body, _ := json.Marshal(triggerDTO)
 
-			Convey("with error type = bad_data", func() {
+			Convey("with error type = bad_data got bad request", func() {
 				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 				request.Header.Add("content-type", "application/json")
 				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
