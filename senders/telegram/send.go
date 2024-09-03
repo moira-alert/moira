@@ -315,7 +315,7 @@ func (sender *Sender) retryIfBadMessageError(
 ) error {
 	var e moira.SenderBrokenContactError
 	if isBrokenContactErr := errors.As(err, &e); !isBrokenContactErr {
-		if _, ok := checkBadMessageError(err); ok {
+		if _, isBadMessage := checkBadMessageError(err); isBadMessage {
 			// There are some problems with message formatting.
 			// For example, it is too long, or have unsupported tags and so on.
 			// Events should not be lost, so retry to send it without description.
