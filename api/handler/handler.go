@@ -43,6 +43,7 @@ func NewHandler(
 	router.Use(moiramiddle.UserContext)
 	router.Use(moiramiddle.RequestLogger(log))
 	router.Use(middleware.NoCache)
+	router.Use(moiramiddle.LimitsContext(apiConfig.Limits))
 
 	router.NotFound(notFoundHandler)
 	router.MethodNotAllowed(methodNotAllowedHandler)

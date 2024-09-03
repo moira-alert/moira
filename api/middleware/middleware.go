@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"github.com/moira-alert/moira/limits"
 	"net/http"
 	"time"
 
@@ -41,6 +42,7 @@ var (
 	authKey              ContextKey = "auth"
 	metricContextKey     ContextKey = "metric"
 	statesContextKey     ContextKey = "states"
+	limitsContextKey     ContextKey = "limits"
 	anonymousUser                   = "anonymous"
 )
 
@@ -173,4 +175,9 @@ func GetMetric(request *http.Request) string {
 // GetStates is used to retrieve trigger state.
 func GetStates(request *http.Request) map[string]struct{} {
 	return request.Context().Value(statesContextKey).(map[string]struct{})
+}
+
+// GetLimits returns configured limits.
+func GetLimits(request *http.Request) limits.Config {
+	return request.Context().Value(limitsContextKey).(limits.Config)
 }

@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"github.com/moira-alert/moira/limits"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -327,6 +328,16 @@ func StatesContext() func(next http.Handler) http.Handler {
 			}
 
 			ctx := context.WithValue(request.Context(), statesContextKey, states)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// LimitsContext places limits.Config to request context.
+func LimitsContext(limit limits.Config) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), limitsContextKey, limit)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}

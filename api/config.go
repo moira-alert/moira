@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/moira-alert/moira/limits"
 	"net/http"
 	"time"
 
@@ -38,6 +39,7 @@ type Config struct {
 	MetricsTTL    map[moira.ClusterKey]time.Duration
 	Flags         FeatureFlags
 	Authorization Authorization
+	Limits        limits.Config
 }
 
 // WebConfig is container for web ui configuration parameters.

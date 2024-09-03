@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	"unicode/utf8"
 
 	"github.com/moira-alert/moira/templating"
 
@@ -161,6 +162,12 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	if trigger.Name == "" {
 		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("trigger name is required")}
+	}
+
+	limits := middleware.GetLimits(request)
+	if utf8.RuneCountInString(trigger.Name) > limits.Trigger.MaxNameSize {
+		return api.ErrInvalidRequestContent{
+			ValidationError: fmt.Errorf("trigger name too long, should be less than %d symbols", limits.Trigger.MaxNameSize)}
 	}
 
 	if err := checkWarnErrorExpression(trigger); err != nil {

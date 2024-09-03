@@ -46,6 +46,8 @@ type apiConfig struct {
 	EnableCORS bool `yaml:"enable_cors"`
 	// Authorization contains authorization configuration.
 	Authorization authorization `yaml:"authorization"`
+	// Limits contains limits applied to entities and so on.
+	Limits cmd.LimitsConfig `yaml:"limits"`
 }
 
 type authorization struct {
@@ -114,6 +116,7 @@ func (config *apiConfig) getSettings(
 		MetricsTTL:    metricsTTL,
 		Flags:         flags,
 		Authorization: config.Authorization.toApiConfig(webConfig),
+		Limits:        config.Limits.ToLimits(),
 	}
 }
 
@@ -214,6 +217,11 @@ func getDefault() config {
 		API: apiConfig{
 			Listen:     ":8081",
 			EnableCORS: false,
+			Limits: cmd.LimitsConfig{
+				Trigger: cmd.TriggerLimitsConfig{
+					MaxNameSize: 200,
+				},
+			},
 		},
 		Web: webConfig{
 			RemoteAllowed: false,
