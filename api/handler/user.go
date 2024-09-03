@@ -11,9 +11,17 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
+const (
+	errNotPermittedStr = "you are not permitted"
+)
+
 func user(router chi.Router) {
 	router.Get("/", getUserName)
 	router.Get("/settings", getUserSettings)
+	router.Route("/{userId}", func(r chi.Router) {
+		router.Use(userFilter)
+		router.Route("/emergency-contacts", emergencyContact)
+	})
 }
 
 // nolint: gofmt,goimports
@@ -61,4 +69,17 @@ func getUserSettings(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
+}
+
+func userFilter(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		userID := middleware.GetUserID(request)
+		userLogin := middleware.GetLogin(request)
+		auth := middleware.GetAuth(request)
+		if !auth.IsAdmin(userLogin) && userID != userLogin {
+			render.Render(writer, request, api.ErrorForbidden(errNotPermittedStr)) //nolint
+			return
+		}
+		next.ServeHTTP(writer, request)
+	})
 }

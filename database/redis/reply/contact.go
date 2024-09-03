@@ -17,12 +17,13 @@ func unmarshalContact(bytes []byte, err error) (moira.ContactData, error) {
 		if errors.Is(err, redis.Nil) {
 			return contact, database.ErrNil
 		}
-		return contact, fmt.Errorf("failed to read contact: %s", err.Error())
+
+		return contact, fmt.Errorf("failed to read contact: %w", err)
 	}
 
 	err = json.Unmarshal(bytes, &contact)
 	if err != nil {
-		return contact, fmt.Errorf("failed to parse contact json %s: %s", string(bytes), err.Error())
+		return contact, fmt.Errorf("failed to parse contact json %s: %w", string(bytes), err)
 	}
 
 	return contact, nil
@@ -39,13 +40,15 @@ func Contacts(rep []*redis.StringCmd) ([]*moira.ContactData, error) {
 	for i, value := range rep {
 		contact, err := unmarshalContact(value.Bytes())
 		if err != nil && !errors.Is(err, database.ErrNil) {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal contact: %w", err)
 		}
+
 		if errors.Is(err, database.ErrNil) {
 			contacts[i] = nil
 		} else {
 			contacts[i] = &contact
 		}
 	}
+
 	return contacts, nil
 }

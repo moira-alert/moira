@@ -222,6 +222,19 @@ func (contact *ContactData) ToTemplateContact() *templating.Contact {
 	}
 }
 
+type EmergencyContactType string
+
+const (
+	EmergencyTypeNotSet            EmergencyContactType = ""
+	EmergencyTypeNotifierOff       EmergencyContactType = "notifier_off"
+	EmergencyTypeRedisDisconnected EmergencyContactType = "redis_disconnected"
+)
+
+type EmergencyContact struct {
+	ContactID      string
+	EmergencyTypes []EmergencyContactType
+}
+
 // SubscriptionData represents user subscription.
 type SubscriptionData struct {
 	Contacts          []string     `json:"contacts" example:"acd2db98-1659-4a2f-b227-52d71f6e3ba1"`

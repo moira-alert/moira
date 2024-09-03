@@ -416,6 +416,51 @@ func (mr *MockDatabaseMockRecorder) GetContacts(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContacts", reflect.TypeOf((*MockDatabase)(nil).GetContacts), arg0)
 }
 
+// GetEmergencyContact mocks base method.
+func (m *MockDatabase) GetEmergencyContact(arg0 string) (moira.EmergencyContact, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmergencyContact", arg0)
+	ret0, _ := ret[0].(moira.EmergencyContact)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmergencyContact indicates an expected call of GetEmergencyContact.
+func (mr *MockDatabaseMockRecorder) GetEmergencyContact(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmergencyContact", reflect.TypeOf((*MockDatabase)(nil).GetEmergencyContact), arg0)
+}
+
+// GetEmergencyContacts mocks base method.
+func (m *MockDatabase) GetEmergencyContacts() ([]*moira.EmergencyContact, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmergencyContacts")
+	ret0, _ := ret[0].([]*moira.EmergencyContact)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmergencyContacts indicates an expected call of GetEmergencyContacts.
+func (mr *MockDatabaseMockRecorder) GetEmergencyContacts() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmergencyContacts", reflect.TypeOf((*MockDatabase)(nil).GetEmergencyContacts))
+}
+
+// GetEmergencyTypeContactIDs mocks base method.
+func (m *MockDatabase) GetEmergencyTypeContactIDs(arg0 moira.EmergencyContactType) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEmergencyTypeContactIDs", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEmergencyTypeContactIDs indicates an expected call of GetEmergencyTypeContactIDs.
+func (mr *MockDatabaseMockRecorder) GetEmergencyTypeContactIDs(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmergencyTypeContactIDs", reflect.TypeOf((*MockDatabase)(nil).GetEmergencyTypeContactIDs), arg0)
+}
+
 // GetMetricRetention mocks base method.
 func (m *MockDatabase) GetMetricRetention(arg0 string) (int64, error) {
 	m.ctrl.T.Helper()
@@ -1162,6 +1207,20 @@ func (mr *MockDatabaseMockRecorder) RemoveContact(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveContact", reflect.TypeOf((*MockDatabase)(nil).RemoveContact), arg0)
 }
 
+// RemoveEmergencyContact mocks base method.
+func (m *MockDatabase) RemoveEmergencyContact(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveEmergencyContact", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveEmergencyContact indicates an expected call of RemoveEmergencyContact.
+func (mr *MockDatabaseMockRecorder) RemoveEmergencyContact(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveEmergencyContact", reflect.TypeOf((*MockDatabase)(nil).RemoveEmergencyContact), arg0)
+}
+
 // RemoveMetricRetention mocks base method.
 func (m *MockDatabase) RemoveMetricRetention(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -1386,6 +1445,34 @@ func (m *MockDatabase) SaveContact(arg0 *moira.ContactData) error {
 func (mr *MockDatabaseMockRecorder) SaveContact(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveContact", reflect.TypeOf((*MockDatabase)(nil).SaveContact), arg0)
+}
+
+// SaveEmergencyContact mocks base method.
+func (m *MockDatabase) SaveEmergencyContact(arg0 moira.EmergencyContact) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveEmergencyContact", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveEmergencyContact indicates an expected call of SaveEmergencyContact.
+func (mr *MockDatabaseMockRecorder) SaveEmergencyContact(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveEmergencyContact", reflect.TypeOf((*MockDatabase)(nil).SaveEmergencyContact), arg0)
+}
+
+// SaveEmergencyContacts mocks base method.
+func (m *MockDatabase) SaveEmergencyContacts(arg0 []moira.EmergencyContact) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveEmergencyContacts", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveEmergencyContacts indicates an expected call of SaveEmergencyContacts.
+func (mr *MockDatabaseMockRecorder) SaveEmergencyContacts(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveEmergencyContacts", reflect.TypeOf((*MockDatabase)(nil).SaveEmergencyContacts), arg0)
 }
 
 // SaveMetrics mocks base method.

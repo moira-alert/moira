@@ -16,18 +16,22 @@ import (
 // GetContact returns contact data by given id, if no value, return database.ErrNil error.
 func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	c := *connector.client
+	ctx := connector.context
 
 	var contact moira.ContactData
 
-	result := c.Get(connector.context, contactKey(id))
+	result := c.Get(ctx, contactKey(id))
 	if errors.Is(result.Err(), redis.Nil) {
 		return contact, database.ErrNil
 	}
+
 	contact, err := reply.Contact(result)
 	if err != nil {
-		return contact, err
+		return contact, fmt.Errorf("failed to reply contact '%s': %w", id, err)
 	}
+
 	contact.ID = id
+
 	return contact, nil
 }
 
@@ -37,19 +41,22 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 	results := make([]*redis.StringCmd, 0, len(contactIDs))
 
 	c := *connector.client
+	ctx := connector.context
+
 	pipe := c.TxPipeline()
 	for _, id := range contactIDs {
-		result := pipe.Get(connector.context, contactKey(id))
+		result := pipe.Get(ctx, contactKey(id))
 		results = append(results, result)
 	}
-	_, err := pipe.Exec(connector.context)
+
+	_, err := pipe.Exec(ctx)
 	if err != nil && !errors.Is(err, redis.Nil) {
-		return nil, err
+		return nil, fmt.Errorf("failed to get contacts by id: %w", err)
 	}
 
 	contacts, err := reply.Contacts(results)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to reply contacts: %w", err)
 	}
 
 	for i := range contacts {
@@ -57,6 +64,7 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 			contacts[i].ID = contactIDs[i]
 		}
 	}
+
 	return contacts, nil
 }
 
@@ -79,6 +87,7 @@ func getContactsKeysOnRedisNode(ctx context.Context, client redis.UniversalClien
 			break
 		}
 	}
+
 	return keys, nil
 }
 
@@ -91,6 +100,7 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 		if err != nil {
 			return err
 		}
+
 		keys = append(keys, keysResult...)
 		return nil
 	})
@@ -102,6 +112,7 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	for _, key := range keys {
 		contactIDs = append(contactIDs, strings.TrimPrefix(key, contactKey("")))
 	}
+
 	return connector.GetContacts(contactIDs)
 }
 
@@ -109,33 +120,40 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	existing, getContactErr := connector.GetContact(contact.ID)
 	if getContactErr != nil && !errors.Is(getContactErr, database.ErrNil) {
-		return getContactErr
+		return fmt.Errorf("failed to get contact '%s': %w", contact.ID, getContactErr)
 	}
-	contactString, err := json.Marshal(contact)
+
+	contactStr, err := json.Marshal(contact)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal contact '%s': %w", contact.ID, err)
 	}
 
 	c := *connector.client
+	ctx := connector.context
 
 	pipe := c.TxPipeline()
-	pipe.Set(connector.context, contactKey(contact.ID), contactString, redis.KeepTTL)
+	pipe.Set(ctx, contactKey(contact.ID), contactStr, redis.KeepTTL)
 	if !errors.Is(getContactErr, database.ErrNil) && contact.User != existing.User {
-		pipe.SRem(connector.context, userContactsKey(existing.User), contact.ID)
+		pipe.SRem(ctx, userContactsKey(existing.User), contact.ID)
 	}
+
 	if !errors.Is(getContactErr, database.ErrNil) && contact.Team != existing.Team {
-		pipe.SRem(connector.context, teamContactsKey(existing.Team), contact.ID)
+		pipe.SRem(ctx, teamContactsKey(existing.Team), contact.ID)
 	}
+
 	if contact.User != "" {
-		pipe.SAdd(connector.context, userContactsKey(contact.User), contact.ID)
+		pipe.SAdd(ctx, userContactsKey(contact.User), contact.ID)
 	}
+
 	if contact.Team != "" {
-		pipe.SAdd(connector.context, teamContactsKey(contact.Team), contact.ID)
+		pipe.SAdd(ctx, teamContactsKey(contact.Team), contact.ID)
 	}
-	_, err = pipe.Exec(connector.context)
+
+	_, err = pipe.Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to save contact '%s': %w", contact.ID, err)
 	}
+
 	return nil
 }
 
@@ -143,40 +161,58 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 func (connector *DbConnector) RemoveContact(contactID string) error {
 	existing, err := connector.GetContact(contactID)
 	if err != nil && !errors.Is(err, database.ErrNil) {
-		return err
+		return fmt.Errorf("failed to get contact '%s': %w", contactID, err)
 	}
+
+	emergencyContact, getEmergencyContactErr := connector.GetEmergencyContact(contactID)
+	if getEmergencyContactErr != nil && !errors.Is(getEmergencyContactErr, database.ErrNil) {
+		return fmt.Errorf("failed to get emergency contact '%s': %w", contactID, err)
+	}
+
 	c := *connector.client
+	ctx := connector.context
 
 	pipe := c.TxPipeline()
-	pipe.Del(connector.context, contactKey(contactID))
-	pipe.SRem(connector.context, userContactsKey(existing.User), contactID)
-	pipe.SRem(connector.context, teamContactsKey(existing.Team), contactID)
-	_, err = pipe.Exec(connector.context)
-	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+	pipe.Del(ctx, contactKey(contactID))
+	pipe.SRem(ctx, userContactsKey(existing.User), contactID)
+	pipe.SRem(ctx, teamContactsKey(existing.Team), contactID)
+
+	if !errors.Is(getEmergencyContactErr, database.ErrNil) {
+		removeEmergencyContactPipe(ctx, pipe, emergencyContact)
 	}
+
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to remove contact '%s': %w", contactID, err)
+	}
+
 	return nil
 }
 
 // GetUserContactIDs returns contacts ids by given login.
 func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) {
 	c := *connector.client
+	ctx := connector.context
 
-	contacts, err := c.SMembers(connector.context, userContactsKey(login)).Result()
+	contactIDs, err := c.SMembers(ctx, userContactsKey(login)).Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get contacts for user login %s: %s", login, err.Error())
+		return nil, fmt.Errorf("failed to get contact IDs for user login '%s': %w", login, err)
 	}
-	return contacts, nil
+
+	return contactIDs, nil
 }
 
 // GetTeamContactIDs returns contacts ids by given team.
 func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) {
 	c := *connector.client
-	contacts, err := c.SMembers(connector.context, teamContactsKey(login)).Result()
+	ctx := connector.context
+
+	contactIDs, err := c.SMembers(ctx, teamContactsKey(login)).Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get contacts for team login %s: %s", login, err.Error())
+		return nil, fmt.Errorf("failed to get contact IDs for team login '%s': %w", login, err)
 	}
-	return contacts, nil
+
+	return contactIDs, nil
 }
 
 func contactKey(id string) string {

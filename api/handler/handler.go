@@ -59,6 +59,9 @@ func NewHandler(
 	//	@tag.name			contact
 	//	@tag.description	APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 	//
+	//	@tag.name			emergency-contact
+	//	@tag.description	APIs for working with Moira emergency contacts
+	//
 	//	@tag.name			config
 	//	@tag.description	View Moira's runtime configuration. For more details, see <https://moira.readthedocs.io/en/latest/installation/configuration.html>
 	//
@@ -115,6 +118,7 @@ func NewHandler(
 				contact(router)
 				contactEvents(router)
 			})
+			router.Route("/emergency-contact", emergencyContact)
 			router.Get("/swagger/*", httpSwagger.Handler(
 				httpSwagger.URL("/api/swagger/doc.json"),
 			))

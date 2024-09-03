@@ -16,6 +16,7 @@ func GetUserSettings(database moira.Database, userLogin string, auth *api.Author
 		},
 		Contacts:      make([]moira.ContactData, 0),
 		Subscriptions: make([]moira.SubscriptionData, 0),
+		
 	}
 
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
