@@ -973,7 +973,7 @@ func TestCleanupFutureMetrics(t *testing.T) {
 			})
 			So(err, ShouldBeNil)
 
-			mockClock.EXPECT().Now().Return(testTime).Times(1)
+			mockClock.EXPECT().NowUTC().Return(testTime).Times(1)
 
 			err = dataBase.CleanUpFutureMetrics(time.Hour)
 			So(err, ShouldBeNil)
@@ -1033,7 +1033,7 @@ func TestCleanupFutureMetrics(t *testing.T) {
 			})
 			So(err, ShouldBeNil)
 
-			mockClock.EXPECT().Now().Return(testTime).Times(1)
+			mockClock.EXPECT().NowUTC().Return(testTime).Times(1)
 
 			err = dataBase.CleanUpFutureMetrics(5 * time.Second)
 			So(err, ShouldBeNil)
