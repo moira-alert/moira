@@ -11,3 +11,12 @@ type Trigger struct {
 	// MaxNameSize is the amount of characters allowed in trigger name.
 	MaxNameSize int
 }
+
+// GetTestConfig is used for testing.
+func GetTestConfig() Config {
+	return Config{
+		Trigger: Trigger{
+			MaxNameSize: 200,
+		},
+	}
+}

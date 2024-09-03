@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/moira-alert/moira/limits"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -165,8 +166,8 @@ func TestUpdateTrigger(t *testing.T) {
 			testRequest.Header.Add("content-type", "application/json")
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "clustersMetricTTL", MakeTestTTLs()))
-
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), triggerIDKey, triggerID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "limits", limits.GetTestConfig()))
 
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, testRequest)
@@ -208,6 +209,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "clustersMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limits.GetTestConfig()))
 
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
@@ -247,6 +249,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "clustersMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limits.GetTestConfig()))
 
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
@@ -272,6 +275,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "clustersMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limits.GetTestConfig()))
 
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
@@ -335,6 +339,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "clustersMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limits.GetTestConfig()))
 
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
@@ -353,6 +358,7 @@ func TestUpdateTrigger(t *testing.T) {
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "clustersMetricTTL", MakeTestTTLs()))
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerID))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limits.GetTestConfig()))
 
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)

@@ -3,6 +3,7 @@ package dto
 import (
 	"context"
 	"fmt"
+	"github.com/moira-alert/moira/limits"
 	"net/http"
 	"testing"
 	"time"
@@ -31,6 +32,7 @@ func TestTriggerValidation(t *testing.T) {
 		request.Header.Set("Content-Type", "application/json")
 		ctx := request.Context()
 		ctx = context.WithValue(ctx, middleware.ContextKey("metricSourceProvider"), sourceProvider)
+		ctx = context.WithValue(ctx, middleware.ContextKey("limits"), limits.GetTestConfig())
 		request = request.WithContext(ctx)
 
 		desc := "Graphite ClickHouse"
