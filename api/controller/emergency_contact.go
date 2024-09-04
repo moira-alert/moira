@@ -10,7 +10,7 @@ import (
 	moiradb "github.com/moira-alert/moira/database"
 )
 
-var errEmptyEmergencyContactID = errors.New("emergency contact id can not be empty")
+var ErrEmptyEmergencyContactID = errors.New("emergency contact id can not be empty")
 
 func GetEmergencyContacts(database moira.Database) (*dto.EmergencyContactList, *api.ErrorResponse) {
 	emergencyContacts, err := database.GetEmergencyContacts()
@@ -67,7 +67,7 @@ func CreateEmergencyContact(
 
 	emergencyContact := moira.EmergencyContact(*emergencyContactDTO)
 	if emergencyContact.ContactID == "" {
-		return dto.SaveEmergencyContactResponse{}, api.ErrorInvalidRequest(errEmptyEmergencyContactID)
+		return dto.SaveEmergencyContactResponse{}, api.ErrorInvalidRequest(ErrEmptyEmergencyContactID)
 	}
 
 	if err := verifyEmergencyContactAccess(database, auth, emergencyContact, userLogin); err != nil {

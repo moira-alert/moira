@@ -235,7 +235,7 @@ func TestCreateEmergencyContact(t *testing.T) {
 		Convey("With empty emergency contact id", func() {
 			emergencyContactDTO := dto.EmergencyContact{}
 			response, err := CreateEmergencyContact(database, auth, &emergencyContactDTO, user)
-			So(err, ShouldResemble, api.ErrorInvalidRequest(errEmptyEmergencyContactID))
+			So(err, ShouldResemble, api.ErrorInvalidRequest(ErrEmptyEmergencyContactID))
 			So(response, ShouldResemble, dto.SaveEmergencyContactResponse{})
 		})
 

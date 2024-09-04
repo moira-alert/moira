@@ -7,9 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var (
-	errEmptyEmergencyTypes     = errors.New("emergency types can not be empty")
-)
+var ErrEmptyEmergencyTypes = errors.New("emergency types can not be empty")
 
 type EmergencyContact struct {
 	ContactID      string                       `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
@@ -22,7 +20,7 @@ func (*EmergencyContact) Render(w http.ResponseWriter, r *http.Request) error {
 
 func (emergencyContact *EmergencyContact) Bind(r *http.Request) error {
 	if len(emergencyContact.EmergencyTypes) == 0 {
-		return errEmptyEmergencyTypes
+		return ErrEmptyEmergencyTypes
 	}
 
 	return nil
