@@ -222,6 +222,7 @@ func (contact *ContactData) ToTemplateContact() *templating.Contact {
 	}
 }
 
+// EmergencyContactType are Moira's special internal types of problems.
 type EmergencyContactType string
 
 const (
@@ -230,6 +231,7 @@ const (
 	EmergencyTypeRedisDisconnected EmergencyContactType = "redis_disconnected"
 )
 
+// EmergencyContact is the structure for contacts to which notifications will go in the event of special internal Moira problems.
 type EmergencyContact struct {
 	ContactID      string
 	EmergencyTypes []EmergencyContactType

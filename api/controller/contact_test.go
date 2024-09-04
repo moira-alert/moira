@@ -373,7 +373,7 @@ func TestCreateContact(t *testing.T) {
 			Type:  contactType,
 		}
 		err := CreateContact(dataBase, auth, contact, userLogin, teamID)
-		So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified")))
+		So(err, ShouldResemble, api.ErrorInternalServer(errUserLoginAndTeamIDSpecified))
 	})
 }
 

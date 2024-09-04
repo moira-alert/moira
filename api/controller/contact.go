@@ -63,7 +63,7 @@ func CreateContact(
 	teamID string,
 ) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
-		return api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified"))
+		return api.ErrorInternalServer(errUserLoginAndTeamIDSpecified)
 	}
 
 	if !isAllowedToUseContactType(auth, userLogin, contact.Type) {

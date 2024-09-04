@@ -10,8 +10,10 @@ import (
 	moiradb "github.com/moira-alert/moira/database"
 )
 
+// ErrEmptyEmergencyContactID error occurring when user did not specify contact id.
 var ErrEmptyEmergencyContactID = errors.New("emergency contact id can not be empty")
 
+// GetEmergencyContacts a method for obtaining all emergency contacts.
 func GetEmergencyContacts(database moira.Database) (*dto.EmergencyContactList, *api.ErrorResponse) {
 	emergencyContacts, err := database.GetEmergencyContacts()
 	if err != nil {
@@ -21,6 +23,7 @@ func GetEmergencyContacts(database moira.Database) (*dto.EmergencyContactList, *
 	return dto.FromEmergencyContacts(emergencyContacts), nil
 }
 
+// GetEmergencyContact a method for obtaining a specific emergency contact.
 func GetEmergencyContact(database moira.Database, contactID string) (*dto.EmergencyContact, *api.ErrorResponse) {
 	emergencyContact, err := database.GetEmergencyContact(contactID)
 	if err != nil {
@@ -55,6 +58,7 @@ func verifyEmergencyContactAccess(
 	return nil
 }
 
+// CreateEmergencyContact a method for creating emergency contact.
 func CreateEmergencyContact(
 	database moira.Database,
 	auth *api.Authorization,
@@ -83,6 +87,7 @@ func CreateEmergencyContact(
 	}, nil
 }
 
+// UpdateEmergencyContact a method to update the emergency contact.
 func UpdateEmergencyContact(database moira.Database, contactID string, emergencyContactDTO *dto.EmergencyContact) (dto.SaveEmergencyContactResponse, *api.ErrorResponse) {
 	if emergencyContactDTO == nil {
 		return dto.SaveEmergencyContactResponse{}, nil
@@ -100,6 +105,7 @@ func UpdateEmergencyContact(database moira.Database, contactID string, emergency
 	}, nil
 }
 
+// UpdateEmergencyContact a method to delete the emergency contact.
 func RemoveEmergencyContact(database moira.Database, contactID string) *api.ErrorResponse {
 	if err := database.RemoveEmergencyContact(contactID); err != nil {
 		return api.ErrorInternalServer(err)

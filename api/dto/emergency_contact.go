@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+// ErrEmptyEmergencyTypes means that the user has not specified any emergency types.
 var ErrEmptyEmergencyTypes = errors.New("emergency types can not be empty")
 
 type EmergencyContact struct {

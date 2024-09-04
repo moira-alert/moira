@@ -12,6 +12,7 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
+// GetEmergencyContact method to retrieve an emergency contact from the database.
 func (connector *DbConnector) GetEmergencyContact(contactID string) (moira.EmergencyContact, error) {
 	c := *connector.client
 	ctx := connector.context
@@ -25,6 +26,7 @@ func (connector *DbConnector) GetEmergencyContact(contactID string) (moira.Emerg
 	return reply.EmergencyContact(cmd)
 }
 
+// GetEmergencyContacts method to retrieve all emergency contacts from the database.
 func (connector *DbConnector) GetEmergencyContacts() ([]*moira.EmergencyContact, error) {
 	emergencyContactIDs, err := connector.getEmergencyContactIDs()
 	if err != nil {
@@ -34,6 +36,7 @@ func (connector *DbConnector) GetEmergencyContacts() ([]*moira.EmergencyContact,
 	return connector.GetEmergencyContactsByIDs(emergencyContactIDs)
 }
 
+// GetEmergencyContactsByIDs method to retrieve all emergency contacts from the database by their identifiers.
 func (connector *DbConnector) GetEmergencyContactsByIDs(contactIDs []string) ([]*moira.EmergencyContact, error) {
 	c := *connector.client
 	ctx := connector.context
@@ -82,6 +85,7 @@ func (connector *DbConnector) getEmergencyContactIDs() ([]string, error) {
 	return emergencyContactIDs, nil
 }
 
+// GetEmergencyTypeContactIDs a method for obtaining contact IDs by specific emergency type.
 func (connector *DbConnector) GetEmergencyTypeContactIDs(emergencyType moira.EmergencyContactType) ([]string, error) {
 	c := *connector.client
 	ctx := connector.context
@@ -112,6 +116,7 @@ func (connector *DbConnector) saveEmergencyContacts(emergencyContacts []moira.Em
 	return nil
 }
 
+// SaveEmergencyContact a method for saving emergency contact.
 func (connector *DbConnector) SaveEmergencyContact(emergencyContact moira.EmergencyContact) error {
 	c := *connector.client
 	ctx := connector.context
@@ -129,6 +134,7 @@ func (connector *DbConnector) SaveEmergencyContact(emergencyContact moira.Emerge
 	return nil
 }
 
+// RemoveEmergencyContact method for removing emergency contact.
 func (connector *DbConnector) RemoveEmergencyContact(contactID string) error {
 	c := *connector.client
 	ctx := connector.context
