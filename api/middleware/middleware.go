@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"context"
-	"github.com/moira-alert/moira/limits"
 	"net/http"
 	"time"
+
+	"github.com/moira-alert/moira/limits"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"

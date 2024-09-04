@@ -3,9 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"github.com/moira-alert/moira/limits"
 	"os"
 	"strings"
+
+	"github.com/moira-alert/moira/limits"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"

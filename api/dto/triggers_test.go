@@ -3,10 +3,12 @@ package dto
 import (
 	"context"
 	"fmt"
-	"github.com/moira-alert/moira/limits"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira/limits"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -19,6 +21,52 @@ import (
 )
 
 func TestTriggerValidation(t *testing.T) {
+	Convey("Test trigger name and tags", t, func() {
+		trigger := Trigger{
+			TriggerModel: TriggerModel{},
+		}
+
+		limit := limits.GetTestConfig()
+
+		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
+		request.Header.Set("Content-Type", "application/json")
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limit))
+
+		Convey("with empty targets", func() {
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrTargetsRequired})
+		})
+
+		trigger.Targets = []string{"foo.bar"}
+
+		Convey("with empty tag in tag list", func() {
+			trigger.Tags = []string{""}
+
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrTagsRequired})
+		})
+
+		trigger.Tags = append(trigger.Tags, "tag1")
+
+		Convey("with empty Name", func() {
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrTriggerNameRequired})
+		})
+
+		Convey("with too long Name", func() {
+			trigger.Name = strings.Repeat("ё", limit.Trigger.MaxNameSize+1)
+
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{
+				ValidationError: fmt.Errorf("trigger name too long, should not be greater than %d symbols", limit.Trigger.MaxNameSize),
+			})
+		})
+	})
+
 	Convey("Tests targets, values and expression validation", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()

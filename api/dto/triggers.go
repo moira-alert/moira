@@ -20,8 +20,19 @@ import (
 
 var targetNameRegex = regexp.MustCompile("^t\\d+$")
 
-// ErrBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
-var ErrBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
+var (
+	// ErrBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
+	ErrBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
+
+	// ErrTargetsRequired is returned when there is no targets in Trigger.
+	ErrTargetsRequired = fmt.Errorf("targets is required")
+
+	// ErrTagsRequired is returned when there is no tags in Trigger.
+	ErrTagsRequired = fmt.Errorf("tags is required")
+
+	// ErrTriggerNameRequired is returned when there is empty Name in Trigger.
+	ErrTriggerNameRequired = fmt.Errorf("trigger name is required")
+)
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
@@ -153,21 +164,22 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 func (trigger *Trigger) Bind(request *http.Request) error {
 	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
-		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("targets is required")}
+		return api.ErrInvalidRequestContent{ValidationError: ErrTargetsRequired}
 	}
 
 	if len(trigger.Tags) == 0 {
-		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("tags is required")}
+		return api.ErrInvalidRequestContent{ValidationError: ErrTagsRequired}
 	}
 
 	if trigger.Name == "" {
-		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("trigger name is required")}
+		return api.ErrInvalidRequestContent{ValidationError: ErrTriggerNameRequired}
 	}
 
 	limits := middleware.GetLimits(request)
 	if utf8.RuneCountInString(trigger.Name) > limits.Trigger.MaxNameSize {
 		return api.ErrInvalidRequestContent{
-			ValidationError: fmt.Errorf("trigger name too long, should be less than %d symbols", limits.Trigger.MaxNameSize)}
+			ValidationError: fmt.Errorf("trigger name too long, should not be greater than %d symbols", limits.Trigger.MaxNameSize),
+		}
 	}
 
 	if err := checkWarnErrorExpression(trigger); err != nil {

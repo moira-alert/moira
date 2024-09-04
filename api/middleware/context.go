@@ -3,12 +3,13 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"github.com/moira-alert/moira/limits"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/moira-alert/moira/limits"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"

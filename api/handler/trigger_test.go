@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/moira-alert/moira/limits"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira/limits"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/dto"
