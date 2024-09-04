@@ -77,14 +77,6 @@ func TestGetEmergencyContact(t *testing.T) {
 			database.EXPECT().GetEmergencyContact(testContactID).Return(moira.EmergencyContact{}, moiradb.ErrNil)
 
 			emergencyContact, err := GetEmergencyContact(database, testContactID)
-			So(err, ShouldResemble, api.ErrorInternalServer(moiradb.ErrNil))
-			So(emergencyContact, ShouldBeNil)
-		})
-
-		Convey("With unexisted emergency contact", func() {
-			database.EXPECT().GetEmergencyContact(testContactID).Return(moira.EmergencyContact{}, moiradb.ErrNil)
-
-			emergencyContact, err := GetEmergencyContact(database, testContactID)
 			So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", testContactID)))
 			So(emergencyContact, ShouldBeNil)
 		})
@@ -103,7 +95,7 @@ func TestGetEmergencyContact(t *testing.T) {
 
 			emergencyContact, err := GetEmergencyContact(database, testContactID)
 			So(err, ShouldBeNil)
-			So(emergencyContact, ShouldResemble, testEmergencyContactDTO)
+			So(emergencyContact, ShouldResemble, &testEmergencyContactDTO)
 		})
 	})
 }
@@ -275,6 +267,75 @@ func TestCreateEmergencyContact(t *testing.T) {
 			So(response, ShouldResemble, dto.SaveEmergencyContactResponse{
 				ContactID: testContactID,
 			})
+		})
+	})
+}
+
+func TestUpdateEmergencyContact(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
+	Convey("Test UpdateEmergencyContact", t, func() {
+		Convey("With nil emergency contact dto", func() {
+			response, err := UpdateEmergencyContact(database, testContactID, nil)
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.SaveEmergencyContactResponse{})
+		})
+
+		Convey("With empty contact id", func() {
+			emergencyContactDTO := dto.EmergencyContact{
+				EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+			}
+			database.EXPECT().SaveEmergencyContact(testEmergencyContact).Return(nil)
+
+			response, err := UpdateEmergencyContact(database, testContactID, &emergencyContactDTO)
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.SaveEmergencyContactResponse{
+				ContactID: testContactID,
+			})
+		})
+
+		Convey("With full filled emergency contact dto", func() {
+			database.EXPECT().SaveEmergencyContact(testEmergencyContact).Return(nil)
+
+			response, err := UpdateEmergencyContact(database, testContactID, &testEmergencyContactDTO)
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.SaveEmergencyContactResponse{
+				ContactID: testContactID,
+			})
+		})
+
+		Convey("With database error", func() {
+			dbErr := errors.New("update emergency contact error")
+			database.EXPECT().SaveEmergencyContact(testEmergencyContact).Return(dbErr)
+
+			response, err := UpdateEmergencyContact(database, testContactID, &testEmergencyContactDTO)
+			So(err, ShouldResemble, api.ErrorInternalServer(dbErr))
+			So(response, ShouldResemble, dto.SaveEmergencyContactResponse{})
+		})
+	})
+}
+
+func TestRemoveEmergencyContact(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+
+	Convey("Test RemoveEmergencyContact", t, func() {
+		Convey("Successfully removed emergency contact", func() {
+			database.EXPECT().RemoveEmergencyContact(testContactID).Return(nil)
+
+			err := RemoveEmergencyContact(database, testContactID)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("With database error", func() {
+			dbErr := errors.New("remove emergency contact error")
+			database.EXPECT().RemoveEmergencyContact(testContactID).Return(dbErr)
+
+			err := RemoveEmergencyContact(database, testContactID)
+			So(err, ShouldResemble, api.ErrorInternalServer(dbErr))
 		})
 	})
 }

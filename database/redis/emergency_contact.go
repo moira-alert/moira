@@ -44,7 +44,7 @@ func (connector *DbConnector) GetEmergencyContactsByIDs(contactIDs []string) ([]
 	}
 
 	cmds, err := pipe.Exec(ctx)
-	if err != nil && !errors.Is(err, database.ErrNil) {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, fmt.Errorf("failed to get emergency contacts by IDs: %w", err)
 	}
 

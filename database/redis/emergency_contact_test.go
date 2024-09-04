@@ -121,6 +121,7 @@ func TestGetEmergencyContactsByIDs(t *testing.T) {
 		})
 
 		Convey("With one saved and one not saved contact ids", func() {
+			database.Flush()
 			database.saveEmergencyContacts([]moira.EmergencyContact{
 				testEmergencyContact,
 			})
@@ -160,14 +161,14 @@ func TestGetEmergencyTypeContactIDs(t *testing.T) {
 
 			emergencyContactIDs, err := database.GetEmergencyTypeContactIDs(moira.EmergencyTypeNotifierOff)
 			So(err, ShouldBeNil)
-			So(emergencyContactIDs, ShouldResemble, []string{
+			assert.ElementsMatch(t, emergencyContactIDs, []string{
 				testContactID,
 				testContactID2,
 			})
 
 			emergencyContactIDs, err = database.GetEmergencyTypeContactIDs(moira.EmergencyTypeRedisDisconnected)
 			So(err, ShouldBeNil)
-			So(emergencyContactIDs, ShouldResemble, []string{
+			assert.ElementsMatch(t, emergencyContactIDs, []string{
 				testContactID3,
 			})
 		})
