@@ -77,7 +77,7 @@ func TestGetEmergencyContact(t *testing.T) {
 			database.EXPECT().GetEmergencyContact(testContactID).Return(moira.EmergencyContact{}, moiradb.ErrNil)
 
 			emergencyContact, err := GetEmergencyContact(database, testContactID)
-			So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", testContactID)))
+			So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("emergency contact with ID '%s' does not exists", testContactID)))
 			So(emergencyContact, ShouldBeNil)
 		})
 

@@ -11,10 +11,6 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-const (
-	errNotPermittedStr = "you are not permitted"
-)
-
 func user(router chi.Router) {
 	router.Get("/", getUserName)
 	router.Get("/settings", getUserSettings)
