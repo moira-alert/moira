@@ -16,6 +16,7 @@ func emergencyContact(router chi.Router) {
 	router.Post("/", createEmergencyContact)
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
+		router.Use(emergencyContactFilter)
 		router.Use(contactFilter)
 		router.Get("/", getEmergencyContactByID)
 		router.Put("/", updateEmergencyContact)
@@ -29,7 +30,7 @@ func emergencyContact(router chi.Router) {
 //	@id			get-all-emergency-contacts
 //	@tags		emergency-contact
 //	@produce	json
-//	@success	200	{object}	dto.EmergencyContactList					"Contacts fetched successfully"
+//	@success	200	{object}	dto.EmergencyContactList		"Contacts fetched successfully"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/emergency-contact [get]
@@ -53,7 +54,7 @@ func getEmergencyContacts(writer http.ResponseWriter, request *http.Request) {
 //	@tags		emergency-contact
 //	@produce	json
 //	@param		contactID	path		string							true	"Contact ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200			{object}	dto.EmergencyContact						"Successfully received contact"
+//	@success	200			{object}	dto.EmergencyContact			"Successfully received contact"
 //	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
 //	@failure	422			{object}	api.ErrorRenderExample			"Render error"
@@ -81,11 +82,11 @@ func getEmergencyContactByID(writer http.ResponseWriter, request *http.Request) 
 //	@tags		emergency-contact
 //	@accept		json
 //	@produce	json
-//	@param		emergency-contact	body		dto.EmergencyContact						true	"Emergency contact data"
-//	@success	200		{object} dto.SaveEmergencyContactResponse		"Emergency contact created successfully"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		emergency-contact	body		dto.EmergencyContact				true	"Emergency contact data"
+//	@success	200					{object}	dto.SaveEmergencyContactResponse	"Emergency contact created successfully"
+//	@failure	400					{object}	api.ErrorInvalidRequestExample		"Bad request from client"
+//	@failure	422					{object}	api.ErrorRenderExample				"Render error"
+//	@failure	500					{object}	api.ErrorInternalServerExample		"Internal server error"
 //	@router		/emergency-contact [post]
 func createEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 	emergencyContactDTO := &dto.EmergencyContact{}
@@ -116,14 +117,14 @@ func createEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 //	@tags		emergency-contact
 //	@accept		json
 //	@produce	json
-//	@param		contactID	path		string							true	"ID of the contact to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		emergency-contact		body		dto.EmergencyContact						true	"Updated emergency contact data"
-//	@success	200		{object} dto.SaveEmergencyContactResponse					"Updated emergency contact"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422			{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		contactID			path		string								true	"ID of the contact to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		emergency-contact	body		dto.EmergencyContact				true	"Updated emergency contact data"
+//	@success	200					{object}	dto.SaveEmergencyContactResponse	"Updated emergency contact"
+//	@failure	400					{object}	api.ErrorInvalidRequestExample		"Bad request from client"
+//	@failure	403					{object}	api.ErrorForbiddenExample			"Forbidden"
+//	@failure	404					{object}	api.ErrorNotFoundExample			"Resource not found"
+//	@failure	422					{object}	api.ErrorRenderExample				"Render error"
+//	@failure	500					{object}	api.ErrorInternalServerExample		"Internal server error"
 //	@router		/emergency-contact/{contactID} [put]
 func updateEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 	emergencyContactDTO := &dto.EmergencyContact{}
@@ -153,7 +154,7 @@ func updateEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 //	@accept		json
 //	@produce	json
 //	@tags		emergency-contact
-//	@param		contactID	path	string	true	"ID of the contact to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		contactID	path	string	true	"ID of the emergency contact to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200			"Emergency contact has been deleted"
 //	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
@@ -167,4 +168,17 @@ func removeEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+}
+
+func emergencyContactFilter(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		contactID := middleware.GetContactID(request)
+
+		if _, err := controller.GetEmergencyContact(database, contactID); err != nil {
+			render.Render(writer, request, err) //nolint
+			return
+		}
+
+		next.ServeHTTP(writer, request)
+	})
 }

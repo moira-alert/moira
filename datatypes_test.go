@@ -1071,3 +1071,32 @@ func TestScheduledNotificationIsDelayed(t *testing.T) {
 		})
 	})
 }
+
+func TestIsValidEmergencyType(t *testing.T) {
+	Convey("Test IsValid emergency type", t, func() {
+		Convey("Test valid cases", func() {
+			testcases := []EmergencyContactType{
+				EmergencyTypeNotifierOff,
+				EmergencyTypeRedisDisconnected,
+				EmergencyTypeCheckerNoTriggerCheck,
+				EmergencyTypeFilterNoMetricsReceived,
+				EmergencyTypeRemoteCheckerNoTriggerCheck,
+			}
+
+			for _, testcase := range testcases {
+				So(testcase.IsValid(), ShouldBeTrue)
+			}
+		})
+
+		Convey("Test invalid cases", func() {
+			testcases := []EmergencyContactType{
+				"notifier_on",
+				"checker_off",
+			}
+
+			for _, testcase := range testcases {
+				So(testcase.IsValid(), ShouldBeFalse)
+			}
+		})
+	})
+}

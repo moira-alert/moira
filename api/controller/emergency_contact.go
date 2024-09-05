@@ -28,7 +28,7 @@ func GetEmergencyContact(database moira.Database, contactID string) (*dto.Emerge
 	emergencyContact, err := database.GetEmergencyContact(contactID)
 	if err != nil {
 		if errors.Is(err, moiradb.ErrNil) {
-			return nil, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", contactID))
+			return nil, api.ErrorNotFound(fmt.Sprintf("emergency contact with ID '%s' does not exists", contactID))
 		}
 
 		return nil, api.ErrorInternalServer(err)

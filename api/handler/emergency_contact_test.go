@@ -146,7 +146,7 @@ func TestGetEmergencyContactByID(t *testing.T) {
 
 			expectedErr := &api.ErrorResponse{
 				StatusText: "Resource not found",
-				ErrorText:  fmt.Sprintf("contact with ID '%s' does not exists", testContactID),
+				ErrorText:  fmt.Sprintf("emergency contact with ID '%s' does not exists", testContactID),
 			}
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/emergency-contact/"+testContactID, nil)
@@ -294,6 +294,45 @@ func TestCreateEmergencyContact(t *testing.T) {
 			expectedErr := &api.ErrorResponse{
 				StatusText: "Invalid request",
 				ErrorText:  dto.ErrEmptyEmergencyTypes.Error(),
+			}
+
+			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
+			testRequest.Header.Add("content-type", "application/json")
+
+			createEmergencyContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expectedErr)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Try to create emergency contact with invalid emergency type", func() {
+			emergencyContact := moira.EmergencyContact{
+				ContactID: testContactID,
+				EmergencyTypes: []moira.EmergencyContactType{
+					"notifier_on",
+				},
+			}
+			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
+
+			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
+			So(err, ShouldBeNil)
+
+			database = mockDb
+
+			expectedErr := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "'notifier_on' emergency type doesn't exist",
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
@@ -464,6 +503,110 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			So(actual, ShouldResemble, expectedResponse)
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("Invalid Request without emergency types in dto", func() {
+			emergencyContact := moira.EmergencyContact{
+				ContactID: testContactID,
+			}
+			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
+
+			expectedErr := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  dto.ErrEmptyEmergencyTypes.Error(),
+			}
+			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
+			So(err, ShouldBeNil)
+
+			database = mockDb
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest.Header.Add("content-type", "application/json")
+
+			updateEmergencyContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expectedErr)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Invalid Request with undefined emergency type in dto", func() {
+			emergencyContact := moira.EmergencyContact{
+				ContactID: testContactID,
+				EmergencyTypes: []moira.EmergencyContactType{
+					"notifier_on",
+				},
+			}
+			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
+
+			expectedErr := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "'notifier_on' emergency type doesn't exist",
+			}
+			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
+			So(err, ShouldBeNil)
+
+			database = mockDb
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest.Header.Add("content-type", "application/json")
+
+			updateEmergencyContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expectedErr)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Internal Server Error with database error", func() {
+			emergencyContactDTO := dto.EmergencyContact(testEmergencyContact)
+
+			dbErr := errors.New("update emergency contact error")
+			expectedErr := &api.ErrorResponse{
+				StatusText: "Internal Server Error",
+				ErrorText:  dbErr.Error(),
+			}
+			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
+			So(err, ShouldBeNil)
+
+			mockDb.EXPECT().SaveEmergencyContact(testEmergencyContact).Return(dbErr)
+			database = mockDb
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest.Header.Add("content-type", "application/json")
+
+			updateEmergencyContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expectedErr)
+			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 	})
 }

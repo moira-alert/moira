@@ -2,6 +2,7 @@ package dto
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/moira-alert/moira"
@@ -22,6 +23,12 @@ func (*EmergencyContact) Render(w http.ResponseWriter, r *http.Request) error {
 func (emergencyContact *EmergencyContact) Bind(r *http.Request) error {
 	if len(emergencyContact.EmergencyTypes) == 0 {
 		return ErrEmptyEmergencyTypes
+	}
+
+	for _, emergencyType := range emergencyContact.EmergencyTypes {
+		if !emergencyType.IsValid() {
+			return fmt.Errorf("'%s' emergency type doesn't exist", emergencyType)
+		}
 	}
 
 	return nil

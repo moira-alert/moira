@@ -226,10 +226,22 @@ func (contact *ContactData) ToTemplateContact() *templating.Contact {
 type EmergencyContactType string
 
 const (
-	EmergencyTypeNotSet            EmergencyContactType = ""
-	EmergencyTypeNotifierOff       EmergencyContactType = "notifier_off"
-	EmergencyTypeRedisDisconnected EmergencyContactType = "redis_disconnected"
+	EmergencyTypeNotifierOff                 EmergencyContactType = "notifier_off"
+	EmergencyTypeRedisDisconnected           EmergencyContactType = "redis_disconnected"
+	EmergencyTypeCheckerNoTriggerCheck       EmergencyContactType = "checker_no_trigger_check"
+	EmergencyTypeFilterNoMetricsReceived     EmergencyContactType = "filter_no_metrics_received"
+	EmergencyTypeRemoteCheckerNoTriggerCheck EmergencyContactType = "remote_checker_no_trigger_check"
 )
+
+// IsValid checks if such an emergency type exists.
+func (emergencyType EmergencyContactType) IsValid() bool {
+	switch emergencyType {
+	case EmergencyTypeNotifierOff, EmergencyTypeRedisDisconnected, EmergencyTypeCheckerNoTriggerCheck, EmergencyTypeFilterNoMetricsReceived, EmergencyTypeRemoteCheckerNoTriggerCheck:
+		return true
+	default:
+		return false
+	}
+}
 
 // EmergencyContact is the structure for contacts to which notifications will go in the event of special internal Moira problems.
 type EmergencyContact struct {
