@@ -70,6 +70,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		location,
 		uriFormatter,
 		descriptionFormatter,
+		msgformat.DefaultDescriptionCutter,
 		boldFormatter,
 		eventStringFormatter,
 		codeBlockStart,

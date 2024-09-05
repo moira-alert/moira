@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
@@ -23,8 +24,11 @@ type BoldFormatter func(str string) string
 // EventStringFormatter formats single event string.
 type EventStringFormatter func(event moira.NotificationEvent, location *time.Location) string
 
-// HighlightSyntaxFormatter formats message by using functions, emojis and some other highlight patterns.
-type HighlightSyntaxFormatter struct {
+// DescriptionCutter cuts the given description to fit max size.
+type DescriptionCutter func(desc string, maxSize int) string
+
+// highlightSyntaxFormatter formats message by using functions, emojis and some other highlight patterns.
+type highlightSyntaxFormatter struct {
 	// emojiGetter used in titles for better description.
 	emojiGetter           emoji_provider.StateEmojiGetter
 	frontURI              string
@@ -32,13 +36,14 @@ type HighlightSyntaxFormatter struct {
 	useEmoji              bool
 	uriFormatter          UriFormatter
 	descriptionFormatter  DescriptionFormatter
+	descriptionCutter     DescriptionCutter
 	boldFormatter         BoldFormatter
 	eventsStringFormatter EventStringFormatter
 	codeBlockStart        string
 	codeBlockEnd          string
 }
 
-// NewHighlightSyntaxFormatter creates new HighlightSyntaxFormatter with given arguments.
+// NewHighlightSyntaxFormatter creates new highlightSyntaxFormatter with given arguments.
 func NewHighlightSyntaxFormatter(
 	emojiGetter emoji_provider.StateEmojiGetter,
 	useEmoji bool,
@@ -46,18 +51,20 @@ func NewHighlightSyntaxFormatter(
 	location *time.Location,
 	uriFormatter UriFormatter,
 	descriptionFormatter DescriptionFormatter,
+	descriptionCutter DescriptionCutter,
 	boldFormatter BoldFormatter,
 	eventsStringFormatter EventStringFormatter,
 	codeBlockStart string,
 	codeBlockEnd string,
 ) MessageFormatter {
-	return &HighlightSyntaxFormatter{
+	return &highlightSyntaxFormatter{
 		emojiGetter:           emojiGetter,
 		frontURI:              frontURI,
 		location:              location,
 		useEmoji:              useEmoji,
 		uriFormatter:          uriFormatter,
 		descriptionFormatter:  descriptionFormatter,
+		descriptionCutter:     descriptionCutter,
 		boldFormatter:         boldFormatter,
 		eventsStringFormatter: eventsStringFormatter,
 		codeBlockStart:        codeBlockStart,
@@ -66,25 +73,25 @@ func NewHighlightSyntaxFormatter(
 }
 
 // Format formats message using given params and formatter functions.
-func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams) string {
+func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams) string {
 	var message strings.Builder
 	state := params.Events.GetCurrentState(params.Throttled)
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
 
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
-	titleLen := len([]rune(title))
+	titleLen := utf8.RuneCountInString(title)
 
 	desc := formatter.descriptionFormatter(params.Trigger)
-	descLen := len([]rune(desc))
+	descLen := utf8.RuneCountInString(desc)
 
 	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
-	eventsStringLen := len([]rune(eventsString))
+	eventsStringLen := utf8.RuneCountInString(eventsString)
 
 	charsLeftAfterTitle := params.MessageMaxChars - titleLen
 
 	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
 	if descLen != descNewLen {
-		desc = desc[:descNewLen] + "...\n"
+		desc = formatter.descriptionCutter(desc, descNewLen)
 	}
 	if eventsNewLen != eventsStringLen {
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
@@ -96,7 +103,7 @@ func (formatter *HighlightSyntaxFormatter) Format(params MessageFormatterParams)
 	return message.String()
 }
 
-func (formatter *HighlightSyntaxFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
+func (formatter *highlightSyntaxFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
 	state := events.GetCurrentState(throttled)
 	title := ""
 	if formatter.useEmoji {
@@ -122,11 +129,11 @@ func (formatter *HighlightSyntaxFormatter) buildTitle(events moira.NotificationE
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
 // if charsForEvents is negative buildEventsString does not limit the events string.
-func (formatter *HighlightSyntaxFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
+func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
-	throttleMsg := fmt.Sprintf("\nPlease, %s to generate less events.", formatter.boldFormatter(changeRecommendation))
+	throttleMsg := fmt.Sprintf("\nPlease, %s to generate less events.", formatter.boldFormatter(ChangeTriggerRecommendation))
 	if throttled {
-		charsForThrottleMsg = len([]rune(throttleMsg))
+		charsForThrottleMsg = utf8.RuneCountInString(throttleMsg)
 	}
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
@@ -143,8 +150,8 @@ func (formatter *HighlightSyntaxFormatter) buildEventsString(events moira.Notifi
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len([]rune(formatter.codeBlockEnd)) + len("\n") + len([]rune(tailString))
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
+		tailStringLen := utf8.RuneCountInString(formatter.codeBlockEnd) + len("\n") + utf8.RuneCountInString(tailString)
+		if !(charsForEvents < 0) && (utf8.RuneCountInString(eventsString)+utf8.RuneCountInString(line) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
 		}

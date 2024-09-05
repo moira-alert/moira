@@ -1,12 +1,12 @@
 // Package msgformat provides MessageFormatter interface which may be used for formatting messages.
-// Also, it contains some realizations such as HighlightSyntaxFormatter.
+// Also, it contains some realizations such as highlightSyntaxFormatter.
 package msgformat
 
 import (
 	"github.com/moira-alert/moira"
 )
 
-const changeRecommendation = "fix your system or tune this trigger"
+const ChangeTriggerRecommendation = "fix your system or tune this trigger"
 
 // MessageFormatter is used for formatting messages to send via telegram, mattermost, etc.
 type MessageFormatter interface {
@@ -20,4 +20,11 @@ type MessageFormatterParams struct {
 	// MessageMaxChars is a limit for future message. If -1 then no limit is set.
 	MessageMaxChars int
 	Throttled       bool
+}
+
+// DefaultDescriptionCutter cuts description, so len(newDesc) <= maxSize. Ensure that len(desc) >= maxSize and
+// maxSize >= len("...\n").
+func DefaultDescriptionCutter(desc string, maxSize int) string {
+	suffix := "...\n"
+	return desc[:maxSize-len(suffix)] + suffix
 }
