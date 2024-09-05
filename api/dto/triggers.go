@@ -21,17 +21,17 @@ import (
 var targetNameRegex = regexp.MustCompile("^t\\d+$")
 
 var (
-	// ErrBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
-	ErrBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
+	// errBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
+	errBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
 
-	// ErrTargetsRequired is returned when there is no targets in Trigger.
-	ErrTargetsRequired = fmt.Errorf("targets is required")
+	// errTargetsRequired is returned when there is no targets in Trigger.
+	errTargetsRequired = fmt.Errorf("targets is required")
 
-	// ErrTagsRequired is returned when there is no tags in Trigger.
-	ErrTagsRequired = fmt.Errorf("tags is required")
+	// errTagsRequired is returned when there is no tags in Trigger.
+	errTagsRequired = fmt.Errorf("tags is required")
 
-	// ErrTriggerNameRequired is returned when there is empty Name in Trigger.
-	ErrTriggerNameRequired = fmt.Errorf("trigger name is required")
+	// errTriggerNameRequired is returned when there is empty Name in Trigger.
+	errTriggerNameRequired = fmt.Errorf("trigger name is required")
 )
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
@@ -164,15 +164,15 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 func (trigger *Trigger) Bind(request *http.Request) error {
 	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
-		return api.ErrInvalidRequestContent{ValidationError: ErrTargetsRequired}
+		return api.ErrInvalidRequestContent{ValidationError: errTargetsRequired}
 	}
 
 	if len(trigger.Tags) == 0 {
-		return api.ErrInvalidRequestContent{ValidationError: ErrTagsRequired}
+		return api.ErrInvalidRequestContent{ValidationError: errTagsRequired}
 	}
 
 	if trigger.Name == "" {
-		return api.ErrInvalidRequestContent{ValidationError: ErrTriggerNameRequired}
+		return api.ErrInvalidRequestContent{ValidationError: errTriggerNameRequired}
 	}
 
 	limits := middleware.GetLimits(request)
@@ -192,7 +192,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	for targetName := range trigger.AloneMetrics {
 		if !targetNameRegex.MatchString(targetName) {
-			return api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName}
+			return api.ErrInvalidRequestContent{ValidationError: errBadAloneMetricName}
 		}
 
 		targetIndexStr := targetName[1:]

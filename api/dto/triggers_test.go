@@ -35,7 +35,7 @@ func TestTriggerValidation(t *testing.T) {
 		Convey("with empty targets", func() {
 			err := trigger.Bind(request)
 
-			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrTargetsRequired})
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTargetsRequired})
 		})
 
 		trigger.Targets = []string{"foo.bar"}
@@ -45,7 +45,7 @@ func TestTriggerValidation(t *testing.T) {
 
 			err := trigger.Bind(request)
 
-			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrTagsRequired})
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTagsRequired})
 		})
 
 		trigger.Tags = append(trigger.Tags, "tag1")
@@ -53,7 +53,7 @@ func TestTriggerValidation(t *testing.T) {
 		Convey("with empty Name", func() {
 			err := trigger.Bind(request)
 
-			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrTriggerNameRequired})
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTriggerNameRequired})
 		})
 
 		Convey("with too long Name", func() {
@@ -253,13 +253,13 @@ func TestTriggerValidation(t *testing.T) {
 				trigger.AloneMetrics = map[string]bool{"ttt": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errBadAloneMetricName})
 			})
 			Convey("have more than 1 metric name but only 1 need", func() {
 				trigger.AloneMetrics = map[string]bool{"t1 t2": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errBadAloneMetricName})
 			})
 			Convey("have target higher than total amount of targets", func() {
 				trigger.AloneMetrics = map[string]bool{"t3": true}
