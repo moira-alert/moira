@@ -29,6 +29,7 @@ func toEmergencyContactStorageElement(emergencyContact moira.EmergencyContact) e
 	}
 }
 
+// GetEmergencyContactBytes a method to get bytes of the emergency contact structure stored in Redis.
 func GetEmergencyContactBytes(emergencyContact moira.EmergencyContact) ([]byte, error) {
 	emergencyContactSE := toEmergencyContactStorageElement(emergencyContact)
 	bytes, err := json.Marshal(emergencyContactSE)
@@ -56,6 +57,7 @@ func unmarshalEmergencyContact(bytes []byte, err error) (moira.EmergencyContact,
 	return emergencyContactSE.toEmergencyContact(), nil
 }
 
+// EmergencyContacts converts redis DB reply to moira.EmergencyContact objects array.
 func EmergencyContacts(rep []*redis.StringCmd) ([]*moira.EmergencyContact, error) {
 	if rep == nil {
 		return []*moira.EmergencyContact{}, nil
@@ -79,6 +81,7 @@ func EmergencyContacts(rep []*redis.StringCmd) ([]*moira.EmergencyContact, error
 	return emergencyContacts, nil
 }
 
+// EmergencyContacts converts redis DB reply to moira.EmergencyContact object.
 func EmergencyContact(rep *redis.StringCmd) (moira.EmergencyContact, error) {
 	if rep == nil || errors.Is(rep.Err(), redis.Nil) {
 		return moira.EmergencyContact{}, database.ErrNil
