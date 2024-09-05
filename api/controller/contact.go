@@ -18,9 +18,7 @@ import (
 var (
 	// errNotAllowedContactType means that this type of contact is not allowed to be created.
 	errNotAllowedContactType = errors.New("cannot create contact with not allowed contact type")
-	// errUserLoginAndTeamIDSpecified means that the user has set the user and team_id fields at the same time in contact.
-	errUserLoginAndTeamIDSpecified = errors.New("cannot create contact when both user and team_id specified")
-	errNotPermittedStr             = "you are not permitted"
+	errNotPermittedStr       = "you are not permitted"
 )
 
 // GetAllContacts gets all moira contacts.
@@ -62,10 +60,6 @@ func CreateContact(
 	userLogin,
 	teamID string,
 ) *api.ErrorResponse {
-	if userLogin != "" && teamID != "" {
-		return api.ErrorInternalServer(errUserLoginAndTeamIDSpecified)
-	}
-
 	if !isAllowedToUseContactType(auth, userLogin, contact.Type) {
 		return api.ErrorInvalidRequest(errNotAllowedContactType)
 	}
@@ -122,12 +116,20 @@ func UpdateContact(
 	contactData.Type = contactDTO.Type
 	contactData.Value = contactDTO.Value
 	contactData.Name = contactDTO.Name
+
+	if contactDTO.User != "" || contactDTO.TeamID != "" {
+		contactData.User = contactDTO.User
+		contactData.Team = contactDTO.TeamID
+	}
+
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return contactDTO, api.ErrorInternalServer(err)
 	}
+
 	contactDTO.User = contactData.User
 	contactDTO.TeamID = contactData.Team
 	contactDTO.ID = contactData.ID
+
 	return contactDTO, nil
 }
 
@@ -226,9 +228,11 @@ func CheckUserPermissionsForContact(
 		}
 		return moira.ContactData{}, api.ErrorInternalServer(err)
 	}
+
 	if auth.IsAdmin(userLogin) {
 		return contactData, nil
 	}
+
 	if contactData.Team != "" {
 		teamContainsUser, err := dataBase.IsTeamContainUser(contactData.Team, userLogin)
 		if err != nil {
@@ -238,9 +242,11 @@ func CheckUserPermissionsForContact(
 			return contactData, nil
 		}
 	}
+
 	if contactData.User == userLogin {
 		return contactData, nil
 	}
+
 	return moira.ContactData{}, api.ErrorForbidden(errNotPermittedStr)
 }
 

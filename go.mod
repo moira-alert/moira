@@ -1,6 +1,6 @@
 module github.com/moira-alert/moira
 
-go 1.21
+go 1.22
 
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
@@ -46,6 +46,7 @@ require (
 require github.com/prometheus/common v0.37.0
 
 require (
+	github.com/golang/mock v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/mattermost/mattermost/server/public v0.1.1
 	github.com/mitchellh/mapstructure v1.5.0
