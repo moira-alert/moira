@@ -105,7 +105,7 @@ func UpdateEmergencyContact(database moira.Database, contactID string, emergency
 	}, nil
 }
 
-// UpdateEmergencyContact a method to delete the emergency contact.
+// RemoveEmergencyContact a method to delete the emergency contact.
 func RemoveEmergencyContact(database moira.Database, contactID string) *api.ErrorResponse {
 	if err := database.RemoveEmergencyContact(contactID); err != nil {
 		return api.ErrorInternalServer(err)

@@ -170,6 +170,7 @@ func removeEmergencyContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// emergencyContactFilter is middleware for check emergency contact existence.
 func emergencyContactFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetContactID(request)
