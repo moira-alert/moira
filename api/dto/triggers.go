@@ -25,10 +25,10 @@ var (
 	errBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
 
 	// errTargetsRequired is returned when there is no targets in Trigger.
-	errTargetsRequired = fmt.Errorf("targets is required")
+	errTargetsRequired = fmt.Errorf("targets are required")
 
 	// errTagsRequired is returned when there is no tags in Trigger.
-	errTagsRequired = fmt.Errorf("tags is required")
+	errTagsRequired = fmt.Errorf("tags are required")
 
 	// errTriggerNameRequired is returned when there is empty Name in Trigger.
 	errTriggerNameRequired = fmt.Errorf("trigger name is required")

@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/moira-alert/moira/limits"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -179,6 +177,6 @@ func GetStates(request *http.Request) map[string]struct{} {
 }
 
 // GetLimits returns configured limits.
-func GetLimits(request *http.Request) limits.Config {
-	return request.Context().Value(limitsContextKey).(limits.Config)
+func GetLimits(request *http.Request) api.LimitsConfig {
+	return request.Context().Value(limitsContextKey).(api.LimitsConfig)
 }

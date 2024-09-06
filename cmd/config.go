@@ -6,8 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/moira-alert/moira/limits"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
 
@@ -312,25 +310,4 @@ func ReadConfig(configFileName string, config interface{}) error {
 func PrintConfig(config interface{}) {
 	d, _ := yaml.Marshal(&config)
 	fmt.Println(string(d))
-}
-
-// LimitsConfig contains configurable moira limits.
-type LimitsConfig struct {
-	// Trigger contains the limits applied to triggers.
-	Trigger TriggerLimitsConfig `yaml:"trigger"`
-}
-
-// TriggerLimitsConfig represents the limits which will be applied to all triggers.
-type TriggerLimitsConfig struct {
-	// MaxNameSize is the max amount of characters allowed in trigger name.
-	MaxNameSize int `yaml:"max_name_size"`
-}
-
-// ToLimits converts LimitsConfig to limits.Config.
-func (conf LimitsConfig) ToLimits() limits.Config {
-	return limits.Config{
-		Trigger: limits.Trigger{
-			MaxNameSize: conf.Trigger.MaxNameSize,
-		},
-	}
 }

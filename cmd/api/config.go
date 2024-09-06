@@ -47,7 +47,28 @@ type apiConfig struct {
 	// Authorization contains authorization configuration.
 	Authorization authorization `yaml:"authorization"`
 	// Limits contains limits applied to entities and so on.
-	Limits cmd.LimitsConfig `yaml:"limits"`
+	Limits LimitsConfig `yaml:"limits"`
+}
+
+// LimitsConfig contains configurable moira limits.
+type LimitsConfig struct {
+	// Trigger contains the limits applied to triggers.
+	Trigger TriggerLimitsConfig `yaml:"trigger"`
+}
+
+// TriggerLimitsConfig represents the limits which will be applied to all triggers.
+type TriggerLimitsConfig struct {
+	// MaxNameSize is the max amount of characters allowed in trigger name.
+	MaxNameSize int `yaml:"max_name_size"`
+}
+
+// ToLimits converts LimitsConfig to api.LimitsConfig.
+func (conf LimitsConfig) ToLimits() api.LimitsConfig {
+	return api.LimitsConfig{
+		Trigger: api.TriggerLimits{
+			MaxNameSize: conf.Trigger.MaxNameSize,
+		},
+	}
 }
 
 type authorization struct {
@@ -217,8 +238,8 @@ func getDefault() config {
 		API: apiConfig{
 			Listen:     ":8081",
 			EnableCORS: false,
-			Limits: cmd.LimitsConfig{
-				Trigger: cmd.TriggerLimitsConfig{
+			Limits: LimitsConfig{
+				Trigger: TriggerLimitsConfig{
 					MaxNameSize: 200,
 				},
 			},

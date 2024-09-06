@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/limits"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/middleware"
@@ -26,7 +24,7 @@ func TestTriggerValidation(t *testing.T) {
 			TriggerModel: TriggerModel{},
 		}
 
-		limit := limits.GetTestConfig()
+		limit := api.GetTestLimitsConfig()
 
 		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")
@@ -80,7 +78,7 @@ func TestTriggerValidation(t *testing.T) {
 		request.Header.Set("Content-Type", "application/json")
 		ctx := request.Context()
 		ctx = context.WithValue(ctx, middleware.ContextKey("metricSourceProvider"), sourceProvider)
-		ctx = context.WithValue(ctx, middleware.ContextKey("limits"), limits.GetTestConfig())
+		ctx = context.WithValue(ctx, middleware.ContextKey("limits"), api.GetTestLimitsConfig())
 		request = request.WithContext(ctx)
 
 		desc := "Graphite ClickHouse"

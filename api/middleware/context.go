@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/moira-alert/moira/limits"
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
@@ -334,8 +332,8 @@ func StatesContext() func(next http.Handler) http.Handler {
 	}
 }
 
-// LimitsContext places limits.Config to request context.
-func LimitsContext(limit limits.Config) func(next http.Handler) http.Handler {
+// LimitsContext places api.LimitsConfig to request context.
+func LimitsContext(limit api.LimitsConfig) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ctx := context.WithValue(request.Context(), limitsContextKey, limit)

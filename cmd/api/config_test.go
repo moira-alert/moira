@@ -88,8 +88,8 @@ func Test_webConfig_getDefault(t *testing.T) {
 			API: apiConfig{
 				Listen:     ":8081",
 				EnableCORS: false,
-				Limits: cmd.LimitsConfig{
-					Trigger: cmd.TriggerLimitsConfig{
+				Limits: LimitsConfig{
+					Trigger: TriggerLimitsConfig{
 						MaxNameSize: 200,
 					},
 				},
