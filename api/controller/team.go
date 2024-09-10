@@ -428,9 +428,10 @@ func CheckUserPermissionsForTeam(
 // GetTeamSettings gets team contacts and subscriptions.
 func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, *api.ErrorResponse) {
 	teamSettings := dto.TeamSettings{
-		TeamID:        teamID,
-		Contacts:      make([]moira.ContactData, 0),
-		Subscriptions: make([]moira.SubscriptionData, 0),
+		TeamID:            teamID,
+		Contacts:          make([]moira.ContactData, 0),
+		Subscriptions:     make([]moira.SubscriptionData, 0),
+		EmergencyContacts: make([]dto.EmergencyContact, 0),
 	}
 
 	subscriptionIDs, err := database.GetTeamSubscriptionIDs(teamID)
@@ -442,11 +443,13 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
+
 	for _, subscription := range subscriptions {
 		if subscription != nil {
 			teamSettings.Subscriptions = append(teamSettings.Subscriptions, *subscription)
 		}
 	}
+
 	contactIDs, err := database.GetTeamContactIDs(teamID)
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
@@ -456,10 +459,23 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
+
 	for _, contact := range contacts {
 		if contact != nil {
 			teamSettings.Contacts = append(teamSettings.Contacts, *contact)
 		}
 	}
+
+	emergencyContacts, err := database.GetEmergencyContactsByIDs(contactIDs)
+	if err != nil {
+		return dto.TeamSettings{}, api.ErrorInternalServer(err)
+	}
+
+	for _, emergencyContact := range emergencyContacts {
+		if emergencyContact != nil {
+			teamSettings.EmergencyContacts = append(teamSettings.EmergencyContacts, dto.EmergencyContact(*emergencyContact))
+		}
+	}
+
 	return teamSettings, nil
 }

@@ -81,7 +81,7 @@ func getContactById(writer http.ResponseWriter, request *http.Request) {
 
 // nolint: gofmt,goimports
 //
-//	@summary	Creates a new contact notification for the current user
+//	@summary	Creates a new contact for the current user
 //	@id			create-new-contact
 //	@tags		contact
 //	@accept		json
@@ -131,8 +131,9 @@ func contactFilter(next http.Handler) http.Handler {
 
 // nolint: gofmt,goimports
 //
-//	@summary	Updates an existing notification contact to the values passed in the request body
+//	@summary	Updates an existing contact to the values passed in the request body
 //	@id			update-contact
+//	@tags		contact
 //	@accept		json
 //	@produce	json
 //	@param		contactID	path		string							true	"ID of the contact to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
@@ -144,7 +145,6 @@ func contactFilter(next http.Handler) http.Handler {
 //	@failure	422			{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact/{contactID} [put]
-//	@tags		contact
 func updateContact(writer http.ResponseWriter, request *http.Request) {
 	contactDTO := dto.Contact{}
 	if err := render.Bind(request, &contactDTO); err != nil {
@@ -195,13 +195,13 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 //	@id			send-test-contact-notification
 //	@accept		json
 //	@produce	json
+//	@tags		contact
 //	@param		contactID	path	string	true	"The ID of the target contact"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200			"Test successful"
 //	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
 //	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact/{contactID}/test [post]
-//	@tags		contact
 func sendTestContactNotification(writer http.ResponseWriter, request *http.Request) {
 	contactID := middleware.GetContactID(request)
 	err := controller.SendTestContactNotification(database, contactID)

@@ -188,7 +188,7 @@ func TestCreateContact(t *testing.T) {
 				Value: contactValue,
 				Type:  notAllowedContactType,
 			}
-			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
+			expectedErr := api.ErrorInvalidRequest(errNotAllowedContactType)
 			err := CreateContact(dataBase, auth, contact, userLogin, "")
 			So(err, ShouldResemble, expectedErr)
 		})
@@ -319,7 +319,7 @@ func TestCreateContact(t *testing.T) {
 				Value: contactValue,
 				Type:  notAllowedContactType,
 			}
-			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
+			expectedErr := api.ErrorInvalidRequest(errNotAllowedContactType)
 			err := CreateContact(dataBase, auth, contact, "", teamID)
 			So(err, ShouldResemble, expectedErr)
 		})
@@ -524,7 +524,7 @@ func TestUpdateContact(t *testing.T) {
 				Value: contactValue,
 				Type:  notAllowedContactType,
 			}
-			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
+			expectedErr := api.ErrorInvalidRequest(errNotAllowedContactType)
 			contactID := uuid.Must(uuid.NewV4()).String()
 			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
 			So(err, ShouldResemble, expectedErr)
