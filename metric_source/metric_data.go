@@ -13,7 +13,7 @@ type MetricData struct {
 	StepTime  int64
 	Values    []float64
 	// TODO(Tetrergeru) Wtf is a wildcard in this context
-	Wildcard  bool
+	Wildcard bool
 }
 
 // MakeMetricData creates new metrics data with given metric timeseries.

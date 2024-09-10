@@ -38,7 +38,6 @@ func (eval *evaluator) fetchAndEval(target string, from, until int64, result *Fe
 	values := make(map[parser.MetricRequest][]*types.MetricData)
 
 	fetchedMetrics, err := expr.FetchAndEvalExp(context.Background(), eval, exp, from, until, values)
-
 	if err != nil {
 		return merry.Unwrap(err)
 	}
@@ -107,7 +106,6 @@ func (eval *evaluator) Eval(
 	}
 
 	results, err = expr.EvalExpr(ctx, eval, exp, from, until, values)
-
 	if err != nil {
 		if errors.Is(err, parser.ErrMissingTimeseries) {
 			err = nil
