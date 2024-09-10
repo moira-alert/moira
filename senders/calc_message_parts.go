@@ -14,3 +14,56 @@ func CalculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen i
 	}
 	return maxChars/2 - 10, maxChars / 2
 }
+
+// CalculateMessageParts calculates and returns the length of tags, description and events string
+// in order to fit the max chars limit.
+func CalculateMessageParts(maxChars, tagsLen, descLen, eventsLen int) (tagsNewLen int, descNewLen int, eventsNewLen int) {
+	if maxChars <= 0 {
+		return 0, 0, 0
+	}
+
+	if tagsLen+descLen+eventsLen <= maxChars {
+		return tagsLen, descLen, eventsLen
+	}
+
+	fairMaxLen := maxChars / 3
+
+	if tagsLen > fairMaxLen && descLen <= fairMaxLen && eventsLen <= fairMaxLen {
+		// give free space to tags
+		tagsNewLen = maxChars - descLen - eventsLen
+
+		return tagsNewLen, descLen, eventsLen
+	} else if tagsLen <= fairMaxLen && descLen > fairMaxLen && eventsLen <= fairMaxLen {
+		// give free space to description
+		descNewLen = maxChars - tagsLen - eventsLen
+
+		return tagsLen, descNewLen, eventsLen
+	} else if tagsLen <= fairMaxLen && descLen <= fairMaxLen && eventsLen > fairMaxLen {
+		// give free space to events
+		eventsNewLen = maxChars - tagsLen - descLen
+
+		return tagsLen, descLen, eventsNewLen
+	} else if tagsLen > fairMaxLen && descLen > fairMaxLen && eventsLen <= fairMaxLen {
+		// description is more important than tags
+		tagsNewLen = fairMaxLen
+		descNewLen = maxChars - tagsNewLen - eventsLen
+
+		return tagsNewLen, descNewLen, eventsLen
+	} else if tagsLen > fairMaxLen && descLen <= fairMaxLen && eventsLen > fairMaxLen {
+		// events are more important than tags
+		tagsNewLen = fairMaxLen
+		eventsNewLen = maxChars - tagsNewLen - descLen
+
+		return tagsNewLen, descLen, eventsNewLen
+	} else if tagsLen <= fairMaxLen && descLen > fairMaxLen && eventsLen > fairMaxLen {
+		// split free space from tags fairly between description and events
+		spaceFromTags := fairMaxLen - tagsLen
+		descNewLen = fairMaxLen + spaceFromTags/2
+		eventsNewLen = fairMaxLen + spaceFromTags/2
+
+		return tagsLen, descNewLen, eventsNewLen
+	}
+
+	// all 3 blocks have length greater than maxChars/3, so split space fairly
+	return fairMaxLen, fairMaxLen, fairMaxLen
+}
