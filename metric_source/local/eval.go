@@ -83,26 +83,7 @@ func (eval *evaluator) Eval(
 	}
 
 	if rewritten {
-		for _, target := range newTargets {
-			exp, _, err = parser.ParseExpr(target)
-			if err != nil {
-				return nil, err
-			}
-
-			targetValues, err := eval.Fetch(ctx, []parser.Expr{exp}, from, until, values)
-			if err != nil {
-				return nil, err
-			}
-
-			result, err := eval.Eval(ctx, exp, from, until, targetValues)
-			if err != nil {
-				return nil, err
-			}
-
-			results = append(results, result...)
-		}
-
-		return results, nil
+		return eval.evalRewritten(ctx, newTargets, from, until, values)
 	}
 
 	results, err = expr.EvalExpr(ctx, eval, exp, from, until, values)
@@ -120,6 +101,35 @@ func (eval *evaluator) Eval(
 	}
 
 	return results, err
+}
+
+func (eval *evaluator) evalRewritten(
+	ctx context.Context,
+	newTargets []string,
+	from, until int64,
+	values map[parser.MetricRequest][]*types.MetricData,
+) (results []*types.MetricData, err error) {
+	for _, target := range newTargets {
+		exp, _, err := parser.ParseExpr(target)
+		if err != nil {
+			return nil, err
+		}
+
+		var targetValues map[parser.MetricRequest][]*types.MetricData
+		targetValues, err = eval.Fetch(ctx, []parser.Expr{exp}, from, until, values)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := eval.Eval(ctx, exp, from, until, targetValues)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, result...)
+	}
+
+	return results, nil
 }
 
 func (eval *evaluator) writeResult(exp parser.Expr, metricsData []*types.MetricData, result *FetchResult) {
