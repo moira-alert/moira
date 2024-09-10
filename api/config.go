@@ -62,6 +62,11 @@ func (WebConfig) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+const (
+	// DefaultTriggerNameMaxSize which will be used while validating dto.Trigger.
+	DefaultTriggerNameMaxSize = 200
+)
+
 // LimitsConfig contains limits for some entities.
 type LimitsConfig struct {
 	// Trigger contains limits for triggers.
@@ -78,7 +83,7 @@ type TriggerLimits struct {
 func GetTestLimitsConfig() LimitsConfig {
 	return LimitsConfig{
 		Trigger: TriggerLimits{
-			MaxNameSize: 200,
+			MaxNameSize: DefaultTriggerNameMaxSize,
 		},
 	}
 }

@@ -90,7 +90,7 @@ func Test_webConfig_getDefault(t *testing.T) {
 				EnableCORS: false,
 				Limits: LimitsConfig{
 					Trigger: TriggerLimitsConfig{
-						MaxNameSize: 200,
+						MaxNameSize: api.DefaultTriggerNameMaxSize,
 					},
 				},
 			},
