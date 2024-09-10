@@ -229,7 +229,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 				render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", err))) //nolint
 				return
 			default:
-				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
 				return
 			}
 		default:
