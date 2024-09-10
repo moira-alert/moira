@@ -2,16 +2,10 @@
 package dto
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/moira-alert/moira"
-)
-
-var (
-	errEmptyContactType           = errors.New("contact type can not be empty")
-	errUserLoginAndTeamIDFilledIn = errors.New("contact cannot have both the user field and the team_id field filled in")
 )
 
 type ContactList struct {
@@ -37,16 +31,13 @@ func (*Contact) Render(w http.ResponseWriter, r *http.Request) error {
 
 func (contact *Contact) Bind(r *http.Request) error {
 	if contact.Type == "" {
-		return errEmptyContactType
+		return fmt.Errorf("contact type can not be empty")
 	}
-
 	if contact.Value == "" {
 		return fmt.Errorf("contact value of type %s can not be empty", contact.Type)
 	}
-
 	if contact.User != "" && contact.TeamID != "" {
-		return errUserLoginAndTeamIDFilledIn
+		return fmt.Errorf("contact cannot have both the user field and the team_id field filled in")
 	}
-
 	return nil
 }

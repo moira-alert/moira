@@ -96,10 +96,9 @@ func (TeamMembers) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type TeamSettings struct {
-	TeamID            string                   `json:"team_id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
-	Contacts          []moira.ContactData      `json:"contacts"`
-	Subscriptions     []moira.SubscriptionData `json:"subscriptions"`
-	EmergencyContacts []EmergencyContact       `json:"emergency_contacts"`
+	TeamID        string                   `json:"team_id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
+	Contacts      []moira.ContactData      `json:"contacts"`
+	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
 }
 
 func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {

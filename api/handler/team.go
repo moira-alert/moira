@@ -29,7 +29,6 @@ func teams(router chi.Router) {
 		router.Get("/settings", getTeamSettings)
 		router.Route("/subscriptions", teamSubscription)
 		router.Route("/contacts", teamContact)
-		router.Route("/emergency-contacts", teamEmergencyContact)
 	})
 }
 

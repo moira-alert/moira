@@ -15,11 +15,8 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-var (
-	// errNotAllowedContactType means that this type of contact is not allowed to be created.
-	errNotAllowedContactType = errors.New("cannot create contact with not allowed contact type")
-	errNotPermittedStr       = "you are not permitted"
-)
+// ErrNotAllowedContactType means that this type of contact is not allowed to be created.
+var ErrNotAllowedContactType = errors.New("cannot create contact with not allowed contact type")
 
 // GetAllContacts gets all moira contacts.
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
@@ -61,7 +58,7 @@ func CreateContact(
 	teamID string,
 ) *api.ErrorResponse {
 	if !isAllowedToUseContactType(auth, userLogin, contact.Type) {
-		return api.ErrorInvalidRequest(errNotAllowedContactType)
+		return api.ErrorInvalidRequest(ErrNotAllowedContactType)
 	}
 
 	// Only admins are allowed to create contacts for other users
@@ -110,7 +107,7 @@ func UpdateContact(
 	contactData moira.ContactData,
 ) (dto.Contact, *api.ErrorResponse) {
 	if !isAllowedToUseContactType(auth, contactDTO.User, contactDTO.Type) {
-		return contactDTO, api.ErrorInvalidRequest(errNotAllowedContactType)
+		return contactDTO, api.ErrorInvalidRequest(ErrNotAllowedContactType)
 	}
 
 	contactData.Type = contactDTO.Type
@@ -247,7 +244,7 @@ func CheckUserPermissionsForContact(
 		return contactData, nil
 	}
 
-	return moira.ContactData{}, api.ErrorForbidden(errNotPermittedStr)
+	return moira.ContactData{}, api.ErrorForbidden("you are not permitted")
 }
 
 func isContactExists(dataBase moira.Database, contactID string) (bool, error) {

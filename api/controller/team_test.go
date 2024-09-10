@@ -642,38 +642,30 @@ func TestGetTeamSettings(t *testing.T) {
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
-		emergencyContacts := []*moira.EmergencyContact{{ContactID: contactIDs[0]}, {ContactID: contactIDs[1]}}
-
 		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
 		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
-		database.EXPECT().GetEmergencyContactsByIDs(contactIDs).Return(emergencyContacts, nil)
-
 		settings, err := GetTeamSettings(database, teamID)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, dto.TeamSettings{
-			TeamID:            teamID,
-			Contacts:          []moira.ContactData{*contacts[0], *contacts[1]},
-			Subscriptions:     []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
-			EmergencyContacts: []dto.EmergencyContact{dto.EmergencyContact(*emergencyContacts[0]), dto.EmergencyContact(*emergencyContacts[1])},
+			TeamID:        teamID,
+			Contacts:      []moira.ContactData{*contacts[0], *contacts[1]},
+			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
 		})
 	})
 
 	Convey("No contacts and subscriptions", t, func() {
-		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{}, nil)
-		database.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil)
-		database.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, nil)
-		database.EXPECT().GetContacts([]string{}).Return([]*moira.ContactData{}, nil)
-		database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*moira.EmergencyContact{}, nil)
-
+		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
+		database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
+		database.EXPECT().GetTeamContactIDs(teamID).Return(make([]string, 0), nil)
+		database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
 		settings, err := GetTeamSettings(database, teamID)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, dto.TeamSettings{
-			TeamID:            teamID,
-			Contacts:          make([]moira.ContactData, 0),
-			Subscriptions:     make([]moira.SubscriptionData, 0),
-			EmergencyContacts: make([]dto.EmergencyContact, 0),
+			TeamID:        teamID,
+			Contacts:      make([]moira.ContactData, 0),
+			Subscriptions: make([]moira.SubscriptionData, 0),
 		})
 	})
 
@@ -681,62 +673,36 @@ func TestGetTeamSettings(t *testing.T) {
 		Convey("GetTeamSubscriptionIDs", func() {
 			expected := fmt.Errorf("can not read ids")
 			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(nil, expected)
-
 			settings, err := GetTeamSettings(database, teamID)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldResemble, dto.TeamSettings{})
 		})
-
 		Convey("GetSubscriptions", func() {
 			expected := fmt.Errorf("can not read subscriptions")
 			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expected)
-
 			settings, err := GetTeamSettings(database, teamID)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldResemble, dto.TeamSettings{})
 		})
-
 		Convey("GetTeamContactIDs", func() {
 			expected := fmt.Errorf("can not read contact ids")
 			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetTeamContactIDs(teamID).Return(nil, expected)
-
 			settings, err := GetTeamSettings(database, teamID)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldResemble, dto.TeamSettings{})
 		})
-
 		Convey("GetContacts", func() {
 			expected := fmt.Errorf("can not read contacts")
 			subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 			subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 			contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
-
 			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 			database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
 			database.EXPECT().GetContacts(contactIDs).Return(nil, expected)
-			settings, err := GetTeamSettings(database, teamID)
-
-			So(err, ShouldResemble, api.ErrorInternalServer(expected))
-			So(settings, ShouldResemble, dto.TeamSettings{})
-		})
-
-		Convey("GetEmergencyContacts", func() {
-			expected := fmt.Errorf("can not read emergency contacts")
-			subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
-			subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
-			contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
-			contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
-
-			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
-			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
-			database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
-			database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
-			database.EXPECT().GetEmergencyContactsByIDs(contactIDs).Return(nil, expected)
-
 			settings, err := GetTeamSettings(database, teamID)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldResemble, dto.TeamSettings{})
