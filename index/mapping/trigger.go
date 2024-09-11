@@ -50,8 +50,8 @@ func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
 }
 
 // CreateIndexedTrigger creates mapping.Trigger object out of moira.TriggerCheck.
-func CreateIndexedTrigger(triggerCheck *moira.TriggerCheck) Trigger {
-	return Trigger{
+func CreateIndexedTrigger(triggerCheck *moira.TriggerCheck) *Trigger {
+	return &Trigger{
 		ID:             triggerCheck.ID,
 		Name:           triggerCheck.Name,
 		Desc:           moira.UseString(triggerCheck.Desc),
