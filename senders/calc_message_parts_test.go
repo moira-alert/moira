@@ -183,6 +183,20 @@ func TestCalculateMessageParts(t *testing.T) {
 					eventsLen: 33,
 				},
 			},
+			{
+				description: "with tagsLen, descLen > maxChars/3, eventsLen <= maxChars/3 and maxChars - maxChars/3 - eventsLen > descLen",
+				given: given{
+					maxChars:  100,
+					tagsLen:   100,
+					descLen:   34,
+					eventsLen: 20,
+				},
+				expected: expected{
+					tagsLen:   33,
+					descLen:   34,
+					eventsLen: 20,
+				},
+			},
 		}
 
 		for i, c := range cases {

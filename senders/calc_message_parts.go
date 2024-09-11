@@ -32,36 +32,36 @@ func CalculateMessageParts(maxChars, tagsLen, descLen, eventsLen int) (tagsNewLe
 		// give free space to tags
 		tagsNewLen = maxChars - descLen - eventsLen
 
-		return tagsNewLen, descLen, eventsLen
+		return min(tagsNewLen, tagsLen), descLen, eventsLen
 	} else if tagsLen <= fairMaxLen && descLen > fairMaxLen && eventsLen <= fairMaxLen {
 		// give free space to description
 		descNewLen = maxChars - tagsLen - eventsLen
 
-		return tagsLen, descNewLen, eventsLen
+		return tagsLen, min(descNewLen, descLen), eventsLen
 	} else if tagsLen <= fairMaxLen && descLen <= fairMaxLen && eventsLen > fairMaxLen {
 		// give free space to events
 		eventsNewLen = maxChars - tagsLen - descLen
 
-		return tagsLen, descLen, eventsNewLen
+		return tagsLen, descLen, min(eventsNewLen, eventsLen)
 	} else if tagsLen > fairMaxLen && descLen > fairMaxLen && eventsLen <= fairMaxLen {
 		// description is more important than tags
 		tagsNewLen = fairMaxLen
 		descNewLen = maxChars - tagsNewLen - eventsLen
 
-		return tagsNewLen, descNewLen, eventsLen
+		return tagsNewLen, min(descNewLen, descLen), eventsLen
 	} else if tagsLen > fairMaxLen && descLen <= fairMaxLen && eventsLen > fairMaxLen {
 		// events are more important than tags
 		tagsNewLen = fairMaxLen
 		eventsNewLen = maxChars - tagsNewLen - descLen
 
-		return tagsNewLen, descLen, eventsNewLen
+		return tagsNewLen, descLen, min(eventsNewLen, eventsLen)
 	} else if tagsLen <= fairMaxLen && descLen > fairMaxLen && eventsLen > fairMaxLen {
 		// split free space from tags fairly between description and events
 		spaceFromTags := fairMaxLen - tagsLen
 		descNewLen = fairMaxLen + spaceFromTags/2
 		eventsNewLen = fairMaxLen + spaceFromTags/2
 
-		return tagsLen, descNewLen, eventsNewLen
+		return tagsLen, min(descNewLen, descLen), min(eventsNewLen, eventsLen)
 	}
 
 	// all 3 blocks have length greater than maxChars/3, so split space fairly

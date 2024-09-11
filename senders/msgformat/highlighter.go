@@ -2,7 +2,6 @@ package msgformat
 
 import (
 	"fmt"
-	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -26,6 +25,10 @@ type EventStringFormatter func(event moira.NotificationEvent, location *time.Loc
 
 // DescriptionCutter cuts the given description to fit max size.
 type DescriptionCutter func(desc string, maxSize int) string
+
+// TagsLimiter should prepare tags string in format like " [tag1][tag2][tag3]",
+// but characters count should be less than or equal to maxSize.
+type TagsLimiter func(tags []string, maxSize int) string
 
 // highlightSyntaxFormatter formats message by using functions, emojis and some other highlight patterns.
 type highlightSyntaxFormatter struct {
@@ -74,12 +77,14 @@ func NewHighlightSyntaxFormatter(
 
 // Format formats message using given params and formatter functions.
 func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams) string {
-	var message strings.Builder
 	state := params.Events.GetCurrentState(params.Throttled)
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
 
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
-	titleLen := utf8.RuneCountInString(title)
+	titleLen := utf8.RuneCountInString(title) + len("\n")
+
+	tagsStr := " " + params.Trigger.GetTags()
+	tagsLen := utf8.RuneCountInString(tagsStr)
 
 	desc := formatter.descriptionFormatter(params.Trigger)
 	descLen := utf8.RuneCountInString(desc)
@@ -89,7 +94,10 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 
 	charsLeftAfterTitle := params.MessageMaxChars - titleLen
 
-	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
+	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessageParts(charsLeftAfterTitle, tagsLen, descLen, eventsStringLen)
+	if tagsNewLen != tagsLen {
+		tagsStr = DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
+	}
 	if descLen != descNewLen {
 		desc = formatter.descriptionCutter(desc, descNewLen)
 	}
@@ -97,12 +105,10 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
 
-	message.WriteString(title)
-	message.WriteString(desc)
-	message.WriteString(eventsString)
-	return message.String()
+	return title + tagsStr + "\n" + desc + eventsString
 }
 
+// buildTitle builds title string for alert (emoji, trigger state, trigger name with link).
 func (formatter *highlightSyntaxFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
 	state := events.GetCurrentState(throttled)
 	title := ""
@@ -118,12 +124,6 @@ func (formatter *highlightSyntaxFormatter) buildTitle(events moira.NotificationE
 		title += " " + trigger.Name
 	}
 
-	tags := trigger.GetTags()
-	if tags != "" {
-		title += " " + tags
-	}
-
-	title += "\n"
 	return title
 }
 
