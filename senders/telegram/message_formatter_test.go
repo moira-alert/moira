@@ -133,7 +133,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				msg := formatter.Format(getParams(events, trigger, throttled))
 
-				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				So(calcRunesCountWithoutHTML(msg), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
 				So(msg, ShouldEqual, expected)
 			})
 
@@ -156,7 +156,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				msg := formatter.Format(getParams(events, trigger, throttled))
 
-				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				So(calcRunesCountWithoutHTML(msg), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
 				So(msg, ShouldEqual, expected)
 			})
 
@@ -182,7 +182,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				msg := formatter.Format(getParams(events, trigger, throttled))
 
-				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				So(calcRunesCountWithoutHTML(msg), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
 				So(msg, ShouldEqual, expected)
 			})
 
@@ -220,7 +220,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 				actual := formatter.Format(getParams(events, trigger, throttled))
 
 				So(actual, ShouldResemble, expected)
-				So(calcRunesCountWithoutHTML([]rune(actual)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
 			})
 		})
 	})

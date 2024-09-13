@@ -52,10 +52,10 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
 
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
-	titleLen := calcRunesCountWithoutHTML([]rune(title)) + len("\n")
+	titleLen := calcRunesCountWithoutHTML(title) + len("\n")
 
 	tagsStr := " " + params.Trigger.GetTags()
-	tagsLen := calcRunesCountWithoutHTML([]rune(tagsStr))
+	tagsLen := calcRunesCountWithoutHTML(tagsStr)
 
 	if tagsLen == len(" ") {
 		tagsStr = ""
@@ -63,10 +63,10 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	}
 
 	desc := descriptionFormatter(params.Trigger)
-	descLen := calcRunesCountWithoutHTML([]rune(desc))
+	descLen := calcRunesCountWithoutHTML(desc)
 
 	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
-	eventsStringLen := calcRunesCountWithoutHTML([]rune(eventsString))
+	eventsStringLen := calcRunesCountWithoutHTML(eventsString)
 
 	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessageParts(params.MessageMaxChars-titleLen, tagsLen, descLen, eventsStringLen)
 	if tagsLen != tagsNewLen {
@@ -95,11 +95,11 @@ func htmlEscapeTags(tags []string) []string {
 // calcRunesCountWithoutHTML is used for calculating symbols in text without html tags. Special symbols
 // like `&gt;`, `&lt;` etc. are counted not as one symbol, for example, len([]rune("&gt;")).
 // This precision is enough for us to evaluate size of message.
-func calcRunesCountWithoutHTML(htmlText []rune) int {
+func calcRunesCountWithoutHTML(htmlText string) int {
 	textLen := 0
 	isTag := false
 
-	for _, r := range htmlText {
+	for _, r := range []rune(htmlText) {
 		if r == '<' {
 			isTag = true
 			continue
@@ -142,7 +142,7 @@ var throttleMsg = fmt.Sprintf("\nPlease, %s to generate less events.", boldForma
 func (formatter *messageFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	if throttled {
-		charsForThrottleMsg = calcRunesCountWithoutHTML([]rune(throttleMsg))
+		charsForThrottleMsg = calcRunesCountWithoutHTML(throttleMsg)
 	}
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
@@ -161,7 +161,7 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
 		tailStringLen := len("\n") + utf8.RuneCountInString(tailString)
-		lineLen := calcRunesCountWithoutHTML([]rune(line))
+		lineLen := calcRunesCountWithoutHTML(line)
 
 		if charsForEvents >= 0 && eventsStringLen+lineLen > charsLeftForEvents-tailStringLen {
 			eventsLenLimitReached = true
