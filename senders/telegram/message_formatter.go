@@ -101,7 +101,7 @@ func calcRunesCountWithoutHTML(htmlText string) int {
 	textLen := 0
 	isTag := false
 
-	for _, r := range []rune(htmlText) {
+	for _, r := range htmlText {
 		if r == '<' {
 			isTag = true
 			continue
