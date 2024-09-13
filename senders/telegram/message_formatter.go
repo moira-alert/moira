@@ -46,11 +46,21 @@ func NewTelegramMessageFormatter(
 
 // Format formats message using given params and formatter functions.
 func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParams) string {
+	params.Trigger.Tags = htmlEscapeTags(params.Trigger.Tags)
+
 	state := params.Events.GetCurrentState(params.Throttled)
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
 
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
-	titleLen := calcRunesCountWithoutHTML([]rune(title))
+	titleLen := calcRunesCountWithoutHTML([]rune(title)) + len("\n")
+
+	tagsStr := " " + params.Trigger.GetTags()
+	tagsLen := calcRunesCountWithoutHTML([]rune(tagsStr))
+
+	if tagsLen == len(" ") {
+		tagsStr = ""
+		tagsLen = 0
+	}
 
 	desc := descriptionFormatter(params.Trigger)
 	descLen := calcRunesCountWithoutHTML([]rune(desc))
@@ -58,7 +68,10 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
 	eventsStringLen := calcRunesCountWithoutHTML([]rune(eventsString))
 
-	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(params.MessageMaxChars-titleLen, descLen, eventsStringLen)
+	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessageParts(params.MessageMaxChars-titleLen, tagsLen, descLen, eventsStringLen)
+	if tagsLen != tagsNewLen {
+		tagsStr = msgformat.DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
+	}
 	if descLen != descNewLen {
 		desc = descriptionCutter(desc, descNewLen)
 	}
@@ -66,7 +79,17 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
 
-	return title + desc + eventsString
+	return title + tagsStr + "\n" + desc + eventsString
+}
+
+func htmlEscapeTags(tags []string) []string {
+	escapedTags := make([]string, 0, len(tags))
+
+	for _, tag := range tags {
+		escapedTags = append(escapedTags, html.EscapeString(tag))
+	}
+
+	return escapedTags
 }
 
 // calcRunesCountWithoutHTML is used for calculating symbols in text without html tags. Special symbols
@@ -109,12 +132,6 @@ func (formatter *messageFormatter) buildTitle(events moira.NotificationEvents, t
 		title += " " + trigger.Name
 	}
 
-	tags := trigger.GetTags()
-	if tags != "" {
-		title += " " + tags
-	}
-
-	title += "\n"
 	return title
 }
 

@@ -44,7 +44,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 	expectedFirstLine := "💣 <b>NODATA</b> <a href=\"https://moira.uri/trigger/TriggerID\">Name</a> [tag1][tag2]\n"
 	lenFirstLine := utf8.RuneCountInString(expectedFirstLine) -
-		utf8.RuneCountInString("<b></b><a href=\"https://moira.uri/trigger/TriggerID\"></a>")
+		utf8.RuneCountInString("<b></b><a href=\"https://moira.uri/trigger/TriggerID\"></a>") // 83 - 57
 
 	eventStr := "02:40 (GMT+00:00): <code>Metric</code> = 123 (OK to NODATA)\n"
 	lenEventStr := utf8.RuneCountInString(eventStr) - utf8.RuneCountInString("<code></code>") // 60 - 13 = 47
@@ -184,6 +184,43 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
 				So(msg, ShouldEqual, expected)
+			})
+
+			Convey("with tags, desc, events > msgLimit/3", func() {
+				var (
+					events           moira.NotificationEvents
+					throttled        = false
+					greaterThanThird = albumCaptionMaxCharacters/3 + 100
+				)
+
+				tag := "tag1"
+				tagCount := (greaterThanThird - len(" ")) / (len(tag) + len("[]"))
+
+				tags := make([]string, 0, tagCount)
+				for i := 0; i < tagCount; i++ {
+					tags = append(tags, tag)
+				}
+				trigger.Tags = tags
+
+				trigger.Desc = strings.Repeat("**ё**ж", greaterThanThird/2)
+
+				eventsCount := greaterThanThird / lenEventStr
+				for i := 0; i < eventsCount; i++ {
+					events = append(events, event)
+				}
+
+				expected := "💣 <b>NODATA</b> <a href=\"https://moira.uri/trigger/TriggerID\">Name</a>" +
+					msgformat.DefaultTagsLimiter(trigger.Tags, (albumCaptionMaxCharacters-(lenFirstLine-len(" [tag1][tag2]")))/3) + "\n" +
+					tooLongDescMessage +
+					eventsBlockStart + "\n" +
+					strings.Repeat(eventStr, 6) +
+					eventsBlockEnd +
+					"\n...and 3 more events."
+
+				actual := formatter.Format(getParams(events, trigger, throttled))
+
+				So(actual, ShouldResemble, expected)
+				So(calcRunesCountWithoutHTML([]rune(actual)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
 			})
 		})
 	})
