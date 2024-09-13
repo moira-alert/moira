@@ -86,6 +86,11 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 	tagsStr := " " + params.Trigger.GetTags()
 	tagsLen := utf8.RuneCountInString(tagsStr)
 
+	if tagsLen == len(" ") {
+		tagsStr = ""
+		tagsLen = 0
+	}
+
 	desc := formatter.descriptionFormatter(params.Trigger)
 	descLen := utf8.RuneCountInString(desc)
 

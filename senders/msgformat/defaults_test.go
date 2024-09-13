@@ -33,5 +33,11 @@ func TestDefaultTagsLimiter(t *testing.T) {
 
 			So(tagsStr, ShouldResemble, "")
 		})
+
+		Convey("with no tags", func() {
+			tagsStr := DefaultTagsLimiter([]string{}, 0)
+
+			So(tagsStr, ShouldResemble, "")
+		})
 	})
 }
