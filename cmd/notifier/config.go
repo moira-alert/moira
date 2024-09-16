@@ -43,7 +43,7 @@ type notifierConfig struct {
 	// Senders configuration section. See https://moira.readthedocs.io/en/latest/installation/configuration.html for more explanation
 	Senders []map[string]interface{} `yaml:"senders"`
 	// Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
-	SelfState selfStateConfig `yaml:"moira_selfstate"`
+	SelfState selfstateConfig `yaml:"moira_selfstate"`
 	// Web-UI uri prefix for trigger links in notifications. For example: with 'http://localhost' every notification will contain link like 'http://localhost/trigger/triggerId'
 	FrontURI string `yaml:"front_uri"`
 	// Timezone to use to convert ticks. Default is UTC. See https://golang.org/pkg/time/#LoadLocation for more details.
@@ -58,26 +58,70 @@ type notifierConfig struct {
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
 }
 
-type selfStateConfig struct {
-	// If true, Self state monitor will be enabled
-	Enabled bool `yaml:"enabled"`
-	// If true, Self state monitor will check remote checker status
-	RemoteTriggersEnabled bool `yaml:"remote_triggers_enabled"`
-	// Max Redis disconnect delay to send alert when reached
-	RedisDisconnectDelay string `yaml:"redis_disconect_delay"`
-	// Max Filter metrics receive delay to send alert when reached
-	LastMetricReceivedDelay string `yaml:"last_metric_received_delay"`
-	// Max Checker checks perform delay to send alert when reached
-	LastCheckDelay string `yaml:"last_check_delay"`
-	// Max Remote triggers Checker checks perform delay to send alert when reached
-	LastRemoteCheckDelay string `yaml:"last_remote_check_delay"`
-	// Contact list for Self state monitor alerts
-	Contacts []map[string]string `yaml:"contacts"`
+type heartbeaterAlertConfig struct {
+	Name        string `yaml:"name"`
+	Description string `yaml:"description"`
+}
+
+type heartbeaterBaseConfig struct {
+	NeedTurnOffNotifier bool `yaml:"need_turn_off_notifier`
+	NeedToCheckOthers   bool `yaml:"need_to_check_others"`
+}
+
+type databaseHeartbeatConfig struct {
+	heartbeaterBaseConfig
+	AlertCfg             heartbeaterAlertConfig `yaml:"alert"`
+	RedisDisconnectDelay string                 `yaml:"redis_disconnect_delay`
+}
+
+type heartbeatsConfig struct {
+	databaseCfg databaseHeartbeatConfig `yaml:"database"`
+}
+
+type selfstateBaseConfig struct {
+	Enabled      bool             `yaml:"enabled"`
+	HearbeatsCfg heartbeatsConfig `yaml:"heartbeats"`
 	// Self state monitor alerting interval
 	NoticeInterval string `yaml:"notice_interval"`
 	// Self state monitor check interval
 	CheckInterval string `yaml:"check_interval"`
 }
+
+type adminSelfstateConfig struct {
+	selfstateBaseConfig
+
+	AdminContacts []map[string]string `yaml:"contacts"`
+}
+
+type userSelfstateConfig struct {
+	selfstateBaseConfig
+}
+
+type selfstateConfig struct {
+	adminCfg adminSelfstateConfig `yaml:"admin"`
+	userCfg  userSelfstateConfig  `yaml:"user"`
+}
+
+// type selfStateConfig struct {
+// 	// If true, Self state monitor will be enabled
+// 	Enabled bool `yaml:"enabled"`
+// 	// If true, Self state monitor will check remote checker status
+// 	RemoteTriggersEnabled bool `yaml:"remote_triggers_enabled"`
+// 	// Max Redis disconnect delay to send alert when reached
+// 	RedisDisconnectDelay string `yaml:"redis_disconect_delay"`
+// 	// Max Filter metrics receive delay to send alert when reached
+// 	LastMetricReceivedDelay string `yaml:"last_metric_received_delay"`
+// 	// Max Checker checks perform delay to send alert when reached
+// 	LastCheckDelay string `yaml:"last_check_delay"`
+// 	// Max Remote triggers Checker checks perform delay to send alert when reached
+// 	LastRemoteCheckDelay string `yaml:"last_remote_check_delay"`
+// 	// Contact list for Self state monitor alerts
+// 	Contacts []map[string]string `yaml:"contacts"`
+// 	// Self state monitor alerting interval
+// 	NoticeInterval string `yaml:"notice_interval"`
+// 	// Self state monitor check interval
+// 	CheckInterval string `yaml:"check_interval"`
+// }
 
 func getDefault() config {
 	return config{

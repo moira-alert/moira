@@ -1,70 +1,85 @@
 package heartbeat
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 )
 
-type filter struct {
-	heartbeat
-	count                   int64
-	firstCheckWasSuccessful bool
+var (
+	localClusterKey = moira.DefaultLocalCluster
+
+	_ Heartbeater = (*filterHeartbeater)(nil)
+)
+
+type FilterHeartbeaterConfig struct {
+	HeartbeaterBaseConfig
+
+	MetricReceivedDelay time.Duration `validator:"required,gt=0"`
 }
 
-func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
-	if delay > 0 {
-		return &filter{
-			heartbeat: heartbeat{
-				logger:              logger,
-				database:            database,
-				delay:               delay,
-				lastSuccessfulCheck: time.Now().Unix(),
-			},
-			firstCheckWasSuccessful: false,
-		}
-	}
-	return nil
+func (cfg FilterHeartbeaterConfig) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
-func (check *filter) Check(nowTS int64) (int64, bool, error) {
-	defaultLocalCluster := moira.DefaultLocalCluster
-	triggersCount, err := check.database.GetTriggersToCheckCount(defaultLocalCluster)
+type filterHeartbeater struct {
+	*heartbeaterBase
+
+	cfg              FilterHeartbeaterConfig
+	lastMetricsCount int64
+}
+
+func NewFilterHeartbeater(cfg FilterHeartbeaterConfig, base *heartbeaterBase) (*filterHeartbeater, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("filter heartheater configuration error: %w", err)
+	}
+
+	return &filterHeartbeater{
+		heartbeaterBase: base,
+		cfg:             cfg,
+	}, nil
+}
+
+func (heartbeater *filterHeartbeater) Check() (State, error) {
+	triggersCount, err := heartbeater.database.GetTriggersToCheckCount(localClusterKey)
 	if err != nil {
-		return 0, false, err
+		return StateError, err
 	}
 
-	metricsCount, err := check.database.GetMetricsUpdatesCount()
+	metricsCount, err := heartbeater.database.GetMetricsUpdatesCount()
 	if err != nil {
-		return 0, false, err
-	}
-	if check.count != metricsCount || triggersCount == 0 {
-		check.count = metricsCount
-		check.lastSuccessfulCheck = nowTS
-		return 0, false, nil
+		return StateError, err
 	}
 
-	if check.lastSuccessfulCheck < nowTS-check.heartbeat.delay {
-		check.logger.Error().
-			String("error", check.GetErrorMessage()).
-			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
-			Msg("Send message")
-
-		check.firstCheckWasSuccessful = true
-		return nowTS - check.heartbeat.lastSuccessfulCheck, true, nil
+	if heartbeater.lastMetricsCount != metricsCount || triggersCount == 0 {
+		heartbeater.lastMetricsCount = metricsCount
+		heartbeater.lastSuccessfulCheck = heartbeater.clock.NowUTC()
+		return StateOK, nil
 	}
-	return 0, false, nil
+
+	if time.Since(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.MetricReceivedDelay {
+		return StateError, nil
+	}
+
+	return StateOK, nil
 }
 
 // NeedTurnOffNotifier: turn off notifications if at least once the filter check was successful.
-func (check filter) NeedTurnOffNotifier() bool {
-	return check.firstCheckWasSuccessful
+func (heartbeater filterHeartbeater) NeedTurnOffNotifier() bool {
+	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (check filter) NeedToCheckOthers() bool {
-	return true
+func (heartbeater filterHeartbeater) NeedToCheckOthers() bool {
+	return heartbeater.cfg.NeedToCheckOthers
 }
 
-func (filter) GetErrorMessage() string {
-	return "Moira-Filter does not receive metrics"
+func (filterHeartbeater) Type() moira.EmergencyContactType {
+	return moira.EmergencyTypeFilterNoMetricsReceived
+}
+
+func (heartbeater filterHeartbeater) AlertSettings() AlertConfig {
+	return heartbeater.cfg.AlertCfg
 }

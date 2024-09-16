@@ -1,52 +1,68 @@
 package heartbeat
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 )
 
-type databaseHeartbeat struct{ heartbeat }
+var _ Heartbeater = (*databaseHeartbeater)(nil)
 
-func GetDatabase(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
-	if delay > 0 {
-		return &databaseHeartbeat{heartbeat{
-			logger:              logger,
-			database:            database,
-			delay:               delay,
-			lastSuccessfulCheck: time.Now().Unix(),
-		}}
-	}
-	return nil
+type DatabaseHeartbeaterConfig struct {
+	HeartbeaterBaseConfig
+
+	RedisDisconnectDelay time.Duration `validate:"required,gt=0"`
 }
 
-func (check *databaseHeartbeat) Check(nowTS int64) (int64, bool, error) {
-	_, err := check.database.GetChecksUpdatesCount()
-	if err == nil {
-		check.lastSuccessfulCheck = nowTS
-		return 0, false, nil
-	}
+func (cfg DatabaseHeartbeaterConfig) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
+}
 
-	if check.lastSuccessfulCheck < nowTS-check.delay {
-		check.logger.Error().
-			String("error", check.GetErrorMessage()).
-			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
-			Msg("Send message")
+type databaseHeartbeater struct {
+	*heartbeaterBase
 
-		return nowTS - check.lastSuccessfulCheck, true, nil
+	cfg DatabaseHeartbeaterConfig
+}
+
+func NewDatabaseHeartbeater(cfg DatabaseHeartbeaterConfig, base *heartbeaterBase) (*databaseHeartbeater, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("database heartbeater configuration error: %w", err)
 	}
 
-	return 0, false, nil
+	return &databaseHeartbeater{
+		heartbeaterBase: base,
+		cfg:             cfg,
+	}, nil
 }
 
-func (databaseHeartbeat) NeedTurnOffNotifier() bool {
-	return true
+func (heartbeater *databaseHeartbeater) Check() (State, error) {
+	if _, err := heartbeater.database.GetChecksUpdatesCount(); err == nil {
+		heartbeater.lastSuccessfulCheck = heartbeater.clock.NowUTC()
+		return StateOK, nil
+	}
+
+	if time.Since(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.RedisDisconnectDelay {
+		return StateError, nil
+	}
+
+	return StateOK, nil
 }
 
-func (databaseHeartbeat) NeedToCheckOthers() bool {
-	return false
+func (heartbeater databaseHeartbeater) NeedTurnOffNotifier() bool {
+	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (databaseHeartbeat) GetErrorMessage() string {
-	return "Redis disconnected"
+func (heartbeater databaseHeartbeater) NeedToCheckOthers() bool {
+	return heartbeater.cfg.NeedToCheckOthers
+}
+
+func (databaseHeartbeater) Type() moira.EmergencyContactType {
+	return moira.EmergencyTypeRedisDisconnected
+}
+
+func (heartbeater databaseHeartbeater) AlertSettings() AlertConfig {
+	return heartbeater.cfg.AlertCfg
 }

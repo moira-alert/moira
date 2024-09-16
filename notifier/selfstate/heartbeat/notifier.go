@@ -1,56 +1,53 @@
 package heartbeat
 
 import (
-	"fmt"
-
-	"github.com/moira-alert/moira/metrics"
-
 	"github.com/moira-alert/moira"
 )
 
-type notifier struct {
-	db      moira.Database
-	log     moira.Logger
-	metrics *metrics.HeartBeatMetrics
+var _ Heartbeater = (*notifierHeartbeater)(nil)
+
+type NotifierHeartbeaterConfig struct {
+	HeartbeaterBaseConfig
 }
 
-func GetNotifier(logger moira.Logger, database moira.Database, metrics *metrics.HeartBeatMetrics) Heartbeater {
-	return &notifier{
-		db:      database,
-		log:     logger,
-		metrics: metrics,
+type notifierHeartbeater struct {
+	*heartbeaterBase
+
+	cfg NotifierHeartbeaterConfig
+}
+
+func NewNotifierHeartbeater(cfg NotifierHeartbeaterConfig, base *heartbeaterBase) (*notifierHeartbeater, error) {
+	return &notifierHeartbeater{
+		heartbeaterBase: base,
+		cfg:             cfg,
+	}, nil
+}
+
+func (heartbeater *notifierHeartbeater) Check() (State, error) {
+	notifierState, err := heartbeater.database.GetNotifierState()
+	if err != nil {
+		return StateError, err
 	}
-}
 
-func (check notifier) Check(int64) (int64, bool, error) {
-	state, _ := check.db.GetNotifierState()
-	if state != moira.SelfStateOK {
-		check.metrics.MarkNotifierIsAlive(false)
-
-		check.log.Error().
-			String("error", check.GetErrorMessage()).
-			Msg("Notifier is not healthy")
-
-		return 0, true, nil
+	if notifierState != moira.SelfStateOK {
+		return StateError, nil
 	}
-	check.metrics.MarkNotifierIsAlive(true)
 
-	check.log.Debug().
-		String("state", state).
-		Msg("Notifier is healthy")
-
-	return 0, false, nil
+	return StateOK, nil
 }
 
-func (notifier) NeedTurnOffNotifier() bool {
-	return false
+func (heartbeater *notifierHeartbeater) NeedTurnOffNotifier() bool {
+	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (notifier) NeedToCheckOthers() bool {
-	return true
+func (heartbeater *notifierHeartbeater) NeedToCheckOthers() bool {
+	return heartbeater.cfg.NeedToCheckOthers
 }
 
-func (check notifier) GetErrorMessage() string {
-	state, _ := check.db.GetNotifierState()
-	return fmt.Sprintf("Moira-Notifier does not send messages. State: %v", state)
+func (notifierHeartbeater) Type() moira.EmergencyContactType {
+	return moira.EmergencyTypeNotifierOff
+}
+
+func (heartbeater notifierHeartbeater) AlertSettings() AlertConfig {
+	return heartbeater.cfg.AlertCfg
 }

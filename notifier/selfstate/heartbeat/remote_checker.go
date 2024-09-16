@@ -1,60 +1,84 @@
 package heartbeat
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 )
 
-type remoteChecker struct {
-	heartbeat
-	count int64
+var (
+	remoteClusterKey = moira.DefaultGraphiteRemoteCluster
+
+	_ Heartbeater = (*remoteCheckerHeartbeater)(nil)
+)
+
+type RemoteCheckerHeartbeaterConfig struct {
+	HeartbeaterBaseConfig
+
+	RemoteCheckDelay time.Duration `validate:"required,gt=0"`
 }
 
-func GetRemoteChecker(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
-	if delay > 0 {
-		return &remoteChecker{heartbeat: heartbeat{
-			logger:              logger,
-			database:            database,
-			delay:               delay,
-			lastSuccessfulCheck: time.Now().Unix(),
-		}}
+func (cfg RemoteCheckerHeartbeaterConfig) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
+}
+
+type remoteCheckerHeartbeater struct {
+	*heartbeaterBase
+
+	cfg                   RemoteCheckerHeartbeaterConfig
+	lastRemoteChecksCount int64
+}
+
+func NewRemoteCheckerHeartbeater(cfg RemoteCheckerHeartbeaterConfig, base *heartbeaterBase) (*remoteCheckerHeartbeater, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("remote checker heartbeater configuration error: %w", err)
 	}
-	return nil
+
+	return &remoteCheckerHeartbeater{
+		heartbeaterBase: base,
+		cfg:             cfg,
+	}, nil
 }
 
-func (check *remoteChecker) Check(nowTS int64) (int64, bool, error) {
-	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
-	triggerCount, err := check.database.GetTriggersToCheckCount(defaultRemoteCluster)
+func (heartbeater remoteCheckerHeartbeater) Check() (State, error) {
+	triggersCount, err := heartbeater.database.GetTriggersToCheckCount(remoteClusterKey)
 	if err != nil {
-		return 0, false, err
+		return StateError, err
 	}
 
-	remoteTriggersCount, _ := check.database.GetRemoteChecksUpdatesCount()
-	if check.count != remoteTriggersCount || triggerCount == 0 {
-		check.count = remoteTriggersCount
-		check.lastSuccessfulCheck = nowTS
-		return 0, false, nil
+	remoteChecksCount, err := heartbeater.database.GetRemoteChecksUpdatesCount()
+	if err != nil {
+		return StateError, err
 	}
 
-	if check.lastSuccessfulCheck < nowTS-check.delay {
-		check.logger.Error().
-			String("error", check.GetErrorMessage()).
-			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
-			Msg("Send message")
-		return nowTS - check.lastSuccessfulCheck, true, nil
+	if heartbeater.lastRemoteChecksCount != remoteChecksCount || triggersCount == 0 {
+		heartbeater.lastRemoteChecksCount = remoteChecksCount
+		heartbeater.lastSuccessfulCheck = heartbeater.clock.NowUTC()
+		return StateOK, nil
 	}
-	return 0, false, nil
+
+	if time.Since(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.RemoteCheckDelay {
+		return StateError, nil
+	}
+
+	return StateOK, nil
 }
 
-func (check remoteChecker) NeedTurnOffNotifier() bool {
-	return false
+func (heartbeater remoteCheckerHeartbeater) NeedTurnOffNotifier() bool {
+	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (remoteChecker) NeedToCheckOthers() bool {
-	return true
+func (heartbeater remoteCheckerHeartbeater) NeedToCheckOthers() bool {
+	return heartbeater.cfg.NeedToCheckOthers
 }
 
-func (remoteChecker) GetErrorMessage() string {
-	return "Moira-Remote-Checker does not check remote triggers"
+func (remoteCheckerHeartbeater) Type() moira.EmergencyContactType {
+	return moira.EmergencyTypeRemoteCheckerNoTriggerCheck
+}
+
+func (heartbeater remoteCheckerHeartbeater) AlertSettings() AlertConfig {
+	return heartbeater.cfg.AlertCfg
 }

@@ -1,0 +1,265 @@
+package monitor
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
+	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
+	w "github.com/moira-alert/moira/worker"
+	"gopkg.in/tomb.v2"
+)
+
+var (
+	okValue           = 0.0
+	errorValue        = 1.0
+	triggerErrorValue = 1.0
+)
+
+type hearbeatInfo struct {
+	lastAlertTime  time.Time
+	lastCheckState heartbeat.State
+}
+
+type monitorConfig struct {
+	Name           string        `validate:"required"`
+	LockName       string        `validate:"required"`
+	LockTTL        time.Duration `validate:"required,gt=0"`
+	NoticeInterval time.Duration `validate:"required,gt=0"`
+	CheckInterval  time.Duration `validate:"required,gt=0"`
+}
+
+func (cfg monitorConfig) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
+}
+
+type monitor struct {
+	cfg               monitorConfig
+	logger            moira.Logger
+	database          moira.Database
+	notifier          notifier.Notifier
+	tomb              tomb.Tomb
+	heartbeaters      []heartbeat.Heartbeater
+	clock             moira.Clock
+	heartbeatsInfo    map[moira.EmergencyContactType]*hearbeatInfo
+	sendNotifications func(pkgs []notifier.NotificationPackage) error
+}
+
+func newMonitor(
+	cfg monitorConfig,
+	logger moira.Logger,
+	database moira.Database,
+	notifier notifier.Notifier,
+	heartbeaters []heartbeat.Heartbeater,
+	sendNotifications func(pkgs []notifier.NotificationPackage) error,
+) (*monitor, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("monitor configuration error: %w", err)
+	}
+
+	hearbeatersInfo := make(map[moira.EmergencyContactType]*hearbeatInfo, len(heartbeaters))
+	for _, heartbeater := range heartbeaters {
+		hearbeatersInfo[heartbeater.Type()] = &hearbeatInfo{
+			lastCheckState: heartbeat.StateOK,
+		}
+	}
+
+	return &monitor{
+		cfg:               cfg,
+		logger:            logger,
+		database:          database,
+		notifier:          notifier,
+		heartbeaters:      heartbeaters,
+		clock:             clock.NewSystemClock(),
+		heartbeatsInfo:    hearbeatersInfo,
+		sendNotifications: sendNotifications,
+	}, nil
+}
+
+func createHearbeaters(
+	heartbeatsCfg selfstate.HeartbeatsCfg,
+	logger moira.Logger,
+	database moira.Database,
+) []heartbeat.Heartbeater {
+	hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database)
+
+	databaseHeartbeater, err := heartbeat.NewDatabaseHeartbeater(heartbeatsCfg.DatabaseCfg, hearbeaterBase)
+	if err != nil {
+		logger.Error().
+			Error(err).
+			String("heartbeater", string(databaseHeartbeater.Type())).
+			Msg("Failed to create a new database heartbeater")
+	}
+
+	filterHeartbeater, err := heartbeat.NewFilterHeartbeater(heartbeatsCfg.FilterCfg, hearbeaterBase)
+	if err != nil {
+		logger.Error().
+			Error(err).
+			String("heartbeater", string(filterHeartbeater.Type())).
+			Msg("Failed to create a new filter heartbeater")
+	}
+
+	localCheckerHeartbeater, err := heartbeat.NewLocalCheckerHeartbeater(heartbeatsCfg.LocalCheckerCfg, hearbeaterBase)
+	if err != nil {
+		logger.Error().
+			Error(err).
+			String("heartbeater", string(localCheckerHeartbeater.Type())).
+			Msg("Failed to create a new local checker heartbeater")
+	}
+
+	remoteCheckerHeartbeater, err := heartbeat.NewRemoteCheckerHeartbeater(heartbeatsCfg.RemoteCheckerCfg, hearbeaterBase)
+	if err != nil {
+		logger.Error().
+			Error(err).
+			String("heartbeater", string(remoteCheckerHeartbeater.Type())).
+			Msg("Failed to create a new remote checker heartbeater")
+	}
+
+	notifierHeartbeater, err := heartbeat.NewNotifierHeartbeater(heartbeatsCfg.NotifierCfg, hearbeaterBase)
+	if err != nil {
+		logger.Error().
+			Error(err).
+			String("heartbeater", string(notifierHeartbeater.Type())).
+			Msg("Failed to create a new notifier heartbeater")
+	}
+
+	return []heartbeat.Heartbeater{
+		databaseHeartbeater,
+		filterHeartbeater,
+		localCheckerHeartbeater,
+		remoteCheckerHeartbeater,
+		notifierHeartbeater,
+	}
+}
+
+func (m *monitor) Start() {
+	m.tomb.Go(func() error {
+		w.NewWorker(
+			m.cfg.Name,
+			m.logger,
+			m.database.NewLock(m.cfg.LockName, m.cfg.LockTTL),
+			m.selfstateCheck,
+		)
+		return nil
+	})
+}
+
+func (m *monitor) selfstateCheck(stop <-chan struct{}) error {
+	m.logger.Info().Msg(fmt.Sprintf("%s started", m.cfg.Name))
+
+	checkTicker := time.NewTicker(m.cfg.CheckInterval)
+	defer checkTicker.Stop()
+
+	for {
+		select {
+		case <-stop:
+			m.logger.Info().Msg(fmt.Sprint("%s stopped", m.cfg.Name))
+			return nil
+		case <-checkTicker.C:
+			m.logger.Debug().Msg(fmt.Sprintf("%s selfstate check", m.cfg.Name))
+
+			m.check()
+		}
+	}
+}
+
+func (m *monitor) check() {
+	pkgs := m.checkHeartbeats()
+	if len(pkgs) > 0 {
+		if err := m.sendNotifications(pkgs); err != nil {
+			m.logger.Error().
+				Error(err).
+				Interface("notification_packages", pkgs).
+				Msg("Failed to send heartbeats notifications")
+		}
+	}
+}
+
+func (m *monitor) checkHeartbeats() []notifier.NotificationPackage {
+	pkgs := make([]notifier.NotificationPackage, 0)
+
+	for _, heartbeater := range m.heartbeaters {
+		heartbeatState, err := heartbeater.Check()
+		if err != nil {
+			m.logger.Error().
+				Error(err).
+				String("heartbeater", string(heartbeater.Type())).
+				Msg("Heartbeat check failed")
+		}
+
+		pkg := m.generateHeartbeatNotificationPackage(heartbeater, heartbeatState)
+		if pkg != nil {
+			pkgs = append(pkgs, *pkg)
+		}
+	}
+
+	return pkgs
+}
+
+func (m *monitor) generateHeartbeatNotificationPackage(heartbeater heartbeat.Heartbeater, heartbeatState heartbeat.State) *notifier.NotificationPackage {
+	heartbeatInfo := m.heartbeatsInfo[heartbeater.Type()]
+
+	isDegradated := heartbeatInfo.lastCheckState.IsDegradated(heartbeatState)
+	isRecovered := heartbeatInfo.lastCheckState.IsRecovered(heartbeatState)
+	allowNotify := time.Since(heartbeatInfo.lastAlertTime) > m.cfg.NoticeInterval
+
+	if isDegradated && allowNotify {
+		return createErrorNotificationPackage(heartbeater, m.clock)
+	} else if isRecovered {
+		return createOkNotificationPackage(heartbeater, m.clock)
+	}
+
+	return nil
+}
+
+func createErrorNotificationPackage(heartbeater heartbeat.Heartbeater, clock moira.Clock) *notifier.NotificationPackage {
+	event := moira.NotificationEvent{
+		Timestamp: clock.NowUnix(),
+		OldState:  moira.StateNODATA,
+		State:     moira.StateERROR,
+		Metric:    string(heartbeater.Type()),
+		Value:     &errorValue,
+	}
+
+	trigger := moira.TriggerData{
+		Name:       heartbeater.AlertSettings().Name,
+		Desc:       heartbeater.AlertSettings().Desc,
+		ErrorValue: triggerErrorValue,
+	}
+
+	return &notifier.NotificationPackage{
+		Events:  []moira.NotificationEvent{event},
+		Trigger: trigger,
+	}
+}
+
+func createOkNotificationPackage(heartbeater heartbeat.Heartbeater, clock moira.Clock) *notifier.NotificationPackage {
+	event := moira.NotificationEvent{
+		Timestamp: clock.NowUnix(),
+		OldState:  moira.StateERROR,
+		State:     moira.StateOK,
+		Metric:    string(heartbeater.Type()),
+		Value:     &okValue,
+	}
+
+	trigger := moira.TriggerData{
+		Name:       heartbeater.AlertSettings().Name,
+		Desc:       heartbeater.AlertSettings().Desc,
+		ErrorValue: triggerErrorValue,
+	}
+
+	return &notifier.NotificationPackage{
+		Events:  []moira.NotificationEvent{event},
+		Trigger: trigger,
+	}
+}
+
+func (m *monitor) Stop() error {
+	m.tomb.Kill(nil)
+	return m.tomb.Wait()
+}

@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
+	dbheartbeat "github.com/moira-alert/moira/notifier/selfstate/heartbeat/database"
 
 	"gopkg.in/tomb.v2"
 
@@ -43,6 +44,10 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	}
 
 	selfCheck.tomb.Go(func() error {
+		
+	})
+
+	selfCheck.tomb.Go(func() error {
 		w.NewWorker(
 			"Moira Self State Monitoring",
 			selfCheck.Logger,
@@ -61,8 +66,20 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
+func getDatabaseHeartbeat(
+	cfg dbheartbeat.HeartbeatConfig,
+	logger moira.Logger,
+	database moira.Database,
+	metrics *metrics.HeartBeatMetrics,
+) (heartbeat.Heartbeater, error) {
+	heartbeaterBase := heartbeat.NewHeartbeaterBase(logger, database)
+	dbheartbeat.New(cfg, )
+}
+
 func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config, metrics *metrics.HeartBeatMetrics) []heartbeat.Heartbeater {
 	heartbeats := make([]heartbeat.Heartbeater, 0)
+
+	if hb := dbheartbeat.New()
 
 	if hb := heartbeat.GetDatabase(conf.RedisDisconnectDelaySeconds, logger, database); hb != nil {
 		heartbeats = append(heartbeats, hb)
