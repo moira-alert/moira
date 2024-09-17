@@ -421,7 +421,6 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 		db.EXPECT().GetTrigger(triggerId).Return(trigger, nil)
 		db.EXPECT().GetTriggerThrottling(triggerId)
 		db.EXPECT().GetNotificationEvents(triggerId, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
-		db.EXPECT().GetNotificationEventCount(triggerId, gomock.Any()).Return(int64(0))
 
 		responseWriter := httptest.NewRecorder()
 		getTrigger(responseWriter, request)
@@ -465,7 +464,6 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 		db.EXPECT().GetTrigger(triggerId).Return(trigger, nil)
 		db.EXPECT().GetTriggerThrottling(triggerId)
 		db.EXPECT().GetNotificationEvents(triggerId, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
-		db.EXPECT().GetNotificationEventCount(triggerId, gomock.Any()).Return(int64(0))
 
 		responseWriter := httptest.NewRecorder()
 		getTrigger(responseWriter, request)
@@ -509,7 +507,6 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 		db.EXPECT().GetTrigger(triggerId).Return(trigger, nil)
 		db.EXPECT().GetTriggerThrottling(triggerId)
 		db.EXPECT().GetNotificationEvents(triggerId, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(make([]*moira.NotificationEvent, 0), nil)
-		db.EXPECT().GetNotificationEventCount(triggerId, gomock.Any()).Return(int64(0))
 
 		responseWriter := httptest.NewRecorder()
 		getTrigger(responseWriter, request)
