@@ -99,7 +99,7 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 
 	charsLeftAfterTitle := params.MessageMaxChars - titleLen
 
-	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessageParts(charsLeftAfterTitle, tagsLen, descLen, eventsStringLen)
+	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessagePartsBetweenTagsDescEvents(charsLeftAfterTitle, tagsLen, descLen, eventsStringLen)
 	if tagsNewLen != tagsLen {
 		tagsStr = DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
 	}

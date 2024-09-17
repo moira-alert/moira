@@ -35,7 +35,7 @@ func TestCalculateMessagePartsLength(t *testing.T) {
 	})
 }
 
-func TestCalculateMessageParts(t *testing.T) {
+func TestCalculateMessagePartsBetweenTagsDescEvents(t *testing.T) {
 	Convey("Message parts calculating test (for tags, desc, events)", t, func() {
 		type given struct {
 			maxChars  int
@@ -201,7 +201,7 @@ func TestCalculateMessageParts(t *testing.T) {
 
 		for i, c := range cases {
 			Convey(fmt.Sprintf("case %d: %s", i+1, c.description), func() {
-				tagsNewLen, descNewLen, eventsNewLen := CalculateMessageParts(c.given.maxChars, c.given.tagsLen, c.given.descLen, c.given.eventsLen)
+				tagsNewLen, descNewLen, eventsNewLen := CalculateMessagePartsBetweenTagsDescEvents(c.given.maxChars, c.given.tagsLen, c.given.descLen, c.given.eventsLen)
 
 				So(tagsNewLen, ShouldResemble, c.expected.tagsLen)
 				So(descNewLen, ShouldResemble, c.expected.descLen)

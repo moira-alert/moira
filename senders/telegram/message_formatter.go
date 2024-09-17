@@ -68,7 +68,7 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
 	eventsStringLen := calcRunesCountWithoutHTML(eventsString)
 
-	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessageParts(params.MessageMaxChars-titleLen, tagsLen, descLen, eventsStringLen)
+	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessagePartsBetweenTagsDescEvents(params.MessageMaxChars-titleLen, tagsLen, descLen, eventsStringLen)
 	if tagsLen != tagsNewLen {
 		tagsStr = msgformat.DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
 	}

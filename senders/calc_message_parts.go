@@ -15,9 +15,9 @@ func CalculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen i
 	return maxChars/2 - 10, maxChars / 2
 }
 
-// CalculateMessageParts calculates and returns the length of tags, description and events string
+// CalculateMessagePartsBetweenTagsDescEvents calculates and returns the length of tags, description and events string
 // in order to fit the max chars limit.
-func CalculateMessageParts(maxChars, tagsLen, descLen, eventsLen int) (tagsNewLen int, descNewLen int, eventsNewLen int) { // nolint
+func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, eventsLen int) (tagsNewLen int, descNewLen int, eventsNewLen int) { // nolint
 	if maxChars <= 0 {
 		return 0, 0, 0
 	}
