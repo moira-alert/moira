@@ -3,7 +3,6 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"html"
 	"strings"
 	"time"
 
@@ -21,11 +20,6 @@ const (
 	messenger          = "telegram"
 	telegramLockTTL    = 30 * time.Second
 	hidden             = "[DATA DELETED]"
-)
-
-var (
-	codeBlockStart = "<blockquote expandable>"
-	codeBlockEnd   = "</blockquote>"
 )
 
 var pollerTimeout = 10 * time.Second
@@ -78,17 +72,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.apiToken = cfg.APIToken
 
 	emojiProvider := telegramEmojiProvider{}
-	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+	sender.formatter = NewTelegramMessageFormatter(
 		emojiProvider,
 		true,
 		cfg.FrontURI,
-		location,
-		urlFormatter,
-		emptyDescriptionFormatter,
-		boldFormatter,
-		eventStringFormatter,
-		codeBlockStart,
-		codeBlockEnd)
+		location)
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
@@ -134,26 +122,4 @@ func (sender *Sender) runTelebot(contactType string) {
 
 func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
-}
-
-func urlFormatter(triggerURI, triggerName string) string {
-	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, html.EscapeString(triggerName))
-}
-
-func emptyDescriptionFormatter(trigger moira.TriggerData) string {
-	return ""
-}
-
-func boldFormatter(str string) string {
-	return fmt.Sprintf("<b>%s</b>", html.EscapeString(str))
-}
-
-func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
-	return fmt.Sprintf(
-		"%s: <code>%s</code> = %s (%s to %s)",
-		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
-		html.EscapeString(event.Metric),
-		html.EscapeString(event.GetMetricsValues(moira.DefaultNotificationSettings)),
-		event.OldState,
-		event.State)
 }
