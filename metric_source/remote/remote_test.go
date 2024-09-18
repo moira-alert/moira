@@ -33,7 +33,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 		for _, config := range testConfigs {
 			config.URL = server.URL
 			remote := Remote{client: server.Client(), config: config}
-			isAvailable, err := remote.IsRemoteAvailable()
+			isAvailable, err := remote.IsAvailable()
 			So(isAvailable, ShouldBeTrue)
 			So(err, ShouldBeEmpty)
 		}
@@ -54,7 +54,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 					systemClock.EXPECT().Sleep(time.Second).Times(len(config.HealthCheckRetrySeconds))
 					remote.clock = systemClock
 
-					isAvailable, err := remote.IsRemoteAvailable()
+					isAvailable, err := remote.IsAvailable()
 					So(err, ShouldResemble, fmt.Errorf(
 						"the remote server is not available. Response status %d: %s", statusCode, string(body),
 					))
@@ -82,7 +82,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 					systemClock.EXPECT().Sleep(time.Second).Times(1)
 					remote := Remote{client: server.Client(), config: config, clock: systemClock}
 
-					isAvailable, err := remote.IsRemoteAvailable()
+					isAvailable, err := remote.IsAvailable()
 					So(err, ShouldBeNil)
 					So(isAvailable, ShouldBeTrue)
 				}

@@ -235,37 +235,21 @@ type GraphiteRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
 	// Timeout for remote requests
 	Timeout string `yaml:"timeout"`
-	// Retry seconds for remote requests divided by spaces
-	RetrySeconds string `yaml:"retry_seconds"`
-	// HealthCheckTimeout is timeout for remote api health check requests
-	HealthCheckTimeout string `yaml:"health_check_timeout"`
-	// Retry seconds for remote api health check requests  divided by spaces
-	HealthCheckRetrySeconds string `yaml:"health_check_retry_seconds"`
 	// Username for basic auth
 	User string `yaml:"user"`
 	// Password for basic auth
 	Password string `yaml:"password"`
+	// Retry seconds for remote requests divided by spaces
+	RetrySeconds string `yaml:"retry_seconds"`
+	// HealthCheckTimeout is timeout for remote api health check requests
+	HealthCheckTimeout string `yaml:"health_check_timeout"`
+	// Retry seconds for remote api health check requests divided by spaces
+	HealthCheckRetrySeconds string `yaml:"health_check_retry_seconds"`
 }
 
 func (config GraphiteRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
 	return &config.RemoteCommonConfig
 }
-
-//// GetRemoteSourceSettings returns remote config parsed from moira config files
-//func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
-//	return &remoteSource.Config{
-//		URL:                     config.URL,
-//		CheckInterval:           to.Duration(config.CheckInterval),
-//		MetricsTTL:              to.Duration(config.MetricsTTL),
-//		Timeout:                 to.Duration(config.Timeout),
-//		RetrySeconds:            ParseRetrySeconds(config.RetrySeconds),
-//		HealthCheckTimeout:      to.Duration(config.HealthCheckTimeout),
-//		HealthCheckRetrySeconds: ParseRetrySeconds(config.HealthCheckRetrySeconds),
-//		User:                    config.User,
-//		Password:                config.Password,
-//		Enabled:                 config.Enabled,
-//	}
-//}
 
 // ParseRetrySeconds parses config value string into array of integers.
 func ParseRetrySeconds(retrySecondsString string) []time.Duration {
@@ -285,12 +269,15 @@ func ParseRetrySeconds(retrySecondsString string) []time.Duration {
 // GetRemoteSourceSettings returns remote config parsed from moira config files.
 func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSource.Config {
 	return &graphiteRemoteSource.Config{
-		URL:           config.URL,
-		CheckInterval: to.Duration(config.CheckInterval),
-		MetricsTTL:    to.Duration(config.MetricsTTL),
-		Timeout:       to.Duration(config.Timeout),
-		User:          config.User,
-		Password:      config.Password,
+		URL:                     config.URL,
+		CheckInterval:           to.Duration(config.CheckInterval),
+		MetricsTTL:              to.Duration(config.MetricsTTL),
+		Timeout:                 to.Duration(config.Timeout),
+		User:                    config.User,
+		Password:                config.Password,
+		RetrySeconds:            ParseRetrySeconds(config.RetrySeconds),
+		HealthCheckTimeout:      to.Duration(config.HealthCheckTimeout),
+		HealthCheckRetrySeconds: ParseRetrySeconds(config.HealthCheckRetrySeconds),
 	}
 }
 

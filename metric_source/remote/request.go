@@ -101,9 +101,11 @@ func (remote *Remote) makeRequestWithRetries(
 ) (body []byte, isRemoteAvailable bool, err error) {
 	for attemptIndex := 0; attemptIndex < len(retrySeconds)+1; attemptIndex++ {
 		body, isRemoteAvailable, err = remote.makeRequestWithTimeout(req, requestTimeout)
+
 		if err == nil || isRemoteAvailable {
 			return body, true, err
 		}
+
 		if attemptIndex < len(retrySeconds) {
 			remote.clock.Sleep(retrySeconds[attemptIndex])
 		}
@@ -120,5 +122,6 @@ func (remote *Remote) makeRequestWithTimeout(
 		defer cancel()
 		req = req.WithContext(ctx)
 	}
+
 	return remote.makeRequest(req)
 }

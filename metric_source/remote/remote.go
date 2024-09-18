@@ -97,26 +97,18 @@ func (remote *Remote) GetMetricsTTLSeconds() int64 {
 	return int64(remote.config.MetricsTTL.Seconds())
 }
 
-// IsConfigured returns false in cases that user does not properly configure remote settings like graphite URL.
-func (remote *Remote) IsConfigured() (bool, error) {
-	return true, nil
-}
-
-// IsRemoteAvailable checks if graphite API is available and returns 200 response.
-func (remote *Remote) IsRemoteAvailable() (bool, error) {
-	return remote.IsAvailable()
-}
-
 // IsAvailable checks if graphite API is available and returns 200 response.
 func (remote *Remote) IsAvailable() (bool, error) {
 	until := time.Now().Unix()
 	from := until - 600 //nolint
+
 	req, err := remote.prepareRequest(from, until, "NonExistingTarget")
 	if err != nil {
 		return false, err
 	}
+
 	_, isRemoteAvailable, err := remote.makeRequestWithRetries(
-		req, remote.config.HealthCheckTimeout, remote.config.HealthCheckRetrySeconds,
-	)
+		req, remote.config.HealthCheckTimeout, remote.config.HealthCheckRetrySeconds)
+
 	return isRemoteAvailable, err
 }
