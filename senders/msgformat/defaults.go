@@ -9,6 +9,14 @@ func DefaultDescriptionCutter(desc string, maxSize int) string {
 	return desc[:maxSize-len(suffix)] + suffix
 }
 
+// DefaultTagsLimiter cuts and formats tags to fit maxSize. There will be no tag parts, for example:
+//
+// if we have
+//
+//	tags = []string{"tag1", "tag2}
+//	maxSize = 8
+//
+// so call DefaultTagsLimiter(tags, maxSize) will return " [tag1]".
 func DefaultTagsLimiter(tags []string, maxSize int) string {
 	tagsStr := " "
 	lenTagsStr := utf8.RuneCountInString(tagsStr)
