@@ -163,8 +163,6 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 		case remote.ErrRemoteTriggerResponse:
 			response := api.ErrorRemoteServerUnavailable(err)
 
-			// middleware.GetLoggerEntry(request).Errorf("%s : %s : %s", response.StatusText, response.ErrorText, err)
-
 			middleware.GetLoggerEntry(request).Error().
 				String("status", response.StatusText).
 				Error(err).
