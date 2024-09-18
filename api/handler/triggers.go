@@ -152,6 +152,32 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorResponse {
+	// In github.com/prometheus/client_golang/api/prometheus/v1 Error has field `Type`
+	// which can be used to understand "the reason" of error. There are some constants in the lib.
+	if promErr.Type == prometheus.ErrBadData {
+		api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", promErr))
+	}
+
+	// VictoriaMetrics also supports prometheus api, BUT puts status code into Error.Type.
+	// So we can't just use constants from prometheus api client lib.
+	statusCode, err := strconv.ParseInt(string(promErr.Type), 10, 64)
+	if err != nil {
+		return api.ErrorInternalServer(promErr)
+	}
+
+	codes4xxLeadTo500 := map[int64]struct{}{
+		http.StatusUnauthorized: {},
+		http.StatusForbidden:    {},
+	}
+
+	if _, leadTo500 := codes4xxLeadTo500[statusCode]; statusCode/100 == 4 && !leadTo500 {
+		return api.ErrorInvalidRequest(promErr)
+	}
+
+	return api.ErrorInternalServer(promErr)
+}
+
 func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorResponse) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
@@ -172,12 +198,7 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 		case *json.UnmarshalTypeError:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
 		case *prometheus.Error:
-			switch typedErr.Type {
-			case prometheus.ErrBadData:
-				return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", err))
-			default:
-				return nil, api.ErrorInternalServer(err)
-			}
+			return nil, errorResponseOnPrometheusError(typedErr)
 		default:
 			return nil, api.ErrorInternalServer(err)
 		}
@@ -224,14 +245,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 			// These errors are skipped because if there are error from local source then it will be caught in
 			// dto.TargetVerification and will be explained in detail.
 		case *prometheus.Error:
-			switch typedErr.Type {
-			case prometheus.ErrBadData:
-				render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", err))) //nolint
-				return
-			default:
-				render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
-				return
-			}
+			render.Render(writer, request, errorResponseOnPrometheusError(typedErr))
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
