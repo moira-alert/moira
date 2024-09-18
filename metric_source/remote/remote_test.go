@@ -89,24 +89,6 @@ func TestIsRemoteAvailable(t *testing.T) {
 			})
 		}
 	})
-
-	// tests from master
-
-	Convey("Is available", t, func() {
-		server := createServer([]byte("Some string"), http.StatusOK)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
-		isAvailable, err := remote.IsAvailable()
-		So(isAvailable, ShouldBeTrue)
-		So(err, ShouldBeEmpty)
-	})
-
-	Convey("Not available", t, func() {
-		server := createServer([]byte("Some string"), http.StatusInternalServerError)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
-		isAvailable, err := remote.IsAvailable()
-		So(isAvailable, ShouldBeFalse)
-		So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
-	})
 }
 
 func TestFetch(t *testing.T) {
@@ -138,8 +120,7 @@ func TestFetch(t *testing.T) {
 		result, err := remote.Fetch(target, from, until, false)
 		So(result, ShouldBeEmpty)
 		So(err.Error(), ShouldResemble, "invalid character 'S' looking for beginning of value")
-		_, ok := err.(ErrRemoteTriggerResponse)
-		So(ok, ShouldBeTrue)
+		So(err, ShouldHaveSameTypeAs, ErrRemoteTriggerResponse{})
 	})
 
 	Convey("Fail request with InternalServerError", t, func() {
@@ -151,8 +132,7 @@ func TestFetch(t *testing.T) {
 			result, err := remote.Fetch(target, from, until, false)
 			So(result, ShouldBeEmpty)
 			So(err.Error(), ShouldResemble, fmt.Sprintf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
-			_, ok := err.(ErrRemoteTriggerResponse)
-			So(ok, ShouldBeTrue)
+			So(err, ShouldHaveSameTypeAs, ErrRemoteTriggerResponse{})
 		}
 	})
 
@@ -164,8 +144,7 @@ func TestFetch(t *testing.T) {
 			result, err := remote.Fetch(target, from, until, false)
 			So(result, ShouldBeEmpty)
 			So(err.Error(), ShouldResemble, "parse \"💩%$&TR\": invalid URL escape \"%$&\"")
-			_, ok := err.(ErrRemoteTriggerResponse)
-			So(ok, ShouldBeTrue)
+			So(err, ShouldHaveSameTypeAs, ErrRemoteTriggerResponse{})
 		}
 	})
 
