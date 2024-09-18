@@ -156,7 +156,7 @@ func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorRespons
 	// In github.com/prometheus/client_golang/api/prometheus/v1 Error has field `Type`
 	// which can be used to understand "the reason" of error. There are some constants in the lib.
 	if promErr.Type == prometheus.ErrBadData {
-		api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", promErr))
+		return api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", promErr))
 	}
 
 	// VictoriaMetrics also supports prometheus api, BUT puts status code into Error.Type.
@@ -245,7 +245,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 			// These errors are skipped because if there are error from local source then it will be caught in
 			// dto.TargetVerification and will be explained in detail.
 		case *prometheus.Error:
-			render.Render(writer, request, errorResponseOnPrometheusError(typedErr))
+			render.Render(writer, request, errorResponseOnPrometheusError(typedErr)) //nolint
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
