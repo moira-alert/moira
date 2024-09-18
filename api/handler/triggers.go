@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -155,6 +156,9 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorResponse) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
+
+		log.Printf("err type: %T, msg: %s", err, err)
+
 		switch typedErr := err.(type) { // nolint:errorlint
 		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))
@@ -172,6 +176,9 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 		case *json.UnmarshalTypeError:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
 		case *prometheus.Error:
+
+			log.Printf("prom err: type: %s, msg: %s, detail: %s", typedErr.Type, typedErr.Msg, typedErr.Detail)
+
 			switch typedErr.Type {
 			case prometheus.ErrBadData:
 				return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", err))
