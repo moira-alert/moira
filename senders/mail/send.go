@@ -8,7 +8,6 @@ import (
 	"net/smtp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/russross/blackfriday/v2"
 
@@ -38,14 +37,15 @@ type triggerData struct {
 	PlotCID      string
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.makeMessage(events, contact, trigger, plots, throttled)
 	return sender.dialAndSend(message)
 }
 
 func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *gomail.Message {
-	state := events.GetSubjectState()
+	state := events.GetCurrentState(throttled)
+
 	tags := trigger.GetTags()
 
 	subject := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, tags, len(events))
@@ -63,10 +63,10 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	for _, event := range events {
 		templateData.Items = append(templateData.Items, &templateRow{
 			Metric:     event.Metric,
-			Timestamp:  time.Unix(event.Timestamp, 0).In(sender.location).Format(sender.dateTimeFormat),
+			Timestamp:  event.FormatTimestamp(sender.location, sender.dateTimeFormat),
 			Oldstate:   event.OldState,
 			State:      event.State,
-			Values:     event.GetMetricsValues(),
+			Values:     event.GetMetricsValues(moira.DefaultNotificationSettings),
 			WarnValue:  strconv.FormatFloat(trigger.WarnValue, 'f', -1, 64),
 			ErrorValue: strconv.FormatFloat(trigger.ErrorValue, 'f', -1, 64),
 			Message:    event.CreateMessage(sender.location),
@@ -98,7 +98,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 
 func formatDescription(desc string) template.HTML {
 	htmlDesc := blackfriday.Run([]byte(desc))
-	htmlDescWithbr := strings.Replace(string(htmlDesc), "\n", "<br/>", -1)
+	htmlDescWithbr := strings.ReplaceAll(string(htmlDesc), "\n", "<br/>")
 	return template.HTML(htmlDescWithbr)
 }
 

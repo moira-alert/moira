@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -9,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// teamStorageElement is a representation of team in database
+// teamStorageElement is a representation of team in database.
 type teamStorageElement struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -29,7 +30,7 @@ func (t *teamStorageElement) toTeam() moira.Team {
 	}
 }
 
-// MarshallTeam is a function that converts team to the bytes that can be held in database
+// MarshallTeam is a function that converts team to the bytes that can be held in database.
 func MarshallTeam(team moira.Team) ([]byte, error) {
 	teamSE := newTeamStorageElement(team)
 	bytes, err := json.Marshal(teamSE)
@@ -39,11 +40,11 @@ func MarshallTeam(team moira.Team) ([]byte, error) {
 	return bytes, nil
 }
 
-// NewTeam is a function that creates a team entity from a bytes received from database
+// NewTeam is a function that creates a team entity from a bytes received from database.
 func NewTeam(rep *redis.StringCmd) (moira.Team, error) {
 	bytes, err := rep.Bytes()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.Team{}, database.ErrNil
 		}
 		return moira.Team{}, fmt.Errorf("failed to read team: %w", err)

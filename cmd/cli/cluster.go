@@ -7,27 +7,35 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 )
 
-var noSuchKeyError = "ERR no such key"
-var anyTagsSubscriptionsKeyOld = "moira-any-tags-subscriptions"
-var anyTagsSubscriptionsKeyNew = "{moira-tag-subscriptions}:moira-any-tags-subscriptions"
-var triggersListKeyOld = "moira-triggers-list"
-var triggersListKeyNew = "{moira-triggers-list}:moira-triggers-list"
-var remoteTriggersListKeyOld = "moira-remote-triggers-list"
-var remoteTriggersListKeyNew = "{moira-triggers-list}:moira-remote-triggers-list"
-var tagSubscriptionsKeyPrefixOld = "moira-tag-subscriptions:"
-var tagSubscriptionsKeyPrefixNew = "{moira-tag-subscriptions}:"
-var tagTriggersKeyKeyPrefixOld = "moira-tag-triggers:"
-var tagTriggersKeyKeyPrefixNew = "{moira-tag-triggers}:"
+var (
+	anyTagsSubscriptionsKeyOld   = "moira-any-tags-subscriptions"
+	anyTagsSubscriptionsKeyNew   = "{moira-tag-subscriptions}:moira-any-tags-subscriptions"
+	triggersListKeyOld           = "moira-triggers-list"
+	triggersListKeyNew           = "{moira-triggers-list}:moira-triggers-list"
+	remoteTriggersListKeyOld     = "moira-remote-triggers-list"
+	remoteTriggersListKeyNew     = "{moira-triggers-list}:moira-remote-triggers-list"
+	tagSubscriptionsKeyPrefixOld = "moira-tag-subscriptions:"
+	tagSubscriptionsKeyPrefixNew = "{moira-tag-subscriptions}:"
+	tagTriggersKeyKeyPrefixOld   = "moira-tag-triggers:"
+	tagTriggersKeyKeyPrefixNew   = "{moira-tag-triggers}:"
+)
 
-func renameKey(database moira.Database, oldKey string, newKey string) error {
+func renameKey(database moira.Database, oldValue, newValue string) error {
 	switch d := database.(type) {
 	case *redis.DbConnector:
-		err := d.Client().Rename(d.Context(), oldKey, newKey).Err()
-		if err != nil {
-			if err.Error() != noSuchKeyError {
-				return err
-			}
+		pipe := d.Client().TxPipeline()
+		iter := d.Client().Scan(d.Context(), 0, oldValue, 0).Iterator()
+		for iter.Next(d.Context()) {
+			oldKey := iter.Val()
+			newKey := strings.Replace(iter.Val(), oldValue, newValue, 1)
+			pipe.Rename(d.Context(), oldKey, newKey)
 		}
+		_, err := pipe.Exec(d.Context())
+		if err != nil {
+			return err
+		}
+	default:
+		return makeUnknownDBError(database)
 	}
 
 	return nil
@@ -47,6 +55,8 @@ func changeKeysPrefix(database moira.Database, oldPrefix string, newPrefix strin
 		if err != nil {
 			return err
 		}
+	default:
+		return makeUnknownDBError(database)
 	}
 
 	return nil
@@ -58,7 +68,7 @@ func renameAnyTagsSubscriptionsKeyForwards(logger moira.Logger, database moira.D
 		return err
 	}
 
-	logger.Info("renameAnyTagsSubscriptionsKeyForwards done")
+	logger.Info().Msg("renameAnyTagsSubscriptionsKeyForwards done")
 
 	return nil
 }
@@ -69,7 +79,7 @@ func renameAnyTagsSubscriptionsKeyReverse(logger moira.Logger, database moira.Da
 		return err
 	}
 
-	logger.Info("renameAnyTagsSubscriptionsKeyReverse done")
+	logger.Info().Msg("renameAnyTagsSubscriptionsKeyReverse done")
 
 	return nil
 }
@@ -80,7 +90,7 @@ func renameTriggersListKeyForwards(logger moira.Logger, database moira.Database)
 		return err
 	}
 
-	logger.Info("renameTriggersListKeyForwards done")
+	logger.Info().Msg("renameTriggersListKeyForwards done")
 
 	return nil
 }
@@ -91,7 +101,7 @@ func renameTriggersListKeyReverse(logger moira.Logger, database moira.Database) 
 		return err
 	}
 
-	logger.Info("renameTriggersListKeyReverse done")
+	logger.Info().Msg("renameTriggersListKeyReverse done")
 
 	return nil
 }
@@ -102,7 +112,7 @@ func renameRemoteTriggersListKeyForwards(logger moira.Logger, database moira.Dat
 		return err
 	}
 
-	logger.Info("renameRemoteTriggersListKeyForwards done")
+	logger.Info().Msg("renameRemoteTriggersListKeyForwards done")
 
 	return nil
 }
@@ -113,7 +123,7 @@ func renameRemoteTriggersListKeyReverse(logger moira.Logger, database moira.Data
 		return err
 	}
 
-	logger.Info("renameRemoteTriggersListKeyReverse done")
+	logger.Info().Msg("renameRemoteTriggersListKeyReverse done")
 
 	return nil
 }
@@ -124,7 +134,7 @@ func renameTagSubscriptionsKeyForwards(logger moira.Logger, database moira.Datab
 		return err
 	}
 
-	logger.Info("renameTagSubscriptionsKeyForwards done")
+	logger.Info().Msg("renameTagSubscriptionsKeyForwards done")
 
 	return nil
 }
@@ -135,7 +145,7 @@ func renameTagSubscriptionsKeyReverse(logger moira.Logger, database moira.Databa
 		return err
 	}
 
-	logger.Info("renameTagSubscriptionsKeyReverse done")
+	logger.Info().Msg("renameTagSubscriptionsKeyReverse done")
 
 	return nil
 }
@@ -146,7 +156,7 @@ func renameTagTriggersKeyKeyForwards(logger moira.Logger, database moira.Databas
 		return err
 	}
 
-	logger.Info("renameTagTriggersKeyKeyForwards done")
+	logger.Info().Msg("renameTagTriggersKeyKeyForwards done")
 
 	return nil
 }
@@ -157,7 +167,7 @@ func renameTagTriggersKeyKeyReverse(logger moira.Logger, database moira.Database
 		return err
 	}
 
-	logger.Info("renameTagTriggersKeyKeyReverse done")
+	logger.Info().Msg("renameTagTriggersKeyKeyReverse done")
 
 	return nil
 }
@@ -188,7 +198,7 @@ func addRedisClusterSupport(logger moira.Logger, database moira.Database) error 
 		return err
 	}
 
-	logger.Info("addRedisClusterSupport done")
+	logger.Info().Msg("addRedisClusterSupport done")
 
 	return nil
 }
@@ -219,7 +229,7 @@ func removeRedisClusterSupport(logger moira.Logger, database moira.Database) err
 		return err
 	}
 
-	logger.Info("removeRedisClusterSupport done")
+	logger.Info().Msg("removeRedisClusterSupport done")
 
 	return nil
 }

@@ -11,48 +11,51 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-// ErrRemoteStorageDisabled is used to prevent remote.Fetch calls when remote storage is disabled
+// ErrRemoteStorageDisabled is used to prevent remote.Fetch calls when remote storage is disabled.
 var ErrRemoteStorageDisabled = fmt.Errorf("remote graphite storage is not enabled")
 
-// ErrRemoteTriggerResponse is a custom error when remote trigger check fails
+// ErrRemoteTriggerResponse is a custom error when remote trigger check fails.
 type ErrRemoteTriggerResponse struct {
 	InternalError error
 	Target        string
 }
 
-// Error is a representation of Error interface method
+// Error is a representation of Error interface method.
 func (err ErrRemoteTriggerResponse) Error() string {
 	return err.InternalError.Error()
 }
 
-// ErrRemoteUnavailable is a custom error when remote trigger check fails
+// ErrRemoteUnavailable is a custom error when remote trigger check fails.
 type ErrRemoteUnavailable struct {
 	InternalError error
 	Target        string
 }
 
-// Error is a representation of Error interface method
+// Error is a representation of Error interface method.
 func (err ErrRemoteUnavailable) Error() string {
 	return err.InternalError.Error()
 }
 
-// Remote is implementation of MetricSource interface, which implements fetch metrics method from remote graphite installation
+// Remote is implementation of MetricSource interface, which implements fetch metrics method from remote graphite installation.
 type Remote struct {
 	config *Config
 	client *http.Client
 	clock  moira.Clock
 }
 
-// Create configures remote metric source
-func Create(config *Config) metricSource.MetricSource {
+// Create configures remote metric source.
+func Create(config *Config) (metricSource.MetricSource, error) {
+	if config.URL == "" {
+		return nil, fmt.Errorf("remote graphite URL should not be empty")
+	}
 	return &Remote{
 		config: config,
 		client: &http.Client{Timeout: config.Timeout},
 		clock:  clock.NewSystemClock(),
-	}
+	}, nil
 }
 
-// Fetch fetches remote metrics and converts them to expected format
+// Fetch fetches remote metrics and converts them to expected format.
 func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	// Don't fetch intervals larger than metrics TTL to prevent OOM errors
 	// See https://github.com/moira-alert/moira/pull/519
@@ -89,21 +92,23 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 	return &fetchResult, nil
 }
 
-// GetMetricsTTLSeconds returns maximum time interval that we are allowed to fetch from remote
+// GetMetricsTTLSeconds returns maximum time interval that we are allowed to fetch from remote.
 func (remote *Remote) GetMetricsTTLSeconds() int64 {
 	return int64(remote.config.MetricsTTL.Seconds())
 }
 
-// IsConfigured returns false in cases that user does not properly configure remote settings like graphite URL
+// IsConfigured returns false in cases that user does not properly configure remote settings like graphite URL.
 func (remote *Remote) IsConfigured() (bool, error) {
-	if remote.config.isEnabled() {
-		return true, nil
-	}
-	return false, ErrRemoteStorageDisabled
+	return true, nil
 }
 
-// IsRemoteAvailable checks if graphite API is available and returns 200 response
+// IsRemoteAvailable checks if graphite API is available and returns 200 response.
 func (remote *Remote) IsRemoteAvailable() (bool, error) {
+	return remote.IsAvailable()
+}
+
+// IsAvailable checks if graphite API is available and returns 200 response.
+func (remote *Remote) IsAvailable() (bool, error) {
 	until := time.Now().Unix()
 	from := until - 600 //nolint
 	req, err := remote.prepareRequest(from, until, "NonExistingTarget")

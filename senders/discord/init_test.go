@@ -21,6 +21,7 @@ type MockLock struct {
 func (lock *MockLock) Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error) {
 	return lost, nil
 }
+
 func (db *MockDB) NewLock(name string, ttl time.Duration) moira.Lock {
 	return &MockLock{}
 }
@@ -31,13 +32,13 @@ func TestInit(t *testing.T) {
 	Convey("Init tests", t, func() {
 		sender := Sender{DataBase: &MockDB{}}
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]string{}, logger, nil, "")
+			err := sender.Init(map[string]interface{}{}, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
 			So(sender, ShouldResemble, Sender{DataBase: &MockDB{}})
 		})
 
 		Convey("Has settings", func() {
-			senderSettings := map[string]string{
+			senderSettings := map[string]interface{}{
 				"token":     "123",
 				"front_uri": "http://moira.uri",
 			}

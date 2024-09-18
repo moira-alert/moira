@@ -1,39 +1,55 @@
 package worker
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/moira-alert/moira"
 )
 
 const (
 	lazyTriggersWorkerTicker = time.Second * 10
 )
 
-func (worker *Checker) lazyTriggersWorker() error {
-	if worker.Config.LazyTriggersCheckInterval <= worker.Config.CheckInterval {
-		worker.Logger.Infof("Lazy triggers worker won't start because lazy triggers interval '%v' is less or equal to check interval '%v'", worker.Config.LazyTriggersCheckInterval, worker.Config.CheckInterval)
+func (manager *WorkerManager) lazyTriggersWorker() error {
+	localConfig, ok := manager.Config.SourceCheckConfigs[moira.DefaultLocalCluster]
+	if !ok {
+		return fmt.Errorf("can not initialize lazyTriggersWorker: default local source is not configured")
+	}
+
+	if manager.Config.LazyTriggersCheckInterval <= localConfig.CheckInterval {
+		manager.Logger.Info().
+			Interface("lazy_triggers_check_interval", manager.Config.LazyTriggersCheckInterval).
+			Interface("check_interval", localConfig.CheckInterval).
+			Msg("Lazy triggers worker won't start because lazy triggers interval is less or equal to check interval")
 		return nil
 	}
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
-	worker.Logger.Infof("Start lazy triggers worker. Update lazy triggers list every %v", lazyTriggersWorkerTicker)
-	worker.Logger.Infof("Check lazy triggers every %v", worker.Config.LazyTriggersCheckInterval)
+	manager.Logger.Info().
+		Interface("lazy_triggers_check_interval", manager.Config.LazyTriggersCheckInterval).
+		Interface("update_lazy_triggers_every", lazyTriggersWorkerTicker).
+		Msg("Start lazy triggers worker")
+
 	for {
 		select {
-		case <-worker.tomb.Dying():
+		case <-manager.tomb.Dying():
 			checkTicker.Stop()
-			worker.Logger.Info("Lazy triggers worker stopped")
+			manager.Logger.Info().Msg("Lazy triggers worker stopped")
 			return nil
 		case <-checkTicker.C:
-			err := worker.fillLazyTriggerIDs()
+			err := manager.fillLazyTriggerIDs()
 			if err != nil {
-				worker.Logger.Errorf("Failed to get lazy triggers: %s", err.Error())
+				manager.Logger.Error().
+					Error(err).
+					Msg("Failed to get lazy triggers")
 			}
 		}
 	}
 }
 
-func (worker *Checker) fillLazyTriggerIDs() error {
-	triggerIDs, err := worker.Database.GetUnusedTriggerIDs()
+func (manager *WorkerManager) fillLazyTriggerIDs() error {
+	triggerIDs, err := manager.Database.GetUnusedTriggerIDs()
 	if err != nil {
 		return err
 	}
@@ -41,13 +57,13 @@ func (worker *Checker) fillLazyTriggerIDs() error {
 	for _, triggerID := range triggerIDs {
 		newLazyTriggerIDs[triggerID] = true
 	}
-	worker.lazyTriggerIDs.Store(newLazyTriggerIDs)
-	worker.Metrics.UnusedTriggersCount.Update(int64(len(newLazyTriggerIDs)))
+	manager.lazyTriggerIDs.Store(newLazyTriggerIDs)
+	manager.Metrics.UnusedTriggersCount.Update(int64(len(newLazyTriggerIDs)))
 	return nil
 }
 
-func (worker *Checker) getRandomLazyCacheDuration() time.Duration {
-	maxLazyCacheSeconds := worker.Config.LazyTriggersCheckInterval.Seconds()
+func (manager *WorkerManager) getRandomLazyCacheDuration() time.Duration {
+	maxLazyCacheSeconds := manager.Config.LazyTriggersCheckInterval.Seconds()
 	min := maxLazyCacheSeconds / 2 //nolint
 	i := rand.Float64()*min + min
 	return time.Duration(i) * time.Second

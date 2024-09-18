@@ -1,25 +1,34 @@
 package metrics
 
-import "github.com/moira-alert/moira"
+import (
+	"fmt"
 
-// CheckerMetrics is a collection of metrics used in checker
+	"github.com/moira-alert/moira"
+)
+
+// CheckerMetrics is a collection of metrics used in checker.
 type CheckerMetrics struct {
-	LocalMetrics           *CheckMetrics
-	RemoteMetrics          *CheckMetrics
+	MetricsBySource        map[moira.ClusterKey]*CheckMetrics
 	MetricEventsChannelLen Histogram
 	UnusedTriggersCount    Histogram
 	MetricEventsHandleTime Timer
 }
 
-// GetCheckMetrics return check metrics dependent on given trigger type
-func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) *CheckMetrics {
-	if trigger.IsRemote {
-		return metrics.RemoteMetrics
-	}
-	return metrics.LocalMetrics
+// GetCheckMetrics return check metrics dependent on given trigger type.
+func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) (*CheckMetrics, error) {
+	return metrics.GetCheckMetricsBySource(trigger.ClusterKey())
 }
 
-// CheckMetrics is a collection of metrics for trigger checks
+// GetCheckMetricsBySource return check metrics dependent on given trigger type.
+func (metrics *CheckerMetrics) GetCheckMetricsBySource(clusterKey moira.ClusterKey) (*CheckMetrics, error) {
+	if checkMetrics, ok := metrics.MetricsBySource[clusterKey]; ok {
+		return checkMetrics, nil
+	}
+
+	return nil, fmt.Errorf("can't get check metrics: unknown cluster with key `%s`", clusterKey.String())
+}
+
+// CheckMetrics is a collection of metrics for trigger checks.
 type CheckMetrics struct {
 	CheckError           Meter
 	HandleError          Meter
@@ -27,25 +36,26 @@ type CheckMetrics struct {
 	TriggersToCheckCount Histogram
 }
 
-// ConfigureCheckerMetrics is checker metrics configurator
-func ConfigureCheckerMetrics(registry Registry, remoteEnabled bool) *CheckerMetrics {
-	m := &CheckerMetrics{
-		LocalMetrics:           configureCheckMetrics(registry, "local"),
+// ConfigureCheckerMetrics is checker metrics configurator.
+func ConfigureCheckerMetrics(registry Registry, sources []moira.ClusterKey) *CheckerMetrics {
+	metrics := &CheckerMetrics{
+		MetricsBySource:        make(map[moira.ClusterKey]*CheckMetrics),
 		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
 		MetricEventsHandleTime: registry.NewTimer("metricEventsHandle"),
 		UnusedTriggersCount:    registry.NewHistogram("triggers", "unused"),
 	}
-	if remoteEnabled {
-		m.RemoteMetrics = configureCheckMetrics(registry, "remote")
+	for _, clusterKey := range sources {
+		metrics.MetricsBySource[clusterKey] = configureCheckMetrics(registry, clusterKey)
 	}
-	return m
+	return metrics
 }
 
-func configureCheckMetrics(registry Registry, prefix string) *CheckMetrics {
+func configureCheckMetrics(registry Registry, clusterKey moira.ClusterKey) *CheckMetrics {
+	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId.String()
 	return &CheckMetrics{
-		CheckError:           registry.NewMeter(prefix, "errors", "check"),
-		HandleError:          registry.NewMeter(prefix, "errors", "handle"),
-		TriggersCheckTime:    registry.NewTimer(prefix, "triggers"),
-		TriggersToCheckCount: registry.NewHistogram(prefix, "triggersToCheck"),
+		CheckError:           registry.NewMeter(source, id, "errors", "check"),
+		HandleError:          registry.NewMeter(source, id, "errors", "handle"),
+		TriggersCheckTime:    registry.NewTimer(source, id, "triggers"),
+		TriggersToCheckCount: registry.NewHistogram(source, id, "triggersToCheck"),
 	}
 }

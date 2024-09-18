@@ -2,28 +2,32 @@ package msteams
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/russross/blackfriday/v2"
 )
 
-const context = "http://schema.org/extensions"
-const messageType = "MessageCard"
-const summary = "Moira Alert"
-const teamsBaseURL = "https://outlook.office.com/webhook/"
-const teamsOKResponse = "1"
-const openURI = "OpenUri"
-const openURIMessage = "View in Moira"
-const openURIOsDefault = "default"
-const activityTitleText = "Description"
+const (
+	extensions        = "http://schema.org/extensions"
+	messageType       = "MessageCard"
+	summary           = "Moira Alert"
+	teamsBaseURL      = "https://outlook.office.com/webhook/"
+	teamsOKResponse   = "1"
+	openURI           = "OpenUri"
+	openURIMessage    = "View in Moira"
+	openURIOsDefault  = "default"
+	activityTitleText = "Description"
+	quotes            = "```"
+)
 
 var throttleWarningFact = Fact{
 	Name:  "Warning",
@@ -35,7 +39,13 @@ var headers = map[string]string{
 	"Content-Type": "application/json",
 }
 
-// Sender implements moira sender interface via MS Teams
+// Structure that represents the MSTeams configuration in the YAML file.
+type config struct {
+	FrontURI  string `mapstructure:"front_uri"`
+	MaxEvents int    `mapstructure:"max_events"`
+}
+
+// Sender implements moira sender interface via MS Teams.
 type Sender struct {
 	frontURI  string
 	maxEvents int
@@ -44,23 +54,25 @@ type Sender struct {
 	client    *http.Client
 }
 
-// Init initialises settings required for full functionality
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// Init initialises settings required for full functionality.
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to msteams config: %w", err)
+	}
+
 	sender.logger = logger
 	sender.location = location
-	sender.frontURI = senderSettings["front_uri"]
-	maxEvents, err := strconv.Atoi(senderSettings["max_events"])
-	if err != nil {
-		return fmt.Errorf("max_events should be an integer: %w", err)
-	}
-	sender.maxEvents = maxEvents
+	sender.frontURI = cfg.FrontURI
+	sender.maxEvents = cfg.MaxEvents
 	sender.client = &http.Client{
 		Timeout: time.Duration(30) * time.Second, //nolint
 	}
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
@@ -68,25 +80,23 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	request, err := sender.buildRequest(events, contact, trigger, throttled)
-
 	if err != nil {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
 
 	response, err := sender.client.Do(request)
-
 	if err != nil {
 		return fmt.Errorf("failed to perform request: %w", err)
 	}
 	defer response.Body.Close()
 
 	// read the entire response as required by https://golang.org/pkg/net/http/#Client.Do
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	//handle non 2xx responses
+	// handle non 2xx responses
 	if response.StatusCode >= http.StatusBadRequest && response.StatusCode <= http.StatusNetworkAuthenticationRequired {
 		return fmt.Errorf("server responded with a non 2xx code: %d", response.StatusCode)
 	}
@@ -100,7 +110,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
-	title, uri := sender.buildTitleAndURI(events, trigger)
+	title, uri := sender.buildTitleAndURI(events, trigger, throttled)
 	var triggerDescription string
 	if trigger.Desc != "" {
 		triggerDescription = string(blackfriday.Run([]byte(trigger.Desc)))
@@ -120,11 +130,13 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		})
 	}
 
+	state := events.GetCurrentState(throttled)
+
 	return MessageCard{
-		Context:     context,
+		Context:     extensions,
 		MessageType: messageType,
 		Summary:     summary,
-		ThemeColor:  getColourForState(events.GetSubjectState()),
+		ThemeColor:  getColourForState(state),
 		Title:       title,
 		Sections: []Section{
 			{
@@ -145,7 +157,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 		return nil, err
 	}
 
-	request, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return request, err
 	}
@@ -153,12 +165,18 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	for k, v := range headers {
 		request.Header.Set(k, v)
 	}
-	sender.logger.Debugf("created payload '%s' for teams endpoint %s", string(requestBody), request.URL.String())
+	sender.logger.Debug().
+		String("payload", string(requestBody)).
+		String("endpoint", request.URL.String()).
+		Msg("Created payload for teams endpoint")
+
 	return request, nil
 }
 
-func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger moira.TriggerData) (string, string) {
-	title := string(events.GetSubjectState())
+func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) (string, string) {
+	state := events.GetCurrentState(throttled)
+
+	title := string(state)
 
 	if trigger.Name != "" {
 		title += " " + trigger.Name
@@ -174,25 +192,25 @@ func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger 
 }
 
 // buildEventsFacts builds Facts from moira events
-// if n is negative buildEventsFacts does not limit the Facts array
+// if n is negative buildEventsFacts does not limit the Facts array.
 func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvents int, throttled bool) []Fact {
 	var facts []Fact //nolint
 
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("%s = %s (%s to %s)", event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		line := fmt.Sprintf("%s = %s (%s to %s)", event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
 		facts = append(facts, Fact{
-			Name:  event.FormatTimestamp(sender.location),
-			Value: "```" + line + "```",
+			Name:  event.FormatTimestamp(sender.location, moira.DefaultTimeFormat),
+			Value: quotes + line + quotes,
 		})
 
 		if maxEvents != -1 && len(facts) > maxEvents {
 			facts = append(facts, Fact{
 				Name:  "Info",
-				Value: "```" + fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted) + "```",
+				Value: quotes + fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted) + quotes,
 			})
 			break
 		}
@@ -230,6 +248,6 @@ func getColourForState(state moira.State) string {
 	case moira.StateNODATA:
 		return Black
 	default:
-		return White //unhandled state
+		return White // unhandled state
 	}
 }

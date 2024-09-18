@@ -3,18 +3,18 @@ package plotting
 import (
 	"time"
 
-	"github.com/beevee/go-chart"
+	"github.com/moira-alert/go-chart"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-// plotCurve is a single curve for given timeserie
+// plotCurve is a single curve for given timeserie.
 type plotCurve struct {
 	timeStamps []time.Time
 	values     []float64
 }
 
-// getCurveSeriesList returns curve series list
+// getCurveSeriesList returns curve series list.
 func getCurveSeriesList(metricsData []metricSource.MetricData, theme moira.PlotTheme) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
 	for metricDataInd := range metricsData {
@@ -25,7 +25,7 @@ func getCurveSeriesList(metricsData []metricSource.MetricData, theme moira.PlotT
 	return curveSeriesList
 }
 
-// generatePlotCurves returns go-chart timeseries to generate plot curves
+// generatePlotCurves returns go-chart timeseries to generate plot curves.
 func generatePlotCurves(metricData metricSource.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
 	curves := describePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
@@ -51,7 +51,7 @@ func generatePlotCurves(metricData metricSource.MetricData, curveStyle chart.Sty
 	return curveSeries
 }
 
-// describePlotCurves returns parameters for required curves
+// describePlotCurves returns parameters for required curves.
 func describePlotCurves(metricData metricSource.MetricData) []plotCurve {
 	curves := []plotCurve{{}}
 	curvesInd := 0
@@ -60,27 +60,25 @@ func describePlotCurves(metricData metricSource.MetricData) []plotCurve {
 
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
 		pointValue := metricData.Values[valInd]
-		if moira.IsValidFloat64(pointValue) {
+		if moira.IsFiniteNumber(pointValue) {
 			timeStampValue := moira.Int64ToTime(timeStamp)
 			curves[curvesInd].timeStamps = append(curves[curvesInd].timeStamps, timeStampValue)
 			curves[curvesInd].values = append(curves[curvesInd].values, pointValue)
-		} else {
-			if len(curves[curvesInd].values) > 0 {
-				curves = append(curves, plotCurve{})
-				curvesInd++
-			}
+		} else if len(curves[curvesInd].values) > 0 {
+			curves = append(curves, plotCurve{})
+			curvesInd++
 		}
 		timeStamp += metricData.StepTime
 	}
 	return curves
 }
 
-// resolveFirstPoint returns first point coordinates
+// resolveFirstPoint returns first point coordinates.
 func resolveFirstPoint(metricData metricSource.MetricData) (int, int64) {
 	start := 0
 	startTime := metricData.StartTime
 	for _, metricVal := range metricData.Values {
-		if !moira.IsValidFloat64(metricVal) {
+		if !moira.IsFiniteNumber(metricVal) {
 			start++
 			startTime += metricData.StepTime
 		} else {

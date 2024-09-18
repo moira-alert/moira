@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -14,7 +16,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-// DatabaseContext sets to requests context configured database
+// DatabaseContext sets to requests context configured database.
 func DatabaseContext(database moira.Database) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -24,7 +26,7 @@ func DatabaseContext(database moira.Database) func(next http.Handler) http.Handl
 	}
 }
 
-// SearchIndexContext sets to requests context configured moira.index.searchIndex
+// SearchIndexContext sets to requests context configured moira.index.searchIndex.
 func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -34,7 +36,7 @@ func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Ha
 	}
 }
 
-// UserContext get x-webauth-user header and sets it in request context, if header is empty sets empty string
+// UserContext get x-webauth-user header and sets it in request context, if header is empty sets empty string.
 func UserContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		userLogin := request.Header.Get("x-webauth-user")
@@ -43,7 +45,7 @@ func UserContext(next http.Handler) http.Handler {
 	})
 }
 
-// TriggerContext gets triggerId from parsed URI corresponding to trigger routes and set it to request context
+// TriggerContext gets triggerId from parsed URI corresponding to trigger routes and set it to request context.
 func TriggerContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		triggerID := chi.URLParam(request, "triggerId")
@@ -56,7 +58,7 @@ func TriggerContext(next http.Handler) http.Handler {
 	})
 }
 
-// ContactContext gets contactID from parsed URI corresponding to trigger routes and set it to request context
+// ContactContext gets contactID from parsed URI corresponding to trigger routes and set it to request context.
 func ContactContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := chi.URLParam(request, "contactId")
@@ -69,7 +71,7 @@ func ContactContext(next http.Handler) http.Handler {
 	})
 }
 
-// TagContext gets tagName from parsed URI corresponding to tag routes and set it to request context
+// TagContext gets tagName from parsed URI corresponding to tag routes and set it to request context.
 func TagContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		tag := chi.URLParam(request, "tag")
@@ -82,7 +84,7 @@ func TagContext(next http.Handler) http.Handler {
 	})
 }
 
-// SubscriptionContext gets subscriptionId from parsed URI corresponding to subscription routes and set it to request context
+// SubscriptionContext gets subscriptionId from parsed URI corresponding to subscription routes and set it to request context.
 func SubscriptionContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		subscriptionID := chi.URLParam(request, "subscriptionId")
@@ -95,7 +97,7 @@ func SubscriptionContext(next http.Handler) http.Handler {
 	})
 }
 
-// MetricSourceProvider adds metrics source provider to context
+// MetricSourceProvider adds metrics source provider to context.
 func MetricSourceProvider(sourceProvider *metricSource.SourceProvider) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -105,15 +107,22 @@ func MetricSourceProvider(sourceProvider *metricSource.SourceProvider) func(next
 	}
 }
 
-// Paginate gets page and size values from URI query and set it to request context. If query has not values sets given values
+// Paginate gets page and size values from URI query and set it to request context. If query has not values sets given values.
 func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			page, err := strconv.ParseInt(request.URL.Query().Get("p"), 10, 64)
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			page, err := strconv.ParseInt(urlValues.Get("p"), 10, 64)
 			if err != nil {
 				page = defaultPage
 			}
-			size, err := strconv.ParseInt(request.URL.Query().Get("size"), 10, 64)
+
+			size, err := strconv.ParseInt(urlValues.Get("size"), 10, 64)
 			if err != nil {
 				size = defaultSize
 			}
@@ -125,16 +134,22 @@ func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handl
 	}
 }
 
-// Pager is a function that takes pager id from query
+// Pager is a function that takes pager id from query.
 func Pager(defaultCreatePager bool, defaultPagerID string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			pagerID := request.URL.Query().Get("pagerID")
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			pagerID := urlValues.Get("pagerID")
 			if pagerID == "" {
 				pagerID = defaultPagerID
 			}
 
-			createPager, err := strconv.ParseBool(request.URL.Query().Get("createPager"))
+			createPager, err := strconv.ParseBool(urlValues.Get("createPager"))
 			if err != nil {
 				createPager = defaultCreatePager
 			}
@@ -146,11 +161,17 @@ func Pager(defaultCreatePager bool, defaultPagerID string) func(next http.Handle
 	}
 }
 
-// Populate gets bool value populate from URI query and set it to request context. If query has not values sets given values
+// Populate gets bool value populate from URI query and set it to request context. If query has not values sets given values.
 func Populate(defaultPopulated bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			populate, err := strconv.ParseBool(request.URL.Query().Get("populated"))
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			populate, err := strconv.ParseBool(urlValues.Get("populated"))
 			if err != nil {
 				populate = defaultPopulated
 			}
@@ -161,26 +182,35 @@ func Populate(defaultPopulated bool) func(next http.Handler) http.Handler {
 	}
 }
 
-// Triggers gets string value target from URI query and set it to request context. If query has not values sets given values
-func Triggers(LocalMetricTTL, RemoteMetricTTL time.Duration) func(next http.Handler) http.Handler {
+// Triggers gets string value target from URI query and set it to request context. If query has not values sets given values.
+func Triggers(metricTTL map[moira.ClusterKey]time.Duration) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			localTTL := context.WithValue(request.Context(), localMetricTTLKey, LocalMetricTTL)
-			remoteTTL := context.WithValue(localTTL, remoteMetricTTLKey, RemoteMetricTTL)
-			next.ServeHTTP(writer, request.WithContext(remoteTTL))
+			ctx := request.Context()
+
+			ctx = context.WithValue(ctx, clustersMetricTTLKey, metricTTL)
+
+			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
 }
 
-// DateRange gets from and to values from URI query and set it to request context. If query has not values sets given values
+// DateRange gets from and to values from URI query and set it to request context. If query has not values sets given values.
 func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			from := request.URL.Query().Get("from")
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			from := urlValues.Get("from")
 			if from == "" {
 				from = defaultFrom
 			}
-			to := request.URL.Query().Get("to")
+
+			to := urlValues.Get("to")
 			if to == "" {
 				to = defaultTo
 			}
@@ -196,17 +226,24 @@ func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handl
 func TargetName(defaultTargetName string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			targetName := request.URL.Query().Get("target")
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			targetName := urlValues.Get("target")
 			if targetName == "" {
 				targetName = defaultTargetName
 			}
+
 			ctx := context.WithValue(request.Context(), targetNameKey, targetName)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
 }
 
-// TeamContext gets teamId from parsed URI corresponding to team routes and set it to request context
+// TeamContext gets teamId from parsed URI corresponding to team routes and set it to request context.
 func TeamContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		teamID := chi.URLParam(request, "teamId")
@@ -219,7 +256,7 @@ func TeamContext(next http.Handler) http.Handler {
 	})
 }
 
-// TeamUserIDContext gets userId from parsed URI corresponding to team routes and set it to request context
+// TeamUserIDContext gets userId from parsed URI corresponding to team routes and set it to request context.
 func TeamUserIDContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		userID := chi.URLParam(request, "teamUserId")
@@ -230,4 +267,67 @@ func TeamUserIDContext(next http.Handler) http.Handler {
 		ctx := context.WithValue(request.Context(), teamUserIDKey, userID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
+}
+
+// AuthorizationContext sets given authorization configuration to request context.
+func AuthorizationContext(auth *api.Authorization) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), authKey, auth)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// MetricContext is a function that gets `metric` value from query string and places it in context. If query does not have value sets given value.
+func MetricContext(defaultMetric string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			metric := urlValues.Get("metric")
+			if metric == "" {
+				metric = defaultMetric
+			}
+
+			ctx := context.WithValue(request.Context(), metricContextKey, metric)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+const statesArraySeparator = ","
+
+// StatesContext is a function that gets `states` value from query string and places it in context. If query does not have value empty map will be used.
+func StatesContext() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			states := make(map[string]struct{}, 0)
+
+			statesStr := urlValues.Get("states")
+			if statesStr != "" {
+				statesList := strings.Split(statesStr, statesArraySeparator)
+				for _, state := range statesList {
+					if !moira.State(state).IsValid() {
+						_ = render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("bad state in query parameter: %s", state)))
+						return
+					}
+					states[state] = struct{}{}
+				}
+			}
+
+			ctx := context.WithValue(request.Context(), statesContextKey, states)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
 }

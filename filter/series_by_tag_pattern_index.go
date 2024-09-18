@@ -1,36 +1,75 @@
 package filter
 
-import "github.com/moira-alert/moira"
+import (
+	lrucache "github.com/hashicorp/golang-lru/v2"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
+)
 
-// SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric
+// SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric.
 type SeriesByTagPatternIndex struct {
 	// namesPrefixTree stores MatchingHandler's for patterns that have name tag in prefix tree structure
 	namesPrefixTree *PrefixTree
 	// withoutStrictNameTagPatternMatchers stores MatchingHandler's for patterns that have no name tag
 	withoutStrictNameTagPatternMatchers map[string]MatchingHandler
+	// Flags for compatibility with different graphite behaviours
+	compatibility Compatibility
 }
 
-// NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
-func NewSeriesByTagPatternIndex(logger moira.Logger, tagSpecsByPattern map[string][]TagSpec) *SeriesByTagPatternIndex {
+// NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag.
+func NewSeriesByTagPatternIndex(
+	logger moira.Logger,
+	tagSpecsByPattern map[string][]TagSpec,
+	compatibility Compatibility,
+	patternMatchingCache *lrucache.Cache[string, *patternMatchingCacheItem],
+	metrics *metrics.FilterMetrics,
+) *SeriesByTagPatternIndex {
 	namesPrefixTree := &PrefixTree{Logger: logger, Root: &PatternNode{}}
 	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
 
-	for pattern, tagSpecs := range tagSpecsByPattern {
-		nameTagValue, matchingHandler := CreateMatchingHandlerForPattern(tagSpecs)
+	var patternMatchingEvicted int64
 
-		if nameTagValue == "" {
-			withoutStrictNameTagPatternMatchers[pattern] = matchingHandler
+	for pattern, tagSpecs := range tagSpecsByPattern {
+		var patternMatching *patternMatchingCacheItem
+
+		patternMatching, ok := patternMatchingCache.Get(pattern)
+		if !ok {
+			nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs, &compatibility)
+			if err != nil {
+				logger.Error().
+					Error(err).
+					String("pattern", pattern).
+					Msg("Failed to create MatchingHandler for pattern")
+				continue
+			}
+
+			patternMatching = &patternMatchingCacheItem{
+				nameTagValue:    nameTagValue,
+				matchingHandler: matchingHandler,
+			}
+
+			if evicted := patternMatchingCache.Add(pattern, patternMatching); evicted {
+				patternMatchingEvicted++
+			}
+		}
+
+		if patternMatching.nameTagValue == "" {
+			withoutStrictNameTagPatternMatchers[pattern] = patternMatching.matchingHandler
 		} else {
-			namesPrefixTree.AddWithPayload(nameTagValue, pattern, matchingHandler)
+			namesPrefixTree.AddWithPayload(patternMatching.nameTagValue, pattern, patternMatching.matchingHandler)
 		}
 	}
 
+	metrics.MarkPatternMatchingEvicted(patternMatchingEvicted)
+
 	return &SeriesByTagPatternIndex{
+		compatibility:                       compatibility,
 		namesPrefixTree:                     namesPrefixTree,
-		withoutStrictNameTagPatternMatchers: withoutStrictNameTagPatternMatchers}
+		withoutStrictNameTagPatternMatchers: withoutStrictNameTagPatternMatchers,
+	}
 }
 
-// MatchPatterns allows to match patterns by metric name and its labels
+// MatchPatterns allows to match patterns by metric name and its labels.
 func (index *SeriesByTagPatternIndex) MatchPatterns(metricName string, labels map[string]string) []string {
 	matchedPatterns := make([]string, 0)
 
@@ -42,7 +81,7 @@ func (index *SeriesByTagPatternIndex) MatchPatterns(metricName string, labels ma
 	}
 
 	for pattern, matchingHandler := range index.withoutStrictNameTagPatternMatchers {
-		if (matchingHandler)(metricName, labels) {
+		if matchingHandler(metricName, labels) {
 			matchedPatterns = append(matchedPatterns, pattern)
 		}
 	}

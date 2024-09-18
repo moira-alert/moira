@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility
+// Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility.
 type triggerStorageElement struct {
 	ID               string              `json:"id"`
 	Name             string              `json:"name"`
@@ -27,14 +28,18 @@ type triggerStorageElement struct {
 	Patterns         []string            `json:"patterns"`
 	TTL              string              `json:"ttl,omitempty"`
 	IsRemote         bool                `json:"is_remote"`
+	TriggerSource    moira.TriggerSource `json:"trigger_source,omitempty"`
+	ClusterId        moira.ClusterId     `json:"cluster_id,omitempty"`
 	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
 	AloneMetrics     map[string]bool     `json:"alone_metrics"`
 	CreatedAt        *int64              `json:"created_at"`
 	UpdatedAt        *int64              `json:"updated_at"`
+	CreatedBy        string              `json:"created_by"`
+	UpdatedBy        string              `json:"updated_by"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
-	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	if storageElement.AloneMetrics == nil {
 		aloneMetricsLen := len(storageElement.Targets)
 		storageElement.AloneMetrics = make(map[string]bool, aloneMetricsLen)
@@ -43,7 +48,10 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 			storageElement.AloneMetrics[targetName] = true
 		}
 	}
-	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+
+	triggerSource := storageElement.TriggerSource.FillInIfNotSet(storageElement.IsRemote)
+	clusterId := storageElement.ClusterId.FillInIfNotSet()
 	return moira.Trigger{
 		ID:               storageElement.ID,
 		Name:             storageElement.Name,
@@ -59,11 +67,14 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		PythonExpression: storageElement.PythonExpression,
 		Patterns:         storageElement.Patterns,
 		TTL:              getTriggerTTL(storageElement.TTL),
-		IsRemote:         storageElement.IsRemote,
+		TriggerSource:    triggerSource,
+		ClusterId:        clusterId,
 		MuteNewMetrics:   storageElement.MuteNewMetrics,
 		AloneMetrics:     storageElement.AloneMetrics,
 		CreatedAt:        storageElement.CreatedAt,
 		UpdatedAt:        storageElement.UpdatedAt,
+		CreatedBy:        storageElement.CreatedBy,
+		UpdatedBy:        storageElement.UpdatedBy,
 	}
 }
 
@@ -83,11 +94,15 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		PythonExpression: trigger.PythonExpression,
 		Patterns:         trigger.Patterns,
 		TTL:              getTriggerTTLString(trigger.TTL),
-		IsRemote:         trigger.IsRemote,
+		IsRemote:         trigger.TriggerSource == moira.GraphiteRemote,
+		TriggerSource:    trigger.TriggerSource,
+		ClusterId:        trigger.ClusterId,
 		MuteNewMetrics:   trigger.MuteNewMetrics,
 		AloneMetrics:     trigger.AloneMetrics,
 		CreatedAt:        trigger.CreatedAt,
 		UpdatedAt:        trigger.UpdatedAt,
+		CreatedBy:        trigger.CreatedBy,
+		UpdatedBy:        trigger.UpdatedBy,
 	}
 }
 
@@ -103,11 +118,11 @@ func getTriggerTTLString(ttl int64) string {
 	return fmt.Sprintf("%v", ttl)
 }
 
-// Trigger converts redis DB reply to moira.Trigger object
+// Trigger converts redis DB reply to moira.Trigger object.
 func Trigger(rep *redis.StringCmd) (moira.Trigger, error) {
 	bytes, err := rep.Bytes()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.Trigger{}, database.ErrNil
 		}
 		return moira.Trigger{}, fmt.Errorf("failed to read trigger: %s", err.Error())
@@ -122,7 +137,7 @@ func Trigger(rep *redis.StringCmd) (moira.Trigger, error) {
 	return trigger, nil
 }
 
-// GetTriggerBytes marshal moira.Trigger to bytes array
+// GetTriggerBytes marshal moira.Trigger to bytes array.
 func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
 	bytes, err := json.Marshal(triggerSE)

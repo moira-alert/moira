@@ -2,9 +2,10 @@ package selfstate
 
 import (
 	"fmt"
+	"time"
 )
 
-// Config is representation of self state worker settings like moira admins contacts and threshold values for checked services
+// Config is representation of self state worker settings like moira admins contacts and threshold values for checked services.
 type Config struct {
 	Enabled                        bool
 	RedisDisconnectDelaySeconds    int64
@@ -12,6 +13,7 @@ type Config struct {
 	LastCheckDelaySeconds          int64
 	LastRemoteCheckDelaySeconds    int64
 	NoticeIntervalSeconds          int64
+	CheckInterval                  time.Duration
 	Contacts                       []map[string]string
 }
 
@@ -30,5 +32,6 @@ func (config *Config) checkConfig(senders map[string]bool) error {
 			return fmt.Errorf("value for [%s] must be present", adminContact["type"])
 		}
 	}
+
 	return nil
 }

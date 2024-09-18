@@ -8,14 +8,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/moira-alert/moira/checker/worker"
 	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
-	"github.com/moira-alert/moira/checker/worker"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -33,7 +31,7 @@ var (
 	triggerID              = flag.String("t", "", "Check single trigger by id and exit")
 )
 
-// Moira checker bin version
+// Moira checker bin version.
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
@@ -67,69 +65,99 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira Checker stopped. Version: %s", MoiraVersion)
+	defer logger.Info().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Checker stopped")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not configure telemetry: %s", err.Error())
+		logger.Fatal().
+			Error(err).
+			Msg("Can not configure telemetry")
 	}
 	defer telemetry.Stop()
 
+	logger.Info().Msg("Debug: checker started")
+
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
+	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Checker)
 
-	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	localSource := local.Create(database)
-	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize metric sources")
+	}
 
-	isConfigured, _ := remoteSource.IsConfigured()
-	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, isConfigured)
-	checkerSettings := config.Checker.getSettings(logger)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, clusterKeyList(metricSourceProvider))
+	checkerSettings := config.getSettings(logger)
+
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
 
-	checkerWorker := &worker.Checker{
+	cacheExpiration := checkerSettings.MetricEventTriggerCheckInterval
+	checkerWorkerManager := &worker.WorkerManager{
 		Logger:            logger,
 		Database:          database,
 		Config:            checkerSettings,
-		RemoteConfig:      remoteConfig,
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
-		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
-		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),                //nolint
-		PatternCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
+		TriggerCache:      cache.New(cacheExpiration, time.Minute*60), //nolint
+		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),  //nolint
+		PatternCache:      cache.New(cacheExpiration, time.Minute*60), //nolint
 	}
-	err = checkerWorker.Start()
+	err = checkerWorkerManager.StartWorkers()
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to start worker check")
 	}
-	defer stopChecker(checkerWorker)
+	defer stopChecker(checkerWorkerManager)
 
-	logger.Infof("Moira Checker started. Version: %s", MoiraVersion)
+	logger.Info().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Checker started")
+
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira Checker shutting down.")
+
+	signal := fmt.Sprint(<-ch)
+	logger.Info().
+		String("signal", signal).
+		Msg("Moira Checker shutting down.")
 }
 
 func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
 	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
 	logger.String(moira.LogFieldNameTriggerID, *triggerID)
 	if err != nil {
-		logger.Errorf("Failed initialize trigger checker: %s", err.Error())
+		logger.Error().
+			Error(err).
+			Msg("Failed initialize trigger checker")
 		os.Exit(1)
 	}
 	if err = triggerChecker.Check(); err != nil {
-		logger.Errorf("Failed check trigger: %s", err)
+		logger.Error().
+			Error(err).
+			Msg("Failed check trigger")
 		os.Exit(1)
 	}
 	os.Exit(0)
 }
 
-func stopChecker(service *worker.Checker) {
+func stopChecker(service *worker.WorkerManager) {
 	if err := service.Stop(); err != nil {
-		logger.Errorf("Failed to Stop Moira Checker: %v", err)
+		logger.Error().
+			Error(err).
+			Msg("Failed to Stop Moira Checker")
 	}
+}
+
+func clusterKeyList(provider *metricSource.SourceProvider) []moira.ClusterKey {
+	keys := make([]moira.ClusterKey, 0, len(provider.GetAllSources()))
+	for ck := range provider.GetAllSources() {
+		keys = append(keys, ck)
+	}
+	return keys
 }

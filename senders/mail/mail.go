@@ -6,13 +6,26 @@ import (
 	"html/template"
 	"net/smtp"
 	"path/filepath"
-	"strconv"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface via pushover
+// Structure that represents the Mail configuration in the YAML file.
+type config struct {
+	MailFrom     string `mapstructure:"mail_from"`
+	SMTPHello    string `mapstructure:"smtp_hello"`
+	SMTPHost     string `mapstructure:"smtp_host"`
+	SMTPPort     int64  `mapstructure:"smtp_port"`
+	InsecureTLS  bool   `mapstructure:"insecure_tls"`
+	FrontURI     string `mapstructure:"front_uri"`
+	SMTPPass     string `mapstructure:"smtp_pass"`
+	SMTPUser     string `mapstructure:"smtp_user"`
+	TemplateFile string `mapstructure:"template_file"`
+}
+
+// Sender implements moira sender interface via pushover.
 type Sender struct {
 	From           string
 	SMTPHello      string
@@ -30,8 +43,8 @@ type Sender struct {
 	dateTimeFormat string
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// Init read yaml config.
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat)
 	if err != nil {
 		return err
@@ -44,17 +57,23 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	return err
 }
 
-func (sender *Sender) fillSettings(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
+	}
+
 	sender.logger = logger
-	sender.From = senderSettings["mail_from"]
-	sender.SMTPHello = senderSettings["smtp_hello"]
-	sender.SMTPHost = senderSettings["smtp_host"]
-	sender.SMTPPort, _ = strconv.ParseInt(senderSettings["smtp_port"], 10, 64)
-	sender.InsecureTLS, _ = strconv.ParseBool(senderSettings["insecure_tls"])
-	sender.FrontURI = senderSettings["front_uri"]
-	sender.Password = senderSettings["smtp_pass"]
-	sender.Username = senderSettings["smtp_user"]
-	sender.TemplateFile = senderSettings["template_file"]
+	sender.From = cfg.MailFrom
+	sender.SMTPHello = cfg.SMTPHello
+	sender.SMTPHost = cfg.SMTPHost
+	sender.SMTPPort = cfg.SMTPPort
+	sender.InsecureTLS = cfg.InsecureTLS
+	sender.FrontURI = cfg.FrontURI
+	sender.Password = cfg.SMTPPass
+	sender.Username = cfg.SMTPUser
+	sender.TemplateFile = cfg.TemplateFile
 	sender.location = location
 	sender.dateTimeFormat = dateTimeFormat
 	if sender.Username == "" {

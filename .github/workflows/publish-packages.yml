@@ -8,14 +8,14 @@ on:
 jobs:
   build:
     name: Create Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Set up Ruby 2.6
+      - name: Set up Ruby 3.3
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.6
+          ruby-version: 3.3
 
       - name: Install fpm
         run: gem install fpm
@@ -27,8 +27,8 @@ jobs:
         uses: docker://antonyurchenko/git-release:latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DRAFT_RELEASE: "false"
-          PRE_RELEASE: "false"
+          DRAFT_RELEASE: "true"
+          PRE_RELEASE: "true"
           CHANGELOG_FILE: "none"
           ALLOW_EMPTY_CHANGELOG: "true"
         with:

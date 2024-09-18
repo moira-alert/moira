@@ -86,6 +86,16 @@ func TestExpression(t *testing.T) {
 		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger, PreviousState: moira.StateNODATA}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateNODATA)
+
+		expression = "t1 > 10 && t2 > 3 ? OK : ddd"
+		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("invalid variable value: %w", fmt.Errorf("no value with name ddd"))})
+		So(result, ShouldBeEmpty)
+
+		expression = "t1 > 10 ? OK : (t2 < 5 ? WARN : ERROR)"
+		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Evaluate()
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("invalid variable value: %w", fmt.Errorf("no value with name t2"))})
+		So(result, ShouldBeEmpty)
 	})
 }
 

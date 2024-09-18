@@ -24,7 +24,8 @@ func GetRemoteChecker(delay int64, logger moira.Logger, database moira.Database)
 }
 
 func (check *remoteChecker) Check(nowTS int64) (int64, bool, error) {
-	triggerCount, err := check.database.GetRemoteTriggersToCheckCount()
+	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
+	triggerCount, err := check.database.GetTriggersToCheckCount(defaultRemoteCluster)
 	if err != nil {
 		return 0, false, err
 	}
@@ -37,7 +38,10 @@ func (check *remoteChecker) Check(nowTS int64) (int64, bool, error) {
 	}
 
 	if check.lastSuccessfulCheck < nowTS-check.delay {
-		check.logger.Errorf(templateMoreThanMessage, check.GetErrorMessage())
+		check.logger.Error().
+			String("error", check.GetErrorMessage()).
+			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
+			Msg("Send message")
 		return nowTS - check.lastSuccessfulCheck, true, nil
 	}
 	return 0, false, nil

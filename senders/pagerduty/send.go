@@ -2,6 +2,7 @@ package pagerduty
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"time"
 
@@ -14,18 +15,18 @@ import (
 
 const summaryMaxChars = 1024
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	event := sender.buildEvent(events, contact, trigger, plots, throttled)
-	_, err := pagerduty.ManageEvent(event)
+	_, err := pagerduty.ManageEventWithContext(context.Background(), event)
 	if err != nil {
-		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %s. ", contact.Value, err)
+		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %w. ", contact.Value, err)
 	}
 	return nil
 }
 
 func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) pagerduty.V2Event {
-	summary := sender.buildSummary(events, trigger)
+	summary := sender.buildSummary(events, trigger, throttled)
 	details := make(map[string]interface{})
 
 	details["Trigger Name"] = trigger.Name
@@ -41,7 +42,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	var eventList string
 
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
@@ -71,7 +72,9 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		for i, plot := range plots {
 			imageLink, err := sender.imageStore.StoreImage(plot)
 			if err != nil {
-				sender.logger.Warningf("could not store the plot image in the image store: %s", i, err)
+				sender.logger.Warning().
+					Error(err).
+					Msg("could not store the plot image in the image store")
 			} else {
 				imageDetails := map[string]string{
 					"src": imageLink,
@@ -98,10 +101,11 @@ func (sender *Sender) getSeverity(events moira.NotificationEvents) string {
 	return severity
 }
 
-func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData) string {
+func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var summary bytes.Buffer
+	state := events.GetCurrentState(throttled)
 
-	summary.WriteString(string(events.GetSubjectState()))
+	summary.WriteString(string(state))
 	summary.WriteString(" ")
 	summary.WriteString(trigger.Name)
 

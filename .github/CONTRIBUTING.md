@@ -50,9 +50,9 @@ During implementation and submission of code follow style guides listed below.
 
 ### Contributing to documentation
 
-The main source of knowledge about Moira is a documentation that is hosted on Read the Docs service. You can help improve the Moira guides or the API reference by making them more coherent, consistent, or readable, adding missing information, correcting factual errors, fixing typos, or bringing them up to date with the latest Moira release. Check [moira-alert/doc](github.com/moira-alert/doc) for sources of documentation.
+The main source of knowledge about Moira is a documentation that is hosted on Read the Docs service. You can help improve the Moira guides or the API reference by making them more coherent, consistent, or readable, adding missing information, correcting factual errors, fixing typos, or bringing them up to date with the latest Moira release. Check [moira-alert/doc](https://github.com/moira-alert/doc) for sources of documentation.
 
-One of our goals is to provide beautiful and clear documentation of Moira API. If you familiar with Go and OpenAPI specification you can add description of missing API methods to swagger file located in `api` folder of [moira-alert/doc](github.com/moira-alert/doc) repository.
+One of our goals is to provide beautiful and clear documentation of Moira API. If you familiar with Go and OpenAPI specification you can add description of missing API methods to swagger file located in `api` folder of [moira-alert/doc](https://github.com/moira-alert/doc) repository.
 
 ## Style Guides
 
@@ -138,8 +138,8 @@ For full local deployment of all services, including web, graphite and metrics r
 docker-compose up
 ```
 
-Before pushing your changes don't forget about linter:
+Before pushing, don't forget to write this command please, it will activate the pre-commit hook on the linter and auto formatting swagger documentation:
 
 ```bash
-make lint
+git config --local core.hooksPath .githooks/
 ```

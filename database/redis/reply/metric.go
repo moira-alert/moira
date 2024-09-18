@@ -1,6 +1,7 @@
 package reply
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,20 +10,20 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// MetricValues converts redis DB reply struct "RetentionTimestamp Value" "Timestamp" to moira.MetricValue object
+// MetricValues converts redis DB reply struct "RetentionTimestamp Value" "Timestamp" to moira.MetricValue object.
 func MetricValues(values *redis.ZSliceCmd) ([]*moira.MetricValue, error) {
 	resultByMetricArr, err := values.Result()
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]*moira.MetricValue, 0), nil
 		}
 		return nil, fmt.Errorf("failed to read metricValues: %s", err.Error())
 	}
-	metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr)) //nolint
+	metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr))
 	for i := 0; i < len(resultByMetricArr); i++ {
 		val := resultByMetricArr[i].Member.(string)
 		valuesArr := strings.Split(val, " ")
-		if len(valuesArr) != 2 { //nolint
+		if len(valuesArr) != 2 {
 			return nil, fmt.Errorf("value format is not valid: %s", val)
 		}
 		timestamp, err := strconv.ParseInt(valuesArr[0], 10, 64)

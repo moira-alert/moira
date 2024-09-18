@@ -8,6 +8,7 @@ import (
 
 	"github.com/moira-alert/moira"
 
+	rds "github.com/go-redis/redis/v8"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -294,4 +295,110 @@ func createDataWithNewKeys(database moira.Database) {
 		client.SAdd(ctx, "{moira-tag-triggers}:tag3", "triggerID-0000000000002")
 		client.SAdd(ctx, "{moira-tag-triggers}:tag3", "triggerID-0000000000003")
 	}
+}
+
+func Test_renameKey(t *testing.T) {
+	logger, _ := logging.GetLogger("Test Worker")
+	oldKey := "my_test_key"
+	newKey := "my_new_test_key"
+
+	Convey("Something was renamed", t, func() {
+		database := redis.NewTestDatabase(logger)
+		database.Flush()
+		defer database.Flush()
+		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
+		So(err, ShouldBeNil)
+
+		err = renameKey(database, oldKey, newKey)
+		So(err, ShouldBeNil)
+
+		res, err := database.Client().Get(database.Context(), newKey).Result()
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, "123")
+		err = database.Client().Get(database.Context(), oldKey).Err()
+		So(err, ShouldEqual, rds.Nil)
+	})
+
+	Convey("Nothing was renamed", t, func() {
+		database := redis.NewTestDatabase(logger)
+		database.Flush()
+		defer database.Flush()
+		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
+		So(err, ShouldBeNil)
+
+		err = renameKey(database, "no_exist_key", newKey)
+		So(err, ShouldBeNil)
+
+		err = database.Client().Get(database.Context(), newKey).Err()
+		So(err, ShouldEqual, rds.Nil)
+
+		res, err := database.Client().Get(database.Context(), oldKey).Result()
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, "123")
+	})
+}
+
+func Test_changeKeysPrefix(t *testing.T) {
+	logger, _ := logging.GetLogger("Test Worker")
+	oldKey := "my_test_key"
+	newKey := "my_new_test_key"
+
+	Convey("Something was renamed", t, func() {
+		database := redis.NewTestDatabase(logger)
+		database.Flush()
+		defer database.Flush()
+		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
+		So(err, ShouldBeNil)
+		err = database.Client().Set(database.Context(), oldKey+"2", "2", 0).Err()
+		So(err, ShouldBeNil)
+		err = database.Client().Set(database.Context(), oldKey+"3", "3", 0).Err()
+		So(err, ShouldBeNil)
+
+		err = changeKeysPrefix(database, oldKey, newKey)
+		So(err, ShouldBeNil)
+
+		res, err := database.Client().Get(database.Context(), newKey+"1").Result()
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, "1")
+		res, err = database.Client().Get(database.Context(), newKey+"2").Result()
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, "2")
+		res, err = database.Client().Get(database.Context(), newKey+"3").Result()
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, "3")
+		err = database.Client().Get(database.Context(), oldKey+"1").Err()
+		So(err, ShouldEqual, rds.Nil)
+		err = database.Client().Get(database.Context(), oldKey+"2").Err()
+		So(err, ShouldEqual, rds.Nil)
+		err = database.Client().Get(database.Context(), oldKey+"3").Err()
+		So(err, ShouldEqual, rds.Nil)
+	})
+
+	Convey("Nothing was renamed", t, func() {
+		database := redis.NewTestDatabase(logger)
+		database.Flush()
+		defer database.Flush()
+		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
+		So(err, ShouldBeNil)
+		err = database.Client().Set(database.Context(), oldKey+"2", "2", 0).Err()
+		So(err, ShouldBeNil)
+		err = database.Client().Set(database.Context(), oldKey+"3", "3", 0).Err()
+		So(err, ShouldBeNil)
+
+		err = renameKey(database, "no_exist_key", newKey)
+		So(err, ShouldBeNil)
+
+		err = database.Client().Get(database.Context(), newKey).Err()
+		So(err, ShouldEqual, rds.Nil)
+
+		res, err := database.Client().Get(database.Context(), oldKey+"1").Result()
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, "1")
+		res, err = database.Client().Get(database.Context(), oldKey+"2").Result()
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, "2")
+		res, err = database.Client().Get(database.Context(), oldKey+"3").Result()
+		So(err, ShouldBeNil)
+		So(res, ShouldResemble, "3")
+	})
 }

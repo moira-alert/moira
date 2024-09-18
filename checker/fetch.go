@@ -18,6 +18,7 @@ func (triggerChecker *TriggerChecker) fetchTriggerMetrics() (map[string][]metric
 		if hasEmptyTargets, emptyTargets := conversion.HasEmptyTargets(triggerMetricsData); hasEmptyTargets {
 			return nil, ErrTriggerHasEmptyTargets{targets: emptyTargets}
 		}
+
 		if conversion.HasOnlyWildcards(triggerMetricsData) {
 			return triggerMetricsData, ErrTriggerHasOnlyWildcards{}
 		}
@@ -53,8 +54,11 @@ func (triggerChecker *TriggerChecker) fetch() (map[string][]metricSource.MetricD
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
 	if len(metrics) > 0 {
-		if err := triggerChecker.database.RemoveMetricsValues(metrics, until-triggerChecker.database.GetMetricsTTLSeconds()); err != nil {
-			triggerChecker.logger.Error(err.Error())
+		err := triggerChecker.database.RemoveMetricsValues(metrics, until-triggerChecker.database.GetMetricsTTLSeconds())
+		if err != nil {
+			triggerChecker.logger.Error().
+				Error(err).
+				Msg("Failed to remove metric values")
 		}
 	}
 }

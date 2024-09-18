@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// RefreshPatternWorker realization
+// RefreshPatternWorker realization.
 type RefreshPatternWorker struct {
 	database       moira.Database
 	logger         moira.Logger
@@ -20,7 +20,7 @@ type RefreshPatternWorker struct {
 	period         time.Duration
 }
 
-// NewRefreshPatternWorker creates new RefreshPatternWorker
+// NewRefreshPatternWorker creates new RefreshPatternWorker.
 func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger, patternStorage *filter.PatternStorage, period time.Duration) *RefreshPatternWorker {
 	return &RefreshPatternWorker{
 		database:       database,
@@ -31,11 +31,13 @@ func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMet
 	}
 }
 
-// Start process to refresh pattern tree every second
+// Start process to refresh pattern tree every second.
 func (worker *RefreshPatternWorker) Start() error {
 	err := worker.patternStorage.Refresh()
 	if err != nil {
-		worker.logger.Errorf("pattern refresh failed: %s", err.Error())
+		worker.logger.Error().
+			Error(err).
+			Msg("pattern refresh failed")
 		return err
 	}
 
@@ -44,23 +46,25 @@ func (worker *RefreshPatternWorker) Start() error {
 		for {
 			select {
 			case <-worker.tomb.Dying():
-				worker.logger.Info("Moira Filter Pattern Updater stopped")
+				worker.logger.Info().Msg("Moira Filter Pattern Updater stopped")
 				return nil
 			case <-checkTicker.C:
 				timer := time.Now()
 				err := worker.patternStorage.Refresh()
 				if err != nil {
-					worker.logger.Errorf("Pattern refresh failed: %s", err.Error())
+					worker.logger.Error().
+						Error(err).
+						Msg("Pattern refresh failed")
 				}
 				worker.metrics.BuildTreeTimer.UpdateSince(timer)
 			}
 		}
 	})
-	worker.logger.Info("Moira Filter Pattern Updater started")
+	worker.logger.Info().Msg("Moira Filter Pattern Updater started")
 	return nil
 }
 
-// Stop stops update pattern tree
+// Stop stops update pattern tree.
 func (worker *RefreshPatternWorker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()

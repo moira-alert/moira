@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 )
 
-// GetAllPatterns get all patterns and triggers and metrics info corresponding to this pattern
+// GetAllPatterns get all patterns and triggers and metrics info corresponding to this pattern.
 func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternList, *api.ErrorResponse) {
 	patterns, err := database.GetPatterns()
 	if err != nil {
@@ -22,17 +22,23 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 		go func(pattern string) {
 			triggerIDs, err := database.GetPatternTriggerIDs(pattern)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Error().
+					Error(err).
+					Msg("Failed to get pattern trigger IDs")
 				rch <- nil
 			}
 			triggers, err := database.GetTriggers(triggerIDs)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Error().
+					Error(err).
+					Msg("Failed to get trigger")
 				rch <- nil
 			}
 			metrics, err := database.GetPatternMetrics(pattern)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Error().
+					Error(err).
+					Msg("Failed to get pattern metrics")
 				rch <- nil
 			}
 			patternData := dto.PatternData{
@@ -58,7 +64,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 	return &pattersList, nil
 }
 
-// DeletePattern deletes trigger pattern
+// DeletePattern deletes trigger pattern.
 func DeletePattern(database moira.Database, pattern string) *api.ErrorResponse {
 	if err := database.RemovePattern(pattern); err != nil {
 		return api.ErrorInternalServer(err)

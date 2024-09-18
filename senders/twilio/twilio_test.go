@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	twilio "github.com/carlosdp/twiliogo"
+	twilio_client "github.com/carlosdp/twiliogo"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -15,7 +15,7 @@ func TestInit(t *testing.T) {
 		sender := Sender{}
 		logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 		location, _ := time.LoadLocation("UTC")
-		settings := map[string]string{}
+		settings := map[string]interface{}{}
 		Convey("no api asid", func() {
 			err := sender.Init(settings, logger, nil, "15:04")
 			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_sid param from config", ""))
@@ -47,12 +47,12 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("config sms", func() {
-			settings["type"] = "twilio sms"
+			settings["sender_type"] = "twilio sms"
 			err := sender.Init(settings, logger, location, "15:04")
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{sender: &twilioSenderSms{
 				twilioSender{
-					client:       twilio.NewClient("123", "321"),
+					client:       twilio_client.NewClient("123", "321"),
 					APIFromPhone: "12345678989",
 					logger:       logger,
 					location:     location,
@@ -61,7 +61,7 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("config voice", func() {
-			settings["type"] = "twilio voice"
+			settings["sender_type"] = "twilio voice"
 			Convey("no voice url", func() {
 				err := sender.Init(settings, logger, location, "15:04")
 				So(err, ShouldResemble, fmt.Errorf("can not read [%s] voiceurl param from config", "twilio voice"))
@@ -71,12 +71,12 @@ func TestInit(t *testing.T) {
 			Convey("has voice url", func() {
 				settings["voiceurl"] = "url here"
 				Convey("append_message == true", func() {
-					settings["append_message"] = "true"
+					settings["append_message"] = true
 					err := sender.Init(settings, logger, location, "15:04")
 					So(err, ShouldBeNil)
 					So(sender, ShouldResemble, Sender{sender: &twilioSenderVoice{
 						twilioSender: twilioSender{
-							client:       twilio.NewClient("123", "321"),
+							client:       twilio_client.NewClient("123", "321"),
 							APIFromPhone: "12345678989",
 							logger:       logger,
 							location:     location,
@@ -86,13 +86,13 @@ func TestInit(t *testing.T) {
 					}})
 				})
 
-				Convey("append_message is something another string", func() {
-					settings["append_message"] = "something another string"
+				Convey("append_message is false", func() {
+					settings["append_message"] = false
 					err := sender.Init(settings, logger, location, "15:04")
 					So(err, ShouldBeNil)
 					So(sender, ShouldResemble, Sender{sender: &twilioSenderVoice{
 						twilioSender: twilioSender{
-							client:       twilio.NewClient("123", "321"),
+							client:       twilio_client.NewClient("123", "321"),
 							APIFromPhone: "12345678989",
 							logger:       logger,
 							location:     location,

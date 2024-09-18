@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func newMocks(t *testing.T) (dataBase *mock_moira_alert.MockDatabase, mockCtrl *gomock.Controller) {
@@ -406,7 +406,6 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", secondState, firstState)
 			So(err, ShouldBeNil)
 			secondState.EventTimestamp = firstState.EventTimestamp
-			//secondState.SuppressedState = firstState.SuppressedState
 			So(actual, ShouldResemble, secondState)
 
 			Convey("Test state change state after suppressed", func() {
@@ -647,7 +646,7 @@ func TestTriggerMaintenance(t *testing.T) {
 
 func TestIsStateChanged(t *testing.T) {
 	Convey("isStateChanged tests", t, func() {
-		var lastCheckTest = moira.CheckData{
+		lastCheckTest := moira.CheckData{
 			Score:           6000,
 			State:           moira.StateOK,
 			Suppressed:      true,
@@ -656,7 +655,7 @@ func TestIsStateChanged(t *testing.T) {
 			Maintenance:     1000,
 		}
 
-		var currentCheckTest = moira.CheckData{
+		currentCheckTest := moira.CheckData{
 			State:     moira.StateWARN,
 			Timestamp: 1504509981,
 		}

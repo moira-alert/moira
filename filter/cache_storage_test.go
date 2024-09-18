@@ -6,7 +6,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
-	"github.com/smartystreets/assertions/should"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -36,12 +35,16 @@ var testRetentions = `
 	pattern = yearly$
 	retentions = 1y:100y
 
+	[tagged metrics]
+	pattern = ;tag1=val1(;.*)?$
+	retentions = 10s:2d,1m:30d,15m:1y
+
 	[default]
 	pattern = .*
 	retentions = 120:7d
 	`
 
-var expectedRetentionIntervals = []int{60, 1200, 3600, 86400, 604800, 31536000, 120}
+var expectedRetentionIntervals = []int{60, 1200, 3600, 86400, 604800, 31536000, 10, 120}
 
 var matchedMetrics = []moira.MatchedMetric{
 	{
@@ -208,7 +211,7 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &matchedMetric)
 		So(len(buffer), ShouldEqual, 1)
 		So(matchedMetric.Retention, ShouldEqual, 60)
-		So(matchedMetric.RetentionTimestamp, should.Equal, 60)
+		So(matchedMetric.RetentionTimestamp, ShouldEqual, 60)
 	})
 
 	Convey("Suf metric, should 1200sec", t, func() {
@@ -218,7 +221,7 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &metr)
 		So(len(buffer), ShouldEqual, 1)
 		So(metr.Retention, ShouldEqual, 1200)
-		So(metr.RetentionTimestamp, should.Equal, 1200)
+		So(metr.RetentionTimestamp, ShouldEqual, 1200)
 	})
 
 	Convey("Default metric, should 120sec", t, func() {
@@ -228,6 +231,38 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &metr)
 		So(len(buffer), ShouldEqual, 1)
 		So(metr.Retention, ShouldEqual, 120)
-		So(metr.RetentionTimestamp, should.Equal, 120)
+		So(metr.RetentionTimestamp, ShouldEqual, 120)
+	})
+
+	Convey("Tagged metrics", t, func() {
+		Convey("should be 10sec", func() {
+			matchedMetric := moira.MatchedMetric{
+				Metric:             "my_super_metric;tag1=val1;tag2=val2",
+				Value:              12,
+				Timestamp:          151,
+				RetentionTimestamp: 0,
+				Retention:          10,
+			}
+			buffer := make(map[string]*moira.MatchedMetric)
+			storage.EnrichMatchedMetric(buffer, &matchedMetric)
+			So(len(buffer), ShouldEqual, 1)
+			So(matchedMetric.Retention, ShouldEqual, 10)
+			So(matchedMetric.RetentionTimestamp, ShouldEqual, 150)
+		})
+
+		Convey("should be default 120sec", func() {
+			matchedMetric := moira.MatchedMetric{
+				Metric:             "my_super_metric;tag2=val2",
+				Value:              12,
+				Timestamp:          151,
+				RetentionTimestamp: 0,
+				Retention:          60,
+			}
+			buffer := make(map[string]*moira.MatchedMetric)
+			storage.EnrichMatchedMetric(buffer, &matchedMetric)
+			So(len(buffer), ShouldEqual, 1)
+			So(matchedMetric.Retention, ShouldEqual, 120)
+			So(matchedMetric.RetentionTimestamp, ShouldEqual, 120)
+		})
 	})
 }

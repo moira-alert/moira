@@ -15,11 +15,9 @@ import (
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/database/stats"
 	"github.com/moira-alert/moira/index"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metric_source/remote"
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -31,7 +29,7 @@ var (
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )
 
-// Moira api bin version
+// Moira api bin version.
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
@@ -48,72 +46,101 @@ func main() {
 		os.Exit(0)
 	}
 
-	config := getDefault()
+	applicationConfig := getDefault()
 	if *printDefaultConfigFlag {
-		cmd.PrintConfig(config)
+		cmd.PrintConfig(applicationConfig)
 		os.Exit(0)
 	}
 
-	err := cmd.ReadConfig(*configFileName, &config)
+	err := cmd.ReadConfig(*configFileName, &applicationConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not read settings: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	apiConfig := config.API.getSettings(config.Redis.MetricsTTL, config.Remote.MetricsTTL)
+	apiConfig := applicationConfig.API.getSettings(
+		applicationConfig.ClustersMetricTTL(),
+		applicationConfig.Web.getFeatureFlags(),
+		&applicationConfig.Web,
+	)
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName, config.Logger.LogPrettyFormat)
-
+	logger, err := logging.ConfigureLog(applicationConfig.Logger.LogFile, applicationConfig.Logger.LogLevel, serviceName, applicationConfig.Logger.LogPrettyFormat)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
+	defer logger.Info().
+		String("moira_version", MoiraVersion).
+		Msg("Moira API stopped")
 
-	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
+	telemetry, err := cmd.ConfigureTelemetry(logger, applicationConfig.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not start telemetry: %s", err.Error())
+		logger.Fatal().
+			Error(err).
+			Msg("Can not start telemetry")
 	}
 	defer telemetry.Stop()
 
-	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.API)
+	databaseSettings := applicationConfig.Redis.GetSettings()
+	notificationHistorySettings := applicationConfig.NotificationHistory.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.NotificationConfig{}, redis.API)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
 	if searchIndex == nil {
-		logger.Fatalf("Failed to create search index")
+		logger.Fatal().Msg("Failed to create search index")
 	}
 
 	err = searchIndex.Start()
 	if err != nil {
-		logger.Fatalf("Failed to start search index: %s", err.Error())
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to start search index")
 	}
 	defer searchIndex.Stop() //nolint
 
 	if !searchIndex.IsReady() {
-		logger.Fatalf("Search index is not ready, exit")
+		logger.Fatal().Msg("Search index is not ready, exit")
 	}
 
 	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to start listening")
 	}
 
-	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
+	logger.Info().
+		String("listen_address", apiConfig.Listen).
+		Msg("Start listening")
 
-	localSource := local.Create(database)
-	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
-
-	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)
+	metricSourceProvider, err := cmd.InitMetricSources(applicationConfig.Remotes, database, logger)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize metric sources")
 	}
 
-	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, webConfigContent)
+	// Start stats manager
+	statsManager := stats.NewStatsManager(
+		stats.NewTriggerStats(telemetry.Metrics, database, logger, metricSourceProvider.GetClusterList()),
+		stats.NewContactStats(telemetry.Metrics, database, logger),
+	)
+	statsManager.Start()
+	defer statsManager.Stop() //nolint
+
+	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
+
+	httpHandler := handler.NewHandler(
+		database,
+		logger,
+		searchIndex,
+		apiConfig,
+		metricSourceProvider,
+		webConfig,
+	)
+
 	server := &http.Server{
 		Handler: httpHandler,
 	}
@@ -123,18 +150,25 @@ func main() {
 	}()
 	defer Stop(logger, server)
 
-	logger.Infof("Moira Api Started (version: %s)", MoiraVersion)
+	logger.Info().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Api Started")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira API shutting down.")
+
+	signal := fmt.Sprint(<-ch)
+	logger.Info().
+		String("signal", signal).
+		Msg("Moira API shutting down.")
 }
 
-// Stop Moira API HTTP server
+// Stop Moira API HTTP server.
 func Stop(logger moira.Logger, server *http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //nolint
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		logger.Errorf("Can't stop Moira API correctly: %v", err)
+		logger.Error().
+			Error(err).
+			Msg("Can't stop Moira API correctly")
 	}
 }

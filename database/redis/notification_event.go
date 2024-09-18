@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -13,25 +14,29 @@ import (
 
 var eventsTTL int64 = 3600 * 24 * 30
 
-// GetNotificationEvents gets NotificationEvents by given triggerID and interval
-func (connector *DbConnector) GetNotificationEvents(triggerID string, start int64, size int64) ([]*moira.NotificationEvent, error) {
-	ctx := connector.context
-	c := *connector.client
+// GetNotificationEvents gets NotificationEvents by given triggerID and interval. The events are also filtered by time range
+// with `from`, `to` params (`from` and `to` should be "+inf", "-inf" or int64 converted to string).
+func (connector *DbConnector) GetNotificationEvents(triggerID string, page, size int64, from, to string) ([]*moira.NotificationEvent, error) {
+	ctx := connector.Context()
+	client := connector.Client()
 
-	eventsData, err := reply.Events(c.ZRevRange(ctx, triggerEventsKey(triggerID), start, start+size))
-
+	eventsData, err := reply.Events(client.ZRevRangeByScore(ctx, triggerEventsKey(triggerID), &redis.ZRangeBy{
+		Min:    from,
+		Max:    to,
+		Offset: page * size,
+		Count:  size,
+	}))
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
-		return nil, fmt.Errorf("failed to get range for trigger events, triggerID: %s, error: %s", triggerID, err.Error())
+		return nil, fmt.Errorf("failed to get range of trigger events, triggerID: %s, error: %w", triggerID, err)
 	}
-
 	return eventsData, nil
 }
 
-// PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days
-// If ui=true, then add to ui events list
+// PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days.
+// If ui=true, then add to ui events list.
 func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEvent, ui bool) error {
 	eventBytes, err := reply.GetEventBytes(*event)
 	if err != nil {
@@ -55,7 +60,6 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	}
 
 	_, err = pipe.Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -63,7 +67,7 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	return nil
 }
 
-// GetNotificationEventCount returns planned notifications count from given timestamp
+// GetNotificationEventCount returns planned notifications count from given timestamp.
 func (connector *DbConnector) GetNotificationEventCount(triggerID string, from int64) int64 {
 	ctx := connector.context
 	c := *connector.client
@@ -72,7 +76,7 @@ func (connector *DbConnector) GetNotificationEventCount(triggerID string, from i
 	return count
 }
 
-// FetchNotificationEvent waiting for event in events list
+// FetchNotificationEvent waiting for event in events list.
 func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	var event moira.NotificationEvent
 	ctx := connector.context
@@ -81,17 +85,17 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	response := c.BRPop(ctx, time.Second, notificationEventsList)
 	err := response.Err()
 
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return event, database.ErrNil
 	}
 
 	if err != nil {
-		return event, fmt.Errorf("failed to fetch event: %s", err.Error())
+		return event, fmt.Errorf("failed to fetch event: %w", err)
 	}
 
 	event, _ = reply.BRPopToEvent(response)
 
-	if event.Values == nil { //TODO(litleleprikon): remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	if event.Values == nil { // TODO(litleleprikon): remove in moira v2.8.0. Compatibility with moira < v2.6.0
 		event.Values = make(map[string]float64)
 	}
 
@@ -103,20 +107,22 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	return event, nil
 }
 
-// RemoveAllNotificationEvents removes all notification events from database
+// RemoveAllNotificationEvents removes all notification events from database.
 func (connector *DbConnector) RemoveAllNotificationEvents() error {
 	ctx := connector.context
 	c := *connector.client
 
 	if _, err := c.Del(ctx, notificationEventsList).Result(); err != nil {
-		return fmt.Errorf("failed to remove %s: %s", notificationEventsList, err.Error())
+		return fmt.Errorf("failed to remove %s: %w", notificationEventsList, err)
 	}
 
 	return nil
 }
 
-var notificationEventsList = "moira-trigger-events"
-var notificationEventsUIList = "moira-trigger-events-ui"
+const (
+	notificationEventsList   = "moira-trigger-events"
+	notificationEventsUIList = "moira-trigger-events-ui"
+)
 
 func triggerEventsKey(triggerID string) string {
 	return "moira-trigger-events:" + triggerID

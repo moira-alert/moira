@@ -1,7 +1,7 @@
 package plotting
 
 import (
-	"github.com/beevee/go-chart"
+	"github.com/moira-alert/go-chart"
 )
 
 const (
@@ -18,7 +18,7 @@ type plotLine struct {
 	style chart.Style
 }
 
-// getPlotLegend returns plot legend
+// getPlotLegend returns plot legend.
 func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart.Renderable {
 	// TODO: Simplify this method
 	return func(r chart.Renderer, cb chart.Box, chartDefaults chart.Style) {
@@ -55,7 +55,7 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 		legendStyle.GetTextOptions().WriteToRenderer(r)
 
 		labelX := 0
-		labelY := c.Height - 15 //nolint
+		labelY := c.Height - 15                         //nolint
 		markerY := labelY - int(legendStyle.FontSize/2) //nolint
 
 		for _, line := range lines {
@@ -89,7 +89,7 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 	}
 }
 
-// inheritFrom inherits style from initial to make sure marker will be added
+// inheritFrom inherits style from initial to make sure marker will be added.
 func inheritFrom(initial chart.Style) chart.Style {
 	if initial.StrokeColor.IsZero() {
 		initial.StrokeColor = initial.DotColor

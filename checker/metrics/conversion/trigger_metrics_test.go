@@ -4,6 +4,8 @@ import (
 	"math"
 	"testing"
 
+	"github.com/pkg/errors"
+
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
@@ -35,7 +37,7 @@ func TestNewTriggerTargetMetrics(t *testing.T) {
 
 func TestTriggerTargetMetrics_Populate(t *testing.T) {
 	type args struct {
-		lastMetrics map[string]bool
+		lastMetrics set[string]
 		from        int64
 		to          int64
 	}
@@ -52,9 +54,9 @@ func TestTriggerTargetMetrics_Populate(t *testing.T) {
 				"metric.test.2": {Name: "metric.test.2", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{0}},
 			},
 			args: args{
-				lastMetrics: map[string]bool{
-					"metric.test.1": true,
-					"metric.test.2": true,
+				lastMetrics: set[string]{
+					"metric.test.1": void,
+					"metric.test.2": void,
 				},
 				from: 17,
 				to:   67,
@@ -70,9 +72,9 @@ func TestTriggerTargetMetrics_Populate(t *testing.T) {
 				"metric.test.1": {Name: "metric.test.1", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{0}},
 			},
 			args: args{
-				lastMetrics: map[string]bool{
-					"metric.test.1": true,
-					"metric.test.2": true,
+				lastMetrics: set[string]{
+					"metric.test.1": void,
+					"metric.test.2": void,
 				},
 				from: 17,
 				to:   67,
@@ -100,6 +102,7 @@ func TestTriggerTargetMetrics_Populate(t *testing.T) {
 		}
 	})
 }
+
 func TestNewTriggerMetricsWithCapacity(t *testing.T) {
 	Convey("NewTriggerMetricsWithCapacity", t, func() {
 		capacity := 10
@@ -117,14 +120,14 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 		to                   int64
 	}
 	tests := []struct {
-		name string
-		m    TriggerMetrics
-		args args
-		want TriggerMetrics
+		name           string
+		triggerMetrics TriggerMetrics
+		args           args
+		want           TriggerMetrics
 	}{
 		{
 			name: "origin do not have missing metrics",
-			m: TriggerMetrics{
+			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
 					"metric.test.2": {Name: "metric.test.2"},
@@ -148,7 +151,7 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 		},
 		{
 			name: "origin have missing metrics",
-			m: TriggerMetrics{
+			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
 				},
@@ -169,14 +172,46 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "no trigger metrics for t2, empty last check (used to panic before PR #939)",
+			triggerMetrics: TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{},
+			},
+			args: args{
+				lastCheck:            map[string]moira.MetricState{},
+				declaredAloneMetrics: map[string]bool{},
+				from:                 17,
+				to:                   67,
+			},
+			want: TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1", StopTime: 0},
+					"metric.test.2": {Name: "metric.test.2", StopTime: 0},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{math.NaN()}},
+					"metric.test.2": {Name: "metric.test.2", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{math.NaN()}},
+				},
+			},
+		},
 	}
 	Convey("Populate", t, func() {
-		for _, tt := range tests {
-			Convey(tt.name, func() {
-				actual := tt.m.Populate(tt.args.lastCheck, tt.args.declaredAloneMetrics, tt.args.from, tt.args.to)
-				So(actual, ShouldHaveLength, len(tt.want))
+		for _, testCase := range tests {
+			Convey(testCase.name, func() {
+				actual := testCase.triggerMetrics.Populate(
+					testCase.args.lastCheck,
+					testCase.args.declaredAloneMetrics,
+					testCase.args.from,
+					testCase.args.to,
+				)
+
+				So(actual, ShouldHaveLength, len(testCase.want))
 				for targetName, metrics := range actual {
-					wantMetrics, ok := tt.want[targetName]
+					wantMetrics, ok := testCase.want[targetName]
 					So(metrics, ShouldHaveLength, len(wantMetrics))
 					So(ok, ShouldBeTrue)
 					for metricName, actualMetric := range metrics {
@@ -275,10 +310,13 @@ func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 			So(filtered, ShouldBeEmpty)
 			So(alone, ShouldBeEmpty)
 			So(err, ShouldBeError)
-			So(err.(ErrUnexpectedAloneMetric).unexpected, ShouldContainKey, "t2")
-			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldHaveLength, 2)
-			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldContain, "metric.test.3")
-			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldContain, "metric.test.4")
+
+			var convertedErr ErrUnexpectedAloneMetric
+			errors.As(err, &convertedErr)
+			So(convertedErr.unexpected, ShouldContainKey, "t2")
+			So(convertedErr.unexpected["t2"], ShouldHaveLength, 2)
+			So(convertedErr.unexpected["t2"], ShouldContain, "metric.test.3")
+			So(convertedErr.unexpected["t2"], ShouldContain, "metric.test.4")
 		})
 		Convey("origin has targets that declared as alone metrics but it is empty", func() {
 			m := TriggerMetrics{
@@ -305,13 +343,13 @@ func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 func TestTriggerMetrics_Diff(t *testing.T) {
 	tests := []struct {
 		name                 string
-		m                    TriggerMetrics
+		triggerMetrics       TriggerMetrics
 		declaredAloneMetrics map[string]bool
-		want                 map[string]map[string]bool
+		want                 map[string]set[string]
 	}{
 		{
 			name: "all targets have same metrics",
-			m: TriggerMetrics{
+			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
 					"metric.test.2": {Name: "metric.test.2"},
@@ -324,11 +362,11 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]map[string]bool{},
+			want:                 map[string]set[string]{},
 		},
 		{
 			name: "one target have missed metric",
-			m: TriggerMetrics{
+			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
 					"metric.test.2": {Name: "metric.test.2"},
@@ -340,11 +378,11 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]map[string]bool{"t2": {"metric.test.3": true}},
+			want:                 map[string]set[string]{"t2": {"metric.test.3": void}},
 		},
 		{
 			name: "one target is alone metric",
-			m: TriggerMetrics{
+			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
 					"metric.test.2": {Name: "metric.test.2"},
@@ -355,11 +393,11 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{"t2": true},
-			want:                 map[string]map[string]bool{},
+			want:                 map[string]set[string]{},
 		},
 		{
 			name: "another target have missed metric",
-			m: TriggerMetrics{
+			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
 					"metric.test.2": {Name: "metric.test.2"},
@@ -373,11 +411,11 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want:                 map[string]map[string]bool{"t1": {"metric.test.4": true}},
+			want:                 map[string]set[string]{"t1": {"metric.test.4": void}},
 		},
 		{
 			name: "one target is empty",
-			m: TriggerMetrics{
+			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{},
 				"t2": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
@@ -387,16 +425,16 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want: map[string]map[string]bool{"t1": {
-				"metric.test.1": true,
-				"metric.test.2": true,
-				"metric.test.3": true,
-				"metric.test.4": true,
+			want: map[string]set[string]{"t1": {
+				"metric.test.1": void,
+				"metric.test.2": void,
+				"metric.test.3": void,
+				"metric.test.4": void,
 			}},
 		},
 		{
 			name: "Multiple targets with different metrics",
-			m: TriggerMetrics{
+			triggerMetrics: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.2": {Name: "metric.test.2"},
 					"metric.test.3": {Name: "metric.test.3"},
@@ -419,27 +457,27 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 				},
 			},
 			declaredAloneMetrics: map[string]bool{},
-			want: map[string]map[string]bool{
+			want: map[string]set[string]{
 				"t1": {
-					"metric.test.1": true,
+					"metric.test.1": void,
 				},
 				"t2": {
-					"metric.test.2": true,
+					"metric.test.2": void,
 				},
 				"t3": {
-					"metric.test.3": true,
+					"metric.test.3": void,
 				},
 				"t4": {
-					"metric.test.4": true,
+					"metric.test.4": void,
 				},
 			},
 		},
 	}
 	Convey("Diff", t, func() {
-		for _, tt := range tests {
-			Convey(tt.name, func() {
-				actual := tt.m.Diff(tt.declaredAloneMetrics)
-				So(actual, ShouldResemble, tt.want)
+		for _, testCase := range tests {
+			Convey(testCase.name, func() {
+				actual := testCase.triggerMetrics.FindMissingMetrics(newSet(testCase.declaredAloneMetrics))
+				So(actual, ShouldResemble, testCase.want)
 			})
 		}
 	})

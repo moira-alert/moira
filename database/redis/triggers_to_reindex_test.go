@@ -42,7 +42,7 @@ func TestTriggersToReindex(t *testing.T) {
 		err = addTriggersToReindex(dataBase, triggerID1)
 		So(err, ShouldBeNil)
 
-		//current time ≈ startTime + 2
+		// current time ≈ startTime + 2
 		time.Sleep(time.Second)
 		actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix())
 		So(err, ShouldBeNil)
@@ -52,7 +52,7 @@ func TestTriggersToReindex(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, []string{triggerID1})
 
-		//current time ≈ startTime + 3
+		// current time ≈ startTime + 3
 		time.Sleep(time.Second)
 		err = addTriggersToReindex(dataBase, triggerID2, triggerID3)
 		So(err, ShouldBeNil)
@@ -75,7 +75,7 @@ func TestTriggersToReindex(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		//try to save 2 similar triggers
+		// try to save 2 similar triggers
 		err = addTriggersToReindex(dataBase, triggerID1, triggerID1)
 		So(err, ShouldBeNil)
 
@@ -84,7 +84,7 @@ func TestTriggersToReindex(t *testing.T) {
 		So(actual, ShouldResemble, []string{triggerID1})
 
 		// and again
-		//current time ≈ startTime + 4
+		// current time ≈ startTime + 4
 		time.Sleep(time.Second)
 		err = addTriggersToReindex(dataBase, triggerID1, triggerID1)
 		So(err, ShouldBeNil)
@@ -101,7 +101,7 @@ func TestTriggersToReindex(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, []string{triggerID1})
 
-		//add other triggers several times
+		// add other triggers several times
 		err = addTriggersToReindex(dataBase, triggerID1, triggerID1)
 		So(err, ShouldBeNil)
 
@@ -148,7 +148,6 @@ func addTriggersToReindex(connector *DbConnector, triggerIDs ...string) error {
 	}
 
 	_, err := pipe.Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to add triggers to reindex: %s", err.Error())
 	}

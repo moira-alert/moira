@@ -16,11 +16,9 @@ const (
 	messageMaxCharacters = 2000
 )
 
-var (
-	mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
-)
+var mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 
-// SendEvents implements pushover build and send message functionality
+// SendEvents implements pushover build and send message functionality.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	data := &discordgo.MessageSend{}
 	data.Content = sender.buildMessage(events, trigger, throttled)
@@ -32,10 +30,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 			},
 		}
 	}
-	sender.logger.Debugf("Calling discord with message %s", data.Content)
+	sender.logger.Debug().
+		String("message", data.Content).
+		Msg("Calling discord with message")
+
 	channelID, err := sender.getChannelID(contact.Value)
 	if err != nil {
-		return fmt.Errorf("failed to get the channel ID: %s", err)
+		return fmt.Errorf("failed to get the channel ID: %w", err)
 	}
 	_, err = sender.session.ChannelMessageSendComplex(channelID, data)
 	if err != nil {
@@ -45,17 +46,19 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) getChannelID(username string) (string, error) {
-	chid, err := sender.DataBase.GetIDByUsername(messenger, username)
+	chid, err := sender.DataBase.GetChatByUsername(messenger, username)
 	if err != nil {
 		return "", fmt.Errorf("failed to get channel ID: %s", err.Error())
 	}
+
 	return chid, nil
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var buffer strings.Builder
 
-	state := events.GetSubjectState()
+	state := events.GetCurrentState(throttled)
+
 	tags := trigger.GetTags()
 	title := fmt.Sprintf("%s %s %s (%d)\n", state, trigger.Name, tags, len(events))
 	titleLen := len([]rune(title))
@@ -93,8 +96,8 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 	return desc
 }
 
-// buildEventsString builds the string from moira events and limits it to charsForEvents.
-// if n is negative buildEventsString does not limit the events string
+// buildEventsString builds the string from moira events and limits it to charsForEvents
+// if n is negative buildEventsString does not limit the events string.
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool, trigger moira.TriggerData) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."
@@ -114,7 +117,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}

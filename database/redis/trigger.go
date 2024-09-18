@@ -1,8 +1,10 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -12,44 +14,70 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// GetAllTriggerIDs gets all moira triggerIDs
+// GetAllTriggerIDs gets all moira triggerIDs.
 func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	c := *connector.client
-	triggerIds, err := c.SMembers(connector.context, triggersListKey).Result()
+	triggerIds, err := c.SMembers(connector.context, allTriggersListKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all triggers-list: %s", err.Error())
 	}
 	return triggerIds, nil
 }
 
-// GetLocalTriggerIDs gets moira local triggerIDs
-func (connector *DbConnector) GetLocalTriggerIDs() ([]string, error) {
+// GetTriggerIDs returns list of ids of triggers with given cluster key.
+func (connector *DbConnector) GetTriggerIDs(clusterKey moira.ClusterKey) ([]string, error) {
 	c := *connector.client
-	triggerIds, err := c.SDiff(connector.context, triggersListKey, remoteTriggersListKey).Result()
+	key, err := makeTriggerListKey(clusterKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get triggers-list: %s", err.Error())
+		return nil, fmt.Errorf("failed to get triggers-list: %w", err)
+	}
+
+	triggerIds, err := c.SMembers(connector.context, key).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get triggers-list: %w", err)
 	}
 	return triggerIds, nil
 }
 
-// GetRemoteTriggerIDs gets moira remote triggerIDs
-func (connector *DbConnector) GetRemoteTriggerIDs() ([]string, error) {
-	c := *connector.client
-	triggerIds, err := c.SMembers(connector.context, remoteTriggersListKey).Result()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get remote triggers-list: %s", err.Error())
+func (connector *DbConnector) GetTriggerCount(clusterKeys []moira.ClusterKey) (map[moira.ClusterKey]int64, error) {
+	pipe := (*connector.client).TxPipeline()
+
+	cmds := make(map[moira.ClusterKey]*redis.IntCmd, len(clusterKeys))
+	for _, key := range clusterKeys {
+		redisKey, err := makeTriggerListKey(key)
+		if err != nil {
+			return nil, err
+		}
+
+		cmds[key] = pipe.SCard(connector.context, redisKey)
 	}
-	return triggerIds, nil
+
+	_, err := pipe.Exec(connector.context)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[moira.ClusterKey]int64, len(clusterKeys))
+	for key, cmd := range cmds {
+		value, err := cmd.Result()
+		if err != nil {
+			return nil, err
+		}
+
+		res[key] = value
+	}
+
+	return res, nil
 }
 
-// GetTrigger gets trigger and trigger tags by given ID and return it in merged object
+// GetTrigger gets trigger and trigger tags by given ID and return it in merged object.
 func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error) {
 	pipe := (*connector.client).TxPipeline()
 	trigger := pipe.Get(connector.context, triggerKey(triggerID))
 	triggerTags := pipe.SMembers(connector.context, triggerTagsKey(triggerID))
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.Trigger{}, database.ErrNil
 		}
 		return moira.Trigger{}, fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -59,7 +87,7 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 }
 
 // GetTriggers returns triggers data by given ids, len of triggerIDs is equal to len of returned values array.
-// If there is no object by current ID, then nil is returned
+// If there is no object by current ID, then nil is returned.
 func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger, error) {
 	pipe := (*connector.client).TxPipeline()
 	for _, triggerID := range triggerIDs {
@@ -67,7 +95,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 		pipe.SMembers(connector.context, triggerTagsKey(triggerID))
 	}
 	rawResponse, err := pipe.Exec(connector.context)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 
@@ -77,7 +105,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 		triggerCmd, tagCmd := rawResponse[i].(*redis.StringCmd), rawResponse[i+1].(*redis.StringSliceCmd)
 		trigger, err := connector.getTriggerWithTags(triggerCmd, tagCmd, triggerID)
 		if err != nil {
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				continue
 			}
 			return nil, err
@@ -87,7 +115,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 	return triggers, nil
 }
 
-// GetPatternTriggerIDs gets trigger list by given pattern
+// GetPatternTriggerIDs gets trigger list by given pattern.
 func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, error) {
 	c := *connector.client
 
@@ -98,26 +126,26 @@ func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, er
 	return triggerIds, nil
 }
 
-// RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern
+// RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern.
 func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	c := *connector.client
 	_, err := c.Del(connector.context, patternTriggersKey(pattern)).Result()
 	if err != nil {
-		return fmt.Errorf("failed delete pattern-triggers: %s, error: %s", pattern, err)
+		return fmt.Errorf("failed delete pattern-triggers: %s, error: %w", pattern, err)
 	}
 	return nil
 }
 
-// SaveTrigger sets trigger data by given trigger and triggerID
+// SaveTrigger sets trigger data by given trigger and triggerID.
 // If trigger already exists, then merge old and new trigger patterns and tags list
-// and cleanup not used tags and patterns from lists
+// and cleanup not used tags and patterns from lists.
 // If given trigger contains new tags then create it.
-// If given trigger has no subscription on it, add it to triggers-without-subscriptions
+// If given trigger has no subscription on it, add it to triggers-without-subscriptions.
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
 	var oldTrigger *moira.Trigger
 	if existing, err := connector.GetTrigger(triggerID); err == nil {
 		oldTrigger = &existing
-	} else if err != database.ErrNil {
+	} else if !errors.Is(err, database.ErrNil) {
 		return fmt.Errorf("failed to get trigger: %s", err.Error())
 	}
 
@@ -125,7 +153,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 
 	err := connector.updateTrigger(triggerID, trigger, oldTrigger)
 	if err != nil {
-		return fmt.Errorf("failed to update trigger: %s", err.Error())
+		return fmt.Errorf("failed to update trigger: %w", err)
 	}
 
 	hasSubscriptions, err := connector.triggerHasSubscriptions(trigger)
@@ -149,7 +177,24 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	return nil
 }
 
-func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error {
+// GetTriggerIDsStartWith returns triggers which have ID starting with "prefix" parameter.
+func (connector *DbConnector) GetTriggerIDsStartWith(prefix string) ([]string, error) {
+	triggers, err := connector.GetAllTriggerIDs()
+	if err != nil {
+		return nil, err
+	}
+
+	var matchedTriggers []string
+	for _, id := range triggers {
+		if strings.HasPrefix(id, prefix) {
+			matchedTriggers = append(matchedTriggers, id)
+		}
+	}
+
+	return matchedTriggers, nil
+}
+
+func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error { // nolint:gocyclo
 	bytes, err := reply.GetTriggerBytes(triggerID, newTrigger)
 	if err != nil {
 		return err
@@ -159,25 +204,36 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 		for _, pattern := range moira.GetStringListsDiff(oldTrigger.Patterns, newTrigger.Patterns) {
 			pipe.SRem(connector.context, patternTriggersKey(pattern), triggerID)
 		}
-		if oldTrigger.IsRemote && !newTrigger.IsRemote {
-			pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
-		}
 
 		for _, tag := range moira.GetStringListsDiff(oldTrigger.Tags, newTrigger.Tags) {
 			pipe.SRem(connector.context, triggerTagsKey(triggerID), tag)
 			pipe.SRem(connector.context, tagTriggersKey(tag), triggerID)
 		}
+
+		if newTrigger.ClusterKey() != oldTrigger.ClusterKey() {
+			var oldTriggersListKey string
+			oldTriggersListKey, err = makeTriggerListKey(oldTrigger.ClusterKey())
+			if err != nil {
+				return fmt.Errorf("could not update trigger: %w", err)
+			}
+			pipe.SRem(connector.context, oldTriggersListKey, triggerID)
+		}
 	}
 	pipe.Set(connector.context, triggerKey(triggerID), bytes, redis.KeepTTL)
-	pipe.SAdd(connector.context, triggersListKey, triggerID)
-	if newTrigger.IsRemote {
-		pipe.SAdd(connector.context, remoteTriggersListKey, triggerID)
-	} else {
+	pipe.SAdd(connector.context, allTriggersListKey, triggerID)
+
+	newTriggersListKey, err := makeTriggerListKey(newTrigger.ClusterKey())
+	if err != nil {
+		return fmt.Errorf("could not update trigger: %w", err)
+	}
+	pipe.SAdd(connector.context, newTriggersListKey, triggerID)
+	if newTrigger.TriggerSource == moira.GraphiteLocal {
 		for _, pattern := range newTrigger.Patterns {
 			pipe.SAdd(connector.context, patternsListKey, pattern)
 			pipe.SAdd(connector.context, patternTriggersKey(pattern), triggerID)
 		}
 	}
+
 	for _, tag := range newTrigger.Tags {
 		pipe.SAdd(connector.context, triggerTagsKey(triggerID), tag)
 		pipe.SAdd(connector.context, tagTriggersKey(tag), triggerID)
@@ -194,26 +250,28 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 }
 
 func (connector *DbConnector) preSaveTrigger(newTrigger *moira.Trigger, oldTrigger *moira.Trigger) {
-	if newTrigger.IsRemote {
+	if newTrigger.TriggerSource != moira.GraphiteLocal {
 		newTrigger.Patterns = make([]string, 0)
 	}
 
-	now := connector.clock.Now().Unix()
+	now := connector.clock.NowUnix()
 	newTrigger.UpdatedAt = &now
 	if oldTrigger != nil {
 		newTrigger.CreatedAt = oldTrigger.CreatedAt
+		newTrigger.CreatedBy = oldTrigger.CreatedBy
 	} else {
 		newTrigger.CreatedAt = &now
+		newTrigger.CreatedBy = newTrigger.UpdatedBy
 	}
 }
 
 // RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,
-// Deletes triggerID from containing tags triggers list and from containing patterns triggers list
-// If containing patterns doesn't used in another triggers, then delete this patterns with metrics data
+// deletes triggerID from containing tags triggers list and from containing patterns triggers list.
+// If containing patterns doesn't used in another triggers, then delete this patterns with metrics data.
 func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	trigger, err := connector.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil
 		}
 		return err
@@ -231,8 +289,14 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 	pipe.Del(connector.context, triggerKey(triggerID))
 	pipe.Del(connector.context, triggerTagsKey(triggerID))
 	pipe.Del(connector.context, triggerEventsKey(triggerID))
-	pipe.SRem(connector.context, triggersListKey, triggerID)
-	pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
+	pipe.SRem(connector.context, allTriggersListKey, triggerID)
+
+	triggerListKey, err := makeTriggerListKey(trigger.ClusterKey())
+	if err != nil {
+		return fmt.Errorf("could not remove trigger: %w", err)
+	}
+	pipe.SRem(connector.context, triggerListKey, triggerID)
+
 	pipe.SRem(connector.context, unusedTriggersKey, triggerID)
 	for _, tag := range trigger.Tags {
 		pipe.SRem(connector.context, tagTriggersKey(tag), triggerID)
@@ -251,9 +315,9 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 	return nil
 }
 
-// GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
+// GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs.
 // Len of triggerIDs is equal to len of returned values array.
-// If there is no object by current ID, then nil is returned
+// If there is no object by current ID, then nil is returned.
 func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerCheck, error) {
 	pipe := (*connector.client).TxPipeline()
 	for _, triggerID := range triggerIDs {
@@ -264,8 +328,8 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 	}
 	rawResponse, err := pipe.Exec(connector.context)
 
-	if err != nil && err != redis.Nil {
-		return nil, fmt.Errorf("failed to EXEC: %s", err)
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return nil, fmt.Errorf("failed to EXEC: %w", err)
 	}
 	var slices [][]interface{}
 	for i := 0; i < len(rawResponse); i += 4 {
@@ -280,13 +344,13 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 		triggerCmd, tagCmd := slice[1].(*redis.StringCmd), slice[2].(*redis.StringSliceCmd)
 		trigger, err := connector.getTriggerWithTags(triggerCmd, tagCmd, triggerID)
 		if err != nil {
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				continue
 			}
 			return nil, err
 		}
 		lastCheck, err := reply.Check(slice[3].(*redis.StringCmd))
-		if err != nil && err != database.ErrNil {
+		if err != nil && !errors.Is(err, database.ErrNil) {
 			return nil, err
 		}
 		throttlingStr, _ := slice[4].(*redis.StringCmd).Result()
@@ -310,7 +374,10 @@ func (connector *DbConnector) getTriggerWithTags(triggerRaw *redis.StringCmd, ta
 	}
 	triggerTags, err := tagsRaw.Result()
 	if err != nil {
-		connector.logger.Errorf("Error getting trigger tags, id: %s, error: %s", triggerID, err.Error())
+		connector.logger.Error().
+			String(moira.LogFieldNameTriggerID, triggerID).
+			Error(err).
+			Msg("Error getting trigger tags")
 	}
 
 	if len(triggerTags) > 0 {
@@ -356,8 +423,36 @@ func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (b
 	return false, nil
 }
 
-var triggersListKey = "{moira-triggers-list}:moira-triggers-list"
-var remoteTriggersListKey = "{moira-triggers-list}:moira-remote-triggers-list"
+var (
+	allTriggersListKey        = "{moira-triggers-list}:moira-triggers-list"
+	localTriggersListKey      = "{moira-triggers-list}:moira-local-triggers-list"
+	remoteTriggersListKey     = "{moira-triggers-list}:moira-remote-triggers-list"
+	prometheusTriggersListKey = "{moira-triggers-list}:moira-prometheus-triggers-list"
+)
+
+func makeTriggerListKey(clusterKey moira.ClusterKey) (string, error) {
+	var key string
+
+	switch clusterKey.TriggerSource {
+	case moira.GraphiteLocal:
+		key = localTriggersListKey
+
+	case moira.GraphiteRemote:
+		key = remoteTriggersListKey
+
+	case moira.PrometheusRemote:
+		key = prometheusTriggersListKey
+
+	default:
+		return "", fmt.Errorf("unknown trigger source %s", clusterKey.TriggerSource)
+	}
+
+	if clusterKey.ClusterId != moira.DefaultCluster {
+		key = key + ":" + clusterKey.ClusterId.String()
+	}
+
+	return key, nil
+}
 
 func triggerKey(triggerID string) string {
 	return "moira-trigger:" + triggerID

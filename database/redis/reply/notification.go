@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -9,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// scheduledNotificationStorageElement represent notification object
+// scheduledNotificationStorageElement represent notification object.
 type scheduledNotificationStorageElement struct {
 	Event     moira.NotificationEvent `json:"event"`
 	Trigger   moira.TriggerData       `json:"trigger"`
@@ -18,6 +19,7 @@ type scheduledNotificationStorageElement struct {
 	Throttled bool                    `json:"throttled"`
 	SendFail  int                     `json:"send_fail"`
 	Timestamp int64                   `json:"timestamp"`
+	CreatedAt int64                   `json:"created_at,omitempty"`
 }
 
 func toScheduledNotificationStorageElement(notification moira.ScheduledNotification) scheduledNotificationStorageElement {
@@ -29,6 +31,7 @@ func toScheduledNotificationStorageElement(notification moira.ScheduledNotificat
 		Throttled: notification.Throttled,
 		SendFail:  notification.SendFail,
 		Timestamp: notification.Timestamp,
+		CreatedAt: notification.CreatedAt,
 	}
 }
 
@@ -41,6 +44,7 @@ func (n scheduledNotificationStorageElement) toScheduledNotification() moira.Sch
 		Throttled: n.Throttled,
 		SendFail:  n.SendFail,
 		Timestamp: n.Timestamp,
+		CreatedAt: n.CreatedAt,
 	}
 }
 
@@ -49,48 +53,52 @@ func GetNotificationBytes(notification moira.ScheduledNotification) ([]byte, err
 	notificationSE := toScheduledNotificationStorageElement(notification)
 	bytes, err := json.Marshal(notificationSE)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal notification: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal notification: %w", err)
 	}
 	return bytes, nil
 }
 
-// unmarshalNotification converts JSON to moira.ScheduledNotification object
+// unmarshalNotification converts JSON to moira.ScheduledNotification object.
 func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification, error) {
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.ScheduledNotification{}, database.ErrNil
 		}
-		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %s", err.Error())
+		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %w", err)
 	}
+
 	notificationSE := scheduledNotificationStorageElement{}
 	err = json.Unmarshal(bytes, &notificationSE)
 	if err != nil {
-		return moira.ScheduledNotification{}, fmt.Errorf("failed to parse notification json %s: %s", string(bytes), err.Error())
+		return moira.ScheduledNotification{}, fmt.Errorf("failed to parse notification json %s: %w", string(bytes), err)
 	}
+
 	return notificationSE.toScheduledNotification(), nil
 }
 
-// Notifications converts redis DB reply to moira.ScheduledNotification objects array
+// Notifications converts redis DB reply to moira.ScheduledNotification objects array.
 func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotification, error) {
-	if responses == nil || responses.Err() == redis.Nil {
+	if responses == nil || errors.Is(responses.Err(), redis.Nil) {
 		return make([]*moira.ScheduledNotification, 0), nil
 	}
 
 	data, err := responses.Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to read ScheduledNotifications: %s", err.Error())
+		return nil, fmt.Errorf("failed to read ScheduledNotifications: %w", err)
 	}
 
 	notifications := make([]*moira.ScheduledNotification, len(data))
 	for i, value := range data {
 		notification, err2 := unmarshalNotification([]byte(value), err)
-		if err2 != nil && err2 != database.ErrNil {
+		if err2 != nil && !errors.Is(err2, database.ErrNil) {
 			return nil, err2
-		} else if err2 == database.ErrNil {
+		}
+		if errors.Is(err2, database.ErrNil) {
 			notifications[i] = nil
 		} else {
 			notifications[i] = &notification
 		}
 	}
+
 	return notifications, nil
 }

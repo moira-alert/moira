@@ -3,7 +3,9 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -11,14 +13,14 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// GetContact returns contact data by given id, if no value, return database.ErrNil error
+// GetContact returns contact data by given id, if no value, return database.ErrNil error.
 func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	c := *connector.client
 
 	var contact moira.ContactData
 
 	result := c.Get(connector.context, contactKey(id))
-	if result.Err() == redis.Nil {
+	if errors.Is(result.Err(), redis.Nil) {
 		return contact, database.ErrNil
 	}
 	contact, err := reply.Contact(result)
@@ -30,7 +32,7 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 }
 
 // GetContacts returns contacts data by given ids, len of contactIDs is equal to len of returned values array.
-// If there is no object by current ID, then nil is returned
+// If there is no object by current ID, then nil is returned.
 func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
 	results := make([]*redis.StringCmd, 0, len(contactIDs))
 
@@ -41,7 +43,7 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 		results = append(results, result)
 	}
 	_, err := pipe.Exec(connector.context)
-	if err != nil && err != redis.Nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, err
 	}
 
@@ -67,7 +69,6 @@ func getContactsKeysOnRedisNode(ctx context.Context, client redis.UniversalClien
 		var keysResult []string
 		var err error
 		keysResult, cursor, err = client.Scan(ctx, cursor, contactKey("*"), scanCount).Result()
-
 		if err != nil {
 			return nil, err
 		}
@@ -81,45 +82,33 @@ func getContactsKeysOnRedisNode(ctx context.Context, client redis.UniversalClien
 	return keys, nil
 }
 
-// GetAllContacts returns full contact list
+// GetAllContacts returns full contact list.
 func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
-	client := *connector.client
 	var keys []string
 
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			keysResult, err := getContactsKeysOnRedisNode(ctx, shard)
-			if err != nil {
-				return err
-			}
-			keys = append(keys, keysResult...)
-			return nil
-		})
-
+	err := connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
+		keysResult, err := getContactsKeysOnRedisNode(connector.context, client)
 		if err != nil {
-			return nil, err
+			return err
 		}
-	default:
-		keysResult, err := getContactsKeysOnRedisNode(connector.context, c)
-		if err != nil {
-			return nil, err
-		}
-		keys = keysResult
+		keys = append(keys, keysResult...)
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	contactIDs := make([]string, 0, len(keys))
 	for _, key := range keys {
-		key = key[14:]
-		contactIDs = append(contactIDs, key)
+		contactIDs = append(contactIDs, strings.TrimPrefix(key, contactKey("")))
 	}
 	return connector.GetContacts(contactIDs)
 }
 
-// SaveContact writes contact data and updates user contacts
+// SaveContact writes contact data and updates user contacts.
 func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	existing, getContactErr := connector.GetContact(contact.ID)
-	if getContactErr != nil && getContactErr != database.ErrNil {
+	if getContactErr != nil && !errors.Is(getContactErr, database.ErrNil) {
 		return getContactErr
 	}
 	contactString, err := json.Marshal(contact)
@@ -131,10 +120,10 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 
 	pipe := c.TxPipeline()
 	pipe.Set(connector.context, contactKey(contact.ID), contactString, redis.KeepTTL)
-	if getContactErr != database.ErrNil && contact.User != existing.User {
+	if !errors.Is(getContactErr, database.ErrNil) && contact.User != existing.User {
 		pipe.SRem(connector.context, userContactsKey(existing.User), contact.ID)
 	}
-	if getContactErr != database.ErrNil && contact.Team != existing.Team {
+	if !errors.Is(getContactErr, database.ErrNil) && contact.Team != existing.Team {
 		pipe.SRem(connector.context, teamContactsKey(existing.Team), contact.ID)
 	}
 	if contact.User != "" {
@@ -150,10 +139,10 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	return nil
 }
 
-// RemoveContact deletes contact data and contactID from user contacts
+// RemoveContact deletes contact data and contactID from user contacts.
 func (connector *DbConnector) RemoveContact(contactID string) error {
 	existing, err := connector.GetContact(contactID)
-	if err != nil && err != database.ErrNil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return err
 	}
 	c := *connector.client
@@ -169,7 +158,7 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	return nil
 }
 
-// GetUserContactIDs returns contacts ids by given login
+// GetUserContactIDs returns contacts ids by given login.
 func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) {
 	c := *connector.client
 
@@ -180,7 +169,7 @@ func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) 
 	return contacts, nil
 }
 
-// GetTeamContactIDs returns contacts ids by given team
+// GetTeamContactIDs returns contacts ids by given team.
 func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) {
 	c := *connector.client
 	contacts, err := c.SMembers(connector.context, teamContactsKey(login)).Result()
@@ -198,6 +187,6 @@ func userContactsKey(userName string) string {
 	return "moira-user-contacts:" + userName
 }
 
-func teamContactsKey(userName string) string {
-	return "moira-team-contacts:" + userName
+func teamContactsKey(teamName string) string {
+	return "moira-team-contacts:" + teamName
 }

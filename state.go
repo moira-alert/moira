@@ -1,18 +1,18 @@
 package moira
 
-// State type describe all default moira triggers or metrics states
+// State type describe all default moira triggers or metrics states.
 type State string
 
-// TTLState declares all ttl (NODATA) states, used if metric has no values for given interval (ttl)
+// TTLState declares all ttl (NODATA) states, used if metric has no values for given interval (ttl).
 type TTLState string
 
-// Moira notifier self-states
+// Moira notifier self-states.
 const (
 	SelfStateOK    = "OK"    // OK means notifier is healthy
 	SelfStateERROR = "ERROR" // ERROR means notifier is stopped, admin intervention is required
 )
 
-// Moira trigger and metric states
+// Moira trigger and metric states.
 var (
 	StateOK        State = "OK"
 	StateWARN      State = "WARN"
@@ -22,7 +22,7 @@ var (
 	StateTEST      State = "TEST"      // Use this only for test notifications
 )
 
-// Moira ttl states
+// Moira ttl states.
 var (
 	TTLStateOK     TTLState = "OK"
 	TTLStateWARN   TTLState = "WARN"
@@ -36,29 +36,39 @@ var (
 	stateScores         = map[State]int64{
 		StateOK:        0,
 		StateWARN:      1,
-		StateERROR:     100, //nolint
-		StateNODATA:    1000, //nolint
+		StateERROR:     100,    //nolint
+		StateNODATA:    1000,   //nolint
 		StateEXCEPTION: 100000, //nolint
 	}
 	eventStateWeight = map[State]int{
 		StateOK:     0,
 		StateWARN:   1,
-		StateERROR:  100, //nolint
+		StateERROR:  100,   //nolint
 		StateNODATA: 10000, //nolint
 	}
 )
 
-// String is a simple Stringer implementation for State
+// String is a simple Stringer implementation for State.
 func (state State) String() string {
 	return string(state)
 }
 
-// ToSelfState converts State to corresponding SelfState
+// ToSelfState converts State to corresponding SelfState.
 func (state State) ToSelfState() string {
 	if state != StateOK {
 		return SelfStateERROR
 	}
 	return SelfStateOK
+}
+
+// IsValid checks if  valid State.
+func (state State) IsValid() bool {
+	for _, allowedState := range eventStatesPriority {
+		if state == allowedState {
+			return true
+		}
+	}
+	return false
 }
 
 // ToMetricState is an auxiliary function to handle metric state properly.

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
+	"go.uber.org/mock/gomock"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -106,7 +106,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 	var until int64 = 500
 	target := "foo.bar"
 	body := []byte("Some string")
-	testConfigs := []Config{
+	testConfigs := []*Config{
 		{},
 		{RetrySeconds: []time.Duration{time.Second}},
 		{RetrySeconds: []time.Duration{time.Second}},
@@ -126,7 +126,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 
 			for _, config := range testConfigs {
 				config.URL = server.URL
-				remote.config = &config
+				remote.config = config
 				request, _ := remote.prepareRequest(from, until, target)
 				actual, isRemoteAvailable, err := remote.makeRequestWithRetries(
 					request,
@@ -150,7 +150,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 
 			for _, config := range testConfigs {
 				config.URL = server.URL
-				remote.config = &config
+				remote.config = config
 				request, _ := remote.prepareRequest(from, until, target)
 				actual, isRemoteAvailable, err := remote.makeRequestWithRetries(
 					request,
@@ -171,7 +171,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 			remote := Remote{client: server.Client()}
 			for _, config := range testConfigs {
 				config.URL = "http://bad/"
-				remote.config = &config
+				remote.config = config
 				systemClock := mock_clock.NewMockClock(mockCtrl)
 				systemClock.EXPECT().Sleep(time.Second).Times(len(config.RetrySeconds))
 				remote.clock = systemClock
@@ -199,7 +199,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 				remote := Remote{client: server.Client()}
 				for _, config := range testConfigs {
 					config.URL = server.URL
-					remote.config = &config
+					remote.config = config
 					systemClock := mock_clock.NewMockClock(mockCtrl)
 					systemClock.EXPECT().Sleep(time.Second).Times(len(config.RetrySeconds))
 					remote.clock = systemClock
@@ -236,7 +236,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 					config.URL = server.URL
 					systemClock := mock_clock.NewMockClock(mockCtrl)
 					systemClock.EXPECT().Sleep(time.Second).Times(1)
-					remote := Remote{client: server.Client(), config: &config, clock: systemClock}
+					remote := Remote{client: server.Client(), config: config, clock: systemClock}
 
 					request, _ := remote.prepareRequest(from, until, target)
 					actual, isRemoteAvailable, err := remote.makeRequestWithRetries(

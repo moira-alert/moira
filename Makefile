@@ -12,7 +12,7 @@ VERSION_FEATURE := ${GIT_TAG}-$(shell echo $(GIT_BRANCH) | cut -c1-100).${GIT_CO
 VERSION_NIGHTLY := ${GIT_COMMIT_DATE}.${GIT_HASH_SHORT}
 VERSION_RELEASE := ${GIT_TAG}.${GIT_COMMIT}
 
-GO_VERSION := $(shell go version | cut -d' ' -f3)
+GO_VERSION := 1.18
 GO_PATH := $(shell go env GOPATH)
 GO111MODULE := on
 GOLANGCI_LINT_VERSION := ""
@@ -39,9 +39,27 @@ lint:
 mock:
 	. ./generate_mocks.sh
 
+.PHONY: install-swag
+install-swag:
+	go install github.com/swaggo/swag/cmd/swag@v1.8.12
+
+.PHONY: spec
+spec:
+	echo "Generating Swagger documentation"
+	swag init -g api/handler/handler.go
+	swag fmt
+
+.PHONY: validate-spec
+validate-spec:
+	openapi-generator-cli validate -i docs/swagger.yaml
+
 .PHONY: test
 test:
-	echo 'mode: atomic' > coverage.txt && go list ./... | xargs -n1 -I{} sh -c 'go test -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
+	echo 'mode: atomic' > coverage.txt && go list ./... | xargs -n1 -I{} sh -c 'go test -race -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
+
+.PHONY: ci-test
+ci-test:
+	echo 'mode: atomic' > coverage.txt && go list ./... | xargs -n1 -I{} sh -c 'go test -race -v -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
 
 .PHONY: build
 build:

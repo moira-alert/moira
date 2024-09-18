@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"go.uber.org/mock/gomock"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -26,7 +26,7 @@ func TestInit(t *testing.T) {
 
 		Convey("Has settings", func() {
 			imageStore.EXPECT().IsEnabled().Return(true)
-			senderSettings := map[string]string{
+			senderSettings := map[string]interface{}{
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
@@ -38,7 +38,7 @@ func TestInit(t *testing.T) {
 			So(sender.imageStore, ShouldResemble, imageStore)
 		})
 		Convey("Wrong image_store name", func() {
-			senderSettings := map[string]string{
+			senderSettings := map[string]interface{}{
 				"front_uri":   "http://moira.uri",
 				"image_store": "s4",
 			}
@@ -48,7 +48,7 @@ func TestInit(t *testing.T) {
 		})
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
-			senderSettings := map[string]string{
+			senderSettings := map[string]interface{}{
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}

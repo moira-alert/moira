@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
-	"github.com/golang/mock/gomock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
@@ -59,7 +59,7 @@ func TestBuildEvent(t *testing.T) {
 			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{}, false)
 			expected := baseExpected
 			details := map[string]interface{}{
-				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Events":       "\n02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)",
 				"Trigger URI":  "http://moira.url/trigger/TriggerID",
 				"Trigger Name": "Trigger Name",
 				"Description":  "bold text italics code regular",
@@ -76,7 +76,7 @@ func TestBuildEvent(t *testing.T) {
 				actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{[]byte("test")}, false)
 				expected := baseExpected
 				details := map[string]interface{}{
-					"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+					"Events":       "\n02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)",
 					"Trigger URI":  "http://moira.url/trigger/TriggerID",
 					"Trigger Name": "Trigger Name",
 					"Description":  "bold text italics code regular",
@@ -106,7 +106,7 @@ func TestBuildEvent(t *testing.T) {
 				)
 				expected := baseExpected
 				details := map[string]interface{}{
-					"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+					"Events":       "\n02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)",
 					"Trigger URI":  "http://moira.url/trigger/TriggerID",
 					"Trigger Name": "Trigger Name",
 					"Description":  "bold text italics code regular",
@@ -134,7 +134,7 @@ func TestBuildEvent(t *testing.T) {
 			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{}, true)
 			expected := baseExpected
 			details := map[string]interface{}{
-				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Events":       "\n02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)",
 				"Message":      "Please, fix your system or tune this trigger to generate less events.",
 				"Trigger URI":  "http://moira.url/trigger/TriggerID",
 				"Description":  "bold text italics code regular",
@@ -153,16 +153,16 @@ func TestBuildEvent(t *testing.T) {
 			expected := baseExpected
 			details := map[string]interface{}{
 				"Events": `
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)`,
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
+02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)`,
 				"Message":      "Please, fix your system or tune this trigger to generate less events.",
 				"Trigger URI":  "http://moira.url/trigger/TriggerID",
 				"Description":  "bold text italics code regular",

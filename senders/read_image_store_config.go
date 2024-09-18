@@ -6,11 +6,23 @@ import (
 
 // ReadImageStoreConfig reads the image store config for a sender
 // from its settings and confirms whether that image store
-// is configured
-func ReadImageStoreConfig(senderSettings map[string]string, imageStores map[string]moira.ImageStore, logger moira.Logger) (string, moira.ImageStore, bool) {
-	imageStoreID, ok := senderSettings["image_store"]
+// is configured.
+func ReadImageStoreConfig(senderSettings interface{}, imageStores map[string]moira.ImageStore, logger moira.Logger) (string, moira.ImageStore, bool) {
+	settings, ok := senderSettings.(map[string]interface{})
 	if !ok {
-		logger.Warningf("Cannot read image_store from the config, will not be able to attach plot images to alerts")
+		logger.Warning().Msg("Failed conversion of senderSettings type to map[string]interface{}")
+		return "", nil, false
+	}
+
+	IimageStoreID, ok := settings["image_store"]
+	if !ok {
+		logger.Warning().Msg("Cannot read image_store from the config, will not be able to attach plot images to alerts")
+		return "", nil, false
+	}
+
+	imageStoreID, ok := IimageStoreID.(string)
+	if !ok {
+		logger.Warning().Msg("Failed to retrieve image_store from sender settings")
 		return "", nil, false
 	}
 
@@ -19,7 +31,9 @@ func ReadImageStoreConfig(senderSettings map[string]string, imageStores map[stri
 	if ok && imageStore.IsEnabled() {
 		imageStoreConfigured = true
 	} else {
-		logger.Warningf("Image store specified (%s) has not been configured", imageStoreID)
+		logger.Warning().
+			String("image_store_id", imageStoreID).
+			Msg("Image store specified has not been configured")
 		return "", nil, false
 	}
 

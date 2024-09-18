@@ -1,18 +1,32 @@
 package webhook
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
-	"strconv"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface via webhook
+var ErrMissingURL = errors.New("can not read url from config")
+
+// Structure that represents the Webhook configuration in the YAML file.
+type config struct {
+	URL      string            `mapstructure:"url"`
+	Body     string            `mapstructure:"body"`
+	Headers  map[string]string `mapstructure:"headers"`
+	User     string            `mapstructure:"user"`
+	Password string            `mapstructure:"password"`
+	Timeout  int               `mapstructure:"timeout"`
+}
+
+// Sender implements moira sender interface via webhook.
 type Sender struct {
 	url      string
+	body     string
 	user     string
 	password string
 	headers  map[string]string
@@ -20,31 +34,37 @@ type Sender struct {
 	log      moira.Logger
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	if senderSettings["name"] == "" {
-		return fmt.Errorf("required name for sender type webhook")
+// Init read yaml config.
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to webhook config: %w", err)
 	}
 
-	sender.url = senderSettings["url"]
+	sender.url = cfg.URL
 	if sender.url == "" {
-		return fmt.Errorf("can not read url from config")
+		return ErrMissingURL
 	}
 
-	sender.user, sender.password = senderSettings["user"], senderSettings["password"]
+	sender.body = cfg.Body
+
+	sender.user, sender.password = cfg.User, cfg.Password
 
 	sender.headers = map[string]string{
 		"User-Agent":   "Moira",
 		"Content-Type": "application/json",
 	}
 
-	timeout := 30
-	if timeoutRaw, ok := senderSettings["timeout"]; ok {
-		var err error
-		timeout, err = strconv.Atoi(timeoutRaw)
-		if err != nil {
-			return fmt.Errorf("can not read timeout from config: %s", err.Error())
-		}
+	for header, value := range cfg.Headers {
+		sender.headers[header] = value
+	}
+
+	var timeout int
+	if cfg.Timeout != 0 {
+		timeout = cfg.Timeout
+	} else {
+		timeout = 30
 	}
 
 	sender.log = logger
@@ -52,10 +72,11 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		Timeout:   time.Duration(timeout) * time.Second,
 		Transport: &http.Transport{DisableKeepAlives: true},
 	}
+
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	request, err := sender.buildRequest(events, contact, trigger, plots, throttled)
 	if request != nil {
@@ -63,7 +84,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to build request: %s", err.Error())
+		return fmt.Errorf("failed to build request: %w", err)
 	}
 
 	response, err := sender.client.Do(request)
@@ -72,12 +93,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to perform request: %s", err.Error())
+		return fmt.Errorf("failed to perform request: %w", err)
 	}
 
 	if !isAllowedResponseCode(response.StatusCode) {
 		var serverResponse string
-		responseBody, err := ioutil.ReadAll(response.Body)
+		responseBody, err := io.ReadAll(response.Body)
 		if err != nil {
 			serverResponse = fmt.Sprintf("failed to read response body: %s", err.Error())
 		} else {
@@ -90,5 +111,5 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func isAllowedResponseCode(responseCode int) bool {
-	return (responseCode >= 200) && (responseCode <= 299)
+	return (responseCode >= http.StatusOK) && (responseCode < http.StatusMultipleChoices)
 }

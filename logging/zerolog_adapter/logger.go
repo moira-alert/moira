@@ -1,4 +1,4 @@
-package logging
+package zerolog_adapter
 
 import (
 	"fmt"
@@ -9,10 +9,11 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/logging"
 )
 
 type Logger struct {
-	zerolog.Logger
+	logger zerolog.Logger
 }
 
 const (
@@ -20,12 +21,12 @@ const (
 	DefaultTimeFormat = "2006-01-02 15:04:05.000"
 )
 
-// ConfigureLog creates new logger based on github.com/rs/zerolog package
+// ConfigureLog creates new logger based on github.com/rs/zerolog package.
 func ConfigureLog(logFile, logLevel, module string, pretty bool) (*Logger, error) {
 	return newLog(logFile, logLevel, module, pretty, false)
 }
 
-// GetLogger need only for backward compatibility in tests
+// GetLogger need only for backward compatibility in tests.
 func GetLogger(module string) (moira.Logger, error) {
 	return newLog("stdout", "info", module, true, true)
 }
@@ -61,113 +62,53 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 	}
 
 	logDir := filepath.Dir(logFileName)
-	if err := os.MkdirAll(logDir, 0755); err != nil {
+	if err := os.MkdirAll(logDir, 0o755); err != nil { //nolint:gofumpt,gomnd
 		return nil, fmt.Errorf("can't create log directories %s: %s", logDir, err.Error())
 	}
-	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644) //nolint:gofumpt,gomnd
 	if err != nil {
 		return nil, fmt.Errorf("can't open log file %s: %s", logFileName, err.Error())
 	}
 	return logFile, nil
 }
 
-func (l Logger) Debug(args ...interface{}) {
-	event := l.Logger.Debug()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+func (l Logger) Debug() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Debug()}
 }
 
-func (l Logger) Debugf(format string, args ...interface{}) {
-	event := l.Logger.Debug()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
+func (l Logger) Info() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Info()}
 }
 
-func (l Logger) Info(args ...interface{}) {
-	event := l.Logger.Info()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+func (l Logger) Error() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Error()}
 }
 
-func (l Logger) Infof(format string, args ...interface{}) {
-	event := l.Logger.Info()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
+func (l Logger) Fatal() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Fatal()}
 }
 
-func (l Logger) Error(args ...interface{}) {
-	event := l.Logger.Error()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(fmt.Sprint(args...))
-}
-
-func (l Logger) Errorf(format string, args ...interface{}) {
-	event := l.Logger.Error()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
-}
-
-func (l Logger) Fatal(args ...interface{}) {
-	event := l.Logger.Fatal()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
-}
-
-func (l Logger) Fatalf(format string, args ...interface{}) {
-	event := l.Logger.Fatal()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
-}
-
-func (l Logger) Warning(args ...interface{}) {
-	event := l.Logger.Warn()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
-}
-
-func (l Logger) Warningf(format string, args ...interface{}) {
-	event := l.Logger.Warn()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
+func (l Logger) Warning() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Warn()}
 }
 
 func (l *Logger) String(key, value string) moira.Logger {
-	l.Logger = l.Logger.With().Str(key, value).Logger()
+	l.logger = l.logger.With().Str(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Int(key string, value int) moira.Logger {
-	l.Logger = l.Logger.With().Int(key, value).Logger()
+	l.logger = l.logger.With().Int(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Int64(key string, value int64) moira.Logger {
-	l.Logger = l.Logger.With().Int64(key, value).Logger()
+	l.logger = l.logger.With().Int64(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Fields(fields map[string]interface{}) moira.Logger {
-	l.Logger = l.Logger.With().Fields(fields).Logger()
+	l.logger = l.logger.With().Fields(fields).Logger()
 	return l
 }
 
@@ -176,12 +117,12 @@ func (l *Logger) Level(s string) (moira.Logger, error) {
 	if err != nil {
 		return l, err
 	}
-	l.Logger = l.Logger.Level(level)
+	l.logger = l.logger.Level(level)
 	return l, nil
 }
 
 func (l Logger) Clone() moira.Logger {
 	return &Logger{
-		Logger: l.Logger.With().Logger(),
+		logger: l.logger.With().Logger(),
 	}
 }

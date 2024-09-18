@@ -12,8 +12,20 @@ func handleCleanUpOutdatedMetrics(config cleanupConfig, database moira.Database)
 		return err
 	}
 
-	err = database.CleanUpOutdatedMetrics(duration)
+	if err = database.CleanUpOutdatedMetrics(duration); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func handleCleanUpFutureMetrics(config cleanupConfig, database moira.Database) error {
+	duration, err := time.ParseDuration(config.CleanupFutureMetricsDuration)
 	if err != nil {
+		return err
+	}
+
+	if err = database.CleanUpFutureMetrics(duration); err != nil {
 		return err
 	}
 
@@ -24,12 +36,12 @@ func handleCleanUpAbandonedRetentions(database moira.Database) error {
 	return database.CleanUpAbandonedRetentions()
 }
 
-func handleCleanUpAbandonedPatternMetrics(database moira.Database) error {
-	return database.CleanUpAbandonedPatternMetrics()
-}
-
 func handleCleanUpAbandonedTriggerLastCheck(database moira.Database) error {
 	return database.CleanUpAbandonedTriggerLastCheck()
+}
+
+func handleCleanUpAbandonedTags(database moira.Database) (int, error) {
+	return database.CleanUpAbandonedTags()
 }
 
 func handleRemoveMetricsByPrefix(database moira.Database, prefix string) error {
@@ -38,4 +50,8 @@ func handleRemoveMetricsByPrefix(database moira.Database, prefix string) error {
 
 func handleRemoveAllMetrics(database moira.Database) error {
 	return database.RemoveAllMetrics()
+}
+
+func handleCleanUpOutdatedPatternMetrics(database moira.Database) (int64, error) {
+	return database.CleanupOutdatedPatternMetrics()
 }

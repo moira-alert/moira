@@ -18,43 +18,60 @@ linters-settings:
     settings:
       mnd:
         checks: argument,case,condition,return
-        ignored-numbers: 1
+        ignored-numbers: 1,2,3,5,10,60,64,100,600,0755,0644,0666
 
 linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
+    - asasalint
+    - asciicheck
+    - bidichk
     - bodyclose
-    - deadcode
+    - decorder
+    - dogsled
     - errcheck
+    - errorlint
+    - exportloopref
     - goconst
+    - gocheckcompilerdirectives
     - gocyclo
+    - goconst
+    - godot
     - gofmt
+    - gofumpt
+    - goheader
     - goimports
-    - golint
     - gomnd
     - gosimple
     - govet
+    - grouper
     - ineffassign
-    - maligned
+    - loggercheck
+    - makezero
     - misspell
+    - nilerr
+    - noctx
     - prealloc
+    - promlinter
     - staticcheck
-    - structcheck
     - typecheck
     - unconvert
     - unparam
     - unused
     - whitespace
-    - varcheck
 
 issues:
   exclude-rules:
     - path: _test\.go
       linters:
         - gomnd
+        - errcheck
+        - goconst
 
 run:
   timeout: 5m
+  skip-files:
+    - notifier/registrator.go
   skip-dirs:
     - vendor

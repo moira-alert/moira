@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   redis:
-    image: redis:alpine
+    image: redis:6.2.12-alpine3.18
     volumes:
       - data:/data
     ports:
@@ -22,6 +22,15 @@ services:
     command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
     ports:
       - "9080:9090"
+    restart: always
+
+  prometheus_2:
+    image: prom/prometheus
+    volumes:
+      - ./local/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+    ports:
+      - "9081:9090"
     restart: always
 
   filter:
@@ -101,14 +110,14 @@ services:
     restart: always
 
   relay:
-    image: openmetric/carbon-c-relay
+    image: openitcockpit/carbon-c-relay
     ports:
       - "2003:2003"
     depends_on:
       - graphite
     volumes:
-      - ./local/relay.conf:/openmetric/conf/relay.conf
-    command: /usr/bin/relay -E -s -f /openmetric/conf/relay.conf
+      - ./local/relay.conf:/opt/carbon-c-relay/relay.conf
+    command: /opt/carbon-c-relay/bin/relay -E -s -f /opt/carbon-c-relay/relay.conf
     restart: always
 networks:
   balancer:

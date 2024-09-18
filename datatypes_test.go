@@ -5,7 +5,14 @@ import (
 	"testing"
 	"time"
 
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
+)
+
+const (
+	checkPointGap      = 120
+	defaultMaintenance = 600
 )
 
 func TestIsScheduleAllows(t *testing.T) {
@@ -178,12 +185,39 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 		})
 	})
 }
-func TestNotificationEvent_GetSubjectState(t *testing.T) {
+
+func TestNotificationEvent_getSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
 		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}}
-		So(states.GetSubjectState(), ShouldResemble, StateERROR)
+		So(states.getSubjectState(), ShouldResemble, StateERROR)
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: OK, Message: '', Timestamp: 0")
 		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: ERROR, Message: '', Timestamp: 0")
+	})
+}
+
+func TestNotificationEvent_getLastState(t *testing.T) {
+	Convey("Get WARN state", t, func() {
+		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}, {State: StateWARN, Values: map[string]float64{"t1": 10}}}
+		So(states.getLastState(), ShouldResemble, StateWARN)
+		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: OK, Message: '', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: ERROR, Message: '', Timestamp: 0")
+		So(states[2].String(), ShouldResemble, "TriggerId: , Metric: , Values: 10, OldState: , State: WARN, Message: '', Timestamp: 0")
+	})
+}
+
+func TestNotificationEvent_GetCurrentState(t *testing.T) {
+	Convey("Get ERROR state without throttling", t, func() {
+		states := NotificationEvents{{State: StateERROR, Values: map[string]float64{"t1": 0}}, {State: StateOK, Values: map[string]float64{"t1": 1}}}
+		So(states.GetCurrentState(false), ShouldResemble, StateERROR)
+		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: ERROR, Message: '', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: OK, Message: '', Timestamp: 0")
+	})
+
+	Convey("Get OK state when throttling", t, func() {
+		states := NotificationEvents{{State: StateERROR, Values: map[string]float64{"t1": 0}}, {State: StateOK, Values: map[string]float64{"t1": 1}}}
+		So(states.GetCurrentState(true), ShouldResemble, StateOK)
+		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: ERROR, Message: '', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: OK, Message: '', Timestamp: 0")
 	})
 }
 
@@ -191,11 +225,11 @@ func TestNotificationEvent_FormatTimestamp(t *testing.T) {
 	Convey("Test FormatTimestamp", t, func() {
 		event := NotificationEvent{Timestamp: 150000000}
 		location, _ := time.LoadLocation("UTC")
-		location1, _ := time.LoadLocation("Europe/Moscow")
-		location2, _ := time.LoadLocation("Asia/Yekaterinburg")
-		So(event.FormatTimestamp(location), ShouldResemble, "02:40")
-		So(event.FormatTimestamp(location1), ShouldResemble, "05:40")
-		So(event.FormatTimestamp(location2), ShouldResemble, "07:40")
+		locationMoscow, _ := time.LoadLocation("Europe/Moscow")
+		locationYekaterinburg, _ := time.LoadLocation("Asia/Yekaterinburg")
+		So(event.FormatTimestamp(location, DefaultTimeFormat), ShouldResemble, "02:40 (GMT+00:00)")
+		So(event.FormatTimestamp(locationMoscow, DefaultTimeFormat), ShouldResemble, "05:40 (GMT+03:00)")
+		So(event.FormatTimestamp(locationYekaterinburg, DefaultTimeFormat), ShouldResemble, "07:40 (GMT+05:00)")
 	})
 }
 
@@ -203,24 +237,37 @@ func TestNotificationEvent_GetValue(t *testing.T) {
 	Convey("Test GetMetricsValues", t, func() {
 		event := NotificationEvent{}
 		event.Values = make(map[string]float64)
+
 		Convey("One target with zero", func() {
 			event.Values["t1"] = 0
-			So(event.GetMetricsValues(), ShouldResemble, "0")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "0")
 		})
 
 		Convey("One target with short fraction", func() {
 			event.Values["t1"] = 2.32
-			So(event.GetMetricsValues(), ShouldResemble, "2.32")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "2.32")
 		})
 
 		Convey("One target with long fraction", func() {
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(), ShouldResemble, "2.3222222")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "2.3222222")
 		})
+
 		Convey("Two targets", func() {
 			event.Values["t2"] = 0.12
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(), ShouldResemble, "t1: 2.3222222, t2: 0.12")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "t1: 2.3222222, t2: 0.12")
+		})
+
+		Convey("One target over 1000 with SIFormatNumbers enum value", func() {
+			event.Values["t1"] = 1110.15
+			So(event.GetMetricsValues(SIFormatNumbers), ShouldResemble, "1.11 k")
+		})
+
+		Convey("Two targets lower 1000 with SIFormatNumbers enum value", func() {
+			event.Values["t1"] = 111.15
+			event.Values["t2"] = 54.5
+			So(event.GetMetricsValues(SIFormatNumbers), ShouldResemble, "t1: 111.15, t2: 54.5")
 		})
 	})
 }
@@ -257,19 +304,112 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 	})
 }
 
+func TestScheduledNotification_GetState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
+	Convey("Test get state of scheduled notifications", t, func() {
+		notification := ScheduledNotification{
+			Event: NotificationEvent{
+				Metric: "test",
+			},
+		}
+
+		Convey("Get Removed state with nil check data", func() {
+			state := notification.GetState(nil)
+			So(state, ShouldEqual, RemovedNotification)
+		})
+
+		Convey("Get Resaved state with metric on maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			state := notification.GetState(&CheckData{
+				Metrics: map[string]MetricState{
+					"test": {
+						Maintenance: testTime + defaultMaintenance,
+					},
+				},
+				Clock: mockTime,
+			})
+
+			So(state, ShouldEqual, ResavedNotification)
+		})
+
+		Convey("Get Resaved state with trigger on maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			state := notification.GetState(&CheckData{
+				Maintenance: testTime + defaultMaintenance,
+				Clock:       mockTime,
+			})
+
+			So(state, ShouldEqual, ResavedNotification)
+		})
+
+		Convey("Get Valid state with trigger without metrics", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			state := notification.GetState(&CheckData{
+				Clock: mockTime,
+			})
+
+			So(state, ShouldEqual, ValidNotification)
+		})
+
+		Convey("Get Valid state with trigger with test metric", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(2)
+
+			state := notification.GetState(&CheckData{
+				Metrics: map[string]MetricState{
+					"test": {},
+				},
+				Clock: mockTime,
+			})
+
+			So(state, ShouldEqual, ValidNotification)
+		})
+	})
+}
+
 func TestCheckData_GetOrCreateMetricState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
 	Convey("Test no metric", t, func() {
+		mockClock := mock_clock.NewMockClock(mockCtrl)
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
+			Clock:   mockClock,
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: StateNODATA, Timestamp: 12343})
+
+		mockClock.EXPECT().NowUnix().Return(testTime).Times(2)
+		So(checkData.GetOrCreateMetricState("my.metric", false, checkPointGap), ShouldResemble, MetricState{State: StateNODATA, Timestamp: testTime, EventTimestamp: testTime - checkPointGap})
 	})
-	Convey("Test no metric, notifyAboutNew = false", t, func() {
+
+	Convey("Test no metric, mute new metric = true", t, func() {
+		mockClock := mock_clock.NewMockClock(mockCtrl)
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
+			Clock:   mockClock,
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: StateOK, Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
+
+		mockClock.EXPECT().NowUnix().Return(testTime).Times(2)
+
+		So(checkData.GetOrCreateMetricState("my.metric", true, checkPointGap), ShouldResemble, MetricState{State: StateOK, Timestamp: testTime, EventTimestamp: testTime - checkPointGap})
 	})
+
 	Convey("Test has metric", t, func() {
 		metricState := MetricState{Timestamp: 11211}
 		checkData := CheckData{
@@ -277,7 +417,78 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 				"my.metric": metricState,
 			},
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, metricState)
+
+		So(checkData.GetOrCreateMetricState("my.metric", true, checkPointGap), ShouldResemble, metricState)
+	})
+}
+
+func TestCheckData_RemoveDeadMetrics(t *testing.T) {
+	Convey("Test RemoveDeadMetrics", t, func() {
+		Convey("Test with nil map of metrics", func() {
+			checkData := CheckData{
+				Metrics: nil,
+			}
+			checkData.RemoveDeadMetrics()
+
+			var expected map[string]MetricState
+			So(checkData.Metrics, ShouldResemble, expected)
+		})
+
+		Convey("Test with empty map of metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{})
+		})
+
+		Convey("Test with all alive metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {},
+					"test2": {},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{
+				"test1": {},
+				"test2": {},
+			})
+		})
+
+		Convey("Test with all dead metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						DeletedButKept: true,
+					},
+					"test2": {
+						DeletedButKept: true,
+					},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{})
+		})
+
+		Convey("Test with alive and dead metrics", func() {
+			checkData := CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						DeletedButKept: true,
+					},
+					"test2": {},
+				},
+			}
+			checkData.RemoveDeadMetrics()
+
+			So(checkData.Metrics, ShouldResemble, map[string]MetricState{
+				"test2": {},
+			})
+		})
 	})
 }
 
@@ -331,6 +542,125 @@ func TestTrigger_IsSimple(t *testing.T) {
 		for _, trigger := range triggers {
 			So(trigger.IsSimple(), ShouldBeFalse)
 		}
+	})
+}
+
+func TestCheckData_IsTriggerOnMaintenance(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
+	Convey("IsTriggerOnMaintenance manipulations", t, func() {
+		Convey("Test with trigger check Maintenance equal with current time", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Maintenance: testTime,
+				Clock:       mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			actual := checkData.IsTriggerOnMaintenance()
+			So(actual, ShouldBeTrue)
+		})
+
+		Convey("Test with trigger check Maintenance less than time now", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Maintenance: testTime - defaultMaintenance,
+				Clock:       mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			actual := checkData.IsTriggerOnMaintenance()
+			So(actual, ShouldBeFalse)
+		})
+	})
+}
+
+func TestCheckData_IsMetricOnMaintenance(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
+	Convey("isMetricOnMaintenance manipulations", t, func() {
+		Convey("Test with a metric that is not in the trigger", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {},
+					"test2": {},
+				},
+				Clock: mockTime,
+			}
+
+			actual := checkData.IsMetricOnMaintenance("")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with metrics that are in the trigger but not on maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {},
+					"test2": {},
+				},
+				Clock: mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			actual := checkData.IsMetricOnMaintenance("test2")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with metrics that are in the trigger and on maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						Maintenance: testTime + defaultMaintenance,
+					},
+					"test2": {},
+				},
+				Clock: mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeTrue)
+		})
+
+		Convey("Test with the metric that is in the trigger, but the time now is more than Maintenance", func() {
+			mockTime := mock_clock.NewMockClock(mockCtrl)
+			checkData := &CheckData{
+				Metrics: map[string]MetricState{
+					"test1": {
+						Maintenance: testTime - defaultMaintenance,
+					},
+					"test2": {},
+				},
+				Clock: mockTime,
+			}
+
+			mockTime.EXPECT().NowUnix().Return(testTime).Times(1)
+
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test with trigger without metrics", func() {
+			checkData := &CheckData{
+				Metrics: make(map[string]MetricState),
+			}
+
+			actual := checkData.IsMetricOnMaintenance("test1")
+			So(actual, ShouldBeFalse)
+		})
 	})
 }
 
@@ -523,6 +853,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 		}
 	})
 }
+
 func TestBuildTriggerURL(t *testing.T) {
 	Convey("Sender has no moira uri", t, func() {
 		url := TriggerData{ID: "SomeID"}.GetTriggerURI("")
@@ -674,7 +1005,7 @@ func testStopMaintenance(message string, actualInfo MaintenanceInfo, user string
 
 func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenance int64, user string, expectedInfo MaintenanceInfo) {
 	Convey(conveyMessage, func() {
-		var lastCheckTest = CheckData{
+		lastCheckTest := CheckData{
 			Maintenance: 1000,
 		}
 		lastCheckTest.MaintenanceInfo = actualInfo
@@ -683,5 +1014,60 @@ func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenan
 
 		So(lastCheckTest.MaintenanceInfo, ShouldResemble, expectedInfo)
 		So(lastCheckTest.Maintenance, ShouldEqual, maintenance)
+	})
+}
+
+func TestScheduledNotificationLess(t *testing.T) {
+	Convey("Test Scheduled notification Less function", t, func() {
+		notification := &ScheduledNotification{
+			Timestamp: 5,
+		}
+
+		Convey("Test Less with nil", func() {
+			actual, err := notification.Less(nil)
+			So(err, ShouldResemble, fmt.Errorf("cannot to compare ScheduledNotification with different type"))
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test Less with less notification :)", func() {
+			actual, err := notification.Less(&ScheduledNotification{Timestamp: 1})
+			So(err, ShouldBeNil)
+			So(actual, ShouldBeFalse)
+		})
+
+		Convey("Test Less with greater notification", func() {
+			actual, err := notification.Less(&ScheduledNotification{Timestamp: 10})
+			So(err, ShouldBeNil)
+			So(actual, ShouldBeTrue)
+		})
+	})
+}
+
+func TestScheduledNotificationIsDelayed(t *testing.T) {
+	Convey("Test Scheduled notification IsDelayed function", t, func() {
+		notification := &ScheduledNotification{
+			Timestamp: 5,
+		}
+
+		var delayedTime int64 = 2
+
+		Convey("Test notification with empty created at field", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeFalse)
+		})
+
+		notification.CreatedAt = 1
+
+		Convey("Test notification which is to be defined as delayed", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeTrue)
+		})
+
+		notification.CreatedAt = 4
+
+		Convey("Test notification which is to be defined as not delayed", func() {
+			actual := notification.IsDelayed(delayedTime)
+			So(actual, ShouldBeFalse)
+		})
 	})
 }

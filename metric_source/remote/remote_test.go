@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 
@@ -14,27 +14,11 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestIsConfigured(t *testing.T) {
-	Convey("Remote is not configured", t, func() {
-		remote := Create(&Config{URL: "", Enabled: true})
-		isConfigured, err := remote.IsConfigured()
-		So(isConfigured, ShouldBeFalse)
-		So(err, ShouldResemble, ErrRemoteStorageDisabled)
-	})
-
-	Convey("Remote is configured", t, func() {
-		remote := Create(&Config{URL: "http://host", Enabled: true})
-		isConfigured, err := remote.IsConfigured()
-		So(isConfigured, ShouldBeTrue)
-		So(err, ShouldBeEmpty)
-	})
-}
-
 func TestIsRemoteAvailable(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	systemClock.EXPECT().Sleep(time.Second).Times(0)
-	testConfigs := []Config{
+	testConfigs := []*Config{
 		{},
 		{HealthCheckRetrySeconds: []time.Duration{time.Second}},
 		{HealthCheckRetrySeconds: []time.Duration{time.Second}},
@@ -48,7 +32,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 		server := createServer(body, http.StatusOK)
 		for _, config := range testConfigs {
 			config.URL = server.URL
-			remote := Remote{client: server.Client(), config: &config}
+			remote := Remote{client: server.Client(), config: config}
 			isAvailable, err := remote.IsRemoteAvailable()
 			So(isAvailable, ShouldBeTrue)
 			So(err, ShouldBeEmpty)
@@ -65,7 +49,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 				remote := Remote{client: server.Client()}
 				for _, config := range testConfigs {
 					config.URL = server.URL
-					remote.config = &config
+					remote.config = config
 					systemClock := mock_clock.NewMockClock(mockCtrl)
 					systemClock.EXPECT().Sleep(time.Second).Times(len(config.HealthCheckRetrySeconds))
 					remote.clock = systemClock
@@ -96,7 +80,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 					config.URL = server.URL
 					systemClock := mock_clock.NewMockClock(mockCtrl)
 					systemClock.EXPECT().Sleep(time.Second).Times(1)
-					remote := Remote{client: server.Client(), config: &config, clock: systemClock}
+					remote := Remote{client: server.Client(), config: config, clock: systemClock}
 
 					isAvailable, err := remote.IsRemoteAvailable()
 					So(err, ShouldBeNil)
@@ -105,13 +89,31 @@ func TestIsRemoteAvailable(t *testing.T) {
 			})
 		}
 	})
+
+	// tests from master
+
+	Convey("Is available", t, func() {
+		server := createServer([]byte("Some string"), http.StatusOK)
+		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
+		isAvailable, err := remote.IsAvailable()
+		So(isAvailable, ShouldBeTrue)
+		So(err, ShouldBeEmpty)
+	})
+
+	Convey("Not available", t, func() {
+		server := createServer([]byte("Some string"), http.StatusInternalServerError)
+		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
+		isAvailable, err := remote.IsAvailable()
+		So(isAvailable, ShouldBeFalse)
+		So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
+	})
 }
 
 func TestFetch(t *testing.T) {
 	var from int64 = 300
 	var until int64 = 500
 	target := "foo.bar" //nolint
-	testConfigs := []Config{
+	testConfigs := []*Config{
 		{},
 		{RetrySeconds: []time.Duration{time.Second}},
 		{RetrySeconds: []time.Duration{time.Second}},
@@ -145,7 +147,7 @@ func TestFetch(t *testing.T) {
 		remote := Remote{client: server.Client()}
 		for _, config := range testConfigs {
 			config.URL = server.URL
-			remote.config = &config
+			remote.config = config
 			result, err := remote.Fetch(target, from, until, false)
 			So(result, ShouldBeEmpty)
 			So(err.Error(), ShouldResemble, fmt.Sprintf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
@@ -158,7 +160,7 @@ func TestFetch(t *testing.T) {
 		url := "💩%$&TR"
 		for _, config := range testConfigs {
 			config.URL = url
-			remote := Remote{config: &config}
+			remote := Remote{config: config}
 			result, err := remote.Fetch(target, from, until, false)
 			So(result, ShouldBeEmpty)
 			So(err.Error(), ShouldResemble, "parse \"💩%$&TR\": invalid URL escape \"%$&\"")
@@ -177,7 +179,7 @@ func TestFetch(t *testing.T) {
 				remote := Remote{client: server.Client()}
 				for _, config := range testConfigs {
 					config.URL = server.URL
-					remote.config = &config
+					remote.config = config
 					systemClock := mock_clock.NewMockClock(mockCtrl)
 					systemClock.EXPECT().Sleep(time.Second).Times(len(config.RetrySeconds))
 					remote.clock = systemClock
@@ -210,7 +212,7 @@ func TestFetch(t *testing.T) {
 					config.URL = server.URL
 					systemClock := mock_clock.NewMockClock(mockCtrl)
 					systemClock.EXPECT().Sleep(time.Second).Times(1)
-					remote := Remote{client: server.Client(), config: &config, clock: systemClock}
+					remote := Remote{client: server.Client(), config: config, clock: systemClock}
 
 					result, err := remote.Fetch(target, from, until, false)
 					So(err, ShouldBeNil)

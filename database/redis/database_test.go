@@ -17,13 +17,13 @@ func TestNewDatabase(t *testing.T) {
 		So(database, ShouldNotBeEmpty)
 		So(database.source, ShouldEqual, "test")
 		So(database.logger, ShouldEqual, logger)
-		So(database.context, ShouldEqual, context.Background())
+		So(database.context, ShouldResemble, context.Background())
 
 		database.Flush()
 		defer database.Flush()
 
 		Convey("Redis client must be workable", func() {
-			var ctx = context.Background()
+			ctx := context.Background()
 
 			Convey("Can get the value of key that does not exists", func() {
 				err := (*database.client).Get(ctx, "key").Err()

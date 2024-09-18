@@ -9,79 +9,98 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// FetchData gets values of given pattern metrics from given interval and returns values and all found pattern metrics
-func FetchData(database moira.Database, pattern string, from int64, until int64, allowRealTimeAlerting bool) ([]*types.MetricData, []string, error) {
-	metrics, err := database.GetPatternMetrics(pattern)
-	if err != nil {
-		return nil, nil, err
-	}
-	metricsData := make([]*types.MetricData, 0)
+const DefaultRetention = 60
 
-	if len(metrics) > 0 {
-		firstMetric := metrics[0]
-		retention, err := database.GetMetricRetention(firstMetric)
-		if err != nil {
-			return nil, nil, err
-		}
-		dataList, err := database.GetMetricsValues(metrics, from, until)
-		if err != nil {
-			return nil, nil, err
-		}
-		valuesMap := unpackMetricsValues(dataList, retention, from, until, allowRealTimeAlerting)
-		for _, metric := range metrics {
-			metricsData = append(metricsData, createMetricData(metric, from, until, retention, valuesMap[metric]))
-		}
-	} else {
-		dataList := map[string][]*moira.MetricValue{pattern: make([]*moira.MetricValue, 0)}
-		valuesMap := unpackMetricsValues(dataList, 60, from, until, allowRealTimeAlerting)
-		metricsData = append(metricsData, createMetricData(pattern, from, until, 60, valuesMap[pattern]))
-	}
-	return metricsData, metrics, nil
+type fetchData struct {
+	database moira.Database
 }
 
-func createMetricData(metric string, from int64, until int64, retention int64, values []float64) *types.MetricData {
+type metricsWithRetention struct {
+	retention int64
+	metrics   []string
+}
+
+func (fd *fetchData) fetchMetricNames(pattern string) (*metricsWithRetention, error) {
+	metrics, err := fd.database.GetPatternMetrics(pattern)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(metrics) == 0 {
+		return &metricsWithRetention{retention: DefaultRetention, metrics: metrics}, nil
+	}
+
+	retention, err := fd.database.GetMetricRetention(metrics[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return &metricsWithRetention{retention, metrics}, nil
+}
+
+func (fd *fetchData) fetchMetricValues(pattern string, metrics *metricsWithRetention, timer Timer) ([]*types.MetricData, error) {
+	if len(metrics.metrics) == 0 {
+		return fetchDataNoMetrics(timer, pattern), nil
+	}
+
+	dataList, err := fd.database.GetMetricsValues(metrics.metrics, timer.startTime, timer.stopTime-1)
+	if err != nil {
+		return nil, err
+	}
+
+	valuesMap := unpackMetricsValues(dataList, timer)
+
+	metricsData := make([]*types.MetricData, 0, len(metrics.metrics))
+	for _, metric := range metrics.metrics {
+		metricsData = append(metricsData, createMetricData(metric, timer, valuesMap[metric]))
+	}
+
+	return metricsData, nil
+}
+
+func fetchDataNoMetrics(timer Timer, pattern string) []*types.MetricData {
+	dataList := map[string][]*moira.MetricValue{pattern: make([]*moira.MetricValue, 0)}
+	valuesMap := unpackMetricsValues(dataList, timer)
+	metricsData := createMetricData(pattern, timer, valuesMap[pattern])
+
+	return []*types.MetricData{metricsData}
+}
+
+func createMetricData(metric string, timer Timer, values []float64) *types.MetricData {
 	fetchResponse := pb.FetchResponse{
 		Name:      metric,
-		StartTime: from,
-		StopTime:  until,
-		StepTime:  retention,
+		StartTime: timer.startTime,
+		StopTime:  timer.stopTime,
+		StepTime:  timer.stepTime,
 		Values:    values,
 	}
 	return &types.MetricData{FetchResponse: fetchResponse, Tags: tags.ExtractTags(metric)}
 }
 
-func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int64, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {
-	retentionFrom := roundToMinimalHighestRetention(from, retention)
-	getTimeSlot := func(timestamp int64) int64 {
-		return (timestamp - retentionFrom) / retention
-	}
-
+func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, timer Timer) map[string][]float64 {
 	valuesMap := make(map[string][]float64, len(metricsData))
 	for metric, metricData := range metricsData {
-		valuesMap[metric] = unpackMetricValues(metricData, until, allowRealTimeAlerting, getTimeSlot)
+		valuesMap[metric] = unpackMetricValues(metricData, timer)
 	}
 	return valuesMap
 }
 
-func unpackMetricValues(metricData []*moira.MetricValue, until int64, allowRealTimeAlerting bool, getTimeSlot func(int64) int64) []float64 {
-	points := make(map[int64]*moira.MetricValue, len(metricData))
+func unpackMetricValues(metricData []*moira.MetricValue, timer Timer) []float64 {
+	points := make(map[int]*moira.MetricValue, len(metricData))
 	for _, metricValue := range metricData {
-		points[getTimeSlot(metricValue.RetentionTimestamp)] = metricValue
+		points[timer.GetTimeSlot(metricValue.RetentionTimestamp)] = metricValue
 	}
 
-	lastTimeSlot := getTimeSlot(until)
+	numberOfTimeSlots := timer.NumberOfTimeSlots()
 
-	values := make([]float64, 0, lastTimeSlot+1)
+	values := make([]float64, 0, numberOfTimeSlots)
+
 	// note that right boundary is exclusive
-	for timeSlot := int64(0); timeSlot < lastTimeSlot; timeSlot++ {
+	for timeSlot := 0; timeSlot < numberOfTimeSlots; timeSlot++ {
 		val, ok := points[timeSlot]
 		values = append(values, getMathFloat64(val, ok))
 	}
 
-	lastPoint, ok := points[lastTimeSlot]
-	if allowRealTimeAlerting && ok {
-		values = append(values, getMathFloat64(lastPoint, ok))
-	}
 	return values
 }
 
@@ -90,11 +109,4 @@ func getMathFloat64(val *moira.MetricValue, ok bool) float64 {
 		return val.Value
 	}
 	return math.NaN()
-}
-
-func roundToMinimalHighestRetention(ts, retention int64) int64 {
-	if (ts % retention) == 0 {
-		return ts
-	}
-	return (ts + retention) / retention * retention
 }

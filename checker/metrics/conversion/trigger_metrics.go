@@ -27,7 +27,7 @@ func NewTriggerTargetMetrics(source FetchedTargetMetrics) TriggerTargetMetrics {
 
 // Populate is a function that takes the list of metric names that first appeared and
 // adds metrics with this names and empty values.
-func (m TriggerTargetMetrics) Populate(lastMetrics map[string]bool, from, to int64) TriggerTargetMetrics {
+func (m TriggerTargetMetrics) Populate(lastMetrics set[string], from, to int64) TriggerTargetMetrics {
 	result := newTriggerTargetMetricsWithCapacity(len(m))
 
 	var firstMetric metricSource.MetricData
@@ -62,35 +62,37 @@ func NewTriggerMetricsWithCapacity(capacity int) TriggerMetrics {
 // Populate is a function that takes TriggerMetrics and populate targets
 // that is missing metrics that appear in another targets except the targets that have
 // only alone metrics.
-func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, declaredAloneMetrics map[string]bool, from int64, to int64) TriggerMetrics {
+func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, declaredAloneMetrics map[string]bool, from int64, to int64) TriggerMetrics {
 	// This one have all metrics that should be in final TriggerMetrics.
 	// This structure filled with metrics from last check,
 	// current received metrics alone metrics from last check.
-	allMetrics := make(map[string]map[string]bool, len(m))
+	allMetrics := make(map[string]set[string], len(triggerMetrics))
 
 	for metricName, metricState := range lastMetrics {
 		for targetName := range metricState.Values {
 			if _, ok := allMetrics[targetName]; !ok {
-				allMetrics[targetName] = make(map[string]bool)
+				allMetrics[targetName] = make(set[string])
 			}
-			allMetrics[targetName][metricName] = true
+
+			allMetrics[targetName].insert(metricName)
 		}
 	}
 
-	for targetName, metrics := range m {
+	for targetName, metrics := range triggerMetrics {
+		if _, ok := allMetrics[targetName]; !ok {
+			allMetrics[targetName] = make(set[string])
+		}
+
 		for metricName := range metrics {
-			if _, ok := allMetrics[targetName]; !ok {
-				allMetrics[targetName] = make(map[string]bool)
-			}
-			allMetrics[targetName][metricName] = true
+			allMetrics[targetName].insert(metricName)
 		}
 	}
 
-	diff := m.Diff(declaredAloneMetrics)
+	diff := triggerMetrics.FindMissingMetrics(newSet(declaredAloneMetrics))
 
 	for targetName, metrics := range diff {
 		for metricName := range metrics {
-			allMetrics[targetName][metricName] = true
+			allMetrics[targetName].insert(metricName)
 		}
 	}
 
@@ -100,13 +102,14 @@ func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, decla
 		// if declaredAloneMetrics[targetName] {
 		// 	continue
 		// }
-		targetMetrics, ok := m[targetName]
+		targetMetrics, ok := triggerMetrics[targetName]
 		if !ok {
 			targetMetrics = newTriggerTargetMetricsWithCapacity(len(metrics))
 		}
 		targetMetrics = targetMetrics.Populate(metrics, from, to)
 		result[targetName] = targetMetrics
 	}
+
 	return result
 }
 
@@ -114,37 +117,45 @@ func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, decla
 // and return this metrics in format map[targetName]MetricData.
 // We split targets that declared as targets with alone metrics
 // from targets with multiple metrics.
-// For example we have a targets with metrics:
+//
+//	For example, we have a targets with metrics:
 //	{
 //		"t1": {"m1": {metrics}, "m2": {metrics}, "m3": {metrics}},
 //		"t2": {"m1": {metrics}, "m2": {metrics}, "m3": {metrics}},
 //		"t3": {"m4": {metrics}},
 //	}
-// and declared alone metrics
+//
+// and declared alone metrics.
+//
 //	{"t3": true}
-// This methos will return
+//
+// These methods will return.
+//
 //	{
 //		"t1": {"m1", "m2", "m3"},
 //		"t2": {"m1", "m2", "m3"},
 //	}
-// and
+//
+// and.
+//
 //	{
 //	"t3": {metrics},
 //	}
-func (m TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool) (TriggerMetrics, AloneMetrics, error) {
+func (triggerMetrics TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool) (TriggerMetrics, AloneMetrics, error) {
 	if len(declaredAloneMetrics) == 0 {
-		return m, NewAloneMetricsWithCapacity(0), nil
+		return triggerMetrics, NewAloneMetricsWithCapacity(0), nil
 	}
 
-	result := NewTriggerMetricsWithCapacity(len(m))
-	aloneMetrics := NewAloneMetricsWithCapacity(len(m)) // Just use len of m for optimization
+	metricCountUpperBound := len(triggerMetrics)
+	result := NewTriggerMetricsWithCapacity(metricCountUpperBound)
+	aloneMetrics := NewAloneMetricsWithCapacity(metricCountUpperBound)
 
 	errorBuilder := newErrUnexpectedAloneMetricBuilder()
 	errorBuilder.setDeclared(declaredAloneMetrics)
 
-	for targetName, targetMetrics := range m {
+	for targetName, targetMetrics := range triggerMetrics {
 		if !declaredAloneMetrics[targetName] {
-			result[targetName] = m[targetName]
+			result[targetName] = triggerMetrics[targetName]
 			continue
 		}
 
@@ -156,36 +167,39 @@ func (m TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool)
 			errorBuilder.addUnexpected(targetName, targetMetrics)
 			continue
 		}
+
 		aloneMetrics[targetName] = targetMetrics[metricName]
 	}
+
 	if err := errorBuilder.build(); err != nil {
 		return TriggerMetrics{}, AloneMetrics{}, err
 	}
+
 	return result, aloneMetrics, nil
 }
 
-// Diff is a function that returns a map of target names with metric names that are absent in
+// FindMissingMetrics is a function that returns a map of target names with metric names that are absent in
 // current target but appear in another targets.
-func (m TriggerMetrics) Diff(declaredAloneMetrics map[string]bool) map[string]map[string]bool {
-	result := make(map[string]map[string]bool)
+func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set[string]) map[string]set[string] {
+	result := make(map[string]set[string])
 
-	if len(m) == 0 {
+	if len(triggerMetrics) == 0 {
 		return result
 	}
 
-	fullMetrics := make(setHelper)
+	fullMetrics := make(set[string])
 
-	for targetName, targetMetrics := range m {
-		if declaredAloneMetrics[targetName] {
+	for targetName, targetMetrics := range triggerMetrics {
+		if declaredAloneMetrics.contains(targetName) {
 			continue
 		}
-		currentMetrics := newSetHelperFromTriggerTargetMetrics(targetMetrics)
+		currentMetrics := newSetFromTriggerTargetMetrics(targetMetrics)
 		fullMetrics = fullMetrics.union(currentMetrics)
 	}
 
-	for targetName, targetMetrics := range m {
-		metricsSet := newSetHelperFromTriggerTargetMetrics(targetMetrics)
-		if declaredAloneMetrics[targetName] {
+	for targetName, targetMetrics := range triggerMetrics {
+		metricsSet := newSetFromTriggerTargetMetrics(targetMetrics)
+		if declaredAloneMetrics.contains(targetName) {
 			continue
 		}
 		diff := metricsSet.diff(fullMetrics)

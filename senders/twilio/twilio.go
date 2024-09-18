@@ -4,11 +4,23 @@ import (
 	"fmt"
 	"time"
 
-	twilio "github.com/carlosdp/twiliogo"
+	twilio_client "github.com/carlosdp/twiliogo"
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface via twilio
+// Structure that represents the Twilio configuration in the YAML file.
+type config struct {
+	Type          string `mapstructure:"sender_type"`
+	APIAsid       string `mapstructure:"api_asid"`
+	APIAuthToken  string `mapstructure:"api_authtoken"`
+	APIFromPhone  string `mapstructure:"api_fromphone"`
+	VoiceURL      string `mapstructure:"voiceurl"`
+	TwimletsEcho  bool   `mapstructure:"twimlets_echo"`
+	AppendMessage bool   `mapstructure:"append_message"`
+}
+
+// Sender implements moira sender interface via twilio.
 type Sender struct {
 	sender sendEventsTwilio
 }
@@ -18,56 +30,56 @@ type sendEventsTwilio interface {
 }
 
 type twilioSender struct {
-	client       *twilio.TwilioClient
+	client       *twilio_client.TwilioClient
 	APIFromPhone string
 	logger       moira.Logger
 	location     *time.Location
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	apiType := senderSettings["type"]
+// Init read yaml config.
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var cfg config
+	err := mapstructure.Decode(senderSettings, &cfg)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
+	}
+	apiType := cfg.Type
 
-	apiASID := senderSettings["api_asid"]
-	if apiASID == "" {
+	if cfg.APIAsid == "" {
 		return fmt.Errorf("can not read [%s] api_sid param from config", apiType)
 	}
 
-	apiAuthToken := senderSettings["api_authtoken"]
-	if apiAuthToken == "" {
+	if cfg.APIAuthToken == "" {
 		return fmt.Errorf("can not read [%s] api_authtoken param from config", apiType)
 	}
 
-	apiFromPhone := senderSettings["api_fromphone"]
-	if apiFromPhone == "" {
+	if cfg.APIFromPhone == "" {
 		return fmt.Errorf("can not read [%s] api_fromphone param from config", apiType)
 	}
 
-	twilioClient := twilio.NewClient(apiASID, apiAuthToken)
+	twilioClient := twilio_client.NewClient(cfg.APIAsid, cfg.APIAuthToken)
 
-	twilioSender1 := twilioSender{
+	tSender := twilioSender{
 		client:       twilioClient,
-		APIFromPhone: apiFromPhone,
+		APIFromPhone: cfg.APIFromPhone,
 		logger:       logger,
 		location:     location,
 	}
 	switch apiType {
 	case "twilio sms":
-		sender.sender = &twilioSenderSms{twilioSender1}
+		sender.sender = &twilioSenderSms{tSender}
 
 	case "twilio voice":
-		twimletsEcho := senderSettings["twimlets_echo"] == "true" //nolint
-		appendMessage := (senderSettings["append_message"] == "true") || (twimletsEcho)
+		appendMessage := cfg.AppendMessage || cfg.TwimletsEcho
 
-		voiceURL := senderSettings["voiceurl"]
-		if voiceURL == "" && !twimletsEcho {
+		if cfg.VoiceURL == "" && !cfg.TwimletsEcho {
 			return fmt.Errorf("can not read [%s] voiceurl param from config", apiType)
 		}
 
 		sender.sender = &twilioSenderVoice{
-			twilioSender:  twilioSender1,
-			voiceURL:      voiceURL,
-			twimletsEcho:  twimletsEcho,
+			twilioSender:  tSender,
+			voiceURL:      cfg.VoiceURL,
+			twimletsEcho:  cfg.TwimletsEcho,
 			appendMessage: appendMessage,
 		}
 
@@ -78,7 +90,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	return sender.sender.SendEvents(events, contact, trigger, plots, throttled)
 }

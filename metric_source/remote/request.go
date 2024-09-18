@@ -3,14 +3,14 @@ package remote
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
 )
 
 func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Request, error) {
-	req, err := http.NewRequest("GET", remote.config.URL, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, remote.config.URL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -26,6 +26,32 @@ func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Re
 	return req, nil
 }
 
+// Old make request
+//func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
+//	var body []byte
+//
+//	resp, err := remote.client.Do(req)
+//	if resp != nil {
+//		defer resp.Body.Close()
+//	}
+//
+//	if err != nil {
+//		return body, fmt.Errorf("The remote server is not available or the response was reset by timeout. "+ //nolint
+//			"TTL: %s, PATH: %s, ERROR: %v ", remote.client.Timeout.String(), req.URL.RawPath, err)
+//	}
+//
+//	body, err = io.ReadAll(resp.Body)
+//	if err != nil {
+//		return body, err
+//	}
+//
+//	if resp.StatusCode != http.StatusOK {
+//		return body, fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
+//	}
+//
+//	return body, nil
+//}
+
 func (remote *Remote) makeRequest(req *http.Request) (body []byte, isRemoteAvailable bool, err error) {
 	resp, err := remote.client.Do(req)
 	if resp != nil {
@@ -34,13 +60,13 @@ func (remote *Remote) makeRequest(req *http.Request) (body []byte, isRemoteAvail
 
 	if err != nil {
 		return body, false, fmt.Errorf(
-			"the remote server is not available or the response was reset by timeout. Url: %s, Error: %v ",
+			"the remote server is not available or the response was reset by timeout. Url: %s, Error: %w ",
 			req.URL.String(),
 			err,
 		)
 	}
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return body, false, err
 	}

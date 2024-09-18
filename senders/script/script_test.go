@@ -48,14 +48,8 @@ func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
 		sender := Sender{}
-		settings := map[string]string{}
-		Convey("Empty map", func() {
-			err := sender.Init(settings, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))
-			So(sender, ShouldResemble, Sender{})
-		})
+		settings := map[string]interface{}{}
 
-		settings["name"] = "script_name"
 		Convey("Empty exec", func() {
 			err := sender.Init(settings, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("file  not found"))
@@ -82,7 +76,12 @@ func TestBuildCommandData(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Test send events", t, func() {
 		sender := Sender{exec: "script.go first second", logger: logger}
-		scriptFile, args, scriptBody, err := sender.buildCommandData([]moira.NotificationEvent{{Metric: "New metric"}}, moira.ContactData{ID: "ContactID"}, moira.TriggerData{ID: "TriggerID"}, true)
+		scriptFile, args, scriptBody, err := sender.buildCommandData(
+			[]moira.NotificationEvent{{Metric: "New metric"}},
+			moira.ContactData{ID: "ContactID"},
+			moira.TriggerData{ID: "TriggerID"},
+			true,
+		)
 		So(scriptFile, ShouldResemble, "script.go")
 		So(args, ShouldResemble, []string{"first", "second"})
 		So(err, ShouldBeNil)

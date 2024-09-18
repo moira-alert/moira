@@ -24,7 +24,8 @@ func GetLocalChecker(delay int64, logger moira.Logger, database moira.Database) 
 }
 
 func (check *localChecker) Check(nowTS int64) (int64, bool, error) {
-	triggersCount, err := check.database.GetLocalTriggersToCheckCount()
+	defaultLocalCluster := moira.DefaultLocalCluster
+	triggersCount, err := check.database.GetTriggersToCheckCount(defaultLocalCluster)
 	if err != nil {
 		return 0, false, err
 	}
@@ -37,7 +38,11 @@ func (check *localChecker) Check(nowTS int64) (int64, bool, error) {
 	}
 
 	if check.lastSuccessfulCheck < nowTS-check.delay {
-		check.logger.Errorf(templateMoreThanMessage, check.GetErrorMessage(), nowTS-check.lastSuccessfulCheck)
+		check.logger.Error().
+			String("error", check.GetErrorMessage()).
+			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
+			Msg("Send message")
+
 		return nowTS - check.lastSuccessfulCheck, true, nil
 	}
 
