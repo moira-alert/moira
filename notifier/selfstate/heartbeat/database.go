@@ -58,10 +58,6 @@ func (heartbeater databaseHeartbeater) NeedTurnOffNotifier() bool {
 	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (heartbeater databaseHeartbeater) NeedToCheckOthers() bool {
-	return heartbeater.cfg.NeedToCheckOthers
-}
-
 func (databaseHeartbeater) Type() moira.EmergencyContactType {
 	return moira.EmergencyTypeRedisDisconnected
 }

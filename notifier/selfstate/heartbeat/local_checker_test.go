@@ -167,25 +167,6 @@ func TestLocalCheckerHeartbeaterNeedTurnOffNotifier(t *testing.T) {
 	})
 }
 
-func TestLocalCheckerHeartbeaterNeedToCheckOthers(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
-
-	Convey("Test localCheckerHeartbeater.NeedToCheckOthers", t, func() {
-		cfg := LocalCheckerHeartbeaterConfig{
-			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
-				NeedToCheckOthers: true,
-			},
-			LocalCheckDelay: defaultLocalCheckDelay,
-		}
-
-		localCheckerHeartbeater, err := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
-		So(err, ShouldBeNil)
-
-		needToCheckOthers := localCheckerHeartbeater.NeedToCheckOthers()
-		So(needToCheckOthers, ShouldBeTrue)
-	})
-}
-
 func TestLocalCheckerHeartbeaterType(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t)
 

@@ -25,7 +25,6 @@ func (lastState State) IsRecovered(newState State) bool {
 type Heartbeater interface {
 	Check() (State, error)
 	NeedTurnOffNotifier() bool
-	NeedToCheckOthers() bool
 	AlertSettings() AlertConfig
 	Type() moira.EmergencyContactType
 }

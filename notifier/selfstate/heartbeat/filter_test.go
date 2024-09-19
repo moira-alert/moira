@@ -167,25 +167,6 @@ func TestFilterHeartbeaterNeedTurnOffNotifier(t *testing.T) {
 	})
 }
 
-func TestFilterHeartbeaterNeedToCheckOthers(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
-
-	Convey("Test filterHeartbeater.NeedToCheckOthers", t, func() {
-		cfg := FilterHeartbeaterConfig{
-			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
-				NeedToCheckOthers: true,
-			},
-			MetricReceivedDelay: defaultMetricReceivedDelay,
-		}
-
-		filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
-		So(err, ShouldBeNil)
-
-		needToCheckOthers := filterHeartbeater.NeedToCheckOthers()
-		So(needToCheckOthers, ShouldBeTrue)
-	})
-}
-
 func TestFilterHeartbeaterType(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t)
 

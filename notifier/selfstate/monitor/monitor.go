@@ -41,7 +41,6 @@ func (cfg monitorConfig) validate() error {
 
 type Monitor interface {
 	Start()
-	Type() string
 	Stop() error
 }
 
@@ -282,10 +281,6 @@ func createOkNotificationPackage(heartbeater heartbeat.Heartbeater, clock moira.
 		Events:  []moira.NotificationEvent{event},
 		Trigger: trigger,
 	}
-}
-
-func (m *monitor) Type() string {
-	return m.cfg.Name
 }
 
 func (m *monitor) Stop() error {

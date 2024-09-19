@@ -68,10 +68,6 @@ func (heartbeater localCheckerHeartbeater) NeedTurnOffNotifier() bool {
 	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (heartbeater localCheckerHeartbeater) NeedToCheckOthers() bool {
-	return heartbeater.cfg.NeedToCheckOthers
-}
-
 func (localCheckerHeartbeater) Type() moira.EmergencyContactType {
 	return moira.EmergencyTypeCheckerNoTriggerCheck
 }

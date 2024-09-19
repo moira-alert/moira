@@ -29,7 +29,7 @@ func NewSelfstateWorker(
 	clock moira.Clock,
 ) (*selfstateWorker, error) {
 	if err := cfg.Validate(notifier.GetSenders()); err != nil {
-		return nil, fmt.Errorf("selfstate worker validation error: %w", err)
+		return nil, fmt.Errorf("selfstate worker configuration error: %w", err)
 	}
 
 	adminMonitorEnabled := cfg.Monitor.AdminCfg.Enabled

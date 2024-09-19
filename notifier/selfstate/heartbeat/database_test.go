@@ -127,25 +127,6 @@ func TestDatabaseHeartbeaterNeedTurnOffNotifier(t *testing.T) {
 	})
 }
 
-func TestDatabaseHeartbeaterNeedToCheckOthers(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
-
-	Convey("Test databaseHeartbeater.NeedToCheckOthers", t, func() {
-		cfg := DatabaseHeartbeaterConfig{
-			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
-				NeedToCheckOthers: true,
-			},
-			RedisDisconnectDelay: defaultRedisDisconnectDelay,
-		}
-
-		databaseHeartbeater, err := NewDatabaseHeartbeater(cfg, heartbeaterBase)
-		So(err, ShouldBeNil)
-
-		needToCheckOthers := databaseHeartbeater.NeedToCheckOthers()
-		So(needToCheckOthers, ShouldBeTrue)
-	})
-}
-
 func TestDatabaseHeartbeaterType(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t)
 
