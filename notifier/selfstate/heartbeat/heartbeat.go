@@ -4,14 +4,13 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/clock"
 )
 
 type State string
 
 const (
 	StateOK    State = "heartbeat_state_ok"
-	StateError       = "heartbeat_state_error"
+	StateError State = "heartbeat_state_error"
 )
 
 func (lastState State) IsDegradated(newState State) bool {
@@ -32,13 +31,15 @@ type Heartbeater interface {
 }
 
 type HeartbeaterBaseConfig struct {
+	Enabled             bool
 	NeedTurnOffNotifier bool
 	NeedToCheckOthers   bool
-	AlertCfg            AlertConfig
+
+	AlertCfg AlertConfig `validate:"required_if=Enabled true"`
 }
 
 type AlertConfig struct {
-	Name string
+	Name string `validate:"required_if=Enabled true"`
 	Desc string
 }
 
@@ -54,9 +55,8 @@ type heartbeaterBase struct {
 func NewHeartbeaterBase(
 	logger moira.Logger,
 	database moira.Database,
+	clock moira.Clock,
 ) *heartbeaterBase {
-	clock := clock.NewSystemClock()
-
 	return &heartbeaterBase{
 		logger:   logger,
 		database: database,

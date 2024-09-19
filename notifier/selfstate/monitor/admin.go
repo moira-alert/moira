@@ -16,15 +16,16 @@ const (
 )
 
 type adminMonitor struct {
-	adminCfg selfstate.AdminConfig
+	adminCfg selfstate.AdminMonitorConfig
 	database moira.Database
 	notifier notifier.Notifier
 }
 
 func NewForAdmin(
-	adminCfg selfstate.AdminConfig,
+	adminCfg selfstate.AdminMonitorConfig,
 	logger moira.Logger,
 	database moira.Database,
+	clock moira.Clock,
 	notifier notifier.Notifier,
 ) (*monitor, error) {
 	adminMonitor := adminMonitor{
@@ -34,19 +35,20 @@ func NewForAdmin(
 	}
 
 	cfg := monitorConfig{
-		Name:           userMonitorName,
-		LockName:       userMonitorLockName,
-		LockTTL:        userMonitorLockTTL,
+		Name:           adminMonitorName,
+		LockName:       adminMonitorLockName,
+		LockTTL:        adminMonitorLockTTL,
 		NoticeInterval: adminCfg.NoticeInterval,
 		CheckInterval:  adminCfg.CheckInterval,
 	}
 
-	heartbeaters := createHearbeaters(adminCfg.HeartbeatsCfg, logger, database)
+	heartbeaters := createHearbeaters(adminCfg.HeartbeatsCfg, logger, database, clock)
 
 	return newMonitor(
 		cfg,
 		logger,
 		database,
+		clock,
 		notifier,
 		heartbeaters,
 		adminMonitor.sendNotifications,

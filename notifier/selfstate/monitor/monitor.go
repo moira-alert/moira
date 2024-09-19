@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
@@ -18,6 +17,8 @@ var (
 	okValue           = 0.0
 	errorValue        = 1.0
 	triggerErrorValue = 1.0
+
+	_ Monitor = (*monitor)(nil)
 )
 
 type hearbeatInfo struct {
@@ -38,6 +39,12 @@ func (cfg monitorConfig) validate() error {
 	return validator.Struct(cfg)
 }
 
+type Monitor interface {
+	Start()
+	Type() string
+	Stop() error
+}
+
 type monitor struct {
 	cfg               monitorConfig
 	logger            moira.Logger
@@ -54,6 +61,7 @@ func newMonitor(
 	cfg monitorConfig,
 	logger moira.Logger,
 	database moira.Database,
+	clock moira.Clock,
 	notifier notifier.Notifier,
 	heartbeaters []heartbeat.Heartbeater,
 	sendNotifications func(pkgs []notifier.NotificationPackage) error,
@@ -75,7 +83,7 @@ func newMonitor(
 		database:          database,
 		notifier:          notifier,
 		heartbeaters:      heartbeaters,
-		clock:             clock.NewSystemClock(),
+		clock:             clock,
 		heartbeatsInfo:    hearbeatersInfo,
 		sendNotifications: sendNotifications,
 	}, nil
@@ -85,56 +93,73 @@ func createHearbeaters(
 	heartbeatsCfg selfstate.HeartbeatsCfg,
 	logger moira.Logger,
 	database moira.Database,
+	clock moira.Clock,
 ) []heartbeat.Heartbeater {
-	hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database)
+	hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 
-	databaseHeartbeater, err := heartbeat.NewDatabaseHeartbeater(heartbeatsCfg.DatabaseCfg, hearbeaterBase)
-	if err != nil {
-		logger.Error().
-			Error(err).
-			String("heartbeater", string(databaseHeartbeater.Type())).
-			Msg("Failed to create a new database heartbeater")
+	heartbeaters := make([]heartbeat.Heartbeater, 0)
+
+	if heartbeatsCfg.DatabaseCfg.Enabled {
+		databaseHeartbeater, err := heartbeat.NewDatabaseHeartbeater(heartbeatsCfg.DatabaseCfg, hearbeaterBase)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				String("heartbeater", string(databaseHeartbeater.Type())).
+				Msg("Failed to create a new database heartbeater")
+		} else {
+			heartbeaters = append(heartbeaters, databaseHeartbeater)
+		}
 	}
 
-	filterHeartbeater, err := heartbeat.NewFilterHeartbeater(heartbeatsCfg.FilterCfg, hearbeaterBase)
-	if err != nil {
-		logger.Error().
-			Error(err).
-			String("heartbeater", string(filterHeartbeater.Type())).
-			Msg("Failed to create a new filter heartbeater")
+	if heartbeatsCfg.FilterCfg.Enabled {
+		filterHeartbeater, err := heartbeat.NewFilterHeartbeater(heartbeatsCfg.FilterCfg, hearbeaterBase)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				String("heartbeater", string(filterHeartbeater.Type())).
+				Msg("Failed to create a new filter heartbeater")
+		} else {
+			heartbeaters = append(heartbeaters, filterHeartbeater)
+		}
 	}
 
-	localCheckerHeartbeater, err := heartbeat.NewLocalCheckerHeartbeater(heartbeatsCfg.LocalCheckerCfg, hearbeaterBase)
-	if err != nil {
-		logger.Error().
-			Error(err).
-			String("heartbeater", string(localCheckerHeartbeater.Type())).
-			Msg("Failed to create a new local checker heartbeater")
+	if heartbeatsCfg.LocalCheckerCfg.Enabled {
+		localCheckerHeartbeater, err := heartbeat.NewLocalCheckerHeartbeater(heartbeatsCfg.LocalCheckerCfg, hearbeaterBase)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				String("heartbeater", string(localCheckerHeartbeater.Type())).
+				Msg("Failed to create a new local checker heartbeater")
+		} else {
+			heartbeaters = append(heartbeaters, localCheckerHeartbeater)
+		}
 	}
 
-	remoteCheckerHeartbeater, err := heartbeat.NewRemoteCheckerHeartbeater(heartbeatsCfg.RemoteCheckerCfg, hearbeaterBase)
-	if err != nil {
-		logger.Error().
-			Error(err).
-			String("heartbeater", string(remoteCheckerHeartbeater.Type())).
-			Msg("Failed to create a new remote checker heartbeater")
+	if heartbeatsCfg.RemoteCheckerCfg.Enabled {
+		remoteCheckerHeartbeater, err := heartbeat.NewRemoteCheckerHeartbeater(heartbeatsCfg.RemoteCheckerCfg, hearbeaterBase)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				String("heartbeater", string(remoteCheckerHeartbeater.Type())).
+				Msg("Failed to create a new remote checker heartbeater")
+		} else {
+			heartbeaters = append(heartbeaters, remoteCheckerHeartbeater)
+		}
 	}
 
-	notifierHeartbeater, err := heartbeat.NewNotifierHeartbeater(heartbeatsCfg.NotifierCfg, hearbeaterBase)
-	if err != nil {
-		logger.Error().
-			Error(err).
-			String("heartbeater", string(notifierHeartbeater.Type())).
-			Msg("Failed to create a new notifier heartbeater")
+	if heartbeatsCfg.NotifierCfg.Enabled {
+		notifierHeartbeater, err := heartbeat.NewNotifierHeartbeater(heartbeatsCfg.NotifierCfg, hearbeaterBase)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				String("heartbeater", string(notifierHeartbeater.Type())).
+				Msg("Failed to create a new notifier heartbeater")
+		} else {
+			heartbeaters = append(heartbeaters, notifierHeartbeater)
+		}
 	}
 
-	return []heartbeat.Heartbeater{
-		databaseHeartbeater,
-		filterHeartbeater,
-		localCheckerHeartbeater,
-		remoteCheckerHeartbeater,
-		notifierHeartbeater,
-	}
+	return heartbeaters
 }
 
 func (m *monitor) Start() {
@@ -158,7 +183,7 @@ func (m *monitor) selfstateCheck(stop <-chan struct{}) error {
 	for {
 		select {
 		case <-stop:
-			m.logger.Info().Msg(fmt.Sprint("%s stopped", m.cfg.Name))
+			m.logger.Info().Msg(fmt.Sprintf("%s stopped", m.cfg.Name))
 			return nil
 		case <-checkTicker.C:
 			m.logger.Debug().Msg(fmt.Sprintf("%s selfstate check", m.cfg.Name))
@@ -257,6 +282,10 @@ func createOkNotificationPackage(heartbeater heartbeat.Heartbeater, clock moira.
 		Events:  []moira.NotificationEvent{event},
 		Trigger: trigger,
 	}
+}
+
+func (m *monitor) Type() string {
+	return m.cfg.Name
 }
 
 func (m *monitor) Stop() error {

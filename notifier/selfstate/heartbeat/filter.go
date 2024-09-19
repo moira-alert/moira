@@ -17,7 +17,7 @@ var (
 type FilterHeartbeaterConfig struct {
 	HeartbeaterBaseConfig
 
-	MetricReceivedDelay time.Duration `validator:"required,gt=0"`
+	MetricReceivedDelay time.Duration `validate:"required,gt=0"`
 }
 
 func (cfg FilterHeartbeaterConfig) validate() error {
@@ -54,13 +54,14 @@ func (heartbeater *filterHeartbeater) Check() (State, error) {
 		return StateError, err
 	}
 
+	now := heartbeater.clock.NowUTC()
 	if heartbeater.lastMetricsCount != metricsCount || triggersCount == 0 {
 		heartbeater.lastMetricsCount = metricsCount
-		heartbeater.lastSuccessfulCheck = heartbeater.clock.NowUTC()
+		heartbeater.lastSuccessfulCheck = now
 		return StateOK, nil
 	}
 
-	if time.Since(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.MetricReceivedDelay {
+	if now.Sub(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.MetricReceivedDelay {
 		return StateError, nil
 	}
 

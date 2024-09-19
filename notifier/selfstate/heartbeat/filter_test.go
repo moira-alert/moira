@@ -5,92 +5,223 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
-func TestFilter(t *testing.T) {
-	Convey("Test filter heartbeat", t, func() {
-		err := errors.New("test filter error")
-		now := time.Now().Unix()
-		check, mockCtrl := createFilterTest(t)
-		defer mockCtrl.Finish()
-		database := check.database.(*mock_moira_alert.MockDatabase)
-		defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
+const (
+	defaultMetricReceivedDelay = time.Minute
+)
 
-		Convey("Checking the created filter", func() {
-			expected := &filter{
-				heartbeat: heartbeat{
-					database:            check.database,
-					logger:              check.logger,
-					delay:               1,
-					lastSuccessfulCheck: now,
-				},
+func TestNewFilterHeartbeater(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	validationErr := validator.ValidationErrors{}
+
+	Convey("Test NewFilterHeartbeater", t, func() {
+		Convey("With too low metric received delay", func() {
+			cfg := FilterHeartbeaterConfig{
+				MetricReceivedDelay: -1,
 			}
 
-			So(GetFilter(0, check.logger, check.database), ShouldBeNil)
-			So(GetFilter(1, check.logger, check.database), ShouldResemble, expected)
+			filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+			So(filterHeartbeater, ShouldBeNil)
 		})
 
-		Convey("Filter error handling test", func() {
-			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), err)
+		Convey("Without metric received delay", func() {
+			cfg := FilterHeartbeaterConfig{}
 
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldEqual, err)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
+			filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+			So(filterHeartbeater, ShouldBeNil)
 		})
 
-		Convey("Test update lastSuccessfulCheck", func() {
-			now += 1000
-			database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
+		Convey("With correct filter heartbeater config", func() {
+			cfg := FilterHeartbeaterConfig{
+				MetricReceivedDelay: 1,
+			}
 
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
-			So(check.lastSuccessfulCheck, ShouldResemble, now)
-		})
+			expected := &filterHeartbeater{
+				heartbeaterBase: heartbeaterBase,
+				cfg:             cfg,
+			}
 
-		Convey("Check for notification", func() {
-			check.lastSuccessfulCheck = now - check.delay - 1
-
-			database.EXPECT().GetMetricsUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
-
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeTrue)
-			So(value, ShouldEqual, now-check.lastSuccessfulCheck)
-		})
-
-		Convey("Exit without action", func() {
-			database.EXPECT().GetMetricsUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
-
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
-		})
-
-		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			// TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
-			So(check.NeedToCheckOthers(), ShouldBeTrue)
-
-			So(check.NeedTurnOffNotifier(), ShouldBeFalse)
+			filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
+			So(err, ShouldBeNil)
+			So(filterHeartbeater, ShouldResemble, expected)
 		})
 	})
 }
 
-func createFilterTest(t *testing.T) (*filter, *gomock.Controller) {
-	mockCtrl := gomock.NewController(t)
-	logger, _ := logging.GetLogger("MetricDelay")
+func TestFilterHeartbeaterCheck(t *testing.T) {
+	database, clock, testTime, heartbeaterBase := heartbeaterHelper(t)
 
-	return GetFilter(60, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*filter), mockCtrl
+	cfg := FilterHeartbeaterConfig{
+		MetricReceivedDelay: defaultMetricReceivedDelay,
+	}
+
+	filterHeartbeater, _ := NewFilterHeartbeater(cfg, heartbeaterBase)
+
+	var (
+		testErr                                         = errors.New("test error")
+		triggersToCheckCount, metricsUpdatesCount int64 = 10, 10
+	)
+
+	Convey("Test filterHeartbeater.Check", t, func() {
+		Convey("With GetTriggersToCheckCount error", func() {
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, testErr)
+
+			state, err := filterHeartbeater.Check()
+			So(err, ShouldResemble, testErr)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With GetMetricsUpdatesCount error", func() {
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetMetricsUpdatesCount().Return(metricsUpdatesCount, testErr)
+
+			state, err := filterHeartbeater.Check()
+			So(err, ShouldResemble, testErr)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With last metrics count not equal current metrics count", func() {
+			defer func() {
+				filterHeartbeater.lastMetricsCount = 0
+			}()
+
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetMetricsUpdatesCount().Return(metricsUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := filterHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+			So(filterHeartbeater.lastMetricsCount, ShouldResemble, metricsUpdatesCount)
+		})
+
+		Convey("With zero triggers to check count", func() {
+			defer func() {
+				filterHeartbeater.lastMetricsCount = 0
+			}()
+
+			var zeroTriggersToCheckCount int64
+
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(zeroTriggersToCheckCount, nil)
+			database.EXPECT().GetMetricsUpdatesCount().Return(metricsUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := filterHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+			So(filterHeartbeater.lastMetricsCount, ShouldResemble, metricsUpdatesCount)
+		})
+
+		filterHeartbeater.lastMetricsCount = metricsUpdatesCount
+
+		Convey("With too much time elapsed since the last successful check", func() {
+			filterHeartbeater.lastSuccessfulCheck = testTime.Add(-10 * defaultMetricReceivedDelay)
+			defer func() {
+				filterHeartbeater.lastSuccessfulCheck = testTime
+			}()
+
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetMetricsUpdatesCount().Return(metricsUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := filterHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With short time elapsed since the last successful check", func() {
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetMetricsUpdatesCount().Return(metricsUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := filterHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+		})
+	})
+}
+
+func TestFilterHeartbeaterNeedTurnOffNotifier(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test filterHeartbeater.TurnOffNotifier", t, func() {
+		cfg := FilterHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				NeedTurnOffNotifier: true,
+			},
+			MetricReceivedDelay: defaultMetricReceivedDelay,
+		}
+
+		filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		needTurnOffNotifier := filterHeartbeater.NeedTurnOffNotifier()
+		So(needTurnOffNotifier, ShouldBeTrue)
+	})
+}
+
+func TestFilterHeartbeaterNeedToCheckOthers(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test filterHeartbeater.NeedToCheckOthers", t, func() {
+		cfg := FilterHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				NeedToCheckOthers: true,
+			},
+			MetricReceivedDelay: defaultMetricReceivedDelay,
+		}
+
+		filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		needToCheckOthers := filterHeartbeater.NeedToCheckOthers()
+		So(needToCheckOthers, ShouldBeTrue)
+	})
+}
+
+func TestFilterHeartbeaterType(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test filterHeartbeater.Type", t, func() {
+		cfg := FilterHeartbeaterConfig{
+			MetricReceivedDelay: defaultMetricReceivedDelay,
+		}
+
+		filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		filterHeartbeaterType := filterHeartbeater.Type()
+		So(filterHeartbeaterType, ShouldResemble, moira.EmergencyTypeFilterNoMetricsReceived)
+	})
+}
+
+func TestFilterHeartbeaterAlertSettings(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test filterHeartbeater.AlertSettings", t, func() {
+		alertCfg := AlertConfig{
+			Name: "test name",
+			Desc: "test desc",
+		}
+
+		cfg := FilterHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				AlertCfg: alertCfg,
+			},
+			MetricReceivedDelay: defaultMetricReceivedDelay,
+		}
+
+		filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		alertSettings := filterHeartbeater.AlertSettings()
+		So(alertSettings, ShouldResemble, alertCfg)
+	})
 }

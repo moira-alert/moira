@@ -54,13 +54,14 @@ func (heartbeater remoteCheckerHeartbeater) Check() (State, error) {
 		return StateError, err
 	}
 
+	now := heartbeater.clock.NowUTC()
 	if heartbeater.lastRemoteChecksCount != remoteChecksCount || triggersCount == 0 {
 		heartbeater.lastRemoteChecksCount = remoteChecksCount
-		heartbeater.lastSuccessfulCheck = heartbeater.clock.NowUTC()
+		heartbeater.lastSuccessfulCheck = now
 		return StateOK, nil
 	}
 
-	if time.Since(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.RemoteCheckDelay {
+	if now.Sub(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.RemoteCheckDelay {
 		return StateError, nil
 	}
 

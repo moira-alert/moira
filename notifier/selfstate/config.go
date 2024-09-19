@@ -1,14 +1,12 @@
 package selfstate
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
-
-var ErrNoAdminContacts = errors.New("admin contacts must be specified")
 
 type HeartbeatsCfg struct {
 	DatabaseCfg      heartbeat.DatabaseHeartbeaterConfig
@@ -18,26 +16,27 @@ type HeartbeatsCfg struct {
 	NotifierCfg      heartbeat.NotifierHeartbeaterConfig
 }
 
-type selfstateBaseConfig struct {
+type MonitorBaseConfig struct {
 	Enabled        bool
 	HeartbeatsCfg  HeartbeatsCfg
-	NoticeInterval time.Duration
-	CheckInterval  time.Duration
+	NoticeInterval time.Duration `validate:"required,gt=0"`
+	CheckInterval  time.Duration `validate:"required,gt=0"`
 }
 
-type AdminConfig struct {
-	selfstateBaseConfig
+type AdminMonitorConfig struct {
+	MonitorBaseConfig
 
-	AdminContacts []map[string]string
+	AdminContacts []map[string]string `validate:"required,min=1"`
 }
 
-func (cfg AdminConfig) validate(senders map[string]bool) error {
+func (cfg AdminMonitorConfig) validate(senders map[string]bool) error {
 	if !cfg.Enabled {
 		return nil
 	}
 
-	if len(cfg.AdminContacts) < 1 {
-		return ErrNoAdminContacts
+	validator := validator.New()
+	if err := validator.Struct(cfg); err != nil {
+		return err
 	}
 
 	for _, contact := range cfg.AdminContacts {
@@ -53,30 +52,35 @@ func (cfg AdminConfig) validate(senders map[string]bool) error {
 	return nil
 }
 
-type UserConfig struct {
-	selfstateBaseConfig
+type UserMonitorConfig struct {
+	MonitorBaseConfig
+}
+
+func (cfg UserMonitorConfig) validate() error {
+	if !cfg.Enabled {
+		return nil
+	}
+
+	validator := validator.New()
+	return validator.Struct(cfg)
+}
+
+type MonitorConfig struct {
+	AdminCfg AdminMonitorConfig
+	UserCfg  UserMonitorConfig
 }
 
 type Config struct {
-	AdminCfg AdminConfig
-	UserCfg  UserConfig
+	Monitor MonitorConfig
 }
 
-// // Config is representation of self state worker settings like moira admins contacts and threshold values for checked services.
-// type Config struct {
-// 	Enabled                        bool
-// 	RedisDisconnectDelaySeconds    int64
-// 	LastMetricReceivedDelaySeconds int64
-// 	LastCheckDelaySeconds          int64
-// 	LastRemoteCheckDelaySeconds    int64
-// 	NoticeIntervalSeconds          int64
-// 	CheckInterval                  time.Duration
-// 	Contacts                       []map[string]string
-// }
+func (cfg *Config) Validate(senders map[string]bool) error {
+	if err := cfg.Monitor.AdminCfg.validate(senders); err != nil {
+		return fmt.Errorf("admin config validation error: %w", err)
+	}
 
-func (cfg *Config) checkConfig(senders map[string]bool) error {
-	if err := cfg.AdminCfg.validate(senders); err != nil {
-		return fmt.Errorf("failed to validate admin config: %w", err)
+	if err := cfg.Monitor.UserCfg.validate(); err != nil {
+		return fmt.Errorf("user config validation error: %w", err)
 	}
 
 	return nil

@@ -50,13 +50,14 @@ func (heartbeater *localCheckerHeartbeater) Check() (State, error) {
 		return StateError, err
 	}
 
+	now := heartbeater.clock.NowUTC()
 	if heartbeater.lastChecksCount != checksCount || triggersCount == 0 {
 		heartbeater.lastChecksCount = checksCount
-		heartbeater.lastSuccessfulCheck = heartbeater.clock.NowUTC()
+		heartbeater.lastSuccessfulCheck = now
 		return StateOK, nil
 	}
 
-	if time.Since(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.LocalCheckDelay {
+	if now.Sub(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.LocalCheckDelay {
 		return StateError, nil
 	}
 

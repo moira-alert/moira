@@ -17,15 +17,16 @@ const (
 )
 
 type userMonitor struct {
-	userCfg  selfstate.UserConfig
+	userCfg  selfstate.UserMonitorConfig
 	database moira.Database
 	notifier notifier.Notifier
 }
 
 func NewForUser(
-	userCfg selfstate.UserConfig,
+	userCfg selfstate.UserMonitorConfig,
 	logger moira.Logger,
 	database moira.Database,
+	clock moira.Clock,
 	notifier notifier.Notifier,
 ) (*monitor, error) {
 	userMonitor := userMonitor{
@@ -42,12 +43,13 @@ func NewForUser(
 		CheckInterval:  userCfg.CheckInterval,
 	}
 
-	heartbeaters := createHearbeaters(userCfg.HeartbeatsCfg, logger, database)
+	heartbeaters := createHearbeaters(userCfg.HeartbeatsCfg, logger, database, clock)
 
 	return newMonitor(
 		cfg,
 		logger,
 		database,
+		clock,
 		notifier,
 		heartbeaters,
 		userMonitor.sendNotifications,
@@ -56,7 +58,7 @@ func NewForUser(
 
 func (um *userMonitor) sendNotifications(pkgs []notifier.NotificationPackage) error {
 	sendingWG := &sync.WaitGroup{}
-	
+
 	for _, pkg := range pkgs {
 		event := pkg.Events[0]
 		emergencyType := moira.EmergencyContactType(event.Metric)

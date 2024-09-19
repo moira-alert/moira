@@ -39,16 +39,19 @@ func NewDatabaseHeartbeater(cfg DatabaseHeartbeaterConfig, base *heartbeaterBase
 }
 
 func (heartbeater *databaseHeartbeater) Check() (State, error) {
-	if _, err := heartbeater.database.GetChecksUpdatesCount(); err == nil {
-		heartbeater.lastSuccessfulCheck = heartbeater.clock.NowUTC()
+	now := heartbeater.clock.NowUTC()
+
+	_, err := heartbeater.database.GetChecksUpdatesCount()
+	if err == nil {
+		heartbeater.lastSuccessfulCheck = now
 		return StateOK, nil
 	}
 
-	if time.Since(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.RedisDisconnectDelay {
+	if now.Sub(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.RedisDisconnectDelay {
 		return StateError, nil
 	}
 
-	return StateOK, nil
+	return StateOK, err
 }
 
 func (heartbeater databaseHeartbeater) NeedTurnOffNotifier() bool {

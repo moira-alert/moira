@@ -1,114 +1,296 @@
 package selfstate
 
 import (
+	"errors"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestConfigCheck(testing *testing.T) {
-	contactTypes := map[string]bool{
-		"admin-mail": true,
+var defaultHeartbeatersConfig = HeartbeatsCfg{
+	DatabaseCfg: heartbeat.DatabaseHeartbeaterConfig{
+		RedisDisconnectDelay: time.Minute,
+	},
+	FilterCfg: heartbeat.FilterHeartbeaterConfig{
+		MetricReceivedDelay: time.Minute,
+	},
+	LocalCheckerCfg: heartbeat.LocalCheckerHeartbeaterConfig{
+		LocalCheckDelay: time.Minute,
+	},
+	RemoteCheckerCfg: heartbeat.RemoteCheckerHeartbeaterConfig{
+		RemoteCheckDelay: time.Minute,
+	},
+	NotifierCfg: heartbeat.NotifierHeartbeaterConfig{},
+}
+
+func TestValidateConfig(t *testing.T) {
+	senders := map[string]bool{
+		"telegram": true,
 	}
 
-	Convey("SelfCheck disabled", testing, func() {
-		config := Config{
-			Enabled: false,
-			Contacts: []map[string]string{
-				{
-					"type":  "admin-mail",
-					"value": "admin@company.com",
-				},
-			},
-		}
+	validationErr := validator.ValidationErrors{}
 
-		Convey("all data valid, should return nil error", func() {
-			actual := config.checkConfig(contactTypes)
-			So(actual, ShouldBeNil)
-		})
-
-		Convey("contacts empty, should return nil error", func() {
-			config.Contacts = []map[string]string{}
-			actual := config.checkConfig(contactTypes)
-			So(actual, ShouldBeNil)
-		})
-
-		Convey("admin sending type not registered, should return nil error", func() {
-			actual := config.checkConfig(make(map[string]bool))
-			So(actual, ShouldBeNil)
-		})
-
-		Convey("admin sending contact empty, should return nil error", func() {
-			config.Contacts = []map[string]string{
-				{
-					"type":  "admin-mail",
-					"value": "",
+	Convey("Test Validate", t, func() {
+		Convey("With disabled admin and user selfchecks", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
 				},
 			}
-			actual := config.checkConfig(make(map[string]bool))
-			So(actual, ShouldBeNil)
+
+			err := cfg.Validate(senders)
+			So(err, ShouldBeNil)
 		})
-	})
 
-	Convey("SelfCheck contacts empty, should return contacts must be specified error", testing, func() {
-		config := Config{
-			Enabled: true,
-		}
-		actual := config.checkConfig(make(map[string]bool))
-		So(actual, ShouldResemble, fmt.Errorf("contacts must be specified"))
-	})
-
-	Convey("Admin sending type not registered, should not pass check without admin contact type", testing, func() {
-		config := Config{
-			Enabled: true,
-			Contacts: []map[string]string{
-				{
-					"type":  "admin-mail",
-					"value": "admin@company.com",
+		Convey("Without heartbeats config", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: true,
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
 				},
-			},
-		}
+			}
 
-		actual := config.checkConfig(make(map[string]bool))
-		So(actual, ShouldResemble, fmt.Errorf("unknown contact type [admin-mail]"))
-	})
+			err := cfg.Validate(senders)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+		})
 
-	Convey("Admin sending contact empty, should not pass check without admin contact", testing, func() {
-		config := Config{
-			Enabled: true,
-			Contacts: []map[string]string{
-				{
-					"type":  "admin-mail",
-					"value": "",
+		Convey("Without admin notice interval", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:       true,
+							HeartbeatsCfg: defaultHeartbeatersConfig,
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
 				},
-			},
-		}
+			}
 
-		contactTypes := map[string]bool{
-			"admin-mail": true,
-		}
+			err := cfg.Validate(senders)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+		})
 
-		actual := config.checkConfig(contactTypes)
-		So(actual, ShouldResemble, fmt.Errorf("value for [admin-mail] must be present"))
-	})
-
-	Convey("Has registered valid admin contact, should pass check", testing, func() {
-		config := Config{
-			Enabled: true,
-			Contacts: []map[string]string{
-				{
-					"type":  "admin-mail",
-					"value": "admin@company.com",
+		Convey("Without user notice interval", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:       true,
+							HeartbeatsCfg: defaultHeartbeatersConfig,
+						},
+					},
 				},
-			},
-		}
+			}
 
-		contactTypes := map[string]bool{
-			"admin-mail": true,
-		}
+			err := cfg.Validate(senders)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+		})
 
-		actual := config.checkConfig(contactTypes)
-		So(actual, ShouldBeNil)
+		Convey("Without admin check interval", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:        true,
+							HeartbeatsCfg:  defaultHeartbeatersConfig,
+							NoticeInterval: time.Minute,
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+				},
+			}
+
+			err := cfg.Validate(senders)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+		})
+
+		Convey("Without user check interval", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:        true,
+							HeartbeatsCfg:  defaultHeartbeatersConfig,
+							NoticeInterval: time.Minute,
+						},
+					},
+				},
+			}
+
+			err := cfg.Validate(senders)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+		})
+
+		Convey("Without admin contacts", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:        true,
+							HeartbeatsCfg:  defaultHeartbeatersConfig,
+							NoticeInterval: time.Minute,
+							CheckInterval:  time.Minute,
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+				},
+			}
+
+			err := cfg.Validate(senders)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+		})
+
+		Convey("With empty admin contacts", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:        true,
+							HeartbeatsCfg:  defaultHeartbeatersConfig,
+							NoticeInterval: time.Minute,
+							CheckInterval:  time.Minute,
+						},
+						AdminContacts: []map[string]string{},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+				},
+			}
+
+			err := cfg.Validate(senders)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+		})
+
+		Convey("With unknown contact type", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:        true,
+							HeartbeatsCfg:  defaultHeartbeatersConfig,
+							NoticeInterval: time.Minute,
+							CheckInterval:  time.Minute,
+						},
+						AdminContacts: []map[string]string{
+							{
+								"type": "test-contact-type",
+							},
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+				},
+			}
+
+			err := cfg.Validate(senders)
+			So(errors.Unwrap(err), ShouldResemble, fmt.Errorf("unknown contact type [%s]", cfg.Monitor.AdminCfg.AdminContacts[0]["type"]))
+		})
+
+		Convey("Without contact value", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:        true,
+							HeartbeatsCfg:  defaultHeartbeatersConfig,
+							NoticeInterval: time.Minute,
+							CheckInterval:  time.Minute,
+						},
+						AdminContacts: []map[string]string{
+							{
+								"type": "telegram",
+							},
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+				},
+			}
+
+			err := cfg.Validate(senders)
+			So(errors.Unwrap(err), ShouldResemble, fmt.Errorf("value for [%s] must be present", cfg.Monitor.AdminCfg.AdminContacts[0]["type"]))
+		})
+
+		Convey("With valid contact type and value", func() {
+			cfg := Config{
+				Monitor: MonitorConfig{
+					AdminCfg: AdminMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled:        true,
+							HeartbeatsCfg:  defaultHeartbeatersConfig,
+							NoticeInterval: time.Minute,
+							CheckInterval:  time.Minute,
+						},
+						AdminContacts: []map[string]string{
+							{
+								"type":  "telegram",
+								"value": "@webcamsmodel",
+							},
+						},
+					},
+					UserCfg: UserMonitorConfig{
+						MonitorBaseConfig: MonitorBaseConfig{
+							Enabled: false,
+						},
+					},
+				},
+			}
+
+			err := cfg.Validate(senders)
+			So(err, ShouldBeNil)
+		})
 	})
 }

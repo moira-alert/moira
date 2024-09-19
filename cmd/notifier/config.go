@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
 
 type config struct {
@@ -43,7 +44,7 @@ type notifierConfig struct {
 	// Senders configuration section. See https://moira.readthedocs.io/en/latest/installation/configuration.html for more explanation
 	Senders []map[string]interface{} `yaml:"senders"`
 	// Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
-	SelfState selfstateConfig `yaml:"moira_selfstate"`
+	Selfstate selfstateConfig `yaml:"moira_selfstate"`
 	// Web-UI uri prefix for trigger links in notifications. For example: with 'http://localhost' every notification will contain link like 'http://localhost/trigger/triggerId'
 	FrontURI string `yaml:"front_uri"`
 	// Timezone to use to convert ticks. Default is UTC. See https://golang.org/pkg/time/#LoadLocation for more details.
@@ -59,26 +60,90 @@ type notifierConfig struct {
 }
 
 type heartbeaterAlertConfig struct {
-	Name        string `yaml:"name"`
-	Description string `yaml:"description"`
+	Name string `yaml:"name"`
+	Desc string `yaml:"desc"`
 }
 
 type heartbeaterBaseConfig struct {
-	NeedTurnOffNotifier bool `yaml:"need_turn_off_notifier`
-	NeedToCheckOthers   bool `yaml:"need_to_check_others"`
+	Enabled             bool `yaml:"enabled"`
+	NeedTurnOffNotifier bool `yaml:"need_turn_off_notifier"`
+
+	AlertCfg heartbeaterAlertConfig `yaml:"alert"`
 }
 
-type databaseHeartbeatConfig struct {
+func (cfg heartbeaterBaseConfig) getSettings() heartbeat.HeartbeaterBaseConfig {
+	return heartbeat.HeartbeaterBaseConfig{
+		Enabled:             cfg.Enabled,
+		NeedTurnOffNotifier: cfg.NeedTurnOffNotifier,
+
+		AlertCfg: heartbeat.AlertConfig{
+			Name: cfg.AlertCfg.Name,
+			Desc: cfg.AlertCfg.Desc,
+		},
+	}
+}
+
+type databaseHeartbeaterConfig struct {
 	heartbeaterBaseConfig
-	AlertCfg             heartbeaterAlertConfig `yaml:"alert"`
-	RedisDisconnectDelay string                 `yaml:"redis_disconnect_delay`
+
+	RedisDisconnectDelay string `yaml:"redis_disconnect_delay"`
+}
+
+type filterHeartbeaterConfig struct {
+	heartbeaterBaseConfig
+
+	MetricReceivedDelay string `yaml:"last_metric_received_delay"`
+}
+
+type localCheckerHeartbeaterConfig struct {
+	heartbeaterBaseConfig
+
+	LocalCheckDelay string `yaml:"last_check_delay"`
+}
+
+type remoteCheckerHeartbeaterConfig struct {
+	heartbeaterBaseConfig
+
+	RemoteCheckDelay string `yaml:"last_remote_check_delay"`
+}
+
+type notifierHeartbeaterConfig struct {
+	heartbeaterBaseConfig
 }
 
 type heartbeatsConfig struct {
-	databaseCfg databaseHeartbeatConfig `yaml:"database"`
+	DatabaseCfg      databaseHeartbeaterConfig      `yaml:"database"`
+	FilterCfg        filterHeartbeaterConfig        `yaml:"filter"`
+	LocalCheckerCfg  localCheckerHeartbeaterConfig  `yaml:"local_checker"`
+	RemoteCheckerCfg remoteCheckerHeartbeaterConfig `yaml:"remote_checker"`
+	NotifierCfg      notifierHeartbeaterConfig      `yaml:"notifier"`
 }
 
-type selfstateBaseConfig struct {
+func (cfg heartbeatsConfig) getSettings() selfstate.HeartbeatsCfg {
+	return selfstate.HeartbeatsCfg{
+		DatabaseCfg: heartbeat.DatabaseHeartbeaterConfig{
+			HeartbeaterBaseConfig: cfg.DatabaseCfg.heartbeaterBaseConfig.getSettings(),
+			RedisDisconnectDelay:  to.Duration(cfg.DatabaseCfg.RedisDisconnectDelay),
+		},
+		FilterCfg: heartbeat.FilterHeartbeaterConfig{
+			HeartbeaterBaseConfig: cfg.FilterCfg.heartbeaterBaseConfig.getSettings(),
+			MetricReceivedDelay:   to.Duration(cfg.FilterCfg.MetricReceivedDelay),
+		},
+		LocalCheckerCfg: heartbeat.LocalCheckerHeartbeaterConfig{
+			HeartbeaterBaseConfig: cfg.LocalCheckerCfg.heartbeaterBaseConfig.getSettings(),
+			LocalCheckDelay:       to.Duration(cfg.LocalCheckerCfg.LocalCheckDelay),
+		},
+		RemoteCheckerCfg: heartbeat.RemoteCheckerHeartbeaterConfig{
+			HeartbeaterBaseConfig: cfg.RemoteCheckerCfg.heartbeaterBaseConfig.getSettings(),
+			RemoteCheckDelay:      to.Duration(cfg.RemoteCheckerCfg.RemoteCheckDelay),
+		},
+		NotifierCfg: heartbeat.NotifierHeartbeaterConfig{
+			HeartbeaterBaseConfig: cfg.NotifierCfg.heartbeaterBaseConfig.getSettings(),
+		},
+	}
+}
+
+type monitorBaseConfig struct {
 	Enabled      bool             `yaml:"enabled"`
 	HearbeatsCfg heartbeatsConfig `yaml:"heartbeats"`
 	// Self state monitor alerting interval
@@ -87,41 +152,24 @@ type selfstateBaseConfig struct {
 	CheckInterval string `yaml:"check_interval"`
 }
 
-type adminSelfstateConfig struct {
-	selfstateBaseConfig
+type adminMonitorConfig struct {
+	monitorBaseConfig
 
 	AdminContacts []map[string]string `yaml:"contacts"`
 }
 
-type userSelfstateConfig struct {
-	selfstateBaseConfig
+type userMonitorConfig struct {
+	monitorBaseConfig
+}
+
+type monitorConfig struct {
+	AdminCfg adminMonitorConfig `yaml:"admin"`
+	UserCfg  userMonitorConfig  `yaml:"user"`
 }
 
 type selfstateConfig struct {
-	adminCfg adminSelfstateConfig `yaml:"admin"`
-	userCfg  userSelfstateConfig  `yaml:"user"`
+	Monitor monitorConfig `yaml:"monitor"`
 }
-
-// type selfStateConfig struct {
-// 	// If true, Self state monitor will be enabled
-// 	Enabled bool `yaml:"enabled"`
-// 	// If true, Self state monitor will check remote checker status
-// 	RemoteTriggersEnabled bool `yaml:"remote_triggers_enabled"`
-// 	// Max Redis disconnect delay to send alert when reached
-// 	RedisDisconnectDelay string `yaml:"redis_disconect_delay"`
-// 	// Max Filter metrics receive delay to send alert when reached
-// 	LastMetricReceivedDelay string `yaml:"last_metric_received_delay"`
-// 	// Max Checker checks perform delay to send alert when reached
-// 	LastCheckDelay string `yaml:"last_check_delay"`
-// 	// Max Remote triggers Checker checks perform delay to send alert when reached
-// 	LastRemoteCheckDelay string `yaml:"last_remote_check_delay"`
-// 	// Contact list for Self state monitor alerts
-// 	Contacts []map[string]string `yaml:"contacts"`
-// 	// Self state monitor alerting interval
-// 	NoticeInterval string `yaml:"notice_interval"`
-// 	// Self state monitor check interval
-// 	CheckInterval string `yaml:"check_interval"`
-// }
 
 func getDefault() config {
 	return config{
@@ -149,12 +197,49 @@ func getDefault() config {
 			SenderTimeout:     "10s",
 			ResendingTimeout:  "1:00",
 			ReschedulingDelay: "60s",
-			SelfState: selfStateConfig{
-				Enabled:                 false,
-				RedisDisconnectDelay:    "30s",
-				LastMetricReceivedDelay: "60s",
-				LastCheckDelay:          "60s",
-				NoticeInterval:          "300s",
+			Selfstate: selfstateConfig{
+				Monitor: monitorConfig{
+					AdminCfg: adminMonitorConfig{
+						monitorBaseConfig: monitorBaseConfig{
+							Enabled: false,
+							HearbeatsCfg: heartbeatsConfig{
+								DatabaseCfg: databaseHeartbeaterConfig{
+									RedisDisconnectDelay: "30s",
+								},
+								FilterCfg: filterHeartbeaterConfig{
+									MetricReceivedDelay: "60s",
+								},
+								LocalCheckerCfg: localCheckerHeartbeaterConfig{
+									LocalCheckDelay: "60s",
+								},
+								RemoteCheckerCfg: remoteCheckerHeartbeaterConfig{
+									RemoteCheckDelay: "300s",
+								},
+								NotifierCfg: notifierHeartbeaterConfig{},
+							},
+						},
+					},
+					UserCfg: userMonitorConfig{
+						monitorBaseConfig: monitorBaseConfig{
+							Enabled: false,
+							HearbeatsCfg: heartbeatsConfig{
+								DatabaseCfg: databaseHeartbeaterConfig{
+									RedisDisconnectDelay: "30s",
+								},
+								FilterCfg: filterHeartbeaterConfig{
+									MetricReceivedDelay: "60s",
+								},
+								LocalCheckerCfg: localCheckerHeartbeaterConfig{
+									LocalCheckDelay: "60s",
+								},
+								RemoteCheckerCfg: remoteCheckerHeartbeaterConfig{
+									RemoteCheckDelay: "300s",
+								},
+								NotifierCfg: notifierHeartbeaterConfig{},
+							},
+						},
+					},
+				},
 			},
 			FrontURI:                      "http://localhost",
 			Timezone:                      "UTC",
@@ -232,9 +317,10 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		Int("subscriptions_count", len(subscriptions)).
 		Msg("Found dynamic log rules in config for some contacts and subscriptions")
 
+	selfstateMonitorEnabled := config.Selfstate.Monitor.AdminCfg.Enabled || config.Selfstate.Monitor.UserCfg.Enabled
+
 	return notifier.Config{
-		SelfStateEnabled:              config.SelfState.Enabled,
-		SelfStateContacts:             config.SelfState.Contacts,
+		SelfstateMonitorEnabled:       selfstateMonitorEnabled,
 		SendingTimeout:                to.Duration(config.SenderTimeout),
 		ResendingTimeout:              to.Duration(config.ResendingTimeout),
 		ReschedulingDelay:             to.Duration(config.ReschedulingDelay),
@@ -258,21 +344,26 @@ func checkDateTimeFormat(format string) error {
 	return nil
 }
 
-func (config *selfStateConfig) getSettings() selfstate.Config {
-	// 10 sec is default check value
-	checkInterval := 10 * time.Second
-	if config.CheckInterval != "" {
-		checkInterval = to.Duration(config.CheckInterval)
-	}
-
+func (cfg *selfstateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
-		Enabled:                        config.Enabled,
-		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
-		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
-		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
-		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelay).Seconds()),
-		CheckInterval:                  checkInterval,
-		Contacts:                       config.Contacts,
-		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
+		Monitor: selfstate.MonitorConfig{
+			AdminCfg: selfstate.AdminMonitorConfig{
+				MonitorBaseConfig: selfstate.MonitorBaseConfig{
+					Enabled:        cfg.Monitor.AdminCfg.Enabled,
+					HeartbeatsCfg:  cfg.Monitor.AdminCfg.HearbeatsCfg.getSettings(),
+					NoticeInterval: to.Duration(cfg.Monitor.AdminCfg.NoticeInterval),
+					CheckInterval:  to.Duration(cfg.Monitor.AdminCfg.CheckInterval),
+				},
+				AdminContacts: cfg.Monitor.AdminCfg.AdminContacts,
+			},
+			UserCfg: selfstate.UserMonitorConfig{
+				MonitorBaseConfig: selfstate.MonitorBaseConfig{
+					Enabled:        cfg.Monitor.UserCfg.Enabled,
+					HeartbeatsCfg:  cfg.Monitor.UserCfg.HearbeatsCfg.getSettings(),
+					NoticeInterval: to.Duration(cfg.Monitor.UserCfg.NoticeInterval),
+					CheckInterval:  to.Duration(cfg.Monitor.UserCfg.CheckInterval),
+				},
+			},
+		},
 	}
 }
