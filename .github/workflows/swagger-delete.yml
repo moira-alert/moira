@@ -13,7 +13,7 @@ jobs:
     name: Delete api from SwaggerHub
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20.17.0'
