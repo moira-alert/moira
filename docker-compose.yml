@@ -1,13 +1,84 @@
 version: "3.7"
 
 services:
-  redis:
-    image: redis:6.2.12-alpine3.18
+  redis_node_0:
+    image: bitnami/redis-cluster:6.2.14
     volumes:
-      - data:/data
+      - data_0:/data
     ports:
-      - "6379:6379"
+      - "6370:6370"
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
+      - "REDIS_NODES=redis_node_0:6370,redis_node_1:6371,redis_node_2:6372,redis_node_3:6373,redis_node_4:6374,redis_node_5:6375"
+      - "REDIS_CLUSTER_CREATOR=yes"
+      - "REDIS_PORT_NUMBER=6370"
     restart: always
+    hostname: redis_node_0
+
+  redis_node_1:
+    image: bitnami/redis-cluster:6.2.14
+    volumes:
+      - data_1:/data
+    ports:
+      - "6371:6371"
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
+      - "REDIS_NODES=redis_node_0:6370,redis_node_1:6371,redis_node_2:6372,redis_node_3:6373,redis_node_4:6374,redis_node_5:6375"
+      - "REDIS_PORT_NUMBER=6371"
+    restart: always
+    hostname: redis_node_1
+
+  redis_node_2:
+    image: bitnami/redis-cluster:6.2.14
+    volumes:
+      - data_2:/data
+    ports:
+      - "6372:6372"
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
+      - "REDIS_NODES=redis_node_0:6370,redis_node_1:6371,redis_node_2:6372,redis_node_3:6373,redis_node_4:6374,redis_node_5:6375"
+      - "REDIS_PORT_NUMBER=6372"
+    restart: always
+    hostname: redis_node_2
+
+  redis_node_3:
+    image: bitnami/redis-cluster:6.2.14
+    volumes:
+      - data_2:/data
+    ports:
+      - "6373:6373"
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
+      - "REDIS_NODES=redis_node_0:6370,redis_node_1:6371,redis_node_2:6372,redis_node_3:6373,redis_node_4:6374,redis_node_5:6375"
+      - "REDIS_PORT_NUMBER=6373"
+    restart: always
+    hostname: redis_node_3
+
+  redis_node_4:
+    image: bitnami/redis-cluster:6.2.14
+    volumes:
+      - data_2:/data
+    ports:
+      - "6374:6374"
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
+      - "REDIS_NODES=redis_node_0:6370,redis_node_1:6371,redis_node_2:6372,redis_node_3:6373,redis_node_4:6374,redis_node_5:6375"
+      - "REDIS_PORT_NUMBER=6374"
+    restart: always
+    hostname: redis_node_4
+
+  redis_node_5:
+    image: bitnami/redis-cluster:6.2.14
+    volumes:
+      - data_2:/data
+    ports:
+      - "6375:6375"
+    environment:
+      - "ALLOW_EMPTY_PASSWORD=yes"
+      - "REDIS_NODES=redis_node_0:6370,redis_node_1:6371,redis_node_2:6372,redis_node_3:6373,redis_node_4:6374,redis_node_5:6375"
+      - "REDIS_PORT_NUMBER=6375"
+    restart: always
+    hostname: redis_node_5
 
   graphite:
     image: graphiteapp/graphite-statsd
@@ -40,7 +111,13 @@ services:
     volumes:
       - ./local/filter.yml:/etc/moira/filter.yml
     depends_on:
-      - redis
+      - redis_node_0
+      - redis_node_1
+      - redis_node_2
+      - redis_node_3
+      - redis_node_4
+      - redis_node_5
+
       - relay
     ports:
       - "8094:8094"
@@ -53,7 +130,13 @@ services:
     volumes:
       - ./local/checker.yml:/etc/moira/checker.yml
     depends_on:
-      - redis
+      - redis_node_0
+      - redis_node_1
+      - redis_node_2
+      - redis_node_3
+      - redis_node_4
+      - redis_node_5
+
       - filter
       - graphite
       - relay
@@ -61,19 +144,19 @@ services:
       - "8092:8092"
     restart: always
 
-  notifier:
-    build:
-      context: .
-      dockerfile: Dockerfile.notifier
-    volumes:
-      - ./local/notifier.yml:/etc/moira/notifier.yml
-    depends_on:
-      - redis
-      - checker
-      - relay
-    ports:
-      - "8093:8093"
-    restart: always
+  # notifier:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.notifier
+  #   volumes:
+  #     - ./local/notifier.yml:/etc/moira/notifier.yml
+  #   depends_on:
+  #     - redis
+  #     - checker
+  #     - relay
+  #   ports:
+  #     - "8093:8093"
+  #   restart: always
 
   api:
     build:
@@ -82,7 +165,12 @@ services:
     volumes:
       - ./local/api.yml:/etc/moira/api.yml
     depends_on:
-      - redis
+      - redis_node_0
+      - redis_node_1
+      - redis_node_2
+      - redis_node_3
+      - redis_node_4
+      - redis_node_5
       - checker
       - relay
     networks:
@@ -121,5 +209,11 @@ services:
     restart: always
 networks:
   balancer:
+  redis_cluster:
 volumes:
-  data:
+  data_0:
+  data_1:
+  data_2:
+  data_3:
+  data_4:
+  data_5:
