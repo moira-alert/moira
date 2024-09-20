@@ -15,6 +15,11 @@ func CalculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen i
 	return maxChars/2 - 10, maxChars / 2
 }
 
+const (
+	// messagePartsCount is the number of parts in alert, which will be recalculated.
+	messagePartsCount = 3
+)
+
 // CalculateMessagePartsBetweenTagsDescEvents calculates and returns the length of tags, description and events string
 // in order to fit the max chars limit.
 func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, eventsLen int) (tagsNewLen int, descNewLen int, eventsNewLen int) { // nolint
@@ -26,44 +31,45 @@ func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, even
 		return tagsLen, descLen, eventsLen
 	}
 
-	fairMaxLen := maxChars / 3
+	fairMaxLen := maxChars / messagePartsCount
 
-	if tagsLen > fairMaxLen && descLen <= fairMaxLen && eventsLen <= fairMaxLen {
+	switch {
+	case tagsLen > fairMaxLen && descLen <= fairMaxLen && eventsLen <= fairMaxLen:
 		// give free space to tags
 		tagsNewLen = maxChars - descLen - eventsLen
 
 		return min(tagsNewLen, tagsLen), descLen, eventsLen
-	} else if tagsLen <= fairMaxLen && descLen > fairMaxLen && eventsLen <= fairMaxLen {
+	case tagsLen <= fairMaxLen && descLen > fairMaxLen && eventsLen <= fairMaxLen:
 		// give free space to description
 		descNewLen = maxChars - tagsLen - eventsLen
 
 		return tagsLen, min(descNewLen, descLen), eventsLen
-	} else if tagsLen <= fairMaxLen && descLen <= fairMaxLen && eventsLen > fairMaxLen {
+	case tagsLen <= fairMaxLen && descLen <= fairMaxLen && eventsLen > fairMaxLen:
 		// give free space to events
 		eventsNewLen = maxChars - tagsLen - descLen
 
 		return tagsLen, descLen, min(eventsNewLen, eventsLen)
-	} else if tagsLen > fairMaxLen && descLen > fairMaxLen && eventsLen <= fairMaxLen {
+	case tagsLen > fairMaxLen && descLen > fairMaxLen && eventsLen <= fairMaxLen:
 		// description is more important than tags
 		tagsNewLen = fairMaxLen
 		descNewLen = maxChars - tagsNewLen - eventsLen
 
 		return tagsNewLen, min(descNewLen, descLen), eventsLen
-	} else if tagsLen > fairMaxLen && descLen <= fairMaxLen && eventsLen > fairMaxLen {
+	case tagsLen > fairMaxLen && descLen <= fairMaxLen && eventsLen > fairMaxLen:
 		// events are more important than tags
 		tagsNewLen = fairMaxLen
 		eventsNewLen = maxChars - tagsNewLen - descLen
 
 		return tagsNewLen, descLen, min(eventsNewLen, eventsLen)
-	} else if tagsLen <= fairMaxLen && descLen > fairMaxLen && eventsLen > fairMaxLen {
+	case tagsLen <= fairMaxLen && descLen > fairMaxLen && eventsLen > fairMaxLen:
 		// split free space from tags fairly between description and events
 		spaceFromTags := fairMaxLen - tagsLen
 		descNewLen = fairMaxLen + spaceFromTags/2
 		eventsNewLen = fairMaxLen + spaceFromTags/2
 
 		return tagsLen, min(descNewLen, descLen), min(eventsNewLen, eventsLen)
+	default:
+		// all 3 blocks have length greater than maxChars/3, so split space fairly
+		return fairMaxLen, fairMaxLen, fairMaxLen
 	}
-
-	// all 3 blocks have length greater than maxChars/3, so split space fairly
-	return fairMaxLen, fairMaxLen, fairMaxLen
 }
