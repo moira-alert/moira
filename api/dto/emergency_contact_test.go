@@ -12,7 +12,7 @@ var (
 
 	testEmergencyContact = moira.EmergencyContact{
 		ContactID:      testContactID,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	}
 )
 

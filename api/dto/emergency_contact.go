@@ -8,13 +8,13 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// ErrEmptyEmergencyTypes means that the user has not specified any emergency types.
-var ErrEmptyEmergencyTypes = errors.New("emergency types can not be empty")
+// ErrEmptyHeartbeatTypes means that the user has not specified any heartbeat types.
+var ErrEmptyHeartbeatTypes = errors.New("heartbeat types can not be empty")
 
 // EmergencyContact is the DTO structure for contacts to which notifications will go in the event of special internal Moira problems.
 type EmergencyContact struct {
-	ContactID      string                       `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
-	EmergencyTypes []moira.EmergencyContactType `json:"emergency_types" example:"notifier_off"`
+	ContactID      string                `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	HeartbeatTypes []moira.HeartbeatType `json:"heartbeat_types" example:"notifier_off"`
 }
 
 // Render is a function that implements chi Renderer interface for EmergencyContact.
@@ -24,13 +24,13 @@ func (*EmergencyContact) Render(w http.ResponseWriter, r *http.Request) error {
 
 // Bind is a method that implements Binder interface from chi and checks that validity of data in request.
 func (emergencyContact *EmergencyContact) Bind(r *http.Request) error {
-	if len(emergencyContact.EmergencyTypes) == 0 {
-		return ErrEmptyEmergencyTypes
+	if len(emergencyContact.HeartbeatTypes) == 0 {
+		return ErrEmptyHeartbeatTypes
 	}
 
-	for _, emergencyType := range emergencyContact.EmergencyTypes {
+	for _, emergencyType := range emergencyContact.HeartbeatTypes {
 		if !emergencyType.IsValid() {
-			return fmt.Errorf("'%s' emergency type doesn't exist", emergencyType)
+			return fmt.Errorf("'%s' heartbeat type doesn't exist", emergencyType)
 		}
 	}
 

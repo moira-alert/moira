@@ -20,20 +20,20 @@ var (
 
 	testEmergencyContact = moira.EmergencyContact{
 		ContactID:      testContactID,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	}
 	testEmergencyContact2 = moira.EmergencyContact{
 		ContactID:      testContactID2,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeRedisDisconnected},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HearbeatTypeNotSet},
 	}
 
 	testEmergencyContactDTO = dto.EmergencyContact{
 		ContactID:      testContactID,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	}
 	testEmergencyContact2DTO = dto.EmergencyContact{
 		ContactID:      testContactID2,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeRedisDisconnected},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HearbeatTypeNotSet},
 	}
 )
 
@@ -285,7 +285,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 		Convey("With empty contact id", func() {
 			emergencyContactDTO := dto.EmergencyContact{
-				EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+				HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 			}
 			database.EXPECT().SaveEmergencyContact(testEmergencyContact).Return(nil)
 

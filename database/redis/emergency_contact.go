@@ -85,7 +85,7 @@ func (connector *DbConnector) getEmergencyContactIDs() ([]string, error) {
 	return emergencyContactIDs, nil
 }
 
-// GetHeartbeatTypeContactIDs a method for obtaining contact IDs by specific emergency type.
+// GetHeartbeatTypeContactIDs a method for obtaining contact IDs by specific heartbeat type.
 func (connector *DbConnector) GetHeartbeatTypeContactIDs(heartbeatType moira.HeartbeatType) ([]string, error) {
 	c := *connector.client
 	ctx := connector.context

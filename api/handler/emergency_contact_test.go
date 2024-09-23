@@ -27,11 +27,11 @@ var (
 
 	testEmergencyContact = moira.EmergencyContact{
 		ContactID:      testContactID,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	}
 	testEmergencyContact2 = moira.EmergencyContact{
 		ContactID:      testContactID2,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeRedisDisconnected},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HearbeatTypeNotSet},
 	}
 
 	login = "testLogin"
@@ -246,7 +246,7 @@ func TestCreateEmergencyContact(t *testing.T) {
 
 		Convey("Try to create emergency contact without contact id", func() {
 			emergencyContact := moira.EmergencyContact{
-				EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+				HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 			}
 			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
 
@@ -280,7 +280,7 @@ func TestCreateEmergencyContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("Try to create emergency contact without emergency types", func() {
+		Convey("Try to create emergency contact without heartbeat types", func() {
 			emergencyContact := moira.EmergencyContact{
 				ContactID: testContactID,
 			}
@@ -293,7 +293,7 @@ func TestCreateEmergencyContact(t *testing.T) {
 
 			expectedErr := &api.ErrorResponse{
 				StatusText: "Invalid request",
-				ErrorText:  dto.ErrEmptyEmergencyTypes.Error(),
+				ErrorText:  dto.ErrEmptyHeartbeatTypes.Error(),
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
@@ -316,10 +316,10 @@ func TestCreateEmergencyContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("Try to create emergency contact with invalid emergency type", func() {
+		Convey("Try to create emergency contact with invalid heartbeat type", func() {
 			emergencyContact := moira.EmergencyContact{
 				ContactID: testContactID,
-				EmergencyTypes: []moira.EmergencyContactType{
+				HeartbeatTypes: []moira.HeartbeatType{
 					"notifier_on",
 				},
 			}
@@ -332,7 +332,7 @@ func TestCreateEmergencyContact(t *testing.T) {
 
 			expectedErr := &api.ErrorResponse{
 				StatusText: "Invalid request",
-				ErrorText:  "'notifier_on' emergency type doesn't exist",
+				ErrorText:  "'notifier_on' heartbeat type doesn't exist",
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
@@ -472,7 +472,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 		Convey("Successfully update emergency contact without contact id in dto", func() {
 			emergencyContact := moira.EmergencyContact{
-				EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+				HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 			}
 			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
 
@@ -505,7 +505,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
-		Convey("Invalid Request without emergency types in dto", func() {
+		Convey("Invalid Request without heartbeat types in dto", func() {
 			emergencyContact := moira.EmergencyContact{
 				ContactID: testContactID,
 			}
@@ -513,7 +513,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			expectedErr := &api.ErrorResponse{
 				StatusText: "Invalid request",
-				ErrorText:  dto.ErrEmptyEmergencyTypes.Error(),
+				ErrorText:  dto.ErrEmptyHeartbeatTypes.Error(),
 			}
 			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
 			So(err, ShouldBeNil)
@@ -539,10 +539,10 @@ func TestUpdateEmergencyContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("Invalid Request with undefined emergency type in dto", func() {
+		Convey("Invalid Request with undefined heartbeat type in dto", func() {
 			emergencyContact := moira.EmergencyContact{
 				ContactID: testContactID,
-				EmergencyTypes: []moira.EmergencyContactType{
+				HeartbeatTypes: []moira.HeartbeatType{
 					"notifier_on",
 				},
 			}
@@ -550,7 +550,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			expectedErr := &api.ErrorResponse{
 				StatusText: "Invalid request",
-				ErrorText:  "'notifier_on' emergency type doesn't exist",
+				ErrorText:  "'notifier_on' heartbeat type doesn't exist",
 			}
 			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
 			So(err, ShouldBeNil)
