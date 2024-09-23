@@ -139,7 +139,7 @@ func TestGetEmergencyContactsByIDs(t *testing.T) {
 	})
 }
 
-func TestGetEmergencyTypeContactIDs(t *testing.T) {
+func TestGetHeartbeatTypeContactIDs(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
 	database := NewTestDatabase(logger)
 	database.Flush()
@@ -166,7 +166,7 @@ func TestGetEmergencyTypeContactIDs(t *testing.T) {
 				testContactID2,
 			})
 
-			emergencyContactIDs, err = database.GetHeartbeatTypeContactIDs(moira.HeartbeatNotifierOff)
+			emergencyContactIDs, err = database.GetHeartbeatTypeContactIDs(moira.HearbeatTypeNotSet)
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContactIDs, []string{
 				testContactID3,
