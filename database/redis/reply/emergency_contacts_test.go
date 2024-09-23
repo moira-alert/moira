@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	testEmergencyContactVal      = `{"contact_id":"test-contact-id","emergency_types":["notifier_off"]}`
-	testEmptyEmergencyContactVal = `{"contact_id":"","emergency_types":null}`
+	testEmergencyContactVal      = `{"contact_id":"test-contact-id","heartbeat_types":["notifier_off"]}`
+	testEmptyEmergencyContactVal = `{"contact_id":"","heartbeat_types":null}`
 )
 
 var (
 	testEmergencyContact = moira.EmergencyContact{
 		ContactID:      "test-contact-id",
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	}
 	testEmptyEmergencyContact = moira.EmergencyContact{}
 )

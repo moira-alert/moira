@@ -18,17 +18,17 @@ var (
 
 	testEmergencyContact = moira.EmergencyContact{
 		ContactID:      testContactID,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	}
 
 	testEmergencyContact2 = moira.EmergencyContact{
 		ContactID:      testContactID2,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	}
 
 	testEmergencyContact3 = moira.EmergencyContact{
 		ContactID:      testContactID3,
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeRedisDisconnected},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HearbeatTypeNotSet},
 	}
 )
 
@@ -139,15 +139,15 @@ func TestGetEmergencyContactsByIDs(t *testing.T) {
 	})
 }
 
-func TestGetEmergencyTypeContactIDs(t *testing.T) {
+func TestGetHeartbeatTypeContactIDs(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
 	database := NewTestDatabase(logger)
 	database.Flush()
 	defer database.Flush()
 
-	Convey("Test GetEmergencyTypeContactIDs", t, func() {
-		Convey("Without any emergency contacts by type", func() {
-			emergencyContactIDs, err := database.GetEmergencyTypeContactIDs(moira.EmergencyTypeNotifierOff)
+	Convey("Test GetHeartbeatTypeContactIDs", t, func() {
+		Convey("Without any emergency contacts by heartbeat type", func() {
+			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(moira.HeartbeatNotifierOff)
 			So(err, ShouldBeNil)
 			So(emergencyContactIDs, ShouldBeEmpty)
 		})
@@ -159,14 +159,14 @@ func TestGetEmergencyTypeContactIDs(t *testing.T) {
 				testEmergencyContact3,
 			})
 
-			emergencyContactIDs, err := database.GetEmergencyTypeContactIDs(moira.EmergencyTypeNotifierOff)
+			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(moira.HeartbeatNotifierOff)
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContactIDs, []string{
 				testContactID,
 				testContactID2,
 			})
 
-			emergencyContactIDs, err = database.GetEmergencyTypeContactIDs(moira.EmergencyTypeRedisDisconnected)
+			emergencyContactIDs, err = database.GetHeartbeatTypeContactIDs(moira.HearbeatTypeNotSet)
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContactIDs, []string{
 				testContactID3,
@@ -197,7 +197,7 @@ func TestSaveEmergencyContact(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(emergencyContacts, ShouldResemble, expectedEmergencyContacts)
 
-			emergencyContactIDs, err := database.GetEmergencyTypeContactIDs(moira.EmergencyTypeNotifierOff)
+			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(moira.HeartbeatNotifierOff)
 			So(err, ShouldBeNil)
 			So(emergencyContactIDs, ShouldResemble, expectedEmergencyContactIDs)
 		})
@@ -230,7 +230,7 @@ func TestSaveEmergencyContacts(t *testing.T) {
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContacts, expectedEmergencyContacts)
 
-			emergencyContactIDs, err := database.GetEmergencyTypeContactIDs(moira.EmergencyTypeNotifierOff)
+			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(moira.HeartbeatNotifierOff)
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContactIDs, expectedEmergencyContactIDs)
 		})

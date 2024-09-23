@@ -461,19 +461,19 @@ func (mr *MockDatabaseMockRecorder) GetEmergencyContactsByIDs(arg0 any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmergencyContactsByIDs", reflect.TypeOf((*MockDatabase)(nil).GetEmergencyContactsByIDs), arg0)
 }
 
-// GetEmergencyTypeContactIDs mocks base method.
-func (m *MockDatabase) GetEmergencyTypeContactIDs(arg0 moira.EmergencyContactType) ([]string, error) {
+// GetHeartbeatTypeContactIDs mocks base method.
+func (m *MockDatabase) GetHeartbeatTypeContactIDs(arg0 moira.HeartbeatType) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEmergencyTypeContactIDs", arg0)
+	ret := m.ctrl.Call(m, "GetHeartbeatTypeContactIDs", arg0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetEmergencyTypeContactIDs indicates an expected call of GetEmergencyTypeContactIDs.
-func (mr *MockDatabaseMockRecorder) GetEmergencyTypeContactIDs(arg0 any) *gomock.Call {
+// GetHeartbeatTypeContactIDs indicates an expected call of GetHeartbeatTypeContactIDs.
+func (mr *MockDatabaseMockRecorder) GetHeartbeatTypeContactIDs(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmergencyTypeContactIDs", reflect.TypeOf((*MockDatabase)(nil).GetEmergencyTypeContactIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeartbeatTypeContactIDs", reflect.TypeOf((*MockDatabase)(nil).GetHeartbeatTypeContactIDs), arg0)
 }
 
 // GetMetricRetention mocks base method.

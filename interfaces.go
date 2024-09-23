@@ -79,7 +79,7 @@ type Database interface {
 	GetEmergencyContacts() ([]*EmergencyContact, error)
 	GetEmergencyContactsByIDs(contactIDs []string) ([]*EmergencyContact, error)
 	GetEmergencyContact(contactID string) (EmergencyContact, error)
-	GetEmergencyTypeContactIDs(emergencyType EmergencyContactType) ([]string, error)
+	GetHeartbeatTypeContactIDs(heartbeatType HeartbeatType) ([]string, error)
 	SaveEmergencyContact(emergencyContact EmergencyContact) error
 	RemoveEmergencyContact(contactID string) error
 
