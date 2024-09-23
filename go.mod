@@ -29,7 +29,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475
-	github.com/rs/cors v1.9.0
+	github.com/rs/cors v1.11.0
 	github.com/rs/zerolog v1.29.0
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/slack-go/slack v0.12.1
@@ -46,7 +46,6 @@ require (
 require github.com/prometheus/common v0.37.0
 
 require (
-	github.com/golang/mock v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/mattermost/mattermost/server/public v0.1.1
 	github.com/mitchellh/mapstructure v1.5.0
