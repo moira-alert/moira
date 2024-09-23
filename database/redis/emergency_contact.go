@@ -85,14 +85,14 @@ func (connector *DbConnector) getEmergencyContactIDs() ([]string, error) {
 	return emergencyContactIDs, nil
 }
 
-// GetEmergencyTypeContactIDs a method for obtaining contact IDs by specific emergency type.
-func (connector *DbConnector) GetEmergencyTypeContactIDs(emergencyType moira.EmergencyContactType) ([]string, error) {
+// GetHeartbeatTypeContactIDs a method for obtaining contact IDs by specific emergency type.
+func (connector *DbConnector) GetHeartbeatTypeContactIDs(heartbeatType moira.HeartbeatType) ([]string, error) {
 	c := *connector.client
 	ctx := connector.context
 
-	contactIDs, err := c.SMembers(ctx, emergencyTypeContactsKey(emergencyType)).Result()
+	contactIDs, err := c.SMembers(ctx, heartbeatTypeContactsKey(heartbeatType)).Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get emergency type contact IDs '%s': %w", emergencyType, err)
+		return nil, fmt.Errorf("failed to get heartbeat type contact IDs '%s': %w", heartbeatType, err)
 	}
 
 	return contactIDs, nil
@@ -104,8 +104,8 @@ func (connector *DbConnector) saveEmergencyContacts(emergencyContacts []moira.Em
 
 	pipe := c.TxPipeline()
 	for _, emergencyContact := range emergencyContacts {
-		if err := saveEmergencyContactPipe(ctx, pipe, emergencyContact); err != nil {
-			return err
+		if err := addSaveEmergencyContactToPipe(ctx, pipe, emergencyContact); err != nil {
+			return fmt.Errorf("failed to add save emergency contact '%s' to pipe: %w", emergencyContact.ContactID, err)
 		}
 	}
 
@@ -123,7 +123,7 @@ func (connector *DbConnector) SaveEmergencyContact(emergencyContact moira.Emerge
 
 	pipe := c.TxPipeline()
 
-	if err := saveEmergencyContactPipe(ctx, pipe, emergencyContact); err != nil {
+	if err := addSaveEmergencyContactToPipe(ctx, pipe, emergencyContact); err != nil {
 		return err
 	}
 
@@ -146,7 +146,7 @@ func (connector *DbConnector) RemoveEmergencyContact(contactID string) error {
 
 	pipe := c.TxPipeline()
 
-	removeEmergencyContactPipe(ctx, pipe, emergencyContact)
+	addRemoveEmergencyContactToPipe(ctx, pipe, emergencyContact)
 
 	if _, err := pipe.Exec(ctx); err != nil {
 		return fmt.Errorf("failed to remove emergency contact '%s': %w", contactID, err)
@@ -155,7 +155,7 @@ func (connector *DbConnector) RemoveEmergencyContact(contactID string) error {
 	return nil
 }
 
-func saveEmergencyContactPipe(ctx context.Context, pipe redis.Pipeliner, emergencyContact moira.EmergencyContact) error {
+func addSaveEmergencyContactToPipe(ctx context.Context, pipe redis.Pipeliner, emergencyContact moira.EmergencyContact) error {
 	emergencyContactBytes, err := reply.GetEmergencyContactBytes(emergencyContact)
 	if err != nil {
 		return fmt.Errorf("failed to get emergency contact '%s' bytes: %w", emergencyContact.ContactID, err)
@@ -163,18 +163,18 @@ func saveEmergencyContactPipe(ctx context.Context, pipe redis.Pipeliner, emergen
 
 	pipe.Set(ctx, emergencyContactsKey(emergencyContact.ContactID), emergencyContactBytes, redis.KeepTTL)
 
-	for _, emergencyType := range emergencyContact.EmergencyTypes {
-		pipe.SAdd(ctx, emergencyTypeContactsKey(emergencyType), emergencyContact.ContactID)
+	for _, heartbeatType := range emergencyContact.HeartbeatTypes {
+		pipe.SAdd(ctx, heartbeatTypeContactsKey(heartbeatType), emergencyContact.ContactID)
 	}
 
 	return nil
 }
 
-func removeEmergencyContactPipe(ctx context.Context, pipe redis.Pipeliner, emergencyContact moira.EmergencyContact) {
+func addRemoveEmergencyContactToPipe(ctx context.Context, pipe redis.Pipeliner, emergencyContact moira.EmergencyContact) {
 	pipe.Del(ctx, emergencyContactsKey(emergencyContact.ContactID))
 
-	for _, emergencyType := range emergencyContact.EmergencyTypes {
-		pipe.SRem(ctx, emergencyTypeContactsKey(emergencyType), emergencyContact.ContactID)
+	for _, heartbeatType := range emergencyContact.HeartbeatTypes {
+		pipe.SRem(ctx, heartbeatTypeContactsKey(heartbeatType), emergencyContact.ContactID)
 	}
 }
 
@@ -182,6 +182,6 @@ func emergencyContactsKey(contactID string) string {
 	return "moira-emergency-contacts:" + contactID
 }
 
-func emergencyTypeContactsKey(emergencyType moira.EmergencyContactType) string {
-	return "moira-emergency-type-contacts:" + string(emergencyType)
+func heartbeatTypeContactsKey(heartbeatType moira.HeartbeatType) string {
+	return "moira-heartbeat-type-contacts:" + string(heartbeatType)
 }

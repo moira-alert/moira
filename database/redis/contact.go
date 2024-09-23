@@ -178,7 +178,7 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	pipe.SRem(ctx, teamContactsKey(existing.Team), contactID)
 
 	if !errors.Is(getEmergencyContactErr, database.ErrNil) {
-		removeEmergencyContactPipe(ctx, pipe, emergencyContact)
+		addRemoveEmergencyContactToPipe(ctx, pipe, emergencyContact)
 	}
 
 	_, err = pipe.Exec(ctx)

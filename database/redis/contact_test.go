@@ -544,7 +544,7 @@ var user2Contacts = []*moira.ContactData{
 var user2EmergencyContacts = []moira.EmergencyContact{
 	{
 		ContactID:      "ContactID-000000000000003",
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	},
 }
 
@@ -605,6 +605,6 @@ var team2Contacts = []*moira.ContactData{
 var team2EmergencyContacts = []moira.EmergencyContact{
 	{
 		ContactID:      "TeamContactID-000000000000003",
-		EmergencyTypes: []moira.EmergencyContactType{moira.EmergencyTypeNotifierOff},
+		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
 	},
 }

@@ -222,21 +222,18 @@ func (contact *ContactData) ToTemplateContact() *templating.Contact {
 	}
 }
 
-// EmergencyContactType are Moira's special internal types of problems.
-type EmergencyContactType string
+// HeartbeatType are Moira's special internal types of problems.
+type HeartbeatType string
 
 const (
-	EmergencyTypeNotifierOff                 EmergencyContactType = "notifier_off"
-	EmergencyTypeRedisDisconnected           EmergencyContactType = "redis_disconnected"
-	EmergencyTypeCheckerNoTriggerCheck       EmergencyContactType = "checker_no_trigger_check"
-	EmergencyTypeFilterNoMetricsReceived     EmergencyContactType = "filter_no_metrics_received"
-	EmergencyTypeRemoteCheckerNoTriggerCheck EmergencyContactType = "remote_checker_no_trigger_check"
+	HearbeatTypeNotSet   HeartbeatType = "type_not_set"
+	HeartbeatNotifierOff HeartbeatType = "notifier_off"
 )
 
-// IsValid checks if such an emergency type exists.
-func (emergencyType EmergencyContactType) IsValid() bool {
-	switch emergencyType {
-	case EmergencyTypeNotifierOff, EmergencyTypeRedisDisconnected, EmergencyTypeCheckerNoTriggerCheck, EmergencyTypeFilterNoMetricsReceived, EmergencyTypeRemoteCheckerNoTriggerCheck:
+// IsValid checks if such an heartbeat type exists.
+func (heartbeatType HeartbeatType) IsValid() bool {
+	switch heartbeatType {
+	case HeartbeatNotifierOff:
 		return true
 	default:
 		return false
@@ -246,7 +243,7 @@ func (emergencyType EmergencyContactType) IsValid() bool {
 // EmergencyContact is the structure for contacts to which notifications will go in the event of special internal Moira problems.
 type EmergencyContact struct {
 	ContactID      string
-	EmergencyTypes []EmergencyContactType
+	HeartbeatTypes []HeartbeatType
 }
 
 // SubscriptionData represents user subscription.

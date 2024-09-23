@@ -1072,15 +1072,11 @@ func TestScheduledNotificationIsDelayed(t *testing.T) {
 	})
 }
 
-func TestIsValidEmergencyType(t *testing.T) {
-	Convey("Test IsValid emergency type", t, func() {
+func TestIsValidHeartbeatType(t *testing.T) {
+	Convey("Test IsValid heartbeat type", t, func() {
 		Convey("Test valid cases", func() {
-			testcases := []EmergencyContactType{
-				EmergencyTypeNotifierOff,
-				EmergencyTypeRedisDisconnected,
-				EmergencyTypeCheckerNoTriggerCheck,
-				EmergencyTypeFilterNoMetricsReceived,
-				EmergencyTypeRemoteCheckerNoTriggerCheck,
+			testcases := []HeartbeatType{
+				HeartbeatNotifierOff,
 			}
 
 			for _, testcase := range testcases {
@@ -1089,7 +1085,7 @@ func TestIsValidEmergencyType(t *testing.T) {
 		})
 
 		Convey("Test invalid cases", func() {
-			testcases := []EmergencyContactType{
+			testcases := []HeartbeatType{
 				"notifier_on",
 				"checker_off",
 			}

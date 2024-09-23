@@ -11,21 +11,21 @@ import (
 )
 
 type emergencyContactStorageElement struct {
-	ContactID      string                       `json:"contact_id"`
-	EmergencyTypes []moira.EmergencyContactType `json:"emergency_types"`
+	ContactID      string                `json:"contact_id"`
+	HeartbeatTypes []moira.HeartbeatType `json:"heartbeat_types"`
 }
 
 func (se emergencyContactStorageElement) toEmergencyContact() moira.EmergencyContact {
 	return moira.EmergencyContact{
 		ContactID:      se.ContactID,
-		EmergencyTypes: se.EmergencyTypes,
+		HeartbeatTypes: se.HeartbeatTypes,
 	}
 }
 
 func toEmergencyContactStorageElement(emergencyContact moira.EmergencyContact) emergencyContactStorageElement {
 	return emergencyContactStorageElement{
 		ContactID:      emergencyContact.ContactID,
-		EmergencyTypes: emergencyContact.EmergencyTypes,
+		HeartbeatTypes: emergencyContact.HeartbeatTypes,
 	}
 }
 
