@@ -152,7 +152,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func is4xxCode(statusCode int) bool {
+func is4xxCode(statusCode int64) bool {
 	return statusCode >= 400 && statusCode < 500
 }
 
@@ -175,7 +175,7 @@ func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorRespons
 		http.StatusForbidden:    {},
 	}
 
-	if _, leadTo500 := codes4xxLeadTo500[statusCode]; is4xxCode(int(statusCode)) && !leadTo500 {
+	if _, leadTo500 := codes4xxLeadTo500[statusCode]; is4xxCode(statusCode) && !leadTo500 {
 		return api.ErrorInvalidRequest(promErr)
 	}
 
