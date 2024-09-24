@@ -152,6 +152,10 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func is4xxCode(statusCode int) bool {
+	return statusCode >= 400 && statusCode < 500
+}
+
 func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorResponse {
 	// In github.com/prometheus/client_golang/api/prometheus/v1 Error has field `Type`
 	// which can be used to understand "the reason" of error. There are some constants in the lib.
@@ -171,7 +175,7 @@ func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorRespons
 		http.StatusForbidden:    {},
 	}
 
-	if _, leadTo500 := codes4xxLeadTo500[statusCode]; statusCode/100 == 4 && !leadTo500 {
+	if _, leadTo500 := codes4xxLeadTo500[statusCode]; is4xxCode(int(statusCode)) && !leadTo500 {
 		return api.ErrorInvalidRequest(promErr)
 	}
 
