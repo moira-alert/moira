@@ -16,7 +16,7 @@ jobs:
     if: ${{github.event.issue.pull_request != null && startsWith(github.event.comment.body, '/build') && github.event.comment.author_association == 'MEMBER'}}
     steps:
       - name: Get PR branch
-        uses: xt0rted/pull-request-comment-branch@v1
+        uses: xt0rted/pull-request-comment-branch@v2
         id: comment-branch
         
       - uses: actions/github-script@v6
@@ -38,7 +38,7 @@ jobs:
       
 
       - name: Checkout PR branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ fromJSON(steps.get-pr.outputs.result).head.repo.full_name }}
           ref: ${{ fromJSON(steps.get-pr.outputs.result).head.sha }}
