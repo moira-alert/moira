@@ -36,6 +36,16 @@ func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Ha
 	}
 }
 
+// WebConfigContext sets to requests context web config.
+func WebConfigContext(webConfig *api.WebConfig) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), webConfig, webConfig)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
 // UserContext get x-webauth-user header and sets it in request context, if header is empty sets empty string.
 func UserContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {

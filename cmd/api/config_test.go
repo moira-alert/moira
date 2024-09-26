@@ -248,3 +248,38 @@ func Test_webConfig_getSettings(t *testing.T) {
 		})
 	})
 }
+
+func Test_webConfig_validate(t *testing.T) {
+	Convey("With empty web config", t, func() {
+		webConfig := webConfig{}
+
+		err := webConfig.validate()
+		So(err, ShouldBeNil)
+	})
+
+	Convey("With invalid contact template pattern", t, func() {
+		webConfig := webConfig{
+			ContactsTemplate: []webContact{
+				{
+					ValidationRegex: "**",
+				},
+			},
+		}
+
+		err := webConfig.validate()
+		So(err, ShouldNotBeNil)
+	})
+
+	Convey("With invalid contact template pattern", t, func() {
+		webConfig := webConfig{
+			ContactsTemplate: []webContact{
+				{
+					ValidationRegex: ".*",
+				},
+			},
+		}
+
+		err := webConfig.validate()
+		So(err, ShouldBeNil)
+	})
+}

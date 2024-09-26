@@ -111,7 +111,9 @@ func NewHandler(
 			router.Route("/subscription", subscription)
 			router.Route("/notification", notification)
 			router.Route("/teams", teams)
-			router.Route("/contact", func(router chi.Router) {
+			router.With(moiramiddle.WebConfigContext(
+				webConfig,
+			)).Route("/contact", func(router chi.Router) {
 				contact(router)
 				contactEvents(router)
 			})

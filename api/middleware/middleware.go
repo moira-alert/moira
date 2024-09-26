@@ -20,6 +20,7 @@ func (key ContextKey) String() string {
 var (
 	databaseKey          ContextKey = "database"
 	searcherKey          ContextKey = "searcher"
+	webConfigKey         ContextKey = "webConfig"
 	triggerIDKey         ContextKey = "triggerID"
 	clustersMetricTTLKey ContextKey = "clustersMetricTTL"
 	populateKey          ContextKey = "populated"
@@ -47,6 +48,11 @@ var (
 // GetDatabase gets moira.Database realization from request context.
 func GetDatabase(request *http.Request) moira.Database {
 	return request.Context().Value(databaseKey).(moira.Database)
+}
+
+// GetWebConfig gets web config from request context.
+func GetWebConfig(request *http.Request) *api.WebConfig {
+	return request.Context().Value(webConfigKey).(*api.WebConfig)
 }
 
 // GetLogin gets user login string from request context, which was sets in UserContext middleware.

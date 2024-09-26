@@ -127,6 +127,15 @@ func TestCreateContact(t *testing.T) {
 		},
 	}
 
+	webConfig := &api.WebConfig{
+		Contacts: []api.WebContact{
+			{
+				ContactType:     contactType,
+				ValidationRegex: "@mail.com",
+			},
+		},
+	}
+
 	Convey("Create for user", t, func() {
 		Convey("Success", func() {
 			contact := &dto.Contact{
@@ -134,7 +143,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  contactType,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 		})
@@ -153,7 +162,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
-			err := CreateContact(dataBase, auth, &contact, userLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, &contact, userLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 			So(contact.ID, ShouldResemble, contact.ID)
@@ -166,7 +175,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  contactType,
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, nil)
-			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists")))
 		})
 
@@ -178,9 +187,33 @@ func TestCreateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, err)
-			expected := CreateContact(dataBase, auth, contact, userLogin, "")
+			expected := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		})
+
+		webConfig.Contacts = []api.WebContact{
+			{
+				ContactType:     contactType,
+				ValidationRegex: "@yandex.ru",
+			},
+		}
+
+		Convey("Error invalid contact value", func() {
+			contact := &dto.Contact{
+				Value: contactValue,
+				Type:  contactType,
+			}
+			expectedErr := api.ErrorInvalidRequest(fmt.Errorf("contact value doesn't match regex: '%s'", "@yandex.ru"))
+			err := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
+			So(err, ShouldResemble, expectedErr)
+		})
+
+		webConfig.Contacts = []api.WebContact{
+			{
+				ContactType:     contactType,
+				ValidationRegex: "@mail.com",
+			},
+		}
 
 		Convey("Error create now allowed contact", func() {
 			contact := &dto.Contact{
@@ -189,7 +222,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  notAllowedContactType,
 			}
 			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
-			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
 			So(err, ShouldResemble, expectedErr)
 		})
 
@@ -215,7 +248,7 @@ func TestCreateContact(t *testing.T) {
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
 
-			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
 			So(err, ShouldBeNil)
 		})
 
@@ -226,7 +259,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(err)
-			expected := CreateContact(dataBase, auth, contact, userLogin, "")
+			expected := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
 			So(expected, ShouldResemble, &api.ErrorResponse{
 				ErrorText:      err.Error(),
 				HTTPStatusCode: http.StatusInternalServerError,
@@ -243,7 +276,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  contactType,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, auth, contact, "", teamID)
+			err := CreateContact(dataBase, auth, webConfig, contact, "", teamID)
 			So(err, ShouldBeNil)
 			So(contact.TeamID, ShouldResemble, teamID)
 		})
@@ -262,7 +295,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
-			err := CreateContact(dataBase, auth, &contact, "", teamID)
+			err := CreateContact(dataBase, auth, webConfig, &contact, "", teamID)
 			So(err, ShouldBeNil)
 			So(contact.TeamID, ShouldResemble, teamID)
 			So(contact.ID, ShouldResemble, contact.ID)
@@ -284,7 +317,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
-			err := CreateContact(dataBase, auth, &contact, "", teamID)
+			err := CreateContact(dataBase, auth, webConfig, &contact, "", teamID)
 			So(err, ShouldBeNil)
 			So(contact.TeamID, ShouldResemble, teamID)
 			So(contact.Name, ShouldResemble, expectedContact.Name)
@@ -297,7 +330,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  contactType,
 			}
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, nil)
-			err := CreateContact(dataBase, auth, contact, "", teamID)
+			err := CreateContact(dataBase, auth, webConfig, contact, "", teamID)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists")))
 		})
 
@@ -309,7 +342,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, err)
-			expected := CreateContact(dataBase, auth, contact, "", teamID)
+			expected := CreateContact(dataBase, auth, webConfig, contact, "", teamID)
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		})
 
@@ -320,7 +353,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  notAllowedContactType,
 			}
 			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
-			err := CreateContact(dataBase, auth, contact, "", teamID)
+			err := CreateContact(dataBase, auth, webConfig, contact, "", teamID)
 			So(err, ShouldResemble, expectedErr)
 		})
 
@@ -346,7 +379,7 @@ func TestCreateContact(t *testing.T) {
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
 
-			err := CreateContact(dataBase, auth, contact, "", teamID)
+			err := CreateContact(dataBase, auth, webConfig, contact, "", teamID)
 			So(err, ShouldBeNil)
 		})
 
@@ -357,7 +390,7 @@ func TestCreateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(err)
-			expected := CreateContact(dataBase, auth, contact, "", teamID)
+			expected := CreateContact(dataBase, auth, webConfig, contact, "", teamID)
 			So(expected, ShouldResemble, &api.ErrorResponse{
 				ErrorText:      err.Error(),
 				HTTPStatusCode: http.StatusInternalServerError,
@@ -389,6 +422,8 @@ func TestAdminsCreatesContact(t *testing.T) {
 		},
 	}
 
+	webConfig := &api.WebConfig{}
+
 	Convey("Create for user", t, func() {
 		Convey("The same user", func() {
 			contact := &dto.Contact{
@@ -397,7 +432,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				User:  userLogin,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 		})
@@ -409,7 +444,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				User:  adminLogin,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, auth, contact, adminLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, adminLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, adminLogin)
 		})
@@ -421,7 +456,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				User:  adminLogin,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, auth, contact, userLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, userLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 		})
@@ -433,7 +468,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				User:  userLogin,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, auth, contact, adminLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, adminLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 		})
@@ -445,7 +480,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				User:  userLogin,
 			}
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-			err := CreateContact(dataBase, auth, contact, adminLogin, "")
+			err := CreateContact(dataBase, auth, webConfig, contact, adminLogin, "")
 			So(err, ShouldBeNil)
 			So(contact.User, ShouldResemble, userLogin)
 		})
@@ -472,6 +507,15 @@ func TestUpdateContact(t *testing.T) {
 		},
 	}
 
+	webConfig := &api.WebConfig{
+		Contacts: []api.WebContact{
+			{
+				ContactType:     contactType,
+				ValidationRegex: "@mail.com",
+			},
+		},
+	}
+
 	Convey("User update", t, func() {
 		Convey("Success", func() {
 			contactDTO := dto.Contact{
@@ -488,7 +532,7 @@ func TestUpdateContact(t *testing.T) {
 				User:  userLogin,
 			}
 			dataBase.EXPECT().SaveContact(&contact).Return(nil)
-			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			expectedContact, err := UpdateContact(dataBase, auth, webConfig, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
 			So(err, ShouldBeNil)
 			So(expectedContact.User, ShouldResemble, userLogin)
 			So(expectedContact.ID, ShouldResemble, contactID)
@@ -512,7 +556,7 @@ func TestUpdateContact(t *testing.T) {
 				User:  newUser,
 			}
 			dataBase.EXPECT().SaveContact(&contact).Return(nil)
-			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			expectedContact, err := UpdateContact(dataBase, auth, webConfig, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
 			So(err, ShouldBeNil)
 			So(expectedContact.User, ShouldResemble, newUser)
 			So(expectedContact.ID, ShouldResemble, contactID)
@@ -526,12 +570,40 @@ func TestUpdateContact(t *testing.T) {
 			}
 			expectedErr := api.ErrorInvalidRequest(ErrNotAllowedContactType)
 			contactID := uuid.Must(uuid.NewV4()).String()
-			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			expectedContact, err := UpdateContact(dataBase, auth, webConfig, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
 			So(err, ShouldResemble, expectedErr)
 			So(expectedContact.User, ShouldResemble, contactDTO.User)
 			So(expectedContact.ID, ShouldResemble, contactDTO.ID)
 			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
 		})
+
+		webConfig.Contacts = []api.WebContact{
+			{
+				ContactType:     contactType,
+				ValidationRegex: "@yandex.ru",
+			},
+		}
+
+		Convey("Error invalid contact value", func() {
+			contactDTO := dto.Contact{
+				Value: contactValue,
+				Type:  contactType,
+			}
+			expectedErr := api.ErrorInvalidRequest(fmt.Errorf("contact value doesn't match regex: '%s'", "@yandex.ru"))
+			contactID := uuid.Must(uuid.NewV4()).String()
+			expectedContact, err := UpdateContact(dataBase, auth, webConfig, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			So(err, ShouldResemble, expectedErr)
+			So(expectedContact.User, ShouldResemble, contactDTO.User)
+			So(expectedContact.ID, ShouldResemble, contactDTO.ID)
+			So(expectedContact.Name, ShouldResemble, contactDTO.Name)
+		})
+
+		webConfig.Contacts = []api.WebContact{
+			{
+				ContactType:     contactType,
+				ValidationRegex: "@mail.com",
+			},
+		}
 
 		Convey("Successfully update not allowed contact with disabled auth", func() {
 			auth.Enabled = false
@@ -554,7 +626,7 @@ func TestUpdateContact(t *testing.T) {
 			}
 
 			dataBase.EXPECT().SaveContact(&contact).Return(nil)
-			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
+			expectedContact, err := UpdateContact(dataBase, auth, webConfig, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
 			So(err, ShouldBeNil)
 			So(expectedContact.User, ShouldResemble, userLogin)
 			So(expectedContact.ID, ShouldResemble, contactID)
@@ -575,7 +647,7 @@ func TestUpdateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops")
 			dataBase.EXPECT().SaveContact(&contact).Return(err)
-			expectedContact, actual := UpdateContact(dataBase, auth, contactDTO, contact)
+			expectedContact, actual := UpdateContact(dataBase, auth, webConfig, contactDTO, contact)
 			So(actual, ShouldResemble, api.ErrorInternalServer(err))
 			So(expectedContact.User, ShouldResemble, contactDTO.User)
 			So(expectedContact.ID, ShouldResemble, contactDTO.ID)
@@ -596,7 +668,7 @@ func TestUpdateContact(t *testing.T) {
 				Team:  teamID,
 			}
 			dataBase.EXPECT().SaveContact(&contact).Return(nil)
-			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
+			expectedContact, err := UpdateContact(dataBase, auth, webConfig, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
 			So(err, ShouldBeNil)
 			So(expectedContact.TeamID, ShouldResemble, teamID)
 			So(expectedContact.ID, ShouldResemble, contactID)
@@ -617,7 +689,7 @@ func TestUpdateContact(t *testing.T) {
 				Team:  newTeam,
 			}
 			dataBase.EXPECT().SaveContact(&contact).Return(nil)
-			expectedContact, err := UpdateContact(dataBase, auth, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
+			expectedContact, err := UpdateContact(dataBase, auth, webConfig, contactDTO, moira.ContactData{ID: contactID, Team: teamID})
 			So(err, ShouldBeNil)
 			So(expectedContact.TeamID, ShouldResemble, newTeam)
 			So(expectedContact.ID, ShouldResemble, contactID)
@@ -637,7 +709,7 @@ func TestUpdateContact(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops")
 			dataBase.EXPECT().SaveContact(&contact).Return(err)
-			expectedContact, actual := UpdateContact(dataBase, auth, contactDTO, contact)
+			expectedContact, actual := UpdateContact(dataBase, auth, webConfig, contactDTO, contact)
 			So(actual, ShouldResemble, api.ErrorInternalServer(err))
 			So(expectedContact.TeamID, ShouldResemble, contactDTO.TeamID)
 			So(expectedContact.ID, ShouldResemble, contactDTO.ID)
@@ -962,6 +1034,57 @@ func Test_isContactExists(t *testing.T) {
 			actual, err := isContactExists(dataBase, contactID)
 			So(actual, ShouldBeFalse)
 			So(err, ShouldResemble, errReturned)
+		})
+	})
+}
+
+func TestValidateContact(t *testing.T) {
+	const (
+		contactType  = "phone"
+		contactValue = "+79998887766"
+	)
+
+	Convey("Test validateContact", t, func() {
+		contact := moira.ContactData{
+			Type:  contactType,
+			Value: contactValue,
+		}
+
+		Convey("With empty webConfig", func() {
+			webConfig := &api.WebConfig{}
+
+			err := validateContact(webConfig, contact)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("With not matched regex pattern", func() {
+			webConfig := &api.WebConfig{
+				Contacts: []api.WebContact{
+					{
+						ContactType:     contactType,
+						ValidationRegex: "^9\\d{9}$",
+					},
+				},
+			}
+
+			notMatchedErr := fmt.Errorf("contact value doesn't match regex: '%s'", "^9\\d{9}$")
+
+			err := validateContact(webConfig, contact)
+			So(err, ShouldResemble, notMatchedErr)
+		})
+
+		Convey("With matched regex pattern", func() {
+			webConfig := &api.WebConfig{
+				Contacts: []api.WebContact{
+					{
+						ContactType:     contactType,
+						ValidationRegex: `^\+79\d{9}$`,
+					},
+				},
+			}
+
+			err := validateContact(webConfig, contact)
+			So(err, ShouldBeNil)
 		})
 	})
 }

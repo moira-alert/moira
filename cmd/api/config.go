@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -134,6 +136,19 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 		AdminList:           adminList,
 		AllowedContactTypes: allowedContactTypes,
 	}
+}
+
+func (config *webConfig) validate() error {
+	for _, contactTemplate := range config.ContactsTemplate {
+		validationPattern := contactTemplate.ValidationRegex
+		if validationPattern != "" {
+			if _, err := regexp.Compile(validationPattern); err != nil {
+				return fmt.Errorf("contact template validation error '%s': %w", validationPattern, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
