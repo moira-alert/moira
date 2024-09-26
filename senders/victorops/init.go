@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira/senders/victorops/api"
 
@@ -12,9 +13,14 @@ import (
 
 // Structure that represents the VictorOps configuration in the YAML file.
 type config struct {
-	RoutingURL string `mapstructure:"routing_url"`
+	RoutingURL string `mapstructure:"routing_url" validate:"required"`
 	ImageStore string `mapstructure:"image_store"`
 	FrontURI   string `mapstructure:"front_uri"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface for victorops.
@@ -40,10 +46,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to victorops config: %w", err)
 	}
 
-	sender.routingURL = cfg.RoutingURL
-	if sender.routingURL == "" {
-		return fmt.Errorf("cannot read the routing url from the yaml config")
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("victorops config validation error: %w", err)
 	}
+
+	sender.routingURL = cfg.RoutingURL
 
 	sender.imageStoreID = cfg.ImageStore
 	if sender.imageStoreID == "" {

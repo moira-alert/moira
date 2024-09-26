@@ -1,10 +1,11 @@
 package telegram
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -14,9 +15,12 @@ func TestInit(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
 		sender := Sender{}
-		Convey("Empty map", func() {
+
+		validatorErr := validator.ValidationErrors{}
+
+		Convey("With empty api_token", func() {
 			err := sender.Init(map[string]interface{}{}, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("can not read telegram api_token from config"))
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{})
 		})
 

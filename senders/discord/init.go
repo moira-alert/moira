@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/worker"
@@ -20,8 +21,13 @@ const (
 // Structure that represents the Discord configuration in the YAML file.
 type config struct {
 	ContactType string `mapstructure:"contact_type"`
-	Token       string `mapstructure:"token"`
+	Token       string `mapstructure:"token" validate:"required"`
 	FrontURI    string `mapstructure:"front_uri"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface for discord.
@@ -42,9 +48,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to discord config: %w", err)
 	}
 
-	if cfg.Token == "" {
-		return fmt.Errorf("cannot read the discord token from the config")
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("discord config validation error: %w", err)
 	}
+
 	sender.session, err = discordgo.New("Bot " + cfg.Token)
 	if err != nil {
 		return fmt.Errorf("error creating discord session: %w", err)

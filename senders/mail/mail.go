@@ -8,21 +8,27 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
 
 // Structure that represents the Mail configuration in the YAML file.
 type config struct {
-	MailFrom     string `mapstructure:"mail_from"`
+	MailFrom     string `mapstructure:"mail_from" validate:"required"`
 	SMTPHello    string `mapstructure:"smtp_hello"`
-	SMTPHost     string `mapstructure:"smtp_host"`
-	SMTPPort     int64  `mapstructure:"smtp_port"`
+	SMTPHost     string `mapstructure:"smtp_host" validate:"required"`
+	SMTPPort     int64  `mapstructure:"smtp_port" validate:"required"`
 	InsecureTLS  bool   `mapstructure:"insecure_tls"`
 	FrontURI     string `mapstructure:"front_uri"`
 	SMTPPass     string `mapstructure:"smtp_pass"`
 	SMTPUser     string `mapstructure:"smtp_user"`
 	TemplateFile string `mapstructure:"template_file"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via pushover.
@@ -64,6 +70,10 @@ func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logg
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
 
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("mail config validation error: %w", err)
+	}
+
 	sender.logger = logger
 	sender.From = cfg.MailFrom
 	sender.SMTPHello = cfg.SMTPHello
@@ -76,12 +86,11 @@ func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logg
 	sender.TemplateFile = cfg.TemplateFile
 	sender.location = location
 	sender.dateTimeFormat = dateTimeFormat
+
 	if sender.Username == "" {
 		sender.Username = sender.From
 	}
-	if sender.From == "" {
-		return fmt.Errorf("mail_from can't be empty")
-	}
+
 	return nil
 }
 
@@ -106,11 +115,13 @@ func (sender *Sender) tryDial() error {
 		return err
 	}
 	defer t.Close()
+
 	if sender.SMTPHello != "" {
 		if err := t.Hello(sender.SMTPHello); err != nil {
 			return err
 		}
 	}
+
 	if sender.Password != "" {
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: sender.InsecureTLS,
@@ -123,5 +134,6 @@ func (sender *Sender) tryDial() error {
 			return err
 		}
 	}
+
 	return nil
 }

@@ -5,19 +5,25 @@ import (
 	"time"
 
 	twilio_client "github.com/carlosdp/twiliogo"
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
 
 // Structure that represents the Twilio configuration in the YAML file.
 type config struct {
-	Type          string `mapstructure:"sender_type"`
-	APIAsid       string `mapstructure:"api_asid"`
-	APIAuthToken  string `mapstructure:"api_authtoken"`
-	APIFromPhone  string `mapstructure:"api_fromphone"`
+	Type          string `mapstructure:"sender_type" validate:"required"`
+	APIAsid       string `mapstructure:"api_asid" validate:"required"`
+	APIAuthToken  string `mapstructure:"api_authtoken" validate:"required"`
+	APIFromPhone  string `mapstructure:"api_fromphone" validate:"required"`
 	VoiceURL      string `mapstructure:"voiceurl"`
 	TwimletsEcho  bool   `mapstructure:"twimlets_echo"`
 	AppendMessage bool   `mapstructure:"append_message"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via twilio.
@@ -43,19 +49,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
+
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("twilio config validation error: %w", err)
+	}
+
 	apiType := cfg.Type
-
-	if cfg.APIAsid == "" {
-		return fmt.Errorf("can not read [%s] api_sid param from config", apiType)
-	}
-
-	if cfg.APIAuthToken == "" {
-		return fmt.Errorf("can not read [%s] api_authtoken param from config", apiType)
-	}
-
-	if cfg.APIFromPhone == "" {
-		return fmt.Errorf("can not read [%s] api_fromphone param from config", apiType)
-	}
 
 	twilioClient := twilio_client.NewClient(cfg.APIAsid, cfg.APIAuthToken)
 
@@ -65,6 +64,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		logger:       logger,
 		location:     location,
 	}
+
 	switch apiType {
 	case "twilio sms":
 		sender.sender = &twilioSenderSms{tSender}

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/moira-alert/moira"
@@ -18,13 +19,18 @@ import (
 
 // Structure that represents the Mattermost configuration in the YAML file.
 type config struct {
-	Url          string            `mapstructure:"url"`
+	Url          string            `mapstructure:"url" validate:"required,url"`
 	InsecureTLS  bool              `mapstructure:"insecure_tls"`
-	APIToken     string            `mapstructure:"api_token"`
-	FrontURI     string            `mapstructure:"front_uri"`
+	APIToken     string            `mapstructure:"api_token" validate:"required"`
+	FrontURI     string            `mapstructure:"front_uri" validate:"required"`
 	UseEmoji     bool              `mapstructure:"use_emoji"`
 	DefaultEmoji string            `mapstructure:"default_emoji"`
 	EmojiMap     map[string]string `mapstructure:"emoji_map"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender posts messages to Mattermost chat.
@@ -53,8 +59,8 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
 	}
 
-	if cfg.Url == "" {
-		return fmt.Errorf("can not read Mattermost url from config")
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("mattermost config validation error: %w", err)
 	}
 
 	client := model.NewAPIv4Client(cfg.Url)
@@ -68,20 +74,13 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 
 	sender.client = client
-
-	if cfg.APIToken == "" {
-		return fmt.Errorf("can not read Mattermost api_token from config")
-	}
 	sender.client.SetToken(cfg.APIToken)
-
-	if cfg.FrontURI == "" {
-		return fmt.Errorf("can not read Mattermost front_uri from config")
-	}
 
 	emojiProvider, err := emoji_provider.NewEmojiProvider(cfg.DefaultEmoji, cfg.EmojiMap)
 	if err != nil {
 		return fmt.Errorf("cannot initialize mattermost sender, err: %w", err)
 	}
+
 	sender.logger = logger
 	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
 		emojiProvider,

@@ -1,26 +1,29 @@
 package webhook
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
 
-var ErrMissingURL = errors.New("can not read url from config")
-
 // Structure that represents the Webhook configuration in the YAML file.
 type config struct {
-	URL      string            `mapstructure:"url"`
+	URL      string            `mapstructure:"url" validate:"required,url"`
 	Body     string            `mapstructure:"body"`
 	Headers  map[string]string `mapstructure:"headers"`
 	User     string            `mapstructure:"user"`
 	Password string            `mapstructure:"password"`
 	Timeout  int               `mapstructure:"timeout"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via webhook.
@@ -42,13 +45,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to webhook config: %w", err)
 	}
 
-	sender.url = cfg.URL
-	if sender.url == "" {
-		return ErrMissingURL
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("webhook config validation error: %w", err)
 	}
 
+	sender.url = cfg.URL
 	sender.body = cfg.Body
-
 	sender.user, sender.password = cfg.User, cfg.Password
 
 	sender.headers = map[string]string{

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/russross/blackfriday/v2"
@@ -29,20 +30,29 @@ const (
 	quotes            = "```"
 )
 
-var throttleWarningFact = Fact{
-	Name:  "Warning",
-	Value: "Please, *fix your system or tune this trigger* to generate less events.",
-}
+var (
+	throttleWarningFact = Fact{
+		Name:  "Warning",
+		Value: "Please, *fix your system or tune this trigger* to generate less events.",
+	}
 
-var headers = map[string]string{
-	"User-Agent":   "Moira",
-	"Content-Type": "application/json",
-}
+	headers = map[string]string{
+		"User-Agent":   "Moira",
+		"Content-Type": "application/json",
+	}
+
+	defaultClientTimeout = 30 * time.Second
+)
 
 // Structure that represents the MSTeams configuration in the YAML file.
 type config struct {
 	FrontURI  string `mapstructure:"front_uri"`
 	MaxEvents int    `mapstructure:"max_events"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via MS Teams.
@@ -62,13 +72,18 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to msteams config: %w", err)
 	}
 
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("msteams config validation error: %w", err)
+	}
+
 	sender.logger = logger
 	sender.location = location
 	sender.frontURI = cfg.FrontURI
 	sender.maxEvents = cfg.MaxEvents
 	sender.client = &http.Client{
-		Timeout: time.Duration(30) * time.Second, //nolint
+		Timeout: defaultClientTimeout,
 	}
+
 	return nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/mitchellh/mapstructure"
@@ -31,11 +32,16 @@ var (
 
 // Structure that represents the Slack configuration in the YAML file.
 type config struct {
-	APIToken     string            `mapstructure:"api_token"`
+	APIToken     string            `mapstructure:"api_token" validate:"required"`
 	UseEmoji     bool              `mapstructure:"use_emoji"`
 	FrontURI     string            `mapstructure:"front_uri"`
 	DefaultEmoji string            `mapstructure:"default_emoji"`
 	EmojiMap     map[string]string `mapstructure:"emoji_map"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via slack.
@@ -54,13 +60,15 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to slack config: %w", err)
 	}
 
-	if cfg.APIToken == "" {
-		return fmt.Errorf("can not read slack api_token from config")
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("slack config validation error: %w", err)
 	}
+
 	emojiProvider, err := emoji_provider.NewEmojiProvider(cfg.DefaultEmoji, cfg.EmojiMap)
 	if err != nil {
 		return fmt.Errorf("cannot initialize slack sender, err: %w", err)
 	}
+
 	sender.logger = logger
 	sender.emojiProvider = emojiProvider
 	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
@@ -75,7 +83,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		eventStringFormatter,
 		codeBlockStart,
 		codeBlockEnd)
+
 	sender.client = slack_client.New(cfg.APIToken)
+
 	return nil
 }
 

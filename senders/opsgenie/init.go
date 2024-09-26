@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
@@ -13,8 +14,12 @@ import (
 
 // Structure that represents the OpsGenie configuration in the YAML file.
 type config struct {
-	APIKey   string `mapstructure:"api_key"`
-	FrontURI string `mapstructure:"front_uri"`
+	APIKey string `mapstructure:"api_key" validate:"required"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Sender implements the Sender interface for opsgenie.
@@ -27,7 +32,6 @@ type Sender struct {
 	imageStoreID         string
 	imageStore           moira.ImageStore
 	imageStoreConfigured bool
-	frontURI             string
 }
 
 // Init initializes the opsgenie sender.
@@ -39,11 +43,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to opsgenie config: %w", err)
 	}
 
-	sender.apiKey = cfg.APIKey
-	if sender.apiKey == "" {
-		return fmt.Errorf("cannot read the api_key from the sender settings")
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("opsgenie config validation error: %w", err)
 	}
 
+	sender.apiKey = cfg.APIKey
 	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured = senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
 
 	sender.client, err = alert.NewClient(&client.Config{
@@ -53,7 +57,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("error while creating opsgenie client: %w", err)
 	}
 
-	sender.frontURI = cfg.FrontURI
 	sender.logger = logger
 	sender.location = location
 	return nil

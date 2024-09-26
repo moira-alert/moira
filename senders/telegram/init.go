@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/mitchellh/mapstructure"
@@ -27,8 +28,13 @@ var pollerTimeout = 10 * time.Second
 // Structure that represents the Telegram configuration in the YAML file.
 type config struct {
 	ContactType string `mapstructure:"contact_type"`
-	APIToken    string `mapstructure:"api_token"`
+	APIToken    string `mapstructure:"api_token" validate:"required"`
 	FrontURI    string `mapstructure:"front_uri"`
+}
+
+func (cfg config) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }
 
 // Bot is abstraction over gopkg.in/telebot.v3#Bot.
@@ -66,9 +72,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
 	}
 
-	if cfg.APIToken == "" {
-		return fmt.Errorf("can not read telegram api_token from config")
+	if err = cfg.validate(); err != nil {
+		return fmt.Errorf("telegram config validation error: %w", err)
 	}
+
 	sender.apiToken = cfg.APIToken
 
 	emojiProvider := telegramEmojiProvider{}
