@@ -125,10 +125,12 @@ func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
 }
 
+const errorInsideTelebotMsg = "Error inside telebot"
+
 func (sender *Sender) customOnErrorFunc(err error, _ telebot.Context) {
 	err = sender.removeTokenFromError(err)
 
 	sender.logger.Error().
 		Error(err).
-		Msg("Error inside telebot")
+		Msg(errorInsideTelebotMsg)
 }
