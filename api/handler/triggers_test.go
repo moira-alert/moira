@@ -192,6 +192,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
 
 			testLogger, _ := logging.GetLogger("Test")
 
@@ -216,6 +217,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 				request.Header.Add("content-type", "application/json")
 				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
 
 				var returnedErr error = &prometheus.Error{
 					Type: prometheus.ErrBadData,
@@ -242,6 +244,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 					request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 					request.Header.Add("content-type", "application/json")
 					request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+					request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
 
 					var returnedErr error = &prometheus.Error{
 						Type: errType,
