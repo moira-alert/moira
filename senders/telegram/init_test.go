@@ -3,11 +3,12 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"go.uber.org/mock/gomock"
 	"strings"
 	"testing"
 	"time"
+
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"go.uber.org/mock/gomock"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
