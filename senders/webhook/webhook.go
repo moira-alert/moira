@@ -13,7 +13,7 @@ import (
 
 // Structure that represents the Webhook configuration in the YAML file.
 type config struct {
-	URL      string            `mapstructure:"url" validate:"required,url"`
+	URL      string            `mapstructure:"url" validate:"required"`
 	Body     string            `mapstructure:"body"`
 	Headers  map[string]string `mapstructure:"headers"`
 	User     string            `mapstructure:"user"`
