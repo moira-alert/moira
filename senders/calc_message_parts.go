@@ -6,18 +6,25 @@ func CalculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen i
 	if descLen+eventsLen <= maxChars {
 		return descLen, eventsLen
 	}
-	if descLen > maxChars/2 && eventsLen <= maxChars/2 {
+
+	halfOfMaxChars := maxChars / splittingByHalfConst
+
+	if descLen > halfOfMaxChars && eventsLen <= halfOfMaxChars {
 		return maxChars - eventsLen - 10, eventsLen
 	}
-	if eventsLen > maxChars/2 && descLen <= maxChars/2 {
+
+	if eventsLen > halfOfMaxChars && descLen <= halfOfMaxChars {
 		return descLen, maxChars - descLen
 	}
-	return maxChars/2 - 10, maxChars / 2
+
+	return halfOfMaxChars - 10, halfOfMaxChars
 }
 
 const (
-	// messagePartsCount is the number of parts in alert, which will be recalculated.
-	messagePartsCount = 3
+	// splittingByHalfConst is used then you need to split given maxChars fairly by half.
+	splittingByHalfConst = 2
+	// splittingByThreePartsConst is used then you need to split given maxChars fairly by three parts.
+	splittingByThreePartsConst = 3
 )
 
 // CalculateMessagePartsBetweenTagsDescEvents calculates and returns the length of tags, description and events string
@@ -31,7 +38,7 @@ func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, even
 		return tagsLen, descLen, eventsLen
 	}
 
-	fairMaxLen := maxChars / messagePartsCount
+	fairMaxLen := maxChars / splittingByThreePartsConst
 
 	switch {
 	case firstIsGreaterThanGivenLenAndOthersLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
@@ -64,8 +71,10 @@ func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, even
 	case firstAndSecondIsGreaterThanGivenLenAndOtherLessOrEqual(fairMaxLen, descLen, eventsLen, tagsLen):
 		// split free space from tags fairly between description and events
 		spaceFromTags := fairMaxLen - tagsLen
-		descNewLen = fairMaxLen + spaceFromTags/2
-		eventsNewLen = fairMaxLen + spaceFromTags/2
+		halfOfSpaceFromTags := spaceFromTags / splittingByHalfConst
+
+		descNewLen = fairMaxLen + halfOfSpaceFromTags
+		eventsNewLen = fairMaxLen + halfOfSpaceFromTags
 
 		return tagsLen, min(descNewLen, descLen), min(eventsNewLen, eventsLen)
 	default:
