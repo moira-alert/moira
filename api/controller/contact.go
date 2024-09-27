@@ -54,7 +54,7 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 func CreateContact(
 	dataBase moira.Database,
 	auth *api.Authorization,
-	webConfig *api.WebConfig,
+	contactsTemplate []api.WebContact,
 	contact *dto.Contact,
 	userLogin,
 	teamID string,
@@ -93,7 +93,7 @@ func CreateContact(
 		}
 	}
 
-	if err := validateContact(webConfig, contactData); err != nil {
+	if err := validateContact(contactsTemplate, contactData); err != nil {
 		return api.ErrorInvalidRequest(err)
 	}
 
@@ -112,7 +112,7 @@ func CreateContact(
 func UpdateContact(
 	dataBase moira.Database,
 	auth *api.Authorization,
-	webConfig *api.WebConfig,
+	contactsTemplate []api.WebContact,
 	contactDTO dto.Contact,
 	contactData moira.ContactData,
 ) (dto.Contact, *api.ErrorResponse) {
@@ -129,7 +129,7 @@ func UpdateContact(
 		contactData.Team = contactDTO.TeamID
 	}
 
-	if err := validateContact(webConfig, contactData); err != nil {
+	if err := validateContact(contactsTemplate, contactData); err != nil {
 		return contactDTO, api.ErrorInvalidRequest(err)
 	}
 
@@ -280,9 +280,9 @@ func isAllowedToUseContactType(auth *api.Authorization, userLogin string, contac
 	return isAllowedContactType || isAdmin || !isAuthEnabled
 }
 
-func validateContact(webConfig *api.WebConfig, contact moira.ContactData) error {
+func validateContact(contactsTemplate []api.WebContact, contact moira.ContactData) error {
 	var validationPattern string
-	for _, contactTemplate := range webConfig.Contacts {
+	for _, contactTemplate := range contactsTemplate {
 		if contactTemplate.ContactType == contact.Type {
 			validationPattern = contactTemplate.ValidationRegex
 			break

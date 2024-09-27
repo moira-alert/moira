@@ -40,12 +40,12 @@ func createNewTeamContact(writer http.ResponseWriter, request *http.Request) {
 
 	teamID := middleware.GetTeamID(request)
 	auth := middleware.GetAuth(request)
-	webConfig := middleware.GetWebConfig(request)
+	contactsTemplate := middleware.GetContactsTemplate(request)
 
 	if err := controller.CreateContact(
 		database,
 		auth,
-		webConfig,
+		contactsTemplate,
 		contact,
 		"",
 		teamID,

@@ -20,14 +20,14 @@ import (
 )
 
 const (
-	testContactIDKey = "contactID"
-	testContactKey   = "contact"
-	testAuthKey      = "auth"
-	testLoginKey     = "login"
-	testWebConfigKey = "webConfig"
-	defaultContact   = "testContact"
-	defaultLogin     = "testLogin"
-	defaultTeamID    = "testTeamID"
+	testContactIDKey        = "contactID"
+	testContactKey          = "contact"
+	testAuthKey             = "auth"
+	testLoginKey            = "login"
+	testContactsTemplateKey = "contactsTemplate"
+	defaultContact          = "testContact"
+	defaultLogin            = "testLogin"
+	defaultTeamID           = "testTeamID"
 )
 
 func TestGetAllContacts(t *testing.T) {
@@ -204,12 +204,10 @@ func TestCreateNewContact(t *testing.T) {
 			},
 		}
 
-		webConfig := &api.WebConfig{
-			Contacts: []api.WebContact{
-				{
-					ContactType:     "mail",
-					ValidationRegex: "@skbkontur.ru",
-				},
+		contactsTemplate := []api.WebContact{
+			{
+				ContactType:     "mail",
+				ValidationRegex: "@skbkontur.ru",
 			},
 		}
 
@@ -240,7 +238,7 @@ func TestCreateNewContact(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -273,7 +271,7 @@ func TestCreateNewContact(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -315,7 +313,7 @@ func TestCreateNewContact(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -347,7 +345,7 @@ func TestCreateNewContact(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -373,7 +371,7 @@ func TestCreateNewContact(t *testing.T) {
 			jsonContact, err := json.Marshal(newContactDto)
 			So(err, ShouldBeNil)
 
-			webConfig.Contacts = []api.WebContact{
+			contactsTemplate = []api.WebContact{
 				{
 					ContactType:     "mail",
 					ValidationRegex: "@yandex.ru",
@@ -386,7 +384,7 @@ func TestCreateNewContact(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -404,7 +402,7 @@ func TestCreateNewContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		webConfig.Contacts = []api.WebContact{
+		contactsTemplate = []api.WebContact{
 			{
 				ContactType:     "mail",
 				ValidationRegex: "@skbkontur.ru",
@@ -427,7 +425,7 @@ func TestCreateNewContact(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -466,12 +464,10 @@ func TestUpdateContact(t *testing.T) {
 			TeamID: "",
 		}
 
-		webConfig := &api.WebConfig{
-			Contacts: []api.WebContact{
-				{
-					ContactType:     "mail",
-					ValidationRegex: "@skbkontur.ru",
-				},
+		contactsTemplate := []api.WebContact{
+			{
+				ContactType:     "mail",
+				ValidationRegex: "@skbkontur.ru",
 			},
 		}
 
@@ -489,7 +485,7 @@ func TestUpdateContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Name:  updatedContactDto.Name,
@@ -530,7 +526,7 @@ func TestUpdateContact(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Name:  updatedContactDto.Name,
@@ -573,7 +569,7 @@ func TestUpdateContact(t *testing.T) {
 			jsonContact, err := json.Marshal(updatedContactDto)
 			So(err, ShouldBeNil)
 
-			webConfig.Contacts = []api.WebContact{
+			contactsTemplate = []api.WebContact{
 				{
 					ContactType:     "mail",
 					ValidationRegex: "@yandex.ru",
@@ -581,7 +577,7 @@ func TestUpdateContact(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Name:  updatedContactDto.Name,
@@ -612,7 +608,7 @@ func TestUpdateContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		webConfig.Contacts = []api.WebContact{
+		contactsTemplate = []api.WebContact{
 			{
 				ContactType:     "mail",
 				ValidationRegex: "@skbkontur.ru",
@@ -637,7 +633,7 @@ func TestUpdateContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testWebConfigKey, webConfig))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  updatedContactDto.Type,

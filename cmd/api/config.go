@@ -140,10 +140,10 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 
 func (config *webConfig) validate() error {
 	for _, contactTemplate := range config.ContactsTemplate {
-		validationPattern := contactTemplate.ValidationRegex
-		if validationPattern != "" {
-			if _, err := regexp.Compile(validationPattern); err != nil {
-				return fmt.Errorf("contact template validation error '%s': %w", validationPattern, err)
+		ValidationRegex := contactTemplate.ValidationRegex
+		if ValidationRegex != "" {
+			if _, err := regexp.Compile(ValidationRegex); err != nil {
+				return fmt.Errorf("contact template regex error '%s': %w", ValidationRegex, err)
 			}
 		}
 	}

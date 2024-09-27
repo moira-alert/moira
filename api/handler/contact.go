@@ -101,12 +101,12 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 
 	userLogin := middleware.GetLogin(request)
 	auth := middleware.GetAuth(request)
-	webConfig := middleware.GetWebConfig(request)
+	contactsTemplate := middleware.GetContactsTemplate(request)
 
 	if err := controller.CreateContact(
 		database,
 		auth,
-		webConfig,
+		contactsTemplate,
 		contact,
 		userLogin,
 		contact.TeamID,
@@ -163,12 +163,12 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 
 	auth := middleware.GetAuth(request)
-	webConfig := middleware.GetWebConfig(request)
+	contactsTemplate := middleware.GetContactsTemplate(request)
 
 	contactDTO, err := controller.UpdateContact(
 		database,
 		auth,
-		webConfig,
+		contactsTemplate,
 		contactDTO,
 		contactData,
 	)

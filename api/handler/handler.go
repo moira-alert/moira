@@ -38,6 +38,11 @@ func NewHandler(
 ) http.Handler {
 	database = db
 	searchIndex = index
+	var contactsTemplate []api.WebContact
+	if webConfig != nil {
+		contactsTemplate = webConfig.Contacts
+	}
+
 	router := chi.NewRouter()
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(moiramiddle.UserContext)
@@ -111,8 +116,8 @@ func NewHandler(
 			router.Route("/subscription", subscription)
 			router.Route("/notification", notification)
 			router.Route("/teams", teams)
-			router.With(moiramiddle.WebConfigContext(
-				webConfig,
+			router.With(moiramiddle.ContactsTemplateContext(
+				contactsTemplate,
 			)).Route("/contact", func(router chi.Router) {
 				contact(router)
 				contactEvents(router)

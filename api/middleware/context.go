@@ -36,11 +36,11 @@ func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Ha
 	}
 }
 
-// WebConfigContext sets to requests context web config.
-func WebConfigContext(webConfig *api.WebConfig) func(next http.Handler) http.Handler {
+// ContactsTemplateContext sets to requests context contacts template.
+func ContactsTemplateContext(contactsTemplate []api.WebContact) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			ctx := context.WithValue(request.Context(), webConfig, webConfig)
+			ctx := context.WithValue(request.Context(), contactsTemplateKey, contactsTemplate)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
