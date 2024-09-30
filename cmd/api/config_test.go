@@ -270,7 +270,7 @@ func Test_webConfig_validate(t *testing.T) {
 		So(err, ShouldNotBeNil)
 	})
 
-	Convey("With invalid contact template pattern", t, func() {
+	Convey("With valid contact template pattern", t, func() {
 		config := webConfig{
 			ContactsTemplate: []webContact{
 				{
