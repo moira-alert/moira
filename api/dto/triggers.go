@@ -2,6 +2,7 @@
 package dto
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -22,16 +23,23 @@ var targetNameRegex = regexp.MustCompile("^t\\d+$")
 
 var (
 	// errBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
-	errBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
+	errBadAloneMetricName = errors.New("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
 
 	// errTargetsRequired is returned when there is no targets in Trigger.
-	errTargetsRequired = fmt.Errorf("targets are required")
+	errTargetsRequired = errors.New("targets are required")
 
 	// errTagsRequired is returned when there is no tags in Trigger.
-	errTagsRequired = fmt.Errorf("tags are required")
+	errTagsRequired = errors.New("tags are required")
 
 	// errTriggerNameRequired is returned when there is empty Name in Trigger.
-	errTriggerNameRequired = fmt.Errorf("trigger name is required")
+	errTriggerNameRequired = errors.New("trigger name is required")
+
+	// errAloneMetricTargetIndexOutOfRange is returned when target index is out of range. Example: if we have target "t1",
+	// then "1" is a target index.
+	errAloneMetricTargetIndexOutOfRange = errors.New("alone metrics target index should be in range from 1 to length of targets")
+
+	// errAsteriskPatternNotAllowed is returned then one of Trigger.Patterns contain only "*".
+	errAsteriskPatternNotAllowed = errors.New("pattern \"*\" is not allowed to use")
 )
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
@@ -202,7 +210,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		}
 
 		if targetIndex < 0 || targetIndex > len(trigger.Targets) {
-			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")}
+			return api.ErrInvalidRequestContent{ValidationError: errAloneMetricTargetIndexOutOfRange}
 		}
 	}
 
@@ -243,7 +251,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
 	for _, pattern := range trigger.Patterns {
 		if pattern == asteriskPattern {
-			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")}
+			return api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed}
 		}
 	}
 

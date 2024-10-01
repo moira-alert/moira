@@ -263,7 +263,7 @@ func TestTriggerValidation(t *testing.T) {
 				trigger.AloneMetrics = map[string]bool{"t3": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errAloneMetricTargetIndexOutOfRange})
 			})
 		})
 
@@ -285,7 +285,7 @@ func TestTriggerValidation(t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				fetchResult.EXPECT().GetPatterns().Return([]string{"*"}, nil).AnyTimes()
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed})
 			})
 		})
 	})
