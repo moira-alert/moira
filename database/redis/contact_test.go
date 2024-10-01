@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/datatypes"
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -191,7 +192,7 @@ func TestContacts(t *testing.T) {
 
 				emergencyContact, err = dataBase.GetEmergencyContact(contact2.ID)
 				So(err, ShouldResemble, database.ErrNil)
-				So(emergencyContact, ShouldResemble, moira.EmergencyContact{})
+				So(emergencyContact, ShouldResemble, datatypes.EmergencyContact{})
 
 				err = dataBase.SaveContact(contact1)
 				So(err, ShouldBeNil)
@@ -346,7 +347,7 @@ func TestContacts(t *testing.T) {
 
 				emergencyContact, err = dataBase.GetEmergencyContact(contact2.ID)
 				So(err, ShouldResemble, database.ErrNil)
-				So(emergencyContact, ShouldResemble, moira.EmergencyContact{})
+				So(emergencyContact, ShouldResemble, datatypes.EmergencyContact{})
 
 				err = dataBase.SaveContact(contact1)
 				So(err, ShouldBeNil)
@@ -541,10 +542,10 @@ var user2Contacts = []*moira.ContactData{
 	},
 }
 
-var user2EmergencyContacts = []moira.EmergencyContact{
+var user2EmergencyContacts = []datatypes.EmergencyContact{
 	{
 		ContactID:      "ContactID-000000000000003",
-		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
 	},
 }
 
@@ -602,9 +603,9 @@ var team2Contacts = []*moira.ContactData{
 	},
 }
 
-var team2EmergencyContacts = []moira.EmergencyContact{
+var team2EmergencyContacts = []datatypes.EmergencyContact{
 	{
 		ContactID:      "TeamContactID-000000000000003",
-		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
 	},
 }

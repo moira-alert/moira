@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/datatypes"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -15,17 +15,17 @@ const (
 )
 
 var (
-	testEmergencyContact = moira.EmergencyContact{
+	testEmergencyContact = datatypes.EmergencyContact{
 		ContactID:      "test-contact-id",
-		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
 	}
-	testEmptyEmergencyContact = moira.EmergencyContact{}
+	testEmptyEmergencyContact = datatypes.EmergencyContact{}
 )
 
 func TestGetEmergencyContactBytes(t *testing.T) {
 	Convey("Test GetEmergencyContactBytes", t, func() {
 		Convey("With empty emergency contact", func() {
-			emergencyContact := moira.EmergencyContact{}
+			emergencyContact := datatypes.EmergencyContact{}
 			expectedEmergencyContactStr := testEmptyEmergencyContactVal
 			bytes, err := GetEmergencyContactBytes(emergencyContact)
 			So(err, ShouldBeNil)
@@ -45,7 +45,7 @@ func TestEmergencyContact(t *testing.T) {
 	Convey("Test EmergencyContact", t, func() {
 		Convey("With nil emergency contact rep", func() {
 			emergencyContact, err := EmergencyContact(nil)
-			So(emergencyContact, ShouldResemble, moira.EmergencyContact{})
+			So(emergencyContact, ShouldResemble, datatypes.EmergencyContact{})
 			So(err, ShouldResemble, database.ErrNil)
 		})
 
@@ -53,7 +53,7 @@ func TestEmergencyContact(t *testing.T) {
 			rep := &redis.StringCmd{}
 			rep.SetErr(redis.Nil)
 			emergencyContact, err := EmergencyContact(rep)
-			So(emergencyContact, ShouldResemble, moira.EmergencyContact{})
+			So(emergencyContact, ShouldResemble, datatypes.EmergencyContact{})
 			So(err, ShouldResemble, database.ErrNil)
 		})
 
@@ -73,7 +73,7 @@ func TestEmergencyContacts(t *testing.T) {
 		Convey("With nil emergency contact rep", func() {
 			emergencyContacts, err := EmergencyContacts(nil)
 			So(err, ShouldBeNil)
-			So(emergencyContacts, ShouldResemble, []*moira.EmergencyContact{})
+			So(emergencyContacts, ShouldResemble, []*datatypes.EmergencyContact{})
 		})
 
 		Convey("With test emergency contacts rep", func() {
@@ -82,7 +82,7 @@ func TestEmergencyContacts(t *testing.T) {
 			rep[0].SetVal(testEmergencyContactVal)
 			rep[1] = &redis.StringCmd{}
 			rep[1].SetVal(testEmptyEmergencyContactVal)
-			expectedEmergencyContacts := []*moira.EmergencyContact{
+			expectedEmergencyContacts := []*datatypes.EmergencyContact{
 				&testEmergencyContact,
 				&testEmptyEmergencyContact,
 			}
@@ -97,7 +97,7 @@ func TestEmergencyContacts(t *testing.T) {
 			rep[0].SetVal(testEmergencyContactVal)
 			rep[1] = &redis.StringCmd{}
 			rep[1].SetErr(redis.Nil)
-			expectedEmergencyContacts := []*moira.EmergencyContact{
+			expectedEmergencyContacts := []*datatypes.EmergencyContact{
 				&testEmergencyContact,
 				nil,
 			}
