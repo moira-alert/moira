@@ -60,7 +60,7 @@ type Database interface {
 	DeleteTriggerThrottling(triggerID string) error
 
 	// NotificationEvent storing
-	GetNotificationEvents(triggerID string, start, size int64, from, to string) ([]*NotificationEvent, error)
+	GetNotificationEvents(triggerID string, page, size int64, from, to string) ([]*NotificationEvent, error)
 	PushNotificationEvent(event *NotificationEvent, ui bool) error
 	GetNotificationEventCount(triggerID string, from int64) int64
 	FetchNotificationEvent() (NotificationEvent, error)
@@ -228,5 +228,6 @@ type PlotTheme interface {
 
 // Clock is an interface to work with Time.
 type Clock interface {
-	Now() time.Time
+	NowUTC() time.Time
+	NowUnix() int64
 }

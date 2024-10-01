@@ -27,7 +27,7 @@ func TestEvent(t *testing.T) {
 	scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
 	systemClock := mock_clock.NewMockClock(mockCtrl)
-	systemClock.EXPECT().Now().Return(time.Now()).AnyTimes()
+	systemClock.EXPECT().NowUTC().Return(time.Now()).AnyTimes()
 
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
 		worker := FetchEventsWorker{
@@ -59,8 +59,8 @@ func TestEvent(t *testing.T) {
 				SubscriptionID: event.SubscriptionID,
 			},
 			SendFail:  0,
-			Timestamp: systemClock.Now().Unix(),
-			CreatedAt: systemClock.Now().Unix(),
+			Timestamp: systemClock.NowUTC().Unix(),
+			CreatedAt: systemClock.NowUTC().Unix(),
 			Throttled: false,
 			Contact:   contact,
 		}
@@ -88,7 +88,7 @@ func TestEvent(t *testing.T) {
 		}
 		dataBase.EXPECT().GetContact(event.ContactID).Times(1).Return(contact, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		now := systemClock.Now()
+		now := systemClock.NowUTC()
 		notification := moira.ScheduledNotification{
 			Event: moira.NotificationEvent{
 				TriggerID:      "",
