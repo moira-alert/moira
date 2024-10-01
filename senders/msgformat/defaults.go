@@ -9,9 +9,7 @@ func DefaultDescriptionCutter(desc string, maxSize int) string {
 	return desc[:maxSize-len(suffix)] + suffix
 }
 
-var (
-	bracketsLen = utf8.RuneCountInString("[]")
-)
+var bracketsLen = utf8.RuneCountInString("[]")
 
 // DefaultTagsLimiter cuts and formats tags to fit maxSize. There will be no tag parts, for example:
 //
