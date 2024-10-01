@@ -130,7 +130,7 @@ const errorInsideTelebotMsg = "Error inside telebot"
 func (sender *Sender) customOnErrorFunc(err error, _ telebot.Context) {
 	err = sender.removeTokenFromError(err)
 
-	sender.logger.Error().
+	sender.logger.Warning().
 		Error(err).
 		Msg(errorInsideTelebotMsg)
 }

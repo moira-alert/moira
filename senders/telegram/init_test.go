@@ -52,7 +52,7 @@ func Test_customOnErrorFunc(t *testing.T) {
 
 		err := fmt.Errorf("https://some.api.of.telegram/bot%s/update failed to update", sender.apiToken)
 
-		logger.EXPECT().Error().Return(eventsBuilder).AnyTimes()
+		logger.EXPECT().Warning().Return(eventsBuilder).AnyTimes()
 		eventsBuilder.EXPECT().Error(errors.New(strings.ReplaceAll(err.Error(), sender.apiToken, hidden))).Return(eventsBuilder)
 		eventsBuilder.EXPECT().Msg(errorInsideTelebotMsg)
 
