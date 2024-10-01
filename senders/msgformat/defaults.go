@@ -9,6 +9,10 @@ func DefaultDescriptionCutter(desc string, maxSize int) string {
 	return desc[:maxSize-len(suffix)] + suffix
 }
 
+var (
+	bracketsLen = utf8.RuneCountInString("[]")
+)
+
 // DefaultTagsLimiter cuts and formats tags to fit maxSize. There will be no tag parts, for example:
 //
 // if we have
@@ -22,7 +26,7 @@ func DefaultTagsLimiter(tags []string, maxSize int) string {
 	lenTagsStr := utf8.RuneCountInString(tagsStr)
 
 	for i := range tags {
-		lenTag := utf8.RuneCountInString(tags[i]) + 2
+		lenTag := utf8.RuneCountInString(tags[i]) + bracketsLen
 
 		if lenTagsStr+lenTag > maxSize {
 			break
@@ -30,10 +34,6 @@ func DefaultTagsLimiter(tags []string, maxSize int) string {
 
 		tagsStr += "[" + tags[i] + "]"
 		lenTagsStr += lenTag
-
-		if lenTagsStr == maxSize {
-			break
-		}
 	}
 
 	if tagsStr == " " {
