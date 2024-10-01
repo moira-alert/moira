@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/datatypes"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
@@ -27,7 +28,7 @@ func TestGetUserSettings(t *testing.T) {
 		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
 
-		emergencyContacts := []*moira.EmergencyContact{{ContactID: contactIDs[0]}, {ContactID: contactIDs[1]}}
+		emergencyContacts := []*datatypes.EmergencyContact{{ContactID: contactIDs[0]}, {ContactID: contactIDs[1]}}
 
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
@@ -50,7 +51,7 @@ func TestGetUserSettings(t *testing.T) {
 		database.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil)
 		database.EXPECT().GetUserContactIDs(login).Return([]string{}, nil)
 		database.EXPECT().GetContacts([]string{}).Return([]*moira.ContactData{}, nil)
-		database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*moira.EmergencyContact{}, nil)
+		database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*datatypes.EmergencyContact{}, nil)
 
 		settings, err := GetUserSettings(database, login, auth)
 		So(err, ShouldBeNil)
@@ -71,7 +72,7 @@ func TestGetUserSettings(t *testing.T) {
 			database.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil)
 			database.EXPECT().GetUserContactIDs(login).Return([]string{}, nil)
 			database.EXPECT().GetContacts([]string{}).Return([]*moira.ContactData{}, nil)
-			database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*moira.EmergencyContact{}, nil)
+			database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*datatypes.EmergencyContact{}, nil)
 
 			settings, err := GetUserSettings(database, login, authFull)
 			So(err, ShouldBeNil)
@@ -88,7 +89,7 @@ func TestGetUserSettings(t *testing.T) {
 			database.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil)
 			database.EXPECT().GetUserContactIDs(adminLogin).Return([]string{}, nil)
 			database.EXPECT().GetContacts([]string{}).Return([]*moira.ContactData{}, nil)
-			database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*moira.EmergencyContact{}, nil)
+			database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*datatypes.EmergencyContact{}, nil)
 
 			settings, err := GetUserSettings(database, adminLogin, authFull)
 			So(err, ShouldBeNil)

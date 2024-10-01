@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/datatypes"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
@@ -642,7 +643,7 @@ func TestGetTeamSettings(t *testing.T) {
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
-		emergencyContacts := []*moira.EmergencyContact{{ContactID: contactIDs[0]}, {ContactID: contactIDs[1]}}
+		emergencyContacts := []*datatypes.EmergencyContact{{ContactID: contactIDs[0]}, {ContactID: contactIDs[1]}}
 
 		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
@@ -665,7 +666,7 @@ func TestGetTeamSettings(t *testing.T) {
 		database.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil)
 		database.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, nil)
 		database.EXPECT().GetContacts([]string{}).Return([]*moira.ContactData{}, nil)
-		database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*moira.EmergencyContact{}, nil)
+		database.EXPECT().GetEmergencyContactsByIDs([]string{}).Return([]*datatypes.EmergencyContact{}, nil)
 
 		settings, err := GetTeamSettings(database, teamID)
 		So(err, ShouldBeNil)

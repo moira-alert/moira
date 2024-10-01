@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/go-chart"
+	"github.com/moira-alert/moira/datatypes"
 	"github.com/moira-alert/moira/logging"
 	"gopkg.in/tomb.v2"
 )
@@ -76,11 +77,11 @@ type Database interface {
 	GetTeamContactIDs(teamID string) ([]string, error)
 
 	// EmergencyContact storing
-	GetEmergencyContacts() ([]*EmergencyContact, error)
-	GetEmergencyContactsByIDs(contactIDs []string) ([]*EmergencyContact, error)
-	GetEmergencyContact(contactID string) (EmergencyContact, error)
-	GetHeartbeatTypeContactIDs(heartbeatType HeartbeatType) ([]string, error)
-	SaveEmergencyContact(emergencyContact EmergencyContact) error
+	GetEmergencyContacts() ([]*datatypes.EmergencyContact, error)
+	GetEmergencyContactsByIDs(contactIDs []string) ([]*datatypes.EmergencyContact, error)
+	GetEmergencyContact(contactID string) (datatypes.EmergencyContact, error)
+	GetHeartbeatTypeContactIDs(heartbeatType datatypes.HeartbeatType) ([]string, error)
+	SaveEmergencyContact(emergencyContact datatypes.EmergencyContact) error
 	RemoveEmergencyContact(contactID string) error
 
 	// SubscriptionData storing

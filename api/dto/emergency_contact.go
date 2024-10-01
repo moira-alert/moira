@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/datatypes"
 )
 
 // ErrEmptyHeartbeatTypes means that the user has not specified any heartbeat types.
@@ -13,8 +13,8 @@ var ErrEmptyHeartbeatTypes = errors.New("heartbeat types can not be empty")
 
 // EmergencyContact is the DTO structure for contacts to which notifications will go in the event of special internal Moira problems.
 type EmergencyContact struct {
-	ContactID      string                `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
-	HeartbeatTypes []moira.HeartbeatType `json:"heartbeat_types" example:"notifier_off"`
+	ContactID      string                    `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	HeartbeatTypes []datatypes.HeartbeatType `json:"heartbeat_types" example:"notifier_off"`
 }
 
 // Render is a function that implements chi Renderer interface for EmergencyContact.
@@ -48,7 +48,7 @@ func (*EmergencyContactList) Render(w http.ResponseWriter, r *http.Request) erro
 }
 
 // FromEmergencyContacts a method that converts emergency contacts to dto emergency ccontact list.
-func FromEmergencyContacts(emergencyContacts []*moira.EmergencyContact) *EmergencyContactList {
+func FromEmergencyContacts(emergencyContacts []*datatypes.EmergencyContact) *EmergencyContactList {
 	emergencyContactsDTO := &EmergencyContactList{
 		List: make([]EmergencyContact, 0, len(emergencyContacts)),
 	}

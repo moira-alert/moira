@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	moiradb "github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/datatypes"
 )
 
 // ErrEmptyEmergencyContactID error occurring when user did not specify contact id.
@@ -42,7 +43,7 @@ func GetEmergencyContact(database moira.Database, contactID string) (*dto.Emerge
 func verifyEmergencyContactAccess(
 	database moira.Database,
 	auth *api.Authorization,
-	emergencyContact moira.EmergencyContact,
+	emergencyContact datatypes.EmergencyContact,
 	userLogin string,
 ) *api.ErrorResponse {
 	contact, err := database.GetContact(emergencyContact.ContactID)
@@ -69,7 +70,7 @@ func CreateEmergencyContact(
 		return dto.SaveEmergencyContactResponse{}, nil
 	}
 
-	emergencyContact := moira.EmergencyContact(*emergencyContactDTO)
+	emergencyContact := datatypes.EmergencyContact(*emergencyContactDTO)
 	if emergencyContact.ContactID == "" {
 		return dto.SaveEmergencyContactResponse{}, api.ErrorInvalidRequest(ErrEmptyEmergencyContactID)
 	}
@@ -93,7 +94,7 @@ func UpdateEmergencyContact(database moira.Database, contactID string, emergency
 		return dto.SaveEmergencyContactResponse{}, nil
 	}
 
-	emergencyContact := moira.EmergencyContact(*emergencyContactDTO)
+	emergencyContact := datatypes.EmergencyContact(*emergencyContactDTO)
 	emergencyContact.ContactID = contactID
 
 	if err := database.SaveEmergencyContact(emergencyContact); err != nil {

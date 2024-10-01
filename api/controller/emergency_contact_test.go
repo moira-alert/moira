@@ -9,6 +9,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	moiradb "github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/datatypes"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
@@ -18,22 +19,22 @@ var (
 	testContactID  = "test-contact-id"
 	testContactID2 = "test-contact-id2"
 
-	testEmergencyContact = moira.EmergencyContact{
+	testEmergencyContact = datatypes.EmergencyContact{
 		ContactID:      testContactID,
-		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
 	}
-	testEmergencyContact2 = moira.EmergencyContact{
+	testEmergencyContact2 = datatypes.EmergencyContact{
 		ContactID:      testContactID2,
-		HeartbeatTypes: []moira.HeartbeatType{moira.HearbeatTypeNotSet},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HearbeatTypeNotSet},
 	}
 
 	testEmergencyContactDTO = dto.EmergencyContact{
 		ContactID:      testContactID,
-		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
 	}
 	testEmergencyContact2DTO = dto.EmergencyContact{
 		ContactID:      testContactID2,
-		HeartbeatTypes: []moira.HeartbeatType{moira.HearbeatTypeNotSet},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HearbeatTypeNotSet},
 	}
 )
 
@@ -55,7 +56,7 @@ func TestGetEmergencyContacts(t *testing.T) {
 		})
 
 		Convey("With some saved emergency contacts in database", func() {
-			database.EXPECT().GetEmergencyContacts().Return([]*moira.EmergencyContact{&testEmergencyContact, &testEmergencyContact2}, nil)
+			database.EXPECT().GetEmergencyContacts().Return([]*datatypes.EmergencyContact{&testEmergencyContact, &testEmergencyContact2}, nil)
 			expectedEmergencyContactList := &dto.EmergencyContactList{
 				List: []dto.EmergencyContact{testEmergencyContactDTO, testEmergencyContact2DTO},
 			}
@@ -74,7 +75,7 @@ func TestGetEmergencyContact(t *testing.T) {
 
 	Convey("Test GetEmergencyContact", t, func() {
 		Convey("With unexisted emergency contact", func() {
-			database.EXPECT().GetEmergencyContact(testContactID).Return(moira.EmergencyContact{}, moiradb.ErrNil)
+			database.EXPECT().GetEmergencyContact(testContactID).Return(datatypes.EmergencyContact{}, moiradb.ErrNil)
 
 			emergencyContact, err := GetEmergencyContact(database, testContactID)
 			So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("emergency contact with ID '%s' does not exists", testContactID)))
@@ -83,7 +84,7 @@ func TestGetEmergencyContact(t *testing.T) {
 
 		Convey("With undefined db error", func() {
 			expectedErr := errors.New("test-error")
-			database.EXPECT().GetEmergencyContact(testContactID).Return(moira.EmergencyContact{}, expectedErr)
+			database.EXPECT().GetEmergencyContact(testContactID).Return(datatypes.EmergencyContact{}, expectedErr)
 
 			emergencyContact, err := GetEmergencyContact(database, testContactID)
 			So(err, ShouldResemble, api.ErrorInternalServer(expectedErr))
@@ -285,7 +286,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 		Convey("With empty contact id", func() {
 			emergencyContactDTO := dto.EmergencyContact{
-				HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
+				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
 			}
 			database.EXPECT().SaveEmergencyContact(testEmergencyContact).Return(nil)
 

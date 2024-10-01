@@ -3,16 +3,16 @@ package dto
 import (
 	"testing"
 
-	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/datatypes"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 var (
 	testContactID = "test-contact-id"
 
-	testEmergencyContact = moira.EmergencyContact{
+	testEmergencyContact = datatypes.EmergencyContact{
 		ContactID:      testContactID,
-		HeartbeatTypes: []moira.HeartbeatType{moira.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
 	}
 )
 
@@ -32,7 +32,7 @@ func TestFromEmergencyContacts(t *testing.T) {
 					EmergencyContact(testEmergencyContact),
 				},
 			}
-			emergencyContacts := []*moira.EmergencyContact{
+			emergencyContacts := []*datatypes.EmergencyContact{
 				&testEmergencyContact,
 				nil,
 			}

@@ -7,27 +7,27 @@ import (
 	"strings"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
+	"github.com/moira-alert/moira/datatypes"
 )
 
 // GetEmergencyContact method to retrieve an emergency contact from the database.
-func (connector *DbConnector) GetEmergencyContact(contactID string) (moira.EmergencyContact, error) {
+func (connector *DbConnector) GetEmergencyContact(contactID string) (datatypes.EmergencyContact, error) {
 	c := *connector.client
 	ctx := connector.context
 
 	cmd := c.Get(ctx, emergencyContactsKey(contactID))
 
 	if errors.Is(cmd.Err(), redis.Nil) {
-		return moira.EmergencyContact{}, database.ErrNil
+		return datatypes.EmergencyContact{}, database.ErrNil
 	}
 
 	return reply.EmergencyContact(cmd)
 }
 
 // GetEmergencyContacts method to retrieve all emergency contacts from the database.
-func (connector *DbConnector) GetEmergencyContacts() ([]*moira.EmergencyContact, error) {
+func (connector *DbConnector) GetEmergencyContacts() ([]*datatypes.EmergencyContact, error) {
 	emergencyContactIDs, err := connector.getEmergencyContactIDs()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get emergency contact IDs: %w", err)
@@ -37,7 +37,7 @@ func (connector *DbConnector) GetEmergencyContacts() ([]*moira.EmergencyContact,
 }
 
 // GetEmergencyContactsByIDs method to retrieve all emergency contacts from the database by their identifiers.
-func (connector *DbConnector) GetEmergencyContactsByIDs(contactIDs []string) ([]*moira.EmergencyContact, error) {
+func (connector *DbConnector) GetEmergencyContactsByIDs(contactIDs []string) ([]*datatypes.EmergencyContact, error) {
 	c := *connector.client
 	ctx := connector.context
 
@@ -85,8 +85,8 @@ func (connector *DbConnector) getEmergencyContactIDs() ([]string, error) {
 	return emergencyContactIDs, nil
 }
 
-// GetHeartbeatTypeContactIDs a method for obtaining contact IDs by specific heartbeat type.
-func (connector *DbConnector) GetHeartbeatTypeContactIDs(heartbeatType moira.HeartbeatType) ([]string, error) {
+// GetHeartbeatTypeContactIDs a method for obtaining contact IDs by specific emergency type.
+func (connector *DbConnector) GetHeartbeatTypeContactIDs(heartbeatType datatypes.HeartbeatType) ([]string, error) {
 	c := *connector.client
 	ctx := connector.context
 
@@ -98,7 +98,7 @@ func (connector *DbConnector) GetHeartbeatTypeContactIDs(heartbeatType moira.Hea
 	return contactIDs, nil
 }
 
-func (connector *DbConnector) saveEmergencyContacts(emergencyContacts []moira.EmergencyContact) error {
+func (connector *DbConnector) saveEmergencyContacts(emergencyContacts []datatypes.EmergencyContact) error {
 	c := *connector.client
 	ctx := connector.context
 
@@ -117,7 +117,7 @@ func (connector *DbConnector) saveEmergencyContacts(emergencyContacts []moira.Em
 }
 
 // SaveEmergencyContact a method for saving emergency contact.
-func (connector *DbConnector) SaveEmergencyContact(emergencyContact moira.EmergencyContact) error {
+func (connector *DbConnector) SaveEmergencyContact(emergencyContact datatypes.EmergencyContact) error {
 	c := *connector.client
 	ctx := connector.context
 
@@ -155,7 +155,7 @@ func (connector *DbConnector) RemoveEmergencyContact(contactID string) error {
 	return nil
 }
 
-func addSaveEmergencyContactToPipe(ctx context.Context, pipe redis.Pipeliner, emergencyContact moira.EmergencyContact) error {
+func addSaveEmergencyContactToPipe(ctx context.Context, pipe redis.Pipeliner, emergencyContact datatypes.EmergencyContact) error {
 	emergencyContactBytes, err := reply.GetEmergencyContactBytes(emergencyContact)
 	if err != nil {
 		return fmt.Errorf("failed to get emergency contact '%s' bytes: %w", emergencyContact.ContactID, err)
@@ -170,7 +170,7 @@ func addSaveEmergencyContactToPipe(ctx context.Context, pipe redis.Pipeliner, em
 	return nil
 }
 
-func addRemoveEmergencyContactToPipe(ctx context.Context, pipe redis.Pipeliner, emergencyContact moira.EmergencyContact) {
+func addRemoveEmergencyContactToPipe(ctx context.Context, pipe redis.Pipeliner, emergencyContact datatypes.EmergencyContact) {
 	pipe.Del(ctx, emergencyContactsKey(emergencyContact.ContactID))
 
 	for _, heartbeatType := range emergencyContact.HeartbeatTypes {
@@ -182,6 +182,6 @@ func emergencyContactsKey(contactID string) string {
 	return "moira-emergency-contacts:" + contactID
 }
 
-func heartbeatTypeContactsKey(heartbeatType moira.HeartbeatType) string {
+func heartbeatTypeContactsKey(heartbeatType datatypes.HeartbeatType) string {
 	return "moira-heartbeat-type-contacts:" + string(heartbeatType)
 }

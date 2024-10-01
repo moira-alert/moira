@@ -14,6 +14,7 @@ import (
 	time "time"
 
 	moira "github.com/moira-alert/moira"
+	datatypes "github.com/moira-alert/moira/datatypes"
 	gomock "go.uber.org/mock/gomock"
 	tomb "gopkg.in/tomb.v2"
 )
@@ -417,10 +418,10 @@ func (mr *MockDatabaseMockRecorder) GetContacts(arg0 any) *gomock.Call {
 }
 
 // GetEmergencyContact mocks base method.
-func (m *MockDatabase) GetEmergencyContact(arg0 string) (moira.EmergencyContact, error) {
+func (m *MockDatabase) GetEmergencyContact(arg0 string) (datatypes.EmergencyContact, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEmergencyContact", arg0)
-	ret0, _ := ret[0].(moira.EmergencyContact)
+	ret0, _ := ret[0].(datatypes.EmergencyContact)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -432,10 +433,10 @@ func (mr *MockDatabaseMockRecorder) GetEmergencyContact(arg0 any) *gomock.Call {
 }
 
 // GetEmergencyContacts mocks base method.
-func (m *MockDatabase) GetEmergencyContacts() ([]*moira.EmergencyContact, error) {
+func (m *MockDatabase) GetEmergencyContacts() ([]*datatypes.EmergencyContact, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEmergencyContacts")
-	ret0, _ := ret[0].([]*moira.EmergencyContact)
+	ret0, _ := ret[0].([]*datatypes.EmergencyContact)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -447,10 +448,10 @@ func (mr *MockDatabaseMockRecorder) GetEmergencyContacts() *gomock.Call {
 }
 
 // GetEmergencyContactsByIDs mocks base method.
-func (m *MockDatabase) GetEmergencyContactsByIDs(arg0 []string) ([]*moira.EmergencyContact, error) {
+func (m *MockDatabase) GetEmergencyContactsByIDs(arg0 []string) ([]*datatypes.EmergencyContact, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEmergencyContactsByIDs", arg0)
-	ret0, _ := ret[0].([]*moira.EmergencyContact)
+	ret0, _ := ret[0].([]*datatypes.EmergencyContact)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -462,7 +463,7 @@ func (mr *MockDatabaseMockRecorder) GetEmergencyContactsByIDs(arg0 any) *gomock.
 }
 
 // GetHeartbeatTypeContactIDs mocks base method.
-func (m *MockDatabase) GetHeartbeatTypeContactIDs(arg0 moira.HeartbeatType) ([]string, error) {
+func (m *MockDatabase) GetHeartbeatTypeContactIDs(arg0 datatypes.HeartbeatType) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHeartbeatTypeContactIDs", arg0)
 	ret0, _ := ret[0].([]string)
@@ -1463,7 +1464,7 @@ func (mr *MockDatabaseMockRecorder) SaveContact(arg0 any) *gomock.Call {
 }
 
 // SaveEmergencyContact mocks base method.
-func (m *MockDatabase) SaveEmergencyContact(arg0 moira.EmergencyContact) error {
+func (m *MockDatabase) SaveEmergencyContact(arg0 datatypes.EmergencyContact) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveEmergencyContact", arg0)
 	ret0, _ := ret[0].(error)

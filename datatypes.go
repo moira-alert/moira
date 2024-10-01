@@ -222,30 +222,6 @@ func (contact *ContactData) ToTemplateContact() *templating.Contact {
 	}
 }
 
-// HeartbeatType are Moira's special internal types of problems.
-type HeartbeatType string
-
-const (
-	HearbeatTypeNotSet   HeartbeatType = "type_not_set"
-	HeartbeatNotifierOff HeartbeatType = "notifier_off"
-)
-
-// IsValid checks if such an heartbeat type exists.
-func (heartbeatType HeartbeatType) IsValid() bool {
-	switch heartbeatType {
-	case HeartbeatNotifierOff:
-		return true
-	default:
-		return false
-	}
-}
-
-// EmergencyContact is the structure for contacts to which notifications will go in the event of special internal Moira problems.
-type EmergencyContact struct {
-	ContactID      string
-	HeartbeatTypes []HeartbeatType
-}
-
 // SubscriptionData represents user subscription.
 type SubscriptionData struct {
 	Contacts          []string     `json:"contacts" example:"acd2db98-1659-4a2f-b227-52d71f6e3ba1"`

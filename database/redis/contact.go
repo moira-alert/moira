@@ -27,7 +27,7 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 
 	contact, err := reply.Contact(result)
 	if err != nil {
-		return contact, fmt.Errorf("failed to reply contact '%s': %w", id, err)
+		return contact, fmt.Errorf("failed to deserialize contact '%s': %w", id, err)
 	}
 
 	contact.ID = id
