@@ -21,9 +21,11 @@ func CalculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen i
 }
 
 const (
-	// partsCountForMessageWithDescAndEvents is used then you need to split given maxChars fairly by half.
+	// partsCountForMessageWithDescAndEvents is used then you need to split given maxChars fairly by half
+	// between description and events.
 	partsCountForMessageWithDescAndEvents = 2
-	// partsCountForMessageWithTagsDescAndEvents is used then you need to split given maxChars fairly by three parts.
+	// partsCountForMessageWithTagsDescAndEvents is used then you need to split given maxChars fairly by three parts
+	// between tags, description and events.
 	partsCountForMessageWithTagsDescAndEvents = 3
 )
 
