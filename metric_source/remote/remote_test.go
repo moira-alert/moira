@@ -40,7 +40,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 	})
 
 	Convey("Given server returns Remote Unavailable responses permanently", t, func() {
-		for _, statusCode := range remoteUnavailableStatusCodes {
+		for statusCode := range remoteUnavailableStatusCodes {
 			server := createTestServer(TestResponse{body, statusCode})
 
 			Convey(fmt.Sprintf(
@@ -65,7 +65,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 	})
 
 	Convey("Given server returns Remote Unavailable response temporary", t, func() {
-		for _, statusCode := range remoteUnavailableStatusCodes {
+		for statusCode := range remoteUnavailableStatusCodes {
 			Convey(fmt.Sprintf(
 				"the remote is available with retry after %d response", statusCode,
 			), func() {
@@ -149,7 +149,7 @@ func TestFetch(t *testing.T) {
 	})
 
 	Convey("Given server returns Remote Unavailable responses permanently", t, func() {
-		for _, statusCode := range remoteUnavailableStatusCodes {
+		for statusCode := range remoteUnavailableStatusCodes {
 			server := createTestServer(TestResponse{validBody, statusCode})
 
 			Convey(fmt.Sprintf(
@@ -176,7 +176,7 @@ func TestFetch(t *testing.T) {
 	})
 
 	Convey("Given server returns Remote Unavailable response temporary", t, func() {
-		for _, statusCode := range remoteUnavailableStatusCodes {
+		for statusCode := range remoteUnavailableStatusCodes {
 			Convey(fmt.Sprintf(
 				"the remote is available with retry after %d response", statusCode,
 			), func() {

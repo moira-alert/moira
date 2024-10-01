@@ -87,7 +87,7 @@ func TestMakeRequest(t *testing.T) {
 	})
 
 	Convey("Client returns status Remote Unavailable status codes", t, func() {
-		for _, statusCode := range remoteUnavailableStatusCodes {
+		for statusCode := range remoteUnavailableStatusCodes {
 			server := createServer(body, statusCode)
 			remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 			request, _ := remote.prepareRequest(from, until, target)
@@ -190,7 +190,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 	})
 
 	Convey("Given server returns Remote Unavailable responses permanently", t, func() {
-		for _, statusCode := range remoteUnavailableStatusCodes {
+		for statusCode := range remoteUnavailableStatusCodes {
 			server := createTestServer(TestResponse{body, statusCode})
 
 			Convey(fmt.Sprintf(
@@ -221,7 +221,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 	})
 
 	Convey("Given server returns Remote Unavailable response temporary", t, func() {
-		for _, statusCode := range remoteUnavailableStatusCodes {
+		for statusCode := range remoteUnavailableStatusCodes {
 			Convey(fmt.Sprintf(
 				"request is successful with retry after %d response and remote is available", statusCode,
 			), func() {
@@ -290,11 +290,4 @@ func (responseWriter *TestResponseWriter) GetResponse() TestResponse {
 	response := responseWriter.responses[responseWriter.count%len(responseWriter.responses)]
 	responseWriter.count++
 	return response
-}
-
-var remoteUnavailableStatusCodes = []int{
-	http.StatusUnauthorized,
-	http.StatusBadGateway,
-	http.StatusServiceUnavailable,
-	http.StatusGatewayTimeout,
 }

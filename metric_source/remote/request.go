@@ -59,16 +59,16 @@ func (remote *Remote) makeRequest(req *http.Request) (body []byte, isRemoteAvail
 	return body, true, nil
 }
 
+var remoteUnavailableStatusCodes = map[int]struct{}{
+	http.StatusUnauthorized:       {},
+	http.StatusBadGateway:         {},
+	http.StatusServiceUnavailable: {},
+	http.StatusGatewayTimeout:     {},
+}
+
 func isRemoteUnavailableStatusCode(statusCode int) bool {
-	switch statusCode {
-	case http.StatusUnauthorized,
-		http.StatusBadGateway,
-		http.StatusServiceUnavailable,
-		http.StatusGatewayTimeout:
-		return true
-	default:
-		return false
-	}
+	_, isUnavailableCode := remoteUnavailableStatusCodes[statusCode]
+	return isUnavailableCode
 }
 
 func (remote *Remote) makeRequestWithRetries(

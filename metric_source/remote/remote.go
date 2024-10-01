@@ -48,6 +48,7 @@ func Create(config *Config) (metricSource.MetricSource, error) {
 	if config.URL == "" {
 		return nil, fmt.Errorf("remote graphite URL should not be empty")
 	}
+
 	return &Remote{
 		config: config,
 		client: &http.Client{Timeout: config.Timeout},
@@ -68,6 +69,7 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 			Target:        target,
 		}
 	}
+
 	body, isRemoteAvailable, err := remote.makeRequestWithRetries(req, remote.config.Timeout, remote.config.RetrySeconds)
 	if err != nil {
 		if isRemoteAvailable {
@@ -76,11 +78,13 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 				Target:        target,
 			}
 		}
+
 		return nil, ErrRemoteUnavailable{
 			InternalError: err,
 			Target:        target,
 		}
 	}
+
 	resp, err := decodeBody(body)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
@@ -88,6 +92,7 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 			Target:        target,
 		}
 	}
+
 	fetchResult := convertResponse(resp, allowRealTimeAlerting)
 	return &fetchResult, nil
 }
