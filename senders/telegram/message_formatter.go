@@ -54,33 +54,33 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
 	titleLen := calcRunesCountWithoutHTML(title) + len("\n")
 
-	var tagsStr string
+	var tags string
 	var tagsLen int
 
 	triggerTags := params.Trigger.GetTags()
 	if len(triggerTags) != 0 {
-		tagsStr = " " + triggerTags
-		tagsLen = calcRunesCountWithoutHTML(tagsStr)
+		tags = " " + triggerTags
+		tagsLen = calcRunesCountWithoutHTML(tags)
 	}
 
 	desc := descriptionFormatter(params.Trigger)
 	descLen := calcRunesCountWithoutHTML(desc)
 
-	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
-	eventsStringLen := calcRunesCountWithoutHTML(eventsString)
+	events := formatter.buildEventsString(params.Events, -1, params.Throttled)
+	eventsStringLen := calcRunesCountWithoutHTML(events)
 
 	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessagePartsBetweenTagsDescEvents(params.MessageMaxChars-titleLen, tagsLen, descLen, eventsStringLen)
 	if tagsLen != tagsNewLen {
-		tagsStr = msgformat.DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
+		tags = msgformat.DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
 	}
 	if descLen != descNewLen {
 		desc = descriptionCutter(desc, descNewLen)
 	}
 	if eventsStringLen != eventsNewLen {
-		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
+		events = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
 
-	return title + tagsStr + "\n" + desc + eventsString
+	return title + tags + "\n" + desc + events
 }
 
 func htmlEscapeTags(tags []string) []string {

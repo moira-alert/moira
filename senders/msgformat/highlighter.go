@@ -83,35 +83,35 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
 	titleLen := utf8.RuneCountInString(title) + len("\n")
 
-	var tagsStr string
+	var tags string
 	var tagsLen int
 
 	triggerTags := params.Trigger.GetTags()
 	if len(triggerTags) != 0 {
-		tagsStr = " " + triggerTags
-		tagsLen = utf8.RuneCountInString(tagsStr)
+		tags = " " + triggerTags
+		tagsLen = utf8.RuneCountInString(tags)
 	}
 
 	desc := formatter.descriptionFormatter(params.Trigger)
 	descLen := utf8.RuneCountInString(desc)
 
-	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
-	eventsStringLen := utf8.RuneCountInString(eventsString)
+	events := formatter.buildEventsString(params.Events, -1, params.Throttled)
+	eventsStringLen := utf8.RuneCountInString(events)
 
 	charsLeftAfterTitle := params.MessageMaxChars - titleLen
 
 	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessagePartsBetweenTagsDescEvents(charsLeftAfterTitle, tagsLen, descLen, eventsStringLen)
 	if tagsNewLen != tagsLen {
-		tagsStr = DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
+		tags = DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
 	}
 	if descLen != descNewLen {
 		desc = formatter.descriptionCutter(desc, descNewLen)
 	}
 	if eventsNewLen != eventsStringLen {
-		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
+		events = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
 
-	return title + tagsStr + "\n" + desc + eventsString
+	return title + tags + "\n" + desc + events
 }
 
 // buildTitle builds title string for alert (emoji, trigger state, trigger name with link).
