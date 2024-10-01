@@ -7,7 +7,7 @@ func CalculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen i
 		return descLen, eventsLen
 	}
 
-	halfOfMaxChars := maxChars / splittingByHalfConst
+	halfOfMaxChars := maxChars / partsCountForMessageWithDescAndEvents
 
 	if descLen > halfOfMaxChars && eventsLen <= halfOfMaxChars {
 		return maxChars - eventsLen - 10, eventsLen
@@ -21,10 +21,10 @@ func CalculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen i
 }
 
 const (
-	// splittingByHalfConst is used then you need to split given maxChars fairly by half.
-	splittingByHalfConst = 2
-	// splittingByThreePartsConst is used then you need to split given maxChars fairly by three parts.
-	splittingByThreePartsConst = 3
+	// partsCountForMessageWithDescAndEvents is used then you need to split given maxChars fairly by half.
+	partsCountForMessageWithDescAndEvents = 2
+	// partsCountForMessageWithTagsDescAndEvents is used then you need to split given maxChars fairly by three parts.
+	partsCountForMessageWithTagsDescAndEvents = 3
 )
 
 // CalculateMessagePartsBetweenTagsDescEvents calculates and returns the length of tags, description and events string
@@ -38,7 +38,7 @@ func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, even
 		return tagsLen, descLen, eventsLen
 	}
 
-	fairMaxLen := maxChars / splittingByThreePartsConst
+	fairMaxLen := maxChars / partsCountForMessageWithTagsDescAndEvents
 
 	switch {
 	case firstIsGreaterThanGivenLenAndOthersLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
@@ -71,7 +71,7 @@ func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, even
 	case firstAndSecondIsGreaterThanGivenLenAndOtherLessOrEqual(fairMaxLen, descLen, eventsLen, tagsLen):
 		// split free space from tags fairly between description and events
 		spaceFromTags := fairMaxLen - tagsLen
-		halfOfSpaceFromTags := spaceFromTags / splittingByHalfConst
+		halfOfSpaceFromTags := spaceFromTags / partsCountForMessageWithDescAndEvents
 
 		descNewLen = fairMaxLen + halfOfSpaceFromTags
 		eventsNewLen = fairMaxLen + halfOfSpaceFromTags

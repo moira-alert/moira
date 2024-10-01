@@ -159,14 +159,14 @@ func TestCalculateMessagePartsBetweenTagsDescEvents(t *testing.T) {
 				description: "with descLen and eventsLen > maxChars/3, tagsLen <= maxChars/3",
 				given: given{
 					maxChars:  100,
-					tagsLen:   55,
-					descLen:   33,
+					tagsLen:   29,
+					descLen:   56,
 					eventsLen: 100,
 				},
 				expected: expected{
-					tagsLen:   33,
-					descLen:   33,
-					eventsLen: 34,
+					tagsLen:   29,
+					descLen:   35,
+					eventsLen: 35,
 				},
 			},
 			{
