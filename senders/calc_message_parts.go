@@ -43,34 +43,34 @@ func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, even
 	fairMaxLen := maxChars / partsCountForMessageWithTagsDescAndEvents
 
 	switch {
-	case firstIsGreaterThanGivenLenAndOthersLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
+	case tagsIsGreaterThanGivenLenAndOthersLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
 		// give free space to tags
 		tagsNewLen = maxChars - descLen - eventsLen
 
 		return min(tagsNewLen, tagsLen), descLen, eventsLen
-	case firstIsGreaterThanGivenLenAndOthersLessOrEqual(fairMaxLen, descLen, tagsLen, eventsLen):
+	case descIsGreaterThanGivenLenAndOthersLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
 		// give free space to description
 		descNewLen = maxChars - tagsLen - eventsLen
 
 		return tagsLen, min(descNewLen, descLen), eventsLen
-	case firstIsGreaterThanGivenLenAndOthersLessOrEqual(fairMaxLen, eventsLen, tagsLen, descLen):
+	case eventsIsGreaterThanGivenLenAndOthersLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
 		// give free space to events
 		eventsNewLen = maxChars - tagsLen - descLen
 
 		return tagsLen, descLen, min(eventsNewLen, eventsLen)
-	case firstAndSecondIsGreaterThanGivenLenAndOtherLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
+	case tagsAndDescAreGreaterThanGivenLenAndOtherLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
 		// description is more important than tags
 		tagsNewLen = fairMaxLen
 		descNewLen = maxChars - tagsNewLen - eventsLen
 
 		return tagsNewLen, min(descNewLen, descLen), eventsLen
-	case firstAndSecondIsGreaterThanGivenLenAndOtherLessOrEqual(fairMaxLen, tagsLen, eventsLen, descLen):
+	case tagsAndEventsAreGreaterThanGivenLenAndOtherLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
 		// events are more important than tags
 		tagsNewLen = fairMaxLen
 		eventsNewLen = maxChars - tagsNewLen - descLen
 
 		return tagsNewLen, descLen, min(eventsNewLen, eventsLen)
-	case firstAndSecondIsGreaterThanGivenLenAndOtherLessOrEqual(fairMaxLen, descLen, eventsLen, tagsLen):
+	case descAndEventsAreGreaterThanGivenLenAndOtherLessOrEqual(fairMaxLen, tagsLen, descLen, eventsLen):
 		// split free space from tags fairly between description and events
 		spaceFromTags := fairMaxLen - tagsLen
 		halfOfSpaceFromTags := spaceFromTags / partsCountForMessageWithDescAndEvents
@@ -85,10 +85,26 @@ func CalculateMessagePartsBetweenTagsDescEvents(maxChars, tagsLen, descLen, even
 	}
 }
 
-func firstIsGreaterThanGivenLenAndOthersLessOrEqual(givenLen, first, second, third int) bool {
-	return first > givenLen && second <= givenLen && third <= givenLen
+func tagsIsGreaterThanGivenLenAndOthersLessOrEqual(givenLen, tags, desc, events int) bool {
+	return tags > givenLen && desc <= givenLen && events <= givenLen
 }
 
-func firstAndSecondIsGreaterThanGivenLenAndOtherLessOrEqual(givenLen, first, second, third int) bool {
-	return first > givenLen && second > givenLen && third <= givenLen
+func descIsGreaterThanGivenLenAndOthersLessOrEqual(givenLen, tags, desc, events int) bool {
+	return tags <= givenLen && desc > givenLen && events <= givenLen
+}
+
+func eventsIsGreaterThanGivenLenAndOthersLessOrEqual(givenLen, tags, desc, events int) bool {
+	return tags <= givenLen && desc <= givenLen && events > givenLen
+}
+
+func tagsAndDescAreGreaterThanGivenLenAndOtherLessOrEqual(givenLen, tags, desc, events int) bool {
+	return tags > givenLen && desc > givenLen && events <= givenLen
+}
+
+func tagsAndEventsAreGreaterThanGivenLenAndOtherLessOrEqual(givenLen, tags, desc, events int) bool {
+	return tags > givenLen && desc <= givenLen && events > givenLen
+}
+
+func descAndEventsAreGreaterThanGivenLenAndOtherLessOrEqual(givenLen, tags, desc, events int) bool {
+	return tags <= givenLen && desc > givenLen && events > givenLen
 }
