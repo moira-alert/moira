@@ -54,12 +54,13 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
 	titleLen := calcRunesCountWithoutHTML(title) + len("\n")
 
-	tagsStr := " " + params.Trigger.GetTags()
-	tagsLen := calcRunesCountWithoutHTML(tagsStr)
+	var tagsStr string
+	var tagsLen int
 
-	if tagsLen == len(" ") {
-		tagsStr = ""
-		tagsLen = 0
+	triggerTags := params.Trigger.GetTags()
+	if len(triggerTags) != 0 {
+		tagsStr = " " + triggerTags
+		tagsLen = calcRunesCountWithoutHTML(tagsStr)
 	}
 
 	desc := descriptionFormatter(params.Trigger)

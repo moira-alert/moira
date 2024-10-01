@@ -83,12 +83,13 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
 	titleLen := utf8.RuneCountInString(title) + len("\n")
 
-	tagsStr := " " + params.Trigger.GetTags()
-	tagsLen := utf8.RuneCountInString(tagsStr)
+	var tagsStr string
+	var tagsLen int
 
-	if tagsLen == len(" ") {
-		tagsStr = ""
-		tagsLen = 0
+	triggerTags := params.Trigger.GetTags()
+	if len(triggerTags) != 0 {
+		tagsStr = " " + triggerTags
+		tagsLen = utf8.RuneCountInString(tagsStr)
 	}
 
 	desc := formatter.descriptionFormatter(params.Trigger)
