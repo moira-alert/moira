@@ -28,7 +28,7 @@ const (
 	pushoverSender    = "pushover"
 	discordSender     = "discord"
 	scriptSender      = "script"
-	selfStateSender   = "selfstate"
+	selfstateSender   = "selfstate"
 	slackSender       = "slack"
 	telegramSender    = "telegram"
 	twilioSmsSender   = "twilio sms"
@@ -91,12 +91,14 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			return err
 		}
 	}
-	if notifier.config.SelfStateEnabled {
-		selfStateSettings := map[string]interface{}{
-			"sender_type":  selfStateSender,
-			"contact_type": selfStateSender,
+
+	if notifier.config.SelfstateMonitorEnabled {
+		selfstateSettings := map[string]interface{}{
+			"sender_type":  selfstateSender,
+			"contact_type": selfstateSender,
 		}
-		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
+
+		if err = notifier.RegisterSender(selfstateSettings, &selfstate.Sender{Database: connector}); err != nil {
 			notifier.logger.Warning().
 				Error(err).
 				Msg("Failed to register selfstate sender")

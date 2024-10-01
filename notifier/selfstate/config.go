@@ -3,34 +3,84 @@ package selfstate
 import (
 	"fmt"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
 
-// Config is representation of self state worker settings like moira admins contacts and threshold values for checked services.
-type Config struct {
-	Enabled                        bool
-	RedisDisconnectDelaySeconds    int64
-	LastMetricReceivedDelaySeconds int64
-	LastCheckDelaySeconds          int64
-	LastRemoteCheckDelaySeconds    int64
-	NoticeIntervalSeconds          int64
-	CheckInterval                  time.Duration
-	Contacts                       []map[string]string
+type HeartbeatsCfg struct {
+	DatabaseCfg      heartbeat.DatabaseHeartbeaterConfig
+	FilterCfg        heartbeat.FilterHeartbeaterConfig
+	LocalCheckerCfg  heartbeat.LocalCheckerHeartbeaterConfig
+	RemoteCheckerCfg heartbeat.RemoteCheckerHeartbeaterConfig
+	NotifierCfg      heartbeat.NotifierHeartbeaterConfig
 }
 
-func (config *Config) checkConfig(senders map[string]bool) error {
-	if !config.Enabled {
+type MonitorBaseConfig struct {
+	Enabled        bool
+	HeartbeatsCfg  HeartbeatsCfg
+	NoticeInterval time.Duration `validate:"required,gt=0"`
+	CheckInterval  time.Duration `validate:"required,gt=0"`
+}
+
+type AdminMonitorConfig struct {
+	MonitorBaseConfig
+
+	AdminContacts []map[string]string `validate:"required,min=1"`
+}
+
+func (cfg AdminMonitorConfig) validate(senders map[string]bool) error {
+	if !cfg.Enabled {
 		return nil
 	}
-	if len(config.Contacts) < 1 {
-		return fmt.Errorf("contacts must be specified")
+
+	validator := validator.New()
+	if err := validator.Struct(cfg); err != nil {
+		return err
 	}
-	for _, adminContact := range config.Contacts {
-		if _, ok := senders[adminContact["type"]]; !ok {
-			return fmt.Errorf("unknown contact type [%s]", adminContact["type"])
+
+	for _, contact := range cfg.AdminContacts {
+		if _, ok := senders[contact["type"]]; !ok {
+			return fmt.Errorf("unknown contact type [%s]", contact["type"])
 		}
-		if adminContact["value"] == "" {
-			return fmt.Errorf("value for [%s] must be present", adminContact["type"])
+
+		if contact["value"] == "" {
+			return fmt.Errorf("value for [%s] must be present", contact["type"])
 		}
+	}
+
+	return nil
+}
+
+type UserMonitorConfig struct {
+	MonitorBaseConfig
+}
+
+func (cfg UserMonitorConfig) validate() error {
+	if !cfg.Enabled {
+		return nil
+	}
+
+	validator := validator.New()
+	return validator.Struct(cfg)
+}
+
+type MonitorConfig struct {
+	AdminCfg AdminMonitorConfig
+	UserCfg  UserMonitorConfig
+}
+
+type Config struct {
+	Monitor MonitorConfig
+}
+
+func (cfg *Config) Validate(senders map[string]bool) error {
+	if err := cfg.Monitor.AdminCfg.validate(senders); err != nil {
+		return fmt.Errorf("admin config validation error: %w", err)
+	}
+
+	if err := cfg.Monitor.UserCfg.validate(); err != nil {
+		return fmt.Errorf("user config validation error: %w", err)
 	}
 
 	return nil
