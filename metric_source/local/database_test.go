@@ -1,6 +1,7 @@
 package local
 
 import (
+	"fmt"
 	"math"
 	"testing"
 	"time"
@@ -240,7 +241,7 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 					patterns: []string{"metric.*.*"},
 				},
 				"metric.foo.2": {
-					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
+					values:   []float64{1.5, 2.5, 3.5, 4.5, 5.5},
 					patterns: []string{"metric.*.*"},
 				},
 			},
@@ -325,20 +326,23 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 
 	Convey("Run test cases", t, func() {
 		for _, testCase := range testCases {
-			database.Flush()
-			err := saveMetrics(database, testCase.metrics, now, testCase.retention)
-			So(err, ShouldBeNil)
+			Convey(fmt.Sprintf("Target '%s'", testCase.target), t, func() {
+				database.Flush()
 
-			result, err := localSource.Fetch(testCase.target, testCase.from, now, true)
-			So(err, ShouldBeNil)
+				err := saveMetrics(database, testCase.metrics, now, testCase.retention)
+				So(err, ShouldBeNil)
 
-			resultData := result.GetMetricsData()
-			resultMap := map[string][]float64{}
-			for _, data := range resultData {
-				resultMap[data.Name] = data.Values
-			}
+				result, err := localSource.Fetch(testCase.target, testCase.from, now, true)
+				So(err, ShouldBeNil)
 
-			So(resultMap, shouldEqualIfNaNsEqual, testCase.expected)
+				resultData := result.GetMetricsData()
+				resultMap := map[string][]float64{}
+				for _, data := range resultData {
+					resultMap[data.Name] = data.Values
+				}
+
+				So(resultMap, shouldEqualIfNaNsEqual, testCase.expected)
+			})
 		}
 	})
 }
