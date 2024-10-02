@@ -33,7 +33,7 @@ func (local *Local) IsConfigured() (bool, error) {
 	return true, nil
 }
 
-// IsConfigured always returns true. It easy to configure local source =).
+// IsAvailable always returns true. It easy to configure local source =).
 func (local *Local) IsAvailable() (bool, error) {
 	return true, nil
 }

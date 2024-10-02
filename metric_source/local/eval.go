@@ -47,14 +47,15 @@ func (eval *evaluator) fetchAndEval(target string, from, until int64, result *Fe
 	return nil
 }
 
-// It returns a map of only the data requested in the current invocation, scaled to a common step.
+// Fetch is an implementation of Evaluator interface from carbonapi.
+// It returns a map the metrics requested in the current invocation, scaled to a common step.
 func (eval *evaluator) Fetch(
 	ctx context.Context,
 	exprs []parser.Expr,
 	from, until int64,
 	values map[parser.MetricRequest][]*types.MetricData,
 ) (map[parser.MetricRequest][]*types.MetricData, error) {
-	fetch := NewFetchCtx(0, 0)
+	fetch := newFetchCtx(0, 0)
 
 	for _, exp := range exprs {
 		ms := exp.Metrics(from, until)
@@ -70,7 +71,8 @@ func (eval *evaluator) Fetch(
 	return fetch.fetchedMetrics.metricsMap, nil
 }
 
-// Eval uses the raw data within the values map being passed into it to in order to evaluate the input expression.
+// Eval is an implementation of Evaluator interface from carbonapi.
+// It uses the raw data within the values map being passed into it to in order to evaluate the input expression.
 func (eval *evaluator) Eval(
 	ctx context.Context,
 	exp parser.Expr,
@@ -139,7 +141,7 @@ func (eval *evaluator) writeResult(exp parser.Expr, metricsData []*types.MetricD
 	}
 
 	for _, metricData := range metricsData {
-		md := newMetricDataFromGraphit(metricData, len(result.Metrics) != len(result.Patterns))
+		md := newMetricDataFromGraphite(metricData, len(result.Metrics) != len(result.Patterns))
 		result.MetricsData = append(result.MetricsData, md)
 	}
 }
@@ -161,7 +163,7 @@ type fetchCtx struct {
 	fetchedMetrics *fetchedMetrics
 }
 
-func NewFetchCtx(from, until int64) *fetchCtx {
+func newFetchCtx(from, until int64) *fetchCtx {
 	return &fetchCtx{
 		from,
 		until,
@@ -184,7 +186,7 @@ func (ctx *fetchCtx) getMetricsData(database moira.Database, metricRequests []pa
 			return err
 		}
 
-		timer := NewTimerRoundingTimestamps(from, until, metricNames.retention)
+		timer := newTimerRoundingTimestamps(from, until, metricNames.retention)
 
 		metricsData, err := fetchData.fetchMetricValues(mr.Metric, metricNames, timer)
 		if err != nil {
@@ -200,8 +202,6 @@ func (ctx *fetchCtx) getMetricsData(database moira.Database, metricRequests []pa
 func (ctx *fetchCtx) scaleToCommonStep() {
 	retention := ctx.fetchedMetrics.calculateCommonStep()
 
-	// from, until := RoundTimestamps(ctx.from, ctx.until, retention)
-
 	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
 	for metricRequest, metricData := range ctx.fetchedMetrics.metricsMap {
 		metricRequest.From += ctx.from
@@ -214,7 +214,7 @@ func (ctx *fetchCtx) scaleToCommonStep() {
 	ctx.fetchedMetrics.metricsMap = metricMap
 }
 
-func newMetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.MetricData {
+func newMetricDataFromGraphite(md *types.MetricData, wildcard bool) metricSource.MetricData {
 	return metricSource.MetricData{
 		Name:      md.Name,
 		StartTime: md.StartTime,
