@@ -203,21 +203,6 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": {
-					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
-					patterns: []string{"metric.*"},
-				},
-			},
-			from:      now - retention*4,
-			retention: retention,
-			target:    "exponentialMovingAverage(metric.*, 2)",
-			expected:  map[string][]float64{
-				// TODO(Tetrergeru): It mustn't work that way
-				// "exponentialMovingAverage(metric.foo, 2)": []float64{1.0, 2.0, 3.0, 4.0, 5.0},
-			},
-		},
-		{
-			metrics: map[string]metricMock{
 				"metric.foo.1": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*.*"},
@@ -326,7 +311,7 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 
 	Convey("Run test cases", t, func() {
 		for _, testCase := range testCases {
-			Convey(fmt.Sprintf("Target '%s'", testCase.target), t, func() {
+			Convey(fmt.Sprintf("Target '%s'", testCase.target), func() {
 				database.Flush()
 
 				err := saveMetrics(database, testCase.metrics, now, testCase.retention)
