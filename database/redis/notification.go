@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/moira-alert/moira/notifier"
-
 	"github.com/go-redis/redis/v8"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
+
+// Separate const to prevent cyclic dependencies
+const NotificationsLimitUnlimited = int64(-1)
 
 type notificationTypes struct {
 	Valid, ToRemove, ToResaveNew, ToResaveOld []*moira.ScheduledNotification
@@ -294,8 +295,8 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 	}
 
 	// No limit
-	if limit == notifier.NotificationsLimitUnlimited {
-		return connector.fetchNotifications(to, notifier.NotificationsLimitUnlimited)
+	if limit == NotificationsLimitUnlimited {
+		return connector.fetchNotifications(to, NotificationsLimitUnlimited)
 	}
 
 	count, err := connector.notificationsCount(to)
@@ -305,7 +306,7 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 
 	// Hope count will be not greater then limit when we call fetchNotificationsNoLimit
 	if limit > connector.notification.TransactionHeuristicLimit && count < limit/2 {
-		return connector.fetchNotifications(to, notifier.NotificationsLimitUnlimited)
+		return connector.fetchNotifications(to, NotificationsLimitUnlimited)
 	}
 
 	return connector.fetchNotifications(to, limit)
@@ -354,7 +355,7 @@ func (connector *DbConnector) fetchNotifications(to int64, limit int64) ([]*moir
 // sorted by timestamp in one transaction with or without limit, depending on whether limit is nil.
 func getNotificationsInTxWithLimit(ctx context.Context, tx *redis.Tx, to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	var rng *redis.ZRangeBy
-	if limit != notifier.NotificationsLimitUnlimited {
+	if limit != NotificationsLimitUnlimited {
 		rng = &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10), Offset: 0, Count: limit}
 	} else {
 		rng = &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10)}
@@ -393,7 +394,7 @@ func getLimitedNotifications(
 
 	limitedNotifications := notifications
 
-	if limit != notifier.NotificationsLimitUnlimited {
+	if limit != NotificationsLimitUnlimited {
 		limitedNotifications = limitNotifications(notifications)
 		lastTs := limitedNotifications[len(limitedNotifications)-1].Timestamp
 
@@ -401,7 +402,7 @@ func getLimitedNotifications(
 			// this means that all notifications have same timestamp,
 			// we hope that all notifications with same timestamp should fit our memory
 			var err error
-			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, notifier.NotificationsLimitUnlimited)
+			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, NotificationsLimitUnlimited)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get notification without limit in transaction: %w", err)
 			}
