@@ -80,8 +80,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  cfg.APIToken,
-		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
+		Token:   cfg.APIToken,
+		Poller:  &telebot.LongPoller{Timeout: pollerTimeout},
+		OnError: sender.customOnErrorFunc,
 	})
 	if err != nil {
 		return sender.removeTokenFromError(err)
@@ -122,4 +123,14 @@ func (sender *Sender) runTelebot(contactType string) {
 
 func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
+}
+
+const errorInsideTelebotMsg = "Error inside telebot"
+
+func (sender *Sender) customOnErrorFunc(err error, _ telebot.Context) {
+	err = sender.removeTokenFromError(err)
+
+	sender.logger.Warning().
+		Error(err).
+		Msg(errorInsideTelebotMsg)
 }
