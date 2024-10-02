@@ -77,11 +77,11 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 	testCases := []testCase{
 		{
 			metrics: map[string]metricMock{
-				"metric1": metricMock{
+				"metric1": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"pattern"},
 				},
-				"metric2": metricMock{
+				"metric2": {
 					values:   []float64{5.0, 4.0, 3.0, 2.0, 1.0},
 					patterns: []string{"pattern"},
 				},
@@ -90,13 +90,13 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "pattern",
 			expected: map[string][]float64{
-				"metric1": []float64{1.0, 2.0, 3.0, 4.0, 5.0},
-				"metric2": []float64{5.0, 4.0, 3.0, 2.0, 1.0},
+				"metric1": {1.0, 2.0, 3.0, 4.0, 5.0},
+				"metric2": {5.0, 4.0, 3.0, 2.0, 1.0},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric1": metricMock{
+				"metric1": {
 					values:   []float64{1.0, 3.0, 1.0, 3.0, 1.0, 3.0},
 					patterns: []string{"pattern"},
 				},
@@ -105,12 +105,12 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "movingAverage(pattern, 2)",
 			expected: map[string][]float64{
-				"movingAverage(metric1,2)": []float64{2.0, 2.0, 2.0, 2.0, 2.0},
+				"movingAverage(metric1,2)": {2.0, 2.0, 2.0, 2.0, 2.0},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric1": metricMock{
+				"metric1": {
 					values:   []float64{1.0, nan, 2.0, nan, nan},
 					patterns: []string{"pattern"},
 				},
@@ -119,24 +119,24 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "keepLastValue(pattern, 1)",
 			expected: map[string][]float64{
-				"keepLastValue(metric1,1)": []float64{1.0, 1.0, 2.0, 2.0, nan},
+				"keepLastValue(metric1,1)": {1.0, 1.0, 2.0, 2.0, nan},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.1.foo": metricMock{
+				"metric.1.foo": {
 					values:   []float64{1.0, 2.0, 1.0, 2.0, 1.0},
 					patterns: []string{"metric.*.*", "metric.1.foo"},
 				},
-				"metric.1.bar": metricMock{
+				"metric.1.bar": {
 					values:   []float64{-1.0, -2.0, -3.0, -4.0, -5.0},
 					patterns: []string{"metric.*.*", "metric.1.bar"},
 				},
-				"metric.2.foo": metricMock{
+				"metric.2.foo": {
 					values:   []float64{3.0, 2.0, 3.0, 2.0, 3.0},
 					patterns: []string{"metric.*.*", "metric.2.foo"},
 				},
-				"metric.2.bar": metricMock{
+				"metric.2.bar": {
 					values:   []float64{-1.0, -2.0, -3.0, -4.0, -5.0},
 					patterns: []string{"metric.*.*", "metric.2.bar"},
 				},
@@ -145,13 +145,13 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    `applyByNode(metric.*.*, 1, "movingMax(%.foo, '2m')")`,
 			expected: map[string][]float64{
-				"movingMax(metric.1.foo,'2m')": []float64{1.0, 2.0, 2.0, 2.0, 2.0},
-				"movingMax(metric.2.foo,'2m')": []float64{3.0, 3.0, 3.0, 3.0, 3.0},
+				"movingMax(metric.1.foo,'2m')": {1.0, 2.0, 2.0, 2.0, 2.0},
+				"movingMax(metric.2.foo,'2m')": {3.0, 3.0, 3.0, 3.0, 3.0},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": metricMock{
+				"metric.foo": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*"},
 				},
@@ -160,12 +160,12 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "aliasByNode(metric.*, 1)",
 			expected: map[string][]float64{
-				"foo": []float64{1.0, 2.0, 3.0, 4.0, 5.0},
+				"foo": {1.0, 2.0, 3.0, 4.0, 5.0},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": metricMock{
+				"metric.foo": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*"},
 				},
@@ -174,20 +174,20 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "aliasByNode(metric.*, 2)",
 			expected: map[string][]float64{
-				"": []float64{1.0, 2.0, 3.0, 4.0, 5.0},
+				"": {1.0, 2.0, 3.0, 4.0, 5.0},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.1": metricMock{
+				"metric.1": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*"},
 				},
-				"metric.2": metricMock{
+				"metric.2": {
 					values:   []float64{-1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*"},
 				},
-				"metric.3": metricMock{
+				"metric.3": {
 					values:   []float64{-1.0, -2.0, -3.0, -4.0, -5.0},
 					patterns: []string{"metric.*"},
 				},
@@ -196,13 +196,13 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "minimumBelow(metric.*, 0)",
 			expected: map[string][]float64{
-				"metric.2": []float64{-1.0, 2.0, 3.0, 4.0, 5.0},
-				"metric.3": []float64{-1.0, -2.0, -3.0, -4.0, -5.0},
+				"metric.2": {-1.0, 2.0, 3.0, 4.0, 5.0},
+				"metric.3": {-1.0, -2.0, -3.0, -4.0, -5.0},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": metricMock{
+				"metric.foo": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*"},
 				},
@@ -217,11 +217,11 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo.1": metricMock{
+				"metric.foo.1": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*.*"},
 				},
-				"metric.foo.2": metricMock{
+				"metric.foo.2": {
 					values:   []float64{1.5, 2.5, 3.5, 4.5, 5.5},
 					patterns: []string{"metric.*.*"},
 				},
@@ -230,16 +230,16 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "groupByNode(metric.*.*, 1, 'sumSeries')",
 			expected: map[string][]float64{
-				"foo": []float64{2.5, 4.5, 6.5, 8.5, 10.5},
+				"foo": {2.5, 4.5, 6.5, 8.5, 10.5},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo.1": metricMock{
+				"metric.foo.1": {
 					values:   []float64{1.5, 2.5, 3.5, 4.5, 5.5},
 					patterns: []string{"metric.*.*"},
 				},
-				"metric.foo.2": metricMock{
+				"metric.foo.2": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*.*"},
 				},
@@ -248,12 +248,12 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "groupByNode(metric.*.*, 1, 'unique')",
 			expected: map[string][]float64{
-				"foo": []float64{1.5, 2.5, 3.5, 4.5, 5.5},
+				"foo": {1.5, 2.5, 3.5, 4.5, 5.5},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": metricMock{
+				"metric.foo": {
 					values:   []float64{0, 1, 2, 3, 4, 5},
 					patterns: []string{"metric.*"},
 				},
@@ -262,12 +262,12 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "hitcount(metric.*, '2m')",
 			expected: map[string][]float64{
-				"hitcount(metric.foo,'2m')": []float64{60, 300, 540},
+				"hitcount(metric.foo,'2m')": {60, 300, 540},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": metricMock{
+				"metric.foo": {
 					values:   []float64{1, nan, 3, nan, nan, 6},
 					patterns: []string{"metric.*"},
 				},
@@ -276,12 +276,12 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "interpolate(metric.*, 1)",
 			expected: map[string][]float64{
-				"interpolate(metric.foo)": []float64{1, 2, 3, nan, nan, 6},
+				"interpolate(metric.foo)": {1, 2, 3, nan, nan, 6},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": metricMock{
+				"metric.foo": {
 					values:   []float64{1, nan, 3, nan, nan, 6},
 					patterns: []string{"metric.*"},
 				},
@@ -290,12 +290,12 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "interpolate(metric.*)",
 			expected: map[string][]float64{
-				"interpolate(metric.foo)": []float64{1, 2, 3, 4, 5, 6},
+				"interpolate(metric.foo)": {1, 2, 3, 4, 5, 6},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": metricMock{
+				"metric.foo": {
 					values:   []float64{1, 2, 3, 4, 5, 6},
 					patterns: []string{"metric.*"},
 				},
@@ -304,12 +304,12 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "smartSummarize(metric.*, '2m', 'average')",
 			expected: map[string][]float64{
-				"smartSummarize(metric.foo,'2m','average')": []float64{1.5, 3.5, 5.5},
+				"smartSummarize(metric.foo,'2m','average')": {1.5, 3.5, 5.5},
 			},
 		},
 		{
 			metrics: map[string]metricMock{
-				"metric.foo": metricMock{
+				"metric.foo": {
 					values:   []float64{1.5, 2, 3, 4, 5, 6.5},
 					patterns: []string{"metric.*"},
 				},
@@ -318,7 +318,7 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			retention: retention,
 			target:    "smartSummarize(metric.*, '3m', 'median')",
 			expected: map[string][]float64{
-				"smartSummarize(metric.foo,'3m','median')": []float64{2, 5},
+				"smartSummarize(metric.foo,'3m','median')": {2, 5},
 			},
 		},
 	}

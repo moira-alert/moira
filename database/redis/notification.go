@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// Separate const to prevent cyclic dependencies
+// Separate const to prevent cyclic dependencies.
 const NotificationsLimitUnlimited = int64(-1)
 
 type notificationTypes struct {
