@@ -50,10 +50,11 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 		next      time.Time
 		throttled bool
 	)
+
 	now := scheduler.clock.NowUTC()
 	if params.SendFail > 0 {
 		next = now.Add(scheduler.config.ReschedulingDelay)
-		throttled = params.ThrottledOld
+		next, throttled = scheduler.calculateNextDelivery(next, &params.Event, logger)
 	} else {
 		if params.Event.State == moira.StateTEST {
 			next = now
@@ -62,6 +63,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 			next, throttled = scheduler.calculateNextDelivery(now, &params.Event, logger)
 		}
 	}
+
 	notification := &moira.ScheduledNotification{
 		Event:     params.Event,
 		Trigger:   params.Trigger,
@@ -78,6 +80,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 		Int64("notification_timestamp_unix", next.Unix()).
 		Int64("notification_created_at_unix", now.Unix()).
 		Msg("Scheduled notification")
+
 	return notification
 }
 
@@ -95,6 +98,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 
 	next, beginning := scheduler.database.GetTriggerThrottling(event.TriggerID)
 
+	fmt.Println(now, next, beginning)
 	if next.After(now) {
 		alarmFatigue = true
 	} else {
