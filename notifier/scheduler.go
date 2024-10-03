@@ -98,7 +98,6 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 
 	next, beginning := scheduler.database.GetTriggerThrottling(event.TriggerID)
 
-	fmt.Println(now, next, beginning)
 	if next.After(now) {
 		alarmFatigue = true
 	} else {
