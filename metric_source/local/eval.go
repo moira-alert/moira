@@ -178,7 +178,7 @@ func (ctx *fetchCtx) getMetricsData(database moira.Database, metricRequests []pa
 	fetchData := fetchData{database}
 
 	for _, mr := range metricRequests {
-		// We must ignore all fields except for these
+		// Other fields are used in carbon for database side consolidations
 		request := parser.MetricRequest{
 			Metric: mr.Metric,
 			From:   mr.From,
