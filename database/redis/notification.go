@@ -16,7 +16,7 @@ import (
 
 // Separate const to prevent cyclic dependencies.
 // Original const is declared in notifier package, notifier depends on all metric source packages.
-// Thus it prevents us from using database in tests for local metric source
+// Thus it prevents us from using database in tests for local metric source.
 const notificationsLimitUnlimited = int64(-1)
 
 type notificationTypes struct {
