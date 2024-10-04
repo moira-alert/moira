@@ -252,8 +252,6 @@ github.com/go-errors/errors v1.1.1/go.mod h1:psDX2osz5VnTOnFWbDeWwS7yejl+uV3FEWE
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20191125211704-12ad95a8df72/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
-github.com/go-graphite/carbonapi v0.16.2-0.20240530091606-c2229eabd094 h1:1obdNCH61kxvX5LLS0Pq4EP4U0GEHOutbVMgkH5yDwM=
-github.com/go-graphite/carbonapi v0.16.2-0.20240530091606-c2229eabd094/go.mod h1:EwQ1MJBzP8BBozLkgwTZdePM/5SqPSxhtY0uDdER2LQ=
 github.com/go-graphite/carbonapi v0.17.0 h1:6JowndAU0qsxUoBftCBy23Rgt8dCxf+1wHxfGZ3GA2E=
 github.com/go-graphite/carbonapi v0.17.0/go.mod h1:EwQ1MJBzP8BBozLkgwTZdePM/5SqPSxhtY0uDdER2LQ=
 github.com/go-graphite/protocol v1.0.0 h1:Fqb0mkVVtfMrn6vw6Ntm3raf3gVVZCOVdZu4JosW5qE=

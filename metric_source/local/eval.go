@@ -178,6 +178,13 @@ func (ctx *fetchCtx) getMetricsData(database moira.Database, metricRequests []pa
 	fetchData := fetchData{database}
 
 	for _, mr := range metricRequests {
+		// We must ignore all fields except for these
+		request := parser.MetricRequest{
+			Metric: mr.Metric,
+			From:   mr.From,
+			Until:  mr.Until,
+		}
+
 		from := mr.From + ctx.from
 		until := mr.Until + ctx.until
 
@@ -193,7 +200,7 @@ func (ctx *fetchCtx) getMetricsData(database moira.Database, metricRequests []pa
 			return err
 		}
 
-		ctx.fetchedMetrics.metricsMap[mr] = metricsData
+		ctx.fetchedMetrics.metricsMap[request] = metricsData
 		ctx.fetchedMetrics.metrics = append(ctx.fetchedMetrics.metrics, metricNames.metrics...)
 	}
 	return nil

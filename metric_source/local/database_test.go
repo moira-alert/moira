@@ -188,8 +188,8 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 			from:      now - retention*4,
 			retention: retention,
 			target:    "consolidateBy(metric.*, 'max')",
-			expected:  map[string][]float64{
-				// "": {1.0, 2.0, 3.0, 4.0, 5.0},
+			expected: map[string][]float64{
+				`consolidateBy(metric.foo,"max")`: {1.0, 2.0, 3.0, 4.0, 5.0},
 			},
 		},
 		{
