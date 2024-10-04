@@ -180,6 +180,20 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 		},
 		{
 			metrics: map[string]metricMock{
+				"metric.foo": {
+					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
+					patterns: []string{"metric.*"},
+				},
+			},
+			from:      now - retention*4,
+			retention: retention,
+			target:    "consolidateBy(metric.*, 'max')",
+			expected:  map[string][]float64{
+				// "": {1.0, 2.0, 3.0, 4.0, 5.0},
+			},
+		},
+		{
+			metrics: map[string]metricMock{
 				"metric.1": {
 					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
 					patterns: []string{"metric.*"},
