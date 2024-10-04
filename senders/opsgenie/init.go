@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
@@ -15,11 +14,6 @@ import (
 // Structure that represents the OpsGenie configuration in the YAML file.
 type config struct {
 	APIKey string `mapstructure:"api_key" validate:"required"`
-}
-
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
 }
 
 // Sender implements the Sender interface for opsgenie.
@@ -43,7 +37,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to opsgenie config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("opsgenie config validation error: %w", err)
 	}
 

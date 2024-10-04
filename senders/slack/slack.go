@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/mitchellh/mapstructure"
@@ -39,11 +38,6 @@ type config struct {
 	EmojiMap     map[string]string `mapstructure:"emoji_map"`
 }
 
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
-}
-
 // Sender implements moira sender interface via slack.
 type Sender struct {
 	emojiProvider emoji_provider.StateEmojiGetter
@@ -60,7 +54,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to slack config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("slack config validation error: %w", err)
 	}
 

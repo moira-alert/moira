@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
@@ -17,11 +16,6 @@ import (
 // Structure that represents the Script configuration in the YAML file.
 type config struct {
 	Exec string `mapstructure:"exec" validate:"required"`
-}
-
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via script execution.
@@ -46,7 +40,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("script config validation error: %w", err)
 	}
 

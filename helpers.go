@@ -5,6 +5,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // BytesScanner allows to scan for subslices separated by separator.
@@ -249,4 +251,10 @@ func MergeToSorted[T Comparable](arr1, arr2 []T) ([]T, error) {
 	}
 
 	return merged, nil
+}
+
+// ValidateConfig is a generic function needed to validate the config structure using validator.
+func ValidateConfig(cfg any) error {
+	validator := validator.New()
+	return validator.Struct(cfg)
 }

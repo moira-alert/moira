@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
@@ -24,11 +23,6 @@ type config struct {
 	SMTPPass     string `mapstructure:"smtp_pass"`
 	SMTPUser     string `mapstructure:"smtp_user"`
 	TemplateFile string `mapstructure:"template_file"`
-}
-
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via pushover.
@@ -70,7 +64,7 @@ func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logg
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("mail config validation error: %w", err)
 	}
 

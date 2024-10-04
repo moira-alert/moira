@@ -290,25 +290,25 @@ func TestMergeToSorted(t *testing.T) {
 		})
 
 		Convey("Test with one nil array", func() {
-			merged, err := MergeToSorted[myInt](nil, []myInt{1, 2, 3})
+			merged, err := MergeToSorted(nil, []myInt{1, 2, 3})
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{1, 2, 3})
 		})
 
 		Convey("Test with two arrays", func() {
-			merged, err := MergeToSorted[myInt]([]myInt{4, 5}, []myInt{1, 2, 3})
+			merged, err := MergeToSorted([]myInt{4, 5}, []myInt{1, 2, 3})
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{1, 2, 3, 4, 5})
 		})
 
 		Convey("Test with empty array", func() {
-			merged, err := MergeToSorted[myInt]([]myInt{-4, 5}, []myInt{})
+			merged, err := MergeToSorted([]myInt{-4, 5}, []myInt{})
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{-4, 5})
 		})
 
 		Convey("Test with sorted values but mixed up", func() {
-			merged, err := MergeToSorted[myInt]([]myInt{1, 9, 10}, []myInt{4, 8, 12})
+			merged, err := MergeToSorted([]myInt{1, 9, 10}, []myInt{4, 8, 12})
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, []myInt{1, 4, 8, 9, 10, 12})
 		})
@@ -333,9 +333,55 @@ func TestMergeToSorted(t *testing.T) {
 			}
 
 			expected := append(arr2, arr1...)
-			merged, err := MergeToSorted[myTest](arr1, arr2)
+			merged, err := MergeToSorted(arr1, arr2)
 			So(err, ShouldBeNil)
 			So(merged, ShouldResemble, expected)
+		})
+	})
+}
+
+func TestValidateConfig(t *testing.T) {
+	type ValidationStruct struct {
+		TestInt  int    `validate:"required,gt=0"`
+		TestURL  string `validate:"required,url"`
+		TestBool bool
+	}
+
+	const (
+		validURL = "https://github.com/moira-alert/moira"
+		validInt = 1
+	)
+
+	Convey("Test ValidateConfig", t, func() {
+		Convey("With TestInt less than zero", func() {
+			testStruct := ValidationStruct{
+				TestInt: -1,
+				TestURL: validURL,
+			}
+
+			err := ValidateConfig(testStruct)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("With invalid TestURL format", func() {
+			testStruct := ValidationStruct{
+				TestInt:  validInt,
+				TestURL:  "test",
+				TestBool: true,
+			}
+
+			err := ValidateConfig(testStruct)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("With valid structure", func() {
+			testStruct := ValidationStruct{
+				TestInt: validInt,
+				TestURL: validURL,
+			}
+
+			err := ValidateConfig(testStruct)
+			So(err, ShouldBeNil)
 		})
 	})
 }

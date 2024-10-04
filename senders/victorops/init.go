@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira/senders/victorops/api"
 
@@ -16,11 +15,6 @@ type config struct {
 	RoutingURL string `mapstructure:"routing_url" validate:"required"`
 	ImageStore string `mapstructure:"image_store"`
 	FrontURI   string `mapstructure:"front_uri"`
-}
-
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface for victorops.
@@ -46,7 +40,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to victorops config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("victorops config validation error: %w", err)
 	}
 

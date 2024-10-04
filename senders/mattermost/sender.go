@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira/senders/msgformat"
 
 	"github.com/moira-alert/moira"
@@ -26,11 +25,6 @@ type config struct {
 	UseEmoji     bool              `mapstructure:"use_emoji"`
 	DefaultEmoji string            `mapstructure:"default_emoji"`
 	EmojiMap     map[string]string `mapstructure:"emoji_map"`
-}
-
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
 }
 
 // Sender posts messages to Mattermost chat.
@@ -59,7 +53,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("mattermost config validation error: %w", err)
 	}
 

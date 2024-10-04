@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 
 	pushover_client "github.com/gregdel/pushover"
@@ -22,11 +21,6 @@ const (
 type config struct {
 	APIToken string `mapstructure:"api_token" validate:"required"`
 	FrontURI string `mapstructure:"front_uri"`
-}
-
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via pushover.
@@ -47,7 +41,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to pushover config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("pushover config validation error: %w", err)
 	}
 

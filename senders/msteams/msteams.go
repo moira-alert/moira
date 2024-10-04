@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/russross/blackfriday/v2"
@@ -50,11 +49,6 @@ type config struct {
 	MaxEvents int    `mapstructure:"max_events"`
 }
 
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
-}
-
 // Sender implements moira sender interface via MS Teams.
 type Sender struct {
 	frontURI  string
@@ -72,7 +66,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to msteams config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("msteams config validation error: %w", err)
 	}
 

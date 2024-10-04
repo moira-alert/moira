@@ -5,7 +5,6 @@ import (
 	"time"
 
 	twilio_client "github.com/carlosdp/twiliogo"
-	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
@@ -19,11 +18,6 @@ type config struct {
 	VoiceURL      string `mapstructure:"voiceurl"`
 	TwimletsEcho  bool   `mapstructure:"twimlets_echo"`
 	AppendMessage bool   `mapstructure:"append_message"`
-}
-
-func (cfg config) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
 }
 
 // Sender implements moira sender interface via twilio.
@@ -50,7 +44,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
 
-	if err = cfg.validate(); err != nil {
+	if err = moira.ValidateConfig(cfg); err != nil {
 		return fmt.Errorf("twilio config validation error: %w", err)
 	}
 
