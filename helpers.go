@@ -253,8 +253,8 @@ func MergeToSorted[T Comparable](arr1, arr2 []T) ([]T, error) {
 	return merged, nil
 }
 
-// ValidateConfig is a generic function needed to validate the config structure using validator.
-func ValidateConfig(cfg any) error {
+// ValidateStruct is a default generic function that uses a validator to validate structure fields.
+func ValidateStruct(s any) error {
 	validator := validator.New()
-	return validator.Struct(cfg)
+	return validator.Struct(s)
 }

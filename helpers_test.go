@@ -340,7 +340,7 @@ func TestMergeToSorted(t *testing.T) {
 	})
 }
 
-func TestValidateConfig(t *testing.T) {
+func TestValidateStruct(t *testing.T) {
 	type ValidationStruct struct {
 		TestInt  int    `validate:"required,gt=0"`
 		TestURL  string `validate:"required,url"`
@@ -352,14 +352,14 @@ func TestValidateConfig(t *testing.T) {
 		validInt = 1
 	)
 
-	Convey("Test ValidateConfig", t, func() {
+	Convey("Test ValidateStruct", t, func() {
 		Convey("With TestInt less than zero", func() {
 			testStruct := ValidationStruct{
 				TestInt: -1,
 				TestURL: validURL,
 			}
 
-			err := ValidateConfig(testStruct)
+			err := ValidateStruct(testStruct)
 			So(err, ShouldNotBeNil)
 		})
 
@@ -370,7 +370,7 @@ func TestValidateConfig(t *testing.T) {
 				TestBool: true,
 			}
 
-			err := ValidateConfig(testStruct)
+			err := ValidateStruct(testStruct)
 			So(err, ShouldNotBeNil)
 		})
 
@@ -380,7 +380,7 @@ func TestValidateConfig(t *testing.T) {
 				TestURL: validURL,
 			}
 
-			err := ValidateConfig(testStruct)
+			err := ValidateStruct(testStruct)
 			So(err, ShouldBeNil)
 		})
 	})

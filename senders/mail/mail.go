@@ -64,7 +64,7 @@ func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logg
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
 
-	if err = moira.ValidateConfig(cfg); err != nil {
+	if err = moira.ValidateStruct(cfg); err != nil {
 		return fmt.Errorf("mail config validation error: %w", err)
 	}
 

@@ -39,7 +39,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to webhook config: %w", err)
 	}
 
-	if err = moira.ValidateConfig(cfg); err != nil {
+	if err = moira.ValidateStruct(cfg); err != nil {
 		return fmt.Errorf("webhook config validation error: %w", err)
 	}
 
