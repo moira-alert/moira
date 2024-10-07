@@ -12,6 +12,11 @@ import (
 	"testing"
 	"time"
 
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metric_source/remote"
+
+	prometheus "github.com/prometheus/client_golang/api/prometheus/v1"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	dataBase "github.com/moira-alert/moira/database"
@@ -137,6 +142,116 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		Convey("Parser should return en error", func() {
 			_, err := getTriggerFromRequest(request)
 			So(err, ShouldHaveSameTypeAs, api.ErrorInvalidRequest(fmt.Errorf("")))
+		})
+	})
+
+	Convey("With incorrect targets errors", t, func() {
+		graphiteLocalSrc := mock_metric_source.NewMockMetricSource(mockCtrl)
+		graphiteRemoteSrc := mock_metric_source.NewMockMetricSource(mockCtrl)
+		prometheusSrc := mock_metric_source.NewMockMetricSource(mockCtrl)
+		allSourceProvider := metricSource.CreateTestMetricSourceProvider(graphiteLocalSrc, graphiteRemoteSrc, prometheusSrc)
+
+		graphiteLocalSrc.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+		graphiteRemoteSrc.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+		prometheusSrc.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+
+		triggerWarnValue := 0.0
+		triggerErrorValue := 1.0
+		ttlState := moira.TTLState("NODATA")
+		triggerDTO := dto.Trigger{
+			TriggerModel: dto.TriggerModel{
+				ID:             "test_id",
+				Name:           "Test trigger",
+				Desc:           new(string),
+				Targets:        []string{"foo.bar"},
+				WarnValue:      &triggerWarnValue,
+				ErrorValue:     &triggerErrorValue,
+				TriggerType:    "rising",
+				Tags:           []string{"Normal", "DevOps", "DevOpsGraphite-duty"},
+				TTLState:       &ttlState,
+				TTL:            moira.DefaultTTL,
+				Schedule:       &moira.ScheduleData{},
+				Expression:     "",
+				Patterns:       []string{},
+				ClusterId:      moira.DefaultCluster,
+				MuteNewMetrics: false,
+				AloneMetrics:   map[string]bool{},
+				CreatedAt:      &time.Time{},
+				UpdatedAt:      &time.Time{},
+				CreatedBy:      "",
+				UpdatedBy:      "anonymous",
+			},
+		}
+
+		Convey("for graphite remote", func() {
+			triggerDTO.TriggerSource = moira.GraphiteRemote
+			body, _ := json.Marshal(triggerDTO)
+
+			request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+			request.Header.Add("content-type", "application/json")
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+
+			testLogger, _ := logging.GetLogger("Test")
+
+			request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
+
+			var returnedErr error = remote.ErrRemoteTriggerResponse{
+				InternalError: fmt.Errorf(""),
+			}
+
+			graphiteRemoteSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(nil, returnedErr)
+
+			_, errRsp := getTriggerFromRequest(request)
+			So(errRsp, ShouldResemble, api.ErrorRemoteServerUnavailable(returnedErr))
+		})
+
+		Convey("for prometheus remote", func() {
+			triggerDTO.TriggerSource = moira.PrometheusRemote
+			body, _ := json.Marshal(triggerDTO)
+
+			Convey("with error type = bad_data got bad request", func() {
+				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+				request.Header.Add("content-type", "application/json")
+				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+
+				var returnedErr error = &prometheus.Error{
+					Type: prometheus.ErrBadData,
+				}
+
+				prometheusSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, returnedErr)
+
+				_, errRsp := getTriggerFromRequest(request)
+				So(errRsp, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", returnedErr)))
+			})
+
+			Convey("with other types internal server error is returned", func() {
+				otherTypes := []prometheus.ErrorType{
+					prometheus.ErrBadResponse,
+					prometheus.ErrCanceled,
+					prometheus.ErrClient,
+					prometheus.ErrExec,
+					prometheus.ErrTimeout,
+					prometheus.ErrServer,
+				}
+
+				for _, errType := range otherTypes {
+					request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+					request.Header.Add("content-type", "application/json")
+					request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+
+					var returnedErr error = &prometheus.Error{
+						Type: errType,
+					}
+
+					prometheusSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Return(nil, returnedErr)
+
+					_, errRsp := getTriggerFromRequest(request)
+					So(errRsp, ShouldResemble, api.ErrorInternalServer(returnedErr))
+				}
+			})
 		})
 	})
 }

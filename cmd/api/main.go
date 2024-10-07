@@ -58,6 +58,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err = applicationConfig.Web.validate(); err != nil {
+		fmt.Fprintf(os.Stderr, "Can not configure web config: %s\n", err.Error())
+		os.Exit(1)
+	}
+
 	apiConfig := applicationConfig.API.getSettings(
 		applicationConfig.ClustersMetricTTL(),
 		applicationConfig.Web.getFeatureFlags(),
