@@ -5,6 +5,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // BytesScanner allows to scan for subslices separated by separator.
@@ -249,4 +251,10 @@ func MergeToSorted[T Comparable](arr1, arr2 []T) ([]T, error) {
 	}
 
 	return merged, nil
+}
+
+// ValidateStruct is a default generic function that uses a validator to validate structure fields.
+func ValidateStruct(s any) error {
+	validator := validator.New()
+	return validator.Struct(s)
 }

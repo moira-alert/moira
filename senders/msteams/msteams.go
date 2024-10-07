@@ -29,15 +29,19 @@ const (
 	quotes            = "```"
 )
 
-var throttleWarningFact = Fact{
-	Name:  "Warning",
-	Value: "Please, *fix your system or tune this trigger* to generate less events.",
-}
+var (
+	throttleWarningFact = Fact{
+		Name:  "Warning",
+		Value: "Please, *fix your system or tune this trigger* to generate less events.",
+	}
 
-var headers = map[string]string{
-	"User-Agent":   "Moira",
-	"Content-Type": "application/json",
-}
+	headers = map[string]string{
+		"User-Agent":   "Moira",
+		"Content-Type": "application/json",
+	}
+
+	defaultClientTimeout = 30 * time.Second
+)
 
 // Structure that represents the MSTeams configuration in the YAML file.
 type config struct {
@@ -62,13 +66,18 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to msteams config: %w", err)
 	}
 
+	if err = moira.ValidateStruct(cfg); err != nil {
+		return fmt.Errorf("msteams config validation error: %w", err)
+	}
+
 	sender.logger = logger
 	sender.location = location
 	sender.frontURI = cfg.FrontURI
 	sender.maxEvents = cfg.MaxEvents
 	sender.client = &http.Client{
-		Timeout: time.Duration(30) * time.Second, //nolint
+		Timeout: defaultClientTimeout,
 	}
+
 	return nil
 }
 
