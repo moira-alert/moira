@@ -27,7 +27,7 @@ var pollerTimeout = 10 * time.Second
 // Structure that represents the Telegram configuration in the YAML file.
 type config struct {
 	ContactType string `mapstructure:"contact_type"`
-	APIToken    string `mapstructure:"api_token"`
+	APIToken    string `mapstructure:"api_token" validate:"required"`
 	FrontURI    string `mapstructure:"front_uri"`
 }
 
@@ -66,9 +66,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
 	}
 
-	if cfg.APIToken == "" {
-		return fmt.Errorf("can not read telegram api_token from config")
+	if err = moira.ValidateStruct(cfg); err != nil {
+		return fmt.Errorf("telegram config validation error: %w", err)
 	}
+
 	sender.apiToken = cfg.APIToken
 
 	emojiProvider := telegramEmojiProvider{}
@@ -80,8 +81,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  cfg.APIToken,
-		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
+		Token:   cfg.APIToken,
+		Poller:  &telebot.LongPoller{Timeout: pollerTimeout},
+		OnError: sender.customOnErrorFunc,
 	})
 	if err != nil {
 		return sender.removeTokenFromError(err)
@@ -122,4 +124,14 @@ func (sender *Sender) runTelebot(contactType string) {
 
 func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
+}
+
+const errorInsideTelebotMsg = "Error inside telebot"
+
+func (sender *Sender) customOnErrorFunc(err error, _ telebot.Context) {
+	err = sender.removeTokenFromError(err)
+
+	sender.logger.Warning().
+		Error(err).
+		Msg(errorInsideTelebotMsg)
 }

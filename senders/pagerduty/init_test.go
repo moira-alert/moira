@@ -37,6 +37,7 @@ func TestInit(t *testing.T) {
 			So(sender.imageStoreConfigured, ShouldResemble, true)
 			So(sender.imageStore, ShouldResemble, imageStore)
 		})
+
 		Convey("Wrong image_store name", func() {
 			senderSettings := map[string]interface{}{
 				"front_uri":   "http://moira.uri",
@@ -46,6 +47,7 @@ func TestInit(t *testing.T) {
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})
+
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
 			senderSettings := map[string]interface{}{

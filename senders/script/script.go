@@ -15,7 +15,7 @@ import (
 
 // Structure that represents the Script configuration in the YAML file.
 type config struct {
-	Exec string `mapstructure:"exec"`
+	Exec string `mapstructure:"exec" validate:"required"`
 }
 
 // Sender implements moira sender interface via script execution.
@@ -38,6 +38,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
+	}
+
+	if err = moira.ValidateStruct(cfg); err != nil {
+		return fmt.Errorf("script config validation error: %w", err)
 	}
 
 	_, _, err = parseExec(cfg.Exec)
