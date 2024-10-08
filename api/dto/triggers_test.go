@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,6 +19,52 @@ import (
 )
 
 func TestTriggerValidation(t *testing.T) {
+	Convey("Test trigger name and tags", t, func() {
+		trigger := Trigger{
+			TriggerModel: TriggerModel{},
+		}
+
+		limit := api.GetTestLimitsConfig()
+
+		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
+		request.Header.Set("Content-Type", "application/json")
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limit))
+
+		Convey("with empty targets", func() {
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTargetsRequired})
+		})
+
+		trigger.Targets = []string{"foo.bar"}
+
+		Convey("with empty tag in tag list", func() {
+			trigger.Tags = []string{""}
+
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTagsRequired})
+		})
+
+		trigger.Tags = append(trigger.Tags, "tag1")
+
+		Convey("with empty Name", func() {
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTriggerNameRequired})
+		})
+
+		Convey("with too long Name", func() {
+			trigger.Name = strings.Repeat("ё", limit.Trigger.MaxNameSize+1)
+
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{
+				ValidationError: fmt.Errorf("trigger name too long, should not be greater than %d symbols", limit.Trigger.MaxNameSize),
+			})
+		})
+	})
+
 	Convey("Tests targets, values and expression validation", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -31,6 +78,7 @@ func TestTriggerValidation(t *testing.T) {
 		request.Header.Set("Content-Type", "application/json")
 		ctx := request.Context()
 		ctx = context.WithValue(ctx, middleware.ContextKey("metricSourceProvider"), sourceProvider)
+		ctx = context.WithValue(ctx, middleware.ContextKey("limits"), api.GetTestLimitsConfig())
 		request = request.WithContext(ctx)
 
 		desc := "Graphite ClickHouse"
@@ -203,19 +251,19 @@ func TestTriggerValidation(t *testing.T) {
 				trigger.AloneMetrics = map[string]bool{"ttt": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errBadAloneMetricName})
 			})
 			Convey("have more than 1 metric name but only 1 need", func() {
 				trigger.AloneMetrics = map[string]bool{"t1 t2": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errBadAloneMetricName})
 			})
 			Convey("have target higher than total amount of targets", func() {
 				trigger.AloneMetrics = map[string]bool{"t3": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errAloneMetricTargetIndexOutOfRange})
 			})
 		})
 
@@ -237,7 +285,7 @@ func TestTriggerValidation(t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				fetchResult.EXPECT().GetPatterns().Return([]string{"*"}, nil).AnyTimes()
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed})
 			})
 		})
 	})

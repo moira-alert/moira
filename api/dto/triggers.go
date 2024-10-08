@@ -2,11 +2,13 @@
 package dto
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+	"unicode/utf8"
 
 	"github.com/moira-alert/moira/templating"
 
@@ -19,8 +21,26 @@ import (
 
 var targetNameRegex = regexp.MustCompile("^t\\d+$")
 
-// ErrBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
-var ErrBadAloneMetricName = fmt.Errorf("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
+var (
+	// errBadAloneMetricName is used when any key in map TriggerModel.AloneMetric doesn't match targetNameRegex.
+	errBadAloneMetricName = errors.New("alone metrics' target name must match the pattern: ^t\\d+$, for example: 't1'")
+
+	// errTargetsRequired is returned when there is no targets in Trigger.
+	errTargetsRequired = errors.New("targets are required")
+
+	// errTagsRequired is returned when there is no tags in Trigger.
+	errTagsRequired = errors.New("tags are required")
+
+	// errTriggerNameRequired is returned when there is empty Name in Trigger.
+	errTriggerNameRequired = errors.New("trigger name is required")
+
+	// errAloneMetricTargetIndexOutOfRange is returned when target index is out of range. Example: if we have target "t1",
+	// then "1" is a target index.
+	errAloneMetricTargetIndexOutOfRange = errors.New("alone metrics target index should be in range from 1 to length of targets")
+
+	// errAsteriskPatternNotAllowed is returned then one of Trigger.Patterns contain only "*".
+	errAsteriskPatternNotAllowed = errors.New("pattern \"*\" is not allowed to use")
+)
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
 var asteriskPattern = "*"
@@ -152,15 +172,22 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 func (trigger *Trigger) Bind(request *http.Request) error {
 	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
-		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("targets is required")}
+		return api.ErrInvalidRequestContent{ValidationError: errTargetsRequired}
 	}
 
 	if len(trigger.Tags) == 0 {
-		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("tags is required")}
+		return api.ErrInvalidRequestContent{ValidationError: errTagsRequired}
 	}
 
 	if trigger.Name == "" {
-		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("trigger name is required")}
+		return api.ErrInvalidRequestContent{ValidationError: errTriggerNameRequired}
+	}
+
+	limits := middleware.GetLimits(request)
+	if utf8.RuneCountInString(trigger.Name) > limits.Trigger.MaxNameSize {
+		return api.ErrInvalidRequestContent{
+			ValidationError: fmt.Errorf("trigger name too long, should not be greater than %d symbols", limits.Trigger.MaxNameSize),
+		}
 	}
 
 	if err := checkWarnErrorExpression(trigger); err != nil {
@@ -173,7 +200,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	for targetName := range trigger.AloneMetrics {
 		if !targetNameRegex.MatchString(targetName) {
-			return api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName}
+			return api.ErrInvalidRequestContent{ValidationError: errBadAloneMetricName}
 		}
 
 		targetIndexStr := targetName[1:]
@@ -183,7 +210,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		}
 
 		if targetIndex < 0 || targetIndex > len(trigger.Targets) {
-			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")}
+			return api.ErrInvalidRequestContent{ValidationError: errAloneMetricTargetIndexOutOfRange}
 		}
 	}
 
@@ -224,7 +251,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
 	for _, pattern := range trigger.Patterns {
 		if pattern == asteriskPattern {
-			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")}
+			return api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed}
 		}
 	}
 
