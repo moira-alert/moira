@@ -3,9 +3,9 @@ package local
 import (
 	"context"
 	"errors"
+	"fmt"
 	"runtime/debug"
 
-	"github.com/ansel1/merry"
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -14,139 +14,75 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-type evaluator struct {
-	database moira.Database
-	metrics  []string
+type evalCtx struct {
+	from  int64
+	until int64
 }
 
-func (eval *evaluator) fetchAndEval(target string, from, until int64, result *FetchResult) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = ErrEvaluateTargetFailedWithPanic{
-				target:         target,
-				recoverMessage: r,
-				stackRecord:    debug.Stack(),
-			}
-		}
-	}()
-
-	exp, err := eval.parse(target)
+func (ctx *evalCtx) fetchAndEval(database moira.Database, target string, result *FetchResult) error {
+	exp, err := ctx.parse(target)
 	if err != nil {
 		return err
 	}
 
-	values := make(map[parser.MetricRequest][]*types.MetricData)
-
-	fetchedMetrics, err := expr.FetchAndEvalExp(context.Background(), eval, exp, from, until, values)
+	fetchedMetrics, err := ctx.getMetricsData(database, exp)
 	if err != nil {
-		return merry.Unwrap(err)
+		return err
 	}
 
-	eval.writeResult(exp, fetchedMetrics, result)
+	commonStep := fetchedMetrics.calculateCommonStep()
+	ctx.scaleToCommonStep(commonStep, fetchedMetrics)
+
+	rewritten, newTargets, err := ctx.rewriteExpr(exp, fetchedMetrics)
+	if err != nil {
+		return err
+	}
+
+	if rewritten {
+		for _, newTarget := range newTargets {
+			err = ctx.fetchAndEvalNoRewrite(database, newTarget, result)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	metricsData, err := ctx.eval(target, exp, fetchedMetrics)
+	if err != nil {
+		return err
+	}
+
+	ctx.writeResult(exp, fetchedMetrics, metricsData, result)
 
 	return nil
 }
 
-// Fetch is an implementation of Evaluator interface from carbonapi.
-// It returns a map the metrics requested in the current invocation, scaled to a common step.
-func (eval *evaluator) Fetch(
-	ctx context.Context,
-	exprs []parser.Expr,
-	from, until int64,
-	values map[parser.MetricRequest][]*types.MetricData,
-) (map[parser.MetricRequest][]*types.MetricData, error) {
-	fetch := newFetchCtx(0, 0)
-
-	for _, exp := range exprs {
-		ms := exp.Metrics(from, until)
-		if err := fetch.getMetricsData(eval.database, ms); err != nil {
-			return nil, err
-		}
-	}
-
-	fetch.scaleToCommonStep()
-
-	eval.metrics = append(eval.metrics, fetch.fetchedMetrics.metrics...)
-
-	return fetch.fetchedMetrics.metricsMap, nil
-}
-
-// Eval is an implementation of Evaluator interface from carbonapi.
-// It uses the raw data within the values map being passed into it to in order to evaluate the input expression.
-func (eval *evaluator) Eval(
-	ctx context.Context,
-	exp parser.Expr,
-	from, until int64,
-	values map[parser.MetricRequest][]*types.MetricData,
-) (results []*types.MetricData, err error) {
-	rewritten, newTargets, err := expr.RewriteExpr(ctx, eval, exp, from, until, values)
+func (ctx *evalCtx) fetchAndEvalNoRewrite(database moira.Database, target string, result *FetchResult) error {
+	exp, err := ctx.parse(target)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if rewritten {
-		return eval.evalRewritten(ctx, newTargets, from, until, values)
-	}
-
-	results, err = expr.EvalExpr(ctx, eval, exp, from, until, values)
+	fetchedMetrics, err := ctx.getMetricsData(database, exp)
 	if err != nil {
-		if errors.Is(err, parser.ErrMissingTimeseries) {
-			err = nil
-		} else if isErrUnknownFunction(err) {
-			err = ErrorUnknownFunction(err)
-		} else {
-			err = ErrEvalExpr{
-				target:        exp.ToString(),
-				internalError: err,
-			}
-		}
+		return err
 	}
 
-	return results, err
+	commonStep := fetchedMetrics.calculateCommonStep()
+	ctx.scaleToCommonStep(commonStep, fetchedMetrics)
+
+	metricsData, err := ctx.eval(target, exp, fetchedMetrics)
+	if err != nil {
+		return err
+	}
+
+	ctx.writeResult(exp, fetchedMetrics, metricsData, result)
+
+	return nil
 }
 
-func (eval *evaluator) evalRewritten(
-	ctx context.Context,
-	newTargets []string,
-	from, until int64,
-	values map[parser.MetricRequest][]*types.MetricData,
-) (results []*types.MetricData, err error) {
-	for _, target := range newTargets {
-		exp, _, err := parser.ParseExpr(target)
-		if err != nil {
-			return nil, err
-		}
-
-		var targetValues map[parser.MetricRequest][]*types.MetricData
-		targetValues, err = eval.Fetch(ctx, []parser.Expr{exp}, from, until, values)
-		if err != nil {
-			return nil, err
-		}
-
-		result, err := eval.Eval(ctx, exp, from, until, targetValues)
-		if err != nil {
-			return nil, err
-		}
-
-		results = append(results, result...)
-	}
-
-	return results, nil
-}
-
-func (eval *evaluator) writeResult(exp parser.Expr, metricsData []*types.MetricData, result *FetchResult) {
-	result.Metrics = append(result.Metrics, eval.metrics...)
-	for _, mr := range exp.Metrics(0, 0) {
-		result.Patterns = append(result.Patterns, mr.Metric)
-	}
-
-	for _, metricData := range metricsData {
-		md := newMetricDataFromGraphite(metricData, len(result.Metrics) != len(result.Patterns))
-		result.MetricsData = append(result.MetricsData, md)
-	}
-}
-
-func (eval *evaluator) parse(target string) (parser.Expr, error) {
+func (ctx *evalCtx) parse(target string) (parser.Expr, error) {
 	parsedExpr, _, err := parser.ParseExpr(target)
 	if err != nil {
 		return nil, ErrParseExpr{
@@ -157,71 +93,109 @@ func (eval *evaluator) parse(target string) (parser.Expr, error) {
 	return parsedExpr, nil
 }
 
-type fetchCtx struct {
-	from           int64
-	until          int64
-	fetchedMetrics *fetchedMetrics
-}
+func (ctx *evalCtx) getMetricsData(database moira.Database, parsedExpr parser.Expr) (*fetchedMetrics, error) {
+	metricRequests := parsedExpr.Metrics()
 
-func newFetchCtx(from, until int64) *fetchCtx {
-	return &fetchCtx{
-		from,
-		until,
-		&fetchedMetrics{
-			metricsMap: make(map[parser.MetricRequest][]*types.MetricData),
-			metrics:    make([]string, 0),
-		},
-	}
-}
+	metrics := make([]string, 0)
+	metricsMap := make(map[parser.MetricRequest][]*types.MetricData)
 
-func (ctx *fetchCtx) getMetricsData(database moira.Database, metricRequests []parser.MetricRequest) error {
 	fetchData := fetchData{database}
 
 	for _, mr := range metricRequests {
-		// Other fields are used in carbon for database side consolidations
-		request := parser.MetricRequest{
-			Metric: mr.Metric,
-			From:   mr.From,
-			Until:  mr.Until,
-		}
-
 		from := mr.From + ctx.from
 		until := mr.Until + ctx.until
 
 		metricNames, err := fetchData.fetchMetricNames(mr.Metric)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		timer := newTimerRoundingTimestamps(from, until, metricNames.retention)
+		timer := NewTimerRoundingTimestamps(from, until, metricNames.retention)
 
 		metricsData, err := fetchData.fetchMetricValues(mr.Metric, metricNames, timer)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		ctx.fetchedMetrics.metricsMap[request] = metricsData
-		ctx.fetchedMetrics.metrics = append(ctx.fetchedMetrics.metrics, metricNames.metrics...)
+		metricsMap[mr] = metricsData
+		metrics = append(metrics, metricNames.metrics...)
 	}
-	return nil
+	return &fetchedMetrics{metricsMap, metrics}, nil
 }
 
-func (ctx *fetchCtx) scaleToCommonStep() {
-	retention := ctx.fetchedMetrics.calculateCommonStep()
+func (ctx *evalCtx) scaleToCommonStep(retention int64, fetchedMetrics *fetchedMetrics) {
+	from, until := RoundTimestamps(ctx.from, ctx.until, retention)
+	ctx.from, ctx.until = from, until
 
 	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
-	for metricRequest, metricData := range ctx.fetchedMetrics.metricsMap {
-		metricRequest.From += ctx.from
-		metricRequest.Until += ctx.until
+	for metricRequest, metricData := range fetchedMetrics.metricsMap {
+		metricRequest.From += from
+		metricRequest.Until += until
 
 		metricData = helper.ScaleToCommonStep(metricData, retention)
 		metricMap[metricRequest] = metricData
 	}
 
-	ctx.fetchedMetrics.metricsMap = metricMap
+	fetchedMetrics.metricsMap = metricMap
 }
 
-func newMetricDataFromGraphite(md *types.MetricData, wildcard bool) metricSource.MetricData {
+func (ctx *evalCtx) rewriteExpr(parsedExpr parser.Expr, metrics *fetchedMetrics) (bool, []string, error) {
+	rewritten, newTargets, err := expr.RewriteExpr(
+		context.Background(),
+		parsedExpr,
+		ctx.from,
+		ctx.until,
+		metrics.metricsMap,
+	)
+
+	if err != nil && !errors.Is(err, parser.ErrMissingTimeseries) {
+		return false, nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
+	}
+	return rewritten, newTargets, nil
+}
+
+func (ctx *evalCtx) eval(target string, parsedExpr parser.Expr, metrics *fetchedMetrics) (result []*types.MetricData, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			result = nil
+			err = ErrEvaluateTargetFailedWithPanic{
+				target:         target,
+				recoverMessage: r,
+				stackRecord:    debug.Stack(),
+			}
+		}
+	}()
+
+	result, err = expr.EvalExpr(context.Background(), parsedExpr, ctx.from, ctx.until, metrics.metricsMap)
+	if err != nil {
+		if errors.Is(err, parser.ErrMissingTimeseries) {
+			err = nil
+		} else if isErrUnknownFunction(err) {
+			err = ErrorUnknownFunction(err)
+		} else {
+			err = ErrEvalExpr{
+				target:        target,
+				internalError: err,
+			}
+		}
+	}
+
+	return result, err
+}
+
+func (ctx *evalCtx) writeResult(exp parser.Expr, metrics *fetchedMetrics, metricsData []*types.MetricData, result *FetchResult) {
+	for _, metricData := range metricsData {
+		md := newMetricDataFromGraphit(metricData, metrics.hasWildcard())
+		result.MetricsData = append(result.MetricsData, md)
+	}
+
+	result.Metrics = append(result.Metrics, metrics.metrics...)
+	for _, mr := range exp.Metrics() {
+		result.Patterns = append(result.Patterns, mr.Metric)
+	}
+}
+
+func newMetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.MetricData {
 	return metricSource.MetricData{
 		Name:      md.Name,
 		StartTime: md.StartTime,
@@ -235,6 +209,10 @@ func newMetricDataFromGraphite(md *types.MetricData, wildcard bool) metricSource
 type fetchedMetrics struct {
 	metricsMap map[parser.MetricRequest][]*types.MetricData
 	metrics    []string
+}
+
+func (m *fetchedMetrics) hasWildcard() bool {
+	return len(m.metrics) == 0
 }
 
 func (m *fetchedMetrics) calculateCommonStep() int64 {

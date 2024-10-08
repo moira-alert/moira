@@ -14,26 +14,26 @@ func TestTimerNumberOfTimeSlots(t *testing.T) {
 	Convey("Given `from` is divisible by retention", t, func() {
 		for _, from := range []int64{0, retention} {
 			until := from + retention*steps
-			timer := newTimerRoundingTimestamps(from, until, retention)
+			timer := NewTimerRoundingTimestamps(from, until, retention)
 
-			So(timer.numberOfTimeSlots(), ShouldEqual, steps+1)
+			So(timer.NumberOfTimeSlots(), ShouldEqual, steps+1)
 		}
 	})
 
 	Convey("Given `from` is divisible by retention", t, func() {
 		from := int64(0)
 		until := int64(0)
-		timer := newTimerRoundingTimestamps(from, until, retention)
+		timer := NewTimerRoundingTimestamps(from, until, retention)
 
-		So(timer.numberOfTimeSlots(), ShouldEqual, 1)
+		So(timer.NumberOfTimeSlots(), ShouldEqual, 1)
 	})
 
 	Convey("Given `from` is not divisible by retention", t, func() {
 		for from := int64(1); from < retention; from++ {
 			until := from + retention*steps
-			timer := newTimerRoundingTimestamps(from, until, retention)
+			timer := NewTimerRoundingTimestamps(from, until, retention)
 
-			So(timer.numberOfTimeSlots(), ShouldEqual, steps)
+			So(timer.NumberOfTimeSlots(), ShouldEqual, steps)
 		}
 	})
 }
@@ -43,7 +43,7 @@ func TestTimerGetTimeSlot(t *testing.T) {
 		retention := int64(10)
 		from := int64(10)
 		until := int64(60)
-		timer := newTimerRoundingTimestamps(from, until, retention)
+		timer := NewTimerRoundingTimestamps(from, until, retention)
 
 		testCases := []struct {
 			timestamp int64
@@ -61,7 +61,7 @@ func TestTimerGetTimeSlot(t *testing.T) {
 		}
 
 		for _, testCase := range testCases {
-			actual := timer.getTimeSlot(testCase.timestamp)
+			actual := timer.GetTimeSlot(testCase.timestamp)
 			So(actual, ShouldEqual, testCase.timeSlot)
 		}
 	})
