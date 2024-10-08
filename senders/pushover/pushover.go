@@ -19,7 +19,7 @@ const (
 
 // Structure that represents the Pushover configuration in the YAML file.
 type config struct {
-	APIToken string `mapstructure:"api_token"`
+	APIToken string `mapstructure:"api_token" validate:"required"`
 	FrontURI string `mapstructure:"front_uri"`
 }
 
@@ -41,14 +41,16 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to pushover config: %w", err)
 	}
 
-	sender.apiToken = cfg.APIToken
-	if sender.apiToken == "" {
-		return fmt.Errorf("can not read pushover api_token from config")
+	if err = moira.ValidateStruct(cfg); err != nil {
+		return fmt.Errorf("pushover config validation error: %w", err)
 	}
+
+	sender.apiToken = cfg.APIToken
 	sender.client = pushover_client.New(sender.apiToken)
 	sender.logger = logger
 	sender.frontURI = cfg.FrontURI
 	sender.location = location
+
 	return nil
 }
 
