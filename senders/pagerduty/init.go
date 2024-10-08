@@ -39,5 +39,6 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.logger = logger
 	sender.location = location
+
 	return nil
 }

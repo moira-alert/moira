@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"go.uber.org/mock/gomock"
-
+	"github.com/go-playground/validator/v10"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestInit(t *testing.T) {
@@ -19,9 +19,12 @@ func TestInit(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
 		sender := Sender{}
-		Convey("Empty map", func() {
+
+		validatorErr := validator.ValidationErrors{}
+
+		Convey("With empty api_token", func() {
 			err := sender.Init(map[string]interface{}{}, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("can not read telegram api_token from config"))
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{})
 		})
 
