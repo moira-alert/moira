@@ -21,11 +21,12 @@ type metricMock struct {
 }
 
 type testCase struct {
-	metrics   map[string]metricMock
-	from      int64
-	retention int64
-	target    string
-	expected  map[string][]float64
+	metrics           map[string]metricMock
+	from              int64
+	retention         int64
+	target            string
+	expected          map[string][]float64
+	expectedWildcards map[string]bool
 }
 
 func saveMetrics(database moira.Database, metrics map[string]metricMock, now, retention int64) error {
@@ -42,7 +43,7 @@ func saveMetrics(database moira.Database, metrics map[string]metricMock, now, re
 
 		metricsMap := make(map[string]*moira.MatchedMetric, len(metrics))
 		for name, metric := range metrics {
-			if len(metric.values) < i {
+			if len(metric.values) <= i {
 				continue
 			}
 
@@ -62,6 +63,93 @@ func saveMetrics(database moira.Database, metrics map[string]metricMock, now, re
 		}
 	}
 	return nil
+}
+
+func TestLocalSourceWithDatabaseWildcards(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true) // nolint: govet
+	database := redis.NewTestDatabase(logger)
+	localSource := Create(database)
+
+	defer database.Flush()
+
+	retention := int64(60)
+	now := floorToMultiplier(time.Now().Unix(), retention) - 2
+
+	testCases := []testCase{
+		{
+			metrics: map[string]metricMock{
+				"metric1": {
+					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
+					patterns: []string{"pattern"},
+				},
+				"metric2": {
+					values:   []float64{5.0, 4.0, 3.0, 2.0, 1.0},
+					patterns: []string{"pattern"},
+				},
+			},
+			from:      now - retention*4,
+			retention: retention,
+			target:    "pattern",
+			expectedWildcards: map[string]bool{
+				"metric1": false,
+				"metric2": false,
+			},
+		},
+		{
+			metrics: map[string]metricMock{
+				"metric1": {
+					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
+					patterns: []string{"pattern1"},
+				},
+				"metric2": {
+					values:   []float64{1.0, 2.0, 3.0, 4.0, 5.0},
+					patterns: []string{"pattern1"},
+				},
+			},
+			from:      now - retention*4,
+			retention: retention,
+			target:    "divideSeries(pattern1, pattern2)",
+			expectedWildcards: map[string]bool{
+				"divideSeries(metric1,pattern2)": false,
+				"divideSeries(metric2,pattern2)": false,
+			},
+			expected: map[string][]float64{
+				"divideSeries(metric1,pattern2)": []float64{},
+				"divideSeries(metric2,pattern2)": []float64{},
+			},
+		},
+		{
+			metrics:   map[string]metricMock{},
+			from:      now - retention*4,
+			retention: retention,
+			target:    "pattern",
+			expectedWildcards: map[string]bool{
+				"pattern": true,
+			},
+		},
+	}
+
+	Convey("Run test cases", t, func() {
+		for idx, testCase := range testCases {
+			Convey(fmt.Sprintf("suite %d, Target '%s'", idx, testCase.target), func() {
+				database.Flush()
+
+				err := saveMetrics(database, testCase.metrics, now, testCase.retention)
+				So(err, ShouldBeNil)
+
+				result, err := localSource.Fetch(testCase.target, testCase.from, now, true)
+				So(err, ShouldBeNil)
+
+				resultData := result.GetMetricsData()
+
+				wildcardResultMap := map[string]bool{}
+				for _, data := range resultData {
+					wildcardResultMap[data.Name] = data.Wildcard
+				}
+				So(wildcardResultMap, shouldEqualIfNaNsEqual, testCase.expectedWildcards)
+			})
+		}
+	})
 }
 
 func TestLocalSourceWithDatabase(t *testing.T) {

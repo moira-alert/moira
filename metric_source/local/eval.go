@@ -141,7 +141,7 @@ func (eval *evaluator) writeResult(exp parser.Expr, metricsData []*types.MetricD
 	}
 
 	for _, metricData := range metricsData {
-		md := newMetricDataFromGraphite(metricData, len(result.Metrics) != len(result.Patterns))
+		md := newMetricDataFromGraphite(metricData, len(result.Metrics) == 0)
 		result.MetricsData = append(result.MetricsData, md)
 	}
 }
