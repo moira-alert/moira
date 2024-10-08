@@ -1,33 +1,90 @@
 package mail
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestFillSettings(t *testing.T) {
-	Convey("Empty map", t, func() {
-		sender := Sender{}
-		err := sender.fillSettings(map[string]interface{}{}, nil, nil, "")
-		So(err, ShouldResemble, fmt.Errorf("mail_from can't be empty"))
-		So(sender, ShouldResemble, Sender{})
-	})
+const (
+	defaultMailFrom     = "test-mail-from"
+	defaultSMTPHost     = "test-smtp-host"
+	defaultSMTPPort     = 80
+	defaultSMTPHello    = "test-smtp-hello"
+	defaultInsecureTLS  = true
+	defaultFrontURI     = "test-front-uri"
+	defaultSMTPPass     = "test-smtp-pass"
+	defaultSMTPUser     = "test-smtp-user"
+	defaultTemplateFile = "test-template-file"
+)
 
-	Convey("Has From", t, func() {
+func TestFillSettings(t *testing.T) {
+	Convey("Test fillSettings", t, func() {
 		sender := Sender{}
-		settings := map[string]interface{}{"mail_from": "123"}
-		Convey("No username", func() {
-			err := sender.fillSettings(settings, nil, nil, "")
-			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{From: "123", Username: "123"})
+
+		validatorErr := validator.ValidationErrors{}
+
+		Convey("With empty mail_from", func() {
+			senderSettings := map[string]interface{}{
+				"smtp_host": defaultSMTPHost,
+				"smtp_port": defaultSMTPPort,
+			}
+
+			err := sender.fillSettings(senderSettings, nil, nil, "")
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
+			So(sender, ShouldResemble, Sender{})
 		})
-		Convey("Has username", func() {
-			settings["smtp_user"] = "user"
-			err := sender.fillSettings(settings, nil, nil, "")
+
+		Convey("With empty smpt_host", func() {
+			senderSettings := map[string]interface{}{
+				"mail_from": defaultMailFrom,
+				"smtp_port": defaultSMTPPort,
+			}
+
+			err := sender.fillSettings(senderSettings, nil, nil, "")
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
+			So(sender, ShouldResemble, Sender{})
+		})
+
+		Convey("With empty smpt_port", func() {
+			senderSettings := map[string]interface{}{
+				"mail_from": defaultMailFrom,
+				"smtp_host": defaultSMTPHost,
+			}
+
+			err := sender.fillSettings(senderSettings, nil, nil, "")
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
+			So(sender, ShouldResemble, Sender{})
+		})
+
+		Convey("With full settings", func() {
+			senderSettings := map[string]interface{}{
+				"mail_from":     defaultMailFrom,
+				"smtp_host":     defaultSMTPHost,
+				"smtp_port":     defaultSMTPPort,
+				"smtp_hello":    defaultSMTPHello,
+				"insecure_tls":  defaultInsecureTLS,
+				"front_uri":     defaultFrontURI,
+				"smtp_user":     defaultSMTPUser,
+				"smtp_pass":     defaultSMTPPass,
+				"template_file": defaultTemplateFile,
+			}
+
+			err := sender.fillSettings(senderSettings, nil, nil, "")
 			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{From: "123", Username: "user"})
+			So(sender, ShouldResemble, Sender{
+				From:         defaultMailFrom,
+				SMTPHello:    defaultSMTPHello,
+				SMTPHost:     defaultSMTPHost,
+				SMTPPort:     80,
+				FrontURI:     defaultFrontURI,
+				InsecureTLS:  defaultInsecureTLS,
+				Username:     defaultSMTPUser,
+				Password:     defaultSMTPPass,
+				TemplateFile: defaultTemplateFile,
+			})
 		})
 	})
 }
