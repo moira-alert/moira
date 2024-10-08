@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-// There is a duplicate of this constant in database package to prevent cyclic dependencies.
 const NotificationsLimitUnlimited = int64(-1)
 
 // Config is sending settings including log settings.

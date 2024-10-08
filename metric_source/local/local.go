@@ -33,7 +33,7 @@ func (local *Local) IsConfigured() (bool, error) {
 	return true, nil
 }
 
-// IsAvailable always returns true. It easy to configure local source =).
+// IsConfigured always returns true. It easy to configure local source =).
 func (local *Local) IsAvailable() (bool, error) {
 	return true, nil
 }
@@ -45,9 +45,9 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 	from = moira.MaxInt64(from, until-local.database.GetMetricsTTLSeconds())
 
 	result := CreateEmptyFetchResult()
-	eval := evaluator{local.database, make([]string, 0)}
+	ctx := evalCtx{from, until}
 
-	err := eval.fetchAndEval(target, from, until, result)
+	err := ctx.fetchAndEval(local.database, target, result)
 	if err != nil {
 		return nil, err
 	}
