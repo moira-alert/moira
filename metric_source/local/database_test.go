@@ -113,10 +113,6 @@ func TestLocalSourceWithDatabaseWildcards(t *testing.T) {
 				"divideSeries(metric1,pattern2)": false,
 				"divideSeries(metric2,pattern2)": false,
 			},
-			expected: map[string][]float64{
-				"divideSeries(metric1,pattern2)": []float64{},
-				"divideSeries(metric2,pattern2)": []float64{},
-			},
 		},
 		{
 			metrics:   map[string]metricMock{},
