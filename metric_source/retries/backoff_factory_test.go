@@ -2,6 +2,7 @@ package retries
 
 import (
 	"github.com/cenkalti/backoff/v4"
+	"sync"
 	"testing"
 	"time"
 
@@ -24,7 +25,7 @@ func TestExponentialBackoffFactory(t *testing.T) {
 			MaxInterval:         testMaxInterval,
 		}
 
-		Convey("with maxRetriesCount != 0 and MaxElapsedTime = 0", func() {
+		Convey("with MaxRetriesCount != 0 and MaxElapsedTime = 0", func() {
 			Convey("with retry interval always lower then config.MaxInterval", func() {
 				conf.MaxRetriesCount = 3
 				defer func() {
@@ -73,6 +74,93 @@ func TestExponentialBackoffFactory(t *testing.T) {
 
 				for i := range expectedBackoffs {
 					So(b.NextBackOff(), ShouldEqual, expectedBackoffs[i])
+				}
+			})
+		})
+
+		Convey("with MaxRetriesCount = 0 and MaxElapsedTime != 0", func() {
+			conf.MaxElapsedTime = time.Second
+			defer func() {
+				conf.MaxElapsedTime = 0
+			}()
+
+			once := sync.Once{}
+
+			expectedBackoffs := []time.Duration{
+				testInitialInterval,
+				backoff.Stop,
+				backoff.Stop,
+				backoff.Stop,
+			}
+
+			factory := NewExponentialBackoffFactory(conf)
+
+			b := factory.NewBackOff()
+
+			for i := range expectedBackoffs {
+				So(b.NextBackOff(), ShouldEqual, expectedBackoffs[i])
+				once.Do(func() {
+					time.Sleep(conf.MaxElapsedTime)
+				})
+			}
+		})
+
+		Convey("with MaxRetriesCount != 0 and MaxElapsedTime != 0", func() {
+			Convey("MaxRetriesCount performed retries before MaxElapsedTime passed", func() {
+				conf.MaxElapsedTime = time.Second
+				conf.MaxRetriesCount = 6
+				defer func() {
+					conf.MaxElapsedTime = 0
+					conf.MaxRetriesCount = 0
+				}()
+
+				expectedBackoffs := []time.Duration{
+					testInitialInterval,
+					testInitialInterval * testMultiplier,
+					testInitialInterval * 4.0,
+					testMaxInterval,
+					testMaxInterval,
+					testMaxInterval,
+					backoff.Stop,
+					backoff.Stop,
+					backoff.Stop,
+				}
+
+				factory := NewExponentialBackoffFactory(conf)
+
+				b := factory.NewBackOff()
+
+				for i := range expectedBackoffs {
+					So(b.NextBackOff(), ShouldEqual, expectedBackoffs[i])
+				}
+			})
+
+			Convey("MaxElapsedTime passed before MaxRetriesCount performed", func() {
+				conf.MaxElapsedTime = time.Second
+				conf.MaxRetriesCount = 6
+				defer func() {
+					conf.MaxElapsedTime = 0
+					conf.MaxRetriesCount = 0
+				}()
+
+				expectedBackoffs := []time.Duration{
+					testInitialInterval,
+					backoff.Stop,
+					backoff.Stop,
+					backoff.Stop,
+				}
+
+				once := sync.Once{}
+
+				factory := NewExponentialBackoffFactory(conf)
+
+				b := factory.NewBackOff()
+
+				for i := range expectedBackoffs {
+					So(b.NextBackOff(), ShouldEqual, expectedBackoffs[i])
+					once.Do(func() {
+						time.Sleep(conf.MaxElapsedTime)
+					})
 				}
 			})
 		})
