@@ -4,23 +4,21 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
-// Retrier retries the given operation.
+// Retrier retries the given operation with given backoff.
 type Retrier[T any] interface {
-	Retry(op RetryableOperation[T]) (T, error)
+	// Retry the given operation until the op succeeds or op returns backoff.PermanentError or backoffPolicy returns backoff.Stop.
+	Retry(op RetryableOperation[T], backoffPolicy backoff.BackOff) (T, error)
 }
 
-type standardRetrier[T any] struct {
-	backoffFactory BackoffFactory
-}
+type standardRetrier[T any] struct{}
 
 // NewStandardRetrier returns standard retrier which will perform retries
 // according to backoff policy provided by BackoffFactory.
-func NewStandardRetrier[T any](backoffFactory BackoffFactory) Retrier[T] {
-	return standardRetrier[T]{
-		backoffFactory: backoffFactory,
-	}
+func NewStandardRetrier[T any]() Retrier[T] {
+	return standardRetrier[T]{}
 }
 
-func (r standardRetrier[T]) Retry(op RetryableOperation[T]) (T, error) {
-	return backoff.RetryWithData[T](op.DoRetryableOperation, r.backoffFactory.NewBackOff())
+// Retry the given operation until the op succeeds or op returns backoff.PermanentError or backoffPolicy returns backoff.Stop.
+func (r standardRetrier[T]) Retry(op RetryableOperation[T], backoffPolicy backoff.BackOff) (T, error) {
+	return backoff.RetryWithData[T](op.DoRetryableOperation, backoffPolicy)
 }

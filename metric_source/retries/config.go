@@ -2,6 +2,7 @@ package retries
 
 import "time"
 
+// Config for exponential backoff retries.
 type Config struct {
 	// InitialInterval between requests.
 	InitialInterval time.Duration
