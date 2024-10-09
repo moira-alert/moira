@@ -73,11 +73,12 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Trigger already exists", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
+		triggerId := uuid.Must(uuid.NewV4())
+		triggerModel := dto.TriggerModel{ID: triggerId.String()}
 		trigger := triggerModel.ToMoiraTrigger()
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID already exists")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID (%s) already exists", triggerId)))
 		So(resp, ShouldBeNil)
 	})
 
