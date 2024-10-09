@@ -232,6 +232,28 @@ type remoteCommon interface {
 	getRemoteCommon() *RemoteCommonConfig
 }
 
+// RetriesConfig is a settings for retry policy when performing requests to remote sources.
+// Stop retrying when ONE of the following conditions is satisfied:
+//   - Time passed since first try is greater than MaxElapsedTime;
+//   - Already MaxRetriesCount done.
+type RetriesConfig struct {
+	// InitialInterval between requests.
+	InitialInterval string `yaml:"initial_interval"`
+	// RandomizationFactor is used in exponential backoff to add some randomization
+	// when calculating next interval between requests.
+	// It will be used in multiplication like:
+	//	RandomizedInterval = RetryInterval * (random value in range [1 - RandomizationFactor, 1 + RandomizationFactor])
+	RandomizationFactor float64 `yaml:"randomization_factor"`
+	// Each new RetryInterval will be multiplied on Multiplier.
+	Multiplier float64 `yaml:"multiplier"`
+	// MaxInterval is the cap for RetryInterval. Note that it doesn't cap the RandomizedInterval.
+	MaxInterval string `yaml:"max_interval"`
+	// MaxElapsedTime caps the time passed from first try. If time passed is greater than MaxElapsedTime than stop retrying.
+	MaxElapsedTime string `yaml:"max_elapsed_time"`
+	// MaxRetriesCount is the amount of allowed retries. So at most MaxRetriesCount will be performed.
+	MaxRetriesCount int `yaml:"max_retries_count"`
+}
+
 // GraphiteRemoteConfig is remote graphite settings structure.
 type GraphiteRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
