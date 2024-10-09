@@ -327,7 +327,7 @@ func TestLocalSourceApplyByNode(t *testing.T) {
 					StopTime:  retentionUntil,
 					StepTime:  retention,
 					Values:    []float64{1, 2, 3, 4, 5},
-					Wildcard:  true,
+					Wildcard:  false,
 				},
 			},
 			Metrics: []string{
