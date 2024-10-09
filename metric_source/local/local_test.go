@@ -257,7 +257,7 @@ func TestLocalSourceFetchMultipleMetrics(t *testing.T) {
 					StopTime:  retentionUntil,
 					StepTime:  retention,
 					Values:    []float64{2, 2, 2, 2, 2},
-					Wildcard:  true,
+					Wildcard:  false,
 				},
 			},
 			Metrics:  metrics,
