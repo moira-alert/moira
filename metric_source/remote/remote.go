@@ -2,6 +2,7 @@ package remote
 
 import (
 	"fmt"
+	"github.com/moira-alert/moira/metric_source/retries"
 	"net/http"
 	"time"
 
@@ -38,9 +39,12 @@ func (err ErrRemoteUnavailable) Error() string {
 
 // Remote is implementation of MetricSource interface, which implements fetch metrics method from remote graphite installation.
 type Remote struct {
-	config *Config
-	client *http.Client
-	clock  moira.Clock
+	config                    *Config
+	client                    *http.Client
+	clock                     moira.Clock
+	retrier                   retries.Retrier[[]byte]
+	requestBackoffFactory     retries.BackoffFactory
+	healthcheckBackoffFactory retries.BackoffFactory
 }
 
 // Create configures remote metric source.
@@ -49,10 +53,25 @@ func Create(config *Config) (metricSource.MetricSource, error) {
 		return nil, fmt.Errorf("remote graphite URL should not be empty")
 	}
 
+	var (
+		requestBackoffFactory     retries.BackoffFactory
+		healthcheckBackoffFactory retries.BackoffFactory
+	)
+
+	requestBackoffFactory = retries.NewExponentialBackoffFactory(config.Retries)
+	if config.HealthcheckRetries != nil {
+		healthcheckBackoffFactory = retries.NewExponentialBackoffFactory(*config.HealthcheckRetries)
+	} else {
+		healthcheckBackoffFactory = requestBackoffFactory
+	}
+
 	return &Remote{
-		config: config,
-		client: &http.Client{Timeout: config.Timeout},
-		clock:  clock.NewSystemClock(),
+		config:                    config,
+		client:                    &http.Client{Timeout: config.Timeout},
+		clock:                     clock.NewSystemClock(),
+		retrier:                   retries.NewStandardRetrier[[]byte](),
+		requestBackoffFactory:     requestBackoffFactory,
+		healthcheckBackoffFactory: healthcheckBackoffFactory,
 	}, nil
 }
 
@@ -70,19 +89,9 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 		}
 	}
 
-	body, isRemoteAvailable, err := remote.makeRequestWithRetries(req, remote.config.Timeout, remote.config.RetrySeconds)
+	body, err := remote.makeRequest(req)
 	if err != nil {
-		if isRemoteAvailable {
-			return nil, ErrRemoteTriggerResponse{
-				InternalError: err,
-				Target:        target,
-			}
-		}
-
-		return nil, ErrRemoteUnavailable{
-			InternalError: err,
-			Target:        target,
-		}
+		return nil, internalErrToPublicErr(err, target)
 	}
 
 	resp, err := decodeBody(body)
@@ -112,8 +121,8 @@ func (remote *Remote) IsAvailable() (bool, error) {
 		return false, err
 	}
 
-	_, isRemoteAvailable, err := remote.makeRequestWithRetries(
-		req, remote.config.HealthCheckTimeout, remote.config.HealthCheckRetrySeconds)
+	_, err = remote.makeRequest(req)
+	err = internalErrToPublicErr(err, "")
 
-	return isRemoteAvailable, err
+	return !isRemoteUnavailable(err), err
 }

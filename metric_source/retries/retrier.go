@@ -12,8 +12,7 @@ type Retrier[T any] interface {
 
 type standardRetrier[T any] struct{}
 
-// NewStandardRetrier returns standard retrier which will perform retries
-// according to backoff policy provided by BackoffFactory.
+// NewStandardRetrier returns standard retrier.
 func NewStandardRetrier[T any]() Retrier[T] {
 	return standardRetrier[T]{}
 }

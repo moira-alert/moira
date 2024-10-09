@@ -1,6 +1,9 @@
 package remote
 
-import "time"
+import (
+	"github.com/moira-alert/moira/metric_source/retries"
+	"time"
+)
 
 // Config represents config from remote storage.
 type Config struct {
@@ -13,4 +16,6 @@ type Config struct {
 	RetrySeconds            []time.Duration
 	HealthCheckTimeout      time.Duration
 	HealthCheckRetrySeconds []time.Duration
+	Retries                 retries.Config
+	HealthcheckRetries      *retries.Config
 }
