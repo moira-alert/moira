@@ -251,7 +251,7 @@ type RetriesConfig struct {
 	// MaxElapsedTime caps the time passed from first try. If time passed is greater than MaxElapsedTime than stop retrying.
 	MaxElapsedTime string `yaml:"max_elapsed_time"`
 	// MaxRetriesCount is the amount of allowed retries. So at most MaxRetriesCount will be performed.
-	MaxRetriesCount int `yaml:"max_retries_count"`
+	MaxRetriesCount uint64 `yaml:"max_retries_count"`
 }
 
 // GraphiteRemoteConfig is remote graphite settings structure.
