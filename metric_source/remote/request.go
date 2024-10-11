@@ -48,12 +48,10 @@ type requestToRemoteGraphite struct {
 }
 
 func (r requestToRemoteGraphite) DoRetryableOperation() ([]byte, error) {
-	req := r.request
-	if r.requestTimeout > 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), r.requestTimeout)
-		defer cancel()
-		req = r.request.WithContext(ctx)
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), r.requestTimeout)
+	defer cancel()
+
+	req := r.request.WithContext(ctx)
 
 	resp, err := r.client.Do(req)
 	if resp != nil {
