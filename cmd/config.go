@@ -3,13 +3,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source/retries"
 	"github.com/moira-alert/moira/metrics"
+	"os"
+	"strings"
 
 	"github.com/moira-alert/moira/image_store/s3"
 	prometheusRemoteSource "github.com/moira-alert/moira/metric_source/prometheus"
@@ -254,54 +252,50 @@ type RetriesConfig struct {
 	MaxRetriesCount uint64 `yaml:"max_retries_count"`
 }
 
+func (config RetriesConfig) getRetriesSettings() retries.Config {
+	return retries.Config{
+		InitialInterval:     to.Duration(config.InitialInterval),
+		RandomizationFactor: config.RandomizationFactor,
+		Multiplier:          config.Multiplier,
+		MaxInterval:         to.Duration(config.MaxInterval),
+		MaxElapsedTime:      to.Duration(config.MaxElapsedTime),
+		MaxRetriesCount:     config.MaxRetriesCount,
+	}
+}
+
 // GraphiteRemoteConfig is remote graphite settings structure.
 type GraphiteRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
-	// Timeout for remote requests
+	// Timeout for remote requests.
 	Timeout string `yaml:"timeout"`
-	// Username for basic auth
+	// Username for basic auth.
 	User string `yaml:"user"`
-	// Password for basic auth
+	// Password for basic auth.
 	Password string `yaml:"password"`
-	// Retry seconds for remote requests divided by spaces
-	RetrySeconds string `yaml:"retry_seconds"`
-	// HealthCheckTimeout is timeout for remote api health check requests
-	HealthCheckTimeout string `yaml:"health_check_timeout"`
-	// Retry seconds for remote api health check requests divided by spaces
-	HealthCheckRetrySeconds string `yaml:"health_check_retry_seconds"`
+	// Retries configuration for general requests to remote graphite.
+	Retries RetriesConfig `yaml:"retries"`
+	// HealthcheckTimeout is timeout for remote api health check requests.
+	HealthcheckTimeout string `yaml:"health_check_timeout"`
+	// HealthCheckRetries configuration for healthcheck requests to remote graphite.
+	HealthCheckRetries RetriesConfig `yaml:"health_check_retries"`
 }
 
 func (config GraphiteRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
 	return &config.RemoteCommonConfig
 }
 
-// ParseRetrySeconds parses config value string into array of integers.
-func ParseRetrySeconds(retrySecondsString string) []time.Duration {
-	secondsStringList := strings.Fields(retrySecondsString)
-	retrySecondsIntList := make([]time.Duration, len(secondsStringList))
-
-	for index, secondsString := range secondsStringList {
-		secondsInt, err := strconv.Atoi(secondsString)
-		if err != nil {
-			panic(err)
-		}
-		retrySecondsIntList[index] = time.Second * time.Duration(secondsInt)
-	}
-	return retrySecondsIntList
-}
-
 // GetRemoteSourceSettings returns remote config parsed from moira config files.
 func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSource.Config {
 	return &graphiteRemoteSource.Config{
-		URL:                     config.URL,
-		CheckInterval:           to.Duration(config.CheckInterval),
-		MetricsTTL:              to.Duration(config.MetricsTTL),
-		Timeout:                 to.Duration(config.Timeout),
-		User:                    config.User,
-		Password:                config.Password,
-		RetrySeconds:            ParseRetrySeconds(config.RetrySeconds),
-		HealthCheckTimeout:      to.Duration(config.HealthCheckTimeout),
-		HealthCheckRetrySeconds: ParseRetrySeconds(config.HealthCheckRetrySeconds),
+		URL:                config.URL,
+		CheckInterval:      to.Duration(config.CheckInterval),
+		MetricsTTL:         to.Duration(config.MetricsTTL),
+		Timeout:            to.Duration(config.Timeout),
+		User:               config.User,
+		Password:           config.Password,
+		Retries:            config.Retries.getRetriesSettings(),
+		HealthcheckTimeout: to.Duration(config.HealthcheckTimeout),
+		HealthcheckRetries: config.HealthCheckRetries.getRetriesSettings(),
 	}
 }
 

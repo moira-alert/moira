@@ -49,29 +49,17 @@ type Remote struct {
 
 // Create configures remote metric source.
 func Create(config *Config) (metricSource.MetricSource, error) {
-	if config.URL == "" {
-		return nil, fmt.Errorf("remote graphite URL should not be empty")
-	}
-
-	var (
-		requestBackoffFactory     retries.BackoffFactory
-		healthcheckBackoffFactory retries.BackoffFactory
-	)
-
-	requestBackoffFactory = retries.NewExponentialBackoffFactory(config.Retries)
-	if config.HealthcheckRetries != nil {
-		healthcheckBackoffFactory = retries.NewExponentialBackoffFactory(*config.HealthcheckRetries)
-	} else {
-		healthcheckBackoffFactory = requestBackoffFactory
+	if err := config.validate(); err != nil {
+		return nil, err
 	}
 
 	return &Remote{
 		config:                    config,
-		client:                    &http.Client{Timeout: config.Timeout},
+		client:                    &http.Client{},
 		clock:                     clock.NewSystemClock(),
 		retrier:                   retries.NewStandardRetrier[[]byte](),
-		requestBackoffFactory:     requestBackoffFactory,
-		healthcheckBackoffFactory: healthcheckBackoffFactory,
+		requestBackoffFactory:     retries.NewExponentialBackoffFactory(config.Retries),
+		healthcheckBackoffFactory: retries.NewExponentialBackoffFactory(config.HealthcheckRetries),
 	}, nil
 }
 
@@ -89,7 +77,7 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 		}
 	}
 
-	body, err := remote.makeRequest(req)
+	body, err := remote.makeRequest(req, remote.config.Timeout, remote.requestBackoffFactory.NewBackOff())
 	if err != nil {
 		return nil, internalErrToPublicErr(err, target)
 	}
@@ -121,7 +109,7 @@ func (remote *Remote) IsAvailable() (bool, error) {
 		return false, err
 	}
 
-	_, err = remote.makeRequest(req)
+	_, err = remote.makeRequest(req, remote.config.HealthcheckTimeout, remote.healthcheckBackoffFactory.NewBackOff())
 	err = internalErrToPublicErr(err, "")
 
 	return !isRemoteUnavailable(err), err

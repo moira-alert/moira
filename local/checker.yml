@@ -21,9 +21,19 @@ graphite_remote:
     check_interval: 60s
     metrics_ttl: 168h
     timeout: 60s
-    retry_seconds: 1 1 1
+    retries:
+      initial_interval: 60s
+      randomization_factor: 0.5
+      multiplier: 1.5
+      max_interval: 120s
+      max_retries_count: 3
     health_check_timeout: 6s
-    health_check_retry_seconds: 1 1 1
+    health_check_retries:
+      initial_interval: 20s
+      randomization_factor: 0.5
+      multiplier: 1.5
+      max_interval: 80s
+      max_retries_count: 3
 prometheus_remote:
   - cluster_id: default
     cluster_name: Prometheus 1

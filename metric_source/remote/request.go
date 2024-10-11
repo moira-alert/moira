@@ -31,14 +31,14 @@ func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Re
 	return req, nil
 }
 
-func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
+func (remote *Remote) makeRequest(req *http.Request, timeout time.Duration, backoffPolicy backoff.BackOff) ([]byte, error) {
 	return remote.retrier.Retry(
 		requestToRemoteGraphite{
 			client:         remote.client,
 			request:        req,
-			requestTimeout: remote.config.Timeout,
+			requestTimeout: timeout,
 		},
-		remote.requestBackoffFactory.NewBackOff())
+		backoffPolicy)
 }
 
 type requestToRemoteGraphite struct {

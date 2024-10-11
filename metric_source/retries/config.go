@@ -1,6 +1,9 @@
 package retries
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 // Config for exponential backoff retries.
 type Config struct {
@@ -19,4 +22,29 @@ type Config struct {
 	MaxElapsedTime time.Duration
 	// MaxRetriesCount is the amount of allowed retries. So at most MaxRetriesCount will be performed.
 	MaxRetriesCount uint64
+}
+
+var (
+	errNoInitialInterval                  = errors.New("initial_interval must be specified and can't be 0")
+	errNoMaxInterval                      = errors.New("max_interval must be specified and can't be 0")
+	errNoMaxElapsedTimeAndMaxRetriesCount = errors.New("at least one of max_elapsed_time, max_retries_count must be specified")
+)
+
+// Validate checks that retries Config has all necessary fields.
+func (conf Config) Validate() error {
+	resErrors := make([]error, 0)
+
+	if conf.InitialInterval == 0 {
+		resErrors = append(resErrors, errNoInitialInterval)
+	}
+
+	if conf.MaxInterval == 0 {
+		resErrors = append(resErrors, errNoMaxInterval)
+	}
+
+	if conf.MaxElapsedTime == 0 && conf.MaxRetriesCount == 0 {
+		resErrors = append(resErrors, errNoMaxElapsedTimeAndMaxRetriesCount)
+	}
+
+	return errors.Join(resErrors...)
 }
