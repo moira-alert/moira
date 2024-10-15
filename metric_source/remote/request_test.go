@@ -9,9 +9,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/moira-alert/moira/metric_source/retries"
-	mock_clock "github.com/moira-alert/moira/mock/clock"
 	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
 func TestPrepareRequest(t *testing.T) {
@@ -151,13 +149,11 @@ func TestMakeRequestWithRetries(t *testing.T) {
 			},
 		},
 	}
-	mockCtrl := gomock.NewController(t)
+
 	retrier := retries.NewStandardRetrier[[]byte]()
 
 	Convey("Given server returns OK response", t, func() {
 		server := createTestServer(TestResponse{body, http.StatusOK})
-		systemClock := mock_clock.NewMockClock(mockCtrl)
-		systemClock.EXPECT().Sleep(time.Second).Times(0)
 
 		Convey("request is successful", func() {
 			remote := Remote{

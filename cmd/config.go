@@ -3,11 +3,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source/retries"
 	"github.com/moira-alert/moira/metrics"
-	"os"
-	"strings"
 
 	"github.com/moira-alert/moira/image_store/s3"
 	prometheusRemoteSource "github.com/moira-alert/moira/metric_source/prometheus"

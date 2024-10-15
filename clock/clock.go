@@ -15,12 +15,7 @@ func (t *SystemClock) NowUTC() time.Time {
 	return time.Now().UTC()
 }
 
-// Sleep pauses the current goroutine for at least the passed duration.
-func (t *SystemClock) Sleep(duration time.Duration) {
-	time.Sleep(duration)
-}
-
-// NowUnix returns now time.Time as a Unix time.
+// NowUnix returns current time in a Unix time format.
 func (t *SystemClock) NowUnix() int64 {
 	return time.Now().Unix()
 }

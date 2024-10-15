@@ -6,8 +6,6 @@ import (
 
 	"github.com/moira-alert/moira/metric_source/retries"
 
-	"github.com/moira-alert/moira/clock"
-
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
@@ -38,7 +36,6 @@ func (err ErrRemoteUnavailable) Error() string {
 type Remote struct {
 	config                    *Config
 	client                    *http.Client
-	clock                     moira.Clock
 	retrier                   retries.Retrier[[]byte]
 	requestBackoffFactory     retries.BackoffFactory
 	healthcheckBackoffFactory retries.BackoffFactory
@@ -53,7 +50,6 @@ func Create(config *Config) (metricSource.MetricSource, error) {
 	return &Remote{
 		config:                    config,
 		client:                    &http.Client{},
-		clock:                     clock.NewSystemClock(),
 		retrier:                   retries.NewStandardRetrier[[]byte](),
 		requestBackoffFactory:     retries.NewExponentialBackoffFactory(config.Retries),
 		healthcheckBackoffFactory: retries.NewExponentialBackoffFactory(config.HealthcheckRetries),

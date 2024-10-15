@@ -66,15 +66,3 @@ func (mr *MockClockMockRecorder) NowUnix() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NowUnix", reflect.TypeOf((*MockClock)(nil).NowUnix))
 }
-
-// Sleep mocks base method.
-func (m *MockClock) Sleep(arg0 time.Duration) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Sleep", arg0)
-}
-
-// Sleep indicates an expected call of Sleep.
-func (mr *MockClockMockRecorder) Sleep(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sleep", reflect.TypeOf((*MockClock)(nil).Sleep), arg0)
-}
