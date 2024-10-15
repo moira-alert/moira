@@ -12,26 +12,47 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestIsRemoteAvailable(t *testing.T) {
-	testConfigs := []*Config{
-		{
-			HealthcheckTimeout: time.Second,
-			HealthcheckRetries: retries.Config{
-				InitialInterval:     time.Millisecond,
-				RandomizationFactor: 0.5,
-				Multiplier:          2,
-				MaxInterval:         time.Millisecond * 20,
-				MaxRetriesCount:     2,
-			},
+var testConfigs = []*Config{
+	{
+		Timeout: time.Second,
+		Retries: retries.Config{
+			InitialInterval:     time.Millisecond,
+			RandomizationFactor: 0.5,
+			Multiplier:          2,
+			MaxInterval:         time.Millisecond * 20,
+			MaxRetriesCount:     2,
 		},
-	}
+	},
+	{
+		Timeout: time.Millisecond * 200,
+		Retries: retries.Config{
+			InitialInterval:     time.Millisecond,
+			RandomizationFactor: 0.5,
+			Multiplier:          2,
+			MaxInterval:         time.Second,
+			MaxElapsedTime:      time.Second * 2,
+		},
+	},
+}
+
+func TestIsAvailable(t *testing.T) {
 	body := []byte("Some string")
+
+	isAvailableTestConfigs := make([]*Config, 0, len(testConfigs))
+	for _, conf := range testConfigs {
+		isAvailableTestConfigs = append(isAvailableTestConfigs, &Config{
+			HealthcheckTimeout: conf.Timeout,
+			HealthcheckRetries: conf.Retries,
+		})
+	}
 
 	retrier := retries.NewStandardRetrier[[]byte]()
 
 	Convey("Given server returns OK response the remote is available", t, func() {
 		server := createServer(body, http.StatusOK)
-		for _, config := range testConfigs {
+		defer server.Close()
+
+		for _, config := range isAvailableTestConfigs {
 			config.URL = server.URL
 
 			remote := Remote{
@@ -54,7 +75,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 			Convey(fmt.Sprintf(
 				"request failed with %d response status code and remote is unavailable", statusCode,
 			), func() {
-				for _, config := range testConfigs {
+				for _, config := range isAvailableTestConfigs {
 					config.URL = server.URL
 
 					remote := Remote{
@@ -73,6 +94,8 @@ func TestIsRemoteAvailable(t *testing.T) {
 					So(isAvailable, ShouldBeFalse)
 				}
 			})
+
+			server.Close()
 		}
 	})
 
@@ -81,7 +104,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 			Convey(fmt.Sprintf(
 				"the remote is available with retry after %d response", statusCode,
 			), func() {
-				for _, config := range testConfigs {
+				for _, config := range isAvailableTestConfigs {
 					server := createTestServer(
 						TestResponse{body, statusCode},
 						TestResponse{body, http.StatusOK},
@@ -98,6 +121,8 @@ func TestIsRemoteAvailable(t *testing.T) {
 					isAvailable, err := remote.IsAvailable()
 					So(err, ShouldBeNil)
 					So(isAvailable, ShouldBeTrue)
+
+					server.Close()
 				}
 			})
 		}
@@ -108,18 +133,6 @@ func TestFetch(t *testing.T) {
 	var from int64 = 300
 	var until int64 = 500
 	target := "foo.bar" //nolint
-	testConfigs := []*Config{
-		{
-			Timeout: time.Second,
-			Retries: retries.Config{
-				InitialInterval:     time.Millisecond,
-				RandomizationFactor: 0.5,
-				Multiplier:          2,
-				MaxInterval:         time.Millisecond * 20,
-				MaxRetriesCount:     2,
-			},
-		},
-	}
 
 	retrier := retries.NewStandardRetrier[[]byte]()
 	validBody := []byte("[{\"Target\": \"t1\",\"DataPoints\":[[1,2],[3,4]]}]")
@@ -144,6 +157,7 @@ func TestFetch(t *testing.T) {
 
 	Convey("Request success but body is invalid", t, func() {
 		server := createServer([]byte("Some string"), http.StatusOK)
+		defer server.Close()
 
 		conf := testConfigs[0]
 		conf.URL = server.URL
@@ -163,6 +177,8 @@ func TestFetch(t *testing.T) {
 
 	Convey("Fail request with InternalServerError", t, func() {
 		server := createServer([]byte("Some string"), http.StatusInternalServerError)
+		defer server.Close()
+
 		for _, config := range testConfigs {
 			config.URL = server.URL
 
@@ -183,6 +199,8 @@ func TestFetch(t *testing.T) {
 
 	Convey("Client calls bad url", t, func() {
 		server := createTestServer(TestResponse{[]byte("Some string"), http.StatusOK})
+		defer server.Close()
+
 		url := "💩%$&TR"
 
 		for _, config := range testConfigs {
@@ -227,6 +245,8 @@ func TestFetch(t *testing.T) {
 					So(result, ShouldBeNil)
 				}
 			})
+
+			server.Close()
 		}
 	})
 
@@ -256,6 +276,8 @@ func TestFetch(t *testing.T) {
 					metricsData := result.GetMetricsData()
 					So(len(metricsData), ShouldEqual, 1)
 					So(metricsData[0].Name, ShouldEqual, "t1")
+
+					server.Close()
 				}
 			})
 		}

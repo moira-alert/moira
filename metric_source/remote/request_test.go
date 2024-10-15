@@ -57,6 +57,8 @@ func Test_requestToRemoteGraphite_DoRetryableOperation(t *testing.T) {
 
 	Convey("Client returns status OK", t, func() {
 		server := createServer(body, http.StatusOK)
+		defer server.Close()
+
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		request, _ := remote.prepareRequest(from, until, target)
 
@@ -74,6 +76,8 @@ func Test_requestToRemoteGraphite_DoRetryableOperation(t *testing.T) {
 
 	Convey("Client returns status InternalServerError", t, func() {
 		server := createServer(body, http.StatusInternalServerError)
+		defer server.Close()
+
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		request, _ := remote.prepareRequest(from, until, target)
 
@@ -93,6 +97,8 @@ func Test_requestToRemoteGraphite_DoRetryableOperation(t *testing.T) {
 
 	Convey("Client calls bad url", t, func() {
 		server := createServer(body, http.StatusOK)
+		defer server.Close()
+
 		client := server.Client()
 		remote := Remote{client: client, config: &Config{URL: "http://bad/"}}
 		request, _ := remote.prepareRequest(from, until, target)
@@ -128,6 +134,8 @@ func Test_requestToRemoteGraphite_DoRetryableOperation(t *testing.T) {
 					"the remote server is not available. Response status %d: %s", statusCode, string(body)),
 			})
 			So(actual, ShouldResemble, body)
+
+			server.Close()
 		}
 	})
 }
@@ -137,23 +145,12 @@ func TestMakeRequestWithRetries(t *testing.T) {
 	var until int64 = 500
 	target := "foo.bar"
 	body := []byte("Some string")
-	testConfigs := []*Config{
-		{
-			Timeout: time.Second,
-			Retries: retries.Config{
-				InitialInterval:     time.Millisecond,
-				RandomizationFactor: 0.5,
-				Multiplier:          2,
-				MaxInterval:         time.Millisecond * 20,
-				MaxRetriesCount:     2,
-			},
-		},
-	}
 
 	retrier := retries.NewStandardRetrier[[]byte]()
 
 	Convey("Given server returns OK response", t, func() {
 		server := createTestServer(TestResponse{body, http.StatusOK})
+		defer server.Close()
 
 		Convey("request is successful", func() {
 			remote := Remote{
@@ -181,6 +178,8 @@ func TestMakeRequestWithRetries(t *testing.T) {
 
 	Convey("Given server returns 500 response", t, func() {
 		server := createTestServer(TestResponse{body, http.StatusInternalServerError})
+		defer server.Close()
+
 		expectedErr := errInvalidRequest{
 			internalErr: fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, string(body)),
 		}
@@ -212,6 +211,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 
 	Convey("Given client calls bad url", t, func() {
 		server := createTestServer(TestResponse{body, http.StatusOK})
+		defer server.Close()
 
 		Convey("request failed and remote is unavailable", func() {
 			remote := Remote{
@@ -271,6 +271,8 @@ func TestMakeRequestWithRetries(t *testing.T) {
 					So(actual, ShouldResemble, body)
 				}
 			})
+
+			server.Close()
 		}
 	})
 
@@ -302,6 +304,8 @@ func TestMakeRequestWithRetries(t *testing.T) {
 
 					So(err, ShouldBeNil)
 					So(actual, ShouldResemble, body)
+
+					server.Close()
 				}
 			})
 		}
