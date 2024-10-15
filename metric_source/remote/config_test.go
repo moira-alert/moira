@@ -3,9 +3,10 @@ package remote
 import (
 	"errors"
 	"fmt"
-	"github.com/moira-alert/moira/metric_source/retries"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira/metric_source/retries"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -43,6 +44,36 @@ func TestConfig_validate(t *testing.T) {
 					HealthcheckRetries: testRetriesConf,
 				},
 				expectedErr: errors.Join(errBadRemoteUrl, errNoTimeout, errNoHealthcheckTimeout),
+			},
+			{
+				caseDesc: "with retries config set and some url",
+				conf: Config{
+					URL:                "http://test-graphite",
+					Retries:            testRetriesConf,
+					HealthcheckRetries: testRetriesConf,
+				},
+				expectedErr: errors.Join(errNoTimeout, errNoHealthcheckTimeout),
+			},
+			{
+				caseDesc: "with retries config set, some url, timeout",
+				conf: Config{
+					Timeout:            time.Second,
+					URL:                "http://test-graphite",
+					Retries:            testRetriesConf,
+					HealthcheckRetries: testRetriesConf,
+				},
+				expectedErr: errors.Join(errNoHealthcheckTimeout),
+			},
+			{
+				caseDesc: "with valid config",
+				conf: Config{
+					Timeout:            time.Second,
+					HealthcheckTimeout: time.Millisecond,
+					URL:                "http://test-graphite",
+					Retries:            testRetriesConf,
+					HealthcheckRetries: testRetriesConf,
+				},
+				expectedErr: nil,
 			},
 		}
 

@@ -1,10 +1,11 @@
 package retries
 
 import (
-	"github.com/cenkalti/backoff/v4"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/cenkalti/backoff/v4"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

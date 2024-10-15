@@ -2,8 +2,9 @@ package retries
 
 import (
 	"errors"
-	"github.com/cenkalti/backoff/v4"
 	"testing"
+
+	"github.com/cenkalti/backoff/v4"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -150,9 +151,7 @@ func newStubRetryableOperation[T any](pairs []retPair[T]) *stubRetryableOperatio
 	}
 }
 
-var (
-	errStubValuesEnded = errors.New("prepared return values and errors for stub ended")
-)
+var errStubValuesEnded = errors.New("prepared return values and errors for stub ended")
 
 func (stub *stubRetryableOperation[T]) DoRetryableOperation() (T, error) {
 	stub.calls += 1

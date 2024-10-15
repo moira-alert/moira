@@ -1,19 +1,16 @@
 package remote
 
 import (
-	"fmt"
-	"github.com/moira-alert/moira/metric_source/retries"
 	"net/http"
 	"time"
+
+	"github.com/moira-alert/moira/metric_source/retries"
 
 	"github.com/moira-alert/moira/clock"
 
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
-
-// ErrRemoteStorageDisabled is used to prevent remote.Fetch calls when remote storage is disabled.
-var ErrRemoteStorageDisabled = fmt.Errorf("remote graphite storage is not enabled")
 
 // ErrRemoteTriggerResponse is a custom error when remote trigger check fails.
 type ErrRemoteTriggerResponse struct {

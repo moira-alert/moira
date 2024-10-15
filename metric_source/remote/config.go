@@ -2,8 +2,9 @@ package remote
 
 import (
 	"errors"
-	"github.com/moira-alert/moira/metric_source/retries"
 	"time"
+
+	"github.com/moira-alert/moira/metric_source/retries"
 )
 
 // Config represents config from remote storage.

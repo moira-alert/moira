@@ -2,15 +2,16 @@ package remote
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/cenkalti/backoff/v4"
 	"github.com/moira-alert/moira/metric_source/retries"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
 func TestPrepareRequest(t *testing.T) {
@@ -187,7 +188,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 		expectedErr := errInvalidRequest{
 			internalErr: fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, string(body)),
 		}
-		//systemClock.EXPECT().Sleep(time.Second).Times(0)
+		// systemClock.EXPECT().Sleep(time.Second).Times(0)
 
 		Convey("request failed with 500 response and remote is available", func() {
 			remote := Remote{
@@ -269,7 +270,8 @@ func TestMakeRequestWithRetries(t *testing.T) {
 					So(err, ShouldResemble, errRemoteUnavailable{
 						internalErr: fmt.Errorf(
 							"the remote server is not available. Response status %d: %s", statusCode, string(body),
-						)})
+						),
+					})
 					So(actual, ShouldResemble, body)
 				}
 			})

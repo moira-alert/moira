@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cenkalti/backoff/v4"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Request, error) {
@@ -41,12 +42,14 @@ func (remote *Remote) makeRequest(req *http.Request, timeout time.Duration, back
 		backoffPolicy)
 }
 
+// requestToRemoteGraphite implements retries.RetryableOperation.
 type requestToRemoteGraphite struct {
 	client         *http.Client
 	request        *http.Request
 	requestTimeout time.Duration
 }
 
+// DoRetryableOperation is a one attempt of performing request to remote graphite.
 func (r requestToRemoteGraphite) DoRetryableOperation() ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.requestTimeout)
 	defer cancel()
