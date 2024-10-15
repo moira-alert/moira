@@ -133,7 +133,9 @@ func internalErrToPublicErr(err error, target string) error {
 		}
 	}
 
-	return ErrRemoteTriggerResponse{}
+	return ErrRemoteTriggerResponse{
+		InternalError: err,
+		Target:        target}
 }
 
 var remoteUnavailableStatusCodes = map[int]struct{}{
