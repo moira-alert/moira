@@ -23,6 +23,7 @@ func convertResponse(metricsData []metricSource.MetricData, allowRealTimeAlertin
 		metricData.Values = metricData.Values[:len(metricData.Values)-1]
 		result = append(result, metricData)
 	}
+
 	return FetchResult{MetricsData: result}
 }
 
@@ -32,12 +33,14 @@ func decodeBody(body []byte) ([]metricSource.MetricData, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	res := make([]metricSource.MetricData, 0, len(tmp))
 	for _, m := range tmp {
 		var stepTime int64 = 60
 		if len(m.DataPoints) > 1 {
 			stepTime = int64(*m.DataPoints[1][1] - *m.DataPoints[0][1])
 		}
+
 		metricData := metricSource.MetricData{
 			Name:      m.Target,
 			StartTime: int64(*m.DataPoints[0][1]),
@@ -45,6 +48,7 @@ func decodeBody(body []byte) ([]metricSource.MetricData, error) {
 			StepTime:  stepTime,
 			Values:    make([]float64, len(m.DataPoints)),
 		}
+
 		for i, v := range m.DataPoints {
 			if v[0] == nil {
 				metricData.Values[i] = math.NaN()
@@ -52,7 +56,9 @@ func decodeBody(body []byte) ([]metricSource.MetricData, error) {
 				metricData.Values[i] = *v[0]
 			}
 		}
+
 		res = append(res, metricData)
 	}
+
 	return res, nil
 }
