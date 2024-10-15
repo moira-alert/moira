@@ -43,11 +43,14 @@ func NewHandler(
 		contactsTemplate = webConfig.Contacts
 	}
 
+	contactsTemplateMiddleware := moiramiddle.ContactsTemplateContext(contactsTemplate)
+
 	router := chi.NewRouter()
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(moiramiddle.UserContext)
 	router.Use(moiramiddle.RequestLogger(log))
 	router.Use(middleware.NoCache)
+	router.Use(moiramiddle.LimitsContext(apiConfig.Limits))
 
 	router.NotFound(notFoundHandler)
 	router.MethodNotAllowed(methodNotAllowedHandler)
@@ -115,13 +118,13 @@ func NewHandler(
 			router.Route("/event", event)
 			router.Route("/subscription", subscription)
 			router.Route("/notification", notification)
-			router.Route("/teams", teams)
-			router.With(moiramiddle.ContactsTemplateContext(
-				contactsTemplate,
-			)).Route("/contact", func(router chi.Router) {
-				contact(router)
-				contactEvents(router)
-			})
+			router.With(contactsTemplateMiddleware).
+				Route("/teams", teams)
+			router.With(contactsTemplateMiddleware).
+				Route("/contact", func(router chi.Router) {
+					contact(router)
+					contactEvents(router)
+				})
 			router.Get("/swagger/*", httpSwagger.Handler(
 				httpSwagger.URL("/api/swagger/doc.json"),
 			))

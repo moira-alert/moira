@@ -50,6 +50,9 @@ prometheus_remote:
 api:
   listen: ":8081"
   enable_cors: false
+  limits:
+    trigger:
+      max_name_size: 200
 web:
   contacts_template:
     - type: mail
