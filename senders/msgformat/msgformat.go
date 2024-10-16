@@ -21,10 +21,3 @@ type MessageFormatterParams struct {
 	MessageMaxChars int
 	Throttled       bool
 }
-
-// DefaultDescriptionCutter cuts description, so len(newDesc) <= maxSize. Ensure that len(desc) >= maxSize and
-// maxSize >= len("...\n").
-func DefaultDescriptionCutter(desc string, maxSize int) string {
-	suffix := "...\n"
-	return desc[:maxSize-len(suffix)] + suffix
-}
