@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/datatypes"
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -171,6 +172,9 @@ func TestContacts(t *testing.T) {
 				err := dataBase.SaveContact(contact2)
 				So(err, ShouldBeNil)
 
+				err = dataBase.SaveEmergencyContact(user2EmergencyContacts[0])
+				So(err, ShouldBeNil)
+
 				actual, err := dataBase.GetContact(contact2.ID)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, *contact2)
@@ -179,8 +183,16 @@ func TestContacts(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual1, ShouldHaveLength, 1)
 
+				emergencyContact, err := dataBase.GetEmergencyContact(contact2.ID)
+				So(err, ShouldBeNil)
+				So(emergencyContact, ShouldResemble, user2EmergencyContacts[0])
+
 				err = dataBase.RemoveContact(contact2.ID)
 				So(err, ShouldBeNil)
+
+				emergencyContact, err = dataBase.GetEmergencyContact(contact2.ID)
+				So(err, ShouldResemble, database.ErrNil)
+				So(emergencyContact, ShouldResemble, datatypes.EmergencyContact{})
 
 				err = dataBase.SaveContact(contact1)
 				So(err, ShouldBeNil)
@@ -315,6 +327,9 @@ func TestContacts(t *testing.T) {
 				err := dataBase.SaveContact(contact2)
 				So(err, ShouldBeNil)
 
+				err = dataBase.SaveEmergencyContact(team2EmergencyContacts[0])
+				So(err, ShouldBeNil)
+
 				actual, err := dataBase.GetContact(contact2.ID)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, *contact2)
@@ -323,8 +338,16 @@ func TestContacts(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual1, ShouldHaveLength, 1)
 
+				emergencyContact, err := dataBase.GetEmergencyContact(contact2.ID)
+				So(err, ShouldBeNil)
+				So(emergencyContact, ShouldResemble, team2EmergencyContacts[0])
+
 				err = dataBase.RemoveContact(contact2.ID)
 				So(err, ShouldBeNil)
+
+				emergencyContact, err = dataBase.GetEmergencyContact(contact2.ID)
+				So(err, ShouldResemble, database.ErrNil)
+				So(emergencyContact, ShouldResemble, datatypes.EmergencyContact{})
 
 				err = dataBase.SaveContact(contact1)
 				So(err, ShouldBeNil)
@@ -519,6 +542,13 @@ var user2Contacts = []*moira.ContactData{
 	},
 }
 
+var user2EmergencyContacts = []datatypes.EmergencyContact{
+	{
+		ContactID:      "ContactID-000000000000003",
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+	},
+}
+
 var team1Contacts = []*moira.ContactData{
 	{
 		ID:    "TeamContactID-000000000000001",
@@ -570,5 +600,12 @@ var team2Contacts = []*moira.ContactData{
 		Type:  "slack",
 		Value: "#devops",
 		Team:  team2,
+	},
+}
+
+var team2EmergencyContacts = []datatypes.EmergencyContact{
+	{
+		ContactID:      "TeamContactID-000000000000003",
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
 	},
 }
