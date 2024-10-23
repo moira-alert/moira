@@ -103,7 +103,7 @@ func (remote *Remote) IsAvailable() (bool, error) {
 	}
 
 	_, err = remote.makeRequest(req, remote.config.HealthcheckTimeout, remote.healthcheckBackoffFactory.NewBackOff())
-	err = internalErrToPublicErr(err, "")
+	publicErr := internalErrToPublicErr(err, "")
 
-	return !isRemoteUnavailable(err), err
+	return !isRemoteUnavailable(publicErr), publicErr
 }
