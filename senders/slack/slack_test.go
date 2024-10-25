@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
@@ -129,7 +130,8 @@ some other text italic text
 		})
 
 		eventLine := "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
-		oneEventLineLen := len([]rune(eventLine))
+		oneEventLineLen := utf8.RuneCountInString(eventLine)
+
 		// Events list with chars less than half the message limit
 		var shortEvents moira.NotificationEvents
 		var shortEventsString string
@@ -137,6 +139,7 @@ some other text italic text
 			shortEvents = append(shortEvents, event)
 			shortEventsString += eventLine
 		}
+
 		// Events list with chars greater than half the message limit
 		var longEvents moira.NotificationEvents
 		var longEventsString string
@@ -144,6 +147,7 @@ some other text italic text
 			longEvents = append(longEvents, event)
 			longEventsString += eventLine
 		}
+
 		longDesc := strings.Repeat("a", messageMaxCharacters/2+100)
 
 		Convey("Print moira message with desc + events < msgLimit", func() {
@@ -159,22 +163,44 @@ some other text italic text
 				events = append(events, event)
 				eventsString += eventLine
 			}
+
+			expected := "*NODATA*\n" +
+				strings.Repeat("a", 1991) + "...\n" +
+				"```" +
+				eventsString + "\n```"
+
 			actual := sender.buildMessage(events, moira.TriggerData{Desc: longDesc}, false)
-			expected := "*NODATA*\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\n```\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```"
+
 			So(actual, ShouldResemble, expected)
+			So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, messageMaxCharacters)
 		})
 
 		Convey("Print moira message events string > msgLimit/2", func() {
 			desc := strings.Repeat("a", messageMaxCharacters/2-100)
+
+			expected := "*NODATA*\n" +
+				desc + "\n" +
+				"```" +
+				strings.Repeat(eventLine, 41) + "\n```" +
+				"\n...and 5 more events."
+
 			actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: desc}, false)
-			expected := "*NODATA*\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n```\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```\n...and 3 more events."
+
 			So(actual, ShouldResemble, expected)
+			So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, messageMaxCharacters)
 		})
 
 		Convey("Print moira message with both desc and events > msgLimit/2", func() {
+			expected := "*NODATA*\n" +
+				strings.Repeat("a", 1991) + "...\n" +
+				"```" +
+				strings.Repeat(eventLine, 41) + "\n```" +
+				"\n...and 5 more events."
+
 			actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: longDesc}, false)
-			expected := "*NODATA*\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\n```\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```\n...and 5 more events."
+
 			So(actual, ShouldResemble, expected)
+			So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, messageMaxCharacters)
 		})
 	})
 }

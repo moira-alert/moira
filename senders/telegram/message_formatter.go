@@ -46,33 +46,57 @@ func NewTelegramMessageFormatter(
 
 // Format formats message using given params and formatter functions.
 func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParams) string {
+	params.Trigger.Tags = htmlEscapeTags(params.Trigger.Tags)
+
 	state := params.Events.GetCurrentState(params.Throttled)
 	emoji := formatter.emojiGetter.GetStateEmoji(state)
 
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
-	titleLen := calcRunesCountWithoutHTML([]rune(title))
+	titleLen := calcRunesCountWithoutHTML(title) + len("\n")
+
+	var tags string
+	var tagsLen int
+
+	triggerTags := params.Trigger.GetTags()
+	if len(triggerTags) != 0 {
+		tags = " " + triggerTags
+		tagsLen = calcRunesCountWithoutHTML(tags)
+	}
 
 	desc := descriptionFormatter(params.Trigger)
-	descLen := calcRunesCountWithoutHTML([]rune(desc))
+	descLen := calcRunesCountWithoutHTML(desc)
 
-	eventsString := formatter.buildEventsString(params.Events, -1, params.Throttled)
-	eventsStringLen := calcRunesCountWithoutHTML([]rune(eventsString))
+	events := formatter.buildEventsString(params.Events, -1, params.Throttled)
+	eventsStringLen := calcRunesCountWithoutHTML(events)
 
-	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(params.MessageMaxChars-titleLen, descLen, eventsStringLen)
+	tagsNewLen, descNewLen, eventsNewLen := senders.CalculateMessagePartsBetweenTagsDescEvents(params.MessageMaxChars-titleLen, tagsLen, descLen, eventsStringLen)
+	if tagsLen != tagsNewLen {
+		tags = msgformat.DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
+	}
 	if descLen != descNewLen {
 		desc = descriptionCutter(desc, descNewLen)
 	}
 	if eventsStringLen != eventsNewLen {
-		eventsString = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
+		events = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
 
-	return title + desc + eventsString
+	return title + tags + "\n" + desc + events
+}
+
+func htmlEscapeTags(tags []string) []string {
+	escapedTags := make([]string, 0, len(tags))
+
+	for _, tag := range tags {
+		escapedTags = append(escapedTags, html.EscapeString(tag))
+	}
+
+	return escapedTags
 }
 
 // calcRunesCountWithoutHTML is used for calculating symbols in text without html tags. Special symbols
 // like `&gt;`, `&lt;` etc. are counted not as one symbol, for example, len([]rune("&gt;")).
 // This precision is enough for us to evaluate size of message.
-func calcRunesCountWithoutHTML(htmlText []rune) int {
+func calcRunesCountWithoutHTML(htmlText string) int {
 	textLen := 0
 	isTag := false
 
@@ -109,12 +133,6 @@ func (formatter *messageFormatter) buildTitle(events moira.NotificationEvents, t
 		title += " " + trigger.Name
 	}
 
-	tags := trigger.GetTags()
-	if tags != "" {
-		title += " " + tags
-	}
-
-	title += "\n"
 	return title
 }
 
@@ -125,7 +143,7 @@ var throttleMsg = fmt.Sprintf("\nPlease, %s to generate less events.", boldForma
 func (formatter *messageFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	if throttled {
-		charsForThrottleMsg = calcRunesCountWithoutHTML([]rune(throttleMsg))
+		charsForThrottleMsg = calcRunesCountWithoutHTML(throttleMsg)
 	}
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
@@ -144,7 +162,7 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
 		tailStringLen := len("\n") + utf8.RuneCountInString(tailString)
-		lineLen := calcRunesCountWithoutHTML([]rune(line))
+		lineLen := calcRunesCountWithoutHTML(line)
 
 		if charsForEvents >= 0 && eventsStringLen+lineLen > charsLeftForEvents-tailStringLen {
 			eventsLenLimitReached = true
