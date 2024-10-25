@@ -3,10 +3,11 @@ package remote
 import (
 	"errors"
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	"github.com/moira-alert/moira"
 	"testing"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira"
 
 	"github.com/moira-alert/moira/metric_source/retries"
 
@@ -76,7 +77,7 @@ func TestConfigWithValidateStruct(t *testing.T) {
 					Retries:            testRetriesConf,
 					HealthcheckRetries: testRetriesConf,
 				},
-				errIsNil: true, //nil,
+				errIsNil: true, // nil,
 			},
 		}
 

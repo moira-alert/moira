@@ -3,10 +3,11 @@ package retries
 import (
 	"errors"
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	"github.com/moira-alert/moira"
 	"testing"
 	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
