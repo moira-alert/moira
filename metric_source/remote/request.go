@@ -57,10 +57,6 @@ func (r requestToRemoteGraphite) DoRetryableOperation() ([]byte, error) {
 	req := r.request.WithContext(ctx)
 
 	resp, err := r.client.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
-
 	if err != nil {
 		return nil, errRemoteUnavailable{
 			internalErr: fmt.Errorf(
@@ -69,6 +65,7 @@ func (r requestToRemoteGraphite) DoRetryableOperation() ([]byte, error) {
 				err),
 		}
 	}
+	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
