@@ -43,7 +43,7 @@ type Remote struct {
 
 // Create configures remote metric source.
 func Create(config *Config) (metricSource.MetricSource, error) {
-	if err := config.validate(); err != nil {
+	if err := moira.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 

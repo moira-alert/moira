@@ -3,6 +3,8 @@ package remote
 import (
 	"errors"
 	"fmt"
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira"
 	"testing"
 	"time"
 
@@ -11,18 +13,19 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestConfig_validate(t *testing.T) {
+func TestConfigWithValidateStruct(t *testing.T) {
 	Convey("Test validating retries config", t, func() {
 		type testcase struct {
-			caseDesc    string
-			conf        Config
-			expectedErr error
+			caseDesc string
+			conf     Config
+			errIsNil bool
 		}
 
 		var (
 			testInitialInterval        = time.Second * 5
 			testMaxInterval            = time.Second * 10
 			testRetriesCount    uint64 = 10
+			validatorErr               = validator.ValidationErrors{}
 		)
 
 		testRetriesConf := retries.Config{
@@ -33,9 +36,9 @@ func TestConfig_validate(t *testing.T) {
 
 		cases := []testcase{
 			{
-				caseDesc:    "with empty config",
-				conf:        Config{},
-				expectedErr: errors.Join(errBadRemoteUrl, errNoTimeout, errNoHealthcheckTimeout, retries.Config{}.Validate(), retries.Config{}.Validate()),
+				caseDesc: "with empty config",
+				conf:     Config{},
+				errIsNil: false,
 			},
 			{
 				caseDesc: "with retries config set",
@@ -43,7 +46,7 @@ func TestConfig_validate(t *testing.T) {
 					Retries:            testRetriesConf,
 					HealthcheckRetries: testRetriesConf,
 				},
-				expectedErr: errors.Join(errBadRemoteUrl, errNoTimeout, errNoHealthcheckTimeout),
+				errIsNil: false,
 			},
 			{
 				caseDesc: "with retries config set and some url",
@@ -52,7 +55,7 @@ func TestConfig_validate(t *testing.T) {
 					Retries:            testRetriesConf,
 					HealthcheckRetries: testRetriesConf,
 				},
-				expectedErr: errors.Join(errNoTimeout, errNoHealthcheckTimeout),
+				errIsNil: false,
 			},
 			{
 				caseDesc: "with retries config set, some url, timeout",
@@ -62,7 +65,7 @@ func TestConfig_validate(t *testing.T) {
 					Retries:            testRetriesConf,
 					HealthcheckRetries: testRetriesConf,
 				},
-				expectedErr: errors.Join(errNoHealthcheckTimeout),
+				errIsNil: false,
 			},
 			{
 				caseDesc: "with valid config",
@@ -73,15 +76,19 @@ func TestConfig_validate(t *testing.T) {
 					Retries:            testRetriesConf,
 					HealthcheckRetries: testRetriesConf,
 				},
-				expectedErr: nil,
+				errIsNil: true, //nil,
 			},
 		}
 
 		for i := range cases {
 			Convey(fmt.Sprintf("Case %d: %s", i+1, cases[i].caseDesc), func() {
-				err := cases[i].conf.validate()
+				err := moira.ValidateStruct(cases[i].conf)
 
-				So(err, ShouldResemble, cases[i].expectedErr)
+				if cases[i].errIsNil {
+					So(err, ShouldBeNil)
+				} else {
+					So(errors.As(err, &validatorErr), ShouldBeTrue)
+				}
 			})
 		}
 	})
