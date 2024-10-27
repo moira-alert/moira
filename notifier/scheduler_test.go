@@ -127,7 +127,7 @@ func TestThrottling(t *testing.T) {
 		params2.SendFail = 1
 
 		// 2015-09-02, 01:00:00 GMT+03:00
-		now := time.Unix(1441144800, 0)
+		testNow := time.Unix(1441144800, 0)
 		testSubscription := subscription
 		testSubscription.ThrottlingEnabled = false
 		testSubscription.Schedule = schedule3
@@ -136,9 +136,9 @@ func TestThrottling(t *testing.T) {
 		expected2.SendFail = 1
 		// 2015-09-02, 02:00:00 GMT+03:00
 		expected2.Timestamp = time.Unix(1441148400, 0).Unix()
-		expected2.CreatedAt = now.Unix()
-		systemClock.EXPECT().NowUTC().Return(now).Times(1)
-		dataBase.EXPECT().GetTriggerThrottling(params2.Event.TriggerID).Return(now, now)
+		expected2.CreatedAt = testNow.Unix()
+		systemClock.EXPECT().NowUTC().Return(testNow).Times(1)
+		dataBase.EXPECT().GetTriggerThrottling(params2.Event.TriggerID).Return(testNow, testNow)
 		dataBase.EXPECT().GetSubscription(*params2.Event.SubscriptionID).Return(testSubscription, nil)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
