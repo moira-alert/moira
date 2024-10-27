@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -98,6 +99,47 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*params2.Event.SubscriptionID).Return(subscription, nil)
 		dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, now.Unix()).Return(int64(0))
 		dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, now.Unix()).Return(int64(0))
+
+		notification := scheduler.ScheduleNotification(params2, logger)
+		So(notification, ShouldResemble, &expected2)
+	})
+
+	Convey("Test sendFail more that 0, and no throttling, but subscription doesn't exists, should send message in one minute", t, func() {
+		params2 := params
+		params2.ThrottledOld = false
+		params2.SendFail = 1
+		testErr := errors.New("subscription doesn't exist")
+
+		expected2 := expected
+		expected2.SendFail = 1
+		expected2.Timestamp = now.Add(time.Minute).Unix()
+		systemClock.EXPECT().NowUTC().Return(now).Times(1)
+		dataBase.EXPECT().GetTriggerThrottling(params2.Event.TriggerID).Return(now, now)
+		dataBase.EXPECT().GetSubscription(*params2.Event.SubscriptionID).Return(moira.SubscriptionData{}, testErr)
+
+		notification := scheduler.ScheduleNotification(params2, logger)
+		So(notification, ShouldResemble, &expected2)
+	})
+
+	Convey("Test sendFail more that 0, and no throttling, but the subscription schedule postpones the dispatch time, should send message in one minute", t, func() {
+		params2 := params
+		params2.ThrottledOld = false
+		params2.SendFail = 1
+
+		// 2015-09-02, 01:00:00 GMT+03:00
+		now := time.Unix(1441144800, 0)
+		testSubscription := subscription
+		testSubscription.ThrottlingEnabled = false
+		testSubscription.Schedule = schedule3
+
+		expected2 := expected
+		expected2.SendFail = 1
+		// 2015-09-02, 02:00:00 GMT+03:00
+		expected2.Timestamp = time.Unix(1441148400, 0).Unix()
+		expected2.CreatedAt = now.Unix()
+		systemClock.EXPECT().NowUTC().Return(now).Times(1)
+		dataBase.EXPECT().GetTriggerThrottling(params2.Event.TriggerID).Return(now, now)
+		dataBase.EXPECT().GetSubscription(*params2.Event.SubscriptionID).Return(testSubscription, nil)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
 		So(notification, ShouldResemble, &expected2)
