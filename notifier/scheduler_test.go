@@ -61,7 +61,7 @@ func TestThrottling(t *testing.T) {
 	metrics2 := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 
 	now := time.Now()
-	next := now.Add(10*time.Minute)
+	next := now.Add(10 * time.Minute)
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	scheduler := NewScheduler(dataBase, logger, metrics2, SchedulerConfig{ReschedulingDelay: time.Minute}, systemClock)
 
@@ -110,7 +110,7 @@ func TestThrottling(t *testing.T) {
 
 		expected2 := expected
 		expected2.SendFail = 3
-		expected2.Timestamp = now.Add(10*time.Minute).Unix()
+		expected2.Timestamp = now.Add(10 * time.Minute).Unix()
 		expected2.Throttled = true
 		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 		dataBase.EXPECT().GetTriggerThrottling(params2.Event.TriggerID).Return(next, now)
