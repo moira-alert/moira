@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -38,12 +40,14 @@ var (
 
 func TestSender_Init(t *testing.T) {
 	Convey("Test Init function", t, func() {
-		Convey("With empty settings", func() {
+		validatorErr := validator.ValidationErrors{}
+
+		Convey("With empty url", func() {
 			settings := map[string]interface{}{}
 			sender := Sender{}
 
 			err := sender.Init(settings, logger, location, dateTimeFormat)
-			So(err, ShouldResemble, ErrMissingURL)
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 		})
 
 		Convey("With only url", func() {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -46,6 +48,29 @@ type apiConfig struct {
 	EnableCORS bool `yaml:"enable_cors"`
 	// Authorization contains authorization configuration.
 	Authorization authorization `yaml:"authorization"`
+	// Limits contains limits applied to entities and so on.
+	Limits LimitsConfig `yaml:"limits"`
+}
+
+// LimitsConfig contains configurable moira limits.
+type LimitsConfig struct {
+	// Trigger contains the limits applied to triggers.
+	Trigger TriggerLimitsConfig `yaml:"trigger"`
+}
+
+// TriggerLimitsConfig represents the limits which will be applied to all triggers.
+type TriggerLimitsConfig struct {
+	// MaxNameSize is the max amount of characters allowed in trigger name.
+	MaxNameSize int `yaml:"max_name_size"`
+}
+
+// ToLimits converts LimitsConfig to api.LimitsConfig.
+func (conf LimitsConfig) ToLimits() api.LimitsConfig {
+	return api.LimitsConfig{
+		Trigger: api.TriggerLimits{
+			MaxNameSize: conf.Trigger.MaxNameSize,
+		},
+	}
 }
 
 type authorization struct {
@@ -114,6 +139,7 @@ func (config *apiConfig) getSettings(
 		MetricsTTL:    metricsTTL,
 		Flags:         flags,
 		Authorization: config.Authorization.toApiConfig(webConfig),
+		Limits:        config.Limits.ToLimits(),
 	}
 }
 
@@ -134,6 +160,21 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 		AdminList:           adminList,
 		AllowedContactTypes: allowedContactTypes,
 	}
+}
+
+func (config *webConfig) validate() error {
+	for _, contactTemplate := range config.ContactsTemplate {
+		validationRegex := contactTemplate.ValidationRegex
+		if validationRegex == "" {
+			continue
+		}
+
+		if _, err := regexp.Compile(validationRegex); err != nil {
+			return fmt.Errorf("contact template regex error '%s': %w", validationRegex, err)
+		}
+	}
+
+	return nil
 }
 
 func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
@@ -214,6 +255,11 @@ func getDefault() config {
 		API: apiConfig{
 			Listen:     ":8081",
 			EnableCORS: false,
+			Limits: LimitsConfig{
+				Trigger: TriggerLimitsConfig{
+					MaxNameSize: api.DefaultTriggerNameMaxSize,
+				},
+			},
 		},
 		Web: webConfig{
 			RemoteAllowed: false,
