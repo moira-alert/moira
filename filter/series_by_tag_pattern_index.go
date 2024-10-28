@@ -73,12 +73,12 @@ func NewSeriesByTagPatternIndex(
 func (index *SeriesByTagPatternIndex) MatchPatterns(metricName string, labels map[string]string) []string {
 	matchedPatterns := make([]string, 0)
 
-	matchingHandlersWithCorrespondingNameTag := index.namesPrefixTree.MatchWithValue(metricName)
-	for pattern, matchingHandler := range matchingHandlersWithCorrespondingNameTag {
+	callback := func(pattern string, matchingHandler MatchingHandler) {
 		if matchingHandler(metricName, labels) {
 			matchedPatterns = append(matchedPatterns, pattern)
 		}
 	}
+	index.namesPrefixTree.MatchWithValue(metricName, callback)
 
 	for pattern, matchingHandler := range index.withoutStrictNameTagPatternMatchers {
 		if matchingHandler(metricName, labels) {
