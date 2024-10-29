@@ -59,7 +59,13 @@ func NewSeriesByTagPatternIndex(
 		}
 
 		if patternMatching.nameTagValue == "" {
-			withoutStrictNameTagPatternMatchers = append(withoutStrictNameTagPatternMatchers, patternAndHandler{pattern, patternMatching.matchingHandler})
+			withoutStrictNameTagPatternMatchers = append(
+				withoutStrictNameTagPatternMatchers,
+				patternAndHandler{
+					pattern: pattern,
+					handler: patternMatching.matchingHandler,
+				},
+			)
 		} else {
 			namesPrefixTree.AddWithPayload(patternMatching.nameTagValue, pattern, patternMatching.matchingHandler)
 		}
