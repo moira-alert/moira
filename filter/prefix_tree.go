@@ -113,26 +113,23 @@ func (source *PrefixTree) Match(metric string) []string {
 }
 
 // MatchWithValue finds metric in tree and returns payloads for all matched nodes.
-func (source *PrefixTree) MatchWithValue(metric string) map[string]MatchingHandler {
+func (source *PrefixTree) MatchWithValue(metric string, callback func(string, MatchingHandler)) {
 	nodes, _ := source.findNodes(metric)
 	if nodes == nil {
-		return map[string]MatchingHandler{}
+		return
 	}
 
-	matched := make(map[string]MatchingHandler)
 	for _, node := range nodes {
 		if node.Terminal {
 			if node.Payload == nil {
-				matched[node.Prefix] = nil
+				callback(node.Prefix, nil)
 			}
 
 			for pattern, matchingHandler := range node.Payload {
-				matched[pattern] = matchingHandler
+				callback(pattern, matchingHandler)
 			}
 		}
 	}
-
-	return matched
 }
 
 func (source *PrefixTree) findNodes(metric string) ([]*PatternNode, int) {
