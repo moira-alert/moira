@@ -545,9 +545,7 @@ func Test_checkScheduleFilling(t *testing.T) {
 
 			gotSchedule, err := checkScheduleFilling(givenSchedule)
 
-			So(err, ShouldResemble, api.ErrInvalidRequestContent{
-				ValidationError: fmt.Errorf("bad day names in schedule: %s, %s", badMondayName, badFridayName),
-			})
+			So(err, ShouldResemble, fmt.Errorf("bad day names in schedule: %s, %s", badMondayName, badFridayName))
 			So(gotSchedule, ShouldBeNil)
 		})
 	})
