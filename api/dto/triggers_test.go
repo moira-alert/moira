@@ -548,6 +548,26 @@ func Test_checkScheduleFilling(t *testing.T) {
 			So(err, ShouldResemble, fmt.Errorf("bad day names in schedule: %s, %s", badMondayName, badFridayName))
 			So(gotSchedule, ShouldBeNil)
 		})
+
+		Convey("With no enabled days error returned", func() {
+			days := slices.Clone(defaultSchedule.Days)
+
+			for i := range days {
+				days[i].Enabled = false
+			}
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldResemble, errNoAllowedDays)
+			So(gotSchedule, ShouldBeNil)
+		})
 	})
 }
 

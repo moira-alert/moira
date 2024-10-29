@@ -72,17 +72,24 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		ttlState := moira.TTLState("NODATA")
 		triggerDTO := dto.Trigger{
 			TriggerModel: dto.TriggerModel{
-				ID:             "test_id",
-				Name:           "Test trigger",
-				Desc:           new(string),
-				Targets:        []string{"foo.bar"},
-				WarnValue:      &triggerWarnValue,
-				ErrorValue:     &triggerErrorValue,
-				TriggerType:    "rising",
-				Tags:           []string{"Normal", "DevOps", "DevOpsGraphite-duty"},
-				TTLState:       &ttlState,
-				TTL:            0,
-				Schedule:       &moira.ScheduleData{},
+				ID:          "test_id",
+				Name:        "Test trigger",
+				Desc:        new(string),
+				Targets:     []string{"foo.bar"},
+				WarnValue:   &triggerWarnValue,
+				ErrorValue:  &triggerErrorValue,
+				TriggerType: "rising",
+				Tags:        []string{"Normal", "DevOps", "DevOpsGraphite-duty"},
+				TTLState:    &ttlState,
+				TTL:         0,
+				Schedule: &moira.ScheduleData{
+					Days: []moira.ScheduleDataDay{
+						{
+							Name:    "Mon",
+							Enabled: true,
+						},
+					},
+				},
 				Expression:     "",
 				Patterns:       []string{},
 				TriggerSource:  moira.GraphiteLocal,
@@ -107,7 +114,9 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		triggerDTO.Schedule.StartOffset = 0
 		triggerDTO.Schedule.EndOffset = 0
 		for i := range triggerDTO.Schedule.Days {
-			triggerDTO.Schedule.Days[i].Enabled = false
+			if i != 0 {
+				triggerDTO.Schedule.Days[i].Enabled = false
+			}
 		}
 
 		Convey("It should be parsed successfully", func() {

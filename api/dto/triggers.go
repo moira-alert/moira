@@ -41,6 +41,9 @@ var (
 
 	// errAsteriskPatternNotAllowed is returned then one of Trigger.Patterns contain only "*".
 	errAsteriskPatternNotAllowed = errors.New("pattern \"*\" is not allowed to use")
+
+	// errNoAllowedDays is returned then all days disabled in moira.ScheduleData.
+	errNoAllowedDays = errors.New("no allowed days in trigger schedule")
 )
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
@@ -311,12 +314,21 @@ func checkScheduleFilling(gotSchedule *moira.ScheduleData) (*moira.ScheduleData,
 	}
 
 	newDaysForSchedule := make([]moira.ScheduleDataDay, 0, len(scheduleDaysMap))
+	someDayEnabled := false
 	for _, day := range defaultSchedule.Days {
 		newDaysForSchedule = append(newDaysForSchedule,
 			moira.ScheduleDataDay{
 				Name:    day.Name,
 				Enabled: scheduleDaysMap[day.Name],
 			})
+
+		if scheduleDaysMap[day.Name] {
+			someDayEnabled = true
+		}
+	}
+
+	if !someDayEnabled {
+		return nil, errNoAllowedDays
 	}
 
 	return &moira.ScheduleData{
