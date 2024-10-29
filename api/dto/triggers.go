@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -257,6 +258,13 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	if trigger.Schedule == nil {
 		trigger.Schedule = moira.NewDefaultScheduleData()
+	} else {
+		correctedSchedule, err := checkScheduleFilling(trigger.Schedule)
+		if err != nil {
+			return api.ErrInvalidRequestContent{ValidationError: err}
+		}
+
+		trigger.Schedule = correctedSchedule
 	}
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
@@ -276,6 +284,47 @@ func getDateTime(timestamp *int64) *time.Time {
 	datetime := time.Unix(*timestamp, 0).UTC()
 
 	return &datetime
+}
+
+// checkScheduleFilling ensures that all days are included to schedule, ordered from monday to sunday
+// and have proper names (one of [Mon, Tue, Wed, Thu, Fri, Sat Sun]).
+func checkScheduleFilling(gotSchedule *moira.ScheduleData) (*moira.ScheduleData, error) {
+	defaultSchedule := moira.NewDefaultScheduleData()
+
+	scheduleDaysMap := make(map[string]bool, len(defaultSchedule.Days))
+	for _, day := range defaultSchedule.Days {
+		scheduleDaysMap[day.Name] = false
+	}
+
+	badDayNames := make([]string, 0)
+	for _, day := range gotSchedule.Days {
+		_, validDay := scheduleDaysMap[day.Name]
+		if validDay && day.Enabled {
+			scheduleDaysMap[day.Name] = true
+		} else if !validDay {
+			badDayNames = append(badDayNames, day.Name)
+		}
+	}
+
+	if len(badDayNames) != 0 {
+		return nil, fmt.Errorf("bad day names in schedule: %s", strings.Join(badDayNames, ", "))
+	}
+
+	newDaysForSchedule := make([]moira.ScheduleDataDay, 0, len(scheduleDaysMap))
+	for _, day := range defaultSchedule.Days {
+		newDaysForSchedule = append(newDaysForSchedule,
+			moira.ScheduleDataDay{
+				Name:    day.Name,
+				Enabled: scheduleDaysMap[day.Name],
+			})
+	}
+
+	return &moira.ScheduleData{
+		Days:           newDaysForSchedule,
+		TimezoneOffset: gotSchedule.TimezoneOffset,
+		StartOffset:    gotSchedule.StartOffset,
+		EndOffset:      gotSchedule.EndOffset,
+	}, nil
 }
 
 func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) error {
