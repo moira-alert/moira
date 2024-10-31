@@ -5,84 +5,205 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira/datatypes"
 
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
-func TestCheckDelay_Check(t *testing.T) {
-	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
-	Convey("Test local checker heartbeat", t, func() {
-		err := errors.New("test error localChecker")
-		now := time.Now().Unix()
-		check, mockCtrl := createGraphiteLocalCheckerTest(t)
-		defer mockCtrl.Finish()
-		database := check.database.(*mock_moira_alert.MockDatabase)
+const (
+	defaultLocalCheckDelay = time.Minute
+)
 
-		Convey("Test creation localChecker", func() {
-			expected := &localChecker{heartbeat: heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now}}
-			So(GetLocalChecker(0, check.logger, check.database), ShouldBeNil)
-			So(GetLocalChecker(1, check.logger, check.database), ShouldResemble, expected)
+func TestNewLocalCheckerHeartbeater(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	validationErr := validator.ValidationErrors{}
+
+	Convey("Test NewLocalCheckerHeartbeater", t, func() {
+		Convey("With too low local check delay", func() {
+			cfg := LocalCheckerHeartbeaterConfig{
+				LocalCheckDelay: -1,
+			}
+
+			localCheckerHeartbeater, err := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+			So(localCheckerHeartbeater, ShouldBeNil)
 		})
 
-		Convey("GraphiteLocalChecker error handling test", func() {
-			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), err)
+		Convey("Without local check delay", func() {
+			cfg := LocalCheckerHeartbeaterConfig{}
 
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldEqual, err)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
+			localCheckerHeartbeater, err := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+			So(localCheckerHeartbeater, ShouldBeNil)
 		})
 
-		Convey("Test update lastSuccessfulCheck", func() {
-			now += 1000
-			database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
+		Convey("With correct local checker heartbeater config", func() {
+			cfg := LocalCheckerHeartbeaterConfig{
+				LocalCheckDelay: 1,
+			}
 
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
-			So(check.lastSuccessfulCheck, ShouldResemble, now)
-		})
+			expected := &localCheckerHeartbeater{
+				heartbeaterBase: heartbeaterBase,
+				cfg:             cfg,
+			}
 
-		Convey("Test get notification", func() {
-			check.lastSuccessfulCheck = now - check.delay - 1
-			database.EXPECT().GetChecksUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
-
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeTrue)
-			So(value, ShouldEqual, now-check.lastSuccessfulCheck)
-		})
-
-		Convey("Exit without action", func() {
-			database.EXPECT().GetChecksUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
-
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
-		})
-
-		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			// TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
-			needCheck := check.NeedToCheckOthers()
-			So(needCheck, ShouldBeTrue)
-
-			So(check.NeedTurnOffNotifier(), ShouldBeFalse)
+			localCheckerHeartbeater, err := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
+			So(err, ShouldBeNil)
+			So(localCheckerHeartbeater, ShouldResemble, expected)
 		})
 	})
 }
 
-func createGraphiteLocalCheckerTest(t *testing.T) (*localChecker, *gomock.Controller) {
-	mockCtrl := gomock.NewController(t)
-	logger, _ := logging.GetLogger("CheckDelay")
+func TestLocalCheckerHeartbeaterCheck(t *testing.T) {
+	database, clock, testTime, heartbeaterBase := heartbeaterHelper(t)
 
-	return GetLocalChecker(120, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*localChecker), mockCtrl
+	cfg := LocalCheckerHeartbeaterConfig{
+		LocalCheckDelay: defaultMetricReceivedDelay,
+	}
+
+	localCheckerHeartbeater, _ := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
+
+	var (
+		testErr                                        = errors.New("test error")
+		triggersToCheckCount, checksUpdatesCount int64 = 10, 10
+	)
+
+	Convey("Test localCheckerHeartbeater.Check", t, func() {
+		Convey("With GetTriggersToCheckCount error", func() {
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, testErr)
+
+			state, err := localCheckerHeartbeater.Check()
+			So(err, ShouldResemble, testErr)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With GetChecksUpdatesCount error", func() {
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetChecksUpdatesCount().Return(checksUpdatesCount, testErr)
+
+			state, err := localCheckerHeartbeater.Check()
+			So(err, ShouldResemble, testErr)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With last checks count not equal current checks count", func() {
+			defer func() {
+				localCheckerHeartbeater.lastChecksCount = 0
+			}()
+
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetChecksUpdatesCount().Return(checksUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := localCheckerHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+			So(localCheckerHeartbeater.lastChecksCount, ShouldResemble, checksUpdatesCount)
+		})
+
+		Convey("With zero triggers to check count", func() {
+			defer func() {
+				localCheckerHeartbeater.lastChecksCount = 0
+			}()
+
+			var zeroTriggersToCheckCount int64
+
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(zeroTriggersToCheckCount, nil)
+			database.EXPECT().GetChecksUpdatesCount().Return(checksUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := localCheckerHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+			So(localCheckerHeartbeater.lastChecksCount, ShouldResemble, checksUpdatesCount)
+		})
+
+		localCheckerHeartbeater.lastChecksCount = checksUpdatesCount
+
+		Convey("With too much time elapsed since the last successful check", func() {
+			localCheckerHeartbeater.lastSuccessfulCheck = testTime.Add(-10 * defaultLocalCheckDelay)
+			defer func() {
+				localCheckerHeartbeater.lastSuccessfulCheck = testTime
+			}()
+
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetChecksUpdatesCount().Return(checksUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := localCheckerHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With short time elapsed since the last successful check", func() {
+			database.EXPECT().GetTriggersToCheckCount(localClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetChecksUpdatesCount().Return(checksUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := localCheckerHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+		})
+	})
+}
+
+func TestLocalCheckerHeartbeaterNeedTurnOffNotifier(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test localCheckerHeartbeater.TurnOffNotifier", t, func() {
+		cfg := LocalCheckerHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				NeedTurnOffNotifier: true,
+			},
+			LocalCheckDelay: defaultLocalCheckDelay,
+		}
+
+		localCheckerHeartbeater, err := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		needTurnOffNotifier := localCheckerHeartbeater.NeedTurnOffNotifier()
+		So(needTurnOffNotifier, ShouldBeTrue)
+	})
+}
+
+func TestLocalCheckerHeartbeaterType(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test localCheckerHeartbeater.Type", t, func() {
+		cfg := LocalCheckerHeartbeaterConfig{
+			LocalCheckDelay: defaultLocalCheckDelay,
+		}
+
+		localCheckerHeartbeater, err := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		localCheckerHeartbeaterType := localCheckerHeartbeater.Type()
+		So(localCheckerHeartbeaterType, ShouldResemble, datatypes.HearbeatTypeNotSet)
+	})
+}
+
+func TestLocalCheckerHeartbeaterAlertSettings(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test localCheckerHeartbeater.AlertSettings", t, func() {
+		alertCfg := AlertConfig{
+			Name: "test name",
+			Desc: "test desc",
+		}
+
+		cfg := LocalCheckerHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				AlertCfg: alertCfg,
+			},
+			LocalCheckDelay: defaultLocalCheckDelay,
+		}
+
+		localCheckerHeartbeater, err := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		alertSettings := localCheckerHeartbeater.AlertSettings()
+		So(alertSettings, ShouldResemble, alertCfg)
+	})
 }

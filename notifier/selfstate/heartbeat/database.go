@@ -1,52 +1,74 @@
 package heartbeat
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/moira-alert/moira"
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira/datatypes"
 )
 
-type databaseHeartbeat struct{ heartbeat }
+// Verify that databaseHeartbeater matches the Heartbeater interface.
+var _ Heartbeater = (*databaseHeartbeater)(nil)
 
-func GetDatabase(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
-	if delay > 0 {
-		return &databaseHeartbeat{heartbeat{
-			logger:              logger,
-			database:            database,
-			delay:               delay,
-			lastSuccessfulCheck: time.Now().Unix(),
-		}}
-	}
-	return nil
+// DatabaseHeartbeaterConfig structure describing the databaseHeartbeater configuration.
+type DatabaseHeartbeaterConfig struct {
+	HeartbeaterBaseConfig
+
+	RedisDisconnectDelay time.Duration `validate:"required,gt=0"`
 }
 
-func (check *databaseHeartbeat) Check(nowTS int64) (int64, bool, error) {
-	_, err := check.database.GetChecksUpdatesCount()
+func (cfg DatabaseHeartbeaterConfig) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
+}
+
+type databaseHeartbeater struct {
+	*heartbeaterBase
+
+	cfg DatabaseHeartbeaterConfig
+}
+
+// NewDatabaseHeartbeater is a function that creates a new databaseHeartbeater.
+func NewDatabaseHeartbeater(cfg DatabaseHeartbeaterConfig, base *heartbeaterBase) (*databaseHeartbeater, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("database heartbeater configuration error: %w", err)
+	}
+
+	return &databaseHeartbeater{
+		heartbeaterBase: base,
+		cfg:             cfg,
+	}, nil
+}
+
+// Check is a function that checks if the database is working correctly.
+func (heartbeater *databaseHeartbeater) Check() (State, error) {
+	now := heartbeater.clock.NowUTC()
+
+	_, err := heartbeater.database.GetChecksUpdatesCount()
 	if err == nil {
-		check.lastSuccessfulCheck = nowTS
-		return 0, false, nil
+		heartbeater.lastSuccessfulCheck = now
+		return StateOK, nil
 	}
 
-	if check.lastSuccessfulCheck < nowTS-check.delay {
-		check.logger.Error().
-			String("error", check.GetErrorMessage()).
-			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
-			Msg("Send message")
-
-		return nowTS - check.lastSuccessfulCheck, true, nil
+	if now.Sub(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.RedisDisconnectDelay {
+		return StateError, nil
 	}
 
-	return 0, false, nil
+	return StateOK, err
 }
 
-func (databaseHeartbeat) NeedTurnOffNotifier() bool {
-	return true
+// NeedTurnOffNotifier is a function that checks to see if the notifier needs to be turned off.
+func (heartbeater databaseHeartbeater) NeedTurnOffNotifier() bool {
+	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (databaseHeartbeat) NeedToCheckOthers() bool {
-	return false
+// Type is a function that returns the current heartbeat type.
+func (databaseHeartbeater) Type() datatypes.HeartbeatType {
+	return datatypes.HearbeatTypeNotSet
 }
 
-func (databaseHeartbeat) GetErrorMessage() string {
-	return "Redis disconnected"
+// AlertSettings is a function that returns the current settings for alerts.
+func (heartbeater databaseHeartbeater) AlertSettings() AlertConfig {
+	return heartbeater.cfg.AlertCfg
 }

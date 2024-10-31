@@ -1,70 +1,89 @@
 package heartbeat
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/datatypes"
 )
 
-type filter struct {
-	heartbeat
-	count                   int64
-	firstCheckWasSuccessful bool
+var (
+	localClusterKey = moira.DefaultLocalCluster
+
+	// Verify that filterHeartbeater matches the Heartbeater interface.
+	_ Heartbeater = (*filterHeartbeater)(nil)
+)
+
+// FilterHeartbeaterConfig structure describing the filterHeartbeater configuration.
+type FilterHeartbeaterConfig struct {
+	HeartbeaterBaseConfig
+
+	MetricReceivedDelay time.Duration `validate:"required,gt=0"`
 }
 
-func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
-	if delay > 0 {
-		return &filter{
-			heartbeat: heartbeat{
-				logger:              logger,
-				database:            database,
-				delay:               delay,
-				lastSuccessfulCheck: time.Now().Unix(),
-			},
-			firstCheckWasSuccessful: false,
-		}
+func (cfg FilterHeartbeaterConfig) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
+}
+
+type filterHeartbeater struct {
+	*heartbeaterBase
+
+	cfg              FilterHeartbeaterConfig
+	lastMetricsCount int64
+}
+
+// NewFilterHeartbeater is a function that creates a new filterHeartbeater.
+func NewFilterHeartbeater(cfg FilterHeartbeaterConfig, base *heartbeaterBase) (*filterHeartbeater, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("filter heartheater configuration error: %w", err)
 	}
-	return nil
+
+	return &filterHeartbeater{
+		heartbeaterBase: base,
+		cfg:             cfg,
+	}, nil
 }
 
-func (check *filter) Check(nowTS int64) (int64, bool, error) {
-	defaultLocalCluster := moira.DefaultLocalCluster
-	triggersCount, err := check.database.GetTriggersToCheckCount(defaultLocalCluster)
+// Check is a function that checks that filters accept metrics and that their number of metrics is not constant.
+func (heartbeater *filterHeartbeater) Check() (State, error) {
+	triggersCount, err := heartbeater.database.GetTriggersToCheckCount(localClusterKey)
 	if err != nil {
-		return 0, false, err
+		return StateError, err
 	}
 
-	metricsCount, err := check.database.GetMetricsUpdatesCount()
+	metricsCount, err := heartbeater.database.GetMetricsUpdatesCount()
 	if err != nil {
-		return 0, false, err
-	}
-	if check.count != metricsCount || triggersCount == 0 {
-		check.count = metricsCount
-		check.lastSuccessfulCheck = nowTS
-		return 0, false, nil
+		return StateError, err
 	}
 
-	if check.lastSuccessfulCheck < nowTS-check.heartbeat.delay {
-		check.logger.Error().
-			String("error", check.GetErrorMessage()).
-			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
-			Msg("Send message")
-
-		check.firstCheckWasSuccessful = true
-		return nowTS - check.heartbeat.lastSuccessfulCheck, true, nil
+	now := heartbeater.clock.NowUTC()
+	if heartbeater.lastMetricsCount != metricsCount || triggersCount == 0 {
+		heartbeater.lastMetricsCount = metricsCount
+		heartbeater.lastSuccessfulCheck = now
+		return StateOK, nil
 	}
-	return 0, false, nil
+
+	if now.Sub(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.MetricReceivedDelay {
+		return StateError, nil
+	}
+
+	return StateOK, nil
 }
 
-// NeedTurnOffNotifier: turn off notifications if at least once the filter check was successful.
-func (check filter) NeedTurnOffNotifier() bool {
-	return check.firstCheckWasSuccessful
+// NeedTurnOffNotifier is a function that checks to see if the notifier needs to be turned off.
+func (heartbeater filterHeartbeater) NeedTurnOffNotifier() bool {
+	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (check filter) NeedToCheckOthers() bool {
-	return true
+// Type is a function that returns the current heartbeat type.
+func (filterHeartbeater) Type() datatypes.HeartbeatType {
+	return datatypes.HearbeatTypeNotSet
 }
 
-func (filter) GetErrorMessage() string {
-	return "Moira-Filter does not receive metrics"
+// AlertSettings is a function that returns the current settings for alerts.
+func (heartbeater filterHeartbeater) AlertSettings() AlertConfig {
+	return heartbeater.cfg.AlertCfg
 }

@@ -1,62 +1,84 @@
 package heartbeat
 
 import (
+	"fmt"
 	"time"
 
-	"github.com/moira-alert/moira"
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira/datatypes"
 )
 
-type localChecker struct {
-	heartbeat
-	count int64
+// Verify that localCheckerHeartbeater matches the Heartbeater interface.
+var _ Heartbeater = (*localCheckerHeartbeater)(nil)
+
+// LocalCheckerHeartbeaterConfig structure describing the localCheckerHeartbeater configuration.
+type LocalCheckerHeartbeaterConfig struct {
+	HeartbeaterBaseConfig
+
+	LocalCheckDelay time.Duration `validate:"required,gt=0"`
 }
 
-func GetLocalChecker(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
-	if delay > 0 {
-		return &localChecker{heartbeat: heartbeat{
-			logger:              logger,
-			database:            database,
-			delay:               delay,
-			lastSuccessfulCheck: time.Now().Unix(),
-		}}
+func (cfg LocalCheckerHeartbeaterConfig) validate() error {
+	validator := validator.New()
+	return validator.Struct(cfg)
+}
+
+type localCheckerHeartbeater struct {
+	*heartbeaterBase
+
+	cfg             LocalCheckerHeartbeaterConfig
+	lastChecksCount int64
+}
+
+// NewLocalCheckerHeartbeater is a function that creates a new localCheckerHeartbeater.
+func NewLocalCheckerHeartbeater(cfg LocalCheckerHeartbeaterConfig, base *heartbeaterBase) (*localCheckerHeartbeater, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("local checker heartbeater configuration error: %w", err)
 	}
-	return nil
+
+	return &localCheckerHeartbeater{
+		heartbeaterBase: base,
+		cfg:             cfg,
+	}, nil
 }
 
-func (check *localChecker) Check(nowTS int64) (int64, bool, error) {
-	defaultLocalCluster := moira.DefaultLocalCluster
-	triggersCount, err := check.database.GetTriggersToCheckCount(defaultLocalCluster)
+// Check is a function that checks that the local checker checks triggers and the number of triggers is not constant.
+func (heartbeater *localCheckerHeartbeater) Check() (State, error) {
+	triggersCount, err := heartbeater.database.GetTriggersToCheckCount(localClusterKey)
 	if err != nil {
-		return 0, false, err
+		return StateError, err
 	}
 
-	checksCount, _ := check.database.GetChecksUpdatesCount()
-	if check.count != checksCount || triggersCount == 0 {
-		check.count = checksCount
-		check.lastSuccessfulCheck = nowTS
-		return 0, false, nil
+	checksCount, err := heartbeater.database.GetChecksUpdatesCount()
+	if err != nil {
+		return StateError, err
 	}
 
-	if check.lastSuccessfulCheck < nowTS-check.delay {
-		check.logger.Error().
-			String("error", check.GetErrorMessage()).
-			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
-			Msg("Send message")
-
-		return nowTS - check.lastSuccessfulCheck, true, nil
+	now := heartbeater.clock.NowUTC()
+	if heartbeater.lastChecksCount != checksCount || triggersCount == 0 {
+		heartbeater.lastChecksCount = checksCount
+		heartbeater.lastSuccessfulCheck = now
+		return StateOK, nil
 	}
 
-	return 0, false, nil
+	if now.Sub(heartbeater.lastSuccessfulCheck) > heartbeater.cfg.LocalCheckDelay {
+		return StateError, nil
+	}
+
+	return StateOK, nil
 }
 
-func (localChecker) NeedToCheckOthers() bool {
-	return true
+// NeedTurnOffNotifier is a function that checks to see if the notifier needs to be turned off.
+func (heartbeater localCheckerHeartbeater) NeedTurnOffNotifier() bool {
+	return heartbeater.cfg.NeedTurnOffNotifier
 }
 
-func (check localChecker) NeedTurnOffNotifier() bool {
-	return false
+// Type is a function that returns the current heartbeat type.
+func (localCheckerHeartbeater) Type() datatypes.HeartbeatType {
+	return datatypes.HearbeatTypeNotSet
 }
 
-func (localChecker) GetErrorMessage() string {
-	return "Moira-Checker does not check triggers"
+// AlertSettings is a function that returns the current settings for alerts.
+func (heartbeater localCheckerHeartbeater) AlertSettings() AlertConfig {
+	return heartbeater.cfg.AlertCfg
 }

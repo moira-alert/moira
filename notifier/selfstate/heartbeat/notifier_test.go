@@ -1,53 +1,121 @@
 package heartbeat
 
 import (
+	"errors"
 	"testing"
-	"time"
-
-	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/moira-alert/moira/datatypes"
 
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
-func TestNotifierState(t *testing.T) {
-	Convey("Test notifier delay heartbeat", t, func() {
-		now := time.Now().Unix()
-		check := createNotifierStateTest(t)
+func TestNewNotifierHeartbeater(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
 
-		Convey("Test get notifier delay", func() {
-			check.db.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+	Convey("Test NewNotifierHeartbeater", t, func() {
+		Convey("With correct local checker heartbeater config", func() {
+			cfg := NotifierHeartbeaterConfig{}
 
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
-		})
+			expected := &notifierHeartbeater{
+				heartbeaterBase: heartbeaterBase,
+				cfg:             cfg,
+			}
 
-		Convey("Test get notification", func() {
-			check.db.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil).Times(2)
-
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeTrue)
-			So(value, ShouldEqual, 0)
-		})
-
-		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			So(check.NeedTurnOffNotifier(), ShouldBeFalse)
-			So(check.NeedToCheckOthers(), ShouldBeTrue)
+			notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase)
+			So(err, ShouldBeNil)
+			So(notifierHeartbeater, ShouldResemble, expected)
 		})
 	})
 }
 
-func createNotifierStateTest(t *testing.T) *notifier {
-	mockCtrl := gomock.NewController(t)
-	logger, _ := logging.GetLogger("MetricDelay")
-	metric := metrics.ConfigureHeartBeatMetrics(metrics.NewDummyRegistry())
+func TestNotifierHeartbeaterCheck(t *testing.T) {
+	database, _, _, heartbeaterBase := heartbeaterHelper(t)
 
-	return GetNotifier(logger, mock_moira_alert.NewMockDatabase(mockCtrl), metric).(*notifier)
+	cfg := NotifierHeartbeaterConfig{}
+
+	notifierHeartbeater, _ := NewNotifierHeartbeater(cfg, heartbeaterBase)
+
+	testErr := errors.New("test error")
+
+	Convey("Test notifierHeartbeater.Check", t, func() {
+		Convey("With GetNotifierState error", func() {
+			database.EXPECT().GetNotifierState().Return(string(moira.SelfStateOK), testErr)
+
+			state, err := notifierHeartbeater.Check()
+			So(err, ShouldResemble, testErr)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With notifier state equals error", func() {
+			database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil)
+
+			state, err := notifierHeartbeater.Check()
+			So(err, ShouldResemble, nil)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With notifier state equals ok", func() {
+			database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+
+			state, err := notifierHeartbeater.Check()
+			So(err, ShouldResemble, nil)
+			So(state, ShouldResemble, StateOK)
+		})
+	})
+}
+
+func TestNotifierHeartbeaterNeedTurnOffNotifier(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test notifierHeartbeater.TurnOffNotifier", t, func() {
+		cfg := NotifierHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				NeedTurnOffNotifier: true,
+			},
+		}
+
+		notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		needTurnOffNotifier := notifierHeartbeater.NeedTurnOffNotifier()
+		So(needTurnOffNotifier, ShouldBeTrue)
+	})
+}
+
+func TestNotifierHeartbeaterType(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test notifierHeartbeater.Type", t, func() {
+		cfg := NotifierHeartbeaterConfig{}
+
+		notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		notifierHeartbeaterType := notifierHeartbeater.Type()
+		So(notifierHeartbeaterType, ShouldResemble, datatypes.HeartbeatNotifierOff)
+	})
+}
+
+func TestNotifierHeartbeaterAlertSettings(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test notifierHeartbeater.AlertSettings", t, func() {
+		alertCfg := AlertConfig{
+			Name: "test name",
+			Desc: "test desc",
+		}
+
+		cfg := NotifierHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				AlertCfg: alertCfg,
+			},
+		}
+
+		notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		alertSettings := notifierHeartbeater.AlertSettings()
+		So(alertSettings, ShouldResemble, alertCfg)
+	})
 }

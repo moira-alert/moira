@@ -5,84 +5,205 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira/datatypes"
 
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
-func TestGraphiteRemoteChecker(t *testing.T) {
-	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
+const (
+	defaultRemoteCheckDelay = time.Minute
+)
 
-	Convey("Test remote checker heartbeat", t, func() {
-		err := errors.New("test error remoteChecker")
-		now := time.Now().Unix()
-		check, mockCtrl := createGraphiteRemoteCheckerTest(t)
-		defer mockCtrl.Finish()
-		database := check.database.(*mock_moira_alert.MockDatabase)
+func TestNewRemoteCheckerHeartbeater(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
 
-		Convey("Checking the created graphite remote checker", func() {
-			expected := &remoteChecker{heartbeat: heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now}}
-			So(GetRemoteChecker(0, check.logger, check.database), ShouldBeNil)
-			So(GetRemoteChecker(1, check.logger, check.database), ShouldResemble, expected)
+	validationErr := validator.ValidationErrors{}
+
+	Convey("Test NewRemoteCheckerHeartbeater", t, func() {
+		Convey("With too low remote check delay", func() {
+			cfg := RemoteCheckerHeartbeaterConfig{
+				RemoteCheckDelay: -1,
+			}
+
+			remoteCheckerHeartbeater, err := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+			So(remoteCheckerHeartbeater, ShouldBeNil)
 		})
 
-		Convey("GraphiteRemoteChecker error handling test", func() {
-			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(0), err)
+		Convey("Without remote check delay", func() {
+			cfg := RemoteCheckerHeartbeaterConfig{}
 
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldEqual, err)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
+			remoteCheckerHeartbeater, err := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
+			So(errors.As(err, &validationErr), ShouldBeTrue)
+			So(remoteCheckerHeartbeater, ShouldBeNil)
 		})
 
-		Convey("Test update lastSuccessfulCheck", func() {
-			now += 1000
-			database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
+		Convey("With correct remote checker heartbeater config", func() {
+			cfg := RemoteCheckerHeartbeaterConfig{
+				RemoteCheckDelay: 1,
+			}
 
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
-			So(check.lastSuccessfulCheck, ShouldResemble, now)
-		})
+			expected := &remoteCheckerHeartbeater{
+				heartbeaterBase: heartbeaterBase,
+				cfg:             cfg,
+			}
 
-		Convey("Check for notification", func() {
-			check.lastSuccessfulCheck = now - check.delay - 1
-
-			database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
-
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeTrue)
-			So(value, ShouldEqual, now-check.lastSuccessfulCheck)
-		})
-
-		Convey("Exit without action", func() {
-			database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
-
-			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
-		})
-
-		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			// TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
-			So(check.NeedToCheckOthers(), ShouldBeTrue)
-			So(check.NeedTurnOffNotifier(), ShouldBeFalse)
+			remoteCheckerHeartbeater, err := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
+			So(err, ShouldBeNil)
+			So(remoteCheckerHeartbeater, ShouldResemble, expected)
 		})
 	})
 }
 
-func createGraphiteRemoteCheckerTest(t *testing.T) (*remoteChecker, *gomock.Controller) {
-	mockCtrl := gomock.NewController(t)
-	logger, _ := logging.GetLogger("MetricDelay")
+func TestRemoteCheckerHeartbeaterCheck(t *testing.T) {
+	database, clock, testTime, heartbeaterBase := heartbeaterHelper(t)
 
-	return GetRemoteChecker(120, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*remoteChecker), mockCtrl
+	cfg := RemoteCheckerHeartbeaterConfig{
+		RemoteCheckDelay: defaultRemoteCheckDelay,
+	}
+
+	remoteCheckerHeartbeater, _ := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
+
+	var (
+		testErr                                              = errors.New("test error")
+		triggersToCheckCount, remoteChecksUpdatesCount int64 = 10, 10
+	)
+
+	Convey("Test remoteCheckerHeartbeater.Check", t, func() {
+		Convey("With GetTriggersToCheckCount error", func() {
+			database.EXPECT().GetTriggersToCheckCount(remoteClusterKey).Return(triggersToCheckCount, testErr)
+
+			state, err := remoteCheckerHeartbeater.Check()
+			So(err, ShouldResemble, testErr)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With GetRemoteChecksUpdatesCount error", func() {
+			database.EXPECT().GetTriggersToCheckCount(remoteClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetRemoteChecksUpdatesCount().Return(remoteChecksUpdatesCount, testErr)
+
+			state, err := remoteCheckerHeartbeater.Check()
+			So(err, ShouldResemble, testErr)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With last remote checks count not equal current remote checks count", func() {
+			defer func() {
+				remoteCheckerHeartbeater.lastRemoteChecksCount = 0
+			}()
+
+			database.EXPECT().GetTriggersToCheckCount(remoteClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetRemoteChecksUpdatesCount().Return(remoteChecksUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := remoteCheckerHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+			So(remoteCheckerHeartbeater.lastRemoteChecksCount, ShouldResemble, remoteChecksUpdatesCount)
+		})
+
+		Convey("With zero triggers to check count", func() {
+			defer func() {
+				remoteCheckerHeartbeater.lastRemoteChecksCount = 0
+			}()
+
+			var zeroTriggersToCheckCount int64
+
+			database.EXPECT().GetTriggersToCheckCount(remoteClusterKey).Return(zeroTriggersToCheckCount, nil)
+			database.EXPECT().GetRemoteChecksUpdatesCount().Return(remoteChecksUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := remoteCheckerHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+			So(remoteCheckerHeartbeater.lastRemoteChecksCount, ShouldResemble, remoteChecksUpdatesCount)
+		})
+
+		remoteCheckerHeartbeater.lastRemoteChecksCount = remoteChecksUpdatesCount
+
+		Convey("With too much time elapsed since the last successful check", func() {
+			remoteCheckerHeartbeater.lastSuccessfulCheck = testTime.Add(-10 * defaultRemoteCheckDelay)
+			defer func() {
+				remoteCheckerHeartbeater.lastSuccessfulCheck = testTime
+			}()
+
+			database.EXPECT().GetTriggersToCheckCount(remoteClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetRemoteChecksUpdatesCount().Return(remoteChecksUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := remoteCheckerHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateError)
+		})
+
+		Convey("With short time elapsed since the last successful check", func() {
+			database.EXPECT().GetTriggersToCheckCount(remoteClusterKey).Return(triggersToCheckCount, nil)
+			database.EXPECT().GetRemoteChecksUpdatesCount().Return(remoteChecksUpdatesCount, nil)
+			clock.EXPECT().NowUTC().Return(testTime)
+
+			state, err := remoteCheckerHeartbeater.Check()
+			So(err, ShouldBeNil)
+			So(state, ShouldResemble, StateOK)
+		})
+	})
+}
+
+func TestRemoteCheckerHeartbeaterNeedTurnOffNotifier(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test remoteCheckerHeartbeater.TurnOffNotifier", t, func() {
+		cfg := RemoteCheckerHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				NeedTurnOffNotifier: true,
+			},
+			RemoteCheckDelay: defaultRemoteCheckDelay,
+		}
+
+		remoteCheckerHeartbeater, err := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		needTurnOffNotifier := remoteCheckerHeartbeater.NeedTurnOffNotifier()
+		So(needTurnOffNotifier, ShouldBeTrue)
+	})
+}
+
+func TestRemoteCheckerHeartbeaterType(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test remoteCheckerHeartbeater.Type", t, func() {
+		cfg := RemoteCheckerHeartbeaterConfig{
+			RemoteCheckDelay: defaultRemoteCheckDelay,
+		}
+
+		remoteCheckerHeartbeater, err := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		remoteCheckerHeartbeaterType := remoteCheckerHeartbeater.Type()
+		So(remoteCheckerHeartbeaterType, ShouldResemble, datatypes.HearbeatTypeNotSet)
+	})
+}
+
+func TestRemoteCheckerHeartbeaterAlertSettings(t *testing.T) {
+	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+
+	Convey("Test remoteCheckerHeartbeater.AlertSettings", t, func() {
+		alertCfg := AlertConfig{
+			Name: "test name",
+			Desc: "test desc",
+		}
+
+		cfg := RemoteCheckerHeartbeaterConfig{
+			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+				AlertCfg: alertCfg,
+			},
+			RemoteCheckDelay: defaultRemoteCheckDelay,
+		}
+
+		remoteCheckerHeartbeater, err := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
+		So(err, ShouldBeNil)
+
+		alertSettings := remoteCheckerHeartbeater.AlertSettings()
+		So(alertSettings, ShouldResemble, alertCfg)
+	})
 }
