@@ -183,7 +183,6 @@ func TestMakeRequestWithRetries(t *testing.T) {
 		expectedErr := errInvalidRequest{
 			internalErr: fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, string(body)),
 		}
-		// systemClock.EXPECT().Sleep(time.Second).Times(0)
 
 		Convey("request failed with 500 response and remote is available", func() {
 			remote := Remote{
