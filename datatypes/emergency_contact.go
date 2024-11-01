@@ -4,7 +4,7 @@ package datatypes
 type HeartbeatType string
 
 const (
-	HearbeatTypeNotSet   HeartbeatType = "type_not_set"
+	HeartbeatTypeNotSet  HeartbeatType = "type_not_set"
 	HeartbeatNotifierOff HeartbeatType = "notifier_off"
 )
 
