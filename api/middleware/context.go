@@ -36,6 +36,16 @@ func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Ha
 	}
 }
 
+// ContactsTemplateContext sets to requests context contacts template.
+func ContactsTemplateContext(contactsTemplate []api.WebContact) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), contactsTemplateKey, contactsTemplate)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
 // UserContext get x-webauth-user header and sets it in request context, if header is empty sets empty string.
 func UserContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -327,6 +337,16 @@ func StatesContext() func(next http.Handler) http.Handler {
 			}
 
 			ctx := context.WithValue(request.Context(), statesContextKey, states)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// LimitsContext places api.LimitsConfig to request context.
+func LimitsContext(limit api.LimitsConfig) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), limitsContextKey, limit)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}

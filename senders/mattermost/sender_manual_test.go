@@ -18,7 +18,7 @@ func TestSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 
 	const (
-		url       = "http://localhost:8065"
+		url       = "https://mattermost.com/"
 		apiToken  = "8pdo6yoiutgidgxs9qxhbo7w4h"
 		channelID = "3y6ab8rptfdr9m1hzskghpxwsc"
 	)

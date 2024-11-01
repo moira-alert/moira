@@ -123,7 +123,7 @@ func TestGetEmergencyContactByID(t *testing.T) {
 
 			expectedEmergencyContactDTO := dto.EmergencyContact(testEmergencyContact)
 			testRequest := httptest.NewRequest(http.MethodGet, "/emergency-contact/"+testContactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 
 			getEmergencyContactByID(responseWriter, testRequest)
 
@@ -151,7 +151,7 @@ func TestGetEmergencyContactByID(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/emergency-contact/"+testContactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 
 			getEmergencyContactByID(responseWriter, testRequest)
 
@@ -179,7 +179,7 @@ func TestGetEmergencyContactByID(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/emergency-contact/"+testContactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 
 			getEmergencyContactByID(responseWriter, testRequest)
 
@@ -226,8 +226,8 @@ func TestCreateEmergencyContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createEmergencyContact(responseWriter, testRequest)
@@ -262,8 +262,8 @@ func TestCreateEmergencyContact(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createEmergencyContact(responseWriter, testRequest)
@@ -298,8 +298,8 @@ func TestCreateEmergencyContact(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createEmergencyContact(responseWriter, testRequest)
@@ -337,8 +337,8 @@ func TestCreateEmergencyContact(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createEmergencyContact(responseWriter, testRequest)
@@ -373,8 +373,8 @@ func TestCreateEmergencyContact(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createEmergencyContact(responseWriter, testRequest)
@@ -410,8 +410,8 @@ func TestCreateEmergencyContact(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), AuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createEmergencyContact(responseWriter, testRequest)
@@ -453,7 +453,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -488,7 +488,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -522,7 +522,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -559,7 +559,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -592,7 +592,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -625,7 +625,7 @@ func TestRemoveEmergencyContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact/"+testContactID, http.NoBody)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 
 			removeEmergencyContact(responseWriter, testRequest)
 
@@ -646,7 +646,7 @@ func TestRemoveEmergencyContact(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/emergency-contact/"+testContactID, http.NoBody)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
 
 			removeEmergencyContact(responseWriter, testRequest)
 

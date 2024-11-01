@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/emoji_provider"
@@ -30,6 +31,7 @@ func TestFormat(t *testing.T) {
 			location,
 			testUriFormatter,
 			testDescriptionFormatter,
+			DefaultDescriptionCutter,
 			testBoldFormatter,
 			testEventStringFormatter,
 			"```",
@@ -88,62 +90,194 @@ func TestFormat(t *testing.T) {
 		})
 
 		Convey("Long message parts", func() {
+			trigger.Desc = ""
+			trigger.Tags = []string{}
+
 			const (
-				msgLimit        = 4_000
-				halfLimit       = msgLimit / 2
-				greaterThanHalf = halfLimit + 100
-				lessThanHalf    = halfLimit - 100
+				titleLine    = "**NODATA** [Name](http://moira.url/trigger/TriggerID)"
+				eventLine    = "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
+				endSuffix    = "...\n"
+				lenEndSuffix = 4
 			)
 
-			const eventLine = "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
-			oneEventLineLen := len([]rune(eventLine))
+			lenTitle := utf8.RuneCountInString(titleLine) + len("\n") // 54 symbols
+			oneEventLineLen := utf8.RuneCountInString(eventLine)      // 47 symbols
 
-			longDesc := strings.Repeat("a", greaterThanHalf)
+			var (
+				msgLimit         = testMaxChars - lenTitle // 3947
+				thirdOfLimit     = msgLimit / 3            // 1315
+				greaterThanThird = thirdOfLimit + 100      // 1415
+				lessThanThird    = thirdOfLimit - 100      // 1215
+			)
 
-			// Events list with chars greater than half of the message limit
-			var longEvents moira.NotificationEvents
-			for i := 0; i < greaterThanHalf/oneEventLineLen; i++ {
-				longEvents = append(longEvents, event)
-			}
-
-			Convey("Long description. desc > msgLimit/2", func() {
-				var events moira.NotificationEvents
-				for i := 0; i < lessThanHalf/oneEventLineLen; i++ {
-					events = append(events, event)
+			Convey("with long tags (tagsLen >= msgLimit), desc and events < msgLimit/3", func() {
+				trigger.Tags = []string{
+					strings.Repeat("a", 1000),
+					strings.Repeat("b", 1000),
+					strings.Repeat("c", 1000),
+					strings.Repeat("d", 1000),
 				}
+				trigger.Desc = genDescByLimit(lessThanThird)
+				events := genEventsByLimit(event, oneEventLineLen, lessThanThird)
 
-				actual := formatter.Format(getParams(events, moira.TriggerData{Desc: longDesc}, false))
-				expected := "**NODATA**\n" +
-					strings.Repeat("a", 2100) + "\n" +
-					"```\n" +
-					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 39) +
-					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```"
+				expected := titleLine +
+					DefaultTagsLimiter(trigger.Tags,
+						msgLimit-utf8.RuneCountInString(trigger.Desc)-len("```\n```")-oneEventLineLen*len(events),
+					) + "\n" +
+					strings.Repeat("a", lessThanThird) + "\n" +
+					"```" +
+					strings.Repeat(eventLine, len(events)) +
+					"\n```"
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
 				So(actual, ShouldResemble, expected)
+				So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, testMaxChars)
 			})
 
-			Convey("Many events. eventString > msgLimit/2", func() {
-				desc := strings.Repeat("a", lessThanHalf)
-				actual := formatter.Format(getParams(longEvents, moira.TriggerData{Desc: desc}, false))
-				expected := "**NODATA**\n" +
-					desc + "\n" +
-					"```\n" +
-					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 43) +
-					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```"
+			Convey("with description > msgLimit/3, tags and events < msgLimit/3, and sum of lengths is greater than msgLimit", func() {
+				longDescLen := greaterThanThird + 200
+
+				trigger.Tags = genTagsByLimit(lessThanThird)
+				trigger.Desc = genDescByLimit(longDescLen)
+				events := genEventsByLimit(event, oneEventLineLen, lessThanThird)
+
+				tagsStr := " " + trigger.GetTags()
+
+				expected := titleLine + tagsStr + "\n" +
+					strings.Repeat("a",
+						msgLimit-utf8.RuneCountInString(tagsStr)-len("```\n```")-oneEventLineLen*len(events)-lenEndSuffix,
+					) + endSuffix +
+					"```" +
+					strings.Repeat(eventLine, len(events)) +
+					"\n```"
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
 				So(actual, ShouldResemble, expected)
+				So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, testMaxChars)
 			})
 
-			Convey("Long description and many events. both desc and events > msgLimit/2", func() {
-				actual := formatter.Format(getParams(longEvents, moira.TriggerData{Desc: longDesc}, false))
-				expected := "**NODATA**\n" +
-					strings.Repeat("a", 1984) + "...\n" +
-					"```\n" +
-					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 40) +
-					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```\n" +
+			Convey("with long events string (> msgLimit/3), desc and tags < msgLimit/3", func() {
+				longEventsLen := greaterThanThird + 200
+
+				trigger.Tags = genTagsByLimit(lessThanThird)
+				trigger.Desc = genDescByLimit(lessThanThird)
+				events := genEventsByLimit(event, oneEventLineLen, longEventsLen)
+
+				tagsStr := " " + trigger.GetTags()
+
+				expected := titleLine + tagsStr + "\n" +
+					strings.Repeat("a", lessThanThird) + "\n" +
+					"```" +
+					strings.Repeat(eventLine, 31) +
+					"\n```\n" +
 					"...and 3 more events."
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
 				So(actual, ShouldResemble, expected)
+				So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, testMaxChars)
+			})
+
+			Convey("with tags and desc > msgLimit/3, events <= msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(greaterThanThird)
+				trigger.Desc = genDescByLimit(greaterThanThird)
+				events := genEventsByLimit(event, oneEventLineLen, lessThanThird)
+
+				expected := titleLine + DefaultTagsLimiter(trigger.Tags, thirdOfLimit) + "\n" +
+					strings.Repeat("a", greaterThanThird) + "\n" +
+					"```" +
+					strings.Repeat(eventLine, len(events)) +
+					"\n```"
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, testMaxChars)
+			})
+
+			Convey("with tags and events > msgLimit/3, desc <= msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(greaterThanThird)
+				trigger.Desc = genDescByLimit(lessThanThird)
+				events := genEventsByLimit(event, oneEventLineLen, greaterThanThird)
+
+				expected := titleLine + DefaultTagsLimiter(trigger.Tags, thirdOfLimit) + "\n" +
+					strings.Repeat("a", lessThanThird) + "\n" +
+					"```" +
+					strings.Repeat(eventLine, 29) +
+					"\n```\n" + "...and 1 more events."
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, testMaxChars)
+			})
+
+			Convey("with desc and events > msgLimit/3, tags <= msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(lessThanThird)
+				trigger.Desc = genDescByLimit(greaterThanThird)
+				events := genEventsByLimit(event, oneEventLineLen, greaterThanThird)
+
+				tagsStr := DefaultTagsLimiter(trigger.Tags, lessThanThird)
+
+				expected := titleLine + tagsStr + "\n" +
+					strings.Repeat("a", thirdOfLimit+(thirdOfLimit-utf8.RuneCountInString(tagsStr))/2-lenEndSuffix) + endSuffix +
+					"```" +
+					strings.Repeat(eventLine, 28) +
+					"\n```\n" + "...and 2 more events."
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, testMaxChars)
+			})
+
+			Convey("tags, description and events all have len > msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(greaterThanThird)
+				trigger.Desc = genDescByLimit(greaterThanThird)
+				events := genEventsByLimit(event, oneEventLineLen, greaterThanThird)
+
+				expected := titleLine + DefaultTagsLimiter(trigger.Tags, thirdOfLimit) + "\n" +
+					strings.Repeat("a", thirdOfLimit-lenEndSuffix) + endSuffix +
+					"```" +
+					strings.Repeat(eventLine, thirdOfLimit/oneEventLineLen) +
+					"\n```\n" +
+					"...and 3 more events."
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, testMaxChars)
 			})
 		})
 	})
+}
+
+func genTagsByLimit(limit int) []string {
+	tagName := "tag1"
+
+	tagsCount := (limit - 1) / (len(tagName) + 2)
+
+	tags := make([]string, 0, tagsCount)
+
+	for i := 0; i < tagsCount; i++ {
+		tags = append(tags, tagName)
+	}
+
+	return tags
+}
+
+func genDescByLimit(limit int) string {
+	return strings.Repeat("a", limit)
+}
+
+func genEventsByLimit(event moira.NotificationEvent, oneEventLineLen int, limit int) moira.NotificationEvents {
+	var events moira.NotificationEvents
+	for i := 0; i < limit/oneEventLineLen; i++ {
+		events = append(events, event)
+	}
+	return events
 }
 
 func testBoldFormatter(str string) string {
