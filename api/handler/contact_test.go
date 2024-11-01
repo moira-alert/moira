@@ -14,6 +14,7 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	db "github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/datatypes"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
@@ -677,6 +678,7 @@ func TestRemoveContact(t *testing.T) {
 		contactID := defaultContact
 
 		Convey("Successful deletion of a contact without user, team id and subscriptions", func() {
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
@@ -703,6 +705,7 @@ func TestRemoveContact(t *testing.T) {
 
 		Convey("Successful deletion of a contact without team id and subscriptions", func() {
 			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
@@ -730,6 +733,7 @@ func TestRemoveContact(t *testing.T) {
 
 		Convey("Successful deletion of a contact without user id and subscriptions", func() {
 			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
@@ -758,6 +762,7 @@ func TestRemoveContact(t *testing.T) {
 		Convey("Successful deletion of a contact without subscriptions", func() {
 			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
@@ -791,6 +796,7 @@ func TestRemoveContact(t *testing.T) {
 			}
 
 			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -823,6 +829,79 @@ func TestRemoveContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
+		Convey("Error when deleting a contact, the user has existing emergency contact", func() {
+			expected := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "this contact is being used with emergency contact",
+			}
+
+			emergencyContact := datatypes.EmergencyContact{
+				ContactID:      contactID,
+				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+			}
+
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(emergencyContact, nil).Times(1)
+			database = mockDb
+
+			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
+				ID:    contactID,
+				Type:  "mail",
+				Value: "moira@skbkontur.ru",
+				User:  defaultLogin,
+			}))
+			testRequest.Header.Add("content-type", "application/json")
+
+			removeContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expected)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Internal error when deleting a contact, failed to get emergency contact", func() {
+			expected := &api.ErrorResponse{
+				StatusText: "Internal Server Error",
+				ErrorText:  testErr.Error(),
+			}
+
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, testErr).Times(1)
+			database = mockDb
+
+			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
+				ID:    contactID,
+				Type:  "mail",
+				Value: "moira@skbkontur.ru",
+				User:  defaultLogin,
+			}))
+			testRequest.Header.Add("content-type", "application/json")
+
+			removeContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expected)
+			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
 		Convey("Error when deleting a contact, the team has existing subscriptions", func() {
 			expected := &api.ErrorResponse{
 				StatusText: "Invalid request",
@@ -830,6 +909,7 @@ func TestRemoveContact(t *testing.T) {
 			}
 
 			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -870,6 +950,7 @@ func TestRemoveContact(t *testing.T) {
 
 			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test1"}, nil).Times(1)
 			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{"test2"}, nil).Times(1)
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test1", "test2"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -913,6 +994,7 @@ func TestRemoveContact(t *testing.T) {
 				ErrorText:  testErr.Error(),
 			}
 
+			mockDb.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(testErr).Times(1)
 			database = mockDb

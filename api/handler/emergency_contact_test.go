@@ -32,7 +32,7 @@ var (
 	}
 	testEmergencyContact2 = datatypes.EmergencyContact{
 		ContactID:      testContactID2,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HearbeatTypeNotSet},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatTypeNotSet},
 	}
 
 	login = "testLogin"

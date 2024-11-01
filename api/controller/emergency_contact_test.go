@@ -25,7 +25,7 @@ var (
 	}
 	testEmergencyContact2 = datatypes.EmergencyContact{
 		ContactID:      testContactID2,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HearbeatTypeNotSet},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatTypeNotSet},
 	}
 
 	testEmergencyContactDTO = dto.EmergencyContact{
@@ -34,7 +34,7 @@ var (
 	}
 	testEmergencyContact2DTO = dto.EmergencyContact{
 		ContactID:      testContactID2,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HearbeatTypeNotSet},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatTypeNotSet},
 	}
 )
 

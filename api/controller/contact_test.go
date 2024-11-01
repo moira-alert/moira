@@ -12,6 +12,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/datatypes"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
@@ -776,6 +777,7 @@ func TestRemoveContact(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		Convey("Without subscriptions", func() {
+			dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, database.ErrNil)
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
 			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			dataBase.EXPECT().RemoveContact(contactID).Return(nil)
@@ -789,6 +791,7 @@ func TestRemoveContact(t *testing.T) {
 				ID:       uuid.Must(uuid.NewV4()).String(),
 			}
 
+			dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, database.ErrNil)
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
 			dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{subscription}, nil)
 			dataBase.EXPECT().RemoveContact(contactID).Return(nil)
@@ -806,6 +809,7 @@ func TestRemoveContact(t *testing.T) {
 			Convey("GetSubscriptions", func() {
 				expectedError := fmt.Errorf("oooops! Can not read user subscriptions")
 				dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
+				dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, database.ErrNil)
 				dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expectedError)
 				err := RemoveContact(dataBase, contactID, userLogin, "")
 				So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
@@ -819,6 +823,7 @@ func TestRemoveContact(t *testing.T) {
 				subscriptionSubstring := fmt.Sprintf("%s (tags: %s)", subscription.ID, strings.Join(subscription.Tags, ", "))
 				expectedError := fmt.Errorf("this contact is being used in following subscriptions: %s", subscriptionSubstring)
 				dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
+				dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, database.ErrNil)
 				dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
 				err := RemoveContact(dataBase, contactID, userLogin, "")
 				So(err, ShouldResemble, api.ErrorInvalidRequest(expectedError))
@@ -832,6 +837,7 @@ func TestRemoveContact(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		Convey("Without subscriptions", func() {
 			dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
+			dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, database.ErrNil)
 			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			dataBase.EXPECT().RemoveContact(contactID).Return(nil)
 			err := RemoveContact(dataBase, contactID, "", teamID)
@@ -845,6 +851,7 @@ func TestRemoveContact(t *testing.T) {
 			}
 
 			dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{subscription.ID}, nil)
+			dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, database.ErrNil)
 			dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{subscription}, nil)
 			dataBase.EXPECT().RemoveContact(contactID).Return(nil)
 			err := RemoveContact(dataBase, contactID, "", teamID)
@@ -861,6 +868,7 @@ func TestRemoveContact(t *testing.T) {
 			Convey("GetSubscriptions", func() {
 				expectedError := fmt.Errorf("oooops! Can not read team subscriptions")
 				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
+				dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, database.ErrNil)
 				dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expectedError)
 				err := RemoveContact(dataBase, contactID, "", teamID)
 				So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
@@ -874,9 +882,27 @@ func TestRemoveContact(t *testing.T) {
 				subscriptionSubstring := fmt.Sprintf("%s (tags: %s)", subscription.ID, strings.Join(subscription.Tags, ", "))
 				expectedError := fmt.Errorf("this contact is being used in following subscriptions: %s", subscriptionSubstring)
 				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{subscription.ID}, nil)
+				dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, database.ErrNil)
 				dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
 				err := RemoveContact(dataBase, contactID, "", teamID)
 				So(err, ShouldResemble, api.ErrorInvalidRequest(expectedError))
+			})
+			Convey("With emergency contact", func() {
+				emergencyContact := datatypes.EmergencyContact{
+					ContactID:      contactID,
+					HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+				}
+				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
+				dataBase.EXPECT().GetEmergencyContact(contactID).Return(emergencyContact, nil)
+				err := RemoveContact(dataBase, contactID, "", teamID)
+				So(err, ShouldResemble, api.ErrorInvalidRequest(errContactAlreadyEmergency))
+			})
+			Convey("With get emergency contact error", func() {
+				testErr := errors.New("test error")
+				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
+				dataBase.EXPECT().GetEmergencyContact(contactID).Return(datatypes.EmergencyContact{}, testErr)
+				err := RemoveContact(dataBase, contactID, "", teamID)
+				So(err, ShouldResemble, api.ErrorInternalServer(testErr))
 			})
 		})
 	})
