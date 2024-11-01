@@ -292,20 +292,20 @@ func getDateTime(timestamp *int64) *time.Time {
 // checkScheduleFilling ensures that all days are included to schedule, ordered from monday to sunday
 // and have proper names (one of [Mon, Tue, Wed, Thu, Fri, Sat Sun]).
 func checkScheduleFilling(gotSchedule *moira.ScheduleData) (*moira.ScheduleData, error) {
-	defaultSchedule := moira.NewDefaultScheduleData()
+	newSchedule := moira.NewDefaultScheduleData()
 
-	scheduleDaysMap := make(map[string]bool, len(defaultSchedule.Days))
-	for _, day := range defaultSchedule.Days {
+	scheduleDaysMap := make(map[moira.DayName]bool, len(newSchedule.Days))
+	for _, day := range newSchedule.Days {
 		scheduleDaysMap[day.Name] = false
 	}
 
 	badDayNames := make([]string, 0)
 	for _, day := range gotSchedule.Days {
-		_, validDay := scheduleDaysMap[day.Name]
-		if validDay && day.Enabled {
-			scheduleDaysMap[day.Name] = true
-		} else if !validDay {
-			badDayNames = append(badDayNames, day.Name)
+		_, validDayName := scheduleDaysMap[day.Name]
+		if validDayName {
+			scheduleDaysMap[day.Name] = day.Enabled
+		} else {
+			badDayNames = append(badDayNames, string(day.Name))
 		}
 	}
 
@@ -313,16 +313,11 @@ func checkScheduleFilling(gotSchedule *moira.ScheduleData) (*moira.ScheduleData,
 		return nil, fmt.Errorf("bad day names in schedule: %s", strings.Join(badDayNames, ", "))
 	}
 
-	newDaysForSchedule := make([]moira.ScheduleDataDay, 0, len(scheduleDaysMap))
 	someDayEnabled := false
-	for _, day := range defaultSchedule.Days {
-		newDaysForSchedule = append(newDaysForSchedule,
-			moira.ScheduleDataDay{
-				Name:    day.Name,
-				Enabled: scheduleDaysMap[day.Name],
-			})
+	for i := range newSchedule.Days {
+		newSchedule.Days[i].Enabled = scheduleDaysMap[newSchedule.Days[i].Name]
 
-		if scheduleDaysMap[day.Name] {
+		if newSchedule.Days[i].Enabled {
 			someDayEnabled = true
 		}
 	}
@@ -331,12 +326,11 @@ func checkScheduleFilling(gotSchedule *moira.ScheduleData) (*moira.ScheduleData,
 		return nil, errNoAllowedDays
 	}
 
-	return &moira.ScheduleData{
-		Days:           newDaysForSchedule,
-		TimezoneOffset: gotSchedule.TimezoneOffset,
-		StartOffset:    gotSchedule.StartOffset,
-		EndOffset:      gotSchedule.EndOffset,
-	}, nil
+	newSchedule.TimezoneOffset = gotSchedule.TimezoneOffset
+	newSchedule.StartOffset = gotSchedule.StartOffset
+	newSchedule.EndOffset = gotSchedule.EndOffset
+
+	return newSchedule, nil
 }
 
 func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) error {

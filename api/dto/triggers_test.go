@@ -449,8 +449,22 @@ func Test_checkScheduleFilling(t *testing.T) {
 	Convey("Testing checking schedule filling", t, func() {
 		defaultSchedule := moira.NewDefaultScheduleData()
 
-		Convey("With not all days missing days filled with false", func() {
-			days := slices.Clone(defaultSchedule.Days)
+		Convey("With valid schedule", func() {
+			givenSchedule := moira.NewDefaultScheduleData()
+
+			givenSchedule.Days[len(givenSchedule.Days)-1].Enabled = false
+			givenSchedule.TimezoneOffset += 1
+			givenSchedule.StartOffset += 1
+			givenSchedule.EndOffset += 1
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, givenSchedule)
+		})
+
+		Convey("With not all days, missing days filled with false", func() {
+			days := moira.GetFilledScheduleDataDays(true)
 
 			givenSchedule := &moira.ScheduleData{
 				Days:           days[:len(days)-1],
@@ -474,8 +488,39 @@ func Test_checkScheduleFilling(t *testing.T) {
 			So(gotSchedule, ShouldResemble, expectedSchedule)
 		})
 
+		Convey("With some days repeated, there is no repeated days and missing days filled with false", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			days[4].Name = moira.Monday
+			days[6].Name = moira.Monday
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			expectedDays := moira.GetFilledScheduleDataDays(true)
+
+			expectedDays[4].Enabled = false
+			expectedDays[6].Enabled = false
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           expectedDays,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
 		Convey("When days shuffled return ordered", func() {
-			days := slices.Clone(defaultSchedule.Days)
+			days := moira.GetFilledScheduleDataDays(true)
 
 			shuffledDays := shuffleArray(days)
 
@@ -500,7 +545,7 @@ func Test_checkScheduleFilling(t *testing.T) {
 		})
 
 		Convey("When days shuffled and some are missed return ordered and filled missing", func() {
-			days := slices.Clone(defaultSchedule.Days)
+			days := moira.GetFilledScheduleDataDays(true)
 
 			shuffledDays := shuffleArray(days[:len(days)-2])
 
@@ -528,10 +573,12 @@ func Test_checkScheduleFilling(t *testing.T) {
 		})
 
 		Convey("With bad day names error returned", func() {
-			days := slices.Clone(defaultSchedule.Days)
+			days := moira.GetFilledScheduleDataDays(true)
 
-			badMondayName := "Monday"
-			badFridayName := "Friday"
+			var (
+				badMondayName moira.DayName = "Monday"
+				badFridayName moira.DayName = "Friday"
+			)
 
 			days[0].Name = badMondayName
 			days[4].Name = badFridayName
@@ -550,11 +597,7 @@ func Test_checkScheduleFilling(t *testing.T) {
 		})
 
 		Convey("With no enabled days error returned", func() {
-			days := slices.Clone(defaultSchedule.Days)
-
-			for i := range days {
-				days[i].Enabled = false
-			}
+			days := moira.GetFilledScheduleDataDays(false)
 
 			givenSchedule := &moira.ScheduleData{
 				Days:           days,

@@ -246,7 +246,7 @@ type PlottingData struct {
 
 // ScheduleData represents subscription schedule.
 type ScheduleData struct {
-	Days           []ScheduleDataDay `json:"days"`
+	Days           []ScheduleDataDay `json:"days" validate:"dive"`
 	TimezoneOffset int64             `json:"tzOffset" example:"-60" format:"int64"`
 	StartOffset    int64             `json:"startOffset" example:"0" format:"int64"`
 	EndOffset      int64             `json:"endOffset" example:"1439" format:"int64"`
@@ -254,8 +254,40 @@ type ScheduleData struct {
 
 // ScheduleDataDay represents week day of schedule.
 type ScheduleDataDay struct {
-	Enabled bool   `json:"enabled" example:"true"`
-	Name    string `json:"name,omitempty" example:"Mon"`
+	Enabled bool    `json:"enabled" example:"true"`
+	Name    DayName `json:"name,omitempty" example:"Mon" validate:"oneof=Mon Tue Wed Thu Fri Sat Sun"`
+}
+
+// DayName represents the day name used in ScheduleDataDay.
+type DayName string
+
+// Constants for day names.
+const (
+	Monday    DayName = "Mon"
+	Tuesday   DayName = "Tue"
+	Wednesday DayName = "Wed"
+	Thursday  DayName = "Thu"
+	Friday    DayName = "Fri"
+	Saturday  DayName = "Sat"
+	Sunday    DayName = "Sun"
+)
+
+// DaysOrder represents the order of days in week.
+var DaysOrder = [...]DayName{Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday}
+
+// GetFilledScheduleDataDays returns slice of ScheduleDataDay with ScheduleDataDay.Enabled field set from param.
+// Days are ordered with DaysOrder.
+func GetFilledScheduleDataDays(enabled bool) []ScheduleDataDay {
+	days := make([]ScheduleDataDay, 0, len(DaysOrder))
+
+	for _, d := range DaysOrder {
+		days = append(days, ScheduleDataDay{
+			Name:    d,
+			Enabled: enabled,
+		})
+	}
+
+	return days
 }
 
 const (
@@ -270,15 +302,7 @@ const (
 // NewDefaultScheduleData returns the default ScheduleData which can be used in Trigger.
 func NewDefaultScheduleData() *ScheduleData {
 	return &ScheduleData{
-		Days: []ScheduleDataDay{
-			{Name: "Mon", Enabled: true},
-			{Name: "Tue", Enabled: true},
-			{Name: "Wed", Enabled: true},
-			{Name: "Thu", Enabled: true},
-			{Name: "Fri", Enabled: true},
-			{Name: "Sat", Enabled: true},
-			{Name: "Sun", Enabled: true},
-		},
+		Days:           GetFilledScheduleDataDays(true),
 		TimezoneOffset: DefaultTimezoneOffset,
 		StartOffset:    DefaultStartOffset,
 		EndOffset:      DefaultEndOffset,
