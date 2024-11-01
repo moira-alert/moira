@@ -164,11 +164,6 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 		return fmt.Errorf("failed to get contact '%s': %w", contactID, err)
 	}
 
-	emergencyContact, getEmergencyContactErr := connector.GetEmergencyContact(contactID)
-	if getEmergencyContactErr != nil && !errors.Is(getEmergencyContactErr, database.ErrNil) {
-		return fmt.Errorf("failed to get emergency contact '%s': %w", contactID, err)
-	}
-
 	c := *connector.client
 	ctx := connector.context
 
@@ -176,10 +171,6 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	pipe.Del(ctx, contactKey(contactID))
 	pipe.SRem(ctx, userContactsKey(existing.User), contactID)
 	pipe.SRem(ctx, teamContactsKey(existing.Team), contactID)
-
-	if !errors.Is(getEmergencyContactErr, database.ErrNil) {
-		addRemoveEmergencyContactToPipe(ctx, pipe, emergencyContact)
-	}
 
 	_, err = pipe.Exec(ctx)
 	if err != nil {
