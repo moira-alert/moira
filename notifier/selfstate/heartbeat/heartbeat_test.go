@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -92,5 +93,43 @@ func TestNewHeartbeaterBase(t *testing.T) {
 
 		heartbeaterBase := NewHeartbeaterBase(logger, database, clock)
 		So(heartbeaterBase, ShouldResemble, expected)
+	})
+}
+
+func TestValidateHeartbeaterBaseConfig(t *testing.T) {
+	Convey("Test validation heartbeaterBaseConfig", t, func() {
+		Convey("With disabled config", func() {
+			hbCfg := HeartbeaterBaseConfig{}
+			err := moira.ValidateStruct(hbCfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("With just enabled config", func() {
+			hbCfg := HeartbeaterBaseConfig{
+				Enabled: true,
+			}
+			err := moira.ValidateStruct(hbCfg)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("With enabled config and added alert config", func() {
+			hbCfg := HeartbeaterBaseConfig{
+				Enabled:  true,
+				AlertCfg: AlertConfig{},
+			}
+			err := moira.ValidateStruct(hbCfg)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("With enabled config, added and filled alert config", func() {
+			hbCfg := HeartbeaterBaseConfig{
+				Enabled: true,
+				AlertCfg: AlertConfig{
+					Name: "test name",
+				},
+			}
+			err := moira.ValidateStruct(hbCfg)
+			So(err, ShouldBeNil)
+		})
 	})
 }
