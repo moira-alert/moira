@@ -109,15 +109,8 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
 
-		triggerDTO.Schedule = moira.NewDefaultScheduleData()
-		triggerDTO.Schedule.TimezoneOffset = 0
-		triggerDTO.Schedule.StartOffset = 0
-		triggerDTO.Schedule.EndOffset = 0
-		for i := range triggerDTO.Schedule.Days {
-			if i != 0 {
-				triggerDTO.Schedule.Days[i].Enabled = false
-			}
-		}
+		triggerDTO.Schedule.Days = moira.GetFilledScheduleDataDays(false)
+		triggerDTO.Schedule.Days[0].Enabled = true
 
 		Convey("It should be parsed successfully", func() {
 			triggerDTO.TTL = moira.DefaultTTL
