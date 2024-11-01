@@ -11,9 +11,14 @@ type SeriesByTagPatternIndex struct {
 	// namesPrefixTree stores MatchingHandler's for patterns that have name tag in prefix tree structure
 	namesPrefixTree *PrefixTree
 	// withoutStrictNameTagPatternMatchers stores MatchingHandler's for patterns that have no name tag
-	withoutStrictNameTagPatternMatchers map[string]MatchingHandler
+	withoutStrictNameTagPatternMatchers []patternAndHandler
 	// Flags for compatibility with different graphite behaviours
 	compatibility Compatibility
+}
+
+type patternAndHandler struct {
+	pattern string
+	handler MatchingHandler
 }
 
 // NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag.
@@ -25,7 +30,7 @@ func NewSeriesByTagPatternIndex(
 	metrics *metrics.FilterMetrics,
 ) *SeriesByTagPatternIndex {
 	namesPrefixTree := &PrefixTree{Logger: logger, Root: &PatternNode{}}
-	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
+	withoutStrictNameTagPatternMatchers := make([]patternAndHandler, 0)
 
 	var patternMatchingEvicted int64
 
@@ -54,7 +59,13 @@ func NewSeriesByTagPatternIndex(
 		}
 
 		if patternMatching.nameTagValue == "" {
-			withoutStrictNameTagPatternMatchers[pattern] = patternMatching.matchingHandler
+			withoutStrictNameTagPatternMatchers = append(
+				withoutStrictNameTagPatternMatchers,
+				patternAndHandler{
+					pattern: pattern,
+					handler: patternMatching.matchingHandler,
+				},
+			)
 		} else {
 			namesPrefixTree.AddWithPayload(patternMatching.nameTagValue, pattern, patternMatching.matchingHandler)
 		}
@@ -73,16 +84,16 @@ func NewSeriesByTagPatternIndex(
 func (index *SeriesByTagPatternIndex) MatchPatterns(metricName string, labels map[string]string) []string {
 	matchedPatterns := make([]string, 0)
 
-	matchingHandlersWithCorrespondingNameTag := index.namesPrefixTree.MatchWithValue(metricName)
-	for pattern, matchingHandler := range matchingHandlersWithCorrespondingNameTag {
+	callback := func(pattern string, matchingHandler MatchingHandler) {
 		if matchingHandler(metricName, labels) {
 			matchedPatterns = append(matchedPatterns, pattern)
 		}
 	}
+	index.namesPrefixTree.MatchWithValue(metricName, callback)
 
-	for pattern, matchingHandler := range index.withoutStrictNameTagPatternMatchers {
-		if matchingHandler(metricName, labels) {
-			matchedPatterns = append(matchedPatterns, pattern)
+	for _, patternAndHandler := range index.withoutStrictNameTagPatternMatchers {
+		if patternAndHandler.handler(metricName, labels) {
+			matchedPatterns = append(matchedPatterns, patternAndHandler.pattern)
 		}
 	}
 
