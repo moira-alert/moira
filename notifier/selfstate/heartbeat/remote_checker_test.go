@@ -180,7 +180,7 @@ func TestRemoteCheckerHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		remoteCheckerHeartbeaterType := remoteCheckerHeartbeater.Type()
-		So(remoteCheckerHeartbeaterType, ShouldResemble, datatypes.HearbeatTypeNotSet)
+		So(remoteCheckerHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
 	})
 }
 

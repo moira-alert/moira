@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -12,13 +13,15 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/database"
+	moiradb "github.com/moira-alert/moira/database"
 )
 
 var (
 	// errNotAllowedContactType means that this type of contact is not allowed to be created.
-	errNotAllowedContactType = errors.New("cannot create contact with not allowed contact type")
-	errNotPermittedStr       = "you are not permitted"
+	errNotAllowedContactType   = errors.New("cannot create contact with not allowed contact type")
+	errContactAlreadyEmergency = errors.New("this contact is being used with emergency contact")
+
+	errNotPermittedStr = "you are not permitted"
 )
 
 // GetAllContacts gets all moira contacts.
@@ -56,6 +59,7 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 func CreateContact(
 	dataBase moira.Database,
 	auth *api.Authorization,
+	contactsTemplate []api.WebContact,
 	contact *dto.Contact,
 	userLogin,
 	teamID string,
@@ -77,6 +81,7 @@ func CreateContact(
 		Type:  contact.Type,
 		Value: contact.Value,
 	}
+
 	if contactData.ID == "" {
 		uuid4, err := uuid.NewV4()
 		if err != nil {
@@ -93,12 +98,18 @@ func CreateContact(
 		}
 	}
 
+	if err := validateContact(contactsTemplate, contactData); err != nil {
+		return api.ErrorInvalidRequest(err)
+	}
+
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	contact.User = contactData.User
 	contact.ID = contactData.ID
 	contact.TeamID = contactData.Team
+
 	return nil
 }
 
@@ -106,6 +117,7 @@ func CreateContact(
 func UpdateContact(
 	dataBase moira.Database,
 	auth *api.Authorization,
+	contactsTemplate []api.WebContact,
 	contactDTO dto.Contact,
 	contactData moira.ContactData,
 ) (dto.Contact, *api.ErrorResponse) {
@@ -120,6 +132,10 @@ func UpdateContact(
 	if contactDTO.User != "" || contactDTO.TeamID != "" {
 		contactData.User = contactDTO.User
 		contactData.Team = contactDTO.TeamID
+	}
+
+	if err := validateContact(contactsTemplate, contactData); err != nil {
+		return contactDTO, api.ErrorInvalidRequest(err)
 	}
 
 	if err := dataBase.SaveContact(&contactData); err != nil {
@@ -150,6 +166,16 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 			return api.ErrorInternalServer(err)
 		}
 		subscriptionIDs = append(subscriptionIDs, teamSubscriptionIDs...)
+	}
+
+	_, err := database.GetEmergencyContact(contactID)
+	isEmergencyContactExist := !errors.Is(err, moiradb.ErrNil)
+	if err != nil && isEmergencyContactExist {
+		return api.ErrorInternalServer(err)
+	}
+
+	if isEmergencyContactExist {
+		return api.ErrorInvalidRequest(errContactAlreadyEmergency)
 	}
 
 	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
@@ -223,7 +249,7 @@ func CheckUserPermissionsForContact(
 ) (moira.ContactData, *api.ErrorResponse) {
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {
-		if errors.Is(err, database.ErrNil) {
+		if errors.Is(err, moiradb.ErrNil) {
 			return moira.ContactData{}, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", contactID))
 		}
 		return moira.ContactData{}, api.ErrorInternalServer(err)
@@ -252,7 +278,7 @@ func CheckUserPermissionsForContact(
 
 func isContactExists(dataBase moira.Database, contactID string) (bool, error) {
 	_, err := dataBase.GetContact(contactID)
-	if errors.Is(err, database.ErrNil) {
+	if errors.Is(err, moiradb.ErrNil) {
 		return false, nil
 	}
 	if err != nil {
@@ -267,4 +293,20 @@ func isAllowedToUseContactType(auth *api.Authorization, userLogin string, contac
 	_, isAllowedContactType := auth.AllowedContactTypes[contactType]
 
 	return isAllowedContactType || isAdmin || !isAuthEnabled
+}
+
+func validateContact(contactsTemplate []api.WebContact, contact moira.ContactData) error {
+	var validationPattern string
+	for _, contactTemplate := range contactsTemplate {
+		if contactTemplate.ContactType == contact.Type {
+			validationPattern = contactTemplate.ValidationRegex
+			break
+		}
+	}
+
+	if matched, err := regexp.MatchString(validationPattern, contact.Value); !matched || err != nil {
+		return fmt.Errorf("contact value doesn't match regex: '%s'", validationPattern)
+	}
+
+	return nil
 }

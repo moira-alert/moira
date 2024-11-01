@@ -11,18 +11,28 @@ import (
 	"gopkg.in/h2non/gock.v1"
 )
 
+const (
+	defaultFrontURI  = "test-front-uri"
+	defaultMaxEvents = -1
+)
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
 	Convey("Init tests", t, func() {
 		sender := Sender{}
+
 		senderSettings := map[string]interface{}{
-			"max_events": -1,
+			"max_events": defaultMaxEvents,
+			"front_uri":  defaultFrontURI,
 		}
+
 		Convey("Minimal settings", func() {
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
-			So(sender.maxEvents, ShouldResemble, -1)
+			So(sender.maxEvents, ShouldResemble, defaultMaxEvents)
+			So(sender.frontURI, ShouldResemble, defaultFrontURI)
 		})
 	})
 }

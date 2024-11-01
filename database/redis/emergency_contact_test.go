@@ -28,7 +28,7 @@ var (
 
 	testEmergencyContact3 = datatypes.EmergencyContact{
 		ContactID:      testContactID3,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HearbeatTypeNotSet},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatTypeNotSet},
 	}
 )
 
@@ -166,7 +166,7 @@ func TestGetHeartbeatTypeContactIDs(t *testing.T) {
 				testContactID2,
 			})
 
-			emergencyContactIDs, err = database.GetHeartbeatTypeContactIDs(datatypes.HearbeatTypeNotSet)
+			emergencyContactIDs, err = database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatTypeNotSet)
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContactIDs, []string{
 				testContactID3,

@@ -10,7 +10,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Ruby 3.3
         uses: ruby/setup-ruby@v1

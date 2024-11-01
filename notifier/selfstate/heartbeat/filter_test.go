@@ -180,7 +180,7 @@ func TestFilterHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		filterHeartbeaterType := filterHeartbeater.Type()
-		So(filterHeartbeaterType, ShouldResemble, datatypes.HearbeatTypeNotSet)
+		So(filterHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
 	})
 }
 

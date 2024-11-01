@@ -1,10 +1,11 @@
 package discord
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -31,9 +32,14 @@ func TestInit(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
 		sender := Sender{DataBase: &MockDB{}}
-		Convey("Empty map", func() {
-			err := sender.Init(map[string]interface{}{}, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
+
+		validatorErr := validator.ValidationErrors{}
+
+		Convey("With empty token", func() {
+			senderSettings := map[string]interface{}{}
+
+			err := sender.Init(senderSettings, logger, nil, "")
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{DataBase: &MockDB{}})
 		})
 
@@ -42,7 +48,9 @@ func TestInit(t *testing.T) {
 				"token":     "123",
 				"front_uri": "http://moira.uri",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+
+			err := sender.Init(senderSettings, logger, location, "15:04") //nolint
+			So(err, ShouldBeNil)
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.session.Token, ShouldResemble, "Bot 123")
 			So(sender.logger, ShouldResemble, logger)

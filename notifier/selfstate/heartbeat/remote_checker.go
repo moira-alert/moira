@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/datatypes"
 )
@@ -23,11 +22,6 @@ type RemoteCheckerHeartbeaterConfig struct {
 	RemoteCheckDelay time.Duration `validate:"required,gt=0"`
 }
 
-func (cfg RemoteCheckerHeartbeaterConfig) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
-}
-
 type remoteCheckerHeartbeater struct {
 	*heartbeaterBase
 
@@ -37,7 +31,7 @@ type remoteCheckerHeartbeater struct {
 
 // NewRemoteCheckerHeartbeater is a function that creates a new remoteCheckerHeartbeater.
 func NewRemoteCheckerHeartbeater(cfg RemoteCheckerHeartbeaterConfig, base *heartbeaterBase) (*remoteCheckerHeartbeater, error) {
-	if err := cfg.validate(); err != nil {
+	if err := moira.ValidateStruct(cfg); err != nil {
 		return nil, fmt.Errorf("remote checker heartbeater configuration error: %w", err)
 	}
 
@@ -80,7 +74,7 @@ func (heartbeater remoteCheckerHeartbeater) NeedTurnOffNotifier() bool {
 
 // Type is a function that returns the current heartbeat type.
 func (remoteCheckerHeartbeater) Type() datatypes.HeartbeatType {
-	return datatypes.HearbeatTypeNotSet
+	return datatypes.HeartbeatTypeNotSet
 }
 
 // AlertSettings is a function that returns the current settings for alerts.

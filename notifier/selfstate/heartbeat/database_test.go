@@ -138,7 +138,7 @@ func TestDatabaseHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		databaseHeartbeaterType := databaseHeartbeater.Type()
-		So(databaseHeartbeaterType, ShouldResemble, datatypes.HearbeatTypeNotSet)
+		So(databaseHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
 	})
 }
 

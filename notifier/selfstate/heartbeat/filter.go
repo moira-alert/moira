@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/datatypes"
 )
@@ -23,11 +22,6 @@ type FilterHeartbeaterConfig struct {
 	MetricReceivedDelay time.Duration `validate:"required,gt=0"`
 }
 
-func (cfg FilterHeartbeaterConfig) validate() error {
-	validator := validator.New()
-	return validator.Struct(cfg)
-}
-
 type filterHeartbeater struct {
 	*heartbeaterBase
 
@@ -37,7 +31,7 @@ type filterHeartbeater struct {
 
 // NewFilterHeartbeater is a function that creates a new filterHeartbeater.
 func NewFilterHeartbeater(cfg FilterHeartbeaterConfig, base *heartbeaterBase) (*filterHeartbeater, error) {
-	if err := cfg.validate(); err != nil {
+	if err := moira.ValidateStruct(cfg); err != nil {
 		return nil, fmt.Errorf("filter heartheater configuration error: %w", err)
 	}
 
@@ -80,7 +74,7 @@ func (heartbeater filterHeartbeater) NeedTurnOffNotifier() bool {
 
 // Type is a function that returns the current heartbeat type.
 func (filterHeartbeater) Type() datatypes.HeartbeatType {
-	return datatypes.HearbeatTypeNotSet
+	return datatypes.HeartbeatTypeNotSet
 }
 
 // AlertSettings is a function that returns the current settings for alerts.

@@ -146,7 +146,6 @@ func TestMakeCreateAlertRequest(t *testing.T) {
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	sender := Sender{
-		frontURI:             "https://my-moira.com",
 		location:             location,
 		logger:               logger,
 		imageStoreConfigured: true,

@@ -180,7 +180,7 @@ func TestLocalCheckerHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		localCheckerHeartbeaterType := localCheckerHeartbeater.Type()
-		So(localCheckerHeartbeaterType, ShouldResemble, datatypes.HearbeatTypeNotSet)
+		So(localCheckerHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
 	})
 }
 
