@@ -4,14 +4,18 @@ package datatypes
 type HeartbeatType string
 
 const (
-	HeartbeatTypeNotSet  HeartbeatType = "type_not_set"
-	HeartbeatNotifierOff HeartbeatType = "notifier_off"
+	HeartbeatTypeNotSet    HeartbeatType = "Heartbeat_type_not_set"
+	HeartbeatNotifier      HeartbeatType = "heartbeat_notifier"
+	HeartbeatDatabase      HeartbeatType = "heartbeat_database"
+	HeartbeatLocalChecker  HeartbeatType = "heartbeat_local_checker"
+	HeartbeatRemoteChecker HeartbeatType = "heartbeat_remote_checker"
+	HeartbeatFilter        HeartbeatType = "heartbeat_filter"
 )
 
 // IsValid checks if such an heartbeat type exists.
 func (heartbeatType HeartbeatType) IsValid() bool {
 	switch heartbeatType {
-	case HeartbeatNotifierOff:
+	case HeartbeatNotifier, HeartbeatDatabase, HeartbeatLocalChecker, HeartbeatRemoteChecker, HeartbeatFilter:
 		return true
 	default:
 		return false

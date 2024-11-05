@@ -23,6 +23,9 @@ func TestNewRemoteCheckerHeartbeater(t *testing.T) {
 	Convey("Test NewRemoteCheckerHeartbeater", t, func() {
 		Convey("With too low remote check delay", func() {
 			cfg := RemoteCheckerHeartbeaterConfig{
+				HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+					Enabled: true,
+				},
 				RemoteCheckDelay: -1,
 			}
 
@@ -32,7 +35,11 @@ func TestNewRemoteCheckerHeartbeater(t *testing.T) {
 		})
 
 		Convey("Without remote check delay", func() {
-			cfg := RemoteCheckerHeartbeaterConfig{}
+			cfg := RemoteCheckerHeartbeaterConfig{
+				HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+					Enabled: true,
+				},
+			}
 
 			remoteCheckerHeartbeater, err := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
 			So(errors.As(err, &validationErr), ShouldBeTrue)
@@ -180,7 +187,7 @@ func TestRemoteCheckerHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		remoteCheckerHeartbeaterType := remoteCheckerHeartbeater.Type()
-		So(remoteCheckerHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
+		So(remoteCheckerHeartbeaterType, ShouldResemble, datatypes.HeartbeatRemoteChecker)
 	})
 }
 

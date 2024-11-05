@@ -32,7 +32,11 @@ func TestNewFilterHeartbeater(t *testing.T) {
 		})
 
 		Convey("Without metric received delay", func() {
-			cfg := FilterHeartbeaterConfig{}
+			cfg := FilterHeartbeaterConfig{
+				HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+					Enabled: true,
+				},
+			}
 
 			filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
 			So(errors.As(err, &validationErr), ShouldBeTrue)
@@ -180,7 +184,7 @@ func TestFilterHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		filterHeartbeaterType := filterHeartbeater.Type()
-		So(filterHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
+		So(filterHeartbeaterType, ShouldResemble, datatypes.HeartbeatFilter)
 	})
 }
 

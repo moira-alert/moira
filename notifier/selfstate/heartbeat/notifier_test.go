@@ -93,7 +93,7 @@ func TestNotifierHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		notifierHeartbeaterType := notifierHeartbeater.Type()
-		So(notifierHeartbeaterType, ShouldResemble, datatypes.HeartbeatNotifierOff)
+		So(notifierHeartbeaterType, ShouldResemble, datatypes.HeartbeatNotifier)
 	})
 }
 

@@ -104,23 +104,6 @@ func TestValidateHeartbeaterBaseConfig(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("With just enabled config", func() {
-			hbCfg := HeartbeaterBaseConfig{
-				Enabled: true,
-			}
-			err := moira.ValidateStruct(hbCfg)
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("With enabled config and added alert config", func() {
-			hbCfg := HeartbeaterBaseConfig{
-				Enabled:  true,
-				AlertCfg: AlertConfig{},
-			}
-			err := moira.ValidateStruct(hbCfg)
-			So(err, ShouldNotBeNil)
-		})
-
 		Convey("With enabled config, added and filled alert config", func() {
 			hbCfg := HeartbeaterBaseConfig{
 				Enabled: true,

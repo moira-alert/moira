@@ -15,7 +15,7 @@ var _ Heartbeater = (*localCheckerHeartbeater)(nil)
 type LocalCheckerHeartbeaterConfig struct {
 	HeartbeaterBaseConfig
 
-	LocalCheckDelay time.Duration `validate:"required,gt=0"`
+	LocalCheckDelay time.Duration `validate:"required_if=Enabled true,gte=0"`
 }
 
 type localCheckerHeartbeater struct {
@@ -70,7 +70,7 @@ func (heartbeater localCheckerHeartbeater) NeedTurnOffNotifier() bool {
 
 // Type is a function that returns the current heartbeat type.
 func (localCheckerHeartbeater) Type() datatypes.HeartbeatType {
-	return datatypes.HeartbeatTypeNotSet
+	return datatypes.HeartbeatLocalChecker
 }
 
 // AlertSettings is a function that returns the current settings for alerts.

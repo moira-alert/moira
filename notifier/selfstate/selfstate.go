@@ -1,88 +1,101 @@
 package selfstate
 
 import (
-	"time"
-
-	"github.com/moira-alert/moira/metrics"
-
-	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
-
-	"gopkg.in/tomb.v2"
+	"errors"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
-	w "github.com/moira-alert/moira/worker"
+	"github.com/moira-alert/moira/notifier/selfstate/monitor"
 )
 
-const (
-	selfStateLockName = "moira-self-state-monitor"
-	selfStateLockTTL  = time.Second * 15
-)
+var _ SelfstateWorker = (*selfstateWorker)(nil)
 
-// SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work.
-type SelfCheckWorker struct {
-	Logger     moira.Logger
-	Database   moira.Database
-	Notifier   notifier.Notifier
-	Config     Config
-	tomb       tomb.Tomb
-	heartbeats []heartbeat.Heartbeater
+type SelfstateWorker interface {
+	Start()
+	Stop() error
 }
 
-// NewSelfCheckWorker creates SelfCheckWorker.
-func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config, metrics *metrics.HeartBeatMetrics) *SelfCheckWorker {
-	heartbeats := createStandardHeartbeats(logger, database, config, metrics)
-	return &SelfCheckWorker{Logger: logger, Database: database, Notifier: notifier, Config: config, heartbeats: heartbeats}
+type selfstateWorker struct {
+	monitors []monitor.Monitor
 }
 
-// Start self check worker.
-func (selfCheck *SelfCheckWorker) Start() error {
-	senders := selfCheck.Notifier.GetSenders()
-	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		return err
-	}
+func NewSelfstateWorker(
+	cfg Config,
+	logger moira.Logger,
+	database moira.Database,
+	notifier notifier.Notifier,
+	clock moira.Clock,
+) (*selfstateWorker, error) {
+	monitors := createMonitors(cfg.MonitorCfg, logger, database, clock, notifier)
 
-	selfCheck.tomb.Go(func() error {
-		w.NewWorker(
-			"Moira Self State Monitoring",
-			selfCheck.Logger,
-			selfCheck.Database.NewLock(selfStateLockName, selfStateLockTTL),
-			selfCheck.selfStateChecker,
-		).Run(selfCheck.tomb.Dying())
-		return nil
-	})
-
-	return nil
+	return &selfstateWorker{
+		monitors: monitors,
+	}, nil
 }
 
-// Stop self check worker and wait for finish.
-func (selfCheck *SelfCheckWorker) Stop() error {
-	selfCheck.tomb.Kill(nil)
-	return selfCheck.tomb.Wait()
+func createMonitors(
+	monitorCfg MonitorConfig,
+	logger moira.Logger,
+	database moira.Database,
+	clock moira.Clock,
+	notifier notifier.Notifier,
+) []monitor.Monitor {
+	adminMonitorEnabled := monitorCfg.AdminCfg.Enabled
+	userMonitorEnabled := monitorCfg.UserCfg.Enabled
+
+	monitors := make([]monitor.Monitor, 0)
+
+	if adminMonitorEnabled {
+		adminMonitor, err := monitor.NewForAdmin(
+			monitorCfg.AdminCfg,
+			logger,
+			database,
+			clock,
+			notifier,
+		)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				Msg("Failed to create a new admin monitor")
+		} else {
+			monitors = append(monitors, adminMonitor)
+		}
+	}
+
+	if userMonitorEnabled {
+		userMonitor, err := monitor.NewForUser(
+			monitorCfg.UserCfg,
+			logger,
+			database,
+			clock,
+			notifier,
+		)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				Msg("Failed to create a new user monitor")
+		} else {
+			monitors = append(monitors, userMonitor)
+		}
+	}
+
+	return monitors
 }
 
-func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config, metrics *metrics.HeartBeatMetrics) []heartbeat.Heartbeater {
-	heartbeats := make([]heartbeat.Heartbeater, 0)
+func (selfstateWorker *selfstateWorker) Start() {
+	for _, monitor := range selfstateWorker.monitors {
+		monitor.Start()
+	}
+}
 
-	if hb := heartbeat.GetDatabase(conf.RedisDisconnectDelaySeconds, logger, database); hb != nil {
-		heartbeats = append(heartbeats, hb)
+func (selfstateWorker *selfstateWorker) Stop() error {
+	stopErrors := make([]error, 0)
+
+	for _, monitor := range selfstateWorker.monitors {
+		if err := monitor.Stop(); err != nil {
+			stopErrors = append(stopErrors, err)
+		}
 	}
 
-	if hb := heartbeat.GetFilter(conf.LastMetricReceivedDelaySeconds, logger, database); hb != nil {
-		heartbeats = append(heartbeats, hb)
-	}
-
-	if hb := heartbeat.GetLocalChecker(conf.LastCheckDelaySeconds, logger, database); hb != nil && hb.NeedToCheckOthers() {
-		heartbeats = append(heartbeats, hb)
-	}
-
-	if hb := heartbeat.GetRemoteChecker(conf.LastRemoteCheckDelaySeconds, logger, database); hb != nil && hb.NeedToCheckOthers() {
-		heartbeats = append(heartbeats, hb)
-	}
-
-	if hb := heartbeat.GetNotifier(logger, database, metrics); hb != nil {
-		heartbeats = append(heartbeats, hb)
-	}
-
-	return heartbeats
+	return errors.Join(stopErrors...)
 }

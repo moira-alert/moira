@@ -117,17 +117,23 @@ func main() {
 			Msg("Can not configure senders")
 	}
 
-	// Start moira self state checker
-	if config.Notifier.SelfState.getSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings(), metrics.ConfigureHeartBeatMetrics(telemetry.Metrics))
-		if err := selfState.Start(); err != nil {
+	selfstateCfg := config.Notifier.Selfstate.getSettings()
+
+	// Start moira selfstate checker
+	if selfstateCfg.Enabled {
+		fmt.Println(selfstateCfg)
+		logger.Info().Msg("Selfstate enabled")
+		selfstateWorker, err := selfstate.NewSelfstateWorker(selfstateCfg, logger, database, sender, systemClock)
+		if err != nil {
 			logger.Fatal().
 				Error(err).
-				Msg("SelfState failed")
+				Msg("Failed to create new selfstate worker")
 		}
-		defer stopSelfStateChecker(selfState)
+
+		selfstateWorker.Start()
+		defer stopSelfstateWorker(selfstateWorker)
 	} else {
-		logger.Debug().Msg("Moira Self State Monitoring disabled")
+		logger.Debug().Msg("Moira Selfstate Monitoring disabled")
 	}
 
 	// Start moira notification fetcher
@@ -181,10 +187,10 @@ func stopNotificationsFetcher(worker *notifications.FetchNotificationsWorker) {
 	}
 }
 
-func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
-	if err := checker.Stop(); err != nil {
+func stopSelfstateWorker(selfstateWorker selfstate.SelfstateWorker) {
+	if err := selfstateWorker.Stop(); err != nil {
 		logger.Error().
 			Error(err).
-			Msg("Failed to stop self check worker")
+			Msg("Failed to stop selfstate worker")
 	}
 }

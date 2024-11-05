@@ -32,7 +32,11 @@ func TestNewLocalCheckerHeartbeater(t *testing.T) {
 		})
 
 		Convey("Without local check delay", func() {
-			cfg := LocalCheckerHeartbeaterConfig{}
+			cfg := LocalCheckerHeartbeaterConfig{
+				HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+					Enabled: true,
+				},
+			}
 
 			localCheckerHeartbeater, err := NewLocalCheckerHeartbeater(cfg, heartbeaterBase)
 			So(errors.As(err, &validationErr), ShouldBeTrue)
@@ -180,7 +184,7 @@ func TestLocalCheckerHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		localCheckerHeartbeaterType := localCheckerHeartbeater.Type()
-		So(localCheckerHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
+		So(localCheckerHeartbeaterType, ShouldResemble, datatypes.HeartbeatLocalChecker)
 	})
 }
 

@@ -48,7 +48,7 @@ func (heartbeater *notifierHeartbeater) NeedTurnOffNotifier() bool {
 
 // Type is a function that returns the current heartbeat type.
 func (notifierHeartbeater) Type() datatypes.HeartbeatType {
-	return datatypes.HeartbeatNotifierOff
+	return datatypes.HeartbeatNotifier
 }
 
 // AlertSettings is a function that returns the current settings for alerts.

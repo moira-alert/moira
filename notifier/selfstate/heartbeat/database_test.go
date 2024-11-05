@@ -34,7 +34,11 @@ func TestNewDatabaseHeartbeater(t *testing.T) {
 		})
 
 		Convey("Without redis disconnect delay", func() {
-			cfg := DatabaseHeartbeaterConfig{}
+			cfg := DatabaseHeartbeaterConfig{
+				HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+					Enabled: true,
+				},
+			}
 
 			databaseHeartbeater, err := NewDatabaseHeartbeater(cfg, heartbeaterBase)
 			So(errors.As(err, &validationErr), ShouldBeTrue)
@@ -138,7 +142,7 @@ func TestDatabaseHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		databaseHeartbeaterType := databaseHeartbeater.Type()
-		So(databaseHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
+		So(databaseHeartbeaterType, ShouldResemble, datatypes.HeartbeatDatabase)
 	})
 }
 

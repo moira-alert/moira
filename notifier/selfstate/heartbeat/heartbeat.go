@@ -15,9 +15,9 @@ const (
 	StateError State = "heartbeat_state_error"
 )
 
-// IsDegraded checks if the condition has degraded.
-func (lastState State) IsDegraded(newState State) bool {
-	return lastState == StateOK && newState == StateError
+// IsDegraded checks if the condition is still degraded.
+func (State) IsDegraded(newState State) bool {
+	return newState == StateError
 }
 
 // IsRecovered checks if the condition has recovered.
@@ -39,12 +39,12 @@ type HeartbeaterBaseConfig struct {
 	NeedTurnOffNotifier bool
 	NeedToCheckOthers   bool
 
-	AlertCfg AlertConfig `validate:"required_if=Enabled true"`
+	AlertCfg AlertConfig
 }
 
 // AlertConfig contains the configuration of the alerts that heartbeater sends out.
 type AlertConfig struct {
-	Name string `validate:"required_if=Enabled true"`
+	Name string
 	Desc string
 }
 
@@ -70,4 +70,13 @@ func NewHeartbeaterBase(
 
 		lastSuccessfulCheck: clock.NowUTC(),
 	}
+}
+
+// HeartbeatersConfig is a structure that combines the configs of all heartbeaters within it.
+type HeartbeatersConfig struct {
+	DatabaseCfg      DatabaseHeartbeaterConfig
+	FilterCfg        FilterHeartbeaterConfig
+	LocalCheckerCfg  LocalCheckerHeartbeaterConfig
+	RemoteCheckerCfg RemoteCheckerHeartbeaterConfig
+	NotifierCfg      NotifierHeartbeaterConfig
 }

@@ -890,7 +890,7 @@ func TestRemoveContact(t *testing.T) {
 			Convey("With emergency contact", func() {
 				emergencyContact := datatypes.EmergencyContact{
 					ContactID:      contactID,
-					HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+					HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 				}
 				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
 				dataBase.EXPECT().GetEmergencyContact(contactID).Return(emergencyContact, nil)

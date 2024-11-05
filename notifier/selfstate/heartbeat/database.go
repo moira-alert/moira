@@ -15,7 +15,7 @@ var _ Heartbeater = (*databaseHeartbeater)(nil)
 type DatabaseHeartbeaterConfig struct {
 	HeartbeaterBaseConfig
 
-	RedisDisconnectDelay time.Duration `validate:"required,gt=0"`
+	RedisDisconnectDelay time.Duration `validate:"required_if=Enabled true,gte=0"`
 }
 
 type databaseHeartbeater struct {
@@ -60,7 +60,7 @@ func (heartbeater databaseHeartbeater) NeedTurnOffNotifier() bool {
 
 // Type is a function that returns the current heartbeat type.
 func (databaseHeartbeater) Type() datatypes.HeartbeatType {
-	return datatypes.HeartbeatTypeNotSet
+	return datatypes.HeartbeatDatabase
 }
 
 // AlertSettings is a function that returns the current settings for alerts.
