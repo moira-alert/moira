@@ -8,8 +8,10 @@ import (
 	"github.com/moira-alert/moira/notifier/selfstate/monitor"
 )
 
+// Verify that selfstateWorker matches the SelfstateWorker interface.
 var _ SelfstateWorker = (*selfstateWorker)(nil)
 
+// SelfstateWorker interface, which defines methods for starting and stopping the selfstate worker.
 type SelfstateWorker interface {
 	Start()
 	Stop() error
@@ -19,6 +21,7 @@ type selfstateWorker struct {
 	monitors []monitor.Monitor
 }
 
+// NewSelfstateWorker is a method to create a new selfstate worker.
 func NewSelfstateWorker(
 	cfg Config,
 	logger moira.Logger,
@@ -82,12 +85,14 @@ func createMonitors(
 	return monitors
 }
 
+// Start is a method to start a selfstate worker.
 func (selfstateWorker *selfstateWorker) Start() {
 	for _, monitor := range selfstateWorker.monitors {
 		monitor.Start()
 	}
 }
 
+// Stop is a method for stopping a selfstate worker.
 func (selfstateWorker *selfstateWorker) Stop() error {
 	stopErrors := make([]error, 0)
 

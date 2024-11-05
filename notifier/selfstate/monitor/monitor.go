@@ -17,9 +17,11 @@ var (
 	errorValue        = 1.0
 	triggerErrorValue = 1.0
 
+	// Verify that monitor matches the Monitor interface.
 	_ Monitor = (*monitor)(nil)
 )
 
+// MonitorBaseConfig sets the basic configuration for the monitor.
 type MonitorBaseConfig struct {
 	Enabled         bool
 	HeartbeatersCfg heartbeat.HeartbeatersConfig `validate:"required_if=Enabled true"`
@@ -40,6 +42,7 @@ type monitorConfig struct {
 	CheckInterval  time.Duration `validate:"required,gt=0"`
 }
 
+// Monitor interface, which defines methods for starting and stopping the monitor.
 type Monitor interface {
 	Start()
 	Stop() error
@@ -162,6 +165,7 @@ func createHearbeaters(
 	return heartbeaters
 }
 
+// Start is the method to start the monitor.
 func (m *monitor) Start() {
 	m.tomb.Go(func() error {
 		w.NewWorker(
@@ -304,6 +308,7 @@ func (m *monitor) createOkNotificationPackage(heartbeater heartbeat.Heartbeater,
 	}
 }
 
+// Stop is a method for stopping the monitor.
 func (m *monitor) Stop() error {
 	m.tomb.Kill(nil)
 	return m.tomb.Wait()

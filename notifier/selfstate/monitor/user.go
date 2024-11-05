@@ -16,6 +16,7 @@ const (
 	userMonitorLockTTL  = 15 * time.Second
 )
 
+// UserMonitorConfig defines the configuration of the user monitor.
 type UserMonitorConfig struct {
 	MonitorBaseConfig
 }
@@ -26,6 +27,7 @@ type userMonitor struct {
 	notifier notifier.Notifier
 }
 
+// NewForUser is a method to create a user monitor.
 func NewForUser(
 	userCfg UserMonitorConfig,
 	logger moira.Logger,

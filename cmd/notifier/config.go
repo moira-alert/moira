@@ -60,11 +60,13 @@ type notifierConfig struct {
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
 }
 
+// heartbeaterAlertConfig sets the configuration for the alert of a particular heartbeater.
 type heartbeaterAlertConfig struct {
 	Name string `yaml:"name"`
 	Desc string `yaml:"desc"`
 }
 
+// heartbeaterBaseConfig sets the base configuration of heartbeater.
 type heartbeaterBaseConfig struct {
 	Enabled             bool `yaml:"enabled"`
 	NeedTurnOffNotifier bool `yaml:"need_turn_off_notifier"`
@@ -84,34 +86,40 @@ func (cfg heartbeaterBaseConfig) getSettings() heartbeat.HeartbeaterBaseConfig {
 	}
 }
 
+// databaseHeartbeaterConfig defines the database heartbeater configuration.
 type databaseHeartbeaterConfig struct {
 	heartbeaterBaseConfig `yaml:",inline"`
 
 	RedisDisconnectDelay string `yaml:"redis_disconnect_delay"`
 }
 
+// filterHeartbeaterConfig defines the filter heartbeater configuration.
 type filterHeartbeaterConfig struct {
 	heartbeaterBaseConfig `yaml:",inline"`
 
 	MetricReceivedDelay string `yaml:"last_metric_received_delay"`
 }
 
+// localCheckerHeartbeaterConfig defines the local checker heartbeater configuration.
 type localCheckerHeartbeaterConfig struct {
 	heartbeaterBaseConfig `yaml:",inline"`
 
 	LocalCheckDelay string `yaml:"last_check_delay"`
 }
 
+// remoteCheckerHeartbeaterConfig defines the remote checker heartbeater configuration.
 type remoteCheckerHeartbeaterConfig struct {
 	heartbeaterBaseConfig `yaml:",inline"`
 
 	RemoteCheckDelay string `yaml:"last_remote_check_delay"`
 }
 
+// notifierHeartbeaterConfig defines the notifier heartbeater configuration.
 type notifierHeartbeaterConfig struct {
 	heartbeaterBaseConfig `yaml:",inline"`
 }
 
+// heartbeatsConfig defines the configuration of heartbeaters.
 type heartbeatsConfig struct {
 	DatabaseCfg      databaseHeartbeaterConfig      `yaml:"database"`
 	FilterCfg        filterHeartbeaterConfig        `yaml:"filter"`
@@ -144,6 +152,7 @@ func (cfg heartbeatsConfig) getSettings() heartbeat.HeartbeatersConfig {
 	}
 }
 
+// monitorBaseConfig defines the basic configuration of the monitor.
 type monitorBaseConfig struct {
 	Enabled        bool             `yaml:"enabled"`
 	HearbeatersCfg heartbeatsConfig `yaml:"heartbeaters"`
@@ -151,21 +160,25 @@ type monitorBaseConfig struct {
 	CheckInterval  string           `yaml:"check_interval"`
 }
 
+// adminMonitorConfig defines the configuration for the admin monitor.
 type adminMonitorConfig struct {
 	monitorBaseConfig `yaml:",inline"`
 
 	AdminContacts []map[string]string `yaml:"contacts"`
 }
 
+// userMonitorConfig defines the configuration for the user monitor.
 type userMonitorConfig struct {
 	monitorBaseConfig `yaml:",inline"`
 }
 
+// monitorConfig defines the configuration for all monitors.
 type monitorConfig struct {
 	AdminCfg adminMonitorConfig `yaml:"admin"`
 	UserCfg  userMonitorConfig  `yaml:"user"`
 }
 
+// selfstateConfig defines the configuration of the selfstate worker.
 type selfstateConfig struct {
 	Enabled    bool          `yaml:"enabled"`
 	MonitorCfg monitorConfig `yaml:"monitor"`

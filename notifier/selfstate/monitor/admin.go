@@ -15,6 +15,7 @@ const (
 	adminMonitorLockTTL  = 15 * time.Second
 )
 
+// AdminMonitorConfig sets the configuration for admin monitor.
 type AdminMonitorConfig struct {
 	MonitorBaseConfig
 
@@ -48,6 +49,7 @@ type adminMonitor struct {
 	notifier notifier.Notifier
 }
 
+// NewForAdmin function that creates a new admin monitor.
 func NewForAdmin(
 	adminCfg AdminMonitorConfig,
 	logger moira.Logger,
