@@ -92,6 +92,10 @@ func Test_webConfig_getDefault(t *testing.T) {
 					Trigger: TriggerLimitsConfig{
 						MaxNameSize: api.DefaultTriggerNameMaxSize,
 					},
+					Team: TeamLimitsConfig{
+						MaxNameSize:        api.DefaultTeamNameMaxSize,
+						MaxDescriptionSize: api.DefaultTeamDescriptionMaxSize,
+					},
 				},
 			},
 			Web: webConfig{
