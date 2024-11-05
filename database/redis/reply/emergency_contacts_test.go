@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	testEmergencyContactVal      = `{"contact_id":"test-contact-id","heartbeat_types":["notifier_off"]}`
+	testEmergencyContactVal      = `{"contact_id":"test-contact-id","heartbeat_types":["heartbeat_notifier"]}`
 	testEmptyEmergencyContactVal = `{"contact_id":"","heartbeat_types":null}`
 )
 
 var (
 	testEmergencyContact = datatypes.EmergencyContact{
 		ContactID:      "test-contact-id",
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 	}
 	testEmptyEmergencyContact = datatypes.EmergencyContact{}
 )

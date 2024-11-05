@@ -18,12 +18,12 @@ var (
 
 	testEmergencyContact = datatypes.EmergencyContact{
 		ContactID:      testContactID,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 	}
 
 	testEmergencyContact2 = datatypes.EmergencyContact{
 		ContactID:      testContactID2,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 	}
 
 	testEmergencyContact3 = datatypes.EmergencyContact{
@@ -147,7 +147,7 @@ func TestGetHeartbeatTypeContactIDs(t *testing.T) {
 
 	Convey("Test GetHeartbeatTypeContactIDs", t, func() {
 		Convey("Without any emergency contacts by heartbeat type", func() {
-			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifierOff)
+			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifier)
 			So(err, ShouldBeNil)
 			So(emergencyContactIDs, ShouldBeEmpty)
 		})
@@ -159,7 +159,7 @@ func TestGetHeartbeatTypeContactIDs(t *testing.T) {
 				testEmergencyContact3,
 			})
 
-			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifierOff)
+			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifier)
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContactIDs, []string{
 				testContactID,
@@ -197,7 +197,7 @@ func TestSaveEmergencyContact(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(emergencyContacts, ShouldResemble, expectedEmergencyContacts)
 
-			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifierOff)
+			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifier)
 			So(err, ShouldBeNil)
 			So(emergencyContactIDs, ShouldResemble, expectedEmergencyContactIDs)
 		})
@@ -230,7 +230,7 @@ func TestSaveEmergencyContacts(t *testing.T) {
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContacts, expectedEmergencyContacts)
 
-			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifierOff)
+			emergencyContactIDs, err := database.GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifier)
 			So(err, ShouldBeNil)
 			assert.ElementsMatch(t, emergencyContactIDs, expectedEmergencyContactIDs)
 		})
