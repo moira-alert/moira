@@ -15,7 +15,7 @@ var _ Heartbeater = (*databaseHeartbeater)(nil)
 type DatabaseHeartbeaterConfig struct {
 	HeartbeaterBaseConfig
 
-	RedisDisconnectDelay time.Duration `validate:"required,gt=0"`
+	RedisDisconnectDelay time.Duration `validate:"required_if=Enabled true,gte=0"`
 }
 
 type databaseHeartbeater struct {
