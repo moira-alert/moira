@@ -10,8 +10,9 @@ import (
 
 type UserSettings struct {
 	User
-	Contacts      []moira.ContactData      `json:"contacts"`
-	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
+	Contacts          []moira.ContactData      `json:"contacts"`
+	Subscriptions     []moira.SubscriptionData `json:"subscriptions"`
+	EmergencyContacts []EmergencyContact       `json:"emergency_contacts"`
 }
 
 func (*UserSettings) Render(w http.ResponseWriter, r *http.Request) error {

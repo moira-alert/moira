@@ -13,11 +13,16 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/database"
+	moiradb "github.com/moira-alert/moira/database"
 )
 
-// ErrNotAllowedContactType means that this type of contact is not allowed to be created.
-var ErrNotAllowedContactType = errors.New("cannot create contact with not allowed contact type")
+var (
+	// errNotAllowedContactType means that this type of contact is not allowed to be created.
+	errNotAllowedContactType   = errors.New("cannot create contact with not allowed contact type")
+	errContactAlreadyEmergency = errors.New("this contact is being used with emergency contact")
+
+	errNotPermittedStr = "you are not permitted"
+)
 
 // GetAllContacts gets all moira contacts.
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
@@ -60,7 +65,7 @@ func CreateContact(
 	teamID string,
 ) *api.ErrorResponse {
 	if !isAllowedToUseContactType(auth, userLogin, contact.Type) {
-		return api.ErrorInvalidRequest(ErrNotAllowedContactType)
+		return api.ErrorInvalidRequest(errNotAllowedContactType)
 	}
 
 	// Only admins are allowed to create contacts for other users
@@ -117,7 +122,7 @@ func UpdateContact(
 	contactData moira.ContactData,
 ) (dto.Contact, *api.ErrorResponse) {
 	if !isAllowedToUseContactType(auth, contactDTO.User, contactDTO.Type) {
-		return contactDTO, api.ErrorInvalidRequest(ErrNotAllowedContactType)
+		return contactDTO, api.ErrorInvalidRequest(errNotAllowedContactType)
 	}
 
 	contactData.Type = contactDTO.Type
@@ -161,6 +166,16 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 			return api.ErrorInternalServer(err)
 		}
 		subscriptionIDs = append(subscriptionIDs, teamSubscriptionIDs...)
+	}
+
+	_, err := database.GetEmergencyContact(contactID)
+	isEmergencyContactExist := !errors.Is(err, moiradb.ErrNil)
+	if err != nil && isEmergencyContactExist {
+		return api.ErrorInternalServer(err)
+	}
+
+	if isEmergencyContactExist {
+		return api.ErrorInvalidRequest(errContactAlreadyEmergency)
 	}
 
 	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
@@ -234,7 +249,7 @@ func CheckUserPermissionsForContact(
 ) (moira.ContactData, *api.ErrorResponse) {
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {
-		if errors.Is(err, database.ErrNil) {
+		if errors.Is(err, moiradb.ErrNil) {
 			return moira.ContactData{}, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", contactID))
 		}
 		return moira.ContactData{}, api.ErrorInternalServer(err)
@@ -258,12 +273,12 @@ func CheckUserPermissionsForContact(
 		return contactData, nil
 	}
 
-	return moira.ContactData{}, api.ErrorForbidden("you are not permitted")
+	return moira.ContactData{}, api.ErrorForbidden(errNotPermittedStr)
 }
 
 func isContactExists(dataBase moira.Database, contactID string) (bool, error) {
 	_, err := dataBase.GetContact(contactID)
-	if errors.Is(err, database.ErrNil) {
+	if errors.Is(err, moiradb.ErrNil) {
 		return false, nil
 	}
 	if err != nil {
