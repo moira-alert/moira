@@ -19,7 +19,7 @@ var (
 type FilterHeartbeaterConfig struct {
 	HeartbeaterBaseConfig
 
-	MetricReceivedDelay time.Duration `validate:"required,gt=0"`
+	MetricReceivedDelay time.Duration `validate:"required_if=Enabled true,gte=0"`
 }
 
 type filterHeartbeater struct {
@@ -67,14 +67,9 @@ func (heartbeater *filterHeartbeater) Check() (State, error) {
 	return StateOK, nil
 }
 
-// NeedTurnOffNotifier is a function that checks to see if the notifier needs to be turned off.
-func (heartbeater filterHeartbeater) NeedTurnOffNotifier() bool {
-	return heartbeater.cfg.NeedTurnOffNotifier
-}
-
 // Type is a function that returns the current heartbeat type.
 func (filterHeartbeater) Type() datatypes.HeartbeatType {
-	return datatypes.HeartbeatTypeNotSet
+	return datatypes.HeartbeatFilter
 }
 
 // AlertSettings is a function that returns the current settings for alerts.

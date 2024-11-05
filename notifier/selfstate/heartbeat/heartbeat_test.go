@@ -31,8 +31,16 @@ func heartbeaterHelper(t *testing.T) (*mock_moira_alert.MockDatabase, *mock_cloc
 }
 
 func TestStateIsDegradated(t *testing.T) {
-	Convey("Test state.IsDegradated", t, func() {
-		Convey("With degradated state", func() {
+	Convey("Test state.IsDegraded", t, func() {
+		Convey("With continue degraded", func() {
+			lastState := StateError
+			newState := StateError
+
+			degradated := lastState.IsDegraded(newState)
+			So(degradated, ShouldBeTrue)
+		})
+
+		Convey("With degraded state", func() {
 			lastState := StateOK
 			newState := StateError
 
@@ -40,8 +48,16 @@ func TestStateIsDegradated(t *testing.T) {
 			So(degradated, ShouldBeTrue)
 		})
 
-		Convey("Without degradated state", func() {
+		Convey("Without degraded state", func() {
 			lastState := StateError
+			newState := StateOK
+
+			degradated := lastState.IsDegraded(newState)
+			So(degradated, ShouldBeFalse)
+		})
+
+		Convey("With continue recovered", func() {
+			lastState := StateOK
 			newState := StateOK
 
 			degradated := lastState.IsDegraded(newState)
@@ -62,6 +78,22 @@ func TestStateIsRecovered(t *testing.T) {
 
 		Convey("Without recovered state", func() {
 			lastState := StateOK
+			newState := StateError
+
+			recovered := lastState.IsRecovered(newState)
+			So(recovered, ShouldBeFalse)
+		})
+
+		Convey("With continue recovered", func() {
+			lastState := StateOK
+			newState := StateOK
+
+			recovered := lastState.IsRecovered(newState)
+			So(recovered, ShouldBeFalse)
+		})
+
+		Convey("With continue degraded", func() {
+			lastState := StateError
 			newState := StateError
 
 			recovered := lastState.IsRecovered(newState)
@@ -102,23 +134,6 @@ func TestValidateHeartbeaterBaseConfig(t *testing.T) {
 			hbCfg := HeartbeaterBaseConfig{}
 			err := moira.ValidateStruct(hbCfg)
 			So(err, ShouldBeNil)
-		})
-
-		Convey("With just enabled config", func() {
-			hbCfg := HeartbeaterBaseConfig{
-				Enabled: true,
-			}
-			err := moira.ValidateStruct(hbCfg)
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("With enabled config and added alert config", func() {
-			hbCfg := HeartbeaterBaseConfig{
-				Enabled:  true,
-				AlertCfg: AlertConfig{},
-			}
-			err := moira.ValidateStruct(hbCfg)
-			So(err, ShouldNotBeNil)
 		})
 
 		Convey("With enabled config, added and filled alert config", func() {

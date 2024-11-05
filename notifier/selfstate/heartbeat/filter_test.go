@@ -32,7 +32,11 @@ func TestNewFilterHeartbeater(t *testing.T) {
 		})
 
 		Convey("Without metric received delay", func() {
-			cfg := FilterHeartbeaterConfig{}
+			cfg := FilterHeartbeaterConfig{
+				HeartbeaterBaseConfig: HeartbeaterBaseConfig{
+					Enabled: true,
+				},
+			}
 
 			filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
 			So(errors.As(err, &validationErr), ShouldBeTrue)
@@ -149,25 +153,6 @@ func TestFilterHeartbeaterCheck(t *testing.T) {
 	})
 }
 
-func TestFilterHeartbeaterNeedTurnOffNotifier(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
-
-	Convey("Test filterHeartbeater.TurnOffNotifier", t, func() {
-		cfg := FilterHeartbeaterConfig{
-			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
-				NeedTurnOffNotifier: true,
-			},
-			MetricReceivedDelay: defaultMetricReceivedDelay,
-		}
-
-		filterHeartbeater, err := NewFilterHeartbeater(cfg, heartbeaterBase)
-		So(err, ShouldBeNil)
-
-		needTurnOffNotifier := filterHeartbeater.NeedTurnOffNotifier()
-		So(needTurnOffNotifier, ShouldBeTrue)
-	})
-}
-
 func TestFilterHeartbeaterType(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t)
 
@@ -180,7 +165,7 @@ func TestFilterHeartbeaterType(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		filterHeartbeaterType := filterHeartbeater.Type()
-		So(filterHeartbeaterType, ShouldResemble, datatypes.HeartbeatTypeNotSet)
+		So(filterHeartbeaterType, ShouldResemble, datatypes.HeartbeatFilter)
 	})
 }
 

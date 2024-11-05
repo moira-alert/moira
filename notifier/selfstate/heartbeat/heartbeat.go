@@ -17,7 +17,7 @@ const (
 
 // IsDegraded checks if the condition has degraded.
 func (lastState State) IsDegraded(newState State) bool {
-	return lastState == StateOK && newState == StateError
+	return newState == StateError
 }
 
 // IsRecovered checks if the condition has recovered.
@@ -28,7 +28,6 @@ func (lastState State) IsRecovered(newState State) bool {
 // Heartbeater is the interface for simplified events verification.
 type Heartbeater interface {
 	Check() (State, error)
-	NeedTurnOffNotifier() bool
 	AlertSettings() AlertConfig
 	Type() datatypes.HeartbeatType
 }
@@ -39,12 +38,12 @@ type HeartbeaterBaseConfig struct {
 	NeedTurnOffNotifier bool
 	NeedToCheckOthers   bool
 
-	AlertCfg AlertConfig `validate:"required_if=Enabled true"`
+	AlertCfg AlertConfig
 }
 
 // AlertConfig contains the configuration of the alerts that heartbeater sends out.
 type AlertConfig struct {
-	Name string `validate:"required_if=Enabled true"`
+	Name string
 	Desc string
 }
 
