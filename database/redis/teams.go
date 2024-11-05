@@ -2,6 +2,7 @@ package redis
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis/reply"
@@ -13,13 +14,26 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 
 	teamBytes, err := reply.MarshallTeam(team)
 	if err != nil {
-		return fmt.Errorf("save team error: %w", err)
+		return fmt.Errorf("failed to marshal team: %w", err)
 	}
 
-	err = c.HSet(connector.context, teamsKey, teamID, teamBytes).Err()
+	pipe := c.TxPipeline()
+
+	err = pipe.HSet(connector.context, teamsKey, teamID, teamBytes).Err()
 	if err != nil {
-		return fmt.Errorf("save team redis error: %w", err)
+		return fmt.Errorf("failed to save team metadata: %w", err)
 	}
+
+	err = pipe.SAdd(connector.context, teamsNamesKey, strings.ToLower(team.Name)).Err()
+	if err != nil {
+		return fmt.Errorf("failed to save team name: %w", err)
+	}
+
+	_, err = pipe.Exec(connector.context)
+	if err != nil {
+		return fmt.Errorf("cannot commit transaction and save team: %w", err)
+	}
+
 	return nil
 }
 
@@ -135,7 +149,22 @@ func (connector *DbConnector) DeleteTeam(teamID, userID string) error {
 	return nil
 }
 
-const teamsKey = "moira-teams"
+// IsTeamExist checks if team with given name (NOT ID) exists.
+func (connector *DbConnector) IsTeamExist(name string) (bool, error) {
+	c := *connector.client
+
+	result, err := c.SIsMember(connector.context, teamsNamesKey, strings.ToLower(name)).Result()
+	if err != nil {
+		return false, fmt.Errorf("failed to check if team with name exists: %w", err)
+	}
+
+	return result, nil
+}
+
+const (
+	teamsKey      = "moira-teams"
+	teamsNamesKey = "moira-team-names"
+)
 
 func userTeamsKey(userID string) string {
 	return fmt.Sprintf("moira-userTeams:%s", userID)
