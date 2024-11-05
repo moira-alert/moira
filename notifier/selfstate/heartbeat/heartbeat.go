@@ -15,8 +15,8 @@ const (
 	StateError State = "heartbeat_state_error"
 )
 
-// IsDegraded checks if the condition has degraded.
-func (lastState State) IsDegraded(newState State) bool {
+// IsDegraded checks if the condition is still degraded.
+func (State) IsDegraded(newState State) bool {
 	return newState == StateError
 }
 
