@@ -15,8 +15,8 @@ const (
 	StateError State = "heartbeat_state_error"
 )
 
-// IsDegraded checks if the condition is still degraded.
-func (State) IsDegraded(newState State) bool {
+// IsDegraded checks if the condition has degraded.
+func (lastState State) IsDegraded(newState State) bool {
 	return newState == StateError
 }
 
@@ -28,7 +28,6 @@ func (lastState State) IsRecovered(newState State) bool {
 // Heartbeater is the interface for simplified events verification.
 type Heartbeater interface {
 	Check() (State, error)
-	NeedTurnOffNotifier() bool
 	AlertSettings() AlertConfig
 	Type() datatypes.HeartbeatType
 }

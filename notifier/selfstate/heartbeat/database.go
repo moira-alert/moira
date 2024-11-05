@@ -53,11 +53,6 @@ func (heartbeater *databaseHeartbeater) Check() (State, error) {
 	return StateOK, err
 }
 
-// NeedTurnOffNotifier is a function that checks to see if the notifier needs to be turned off.
-func (heartbeater databaseHeartbeater) NeedTurnOffNotifier() bool {
-	return heartbeater.cfg.NeedTurnOffNotifier
-}
-
 // Type is a function that returns the current heartbeat type.
 func (databaseHeartbeater) Type() datatypes.HeartbeatType {
 	return datatypes.HeartbeatDatabase

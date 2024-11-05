@@ -156,25 +156,6 @@ func TestRemoteCheckerHeartbeaterCheck(t *testing.T) {
 	})
 }
 
-func TestRemoteCheckerHeartbeaterNeedTurnOffNotifier(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
-
-	Convey("Test remoteCheckerHeartbeater.TurnOffNotifier", t, func() {
-		cfg := RemoteCheckerHeartbeaterConfig{
-			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
-				NeedTurnOffNotifier: true,
-			},
-			RemoteCheckDelay: defaultRemoteCheckDelay,
-		}
-
-		remoteCheckerHeartbeater, err := NewRemoteCheckerHeartbeater(cfg, heartbeaterBase)
-		So(err, ShouldBeNil)
-
-		needTurnOffNotifier := remoteCheckerHeartbeater.NeedTurnOffNotifier()
-		So(needTurnOffNotifier, ShouldBeTrue)
-	})
-}
-
 func TestRemoteCheckerHeartbeaterType(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t)
 

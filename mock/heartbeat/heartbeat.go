@@ -69,18 +69,18 @@ func (mr *MockHeartbeaterMockRecorder) Check() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockHeartbeater)(nil).Check))
 }
 
-// NeedTurnOffNotifier mocks base method.
-func (m *MockHeartbeater) NeedTurnOffNotifier() bool {
+// Type mocks base method.
+func (m *MockHeartbeater) Type() datatypes.HeartbeatType {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NeedTurnOffNotifier")
-	ret0, _ := ret[0].(bool)
+	ret := m.ctrl.Call(m, "Type")
+	ret0, _ := ret[0].(datatypes.HeartbeatType)
 	return ret0
 }
 
-// NeedTurnOffNotifier indicates an expected call of NeedTurnOffNotifier.
-func (mr *MockHeartbeaterMockRecorder) NeedTurnOffNotifier() *gomock.Call {
+// Type indicates an expected call of Type.
+func (mr *MockHeartbeaterMockRecorder) Type() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NeedTurnOffNotifier", reflect.TypeOf((*MockHeartbeater)(nil).NeedTurnOffNotifier))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Type", reflect.TypeOf((*MockHeartbeater)(nil).Type))
 }
 
 // Type mocks base method.

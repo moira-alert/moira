@@ -65,24 +65,6 @@ func TestNotifierHeartbeaterCheck(t *testing.T) {
 	})
 }
 
-func TestNotifierHeartbeaterNeedTurnOffNotifier(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
-
-	Convey("Test notifierHeartbeater.TurnOffNotifier", t, func() {
-		cfg := NotifierHeartbeaterConfig{
-			HeartbeaterBaseConfig: HeartbeaterBaseConfig{
-				NeedTurnOffNotifier: true,
-			},
-		}
-
-		notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase)
-		So(err, ShouldBeNil)
-
-		needTurnOffNotifier := notifierHeartbeater.NeedTurnOffNotifier()
-		So(needTurnOffNotifier, ShouldBeTrue)
-	})
-}
-
 func TestNotifierHeartbeaterType(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t)
 
