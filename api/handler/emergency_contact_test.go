@@ -28,7 +28,7 @@ var (
 
 	testEmergencyContact = datatypes.EmergencyContact{
 		ContactID:      testContactID,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 	}
 	testEmergencyContact2 = datatypes.EmergencyContact{
 		ContactID:      testContactID2,
@@ -247,7 +247,7 @@ func TestCreateEmergencyContact(t *testing.T) {
 
 		Convey("Try to create emergency contact without contact id", func() {
 			emergencyContact := datatypes.EmergencyContact{
-				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 			}
 			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
 
@@ -473,7 +473,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 		Convey("Successfully update emergency contact without contact id in dto", func() {
 			emergencyContact := datatypes.EmergencyContact{
-				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 			}
 			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
 

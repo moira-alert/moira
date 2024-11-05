@@ -837,7 +837,7 @@ func TestRemoveContact(t *testing.T) {
 
 			emergencyContact := datatypes.EmergencyContact{
 				ContactID:      contactID,
-				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 			}
 
 			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test"}, nil).Times(1)
