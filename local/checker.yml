@@ -19,8 +19,21 @@ graphite_remote:
     cluster_name: Graphite 1
     url: "http://graphite:80/render"
     check_interval: 60s
-    timeout: 60s
     metrics_ttl: 168h
+    timeout: 60s
+    retries:
+      initial_interval: 60s
+      randomization_factor: 0.5
+      multiplier: 1.5
+      max_interval: 120s
+      max_retries_count: 3
+    health_check_timeout: 6s
+    health_check_retries:
+      initial_interval: 20s
+      randomization_factor: 0.5
+      multiplier: 1.5
+      max_interval: 80s
+      max_retries_count: 3
 prometheus_remote:
   - cluster_id: default
     cluster_name: Prometheus 1
