@@ -37,7 +37,7 @@ func NewForUser(
 		return nil, fmt.Errorf("user config validation error: %w", err)
 	}
 
-	userMonitor := userMonitor{
+	um := userMonitor{
 		userCfg:  userCfg,
 		database: database,
 		notifier: notifier,
@@ -60,7 +60,7 @@ func NewForUser(
 		clock,
 		notifier,
 		heartbeaters,
-		userMonitor.sendNotifications,
+		um.sendNotifications,
 	)
 }
 

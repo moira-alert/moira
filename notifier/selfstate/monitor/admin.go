@@ -59,7 +59,7 @@ func NewForAdmin(
 		return nil, fmt.Errorf("admin config validation error: %w", err)
 	}
 
-	adminMonitor := adminMonitor{
+	am := adminMonitor{
 		adminCfg: adminCfg,
 		database: database,
 		notifier: notifier,
@@ -82,7 +82,7 @@ func NewForAdmin(
 		clock,
 		notifier,
 		heartbeaters,
-		adminMonitor.sendNotifications,
+		am.sendNotifications,
 	)
 }
 

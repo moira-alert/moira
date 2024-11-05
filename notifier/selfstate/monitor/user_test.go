@@ -83,7 +83,7 @@ func TestUserSendNotifications(t *testing.T) {
 
 	sendingWG := &sync.WaitGroup{}
 
-	userMonitor := userMonitor{
+	um := userMonitor{
 		notifier: mockNotifier,
 		database: mockDatabase,
 	}
@@ -99,7 +99,7 @@ func TestUserSendNotifications(t *testing.T) {
 	Convey("Test sendNotifications", t, func() {
 		Convey("With empty notification packages", func() {
 			pkgs := []notifier.NotificationPackage{}
-			err := userMonitor.sendNotifications(pkgs)
+			err := um.sendNotifications(pkgs)
 			So(err, ShouldBeNil)
 		})
 
@@ -114,7 +114,7 @@ func TestUserSendNotifications(t *testing.T) {
 				},
 			}
 			mockDatabase.EXPECT().GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifier).Return([]string{}, testErr).Times(1)
-			err := userMonitor.sendNotifications(pkgs)
+			err := um.sendNotifications(pkgs)
 			So(err, ShouldResemble, fmt.Errorf("failed to get heartbeat type contact ids: %w", testErr))
 		})
 
@@ -130,7 +130,7 @@ func TestUserSendNotifications(t *testing.T) {
 			}
 			mockDatabase.EXPECT().GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifier).Return(contactIDs, nil).Times(1)
 			mockDatabase.EXPECT().GetContacts(contactIDs).Return(nil, testErr).Times(1)
-			err := userMonitor.sendNotifications(pkgs)
+			err := um.sendNotifications(pkgs)
 			So(err, ShouldResemble, fmt.Errorf("failed to get contacts by ids: %w", testErr))
 		})
 
@@ -155,7 +155,7 @@ func TestUserSendNotifications(t *testing.T) {
 			mockDatabase.EXPECT().GetHeartbeatTypeContactIDs(datatypes.HeartbeatNotifier).Return(contactIDs, nil).Times(1)
 			mockDatabase.EXPECT().GetContacts(contactIDs).Return(contacts, nil).Times(1)
 			mockNotifier.EXPECT().Send(pkgWithContact, sendingWG).Times(1)
-			err := userMonitor.sendNotifications(pkgs)
+			err := um.sendNotifications(pkgs)
 			So(err, ShouldBeNil)
 		})
 	})

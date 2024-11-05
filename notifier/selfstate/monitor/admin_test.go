@@ -190,7 +190,7 @@ func TestAdminSendNotifications(t *testing.T) {
 
 	sendingWG := &sync.WaitGroup{}
 
-	adminMonitor := adminMonitor{
+	am := adminMonitor{
 		notifier: mockNotifier,
 		adminCfg: adminCfg,
 	}
@@ -198,7 +198,7 @@ func TestAdminSendNotifications(t *testing.T) {
 	Convey("Test sendNotifications", t, func() {
 		Convey("With empty notification packages", func() {
 			pkgs := []notifier.NotificationPackage{}
-			err := adminMonitor.sendNotifications(pkgs)
+			err := am.sendNotifications(pkgs)
 			So(err, ShouldBeNil)
 		})
 
@@ -213,7 +213,7 @@ func TestAdminSendNotifications(t *testing.T) {
 				},
 			}
 			mockNotifier.EXPECT().Send(pkgWithContact, sendingWG).Times(1)
-			err := adminMonitor.sendNotifications(pkgs)
+			err := am.sendNotifications(pkgs)
 			So(err, ShouldBeNil)
 		})
 	})

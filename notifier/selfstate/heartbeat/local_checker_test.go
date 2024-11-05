@@ -16,7 +16,7 @@ const (
 )
 
 func TestNewLocalCheckerHeartbeater(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	validationErr := validator.ValidationErrors{}
 
@@ -154,7 +154,7 @@ func TestLocalCheckerHeartbeaterCheck(t *testing.T) {
 }
 
 func TestLocalCheckerHeartbeaterType(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	Convey("Test localCheckerHeartbeater.Type", t, func() {
 		cfg := LocalCheckerHeartbeaterConfig{
@@ -170,7 +170,7 @@ func TestLocalCheckerHeartbeaterType(t *testing.T) {
 }
 
 func TestLocalCheckerHeartbeaterAlertSettings(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	Convey("Test localCheckerHeartbeater.AlertSettings", t, func() {
 		alertCfg := AlertConfig{

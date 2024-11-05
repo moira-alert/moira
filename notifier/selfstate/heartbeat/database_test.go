@@ -15,7 +15,7 @@ const (
 )
 
 func TestNewDatabaseHeartbeater(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	validationErr := validator.ValidationErrors{}
 
@@ -112,7 +112,7 @@ func TestDatabaseHeartbeaterCheck(t *testing.T) {
 }
 
 func TestDatabaseHeartbeaterType(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	Convey("Test databaseHeartbeater.Type", t, func() {
 		cfg := DatabaseHeartbeaterConfig{
@@ -128,7 +128,7 @@ func TestDatabaseHeartbeaterType(t *testing.T) {
 }
 
 func TestDatabaseHeartbeaterAlertSettings(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	Convey("Test databaseHeartbeater.AlertSettings", t, func() {
 		alertCfg := AlertConfig{
