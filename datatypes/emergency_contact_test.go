@@ -10,7 +10,11 @@ func TestIsValidHeartbeatType(t *testing.T) {
 	Convey("Test IsValid heartbeat type", t, func() {
 		Convey("Test valid cases", func() {
 			testcases := []HeartbeatType{
-				HeartbeatNotifierOff,
+				HeartbeatNotifier,
+				HeartbeatDatabase,
+				HeartbeatLocalChecker,
+				HeartbeatRemoteChecker,
+				HeartbeatFilter,
 			}
 
 			for _, testcase := range testcases {

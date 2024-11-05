@@ -21,7 +21,7 @@ var (
 
 	testEmergencyContact = datatypes.EmergencyContact{
 		ContactID:      testContactID,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 	}
 	testEmergencyContact2 = datatypes.EmergencyContact{
 		ContactID:      testContactID2,
@@ -30,7 +30,7 @@ var (
 
 	testEmergencyContactDTO = dto.EmergencyContact{
 		ContactID:      testContactID,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 	}
 	testEmergencyContact2DTO = dto.EmergencyContact{
 		ContactID:      testContactID2,
@@ -286,7 +286,7 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 		Convey("With empty contact id", func() {
 			emergencyContactDTO := dto.EmergencyContact{
-				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifierOff},
+				HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatNotifier},
 			}
 			database.EXPECT().SaveEmergencyContact(testEmergencyContact).Return(nil)
 
