@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/moira-alert/moira/notifier/selfstate/controller"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 	"github.com/moira-alert/moira/notifier/selfstate/monitor"
 )
@@ -178,10 +179,17 @@ type monitorConfig struct {
 	UserCfg  userMonitorConfig  `yaml:"user"`
 }
 
+type controllerConfig struct {
+	Enabled        bool             `yaml:"enabled"`
+	HearbeatersCfg heartbeatsConfig `yaml:"heartbeaters"`
+	CheckInterval  string           `yaml:"check_interval"`
+}
+
 // selfstateConfig defines the configuration of the selfstate worker.
 type selfstateConfig struct {
-	Enabled    bool          `yaml:"enabled"`
-	MonitorCfg monitorConfig `yaml:"monitor"`
+	Enabled       bool             `yaml:"enabled"`
+	MonitorCfg    monitorConfig    `yaml:"monitor"`
+	ControllerCfg controllerConfig `yaml:"controller"`
 }
 
 func (cfg *selfstateConfig) getSettings() selfstate.Config {
@@ -205,6 +213,11 @@ func (cfg *selfstateConfig) getSettings() selfstate.Config {
 					CheckInterval:   to.Duration(cfg.MonitorCfg.UserCfg.CheckInterval),
 				},
 			},
+		},
+		ControllerCfg: controller.ControllerConfig{
+			Enabled:         cfg.ControllerCfg.Enabled,
+			HeartbeatersCfg: cfg.ControllerCfg.HearbeatersCfg.getSettings(),
+			CheckInterval:   to.Duration(cfg.ControllerCfg.CheckInterval),
 		},
 	}
 }
@@ -278,6 +291,10 @@ func getDefault() config {
 							},
 						},
 					},
+				},
+				ControllerCfg: controllerConfig{
+					Enabled:       false,
+					CheckInterval: "10s",
 				},
 			},
 			FrontURI:                      "http://localhost",
