@@ -66,7 +66,7 @@ func createHeartbeaters(
 	logger moira.Logger,
 	database moira.Database,
 	clock moira.Clock,
-) []heartbeat.Heartbeater {
+) []heartbeat.Heartbeater { //nolint:gocyclo
 	hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 
 	heartbeaters := make([]heartbeat.Heartbeater, 0)
