@@ -6,12 +6,16 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/datatypes"
+	"github.com/moira-alert/moira/metrics"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestNewNotifierHeartbeater(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
+
+	dummyRegistry := metrics.NewDummyRegistry()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(dummyRegistry)
 
 	Convey("Test NewNotifierHeartbeater", t, func() {
 		Convey("With correct local checker heartbeater config", func() {
@@ -20,9 +24,10 @@ func TestNewNotifierHeartbeater(t *testing.T) {
 			expected := &notifierHeartbeater{
 				heartbeaterBase: heartbeaterBase,
 				cfg:             cfg,
+				metrics:         heartbeatMetrics,
 			}
 
-			notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase)
+			notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase, heartbeatMetrics)
 			So(err, ShouldBeNil)
 			So(notifierHeartbeater, ShouldResemble, expected)
 		})
@@ -32,9 +37,12 @@ func TestNewNotifierHeartbeater(t *testing.T) {
 func TestNotifierHeartbeaterCheck(t *testing.T) {
 	database, _, _, heartbeaterBase := heartbeaterHelper(t)
 
+	dummyRegistry := metrics.NewDummyRegistry()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(dummyRegistry)
+
 	cfg := NotifierHeartbeaterConfig{}
 
-	notifierHeartbeater, _ := NewNotifierHeartbeater(cfg, heartbeaterBase)
+	notifierHeartbeater, _ := NewNotifierHeartbeater(cfg, heartbeaterBase, heartbeatMetrics)
 
 	testErr := errors.New("test error")
 
@@ -68,10 +76,13 @@ func TestNotifierHeartbeaterCheck(t *testing.T) {
 func TestNotifierHeartbeaterType(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
+	dummyRegistry := metrics.NewDummyRegistry()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(dummyRegistry)
+
 	Convey("Test notifierHeartbeater.Type", t, func() {
 		cfg := NotifierHeartbeaterConfig{}
 
-		notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase)
+		notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase, heartbeatMetrics)
 		So(err, ShouldBeNil)
 
 		notifierHeartbeaterType := notifierHeartbeater.Type()
@@ -81,6 +92,9 @@ func TestNotifierHeartbeaterType(t *testing.T) {
 
 func TestNotifierHeartbeaterAlertSettings(t *testing.T) {
 	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
+
+	dummyRegistry := metrics.NewDummyRegistry()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(dummyRegistry)
 
 	Convey("Test notifierHeartbeater.AlertSettings", t, func() {
 		alertCfg := AlertConfig{
@@ -94,7 +108,7 @@ func TestNotifierHeartbeaterAlertSettings(t *testing.T) {
 			},
 		}
 
-		notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase)
+		notifierHeartbeater, err := NewNotifierHeartbeater(cfg, heartbeaterBase, heartbeatMetrics)
 		So(err, ShouldBeNil)
 
 		alertSettings := notifierHeartbeater.AlertSettings()
