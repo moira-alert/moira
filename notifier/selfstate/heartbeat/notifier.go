@@ -20,10 +20,13 @@ type notifierHeartbeater struct {
 }
 
 // NewNotifierHeartbeater is a function that creates a new notifierHeartbeater.
-func NewNotifierHeartbeater(cfg NotifierHeartbeaterConfig, base *heartbeaterBase) (*notifierHeartbeater, error) {
+func NewNotifierHeartbeater(
+	cfg NotifierHeartbeaterConfig,
+	base *heartbeaterBase,
+) (*notifierHeartbeater, error) {
 	return &notifierHeartbeater{
-		heartbeaterBase: base,
 		cfg:             cfg,
+		heartbeaterBase: base,
 	}, nil
 }
 
