@@ -20,3 +20,6 @@ type ErrLockNotAcquired struct {
 func (e *ErrLockNotAcquired) Error() string {
 	return fmt.Sprintf("lock was not acquired: %v", e.Err)
 }
+
+// ErrTeamWithNameAlreadyExists may be returned from SaveTeam method.
+var ErrTeamWithNameAlreadyExists = fmt.Errorf("team with such name alredy exists")

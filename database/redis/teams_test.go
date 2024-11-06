@@ -36,9 +36,17 @@ func TestTeamStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actualTeam, ShouldResemble, team)
 
+		teamExists, err := dataBase.IsTeamExist(team.Name)
+		So(err, ShouldBeNil)
+		So(teamExists, ShouldBeTrue)
+
 		actualTeam, err = dataBase.GetTeam("nonExistentTeam")
 		So(err, ShouldResemble, database.ErrNil)
 		So(actualTeam, ShouldResemble, moira.Team{})
+
+		notExistentTeamExists, err := dataBase.IsTeamExist("not existing team name")
+		So(err, ShouldBeNil)
+		So(notExistentTeamExists, ShouldBeFalse)
 
 		// Add two users for team 1
 		err = dataBase.SaveTeamsAndUsers(
@@ -130,18 +138,32 @@ func TestTeamStoring(t *testing.T) {
 			Name:        "TeamName",
 			Description: "Team Description",
 		}
+
 		err = dataBase.SaveTeam(teamToDeleteID, teamToDelete)
 		So(err, ShouldBeNil)
+
+		teamExists, err = dataBase.IsTeamExist(teamToDelete.Name)
+		So(err, ShouldBeNil)
+		So(teamExists, ShouldBeTrue)
+
 		err = dataBase.SaveTeamsAndUsers(teamToDeleteID, []string{userOfTeamToDeleteID}, map[string][]string{teamToDeleteID: {userOfTeamToDeleteID}})
 		So(err, ShouldBeNil)
+
 		err = dataBase.DeleteTeam(teamToDeleteID, userOfTeamToDeleteID)
 		So(err, ShouldBeNil)
+
 		actualTeam, err = dataBase.GetTeam(teamToDeleteID)
 		So(err, ShouldResemble, database.ErrNil)
 		So(actualTeam, ShouldResemble, moira.Team{})
+
+		teamExists, err = dataBase.IsTeamExist(teamToDelete.Name)
+		So(err, ShouldBeNil)
+		So(teamExists, ShouldBeFalse)
+
 		actualTeams, err = dataBase.GetUserTeams(userOfTeamToDeleteID)
 		So(err, ShouldBeNil)
 		So(actualTeams, ShouldHaveLength, 0)
+
 		actualUsers, err = dataBase.GetTeamUsers(teamToDeleteID)
 		So(err, ShouldBeNil)
 		So(actualUsers, ShouldHaveLength, 0)
