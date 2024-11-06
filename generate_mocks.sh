@@ -19,6 +19,7 @@ mockgen -destination=mock/moira-alert/searcher.go -package=mock_moira_alert gith
 mockgen -destination=mock/metric_source/source.go  -package=mock_metric_source github.com/moira-alert/moira/metric_source MetricSource
 mockgen -destination=mock/metric_source/fetch_result.go -package=mock_metric_source github.com/moira-alert/moira/metric_source FetchResult
 mockgen -destination=mock/heartbeat/heartbeat.go -package=mock_heartbeat github.com/moira-alert/moira/notifier/selfstate/heartbeat Heartbeater
+mockgen -destination=mock/monitor/monitor.go -package=mock_monitor github.com/moira-alert/moira/notifier/selfstate/monitor Monitor
 mockgen -destination=mock/clock/clock.go -package=mock_clock github.com/moira-alert/moira Clock
 mockgen -destination=mock/notifier/mattermost/client.go -package=mock_mattermost github.com/moira-alert/moira/senders/mattermost Client
 
