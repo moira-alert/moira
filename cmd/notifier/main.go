@@ -121,7 +121,6 @@ func main() {
 
 	// Start moira selfstate checker
 	if selfstateCfg.Enabled {
-		fmt.Println(selfstateCfg)
 		logger.Info().Msg("Selfstate enabled")
 		selfstateWorker, err := selfstate.NewSelfstateWorker(selfstateCfg, logger, database, sender, systemClock)
 		if err != nil {
