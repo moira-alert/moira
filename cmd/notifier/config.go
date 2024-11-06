@@ -179,6 +179,7 @@ type monitorConfig struct {
 	UserCfg  userMonitorConfig  `yaml:"user"`
 }
 
+// controllerConfig defines the selfstate controller configuration.
 type controllerConfig struct {
 	Enabled        bool             `yaml:"enabled"`
 	HearbeatersCfg heartbeatsConfig `yaml:"heartbeaters"`

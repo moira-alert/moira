@@ -10,17 +10,22 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
+// Verify that monitor matches the Monitor interface.
+var _ Controller = (*controller)(nil)
+
 const (
 	name     = "Moira Selfstate Controller"
 	lockName = "moira-selfstate-controller"
 	lockTTL  = 15 * time.Second
 )
 
+// Controller interface that defines the methods of the selfstate controller.
 type Controller interface {
 	Start()
 	Stop() error
 }
 
+// ControllerConfig defines the selfstate controller configuration.
 type ControllerConfig struct {
 	Enabled         bool
 	HeartbeatersCfg heartbeat.HeartbeatersConfig `validate:"required_if=Enabled true"`
@@ -35,6 +40,7 @@ type controller struct {
 	heartbeaters []heartbeat.Heartbeater
 }
 
+// NewController is a function to create a new selfstate controller.
 func NewController(
 	cfg ControllerConfig,
 	logger moira.Logger,
@@ -128,6 +134,7 @@ func createHeartbeaters(
 	return heartbeaters
 }
 
+// Start is the method to start the selfstate controller.
 func (c *controller) Start() {
 	c.tomb.Go(func() error {
 		w.NewWorker(
@@ -183,6 +190,7 @@ func (c *controller) checkHeartbeats() {
 	}
 }
 
+// Stop is a method to stop the selfstate controller.
 func (c *controller) Stop() error {
 	c.tomb.Kill(nil)
 	return c.tomb.Wait()
