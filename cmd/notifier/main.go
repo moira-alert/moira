@@ -118,12 +118,13 @@ func main() {
 	}
 
 	selfstateCfg := config.Notifier.Selfstate.getSettings()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(telemetry.Metrics)
 
 	// Start moira selfstate checker
 	if selfstateCfg.Enabled {
 		fmt.Println(selfstateCfg)
 		logger.Info().Msg("Selfstate enabled")
-		selfstateWorker, err := selfstate.NewSelfstateWorker(selfstateCfg, logger, database, sender, systemClock)
+		selfstateWorker, err := selfstate.NewSelfstateWorker(selfstateCfg, logger, database, sender, systemClock, heartbeatMetrics)
 		if err != nil {
 			logger.Fatal().
 				Error(err).

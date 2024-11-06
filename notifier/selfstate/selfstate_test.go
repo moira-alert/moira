@@ -8,6 +8,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metrics"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_controller "github.com/moira-alert/moira/mock/controller"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -27,6 +28,8 @@ func TestNewSelfstateWorker(t *testing.T) {
 	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	mockNotifier := mock_notifier.NewMockNotifier(mockCtrl)
+	dummyRegistry := metrics.NewDummyRegistry()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(dummyRegistry)
 
 	cfg := Config{
 		Enabled:       true,
@@ -35,7 +38,7 @@ func TestNewSelfstateWorker(t *testing.T) {
 	}
 
 	Convey("Test NewSelfstateWorker", t, func() {
-		worker, err := NewSelfstateWorker(cfg, logger, mockDatabase, mockNotifier, mockClock)
+		worker, err := NewSelfstateWorker(cfg, logger, mockDatabase, mockNotifier, mockClock, heartbeatMetrics)
 		So(err, ShouldBeNil)
 		So(worker.monitors, ShouldHaveLength, 0)
 	})
@@ -133,12 +136,14 @@ func TestCreateController(t *testing.T) {
 	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC)
+	dummyRegistry := metrics.NewDummyRegistry()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(dummyRegistry)
 
 	Convey("Test createController", t, func() {
 		mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
 
 		Convey("With disabled controller", func() {
-			controller := createController(controller.ControllerConfig{}, logger, mockDatabase, mockClock)
+			controller := createController(controller.ControllerConfig{}, logger, mockDatabase, mockClock, heartbeatMetrics)
 			So(controller, ShouldBeNil)
 		})
 
@@ -156,7 +161,7 @@ func TestCreateController(t *testing.T) {
 				CheckInterval: time.Minute,
 			}
 
-			controller := createController(cfg, logger, mockDatabase, mockClock)
+			controller := createController(cfg, logger, mockDatabase, mockClock, heartbeatMetrics)
 			So(controller, ShouldNotBeNil)
 		})
 	})

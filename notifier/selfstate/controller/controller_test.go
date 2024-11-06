@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/datatypes"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metrics"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_heartbeat "github.com/moira-alert/moira/mock/heartbeat"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -24,6 +25,8 @@ func TestNewController(t *testing.T) {
 	mockClock := mock_clock.NewMockClock(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC)
+	dummySource := metrics.NewDummyRegistry()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(dummySource)
 
 	Convey("Test NewController", t, func() {
 		mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
@@ -31,13 +34,14 @@ func TestNewController(t *testing.T) {
 		Convey("With disabled config", func() {
 			cfg := ControllerConfig{}
 
-			c, err := NewController(cfg, logger, mockDatabase, mockClock)
+			c, err := NewController(cfg, logger, mockDatabase, mockClock, heartbeatMetrics)
 			So(err, ShouldBeNil)
 			So(c, ShouldResemble, &controller{
-				cfg:          cfg,
-				logger:       logger,
-				database:     mockDatabase,
-				heartbeaters: make([]heartbeat.Heartbeater, 0),
+				cfg:              cfg,
+				logger:           logger,
+				database:         mockDatabase,
+				heartbeaters:     make([]heartbeat.Heartbeater, 0),
+				heartbeatMetrics: heartbeatMetrics,
 			})
 		})
 
@@ -46,7 +50,7 @@ func TestNewController(t *testing.T) {
 				Enabled: true,
 			}
 
-			c, err := NewController(cfg, logger, mockDatabase, mockClock)
+			c, err := NewController(cfg, logger, mockDatabase, mockClock, heartbeatMetrics)
 			So(err, ShouldNotBeNil)
 			So(c, ShouldBeNil)
 		})
@@ -64,7 +68,7 @@ func TestNewController(t *testing.T) {
 				},
 			}
 
-			c, err := NewController(cfg, logger, mockDatabase, mockClock)
+			c, err := NewController(cfg, logger, mockDatabase, mockClock, heartbeatMetrics)
 			So(err, ShouldNotBeNil)
 			So(c, ShouldBeNil)
 		})
@@ -83,7 +87,7 @@ func TestNewController(t *testing.T) {
 				CheckInterval: time.Minute,
 			}
 
-			_, err := NewController(cfg, logger, mockDatabase, mockClock)
+			_, err := NewController(cfg, logger, mockDatabase, mockClock, heartbeatMetrics)
 			So(err, ShouldBeNil)
 		})
 	})
@@ -274,6 +278,8 @@ func TestCheckHeartbeats(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC)
+	dummySource := metrics.NewDummyRegistry()
+	heartbeatMetrics := metrics.ConfigureHeartBeatMetrics(dummySource)
 
 	Convey("Test checkHeartbeats", t, func() {
 		mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
@@ -283,22 +289,32 @@ func TestCheckHeartbeats(t *testing.T) {
 		notifierHeartbeater := mock_heartbeat.NewMockHeartbeater(mockCtrl)
 
 		c := &controller{
-			heartbeaters: []heartbeat.Heartbeater{databaseHeartbeater, localCheckerHeartbeater, notifierHeartbeater},
-			logger:       logger,
-			database:     mockDatabase,
+			heartbeaters:     []heartbeat.Heartbeater{databaseHeartbeater, localCheckerHeartbeater, notifierHeartbeater},
+			logger:           logger,
+			database:         mockDatabase,
+			heartbeatMetrics: heartbeatMetrics,
 		}
 
 		Convey("Without error heartbeat states", func() {
 			databaseHeartbeater.EXPECT().Check().Return(heartbeat.StateOK, nil)
+			databaseHeartbeater.EXPECT().Type().Return(datatypes.HeartbeatDatabase)
+
 			localCheckerHeartbeater.EXPECT().Check().Return(heartbeat.StateOK, nil)
+			localCheckerHeartbeater.EXPECT().Type().Return(datatypes.HeartbeatLocalChecker)
+
 			notifierHeartbeater.EXPECT().Check().Return(heartbeat.StateOK, nil)
+			notifierHeartbeater.EXPECT().Type().Return(datatypes.HeartbeatNotifier)
 
 			c.checkHeartbeats()
 		})
 
 		Convey("With heartbeat error state", func() {
 			databaseHeartbeater.EXPECT().Check().Return(heartbeat.StateOK, nil)
+			databaseHeartbeater.EXPECT().Type().Return(datatypes.HeartbeatDatabase)
+
 			localCheckerHeartbeater.EXPECT().Check().Return(heartbeat.StateError, nil)
+			localCheckerHeartbeater.EXPECT().Type().Return(datatypes.HeartbeatLocalChecker)
+
 			mockDatabase.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(nil)
 
 			c.checkHeartbeats()
@@ -307,7 +323,11 @@ func TestCheckHeartbeats(t *testing.T) {
 		Convey("With heartbeat error state and error while set notifier state", func() {
 			dbErr := errors.New("test database error")
 			databaseHeartbeater.EXPECT().Check().Return(heartbeat.StateOK, nil)
+			databaseHeartbeater.EXPECT().Type().Return(datatypes.HeartbeatDatabase)
+
 			localCheckerHeartbeater.EXPECT().Check().Return(heartbeat.StateError, nil)
+			localCheckerHeartbeater.EXPECT().Type().Return(datatypes.HeartbeatLocalChecker)
+
 			mockDatabase.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(dbErr)
 			localCheckerHeartbeater.EXPECT().Type().Return(datatypes.HeartbeatLocalChecker)
 

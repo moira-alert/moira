@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate/controller"
 	"github.com/moira-alert/moira/notifier/selfstate/monitor"
@@ -30,9 +31,10 @@ func NewSelfstateWorker(
 	database moira.Database,
 	notifier notifier.Notifier,
 	clock moira.Clock,
+	heartbeatMetrics *metrics.HeartBeatMetrics,
 ) (*selfstateWorker, error) {
 	monitors := createMonitors(cfg.MonitorCfg, logger, database, clock, notifier)
-	controller := createController(cfg.ControllerCfg, logger, database, clock)
+	controller := createController(cfg.ControllerCfg, logger, database, clock, heartbeatMetrics)
 
 	return &selfstateWorker{
 		monitors:   monitors,
@@ -94,12 +96,13 @@ func createController(
 	logger moira.Logger,
 	database moira.Database,
 	clock moira.Clock,
+	heartbeatMetrics *metrics.HeartBeatMetrics,
 ) controller.Controller {
 	var c controller.Controller
 	var err error
 
 	if controllerCfg.Enabled {
-		c, err = controller.NewController(controllerCfg, logger, database, clock)
+		c, err = controller.NewController(controllerCfg, logger, database, clock, heartbeatMetrics)
 		if err != nil {
 			logger.Error().
 				Error(err).

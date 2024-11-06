@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/datatypes"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 	w "github.com/moira-alert/moira/worker"
 	"gopkg.in/tomb.v2"
@@ -33,11 +35,12 @@ type ControllerConfig struct {
 }
 
 type controller struct {
-	cfg          ControllerConfig
-	tomb         tomb.Tomb
-	logger       moira.Logger
-	database     moira.Database
-	heartbeaters []heartbeat.Heartbeater
+	cfg              ControllerConfig
+	tomb             tomb.Tomb
+	logger           moira.Logger
+	database         moira.Database
+	heartbeaters     []heartbeat.Heartbeater
+	heartbeatMetrics *metrics.HeartBeatMetrics
 }
 
 // NewController is a function to create a new selfstate controller.
@@ -46,6 +49,7 @@ func NewController(
 	logger moira.Logger,
 	database moira.Database,
 	clock moira.Clock,
+	heartbeatMetrics *metrics.HeartBeatMetrics,
 ) (*controller, error) {
 	if err := moira.ValidateStruct(cfg); err != nil {
 		return nil, fmt.Errorf("controller configuration error: %w", err)
@@ -54,10 +58,11 @@ func NewController(
 	heartbeaters := createHeartbeaters(cfg.HeartbeatersCfg, logger, database, clock)
 
 	return &controller{
-		cfg:          cfg,
-		logger:       logger,
-		database:     database,
-		heartbeaters: heartbeaters,
+		cfg:              cfg,
+		logger:           logger,
+		database:         database,
+		heartbeaters:     heartbeaters,
+		heartbeatMetrics: heartbeatMetrics,
 	}, nil
 }
 
@@ -175,6 +180,14 @@ func (c *controller) checkHeartbeats() {
 				String("name", name).
 				String("heartbeater", string(heartbeater.Type())).
 				Msg("Heartbeat check failed")
+		}
+
+		if heartbeater.Type() == datatypes.HeartbeatNotifier {
+			if heartbeatState == heartbeat.StateError {
+				c.heartbeatMetrics.MarkNotifierIsAlive(false)
+			} else {
+				c.heartbeatMetrics.MarkNotifierIsAlive(true)
+			}
 		}
 
 		if heartbeatState == heartbeat.StateError {
