@@ -3,7 +3,6 @@ package heartbeat
 import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/datatypes"
-	"github.com/moira-alert/moira/metrics"
 )
 
 // Verify that notifierHeartbeater matches the Heartbeater interface.
@@ -17,20 +16,17 @@ type NotifierHeartbeaterConfig struct {
 type notifierHeartbeater struct {
 	*heartbeaterBase
 
-	metrics *metrics.HeartBeatMetrics
-	cfg     NotifierHeartbeaterConfig
+	cfg NotifierHeartbeaterConfig
 }
 
 // NewNotifierHeartbeater is a function that creates a new notifierHeartbeater.
 func NewNotifierHeartbeater(
 	cfg NotifierHeartbeaterConfig,
 	base *heartbeaterBase,
-	metrics *metrics.HeartBeatMetrics,
 ) (*notifierHeartbeater, error) {
 	return &notifierHeartbeater{
 		cfg:             cfg,
 		heartbeaterBase: base,
-		metrics:         metrics,
 	}, nil
 }
 
@@ -38,16 +34,12 @@ func NewNotifierHeartbeater(
 func (heartbeater *notifierHeartbeater) Check() (State, error) {
 	notifierState, err := heartbeater.database.GetNotifierState()
 	if err != nil {
-		heartbeater.metrics.MarkNotifierIsAlive(false)
 		return StateError, err
 	}
 
 	if notifierState != moira.SelfStateOK {
-		heartbeater.metrics.MarkNotifierIsAlive(false)
 		return StateError, nil
 	}
-
-	heartbeater.metrics.MarkNotifierIsAlive(true)
 
 	return StateOK, nil
 }
