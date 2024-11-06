@@ -45,7 +45,7 @@ notifier:
             need_turn_off_notifier: true
             alert:
               name: Database Problems
-            redis_disconect_delay: 60s
+            redis_disconnect_delay: 10s
           notifier:
             enabled: true
             need_turn_off_notifier: true
@@ -64,7 +64,7 @@ notifier:
             need_turn_off_notifier: true
             alert:
               name: Database Problems
-            redis_disconect_delay: 60s
+            redis_disconnect_delay: 60s
           notifier:
             enabled: true
             need_turn_off_notifier: true
@@ -72,6 +72,17 @@ notifier:
               name: Notifier Problems
         notice_interval: 10s
         check_interval: 5s
+    controller:
+      enabled: true
+      heartbeaters:
+          database:
+            enabled: true
+            need_turn_off_notifier: true
+            redis_disconnect_delay: 60s
+          notifier:
+            enabled: true
+            need_turn_off_notifier: true
+      check_interval: 5s
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"
