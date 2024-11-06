@@ -3,7 +3,9 @@ package dto
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -441,4 +443,198 @@ func TestCreateTriggerModel(t *testing.T) {
 
 		So(CreateTriggerModel(trigger), ShouldResemble, expTriggerModel)
 	})
+}
+
+func Test_checkScheduleFilling(t *testing.T) {
+	Convey("Testing checking schedule filling", t, func() {
+		defaultSchedule := moira.NewDefaultScheduleData()
+
+		Convey("With valid schedule", func() {
+			givenSchedule := moira.NewDefaultScheduleData()
+
+			givenSchedule.Days[len(givenSchedule.Days)-1].Enabled = false
+			givenSchedule.TimezoneOffset += 1
+			givenSchedule.StartOffset += 1
+			givenSchedule.EndOffset += 1
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, givenSchedule)
+		})
+
+		Convey("With not all days, missing days filled with false", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days[:len(days)-1],
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			days[len(days)-1].Enabled = false
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
+		Convey("With some days repeated, there is no repeated days and missing days filled with false", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			days[4].Name = moira.Monday
+			days[6].Name = moira.Monday
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			expectedDays := moira.GetFilledScheduleDataDays(true)
+
+			expectedDays[4].Enabled = false
+			expectedDays[6].Enabled = false
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           expectedDays,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
+		Convey("When days shuffled return ordered", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			shuffledDays := shuffleArray(days)
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           shuffledDays,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           defaultSchedule.Days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
+		Convey("When days shuffled and some are missed return ordered and filled missing", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			shuffledDays := shuffleArray(days[:len(days)-2])
+
+			days[len(days)-1].Enabled = false
+			days[len(days)-2].Enabled = false
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           shuffledDays,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
+		Convey("With bad day names error returned", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			var (
+				badMondayName moira.DayName = "Monday"
+				badFridayName moira.DayName = "Friday"
+			)
+
+			days[0].Name = badMondayName
+			days[4].Name = badFridayName
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldResemble, fmt.Errorf("bad day names in schedule: %s, %s", badMondayName, badFridayName))
+			So(gotSchedule, ShouldBeNil)
+		})
+
+		Convey("With no enabled days error returned", func() {
+			days := moira.GetFilledScheduleDataDays(false)
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldResemble, errNoAllowedDays)
+			So(gotSchedule, ShouldBeNil)
+		})
+	})
+}
+
+func shuffleArray[S interface{ ~[]E }, E any](slice S) S {
+	slice = slices.Clone(slice)
+	shuffledSlice := make(S, 0, len(slice))
+
+	for len(slice) > 0 {
+		randomIdx := rand.Intn(len(slice))
+		shuffledSlice = append(shuffledSlice, slice[randomIdx])
+
+		switch {
+		case randomIdx == len(slice)-1:
+			slice = slice[:len(slice)-1]
+		case randomIdx == 0:
+			if len(slice) > 1 {
+				slice = slice[1:]
+			} else {
+				slice = nil
+			}
+		default:
+			slice = append(slice[:randomIdx], slice[randomIdx+1:]...)
+		}
+	}
+
+	return shuffledSlice
 }
