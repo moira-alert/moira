@@ -17,7 +17,7 @@ import (
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
-	"github.com/moira-alert/moira/notifier/selfstate"
+	selfstate "github.com/moira-alert/moira/notifier/selfstate/worker"
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -117,18 +117,14 @@ func main() {
 			Msg("Can not configure senders")
 	}
 
-	// Start moira self state checker
-	if config.Notifier.SelfState.getSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings(), metrics.ConfigureHeartBeatMetrics(telemetry.Metrics))
-		if err := selfState.Start(); err != nil {
-			logger.Fatal().
-				Error(err).
-				Msg("SelfState failed")
-		}
-		defer stopSelfStateChecker(selfState)
-	} else {
-		logger.Debug().Msg("Moira Self State Monitoring disabled")
+	selfstateCfg := config.Notifier.Selfstate.getSettings()
+	selfstateWorker, err := selfstate.NewSelfstateWorker(selfstateCfg, logger, database, sender, systemClock)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to create a new selfstate worker")
 	}
+	defer stopSelfstateWorker(selfstateWorker)
 
 	// Start moira notification fetcher
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
@@ -181,10 +177,10 @@ func stopNotificationsFetcher(worker *notifications.FetchNotificationsWorker) {
 	}
 }
 
-func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
-	if err := checker.Stop(); err != nil {
+func stopSelfstateWorker(selfstateWorker selfstate.SelfstateWorker) {
+	if err := selfstateWorker.Stop(); err != nil {
 		logger.Error().
 			Error(err).
-			Msg("Failed to stop self check worker")
+			Msg("Failed to stop selfstate worker")
 	}
 }
