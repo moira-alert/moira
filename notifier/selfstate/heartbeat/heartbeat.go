@@ -36,7 +36,6 @@ type Heartbeater interface {
 type HeartbeaterBaseConfig struct {
 	Enabled             bool
 	NeedTurnOffNotifier bool
-	NeedToCheckOthers   bool
 
 	AlertCfg AlertConfig
 }
