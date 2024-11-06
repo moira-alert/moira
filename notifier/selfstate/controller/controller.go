@@ -10,7 +10,7 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
-// Verify that monitor matches the Monitor interface.
+// Verify that controller matches the Controller interface.
 var _ Controller = (*controller)(nil)
 
 const (
