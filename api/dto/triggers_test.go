@@ -3,7 +3,10 @@ package dto
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,6 +21,52 @@ import (
 )
 
 func TestTriggerValidation(t *testing.T) {
+	Convey("Test trigger name and tags", t, func() {
+		trigger := Trigger{
+			TriggerModel: TriggerModel{},
+		}
+
+		limit := api.GetTestLimitsConfig()
+
+		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
+		request.Header.Set("Content-Type", "application/json")
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limit))
+
+		Convey("with empty targets", func() {
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTargetsRequired})
+		})
+
+		trigger.Targets = []string{"foo.bar"}
+
+		Convey("with empty tag in tag list", func() {
+			trigger.Tags = []string{""}
+
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTagsRequired})
+		})
+
+		trigger.Tags = append(trigger.Tags, "tag1")
+
+		Convey("with empty Name", func() {
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errTriggerNameRequired})
+		})
+
+		Convey("with too long Name", func() {
+			trigger.Name = strings.Repeat("ё", limit.Trigger.MaxNameSize+1)
+
+			err := trigger.Bind(request)
+
+			So(err, ShouldResemble, api.ErrInvalidRequestContent{
+				ValidationError: fmt.Errorf("trigger name too long, should not be greater than %d symbols", limit.Trigger.MaxNameSize),
+			})
+		})
+	})
+
 	Convey("Tests targets, values and expression validation", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -31,6 +80,7 @@ func TestTriggerValidation(t *testing.T) {
 		request.Header.Set("Content-Type", "application/json")
 		ctx := request.Context()
 		ctx = context.WithValue(ctx, middleware.ContextKey("metricSourceProvider"), sourceProvider)
+		ctx = context.WithValue(ctx, middleware.ContextKey("limits"), api.GetTestLimitsConfig())
 		request = request.WithContext(ctx)
 
 		desc := "Graphite ClickHouse"
@@ -203,19 +253,19 @@ func TestTriggerValidation(t *testing.T) {
 				trigger.AloneMetrics = map[string]bool{"ttt": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errBadAloneMetricName})
 			})
 			Convey("have more than 1 metric name but only 1 need", func() {
 				trigger.AloneMetrics = map[string]bool{"t1 t2": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: ErrBadAloneMetricName})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errBadAloneMetricName})
 			})
 			Convey("have target higher than total amount of targets", func() {
 				trigger.AloneMetrics = map[string]bool{"t3": true}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errAloneMetricTargetIndexOutOfRange})
 			})
 		})
 
@@ -237,7 +287,7 @@ func TestTriggerValidation(t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				fetchResult.EXPECT().GetPatterns().Return([]string{"*"}, nil).AnyTimes()
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")})
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed})
 			})
 		})
 	})
@@ -393,4 +443,198 @@ func TestCreateTriggerModel(t *testing.T) {
 
 		So(CreateTriggerModel(trigger), ShouldResemble, expTriggerModel)
 	})
+}
+
+func Test_checkScheduleFilling(t *testing.T) {
+	Convey("Testing checking schedule filling", t, func() {
+		defaultSchedule := moira.NewDefaultScheduleData()
+
+		Convey("With valid schedule", func() {
+			givenSchedule := moira.NewDefaultScheduleData()
+
+			givenSchedule.Days[len(givenSchedule.Days)-1].Enabled = false
+			givenSchedule.TimezoneOffset += 1
+			givenSchedule.StartOffset += 1
+			givenSchedule.EndOffset += 1
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, givenSchedule)
+		})
+
+		Convey("With not all days, missing days filled with false", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days[:len(days)-1],
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			days[len(days)-1].Enabled = false
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
+		Convey("With some days repeated, there is no repeated days and missing days filled with false", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			days[4].Name = moira.Monday
+			days[6].Name = moira.Monday
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			expectedDays := moira.GetFilledScheduleDataDays(true)
+
+			expectedDays[4].Enabled = false
+			expectedDays[6].Enabled = false
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           expectedDays,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
+		Convey("When days shuffled return ordered", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			shuffledDays := shuffleArray(days)
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           shuffledDays,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           defaultSchedule.Days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
+		Convey("When days shuffled and some are missed return ordered and filled missing", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			shuffledDays := shuffleArray(days[:len(days)-2])
+
+			days[len(days)-1].Enabled = false
+			days[len(days)-2].Enabled = false
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           shuffledDays,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			expectedSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldBeNil)
+			So(gotSchedule, ShouldResemble, expectedSchedule)
+		})
+
+		Convey("With bad day names error returned", func() {
+			days := moira.GetFilledScheduleDataDays(true)
+
+			var (
+				badMondayName moira.DayName = "Monday"
+				badFridayName moira.DayName = "Friday"
+			)
+
+			days[0].Name = badMondayName
+			days[4].Name = badFridayName
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldResemble, fmt.Errorf("bad day names in schedule: %s, %s", badMondayName, badFridayName))
+			So(gotSchedule, ShouldBeNil)
+		})
+
+		Convey("With no enabled days error returned", func() {
+			days := moira.GetFilledScheduleDataDays(false)
+
+			givenSchedule := &moira.ScheduleData{
+				Days:           days,
+				TimezoneOffset: defaultSchedule.TimezoneOffset,
+				StartOffset:    defaultSchedule.StartOffset,
+				EndOffset:      defaultSchedule.EndOffset,
+			}
+
+			gotSchedule, err := checkScheduleFilling(givenSchedule)
+
+			So(err, ShouldResemble, errNoAllowedDays)
+			So(gotSchedule, ShouldBeNil)
+		})
+	})
+}
+
+func shuffleArray[S interface{ ~[]E }, E any](slice S) S {
+	slice = slices.Clone(slice)
+	shuffledSlice := make(S, 0, len(slice))
+
+	for len(slice) > 0 {
+		randomIdx := rand.Intn(len(slice))
+		shuffledSlice = append(shuffledSlice, slice[randomIdx])
+
+		switch {
+		case randomIdx == len(slice)-1:
+			slice = slice[:len(slice)-1]
+		case randomIdx == 0:
+			if len(slice) > 1 {
+				slice = slice[1:]
+			} else {
+				slice = nil
+			}
+		default:
+			slice = append(slice[:randomIdx], slice[randomIdx+1:]...)
+		}
+	}
+
+	return shuffledSlice
 }

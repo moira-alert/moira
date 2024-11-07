@@ -19,7 +19,12 @@ func TestPrefixTree(t *testing.T) {
 		})
 
 		Convey("MatchWithValue should return empty map", func() {
-			matchedPatterns := prefixTree.MatchWithValue("any_string")
+			matchedPatterns := map[string]MatchingHandler{}
+			prefixTree.MatchWithValue("any_string", func(s string, mh MatchingHandler) {
+				_, ok := matchedPatterns[s]
+				So(ok, ShouldBeFalse)
+				matchedPatterns[s] = mh
+			})
 			So(matchedPatterns, ShouldResemble, map[string]MatchingHandler{})
 		})
 	})
@@ -96,14 +101,28 @@ func TestPrefixTree(t *testing.T) {
 					"Complex.matching.pattern": nil,
 					"Complex.*.*":              nil,
 				}
-				matchedPatterns := prefixTree.MatchWithValue(metric)
+
+				matchedPatterns := map[string]MatchingHandler{}
+				prefixTree.MatchWithValue(metric, func(s string, mh MatchingHandler) {
+					_, ok := matchedPatterns[s]
+					So(ok, ShouldBeFalse)
+					matchedPatterns[s] = mh
+				})
+
 				So(matchedPatterns, ShouldResemble, matchedValue)
 			})
 
 			Convey("For metrics not from tree", func() {
 				metric := "Simple.notmatching.pattern"
 				matchedValue := map[string]MatchingHandler{}
-				matchedPatterns := prefixTree.MatchWithValue(metric)
+
+				matchedPatterns := map[string]MatchingHandler{}
+				prefixTree.MatchWithValue(metric, func(s string, mh MatchingHandler) {
+					_, ok := matchedPatterns[s]
+					So(ok, ShouldBeFalse)
+					matchedPatterns[s] = mh
+				})
+
 				So(matchedPatterns, ShouldResemble, matchedValue)
 			})
 		})
@@ -143,7 +162,13 @@ func TestPrefixTree(t *testing.T) {
 				}},
 			}
 			for _, testCase := range testCases {
-				matchedPatterns := prefixTree.MatchWithValue(testCase.Metric)
+				matchedPatterns := map[string]MatchingHandler{}
+				prefixTree.MatchWithValue(testCase.Metric, func(s string, mh MatchingHandler) {
+					_, ok := matchedPatterns[s]
+					So(ok, ShouldBeFalse)
+					matchedPatterns[s] = mh
+				})
+
 				So(len(matchedPatterns), ShouldEqual, len(testCase.MatchedPatterns))
 				for pKey, pValue := range testCase.MatchedPatterns {
 					So(matchedPatterns, ShouldContainKey, pKey)
@@ -162,7 +187,13 @@ func TestPrefixTree(t *testing.T) {
 				"Simple.notmatching.pattern",
 			}
 			for _, testCase := range testCases {
-				matchedPatterns := prefixTree.MatchWithValue(testCase)
+				matchedPatterns := map[string]MatchingHandler{}
+				prefixTree.MatchWithValue(testCase, func(s string, mh MatchingHandler) {
+					_, ok := matchedPatterns[s]
+					So(ok, ShouldBeFalse)
+					matchedPatterns[s] = mh
+				})
+
 				So(matchedPatterns, ShouldResemble, map[string]MatchingHandler{})
 			}
 		})

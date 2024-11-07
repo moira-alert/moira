@@ -1,10 +1,11 @@
 package opsgenie
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 	"go.uber.org/mock/gomock"
 
@@ -25,9 +26,13 @@ func TestInit(t *testing.T) {
 			"s3": imageStore,
 		}}
 
-		Convey("Empty map", func() {
-			err := sender.Init(map[string]interface{}{}, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("cannot read the api_key from the sender settings"))
+		validatorErr := validator.ValidationErrors{}
+
+		Convey("With empty api_key", func() {
+			senderSettings := map[string]interface{}{}
+
+			err := sender.Init(senderSettings, logger, nil, "")
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{
 				ImageStores: map[string]moira.ImageStore{
 					"s3": imageStore,
@@ -35,7 +40,7 @@ func TestInit(t *testing.T) {
 			})
 		})
 
-		Convey("Has settings", func() {
+		Convey("With full settings", func() {
 			imageStore.EXPECT().IsEnabled().Return(true)
 			senderSettings := map[string]interface{}{
 				"api_key":     "testkey",
@@ -44,7 +49,6 @@ func TestInit(t *testing.T) {
 			}
 			sender.Init(senderSettings, logger, location, "15:04") //nolint
 			So(sender.apiKey, ShouldResemble, "testkey")
-			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
 		})

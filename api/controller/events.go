@@ -1,24 +1,65 @@
 package controller
 
 import (
+	"regexp"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 )
 
-// GetTriggerEvents gets trigger event from current page and all trigger event count.
-func GetTriggerEvents(database moira.Database, triggerID string, page int64, size int64) (*dto.EventsList, *api.ErrorResponse) {
-	events, err := database.GetNotificationEvents(triggerID, page*size, size-1)
+const (
+	zeroPage      int64 = 0
+	allEventsSize int64 = -1
+)
+
+// GetTriggerEvents gets trigger events from current page and total count of filtered trigger events. Events list is filtered by time range
+// with `from` and `to` params (`from` and `to` should be "+inf", "-inf" or int64 converted to string),
+// by metric (regular expression) and by states. If `states` map is empty or nil then all states are accepted.
+func GetTriggerEvents(
+	database moira.Database,
+	triggerID string,
+	page, size int64,
+	from, to string,
+	metricRegexp *regexp.Regexp,
+	states map[string]struct{},
+) (*dto.EventsList, *api.ErrorResponse) {
+	events, err := getFilteredNotificationEvents(database, triggerID, from, to, metricRegexp, states)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	eventCount := database.GetNotificationEventCount(triggerID, -1)
+
+	eventCount := int64(len(events))
+
+	if page < 0 || (page > 0 && size < 0) {
+		return &dto.EventsList{
+			Size:  size,
+			Page:  page,
+			Total: eventCount,
+			List:  []moira.NotificationEvent{},
+		}, nil
+	}
+
+	if page >= 0 && size >= 0 {
+		start := page * size
+		end := start + size
+
+		if start >= eventCount {
+			events = []*moira.NotificationEvent{}
+		} else {
+			if end > eventCount {
+				end = eventCount
+			}
+
+			events = events[start:end]
+		}
+	}
 
 	eventsList := &dto.EventsList{
 		Size:  size,
 		Page:  page,
 		Total: eventCount,
-		List:  make([]moira.NotificationEvent, 0),
+		List:  make([]moira.NotificationEvent, 0, len(events)),
 	}
 	for _, event := range events {
 		if event != nil {
@@ -26,6 +67,40 @@ func GetTriggerEvents(database moira.Database, triggerID string, page int64, siz
 		}
 	}
 	return eventsList, nil
+}
+
+func getFilteredNotificationEvents(
+	database moira.Database,
+	triggerID string,
+	from, to string,
+	metricRegexp *regexp.Regexp,
+	states map[string]struct{},
+) ([]*moira.NotificationEvent, error) {
+	events, err := database.GetNotificationEvents(triggerID, zeroPage, allEventsSize, from, to)
+	if err != nil {
+		return nil, err
+	}
+
+	return filterNotificationEvents(events, metricRegexp, states), nil
+}
+
+func filterNotificationEvents(
+	notificationEvents []*moira.NotificationEvent,
+	metricRegexp *regexp.Regexp,
+	states map[string]struct{},
+) []*moira.NotificationEvent {
+	filteredNotificationEvents := make([]*moira.NotificationEvent, 0)
+
+	for _, event := range notificationEvents {
+		if metricRegexp.MatchString(event.Metric) {
+			_, ok := states[string(event.State)]
+			if len(states) == 0 || ok {
+				filteredNotificationEvents = append(filteredNotificationEvents, event)
+			}
+		}
+	}
+
+	return filteredNotificationEvents
 }
 
 // DeleteAllEvents deletes all notification events.

@@ -3,8 +3,10 @@ package checker
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -14,6 +16,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
+
+var hourInSec = int64(time.Hour.Seconds())
 
 func TestInitTriggerChecker(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -120,6 +124,8 @@ func TestInitTriggerChecker(t *testing.T) {
 		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
 		So(err, ShouldBeNil)
 
+		expectedLastCheck := lastCheck
+		expectedLastCheck.Clock = clock.NewSystemClock()
 		expected := TriggerChecker{
 			triggerID: triggerID,
 			database:  dataBase,
@@ -129,7 +135,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			trigger:   &trigger,
 			ttl:       trigger.TTL,
 			ttlState:  *trigger.TTLState,
-			lastCheck: &lastCheck,
+			lastCheck: &expectedLastCheck,
 			from:      lastCheck.Timestamp - ttl,
 			until:     actual.until,
 			metrics:   metrics,
@@ -155,12 +161,14 @@ func TestInitTriggerChecker(t *testing.T) {
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
 				State:     moira.StateOK,
-				Timestamp: actual.until - 3600,
+				Timestamp: actual.until - hourInSec,
+				Clock:     clock.NewSystemClock(),
 			},
-			from:    actual.until - 3600 - ttl,
+			from:    actual.until - hourInSec - ttl,
 			until:   actual.until,
 			metrics: metrics,
 		}
+
 		So(*actual, ShouldResemble, expected)
 	})
 
@@ -185,9 +193,10 @@ func TestInitTriggerChecker(t *testing.T) {
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
 				State:     moira.StateOK,
-				Timestamp: actual.until - 3600,
+				Timestamp: actual.until - hourInSec,
+				Clock:     clock.NewSystemClock(),
 			},
-			from:    actual.until - 3600 - 600,
+			from:    actual.until - hourInSec - tenMinInSec,
 			until:   actual.until,
 			metrics: metrics,
 		}
@@ -201,6 +210,8 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		So(err, ShouldBeNil)
 
+		expectedLastCheck := lastCheck
+		expectedLastCheck.Clock = clock.NewSystemClock()
 		expected := TriggerChecker{
 			triggerID: triggerID,
 			database:  dataBase,
@@ -210,8 +221,8 @@ func TestInitTriggerChecker(t *testing.T) {
 			trigger:   &trigger,
 			ttl:       0,
 			ttlState:  moira.TTLStateNODATA,
-			lastCheck: &lastCheck,
-			from:      lastCheck.Timestamp - 600,
+			lastCheck: &expectedLastCheck,
+			from:      lastCheck.Timestamp - tenMinInSec,
 			until:     actual.until,
 			metrics:   metrics,
 		}

@@ -93,12 +93,13 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 
 // NewTestDatabase use it only for tests.
 func NewTestDatabase(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, DatabaseConfig{
-		Addrs: []string{"0.0.0.0:6379"},
-	},
+	return NewDatabase(
+		logger, DatabaseConfig{
+			Addrs:      []string{"0.0.0.0:6379"},
+			MetricsTTL: time.Hour,
+		},
 		NotificationHistoryConfig{
-			NotificationHistoryTTL:        time.Hour * 48,
-			NotificationHistoryQueryLimit: 1000,
+			NotificationHistoryTTL: time.Hour * 48,
 		},
 		NotificationConfig{
 			DelayedTime:               time.Minute,
@@ -107,7 +108,8 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 			TransactionHeuristicLimit: 10000,
 			ResaveTime:                30 * time.Second,
 		},
-		testSource)
+		testSource,
+	)
 }
 
 // NewTestDatabaseWithIncorrectConfig use it only for tests.
@@ -115,8 +117,7 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger,
 		DatabaseConfig{Addrs: []string{"0.0.0.0:0000"}},
 		NotificationHistoryConfig{
-			NotificationHistoryTTL:        time.Hour * 48,
-			NotificationHistoryQueryLimit: 1000,
+			NotificationHistoryTTL: time.Hour * 48,
 		},
 		NotificationConfig{
 			DelayedTime:               time.Minute,

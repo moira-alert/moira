@@ -20,6 +20,7 @@ func (key ContextKey) String() string {
 var (
 	databaseKey          ContextKey = "database"
 	searcherKey          ContextKey = "searcher"
+	contactsTemplateKey  ContextKey = "contactsTemplate"
 	triggerIDKey         ContextKey = "triggerID"
 	clustersMetricTTLKey ContextKey = "clustersMetricTTL"
 	populateKey          ContextKey = "populated"
@@ -39,12 +40,20 @@ var (
 	teamIDKey            ContextKey = "teamID"
 	teamUserIDKey        ContextKey = "teamUserIDKey"
 	authKey              ContextKey = "auth"
+	metricContextKey     ContextKey = "metric"
+	statesContextKey     ContextKey = "states"
+	limitsContextKey     ContextKey = "limits"
 	anonymousUser                   = "anonymous"
 )
 
 // GetDatabase gets moira.Database realization from request context.
 func GetDatabase(request *http.Request) moira.Database {
 	return request.Context().Value(databaseKey).(moira.Database)
+}
+
+// GetContactsTemplate gets contacts template from request context.
+func GetContactsTemplate(request *http.Request) []api.WebContact {
+	return request.Context().Value(contactsTemplateKey).([]api.WebContact)
 }
 
 // GetLogin gets user login string from request context, which was sets in UserContext middleware.
@@ -63,7 +72,7 @@ func GetTriggerID(request *http.Request) string {
 	return request.Context().Value(triggerIDKey).(string)
 }
 
-// GetLocalMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware.
+// GetMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware.
 func GetMetricTTL(request *http.Request) map[moira.ClusterKey]time.Duration {
 	return request.Context().Value(clustersMetricTTLKey).(map[moira.ClusterKey]time.Duration)
 }
@@ -118,13 +127,13 @@ func GetToStr(request *http.Request) string {
 	return request.Context().Value(toKey).(string)
 }
 
-// SetTimeSeriesNames sets to requests context timeSeriesNames from saved trigger.
+// SetTimeSeriesNames sets to request's context timeSeriesNames from saved trigger.
 func SetTimeSeriesNames(request *http.Request, timeSeriesNames map[string]bool) {
 	ctx := context.WithValue(request.Context(), timeSeriesNamesKey, timeSeriesNames)
 	*request = *request.WithContext(ctx)
 }
 
-// GetTimeSeriesNames gets from requests context timeSeriesNames from saved trigger.
+// GetTimeSeriesNames gets from request's context timeSeriesNames from saved trigger.
 func GetTimeSeriesNames(request *http.Request) map[string]bool {
 	return request.Context().Value(timeSeriesNamesKey).(map[string]bool)
 }
@@ -161,4 +170,19 @@ func SetContextValueForTest(ctx context.Context, key string, value interface{}) 
 // GetAuth gets authorization configuration.
 func GetAuth(request *http.Request) *api.Authorization {
 	return request.Context().Value(authKey).(*api.Authorization)
+}
+
+// GetMetric is used to retrieve metric name.
+func GetMetric(request *http.Request) string {
+	return request.Context().Value(metricContextKey).(string)
+}
+
+// GetStates is used to retrieve trigger state.
+func GetStates(request *http.Request) map[string]struct{} {
+	return request.Context().Value(statesContextKey).(map[string]struct{})
+}
+
+// GetLimits returns configured limits.
+func GetLimits(request *http.Request) api.LimitsConfig {
+	return request.Context().Value(limitsContextKey).(api.LimitsConfig)
 }

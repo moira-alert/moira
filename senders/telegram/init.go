@@ -3,7 +3,6 @@ package telegram
 import (
 	"errors"
 	"fmt"
-	"html"
 	"strings"
 	"time"
 
@@ -23,17 +22,12 @@ const (
 	hidden             = "[DATA DELETED]"
 )
 
-var (
-	codeBlockStart = "<blockquote expandable>"
-	codeBlockEnd   = "</blockquote>"
-)
-
 var pollerTimeout = 10 * time.Second
 
 // Structure that represents the Telegram configuration in the YAML file.
 type config struct {
 	ContactType string `mapstructure:"contact_type"`
-	APIToken    string `mapstructure:"api_token"`
+	APIToken    string `mapstructure:"api_token" validate:"required"`
 	FrontURI    string `mapstructure:"front_uri"`
 }
 
@@ -72,28 +66,24 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
 	}
 
-	if cfg.APIToken == "" {
-		return fmt.Errorf("can not read telegram api_token from config")
+	if err = moira.ValidateStruct(cfg); err != nil {
+		return fmt.Errorf("telegram config validation error: %w", err)
 	}
+
 	sender.apiToken = cfg.APIToken
 
 	emojiProvider := telegramEmojiProvider{}
-	sender.formatter = msgformat.NewHighlightSyntaxFormatter(
+	sender.formatter = NewTelegramMessageFormatter(
 		emojiProvider,
 		true,
 		cfg.FrontURI,
-		location,
-		urlFormatter,
-		emptyDescriptionFormatter,
-		boldFormatter,
-		eventStringFormatter,
-		codeBlockStart,
-		codeBlockEnd)
+		location)
 
 	sender.logger = logger
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  cfg.APIToken,
-		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
+		Token:   cfg.APIToken,
+		Poller:  &telebot.LongPoller{Timeout: pollerTimeout},
+		OnError: sender.customOnErrorFunc,
 	})
 	if err != nil {
 		return sender.removeTokenFromError(err)
@@ -136,24 +126,12 @@ func telegramLockKey(contactType string) string {
 	return telegramLockPrefix + contactType
 }
 
-func urlFormatter(triggerURI, triggerName string) string {
-	return fmt.Sprintf("<a href=\"%s\">%s</a>", triggerURI, html.EscapeString(triggerName))
-}
+const errorInsideTelebotMsg = "Error inside telebot"
 
-func emptyDescriptionFormatter(trigger moira.TriggerData) string {
-	return ""
-}
+func (sender *Sender) customOnErrorFunc(err error, _ telebot.Context) {
+	err = sender.removeTokenFromError(err)
 
-func boldFormatter(str string) string {
-	return fmt.Sprintf("<b>%s</b>", html.EscapeString(str))
-}
-
-func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) string {
-	return fmt.Sprintf(
-		"%s: <code>%s</code> = %s (%s to %s)",
-		event.FormatTimestamp(loc, moira.DefaultTimeFormat),
-		html.EscapeString(event.Metric),
-		html.EscapeString(event.GetMetricsValues(moira.DefaultNotificationSettings)),
-		event.OldState,
-		event.State)
+	sender.logger.Warning().
+		Error(err).
+		Msg(errorInsideTelebotMsg)
 }

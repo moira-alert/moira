@@ -50,10 +50,11 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 		next      time.Time
 		throttled bool
 	)
-	now := scheduler.clock.Now()
+
+	now := scheduler.clock.NowUTC()
 	if params.SendFail > 0 {
 		next = now.Add(scheduler.config.ReschedulingDelay)
-		throttled = params.ThrottledOld
+		next, throttled = scheduler.calculateNextDelivery(next, &params.Event, logger)
 	} else {
 		if params.Event.State == moira.StateTEST {
 			next = now
@@ -62,6 +63,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 			next, throttled = scheduler.calculateNextDelivery(now, &params.Event, logger)
 		}
 	}
+
 	notification := &moira.ScheduledNotification{
 		Event:     params.Event,
 		Trigger:   params.Trigger,
@@ -78,6 +80,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 		Int64("notification_timestamp_unix", next.Unix()).
 		Int64("notification_created_at_unix", now.Unix()).
 		Msg("Scheduled notification")
+
 	return notification
 }
 
@@ -162,16 +165,25 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	if len(schedule.Days) == 0 {
 		return nextTime, nil
 	}
+
 	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
 	endOffset := time.Duration(schedule.EndOffset) * time.Minute
-	if schedule.EndOffset < schedule.StartOffset {
-		endOffset += time.Hour * 24
-	}
 
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute
 	localNextTime := nextTime.Add(-tzOffset).Truncate(time.Minute)
 	localNextTimeDay := localNextTime.Truncate(24 * time.Hour) //nolint
 	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7  //nolint
+	timeOfDay := localNextTime.Sub(localNextTimeDay)
+
+	if schedule.EndOffset < schedule.StartOffset {
+		// The condition can only be fulfilled if the begin offset should be on the past day and not on the current day.
+		// In other variants end offset must be on the next day
+		if timeOfDay < beginOffset && timeOfDay < endOffset {
+			beginOffset -= time.Hour * 24
+		} else {
+			endOffset += time.Hour * 24
+		}
+	}
 
 	if schedule.Days[localNextWeekday].Enabled &&
 		(localNextTime.Equal(localNextTimeDay.Add(beginOffset)) || localNextTime.After(localNextTimeDay.Add(beginOffset))) &&
@@ -186,9 +198,11 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 		if localNextTime.After(nextLocalDayBegin.Add(beginOffset)) {
 			continue
 		}
+
 		if !schedule.Days[nextLocalWeekDay].Enabled {
 			continue
 		}
+
 		return nextLocalDayBegin.Add(beginOffset + tzOffset), nil
 	}
 

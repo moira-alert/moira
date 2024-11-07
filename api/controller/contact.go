@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -53,14 +54,11 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 func CreateContact(
 	dataBase moira.Database,
 	auth *api.Authorization,
+	contactsTemplate []api.WebContact,
 	contact *dto.Contact,
 	userLogin,
 	teamID string,
 ) *api.ErrorResponse {
-	if userLogin != "" && teamID != "" {
-		return api.ErrorInternalServer(fmt.Errorf("CreateContact: cannot create contact when both userLogin and teamID specified"))
-	}
-
 	if !isAllowedToUseContactType(auth, userLogin, contact.Type) {
 		return api.ErrorInvalidRequest(ErrNotAllowedContactType)
 	}
@@ -78,6 +76,7 @@ func CreateContact(
 		Type:  contact.Type,
 		Value: contact.Value,
 	}
+
 	if contactData.ID == "" {
 		uuid4, err := uuid.NewV4()
 		if err != nil {
@@ -94,12 +93,18 @@ func CreateContact(
 		}
 	}
 
+	if err := validateContact(contactsTemplate, contactData); err != nil {
+		return api.ErrorInvalidRequest(err)
+	}
+
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	contact.User = contactData.User
 	contact.ID = contactData.ID
 	contact.TeamID = contactData.Team
+
 	return nil
 }
 
@@ -107,6 +112,7 @@ func CreateContact(
 func UpdateContact(
 	dataBase moira.Database,
 	auth *api.Authorization,
+	contactsTemplate []api.WebContact,
 	contactDTO dto.Contact,
 	contactData moira.ContactData,
 ) (dto.Contact, *api.ErrorResponse) {
@@ -117,12 +123,24 @@ func UpdateContact(
 	contactData.Type = contactDTO.Type
 	contactData.Value = contactDTO.Value
 	contactData.Name = contactDTO.Name
+
+	if contactDTO.User != "" || contactDTO.TeamID != "" {
+		contactData.User = contactDTO.User
+		contactData.Team = contactDTO.TeamID
+	}
+
+	if err := validateContact(contactsTemplate, contactData); err != nil {
+		return contactDTO, api.ErrorInvalidRequest(err)
+	}
+
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return contactDTO, api.ErrorInternalServer(err)
 	}
+
 	contactDTO.User = contactData.User
 	contactDTO.TeamID = contactData.Team
 	contactDTO.ID = contactData.ID
+
 	return contactDTO, nil
 }
 
@@ -221,9 +239,11 @@ func CheckUserPermissionsForContact(
 		}
 		return moira.ContactData{}, api.ErrorInternalServer(err)
 	}
+
 	if auth.IsAdmin(userLogin) {
 		return contactData, nil
 	}
+
 	if contactData.Team != "" {
 		teamContainsUser, err := dataBase.IsTeamContainUser(contactData.Team, userLogin)
 		if err != nil {
@@ -233,9 +253,11 @@ func CheckUserPermissionsForContact(
 			return contactData, nil
 		}
 	}
+
 	if contactData.User == userLogin {
 		return contactData, nil
 	}
+
 	return moira.ContactData{}, api.ErrorForbidden("you are not permitted")
 }
 
@@ -256,4 +278,20 @@ func isAllowedToUseContactType(auth *api.Authorization, userLogin string, contac
 	_, isAllowedContactType := auth.AllowedContactTypes[contactType]
 
 	return isAllowedContactType || isAdmin || !isAuthEnabled
+}
+
+func validateContact(contactsTemplate []api.WebContact, contact moira.ContactData) error {
+	var validationPattern string
+	for _, contactTemplate := range contactsTemplate {
+		if contactTemplate.ContactType == contact.Type {
+			validationPattern = contactTemplate.ValidationRegex
+			break
+		}
+	}
+
+	if matched, err := regexp.MatchString(validationPattern, contact.Value); !matched || err != nil {
+		return fmt.Errorf("contact value doesn't match regex: '%s'", validationPattern)
+	}
+
+	return nil
 }

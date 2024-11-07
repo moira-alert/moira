@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -30,6 +31,16 @@ func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Ha
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ctx := context.WithValue(request.Context(), searcherKey, searcher)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// ContactsTemplateContext sets to requests context contacts template.
+func ContactsTemplateContext(contactsTemplate []api.WebContact) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), contactsTemplateKey, contactsTemplate)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
@@ -273,6 +284,69 @@ func AuthorizationContext(auth *api.Authorization) func(next http.Handler) http.
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ctx := context.WithValue(request.Context(), authKey, auth)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// MetricContext is a function that gets `metric` value from query string and places it in context. If query does not have value sets given value.
+func MetricContext(defaultMetric string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			metric := urlValues.Get("metric")
+			if metric == "" {
+				metric = defaultMetric
+			}
+
+			ctx := context.WithValue(request.Context(), metricContextKey, metric)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+const statesArraySeparator = ","
+
+// StatesContext is a function that gets `states` value from query string and places it in context. If query does not have value empty map will be used.
+func StatesContext() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			states := make(map[string]struct{}, 0)
+
+			statesStr := urlValues.Get("states")
+			if statesStr != "" {
+				statesList := strings.Split(statesStr, statesArraySeparator)
+				for _, state := range statesList {
+					if !moira.State(state).IsValid() {
+						_ = render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("bad state in query parameter: %s", state)))
+						return
+					}
+					states[state] = struct{}{}
+				}
+			}
+
+			ctx := context.WithValue(request.Context(), statesContextKey, states)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// LimitsContext places api.LimitsConfig to request context.
+func LimitsContext(limit api.LimitsConfig) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), limitsContextKey, limit)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
