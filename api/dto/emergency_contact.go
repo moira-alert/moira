@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/datatypes"
 )
 
@@ -28,9 +29,17 @@ func (emergencyContact *EmergencyContact) Bind(r *http.Request) error {
 		return ErrEmptyHeartbeatTypes
 	}
 
+	auth := middleware.GetAuth(r)
+	userLogin := middleware.GetLogin(r)
+	isAdmin := auth.IsAdmin(userLogin)
+
 	for _, emergencyType := range emergencyContact.HeartbeatTypes {
 		if !emergencyType.IsValid() {
 			return fmt.Errorf("'%s' heartbeat type doesn't exist", emergencyType)
+		}
+
+		if _, ok := auth.AllowedEmergencyContactTypes[emergencyType]; !ok && !isAdmin {
+			return fmt.Errorf("'%s' heartbeat type is not allowed", emergencyType)
 		}
 	}
 

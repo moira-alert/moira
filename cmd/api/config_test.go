@@ -6,6 +6,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/datatypes"
 
 	"github.com/moira-alert/moira/api"
 
@@ -25,6 +26,7 @@ func Test_apiConfig_getSettings(t *testing.T) {
 					ContactType: "test",
 				},
 			},
+			EmergencyContactTypes: []datatypes.HeartbeatType{datatypes.HeartbeatDatabase, datatypes.HeartbeatFilter},
 		}
 
 		apiConf := apiConfig{
@@ -41,6 +43,10 @@ func Test_apiConfig_getSettings(t *testing.T) {
 				AdminList: make(map[string]struct{}),
 				AllowedContactTypes: map[string]struct{}{
 					"test": {},
+				},
+				AllowedEmergencyContactTypes: map[datatypes.HeartbeatType]struct{}{
+					datatypes.HeartbeatDatabase: {},
+					datatypes.HeartbeatFilter:   {},
 				},
 			},
 		}
@@ -173,6 +179,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 					Help:            "help",
 				},
 			},
+			EmergencyContactTypes: []datatypes.HeartbeatType{datatypes.HeartbeatDatabase, datatypes.HeartbeatFilter},
 			FeatureFlags: featureFlags{
 				IsPlottingDefaultOn:              true,
 				IsPlottingAvailable:              true,
@@ -198,6 +205,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 					Help:            "help",
 				},
 			},
+			EmergencyContactTypes: []datatypes.HeartbeatType{datatypes.HeartbeatDatabase, datatypes.HeartbeatFilter},
 			FeatureFlags: api.FeatureFlags{
 				IsPlottingDefaultOn:              true,
 				IsPlottingAvailable:              true,
