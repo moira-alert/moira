@@ -55,7 +55,7 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 					}
 
 					// remove old team.Name from team names set
-					err = pipe.SRem(connector.context, teamsNamesKey, existedTeamLowercaseName).Err()
+					err = pipe.HDel(connector.context, teamsByNamesKey, existedTeamLowercaseName).Err()
 					if err != nil {
 						return fmt.Errorf("failed to update team name: %w", err)
 					}
@@ -67,7 +67,7 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 					return fmt.Errorf("failed to save team metadata: %w", err)
 				}
 
-				err = pipe.SAdd(connector.context, teamsNamesKey, newTeamLowercaseName).Err()
+				err = pipe.HSet(connector.context, teamsByNamesKey, newTeamLowercaseName, teamID).Err()
 				if err != nil {
 					return fmt.Errorf("failed to save team name: %w", err)
 				}
@@ -82,7 +82,7 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 
 	// need to use watch here because if team name is updated
 	// we also need to change name in moira-teams-names set
-	err = c.Watch(connector.context, saveTeamInTx, teamsNamesKey)
+	err = c.Watch(connector.context, saveTeamInTx, teamsByNamesKey)
 
 	return err
 }
@@ -99,7 +99,7 @@ func (connector *DbConnector) getTeamInTx(tx *redis.Tx, teamID string) (moira.Te
 }
 
 func (connector *DbConnector) isTeamExist(tx *redis.Tx, teamName string) (bool, error) {
-	nameExists, err := tx.SIsMember(connector.context, teamsNamesKey, strings.ToLower(teamName)).Result()
+	nameExists, err := tx.HExists(connector.context, teamsByNamesKey, strings.ToLower(teamName)).Result()
 	if err != nil {
 		return false, fmt.Errorf("failed to check team name existance: %w", err)
 	}
@@ -119,6 +119,22 @@ func (connector *DbConnector) GetTeam(teamID string) (moira.Team, error) {
 	team.ID = teamID
 
 	return team, nil
+}
+
+// GetTeamByName retrieves team from redis by its name. Note that
+func (connector *DbConnector) GetTeamByName(name string) (moira.Team, error) {
+	c := *connector.client
+
+	teamID, err := c.HGet(connector.context, teamsByNamesKey, strings.ToLower(name)).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return moira.Team{}, database.ErrNil
+		}
+
+		return moira.Team{}, fmt.Errorf("failed to get team by name: %w", err)
+	}
+
+	return connector.GetTeam(teamID)
 }
 
 // SaveTeamsAndUsers is a function that saves users for one team and teams for bunch of users in one transaction.
@@ -213,7 +229,7 @@ func (connector *DbConnector) DeleteTeam(teamID, userID string) error {
 					return fmt.Errorf("failed to remove team users: %w", err)
 				}
 
-				err = pipe.SRem(connector.context, teamsNamesKey, strings.ToLower(team.Name)).Err()
+				err = pipe.HDel(connector.context, teamsByNamesKey, strings.ToLower(team.Name)).Err()
 				if err != nil {
 					return fmt.Errorf("failed to remove team name: %w", err)
 				}
@@ -229,14 +245,14 @@ func (connector *DbConnector) DeleteTeam(teamID, userID string) error {
 		return err
 	}
 
-	err := c.Watch(connector.context, deleteTeamInTx, teamsNamesKey)
+	err := c.Watch(connector.context, deleteTeamInTx, teamsByNamesKey)
 
 	return err
 }
 
 const (
-	teamsKey      = "moira-teams"
-	teamsNamesKey = "moira-teams-names"
+	teamsKey        = "moira-teams"
+	teamsByNamesKey = "moira-teams-by-names"
 )
 
 func userTeamsKey(userID string) string {
