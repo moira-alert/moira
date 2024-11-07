@@ -52,21 +52,26 @@ type DbConnector struct {
 
 func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
+		Addrs: config.Addrs,
+
 		MasterName:       config.MasterName,
-		Addrs:            config.Addrs,
-		Username:         config.Username,
-		Password:         config.Password,
 		SentinelPassword: config.SentinelPassword,
 		SentinelUsername: config.SentinelUsername,
-		DialTimeout:      config.DialTimeout,
-		ReadTimeout:      config.ReadTimeout,
-		WriteTimeout:     config.WriteTimeout,
-		MaxRetries:       config.MaxRetries,
-		ReadOnly:         config.ReadOnly,
-		RouteByLatency:   config.RouteByLatency,
-		RouteRandomly:    config.RouteRandomly,
-		MinRetryBackoff:  time.Second,
-		MaxRetryBackoff:  time.Second,
+
+		Username: config.Username,
+		Password: config.Password,
+
+		DialTimeout:  config.DialTimeout,
+		ReadTimeout:  config.ReadTimeout,
+		WriteTimeout: config.WriteTimeout,
+
+		MaxRetries:      config.MaxRetries,
+		MinRetryBackoff: time.Second,
+		MaxRetryBackoff: time.Second,
+
+		ReadOnly:       config.ReadOnly,
+		RouteByLatency: config.RouteByLatency,
+		RouteRandomly:  config.RouteRandomly,
 	})
 
 	ctx := context.Background()
