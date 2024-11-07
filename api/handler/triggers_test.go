@@ -72,17 +72,24 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		ttlState := moira.TTLState("NODATA")
 		triggerDTO := dto.Trigger{
 			TriggerModel: dto.TriggerModel{
-				ID:             "test_id",
-				Name:           "Test trigger",
-				Desc:           new(string),
-				Targets:        []string{"foo.bar"},
-				WarnValue:      &triggerWarnValue,
-				ErrorValue:     &triggerErrorValue,
-				TriggerType:    "rising",
-				Tags:           []string{"Normal", "DevOps", "DevOpsGraphite-duty"},
-				TTLState:       &ttlState,
-				TTL:            0,
-				Schedule:       &moira.ScheduleData{},
+				ID:          "test_id",
+				Name:        "Test trigger",
+				Desc:        new(string),
+				Targets:     []string{"foo.bar"},
+				WarnValue:   &triggerWarnValue,
+				ErrorValue:  &triggerErrorValue,
+				TriggerType: "rising",
+				Tags:        []string{"Normal", "DevOps", "DevOpsGraphite-duty"},
+				TTLState:    &ttlState,
+				TTL:         0,
+				Schedule: &moira.ScheduleData{
+					Days: []moira.ScheduleDataDay{
+						{
+							Name:    "Mon",
+							Enabled: true,
+						},
+					},
+				},
 				Expression:     "",
 				Patterns:       []string{},
 				TriggerSource:  moira.GraphiteLocal,
@@ -101,6 +108,9 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		request.Header.Add("content-type", "application/json")
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
+
+		triggerDTO.Schedule.Days = moira.GetFilledScheduleDataDays(false)
+		triggerDTO.Schedule.Days[0].Enabled = true
 
 		Convey("It should be parsed successfully", func() {
 			triggerDTO.TTL = moira.DefaultTTL

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -40,6 +41,9 @@ var (
 
 	// errAsteriskPatternNotAllowed is returned then one of Trigger.Patterns contain only "*".
 	errAsteriskPatternNotAllowed = errors.New("pattern \"*\" is not allowed to use")
+
+	// errNoAllowedDays is returned then all days disabled in moira.ScheduleData.
+	errNoAllowedDays = errors.New("no allowed days in trigger schedule")
 )
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
@@ -257,6 +261,13 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	if trigger.Schedule == nil {
 		trigger.Schedule = moira.NewDefaultScheduleData()
+	} else {
+		correctedSchedule, err := checkScheduleFilling(trigger.Schedule)
+		if err != nil {
+			return api.ErrInvalidRequestContent{ValidationError: err}
+		}
+
+		trigger.Schedule = correctedSchedule
 	}
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
@@ -276,6 +287,50 @@ func getDateTime(timestamp *int64) *time.Time {
 	datetime := time.Unix(*timestamp, 0).UTC()
 
 	return &datetime
+}
+
+// checkScheduleFilling ensures that all days are included to schedule, ordered from monday to sunday
+// and have proper names (one of [Mon, Tue, Wed, Thu, Fri, Sat Sun]).
+func checkScheduleFilling(gotSchedule *moira.ScheduleData) (*moira.ScheduleData, error) {
+	newSchedule := moira.NewDefaultScheduleData()
+
+	scheduleDaysMap := make(map[moira.DayName]bool, len(newSchedule.Days))
+	for _, day := range newSchedule.Days {
+		scheduleDaysMap[day.Name] = false
+	}
+
+	badDayNames := make([]string, 0)
+	for _, day := range gotSchedule.Days {
+		_, validDayName := scheduleDaysMap[day.Name]
+		if validDayName {
+			scheduleDaysMap[day.Name] = day.Enabled
+		} else {
+			badDayNames = append(badDayNames, string(day.Name))
+		}
+	}
+
+	if len(badDayNames) != 0 {
+		return nil, fmt.Errorf("bad day names in schedule: %s", strings.Join(badDayNames, ", "))
+	}
+
+	someDayEnabled := false
+	for i := range newSchedule.Days {
+		newSchedule.Days[i].Enabled = scheduleDaysMap[newSchedule.Days[i].Name]
+
+		if newSchedule.Days[i].Enabled {
+			someDayEnabled = true
+		}
+	}
+
+	if !someDayEnabled {
+		return nil, errNoAllowedDays
+	}
+
+	newSchedule.TimezoneOffset = gotSchedule.TimezoneOffset
+	newSchedule.StartOffset = gotSchedule.StartOffset
+	newSchedule.EndOffset = gotSchedule.EndOffset
+
+	return newSchedule, nil
 }
 
 func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) error {
