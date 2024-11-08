@@ -72,11 +72,10 @@ func createHeartbeaters( //nolint:gocyclo
 	database moira.Database,
 	clock moira.Clock,
 ) []heartbeat.Heartbeater {
-	hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
-
 	heartbeaters := make([]heartbeat.Heartbeater, 0)
 
 	if heartbeatersCfg.DatabaseCfg.Enabled && heartbeatersCfg.DatabaseCfg.NeedTurnOffNotifier {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		databaseHeartbeater, err := heartbeat.NewDatabaseHeartbeater(heartbeatersCfg.DatabaseCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
@@ -89,6 +88,7 @@ func createHeartbeaters( //nolint:gocyclo
 	}
 
 	if heartbeatersCfg.FilterCfg.Enabled && heartbeatersCfg.FilterCfg.NeedTurnOffNotifier {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		filterHeartbeater, err := heartbeat.NewFilterHeartbeater(heartbeatersCfg.FilterCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
@@ -101,6 +101,7 @@ func createHeartbeaters( //nolint:gocyclo
 	}
 
 	if heartbeatersCfg.LocalCheckerCfg.Enabled && heartbeatersCfg.LocalCheckerCfg.NeedTurnOffNotifier {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		localCheckerHeartbeater, err := heartbeat.NewLocalCheckerHeartbeater(heartbeatersCfg.LocalCheckerCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
@@ -113,6 +114,7 @@ func createHeartbeaters( //nolint:gocyclo
 	}
 
 	if heartbeatersCfg.RemoteCheckerCfg.Enabled && heartbeatersCfg.RemoteCheckerCfg.NeedTurnOffNotifier {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		remoteCheckerHeartbeater, err := heartbeat.NewRemoteCheckerHeartbeater(heartbeatersCfg.RemoteCheckerCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
@@ -125,6 +127,7 @@ func createHeartbeaters( //nolint:gocyclo
 	}
 
 	if heartbeatersCfg.NotifierCfg.Enabled && heartbeatersCfg.NotifierCfg.NeedTurnOffNotifier {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		notifierHeartbeater, err := heartbeat.NewNotifierHeartbeater(heartbeatersCfg.NotifierCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().

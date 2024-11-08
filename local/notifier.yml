@@ -51,7 +51,7 @@ notifier:
             need_turn_off_notifier: true
             alert:
               name: Notifier Problems
-        notice_interval: 30s
+        notice_interval: 20s
         check_interval: 5s
         contacts:
             - type: webhook
@@ -64,13 +64,13 @@ notifier:
             need_turn_off_notifier: true
             alert:
               name: Database Problems
-            redis_disconnect_delay: 60s
+            redis_disconnect_delay: 10s
           notifier:
             enabled: true
             need_turn_off_notifier: true
             alert:
               name: Notifier Problems
-        notice_interval: 10s
+        notice_interval: 20s
         check_interval: 5s
     controller:
       enabled: true
@@ -78,7 +78,11 @@ notifier:
           database:
             enabled: true
             need_turn_off_notifier: true
-            redis_disconnect_delay: 60s
+            redis_disconnect_delay: 10s
+          local_checker:
+            enabled: true
+            need_turn_off_notifier: true
+            last_check_delay: 10s
           notifier:
             enabled: true
             need_turn_off_notifier: true

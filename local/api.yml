@@ -59,11 +59,17 @@ web:
       label: MS Teams
     - type: mattermost
       label: Mattermost
+    - type: webhook
+      label: Webhook
   feature_flags:
     is_plotting_available: true
     is_plotting_default_on: true
     is_subscription_to_all_tags_available: true
     is_readonly_enabled: false
+  emergency_contact_types:
+    - heartbeat_local_checker
+    - heartbeat_notifier
+    - heartbeat_database
 notification_history:
   ttl: 48h
   query_limit: 10000
