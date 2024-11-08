@@ -4,7 +4,9 @@ import (
 	"errors"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/notifier/selfstate/controller"
 	"github.com/moira-alert/moira/notifier/selfstate/monitor"
 )
 
@@ -18,7 +20,8 @@ type SelfstateWorker interface {
 }
 
 type selfstateWorker struct {
-	monitors []monitor.Monitor
+	monitors   []monitor.Monitor
+	controller controller.Controller
 }
 
 // NewSelfstateWorker is a method to create a new selfstate worker.
@@ -28,11 +31,14 @@ func NewSelfstateWorker(
 	database moira.Database,
 	notifier notifier.Notifier,
 	clock moira.Clock,
+	heartbeatMetrics *metrics.HeartBeatMetrics,
 ) (*selfstateWorker, error) {
 	monitors := createMonitors(cfg.MonitorCfg, logger, database, clock, notifier)
+	controller := createController(cfg.ControllerCfg, logger, database, clock, heartbeatMetrics)
 
 	return &selfstateWorker{
-		monitors: monitors,
+		monitors:   monitors,
+		controller: controller,
 	}, nil
 }
 
@@ -85,10 +91,36 @@ func createMonitors(
 	return monitors
 }
 
+func createController(
+	controllerCfg controller.ControllerConfig,
+	logger moira.Logger,
+	database moira.Database,
+	clock moira.Clock,
+	heartbeatMetrics *metrics.HeartBeatMetrics,
+) controller.Controller {
+	var c controller.Controller
+	var err error
+
+	if controllerCfg.Enabled {
+		c, err = controller.NewController(controllerCfg, logger, database, clock, heartbeatMetrics)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				Msg("Failed to create a new controller")
+		}
+	}
+
+	return c
+}
+
 // Start is a method to start a selfstate worker.
 func (selfstateWorker *selfstateWorker) Start() {
 	for _, monitor := range selfstateWorker.monitors {
 		monitor.Start()
+	}
+
+	if selfstateWorker.controller != nil {
+		selfstateWorker.controller.Start()
 	}
 }
 
@@ -98,6 +130,12 @@ func (selfstateWorker *selfstateWorker) Stop() error {
 
 	for _, monitor := range selfstateWorker.monitors {
 		if err := monitor.Stop(); err != nil {
+			stopErrors = append(stopErrors, err)
+		}
+	}
+
+	if selfstateWorker.controller != nil {
+		if err := selfstateWorker.controller.Stop(); err != nil {
 			stopErrors = append(stopErrors, err)
 		}
 	}

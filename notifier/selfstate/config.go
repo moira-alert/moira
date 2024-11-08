@@ -1,6 +1,7 @@
 package selfstate
 
 import (
+	"github.com/moira-alert/moira/notifier/selfstate/controller"
 	"github.com/moira-alert/moira/notifier/selfstate/monitor"
 )
 
@@ -12,6 +13,7 @@ type MonitorConfig struct {
 
 // Config sets the configuration of the selfstate worker.
 type Config struct {
-	Enabled    bool
-	MonitorCfg MonitorConfig
+	Enabled       bool
+	MonitorCfg    MonitorConfig
+	ControllerCfg controller.ControllerConfig
 }
