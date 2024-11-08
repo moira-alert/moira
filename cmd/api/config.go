@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/datatypes"
 )
 
 type config struct {
@@ -99,6 +100,8 @@ type webConfig struct {
 	RemoteAllowed bool
 	// List of enabled contacts template.
 	ContactsTemplate []webContact `yaml:"contacts_template"`
+	// List of allowed emergency contact types.
+	EmergencyContactTypes []datatypes.HeartbeatType `yaml:"emergency_contact_types"`
 	// Struct to manage feature flags.
 	FeatureFlags featureFlags `yaml:"feature_flags"`
 	// Returns the sentry configuration for the frontend.
@@ -150,15 +153,20 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 	}
 
 	allowedContactTypes := make(map[string]struct{}, len(webConfig.ContactsTemplate))
-
 	for _, contactTemplate := range webConfig.ContactsTemplate {
 		allowedContactTypes[contactTemplate.ContactType] = struct{}{}
 	}
 
+	allowedEmergencyContactTypes := make(map[datatypes.HeartbeatType]struct{}, len(webConfig.EmergencyContactTypes))
+	for _, emergencyContactType := range webConfig.EmergencyContactTypes {
+		allowedEmergencyContactTypes[emergencyContactType] = struct{}{}
+	}
+
 	return api.Authorization{
-		Enabled:             auth.Enabled,
-		AdminList:           adminList,
-		AllowedContactTypes: allowedContactTypes,
+		Enabled:                      auth.Enabled,
+		AdminList:                    adminList,
+		AllowedContactTypes:          allowedContactTypes,
+		AllowedEmergencyContactTypes: allowedEmergencyContactTypes,
 	}
 }
 
@@ -218,12 +226,13 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 	}
 
 	return &api.WebConfig{
-		SupportEmail:         config.SupportEmail,
-		RemoteAllowed:        isRemoteEnabled,
-		MetricSourceClusters: clusters,
-		Contacts:             webContacts,
-		FeatureFlags:         config.getFeatureFlags(),
-		Sentry:               config.Sentry.getSettings(),
+		SupportEmail:          config.SupportEmail,
+		RemoteAllowed:         isRemoteEnabled,
+		MetricSourceClusters:  clusters,
+		Contacts:              webContacts,
+		EmergencyContactTypes: config.EmergencyContactTypes,
+		FeatureFlags:          config.getFeatureFlags(),
+		Sentry:                config.Sentry.getSettings(),
 	}
 }
 
