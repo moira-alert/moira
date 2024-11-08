@@ -30,7 +30,7 @@ func TestCreateHeartbeaters(t *testing.T) {
 	Convey("Test createHeartbeaters", t, func() {
 		Convey("Without any heartbeater", func() {
 			hbCfg := heartbeat.HeartbeatersConfig{}
-			mockClock.EXPECT().NowUTC().Return(testTime)
+			mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
 			heartbeaters := createHearbeaters(hbCfg, mockLogger, mockDatabase, mockClock)
 			So(heartbeaters, ShouldBeEmpty)
 		})
@@ -44,7 +44,7 @@ func TestCreateHeartbeaters(t *testing.T) {
 					RedisDisconnectDelay: time.Minute,
 				},
 			}
-			mockClock.EXPECT().NowUTC().Return(testTime)
+			mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
 			heartbeaters := createHearbeaters(hbCfg, mockLogger, mockDatabase, mockClock)
 			So(heartbeaters, ShouldHaveLength, 1)
 		})
@@ -64,7 +64,7 @@ func TestCreateHeartbeaters(t *testing.T) {
 					MetricReceivedDelay: time.Minute,
 				},
 			}
-			mockClock.EXPECT().NowUTC().Return(testTime)
+			mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
 			heartbeaters := createHearbeaters(hbCfg, mockLogger, mockDatabase, mockClock)
 			So(heartbeaters, ShouldHaveLength, 2)
 		})
@@ -90,7 +90,7 @@ func TestCreateHeartbeaters(t *testing.T) {
 					LocalCheckDelay: time.Minute,
 				},
 			}
-			mockClock.EXPECT().NowUTC().Return(testTime)
+			mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
 			heartbeaters := createHearbeaters(hbCfg, mockLogger, mockDatabase, mockClock)
 			So(heartbeaters, ShouldHaveLength, 3)
 		})
@@ -122,7 +122,7 @@ func TestCreateHeartbeaters(t *testing.T) {
 					RemoteCheckDelay: time.Minute,
 				},
 			}
-			mockClock.EXPECT().NowUTC().Return(testTime)
+			mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
 			heartbeaters := createHearbeaters(hbCfg, mockLogger, mockDatabase, mockClock)
 			So(heartbeaters, ShouldHaveLength, 4)
 		})
@@ -159,7 +159,7 @@ func TestCreateHeartbeaters(t *testing.T) {
 					},
 				},
 			}
-			mockClock.EXPECT().NowUTC().Return(testTime)
+			mockClock.EXPECT().NowUTC().Return(testTime).AnyTimes()
 			heartbeaters := createHearbeaters(hbCfg, mockLogger, mockDatabase, mockClock)
 			So(heartbeaters, ShouldHaveLength, 5)
 		})

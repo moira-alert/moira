@@ -98,11 +98,10 @@ func createHearbeaters(
 	database moira.Database,
 	clock moira.Clock,
 ) []heartbeat.Heartbeater {
-	hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
-
 	heartbeaters := make([]heartbeat.Heartbeater, 0)
 
 	if heartbeatersCfg.DatabaseCfg.Enabled {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		databaseHeartbeater, err := heartbeat.NewDatabaseHeartbeater(heartbeatersCfg.DatabaseCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
@@ -115,6 +114,7 @@ func createHearbeaters(
 	}
 
 	if heartbeatersCfg.FilterCfg.Enabled {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		filterHeartbeater, err := heartbeat.NewFilterHeartbeater(heartbeatersCfg.FilterCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
@@ -127,6 +127,7 @@ func createHearbeaters(
 	}
 
 	if heartbeatersCfg.LocalCheckerCfg.Enabled {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		localCheckerHeartbeater, err := heartbeat.NewLocalCheckerHeartbeater(heartbeatersCfg.LocalCheckerCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
@@ -139,6 +140,7 @@ func createHearbeaters(
 	}
 
 	if heartbeatersCfg.RemoteCheckerCfg.Enabled {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		remoteCheckerHeartbeater, err := heartbeat.NewRemoteCheckerHeartbeater(heartbeatersCfg.RemoteCheckerCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
@@ -151,6 +153,7 @@ func createHearbeaters(
 	}
 
 	if heartbeatersCfg.NotifierCfg.Enabled {
+		hearbeaterBase := heartbeat.NewHeartbeaterBase(logger, database, clock)
 		notifierHeartbeater, err := heartbeat.NewNotifierHeartbeater(heartbeatersCfg.NotifierCfg, hearbeaterBase)
 		if err != nil {
 			logger.Error().
