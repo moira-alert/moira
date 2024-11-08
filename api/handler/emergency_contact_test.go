@@ -32,7 +32,7 @@ var (
 	}
 	testEmergencyContact2 = datatypes.EmergencyContact{
 		ContactID:      testContactID2,
-		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatTypeNotSet},
+		HeartbeatTypes: []datatypes.HeartbeatType{datatypes.HeartbeatFilter},
 	}
 
 	login = "testLogin"
@@ -209,7 +209,13 @@ func TestCreateEmergencyContact(t *testing.T) {
 		auth := &api.Authorization{
 			Enabled:   true,
 			AdminList: map[string]struct{}{login: {}},
+			AllowedEmergencyContactTypes: map[datatypes.HeartbeatType]struct{}{
+				datatypes.HeartbeatFilter:   {},
+				datatypes.HeartbeatNotifier: {},
+			},
 		}
+
+		notAdmin := "not-admin"
 
 		Convey("Successfully create emergency contact", func() {
 			emergencyContactDTO := dto.EmergencyContact(testEmergencyContact)
@@ -356,6 +362,85 @@ func TestCreateEmergencyContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
+		Convey("Try to create emergency contact with not allowed heartbeat type", func() {
+			emergencyContact := datatypes.EmergencyContact{
+				ContactID: testContactID,
+				HeartbeatTypes: []datatypes.HeartbeatType{
+					datatypes.HeartbeatLocalChecker,
+				},
+			}
+			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
+
+			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
+			So(err, ShouldBeNil)
+
+			database = mockDb
+
+			expectedErr := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "'heartbeat_local_checker' heartbeat type is not allowed",
+			}
+
+			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, notAdmin))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest.Header.Add("content-type", "application/json")
+
+			createEmergencyContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expectedErr)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Try to create emergency contact with not allowed but with admin login", func() {
+			emergencyContact := datatypes.EmergencyContact{
+				ContactID: testContactID,
+				HeartbeatTypes: []datatypes.HeartbeatType{
+					datatypes.HeartbeatLocalChecker,
+				},
+			}
+			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
+
+			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
+			So(err, ShouldBeNil)
+
+			mockDb.EXPECT().GetContact(testContactID).Return(testContact, nil)
+			mockDb.EXPECT().SaveEmergencyContact(emergencyContact).Return(nil)
+			database = mockDb
+
+			expectedResponse := &dto.SaveEmergencyContactResponse{
+				ContactID: testContactID,
+			}
+
+			testRequest := httptest.NewRequest(http.MethodPost, "/emergency-contact", bytes.NewBuffer(jsonEmergencyContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest.Header.Add("content-type", "application/json")
+
+			createEmergencyContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &dto.SaveEmergencyContactResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expectedResponse)
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
 		Convey("Internal server error with get contact database error", func() {
 			emergencyContactDTO := dto.EmergencyContact(testEmergencyContact)
 
@@ -439,6 +524,17 @@ func TestUpdateEmergencyContact(t *testing.T) {
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
+		auth := &api.Authorization{
+			Enabled:   true,
+			AdminList: map[string]struct{}{login: {}},
+			AllowedEmergencyContactTypes: map[datatypes.HeartbeatType]struct{}{
+				datatypes.HeartbeatFilter:   {},
+				datatypes.HeartbeatNotifier: {},
+			},
+		}
+
+		notAdmin := "not-admin"
+
 		Convey("Successfully update emergency contact", func() {
 			emergencyContactDTO := dto.EmergencyContact(testEmergencyContact)
 
@@ -454,6 +550,8 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -489,6 +587,8 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -523,6 +623,8 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -560,6 +662,8 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)
@@ -575,6 +679,85 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			So(actual, ShouldResemble, expectedErr)
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Invalid Request with not allowed heartbeat type in dto", func() {
+			emergencyContact := datatypes.EmergencyContact{
+				ContactID: testContactID,
+				HeartbeatTypes: []datatypes.HeartbeatType{
+					datatypes.HeartbeatLocalChecker,
+				},
+			}
+			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
+
+			expectedErr := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "'heartbeat_local_checker' heartbeat type is not allowed",
+			}
+			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
+			So(err, ShouldBeNil)
+
+			database = mockDb
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, notAdmin))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest.Header.Add("content-type", "application/json")
+
+			updateEmergencyContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expectedErr)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Try to update emergency contact with not allowed but with admin login", func() {
+			emergencyContact := datatypes.EmergencyContact{
+				ContactID: testContactID,
+				HeartbeatTypes: []datatypes.HeartbeatType{
+					datatypes.HeartbeatLocalChecker,
+				},
+			}
+			emergencyContactDTO := dto.EmergencyContact(emergencyContact)
+
+			expectedResponse := &dto.SaveEmergencyContactResponse{
+				ContactID: testContactID,
+			}
+
+			jsonEmergencyContact, err := json.Marshal(emergencyContactDTO)
+			So(err, ShouldBeNil)
+
+			mockDb.EXPECT().SaveEmergencyContact(emergencyContact).Return(nil)
+			database = mockDb
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest.Header.Add("content-type", "application/json")
+
+			updateEmergencyContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &dto.SaveEmergencyContactResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expectedResponse)
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
 		Convey("Internal Server Error with database error", func() {
@@ -593,6 +776,8 @@ func TestUpdateEmergencyContact(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/emergency-contact/"+testContactID, bytes.NewBuffer(jsonEmergencyContact))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, testContactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateEmergencyContact(responseWriter, testRequest)

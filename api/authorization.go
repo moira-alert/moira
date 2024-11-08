@@ -1,10 +1,13 @@
 package api
 
+import "github.com/moira-alert/moira/datatypes"
+
 // Authorization contains authorization configuration.
 type Authorization struct {
-	AdminList           map[string]struct{}
-	Enabled             bool
-	AllowedContactTypes map[string]struct{}
+	AdminList                    map[string]struct{}
+	Enabled                      bool
+	AllowedContactTypes          map[string]struct{}
+	AllowedEmergencyContactTypes map[datatypes.HeartbeatType]struct{}
 }
 
 // IsEnabled returns true if auth is enabled and false otherwise.

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/datatypes"
 )
 
 // WebContact is container for web ui contact validation.
@@ -43,12 +44,13 @@ type Config struct {
 
 // WebConfig is container for web ui configuration parameters.
 type WebConfig struct {
-	SupportEmail         string                `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
-	RemoteAllowed        bool                  `json:"remoteAllowed" example:"true"`
-	MetricSourceClusters []MetricSourceCluster `json:"metric_source_clusters"`
-	Contacts             []WebContact          `json:"contacts"`
-	FeatureFlags         FeatureFlags          `json:"featureFlags"`
-	Sentry               Sentry                `json:"sentry"`
+	SupportEmail          string                    `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
+	RemoteAllowed         bool                      `json:"remoteAllowed" example:"true"`
+	MetricSourceClusters  []MetricSourceCluster     `json:"metric_source_clusters"`
+	Contacts              []WebContact              `json:"contacts"`
+	EmergencyContactTypes []datatypes.HeartbeatType `json:"emergency_contact_types"`
+	FeatureFlags          FeatureFlags              `json:"featureFlags"`
+	Sentry                Sentry                    `json:"sentry"`
 }
 
 // MetricSourceCluster contains data about supported metric source cluster.
