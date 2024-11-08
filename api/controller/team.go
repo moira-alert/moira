@@ -49,6 +49,7 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate unique id for team"))
 		}
 	}
+
 	err := dataBase.SaveTeam(teamID, team.ToMoiraTeam())
 	if err != nil {
 		if errors.Is(err, database.ErrTeamWithNameAlreadyExists) {

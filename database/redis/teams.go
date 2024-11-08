@@ -3,14 +3,15 @@ package redis
 import (
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	"github.com/moira-alert/moira/database"
 	"strings"
-	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
+
+const teamSaveDeleteAttempts = 3
 
 // SaveTeam saves team into redis.
 func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
@@ -72,17 +73,25 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 					return fmt.Errorf("failed to save team name: %w", err)
 				}
 
-				time.Sleep(5 * time.Second)
-
 				return nil
 			})
 
 		return err
 	}
 
-	// need to use watch here because if team name is updated
-	// we also need to change name in moira-teams-names set
-	err = c.Watch(connector.context, saveTeamInTx, teamsByNamesKey)
+	for i := 1; i < teamSaveDeleteAttempts; i++ {
+		// need to use watch here because if team name is updated
+		// we also need to change name in moira-teams-names set
+		err = c.Watch(connector.context, saveTeamInTx, teamsByNamesKey)
+
+		if err == nil {
+			return nil
+		}
+
+		if !errors.Is(err, redis.TxFailedErr) {
+			return err
+		}
+	}
 
 	return err
 }
@@ -245,7 +254,20 @@ func (connector *DbConnector) DeleteTeam(teamID, userID string) error {
 		return err
 	}
 
-	err := c.Watch(connector.context, deleteTeamInTx, teamsByNamesKey)
+	var err error
+	for i := 1; i < teamSaveDeleteAttempts; i++ {
+		// need to use watch here because if team is deleted
+		// we also need to remove team name
+		err = c.Watch(connector.context, deleteTeamInTx, teamsByNamesKey)
+
+		if err == nil {
+			return nil
+		}
+
+		if !errors.Is(err, redis.TxFailedErr) {
+			return err
+		}
+	}
 
 	return err
 }

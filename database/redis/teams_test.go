@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/moira-alert/moira"
@@ -33,6 +34,10 @@ func TestTeamStoring(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		actualTeam, err := dataBase.GetTeam(teamID)
+		So(err, ShouldBeNil)
+		So(actualTeam, ShouldResemble, team)
+
+		actualTeam, err = dataBase.GetTeamByName(team.Name)
 		So(err, ShouldBeNil)
 		So(actualTeam, ShouldResemble, team)
 
@@ -144,6 +149,10 @@ func TestTeamStoring(t *testing.T) {
 		So(err, ShouldResemble, database.ErrNil)
 		So(actualTeam, ShouldResemble, moira.Team{})
 
+		actualTeam, err = dataBase.GetTeamByName(teamToDelete.Name)
+		So(err, ShouldResemble, database.ErrNil)
+		So(actualTeam, ShouldResemble, moira.Team{})
+
 		actualTeams, err = dataBase.GetUserTeams(userOfTeamToDeleteID)
 		So(err, ShouldBeNil)
 		So(actualTeams, ShouldHaveLength, 0)
@@ -151,5 +160,113 @@ func TestTeamStoring(t *testing.T) {
 		actualUsers, err = dataBase.GetTeamUsers(teamToDeleteID)
 		So(err, ShouldBeNil)
 		So(actualUsers, ShouldHaveLength, 0)
+	})
+}
+
+func TestSaveAndGetTeam(t *testing.T) {
+	Convey("Test saving team", t, func() {
+		logger, _ := logging.GetLogger("dataBase")
+		dataBase := NewTestDatabase(logger)
+		dataBase.Flush()
+		defer dataBase.Flush()
+
+		team := moira.Team{
+			ID:          "someTeamID",
+			Name:        "Test team name",
+			Description: "Test description",
+		}
+
+		Convey("when no team, get returns database.ErrNil", func() {
+			gotTeam, err := dataBase.GetTeam(team.ID)
+
+			So(err, ShouldResemble, database.ErrNil)
+			So(gotTeam, ShouldResemble, moira.Team{})
+		})
+
+		Convey("when no team, get by name returns database.ErrNil", func() {
+			gotTeam, err := dataBase.GetTeamByName(team.Name)
+
+			So(err, ShouldResemble, database.ErrNil)
+			So(gotTeam, ShouldResemble, moira.Team{})
+		})
+
+		Convey("when no team with such name, saved ok", func() {
+			err := dataBase.SaveTeam(team.ID, team)
+
+			So(err, ShouldBeNil)
+
+			Convey("and getting team by id returns saved team", func() {
+				gotTeam, err := dataBase.GetTeam(team.ID)
+
+				So(err, ShouldBeNil)
+				So(gotTeam, ShouldResemble, team)
+			})
+
+			Convey("and getting team by name returns saved team", func() {
+				gotTeam, err := dataBase.GetTeamByName(team.Name)
+
+				So(err, ShouldBeNil)
+				So(gotTeam, ShouldResemble, team)
+			})
+
+			Convey("and updating team ok", func() {
+				team.Name = strings.ToUpper(team.Name)
+
+				err := dataBase.SaveTeam(team.ID, team)
+
+				So(err, ShouldBeNil)
+
+				gotTeam, err := dataBase.GetTeam(team.ID)
+				So(err, ShouldBeNil)
+				So(gotTeam, ShouldResemble, team)
+
+				gotTeam, err = dataBase.GetTeamByName(team.Name)
+				So(err, ShouldBeNil)
+				So(gotTeam, ShouldResemble, team)
+			})
+		})
+
+		Convey("with changing name of existing team", func() {
+			err := dataBase.SaveTeam(team.ID, team)
+			So(err, ShouldBeNil)
+
+			otherTeam := moira.Team{
+				ID:          "otherTeamID",
+				Name:        "Other team name",
+				Description: "others description",
+			}
+
+			err = dataBase.SaveTeam(otherTeam.ID, otherTeam)
+			So(err, ShouldBeNil)
+
+			prevName := otherTeam.Name
+
+			Convey("to name of existed team (no matter upper/lower-case) returns error", func() {
+				otherTeam.Name = team.Name
+
+				err = dataBase.SaveTeam(otherTeam.ID, otherTeam)
+				So(err, ShouldResemble, database.ErrTeamWithNameAlreadyExists)
+
+				otherTeam.Name = strings.ToLower(team.Name)
+
+				err = dataBase.SaveTeam(otherTeam.ID, otherTeam)
+				So(err, ShouldResemble, database.ErrTeamWithNameAlreadyExists)
+			})
+
+			Convey("to new name, no team with prev name exist", func() {
+				otherTeam.Name += "1"
+
+				err = dataBase.SaveTeam(otherTeam.ID, otherTeam)
+				So(err, ShouldBeNil)
+
+				gotTeam, err := dataBase.GetTeamByName(prevName)
+				So(err, ShouldResemble, database.ErrNil)
+				So(gotTeam, ShouldResemble, moira.Team{})
+
+				gotTeam, err = dataBase.GetTeamByName(otherTeam.Name)
+				So(err, ShouldBeNil)
+				So(gotTeam, ShouldResemble, otherTeam)
+			})
+		})
 	})
 }
