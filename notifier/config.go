@@ -10,8 +10,7 @@ const NotificationsLimitUnlimited = int64(-1)
 // Config is sending settings including log settings.
 type Config struct {
 	Enabled                       bool
-	SelfStateEnabled              bool
-	SelfStateContacts             []map[string]string
+	SelfstateEnabled              bool
 	SendingTimeout                time.Duration
 	ResendingTimeout              time.Duration
 	ReschedulingDelay             time.Duration

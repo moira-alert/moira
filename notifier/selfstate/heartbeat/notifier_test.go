@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewNotifierHeartbeater(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	Convey("Test NewNotifierHeartbeater", t, func() {
 		Convey("With correct local checker heartbeater config", func() {
@@ -66,7 +66,7 @@ func TestNotifierHeartbeaterCheck(t *testing.T) {
 }
 
 func TestNotifierHeartbeaterType(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	Convey("Test notifierHeartbeater.Type", t, func() {
 		cfg := NotifierHeartbeaterConfig{}
@@ -80,7 +80,7 @@ func TestNotifierHeartbeaterType(t *testing.T) {
 }
 
 func TestNotifierHeartbeaterAlertSettings(t *testing.T) {
-	_, _, _, heartbeaterBase := heartbeaterHelper(t)
+	_, _, _, heartbeaterBase := heartbeaterHelper(t) //nolint:dogsled
 
 	Convey("Test notifierHeartbeater.AlertSettings", t, func() {
 		alertCfg := AlertConfig{

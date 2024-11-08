@@ -69,3 +69,12 @@ func NewHeartbeaterBase(
 		lastSuccessfulCheck: clock.NowUTC(),
 	}
 }
+
+// HeartbeatersConfig is a structure that combines the configs of all heartbeaters within it.
+type HeartbeatersConfig struct {
+	DatabaseCfg      DatabaseHeartbeaterConfig
+	FilterCfg        FilterHeartbeaterConfig
+	LocalCheckerCfg  LocalCheckerHeartbeaterConfig
+	RemoteCheckerCfg RemoteCheckerHeartbeaterConfig
+	NotifierCfg      NotifierHeartbeaterConfig
+}
