@@ -104,12 +104,14 @@ func groupTeamsByNames(logger moira.Logger, teamMaps []map[string]string) (map[s
 				return nil, err
 			}
 
-			teamWithNameList, exists := teamsByNameMap[team.Name]
+			lowercaseTeamName := strings.ToLower(team.Name)
+
+			teamWithNameList, exists := teamsByNameMap[lowercaseTeamName]
 			if exists {
 				teamWithNameList = append(teamWithNameList, team)
-				teamsByNameMap[team.Name] = teamWithNameList
+				teamsByNameMap[lowercaseTeamName] = teamWithNameList
 			} else {
-				teamsByNameMap[team.Name] = []teamWithID{team}
+				teamsByNameMap[lowercaseTeamName] = []teamWithID{team}
 			}
 		}
 	}
@@ -122,8 +124,10 @@ func groupTeamsByNames(logger moira.Logger, teamMaps []map[string]string) (map[s
 }
 
 func updateTeamsInPipe(ctx context.Context, logger moira.Logger, pipe goredis.Pipeliner, teamsByNameMap map[string][]teamWithID) error {
-	for teamName, teams := range teamsByNameMap {
+	for _, teams := range teamsByNameMap {
 		for i, team := range teams {
+			prevName := team.Name
+
 			if i > 0 {
 				// there more than 1 team with same name, so updating teams by adding digit to the name end
 				team.Name += strconv.FormatInt(int64(i), 10)
@@ -138,7 +142,7 @@ func updateTeamsInPipe(ctx context.Context, logger moira.Logger, pipe goredis.Pi
 					logger.Error().
 						Error(err).
 						String("team_id", team.ID).
-						String("prev_team_name", teamName).
+						String("prev_team_name", prevName).
 						String("new_team_name", team.Name).
 						Msg("failed to update team name")
 
@@ -151,7 +155,7 @@ func updateTeamsInPipe(ctx context.Context, logger moira.Logger, pipe goredis.Pi
 				logger.Error().
 					Error(err).
 					String("team_id", team.ID).
-					String("prev_team_name", teamName).
+					String("prev_team_name", prevName).
 					String("new_team_name", team.Name).
 					Msg("failed to add team name to redis hash")
 

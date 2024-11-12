@@ -25,7 +25,15 @@ var (
 	GoVersion    = "unknown"
 )
 
-var moiraValidVersions = []string{"2.3", "2.6", "2.7", "2.9", "2.11", "2.12", "2.13"}
+var moiraValidVersions = []string{
+	"2.3",
+	"2.6",
+	"2.7",
+	"2.9",
+	"2.11",
+	"2.12",
+	"2.13",
+}
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/cli.yml", "Path to configuration file")
