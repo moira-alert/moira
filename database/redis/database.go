@@ -33,6 +33,8 @@ const (
 	testSource DBSource = "test"
 )
 
+var _ moira.Database = &DbConnector{}
+
 // DbConnector contains redis client.
 type DbConnector struct {
 	client               *redis.UniversalClient

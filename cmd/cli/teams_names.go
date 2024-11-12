@@ -23,7 +23,7 @@ const (
 //  2. Group teams with same names.
 //  3. For teams with same names change name (example: ["name", "name", "name"] -> ["name", "name1", "name2"]).
 //  4. Update teams with name changed.
-//  5. Save pair teamName:team.ID to "moira-teams-by-names" redis hash.
+//  5. Save pairs teamName:team.ID to "moira-teams-by-names" redis hash.
 func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 	logger.Info().Msg("Start filling \"moira-teams-by-names\" hash")
 
