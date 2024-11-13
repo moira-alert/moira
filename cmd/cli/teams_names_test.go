@@ -128,13 +128,18 @@ func Test_fillTeamNamesHash(t *testing.T) {
 
 			for i, team := range testTeams {
 				Convey(fmt.Sprintf("for team %v fields ok", i), func() {
-					res, err := client.HGet(ctx, teamsKey, team.ID).Result()
+					var marshaledTeam string
+
+					marshaledTeam, err = client.HGet(ctx, teamsKey, team.ID).Result()
 					So(err, ShouldBeNil)
 
-					actualTeam, err := unmarshalTeam(team.ID, []byte(res))
+					var actualTeam teamWithID
+
+					actualTeam, err = unmarshalTeam(team.ID, []byte(marshaledTeam))
 					So(err, ShouldBeNil)
 					So(actualTeam.ID, ShouldEqual, team.ID)
 					So(actualTeam.Description, ShouldEqual, team.Description)
+
 					if i < 3 {
 						So(actualTeam.Name, ShouldBeIn, []string{team.Name, team.Name + "1", team.Name + "2"})
 					} else {
@@ -176,13 +181,18 @@ func Test_fillTeamNamesHash(t *testing.T) {
 
 			for i, team := range testTeams {
 				Convey(fmt.Sprintf("for team %v fields ok", i), func() {
-					res, err := client.HGet(ctx, teamsKey, team.ID).Result()
+					var marshaledTeam string
+
+					marshaledTeam, err = client.HGet(ctx, teamsKey, team.ID).Result()
 					So(err, ShouldBeNil)
 
-					actualTeam, err := unmarshalTeam(team.ID, []byte(res))
+					var actualTeam teamWithID
+
+					actualTeam, err = unmarshalTeam(team.ID, []byte(marshaledTeam))
 					So(err, ShouldBeNil)
 					So(actualTeam.ID, ShouldEqual, team.ID)
 					So(actualTeam.Description, ShouldEqual, team.Description)
+
 					if i < 3 {
 						So(actualTeam.Name, ShouldBeIn, []string{team.Name, team.Name + "1", team.Name + "1_1", team.Name + "1_0"})
 					} else {
