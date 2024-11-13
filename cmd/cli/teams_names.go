@@ -44,13 +44,15 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 			return fmt.Errorf("failed to group teams by names: %w", err)
 		}
 
+		teamByUniqueName := transformTeamsByNameMap(teamsByNameMap)
+
 		client := db.Client()
 		ctx := db.Context()
 
 		_, pipeErr := client.TxPipelined(
 			ctx,
 			func(pipe goredis.Pipeliner) error {
-				return updateTeamsInPipe(ctx, logger, pipe, teamsByNameMap)
+				return updateTeamsInPipe(ctx, logger, pipe, teamByUniqueName)
 			})
 		if pipeErr != nil {
 			return pipeErr
@@ -89,44 +91,68 @@ func groupTeamsByNames(logger moira.Logger, teamsMap map[string]string) (map[str
 	return teamsByNameMap, nil
 }
 
-func updateTeamsInPipe(ctx context.Context, logger moira.Logger, pipe goredis.Pipeliner, teamsByNameMap map[string][]teamWithID) error {
+func transformTeamsByNameMap(teamsByNameMap map[string][]teamWithID) map[string]teamWithID {
+	teamByUniqueName := make(map[string]teamWithID, len(teamsByNameMap))
+
 	for _, teams := range teamsByNameMap {
 		for i, team := range teams {
-			prevName := team.Name
+			iStr := strconv.FormatInt(int64(i), 10)
 
 			if i > 0 {
-				// there more than 1 team with same name, so updating teams by adding digit to the name end
-				team.Name += strconv.FormatInt(int64(i), 10)
-
-				teamBytes, err := getTeamBytes(team)
-				if err != nil {
-					return err
-				}
-
-				err = pipe.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
-				if err != nil {
-					logger.Error().
-						Error(err).
-						String("team_id", team.ID).
-						String("prev_team_name", prevName).
-						String("new_team_name", team.Name).
-						Msg("failed to update team name")
-
-					return fmt.Errorf("failed to update team name: %w", err)
-				}
+				team.Name += iStr
 			}
 
-			err := pipe.HSet(ctx, teamsByNamesKey, strings.ToLower(team.Name), team.ID).Err()
-			if err != nil {
-				logger.Error().
-					Error(err).
-					String("team_id", team.ID).
-					String("prev_team_name", prevName).
-					String("new_team_name", team.Name).
-					Msg("failed to add team name to redis hash")
+			for {
+				// sometimes we have the following situation in db (IDs and team names):
+				// moira-teams: {
+				//    team1: "team name",
+				//    team2: "team Name",
+				//    team3: "Team name1"
+				// }
+				// so we can't just add 1 to one of [team1, team2]
+				lowercasedTeamName := strings.ToLower(team.Name)
 
-				return fmt.Errorf("failed to add team name to redis hash: %w", err)
+				_, exists := teamByUniqueName[lowercasedTeamName]
+				if exists {
+					team.Name = team.Name + "_" + iStr
+				} else {
+					teamByUniqueName[lowercasedTeamName] = team
+					break
+				}
 			}
+		}
+	}
+
+	return teamByUniqueName
+}
+
+func updateTeamsInPipe(ctx context.Context, logger moira.Logger, pipe goredis.Pipeliner, teamsByUniqueName map[string]teamWithID) error {
+	for _, team := range teamsByUniqueName {
+		teamBytes, err := getTeamBytes(team)
+		if err != nil {
+			return err
+		}
+
+		err = pipe.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
+		if err != nil {
+			logger.Error().
+				Error(err).
+				String("team_id", team.ID).
+				String("new_team_name", team.Name).
+				Msg("failed to update team name")
+
+			return fmt.Errorf("failed to update team name: %w", err)
+		}
+
+		err = pipe.HSet(ctx, teamsByNamesKey, strings.ToLower(team.Name), team.ID).Err()
+		if err != nil {
+			logger.Error().
+				Error(err).
+				String("team_id", team.ID).
+				String("new_team_name", team.Name).
+				Msg("failed to add team name to redis hash")
+
+			return fmt.Errorf("failed to add team name to redis hash: %w", err)
 		}
 	}
 

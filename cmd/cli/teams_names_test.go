@@ -143,6 +143,54 @@ func Test_fillTeamNamesHash(t *testing.T) {
 				})
 			}
 		})
+
+		Convey("with teams has no unique names and adding one number does not help", func() {
+			testTeams[0].Name = "Team name"
+			testTeams[1].Name = "teaM name"
+			testTeams[2].Name = "Team name1"
+
+			for _, team := range testTeams {
+				var teamBytes []byte
+
+				teamBytes, err = getTeamBytes(team)
+				So(err, ShouldBeNil)
+
+				err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
+				So(err, ShouldBeNil)
+			}
+
+			err = fillTeamNamesHash(logger, db)
+			So(err, ShouldBeNil)
+
+			var actualTeamNames map[string]string
+
+			actualTeamNames, err = client.HGetAll(ctx, teamsByNamesKey).Result()
+			So(err, ShouldBeNil)
+			So(actualTeamNames, ShouldHaveLength, len(testTeams))
+
+			// depends on order of map iteration
+			expectedLowercasedTeamNames := []string{"team name", "team name1", "team name1_0", "team name1_1", strings.ToLower(testTeams[3].Name)}
+			for name := range actualTeamNames {
+				So(name, ShouldBeIn, expectedLowercasedTeamNames)
+			}
+
+			for i, team := range testTeams {
+				Convey(fmt.Sprintf("for team %v fields ok", i), func() {
+					res, err := client.HGet(ctx, teamsKey, team.ID).Result()
+					So(err, ShouldBeNil)
+
+					actualTeam, err := unmarshalTeam(team.ID, []byte(res))
+					So(err, ShouldBeNil)
+					So(actualTeam.ID, ShouldEqual, team.ID)
+					So(actualTeam.Description, ShouldEqual, team.Description)
+					if i < 3 {
+						So(actualTeam.Name, ShouldBeIn, []string{team.Name, team.Name + "1", team.Name + "1_1", team.Name + "1_0"})
+					} else {
+						So(actualTeam.Name, ShouldEqual, team.Name)
+					}
+				})
+			}
+		})
 	})
 }
 
