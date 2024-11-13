@@ -213,7 +213,6 @@ func TestSaveAndGetTeam(t *testing.T) {
 				team.Name = strings.ToUpper(team.Name)
 
 				err := dataBase.SaveTeam(team.ID, team)
-
 				So(err, ShouldBeNil)
 
 				gotTeam, err := dataBase.GetTeam(team.ID)
@@ -254,12 +253,16 @@ func TestSaveAndGetTeam(t *testing.T) {
 			})
 
 			Convey("to new name, no team with prev name exist", func() {
-				otherTeam.Name += "1"
+				otherTeam.Name = team.Name + "1"
 
 				err = dataBase.SaveTeam(otherTeam.ID, otherTeam)
 				So(err, ShouldBeNil)
 
-				gotTeam, err := dataBase.GetTeamByName(prevName)
+				gotTeam, err := dataBase.GetTeam(otherTeam.ID)
+				So(err, ShouldBeNil)
+				So(gotTeam, ShouldResemble, otherTeam)
+
+				gotTeam, err = dataBase.GetTeamByName(prevName)
 				So(err, ShouldResemble, database.ErrNil)
 				So(gotTeam, ShouldResemble, moira.Team{})
 
