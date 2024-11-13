@@ -56,3 +56,26 @@ func NewTeam(rep *redis.StringCmd) (moira.Team, error) {
 	}
 	return teamSE.toTeam(), nil
 }
+
+func UnmarshalAllTeams(rsp *redis.StringStringMapCmd) ([]moira.Team, error) {
+	teamsMap, err := rsp.Result()
+	if err != nil {
+		return nil, err
+	}
+
+	resTeams := make([]moira.Team, 0, len(teamsMap))
+	for teamID, marshaledTeam := range teamsMap {
+		teamSE := teamStorageElement{}
+		err = json.Unmarshal([]byte(marshaledTeam), &teamSE)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse team json %s: %w", marshaledTeam, err)
+		}
+
+		team := teamSE.toTeam()
+		team.ID = teamID
+
+		resTeams = append(resTeams, team)
+	}
+
+	return resTeams, nil
+}
