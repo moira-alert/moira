@@ -71,6 +71,8 @@ const (
 type LimitsConfig struct {
 	// Trigger contains limits for triggers.
 	Trigger TriggerLimits
+	// Trigger contains limits for teams.
+	Team TeamLimits
 }
 
 // TriggerLimits contains all limits applied for triggers.
@@ -85,5 +87,22 @@ func GetTestLimitsConfig() LimitsConfig {
 		Trigger: TriggerLimits{
 			MaxNameSize: DefaultTriggerNameMaxSize,
 		},
+		Team: TeamLimits{
+			MaxNameSize:        DefaultTeamNameMaxSize,
+			MaxDescriptionSize: DefaultTeamDescriptionMaxSize,
+		},
 	}
+}
+
+const (
+	DefaultTeamNameMaxSize        = 100
+	DefaultTeamDescriptionMaxSize = 1000
+)
+
+// TeamLimits contains all limits applied for triggers.
+type TeamLimits struct {
+	// MaxNameSize is the amount of characters allowed in team name.
+	MaxNameSize int
+	// MaxNameSize is the amount of characters allowed in team description.
+	MaxDescriptionSize int
 }

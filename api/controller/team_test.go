@@ -82,6 +82,14 @@ func TestCreateTeam(t *testing.T) {
 			So(response, ShouldResemble, dto.SaveTeamResponse{})
 			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", returnErr)))
 		})
+
+		Convey("team with name already exists error, while saving", func() {
+			dataBase.EXPECT().GetTeam(gomock.Any()).Return(moira.Team{}, database.ErrNil)
+			dataBase.EXPECT().SaveTeam(gomock.Any(), team.ToMoiraTeam()).Return(database.ErrTeamWithNameAlreadyExists)
+			response, err := CreateTeam(dataBase, team, user)
+			So(response, ShouldResemble, dto.SaveTeamResponse{})
+			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("cannot save team: %w", database.ErrTeamWithNameAlreadyExists)))
+		})
 	})
 }
 

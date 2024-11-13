@@ -53,6 +53,9 @@ api:
   limits:
     trigger:
       max_name_size: 200
+    team:
+      max_name_size: 100
+      max_description_size: 1000
 web:
   contacts_template:
     - type: mail
