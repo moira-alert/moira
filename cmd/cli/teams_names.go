@@ -114,7 +114,7 @@ func transformTeamsByNameMap(teamsByNameMap map[string][]teamWithID) map[string]
 
 				_, exists := teamByUniqueName[lowercasedTeamName]
 				if exists {
-					team.Name = team.Name + "_" + iStr
+					team.Name += "_" + iStr
 				} else {
 					teamByUniqueName[lowercasedTeamName] = team
 					break
