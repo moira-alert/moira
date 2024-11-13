@@ -194,7 +194,7 @@ func Test_fillTeamNamesHash(t *testing.T) {
 					So(actualTeam.Description, ShouldEqual, team.Description)
 
 					if i < 3 {
-						So(actualTeam.Name, ShouldBeIn, []string{team.Name, team.Name + "1", team.Name + "1_1", team.Name + "1_0"})
+						So(actualTeam.Name, ShouldBeIn, []string{team.Name, team.Name + "1", team.Name + "1_1", team.Name + "_0"})
 					} else {
 						So(actualTeam.Name, ShouldEqual, team.Name)
 					}
