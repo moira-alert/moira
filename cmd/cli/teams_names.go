@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
-	"sync"
-
 	goredis "github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -29,34 +27,18 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 
 	switch db := database.(type) {
 	case *redis.DbConnector:
-		teamMaps := make([]map[string]string, 0)
-		mutex := sync.Mutex{}
+		logger.Info().Msg("collecting teams from redis node...")
 
-		err := callFunc(
-			db,
-			func(connector *redis.DbConnector, client goredis.UniversalClient) error {
-				ctx := connector.Context()
-
-				logger.Info().Msg("collecting teams from redis node...")
-
-				resMap, err := client.HGetAll(ctx, teamsKey).Result()
-				if err != nil {
-					return fmt.Errorf("failed to fetch teams from redis node: %w", err)
-				}
-
-				// func passed to callFunc may be called concurrently
-				mutex.Lock()
-				defer mutex.Unlock()
-
-				teamMaps = append(teamMaps, resMap)
-
-				return nil
-			})
+		teamsMap, err := db.Client().HGetAll(db.Context(), teamsKey).Result()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to fetch teams from redis node: %w", err)
 		}
 
-		teamsByNameMap, err := groupTeamsByNames(logger, teamMaps)
+		logger.Info().
+			Int("total_teams_count", len(teamsMap)).
+			Msg("fetched teams")
+
+		teamsByNameMap, err := groupTeamsByNames(logger, teamsMap)
 		if err != nil {
 			return fmt.Errorf("failed to group teams by names: %w", err)
 		}
@@ -79,40 +61,23 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 	return nil
 }
 
-func groupTeamsByNames(logger moira.Logger, teamMaps []map[string]string) (map[string][]teamWithID, error) {
-	mapSize := 0
-	for _, m := range teamMaps {
-		collectedFromNode := len(m)
+func groupTeamsByNames(logger moira.Logger, teamsMap map[string]string) (map[string][]teamWithID, error) {
+	teamsByNameMap := make(map[string][]teamWithID, len(teamsMap))
 
-		logger.Info().
-			Int("teams_count", collectedFromNode).
-			Msg("successfully collected from redis node")
+	for teamID, marshaledTeam := range teamsMap {
+		team, err := unmarshalTeam(teamID, []byte(marshaledTeam))
+		if err != nil {
+			return nil, err
+		}
 
-		mapSize += len(m)
-	}
+		lowercaseTeamName := strings.ToLower(team.Name)
 
-	logger.Info().
-		Int("total_teams_count", mapSize).
-		Msg("from all nodes")
-
-	teamsByNameMap := make(map[string][]teamWithID, mapSize)
-
-	for _, m := range teamMaps {
-		for teamID, marshaledTeam := range m {
-			team, err := unmarshalTeam(teamID, []byte(marshaledTeam))
-			if err != nil {
-				return nil, err
-			}
-
-			lowercaseTeamName := strings.ToLower(team.Name)
-
-			teamWithNameList, exists := teamsByNameMap[lowercaseTeamName]
-			if exists {
-				teamWithNameList = append(teamWithNameList, team)
-				teamsByNameMap[lowercaseTeamName] = teamWithNameList
-			} else {
-				teamsByNameMap[lowercaseTeamName] = []teamWithID{team}
-			}
+		teamWithNameList, exists := teamsByNameMap[lowercaseTeamName]
+		if exists {
+			teamWithNameList = append(teamWithNameList, team)
+			teamsByNameMap[lowercaseTeamName] = teamWithNameList
+		} else {
+			teamsByNameMap[lowercaseTeamName] = []teamWithID{team}
 		}
 	}
 
@@ -174,18 +139,9 @@ func removeTeamNamesHash(logger moira.Logger, database moira.Database) error {
 
 	switch db := database.(type) {
 	case *redis.DbConnector:
-		err := callFunc(
-			db,
-			func(connector *redis.DbConnector, client goredis.UniversalClient) error {
-				_, err := client.Del(connector.Context(), teamsByNamesKey).Result()
-				if err != nil {
-					return fmt.Errorf("failed to delete teamsByNameKey: %w", err)
-				}
-
-				return nil
-			})
+		_, err := db.Client().Del(db.Context(), teamsByNamesKey).Result()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to delete teamsByNameKey: %w", err)
 		}
 
 	default:
