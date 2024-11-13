@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -16,6 +17,9 @@ const (
 	teamsKey        = "moira-teams"
 	teamsByNamesKey = "moira-teams-by-names"
 )
+
+var errTeamsCountAndUniqueNamesCountMismatch = errors.New(
+	"count of teams does not match count of unique names after transformation")
 
 // fillTeamNamesHash does the following
 //  1. Get all teams from DB.
@@ -45,6 +49,10 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 		}
 
 		teamByUniqueName := transformTeamsByNameMap(teamsByNameMap)
+
+		if len(teamByUniqueName) != len(teamsMap) {
+			return errTeamsCountAndUniqueNamesCountMismatch
+		}
 
 		client := db.Client()
 		ctx := db.Context()
