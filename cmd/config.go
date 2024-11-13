@@ -72,6 +72,8 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 		SentinelUsername: config.SentinelUsername,
 		SentinelPassword: config.SentinelPassword,
 		MaxRetries:       config.MaxRetries,
+		MinRetryBackoff:  to.Duration(config.MinRetryBackoff),
+		MaxRetryBackoff:  to.Duration(config.MaxRetryBackoff),
 		MetricsTTL:       to.Duration(config.MetricsTTL),
 		DialTimeout:      to.Duration(config.DialTimeout),
 		ReadTimeout:      to.Duration(config.ReadTimeout),
