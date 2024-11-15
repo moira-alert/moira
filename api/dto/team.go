@@ -104,3 +104,26 @@ type TeamSettings struct {
 func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type TeamsList struct {
+	List  []TeamModel `json:"list"`
+	Page  *int64      `json:"page,omitempty" format:"int64" extensions:"x-nullable"`
+	Size  *int64      `json:"size,omitempty" format:"int64" extensions:"x-nullable"`
+	Total *int64      `json:"total,omitempty" format:"int64" extensions:"x-nullable"`
+}
+
+func (TeamsList) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+func NewTeamsList(teams []moira.Team) TeamsList {
+	models := make([]TeamModel, 0, len(teams))
+
+	for _, team := range teams {
+		models = append(models, NewTeamModel(team))
+	}
+
+	return TeamsList{
+		List: models,
+	}
+}
