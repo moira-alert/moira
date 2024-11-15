@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/go-redis/redis/v8"
@@ -84,7 +84,7 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 }
 
 // GetAllTeams is a controller function that returns all teams.
-func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, sortOrder string) (dto.TeamsList, *api.ErrorResponse) {
+func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, nameSortOrder string) (dto.TeamsList, *api.ErrorResponse) {
 	if page < 0 {
 		return dto.TeamsList{}, api.ErrorInvalidRequest(fmt.Errorf("p cannot be less than zero, got %v", page))
 	} else if page > 0 && size < 0 {
@@ -105,11 +105,11 @@ func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.R
 
 	teams = filteredTeams
 
-	if sortOrder != "" {
-		sort.Slice(teams, func(i, j int) bool {
-			cmpRes := strings.ToLower(teams[i].Name) < strings.ToLower(teams[j].Name)
-			if sortOrder == "desc" {
-				return !cmpRes
+	if nameSortOrder == "asc" || nameSortOrder == "desc" {
+		slices.SortFunc(teams, func(first, second moira.Team) int {
+			cmpRes := strings.Compare(strings.ToLower(first.Name), strings.ToLower(second.Name))
+			if nameSortOrder == "desc" {
+				return cmpRes * -1
 			} else {
 				return cmpRes
 			}
@@ -122,6 +122,8 @@ func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.R
 		shift := page * size
 		if shift < int64(len(teams)) {
 			teams = teams[shift:]
+		} else {
+			teams = []moira.Team{}
 		}
 
 		if size <= int64(len(teams)) {
