@@ -16,3 +16,9 @@ const (
 	contactEventsDefaultPage = 0
 	contactEventsDefaultSize = -1
 )
+
+const (
+	getAllTeamsDefaultPage          = 0
+	getAllTeamsDefaultSize          = -1
+	getAllTeamsDefaultRegexTemplate = ".*"
+)

@@ -84,13 +84,7 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 }
 
 // GetAllTeams is a controller function that returns all teams.
-func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, nameSortOrder string) (dto.TeamsList, *api.ErrorResponse) {
-	if page < 0 {
-		return dto.TeamsList{}, api.ErrorInvalidRequest(fmt.Errorf("p cannot be less than zero, got %v", page))
-	} else if page > 0 && size < 0 {
-		return dto.TeamsList{}, api.ErrorInvalidRequest(fmt.Errorf("cannon have positive p with negative size"))
-	}
-
+func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, sortOrder api.SortOrder) (dto.TeamsList, *api.ErrorResponse) {
 	teams, err := dataBase.GetAllTeams()
 	if err != nil {
 		return dto.TeamsList{}, api.ErrorInternalServer(fmt.Errorf("cannot get teams fron database: %w", err))
@@ -105,10 +99,10 @@ func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.R
 
 	teams = filteredTeams
 
-	if nameSortOrder == "asc" || nameSortOrder == "desc" {
+	if sortOrder == api.AscSortOrder || sortOrder == api.DescSortOrder {
 		slices.SortFunc(teams, func(first, second moira.Team) int {
 			cmpRes := strings.Compare(strings.ToLower(first.Name), strings.ToLower(second.Name))
-			if nameSortOrder == "desc" {
+			if sortOrder == api.DescSortOrder {
 				return cmpRes * -1
 			} else {
 				return cmpRes
@@ -118,7 +112,16 @@ func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.R
 
 	total := int64(len(teams))
 
-	if size >= 0 {
+	if page < 0 || (page > 0 && size < 0) {
+		return dto.TeamsList{
+			List:  []dto.TeamModel{},
+			Page:  &page,
+			Size:  &size,
+			Total: &total,
+		}, nil
+	}
+
+	if page >= 0 && size >= 0 {
 		shift := page * size
 		if shift < int64(len(teams)) {
 			teams = teams[shift:]

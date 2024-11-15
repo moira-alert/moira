@@ -233,12 +233,6 @@ func TestGetAllTeams(t *testing.T) {
 
 		teamModels := dto.NewTeamsList(teams).List
 
-		const (
-			noSortOrder   = ""
-			ascSortOrder  = "asc"
-			descSortOrder = "desc"
-		)
-
 		anyText := regexp.MustCompile(".*")
 
 		var (
@@ -246,18 +240,40 @@ func TestGetAllTeams(t *testing.T) {
 			allTeamsSize int64 = -1
 		)
 
-		Convey("with page < 0 returns error invalid request", func() {
-			response, err := GetAllTeams(dataBase, -1, allTeamsSize, anyText, noSortOrder)
+		Convey("with page < 0 returns empty list", func() {
+			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+			var (
+				page  int64 = -1
+				total       = int64(len(teamModels))
+			)
 
-			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("p cannot be less than zero, got %v", -1)))
-			So(response, ShouldResemble, dto.TeamsList{})
+			response, err := GetAllTeams(dataBase, page, allTeamsSize, anyText, api.NoSortOrder)
+
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TeamsList{
+				List:  []dto.TeamModel{},
+				Page:  &page,
+				Size:  &allTeamsSize,
+				Total: &total,
+			})
 		})
 
-		Convey("with page > 0 and size < 0, returns error invalid request", func() {
-			response, err := GetAllTeams(dataBase, 1, allTeamsSize, anyText, noSortOrder)
+		Convey("with page > 0 and size < 0, returns empty list", func() {
+			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+			var (
+				page  int64 = 1
+				total       = int64(len(teamModels))
+			)
 
-			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("cannon have positive p with negative size")))
-			So(response, ShouldResemble, dto.TeamsList{})
+			response, err := GetAllTeams(dataBase, page, allTeamsSize, anyText, api.NoSortOrder)
+
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TeamsList{
+				List:  []dto.TeamModel{},
+				Page:  &page,
+				Size:  &allTeamsSize,
+				Total: &total,
+			})
 		})
 
 		Convey("when database returns error", func() {
@@ -265,7 +281,7 @@ func TestGetAllTeams(t *testing.T) {
 
 			dataBase.EXPECT().GetAllTeams().Return(nil, dbErr)
 
-			response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, noSortOrder)
+			response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, api.NoSortOrder)
 
 			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get teams fron database: %w", dbErr)))
 			So(response, ShouldResemble, dto.TeamsList{})
@@ -275,7 +291,7 @@ func TestGetAllTeams(t *testing.T) {
 			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
 			total := int64(len(teamModels))
 
-			response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, noSortOrder)
+			response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, api.NoSortOrder)
 
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, dto.TeamsList{
@@ -297,7 +313,7 @@ func TestGetAllTeams(t *testing.T) {
 
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
 
-				response, err := GetAllTeams(dataBase, page0, size, anyText, noSortOrder)
+				response, err := GetAllTeams(dataBase, page0, size, anyText, api.NoSortOrder)
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List:  teamModels[:size],
@@ -308,7 +324,7 @@ func TestGetAllTeams(t *testing.T) {
 
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
 
-				response, err = GetAllTeams(dataBase, page1, size, anyText, noSortOrder)
+				response, err = GetAllTeams(dataBase, page1, size, anyText, api.NoSortOrder)
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List:  teamModels[page1*size : page1*size+size],
@@ -327,7 +343,7 @@ func TestGetAllTeams(t *testing.T) {
 
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
 
-				response, err := GetAllTeams(dataBase, page, size, anyText, noSortOrder)
+				response, err := GetAllTeams(dataBase, page, size, anyText, api.NoSortOrder)
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List:  teamModels[page*size:],
@@ -346,7 +362,7 @@ func TestGetAllTeams(t *testing.T) {
 
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
 
-				response, err := GetAllTeams(dataBase, page, size, anyText, noSortOrder)
+				response, err := GetAllTeams(dataBase, page, size, anyText, api.NoSortOrder)
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List:  []dto.TeamModel{},
@@ -362,7 +378,7 @@ func TestGetAllTeams(t *testing.T) {
 			textRegexp := regexp.MustCompile(".*th-team-id")
 			total := int64(len(teamModels)) - 3
 
-			response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, textRegexp, noSortOrder)
+			response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, textRegexp, api.NoSortOrder)
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, dto.TeamsList{
 				List:  teamModels[3:],
@@ -377,7 +393,7 @@ func TestGetAllTeams(t *testing.T) {
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
 				total := int64(len(teamModels))
 
-				response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, ascSortOrder)
+				response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, api.AscSortOrder)
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List: []dto.TeamModel{
@@ -399,7 +415,7 @@ func TestGetAllTeams(t *testing.T) {
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
 				total := int64(len(teamModels))
 
-				response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, descSortOrder)
+				response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List: []dto.TeamModel{
@@ -427,7 +443,7 @@ func TestGetAllTeams(t *testing.T) {
 				size  int64 = 2
 			)
 
-			response, err := GetAllTeams(dataBase, page, size, textRegexp, descSortOrder)
+			response, err := GetAllTeams(dataBase, page, size, textRegexp, api.DescSortOrder)
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, dto.TeamsList{
 				List: []dto.TeamModel{
