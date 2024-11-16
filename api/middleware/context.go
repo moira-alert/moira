@@ -369,7 +369,7 @@ func SearchTextContext(defaultRegex *regexp.Regexp) func(next http.Handler) http
 			if searchText != "" {
 				searchTextRegex, err = regexp.Compile(searchText)
 				if err != nil {
-					render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("failed to parse searchText template \"%s\": %w", searchText, err))) //nolint
+					render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("failed to parse searchText template '%s': %w", searchText, err))) //nolint
 					return
 				}
 			} else {

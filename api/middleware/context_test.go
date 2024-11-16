@@ -1,9 +1,12 @@
 package middleware
 
 import (
+	"fmt"
+	"github.com/moira-alert/moira/api"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -217,7 +220,7 @@ func TestTargetNameMiddleware(t *testing.T) {
 	})
 }
 
-func TestMetricProviderMiddleware(t *testing.T) {
+func TestMetricContextMiddleware(t *testing.T) {
 	Convey("Check metric provider", t, func() {
 		responseWriter := httptest.NewRecorder()
 		defaultMetric := ".*"
@@ -255,7 +258,7 @@ func TestMetricProviderMiddleware(t *testing.T) {
 	})
 }
 
-func TestStatesProviderMiddleware(t *testing.T) {
+func TestStatesContextMiddleware(t *testing.T) {
 	Convey("Checking states provide", t, func() {
 		responseWriter := httptest.NewRecorder()
 
@@ -292,6 +295,119 @@ func TestStatesProviderMiddleware(t *testing.T) {
 			handler := func(w http.ResponseWriter, r *http.Request) {}
 
 			middlewareFunc := StatesContext()
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, _ := io.ReadAll(response.Body)
+			contents := string(contentBytes)
+
+			So(contents, ShouldEqual, expectedBadRequest)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+	})
+}
+
+func TestSearchTextContext(t *testing.T) {
+	Convey("Checkins search text context", t, func() {
+		responseWriter := httptest.NewRecorder()
+		defaultSearchText := regexp.MustCompile(".*")
+
+		Convey("status ok with correct query parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?searchText=test%5Ctext.*", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := SearchTextContext(defaultSearchText)
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("status ok with empty query parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?searchText=", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := SearchTextContext(defaultSearchText)
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("status bad request with wrong url query parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?searchText%=test", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := SearchTextContext(defaultSearchText)
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, _ := io.ReadAll(response.Body)
+			contents := string(contentBytes)
+
+			So(contents, ShouldEqual, expectedBadRequest)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("status bad request with bad regexp", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?searchText=*", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := SearchTextContext(defaultSearchText)
+			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+			wrappedHandler.ServeHTTP(responseWriter, testRequest)
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, _ := io.ReadAll(response.Body)
+			contents := string(contentBytes)
+
+			So(contents, ShouldEqual, "{\"status\":\"Invalid request\",\"error\":\"failed to parse searchText template '*': error parsing regexp: missing argument to repetition operator: `*`\"}\n")
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+	})
+}
+
+func TestSortOrderContext(t *testing.T) {
+	Convey("Checking sort order context", t, func() {
+		responseWriter := httptest.NewRecorder()
+		defaultSortOrder := api.NoSortOrder
+
+		Convey("with correct query parameter", func() {
+			sortOrders := []api.SortOrder{api.NoSortOrder, api.AscSortOrder, api.DescSortOrder, "some"}
+
+			for i, givenSortOrder := range sortOrders {
+				Convey(fmt.Sprintf("case %d: sord order '%s'", i+1, givenSortOrder), func() {
+					testRequest := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/test?sort=%s", givenSortOrder), nil)
+					handler := func(w http.ResponseWriter, r *http.Request) {}
+
+					middlewareFunc := SortOrderContext(defaultSortOrder)
+					wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
+
+					wrappedHandler.ServeHTTP(responseWriter, testRequest)
+					response := responseWriter.Result()
+					defer response.Body.Close()
+
+					So(response.StatusCode, ShouldEqual, http.StatusOK)
+				})
+			}
+		})
+
+		Convey("status bad request with wrong url query parameter", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/test?sort%=test", nil)
+			handler := func(w http.ResponseWriter, r *http.Request) {}
+
+			middlewareFunc := SortOrderContext(defaultSortOrder)
 			wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 			wrappedHandler.ServeHTTP(responseWriter, testRequest)
