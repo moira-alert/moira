@@ -31,7 +31,7 @@ jobs:
       - run: make validate-spec
 
       - name: Save build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: specfile
           path: docs/swagger.yaml
@@ -53,7 +53,7 @@ jobs:
           name: specfile
           path: docs
           
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
       - run: npm i --location=global swaggerhub-cli
       - run: |
           VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`

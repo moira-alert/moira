@@ -21,7 +21,7 @@ func TestSendEvents(t *testing.T) {
 
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]interface{}{ // redundant, but necessary config
-			"url":          "qwerty",
+			"url":          "https://mattermost.com/",
 			"api_token":    "qwerty",
 			"front_uri":    "qwerty",
 			"insecure_tls": true,

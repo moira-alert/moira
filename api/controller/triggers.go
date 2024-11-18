@@ -35,7 +35,7 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 			return nil, api.ErrorInternalServer(err)
 		}
 		if exists {
-			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID already exists"))
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID (%s) already exists", trigger.ID))
 		}
 	}
 	resp, err := saveTrigger(dataBase, trigger.ToMoiraTrigger(), trigger.ID, timeSeriesNames)

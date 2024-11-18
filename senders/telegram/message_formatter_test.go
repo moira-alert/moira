@@ -1,7 +1,6 @@
 package telegram
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -43,8 +42,6 @@ func TestMessageFormatter_Format(t *testing.T) {
 	}
 
 	expectedFirstLine := "💣 <b>NODATA</b> <a href=\"https://moira.uri/trigger/TriggerID\">Name</a> [tag1][tag2]\n"
-	lenFirstLine := utf8.RuneCountInString(expectedFirstLine) -
-		utf8.RuneCountInString("<b></b><a href=\"https://moira.uri/trigger/TriggerID\"></a>")
 
 	eventStr := "02:40 (GMT+00:00): <code>Metric</code> = 123 (OK to NODATA)\n"
 	lenEventStr := utf8.RuneCountInString(eventStr) - utf8.RuneCountInString("<code></code>") // 60 - 13 = 47
@@ -109,84 +106,180 @@ func TestMessageFormatter_Format(t *testing.T) {
 		})
 
 		Convey("with long messages", func() {
-			msgLimit := albumCaptionMaxCharacters - lenFirstLine
-			halfMsgLimit := msgLimit / 2
-			greaterThanHalf := halfMsgLimit + 100
-			lessThanHalf := halfMsgLimit - 100
+			const (
+				titleWithoutTags = "💣 <b>NODATA</b> <a href=\"https://moira.uri/trigger/TriggerID\">Name</a>"
+			)
 
-			Convey("text size of description > msgLimit / 2", func() {
-				var events moira.NotificationEvents
-				throttled := false
+			titleLen := utf8.RuneCountInString(titleWithoutTags) -
+				utf8.RuneCountInString("<b></b><a href=\"https://moira.uri/trigger/TriggerID\"></a>") + len("\n") // 70 - 57 + 1 = 14
 
-				eventsCount := lessThanHalf / lenEventStr
-				for i := 0; i < eventsCount; i++ {
-					events = append(events, event)
-				}
+			msgLimit := albumCaptionMaxCharacters - titleLen // 1024 - 14 = 1010
+			thirdOfMsgLimit := msgLimit / 3
+			greaterThanThird := thirdOfMsgLimit + 150
+			lessThanThird := thirdOfMsgLimit - 100
 
-				trigger.Desc = strings.Repeat("**ё**ж", greaterThanHalf/2)
+			// see genDescByLimit
+			symbolAtEndOfDescription := ""
+			if thirdOfMsgLimit%2 != 0 {
+				symbolAtEndOfDescription = "i"
+			}
 
-				expected := expectedFirstLine +
-					strings.Repeat("<strong>ё</strong>ж", greaterThanHalf/2) + "\n" +
+			Convey("with tags > msgLimit/3, desc and events < msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(greaterThanThird + 200)
+				trigger.Desc = genDescByLimit(lessThanThird)
+				events := genEventsByLimit(event, lenEventStr, lessThanThird)
+
+				expected := titleWithoutTags +
+					msgformat.DefaultTagsLimiter(trigger.Tags,
+						msgLimit-lessThanThird-len(events)*lenEventStr-len("\n")) + "\n" +
+					strings.Repeat("<strong>ё</strong>ж", lessThanThird/2) + symbolAtEndOfDescription + "\n" +
 					eventsBlockStart + "\n" +
-					strings.Repeat(eventStr, eventsCount) +
-					eventsBlockEnd
+					strings.Repeat(eventStr, len(events)) + eventsBlockEnd
 
-				msg := formatter.Format(getParams(events, trigger, throttled))
+				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
-				So(msg, ShouldEqual, expected)
+				So(actual, ShouldResemble, expected)
+				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
 			})
 
-			Convey("text size of events block > msgLimit / 2", func() {
-				var events moira.NotificationEvents
-				throttled := false
+			Convey("with desc > msgLimit/3, tags and events < msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(lessThanThird)
+				trigger.Desc = genDescByLimit(greaterThanThird + 200)
+				events := genEventsByLimit(event, lenEventStr, lessThanThird)
 
-				eventsCount := greaterThanHalf / lenEventStr
-				for i := 0; i < eventsCount; i++ {
-					events = append(events, event)
-				}
-
-				trigger.Desc = strings.Repeat("**ё**ж", lessThanHalf/2)
-
-				expected := expectedFirstLine +
-					strings.Repeat("<strong>ё</strong>ж", lessThanHalf/2) + "\n" +
-					eventsBlockStart + "\n" +
-					strings.Repeat(eventStr, eventsCount) +
-					eventsBlockEnd
-
-				msg := formatter.Format(getParams(events, trigger, throttled))
-
-				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
-				So(msg, ShouldEqual, expected)
-			})
-
-			Convey("both description and events block have text size > msgLimit/2", func() {
-				var events moira.NotificationEvents
-				throttled := false
-
-				eventsCount := greaterThanHalf / lenEventStr
-				for i := 0; i < eventsCount; i++ {
-					events = append(events, event)
-				}
-
-				trigger.Desc = strings.Repeat("**ё**ж", greaterThanHalf/2)
-
-				eventsShouldBe := halfMsgLimit / lenEventStr
-
-				expected := expectedFirstLine +
+				expected := titleWithoutTags +
+					msgformat.DefaultTagsLimiter(trigger.Tags, lessThanThird) + "\n" +
 					tooLongDescMessage +
 					eventsBlockStart + "\n" +
-					strings.Repeat(eventStr, eventsShouldBe) +
+					strings.Repeat(eventStr, len(events)) + eventsBlockEnd
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+			})
+
+			Convey("with events > msgLimit/3, tags and desc < msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(lessThanThird)
+				trigger.Desc = genDescByLimit(lessThanThird)
+				events := genEventsByLimit(event, lenEventStr, greaterThanThird+200)
+
+				expected := titleWithoutTags +
+					msgformat.DefaultTagsLimiter(trigger.Tags, lessThanThird) + "\n" +
+					strings.Repeat("<strong>ё</strong>ж", lessThanThird/2) + symbolAtEndOfDescription + "\n" +
+					eventsBlockStart + "\n" +
+					strings.Repeat(eventStr, 10) + eventsBlockEnd +
+					"\n...and 4 more events."
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+			})
+
+			Convey("with tags and desc > msgLimit/3, events < msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(greaterThanThird)
+				trigger.Desc = genDescByLimit(greaterThanThird)
+				events := genEventsByLimit(event, lenEventStr, lessThanThird)
+
+				expected := titleWithoutTags +
+					msgformat.DefaultTagsLimiter(trigger.Tags, thirdOfMsgLimit) + "\n" +
+					tooLongDescMessage +
+					eventsBlockStart + "\n" +
+					strings.Repeat(eventStr, len(events)) + eventsBlockEnd
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+			})
+
+			Convey("with tags and events > msgLimit / 3, desc < msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(greaterThanThird)
+				trigger.Desc = genDescByLimit(lessThanThird)
+				events := genEventsByLimit(event, lenEventStr, greaterThanThird)
+
+				expected := titleWithoutTags +
+					msgformat.DefaultTagsLimiter(trigger.Tags, thirdOfMsgLimit) + "\n" +
+					strings.Repeat("<strong>ё</strong>ж", lessThanThird/2) + symbolAtEndOfDescription + "\n" +
+					eventsBlockStart + "\n" +
+					strings.Repeat(eventStr, 8) + eventsBlockEnd +
+					"\n...and 2 more events."
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+			})
+
+			Convey("with desc and events > msgLimit / 3, tags < msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(lessThanThird)
+				trigger.Desc = genDescByLimit(greaterThanThird)
+				events := genEventsByLimit(event, lenEventStr, greaterThanThird)
+
+				expected := titleWithoutTags +
+					msgformat.DefaultTagsLimiter(trigger.Tags, lessThanThird) + "\n" +
+					tooLongDescMessage +
+					eventsBlockStart + "\n" +
+					strings.Repeat(eventStr, 7) + eventsBlockEnd +
+					"\n...and 3 more events."
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				So(actual, ShouldResemble, expected)
+				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+			})
+
+			Convey("with tags, desc, events > msgLimit/3", func() {
+				trigger.Tags = genTagsByLimit(greaterThanThird)
+				trigger.Desc = genDescByLimit(greaterThanThird)
+				events := genEventsByLimit(event, lenEventStr, greaterThanThird)
+
+				expected := titleWithoutTags +
+					msgformat.DefaultTagsLimiter(trigger.Tags, thirdOfMsgLimit) + "\n" +
+					tooLongDescMessage +
+					eventsBlockStart + "\n" +
+					strings.Repeat(eventStr, 6) +
 					eventsBlockEnd +
-					fmt.Sprintf("\n...and %d more events.", len(events)-eventsShouldBe)
+					"\n...and 4 more events."
 
-				msg := formatter.Format(getParams(events, trigger, throttled))
+				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(calcRunesCountWithoutHTML([]rune(msg)), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
-				So(msg, ShouldEqual, expected)
+				So(actual, ShouldResemble, expected)
+				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
 			})
 		})
 	})
+}
+
+func genTagsByLimit(limit int) []string {
+	tagName := "tag1"
+
+	tagsCount := (limit - 1) / (len(tagName) + 2)
+
+	tags := make([]string, 0, tagsCount)
+
+	for i := 0; i < tagsCount; i++ {
+		tags = append(tags, tagName)
+	}
+
+	return tags
+}
+
+func genDescByLimit(limit int) string {
+	str := strings.Repeat("**ё**ж", limit/2)
+	if limit%2 != 0 {
+		str += "i"
+	}
+	return str
+}
+
+func genEventsByLimit(event moira.NotificationEvent, oneEventLineLen int, limit int) moira.NotificationEvents {
+	var events moira.NotificationEvents
+	for i := 0; i < limit/oneEventLineLen; i++ {
+		events = append(events, event)
+	}
+	return events
 }
 
 func getParams(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) msgformat.MessageFormatterParams {
