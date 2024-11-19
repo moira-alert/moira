@@ -48,7 +48,7 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 			return fmt.Errorf("failed to group teams by names: %w", err)
 		}
 
-		teamByUniqueName := transformTeamsByNameMap(teamsByNameMap)
+		teamByUniqueName := transformTeamsByNameMap(logger, teamsByNameMap)
 
 		if len(teamByUniqueName) != len(teamsMap) {
 			return errTeamsCountAndUniqueNamesCountMismatch
@@ -65,6 +65,8 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 		if pipeErr != nil {
 			return pipeErr
 		}
+
+		logger.Info().Msg("\"moira-teams-by-names\" hash successfully filled")
 
 	default:
 		return makeUnknownDBError(database)
@@ -99,13 +101,14 @@ func groupTeamsByNames(logger moira.Logger, teamsMap map[string]string) (map[str
 	return teamsByNameMap, nil
 }
 
-func transformTeamsByNameMap(teamsByNameMap map[string][]teamWithID) map[string]teamWithID {
+func transformTeamsByNameMap(logger moira.Logger, teamsByNameMap map[string][]teamWithID) map[string]teamWithID {
 	teamByUniqueName := make(map[string]teamWithID, len(teamsByNameMap))
 
 	for _, teams := range teamsByNameMap {
 		for i, team := range teams {
 			iStr := strconv.FormatInt(int64(i), 10)
 
+			oldTeamName := team.Name
 			if i > 0 {
 				team.Name += iStr
 			}
@@ -125,6 +128,13 @@ func transformTeamsByNameMap(teamsByNameMap map[string][]teamWithID) map[string]
 					team.Name += "_" + iStr
 				} else {
 					teamByUniqueName[lowercasedTeamName] = team
+					if team.Name != oldTeamName {
+						logger.Info().
+							String("team_id", team.ID).
+							String("old_team_name", oldTeamName).
+							String("new_team_name", team.Name).
+							Msg("Would rename team")
+					}
 					break
 				}
 			}
