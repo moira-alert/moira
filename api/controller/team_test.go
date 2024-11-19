@@ -283,7 +283,7 @@ func TestGetAllTeams(t *testing.T) {
 
 			response, err := GetAllTeams(dataBase, firstPage, allTeamsSize, anyText, api.NoSortOrder)
 
-			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get teams fron database: %w", dbErr)))
+			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get teams from database: %w", dbErr)))
 			So(response, ShouldResemble, dto.TeamsList{})
 		})
 

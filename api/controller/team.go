@@ -87,7 +87,7 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, sortOrder api.SortOrder) (dto.TeamsList, *api.ErrorResponse) {
 	teams, err := dataBase.GetAllTeams()
 	if err != nil {
-		return dto.TeamsList{}, api.ErrorInternalServer(fmt.Errorf("cannot get teams fron database: %w", err))
+		return dto.TeamsList{}, api.ErrorInternalServer(fmt.Errorf("cannot get teams from database: %w", err))
 	}
 
 	filteredTeams := make([]moira.Team, 0)
