@@ -352,6 +352,13 @@ func TestSortOrderContext(t *testing.T) {
 	Convey("Checking sort order context", t, func() {
 		defaultSortOrder := api.NoSortOrder
 
+		Convey("with no query parameter", func() {
+			testRequestOk(
+				"/test",
+				SortOrderContext(defaultSortOrder),
+				nil)
+		})
+
 		Convey("with correct query parameter", func() {
 			sortOrders := []api.SortOrder{api.NoSortOrder, api.AscSortOrder, api.DescSortOrder, "some"}
 

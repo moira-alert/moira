@@ -17,7 +17,7 @@ func teams(router chi.Router) {
 		middleware.AdminOnlyMiddleware(),
 		middleware.Paginate(getAllTeamsDefaultPage, getAllTeamsDefaultSize),
 		middleware.SearchTextContext(regexp.MustCompile(getAllTeamsDefaultRegexTemplate)),
-		middleware.SortOrderContext(api.NoSortOrder),
+		middleware.SortOrderContext(api.AscSortOrder),
 	).Get("/all", getAllTeams)
 	router.Get("/", getAllTeamsForUser)
 	router.Post("/", createTeam)
@@ -147,7 +147,7 @@ func getTeam(writer http.ResponseWriter, request *http.Request) {
 //	@param		size		query		int								false	"Number of items to be displayed on one page. if size = -1 then all teams returned"				default(-1)
 //	@param		p			query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"					default(0)
 //	@param		searchText	query		string							false	"Regular expression which will be applied to team id or team name than filtering teams"			default(.*)
-//	@param		sort		query		string							false	"String to set sort order (by name). On empty - no order, asc - ascending, desc - descending"	default()
+//	@param		sort		query		string							false	"String to set sort order (by name). On empty - no order, asc - ascending, desc - descending"	default(asc)
 //	@success	200			{object}	dto.TeamsList					"Teams fetched successfully"
 //	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"

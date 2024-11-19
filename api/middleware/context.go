@@ -392,14 +392,19 @@ func SortOrderContext(defaultSortOrder api.SortOrder) func(next http.Handler) ht
 				return
 			}
 
-			var sortOrder api.SortOrder
+			queryParamName := "sort"
 
-			sortVal := api.SortOrder(urlValues.Get("sort"))
-			switch sortVal {
-			case api.NoSortOrder, api.AscSortOrder, api.DescSortOrder:
-				sortOrder = sortVal
-			default:
+			var sortOrder api.SortOrder
+			if !urlValues.Has(queryParamName) {
 				sortOrder = defaultSortOrder
+			} else {
+				sortVal := api.SortOrder(urlValues.Get(queryParamName))
+				switch sortVal {
+				case api.NoSortOrder, api.AscSortOrder, api.DescSortOrder:
+					sortOrder = sortVal
+				default:
+					sortOrder = defaultSortOrder
+				}
 			}
 
 			ctx := context.WithValue(request.Context(), sortOrderContextKey, sortOrder)
