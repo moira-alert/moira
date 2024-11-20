@@ -31,7 +31,7 @@ func fillContextForGetAllTeams(ctx context.Context, testPage, testSize int64, se
 	return ctx
 }
 
-func TestGetAllTeams(t *testing.T) {
+func Test_searchAllTeams(t *testing.T) {
 	Convey("Test getting all teams", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -78,7 +78,7 @@ func TestGetAllTeams(t *testing.T) {
 			expectedDTO.Size = &defaultTestSize
 			expectedDTO.Total = &total
 
-			getAllTeams(responseWriter, testRequest)
+			searchAllTeams(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
@@ -121,7 +121,7 @@ func TestGetAllTeams(t *testing.T) {
 				ErrorText:  expectedErrResponseFromController.ErrorText,
 			}
 
-			getAllTeams(responseWriter, testRequest)
+			searchAllTeams(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()

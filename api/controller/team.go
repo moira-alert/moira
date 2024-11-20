@@ -83,8 +83,8 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 	return teamModel, nil
 }
 
-// GetAllTeams is a controller function that returns all teams.
-func GetAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, sortOrder api.SortOrder) (dto.TeamsList, *api.ErrorResponse) {
+// SearchAllTeams is a controller function that returns all teams.
+func SearchAllTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, sortOrder api.SortOrder) (dto.TeamsList, *api.ErrorResponse) {
 	teams, err := dataBase.GetAllTeams()
 	if err != nil {
 		return dto.TeamsList{}, api.ErrorInternalServer(fmt.Errorf("cannot get teams from database: %w", err))
