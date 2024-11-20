@@ -22,7 +22,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func fillContextForGetAllTeams(ctx context.Context, testPage, testSize int64, searchText *regexp.Regexp, sort api.SortOrder) context.Context {
+func fillContextForTestSearchTeams(ctx context.Context, testPage, testSize int64, searchText *regexp.Regexp, sort api.SortOrder) context.Context {
 	ctx = middleware.SetContextValueForTest(ctx, "page", testPage)
 	ctx = middleware.SetContextValueForTest(ctx, "size", testSize)
 	ctx = middleware.SetContextValueForTest(ctx, "searchText", searchText)
@@ -31,8 +31,8 @@ func fillContextForGetAllTeams(ctx context.Context, testPage, testSize int64, se
 	return ctx
 }
 
-func Test_searchAllTeams(t *testing.T) {
-	Convey("Test getting all teams", t, func() {
+func Test_searchTeams(t *testing.T) {
+	Convey("Test searching teams", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		responseWriter := httptest.NewRecorder()
@@ -63,7 +63,7 @@ func Test_searchAllTeams(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/api/teams/all", nil)
 
 			testRequest = testRequest.WithContext(
-				fillContextForGetAllTeams(
+				fillContextForTestSearchTeams(
 					testRequest.Context(),
 					defaultTestPage,
 					defaultTestSize,
@@ -78,7 +78,7 @@ func Test_searchAllTeams(t *testing.T) {
 			expectedDTO.Size = &defaultTestSize
 			expectedDTO.Total = &total
 
-			searchAllTeams(responseWriter, testRequest)
+			searchTeams(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
@@ -102,7 +102,7 @@ func Test_searchAllTeams(t *testing.T) {
 			testRequest := httptest.NewRequest(http.MethodGet, "/api/teams/all", nil)
 
 			testRequest = testRequest.WithContext(
-				fillContextForGetAllTeams(
+				fillContextForTestSearchTeams(
 					testRequest.Context(),
 					defaultTestPage,
 					defaultTestSize,
@@ -121,7 +121,7 @@ func Test_searchAllTeams(t *testing.T) {
 				ErrorText:  expectedErrResponseFromController.ErrorText,
 			}
 
-			searchAllTeams(responseWriter, testRequest)
+			searchTeams(responseWriter, testRequest)
 
 			response := responseWriter.Result()
 			defer response.Body.Close()

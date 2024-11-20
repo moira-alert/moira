@@ -18,7 +18,7 @@ func teams(router chi.Router) {
 		middleware.Paginate(getAllTeamsDefaultPage, getAllTeamsDefaultSize),
 		middleware.SearchTextContext(regexp.MustCompile(getAllTeamsDefaultRegexTemplate)),
 		middleware.SortOrderContext(api.AscSortOrder),
-	).Get("/all", searchAllTeams)
+	).Get("/all", searchTeams)
 	router.Get("/", getAllTeamsForUser)
 	router.Post("/", createTeam)
 	router.Route("/{teamId}", func(router chi.Router) {
@@ -154,13 +154,13 @@ func getTeam(writer http.ResponseWriter, request *http.Request) {
 //	@failure	422			{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/teams/all [get]
-func searchAllTeams(writer http.ResponseWriter, request *http.Request) {
+func searchTeams(writer http.ResponseWriter, request *http.Request) {
 	page := middleware.GetPage(request)
 	size := middleware.GetSize(request)
 	textRegex := middleware.GetSearchText(request)
 	sort := middleware.GetSortOrder(request)
 
-	response, err := controller.SearchAllTeams(database, page, size, textRegex, sort)
+	response, err := controller.SearchTeams(database, page, size, textRegex, sort)
 	if err != nil {
 		render.Render(writer, request, err) //nolint:errcheck
 		return
