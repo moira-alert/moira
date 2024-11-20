@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	goredis "github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -14,12 +15,23 @@ import (
 )
 
 const (
-	teamsKey        = "moira-teams"
-	teamsByNamesKey = "moira-teams-by-names"
+	teamsKey                 = "moira-teams"
+	teamsByNamesKey          = "moira-teams-by-names"
+	delayBeforeRenamingTeams = time.Second * 10
 )
 
 var errTeamsCountAndUniqueNamesCountMismatch = errors.New(
 	"count of teams does not match count of unique names after transformation")
+
+type renameInfo struct {
+	oldTeamName string
+	newTeamName string
+	teamID      string
+}
+
+func (info *renameInfo) String() string {
+	return fmt.Sprintf("%s: '%s' -> '%s'", info.teamID, info.oldTeamName, info.newTeamName)
+}
 
 // fillTeamNamesHash does the following
 //  1. Get all teams from DB.
@@ -48,11 +60,33 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 			return fmt.Errorf("failed to group teams by names: %w", err)
 		}
 
-		teamByUniqueName := transformTeamsByNameMap(logger, teamsByNameMap)
+		teamByUniqueName, renamingInfo := transformTeamsByNameMap(teamsByNameMap)
 
 		if len(teamByUniqueName) != len(teamsMap) {
 			return errTeamsCountAndUniqueNamesCountMismatch
 		}
+
+		builder := strings.Builder{}
+		for i, rename := range renamingInfo {
+			builder.WriteString(rename.String())
+			if i != len(renamingInfo)-1 {
+				builder.WriteString(", ")
+			}
+		}
+
+		logger.Info().
+			String("rename_info", builder.String()).
+			Msg("Would rename teams")
+
+		logger.Info().
+			Int("teams_renamed_count", len(renamingInfo)).
+			String("delay", delayBeforeRenamingTeams.String()).
+			Msg("Teams will be renamed after delay")
+
+		logger.Info().Msg("Press Ctrl+C to stop")
+		time.Sleep(delayBeforeRenamingTeams)
+
+		logger.Info().Msg("Start renaming teams and filling \"moira-teams-by-names\" hash")
 
 		client := db.Client()
 		ctx := db.Context()
@@ -101,8 +135,9 @@ func groupTeamsByNames(logger moira.Logger, teamsMap map[string]string) (map[str
 	return teamsByNameMap, nil
 }
 
-func transformTeamsByNameMap(logger moira.Logger, teamsByNameMap map[string][]teamWithID) map[string]teamWithID {
+func transformTeamsByNameMap(teamsByNameMap map[string][]teamWithID) (map[string]teamWithID, []renameInfo) {
 	teamByUniqueName := make(map[string]teamWithID, len(teamsByNameMap))
+	renamingTeams := make([]renameInfo, 0)
 
 	for _, teams := range teamsByNameMap {
 		for i, team := range teams {
@@ -129,11 +164,11 @@ func transformTeamsByNameMap(logger moira.Logger, teamsByNameMap map[string][]te
 				} else {
 					teamByUniqueName[lowercasedTeamName] = team
 					if team.Name != oldTeamName {
-						logger.Info().
-							String("team_id", team.ID).
-							String("old_team_name", oldTeamName).
-							String("new_team_name", team.Name).
-							Msg("Would rename team")
+						renamingTeams = append(renamingTeams, renameInfo{
+							teamID:      team.ID,
+							oldTeamName: oldTeamName,
+							newTeamName: team.Name,
+						})
 					}
 					break
 				}
@@ -141,7 +176,7 @@ func transformTeamsByNameMap(logger moira.Logger, teamsByNameMap map[string][]te
 		}
 	}
 
-	return teamByUniqueName
+	return teamByUniqueName, renamingTeams
 }
 
 func updateTeamsInPipe(ctx context.Context, logger moira.Logger, pipe goredis.Pipeliner, teamsByUniqueName map[string]teamWithID) error {
