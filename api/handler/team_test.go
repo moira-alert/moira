@@ -74,9 +74,9 @@ func Test_searchTeams(t *testing.T) {
 			total := int64(len(testTeams))
 
 			expectedDTO := dto.NewTeamsList(testTeams)
-			expectedDTO.Page = &defaultTestPage
-			expectedDTO.Size = &defaultTestSize
-			expectedDTO.Total = &total
+			expectedDTO.Page = defaultTestPage
+			expectedDTO.Size = defaultTestSize
+			expectedDTO.Total = total
 
 			searchTeams(responseWriter, testRequest)
 

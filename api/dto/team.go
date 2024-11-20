@@ -110,9 +110,9 @@ func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
 // TeamsList is a structure that represents a list of existing teams in db.
 type TeamsList struct {
 	List  []TeamModel `json:"list"`
-	Page  *int64      `json:"page,omitempty" format:"int64" extensions:"x-nullable"`
-	Size  *int64      `json:"size,omitempty" format:"int64" extensions:"x-nullable"`
-	Total *int64      `json:"total,omitempty" format:"int64" extensions:"x-nullable"`
+	Page  int64       `json:"page" example:"0" format:"int64"`
+	Size  int64       `json:"size" example:"100" format:"int64"`
+	Total int64       `json:"total" example:"10" format:"int64"`
 }
 
 // Render is a function that implements chi Renderer interface for TeamsList.

@@ -115,9 +115,9 @@ func SearchTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.R
 	if page < 0 || (page > 0 && size < 0) {
 		return dto.TeamsList{
 			List:  []dto.TeamModel{},
-			Page:  &page,
-			Size:  &size,
-			Total: &total,
+			Page:  page,
+			Size:  size,
+			Total: total,
 		}, nil
 	}
 
@@ -135,9 +135,9 @@ func SearchTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.R
 	}
 
 	model := dto.NewTeamsList(teams)
-	model.Page = &page
-	model.Size = &size
-	model.Total = &total
+	model.Page = page
+	model.Size = size
+	model.Total = total
 
 	return model, nil
 }

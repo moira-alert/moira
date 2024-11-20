@@ -252,9 +252,9 @@ func TestSearchTeams(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, dto.TeamsList{
 				List:  []dto.TeamModel{},
-				Page:  &page,
-				Size:  &allTeamsSize,
-				Total: &total,
+				Page:  page,
+				Size:  allTeamsSize,
+				Total: total,
 			})
 		})
 
@@ -270,9 +270,9 @@ func TestSearchTeams(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, dto.TeamsList{
 				List:  []dto.TeamModel{},
-				Page:  &page,
-				Size:  &allTeamsSize,
-				Total: &total,
+				Page:  page,
+				Size:  allTeamsSize,
+				Total: total,
 			})
 		})
 
@@ -296,9 +296,9 @@ func TestSearchTeams(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, dto.TeamsList{
 				List:  teamModels,
-				Page:  &firstPage,
-				Size:  &allTeamsSize,
-				Total: &total,
+				Page:  firstPage,
+				Size:  allTeamsSize,
+				Total: total,
 			})
 		})
 
@@ -317,9 +317,9 @@ func TestSearchTeams(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List:  teamModels[:size],
-					Page:  &page0,
-					Size:  &size,
-					Total: &total,
+					Page:  page0,
+					Size:  size,
+					Total: total,
 				})
 
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
@@ -328,9 +328,9 @@ func TestSearchTeams(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List:  teamModels[page1*size : page1*size+size],
-					Page:  &page1,
-					Size:  &size,
-					Total: &total,
+					Page:  page1,
+					Size:  size,
+					Total: total,
 				})
 			})
 
@@ -347,9 +347,9 @@ func TestSearchTeams(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List:  teamModels[page*size:],
-					Page:  &page,
-					Size:  &size,
-					Total: &total,
+					Page:  page,
+					Size:  size,
+					Total: total,
 				})
 			})
 
@@ -366,9 +366,9 @@ func TestSearchTeams(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(response, ShouldResemble, dto.TeamsList{
 					List:  []dto.TeamModel{},
-					Page:  &page,
-					Size:  &size,
-					Total: &total,
+					Page:  page,
+					Size:  size,
+					Total: total,
 				})
 			})
 		})
@@ -382,9 +382,9 @@ func TestSearchTeams(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, dto.TeamsList{
 				List:  teamModels[3:],
-				Page:  &firstPage,
-				Size:  &allTeamsSize,
-				Total: &total,
+				Page:  firstPage,
+				Size:  allTeamsSize,
+				Total: total,
 			})
 		})
 
@@ -405,9 +405,9 @@ func TestSearchTeams(t *testing.T) {
 						teamModels[5],
 						teamModels[2],
 					},
-					Page:  &firstPage,
-					Size:  &allTeamsSize,
-					Total: &total,
+					Page:  firstPage,
+					Size:  allTeamsSize,
+					Total: total,
 				})
 			})
 
@@ -427,9 +427,9 @@ func TestSearchTeams(t *testing.T) {
 						teamModels[0],
 						teamModels[4],
 					},
-					Page:  &firstPage,
-					Size:  &allTeamsSize,
-					Total: &total,
+					Page:  firstPage,
+					Size:  allTeamsSize,
+					Total: total,
 				})
 			})
 		})
@@ -450,9 +450,9 @@ func TestSearchTeams(t *testing.T) {
 					teamModels[3],
 					teamModels[4],
 				},
-				Page:  &page,
-				Size:  &size,
-				Total: &total,
+				Page:  page,
+				Size:  size,
+				Total: total,
 			})
 		})
 	})
