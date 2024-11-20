@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/moira-alert/moira"
@@ -145,5 +146,82 @@ func TestTeamStoring(t *testing.T) {
 		actualUsers, err = dataBase.GetTeamUsers(teamToDeleteID)
 		So(err, ShouldBeNil)
 		So(actualUsers, ShouldHaveLength, 0)
+	})
+}
+
+func TestGetAllTeams(t *testing.T) {
+	Convey("Test getting all teams", t, func() {
+		logger, _ := logging.GetLogger("dataBase")
+		dataBase := NewTestDatabase(logger)
+		dataBase.Flush()
+		defer dataBase.Flush()
+
+		Convey("with empty db returns no err and empty teams slice", func() {
+			teams, err := dataBase.GetAllTeams()
+			So(err, ShouldBeNil)
+			So(teams, ShouldHaveLength, 0)
+		})
+
+		testTeams := []moira.Team{
+			{
+				ID:   "teamID_1",
+				Name: "First team",
+			},
+			{
+				ID:   "teamID_2",
+				Name: "Second team",
+			},
+			{
+				ID:   "teamID_3",
+				Name: "Third team",
+			},
+			{
+				ID:   "teamID_4",
+				Name: "Fourth team",
+			},
+			{
+				ID:   "teamID_5",
+				Name: "Fifth team",
+			},
+		}
+
+		Convey("with some teams returns all", func() {
+			type expectedTeamCase struct {
+				moira.Team
+				count int
+			}
+
+			mapOfExpectedTeams := make(map[string]expectedTeamCase)
+
+			for _, team := range testTeams {
+				mapOfExpectedTeams[team.ID] = expectedTeamCase{
+					Team:  team,
+					count: 0,
+				}
+
+				err := dataBase.SaveTeam(team.ID, team)
+				So(err, ShouldBeNil)
+			}
+
+			gotTeams, err := dataBase.GetAllTeams()
+			So(err, ShouldBeNil)
+			So(gotTeams, ShouldHaveLength, len(mapOfExpectedTeams))
+
+			Convey("check equality of teams", func() {
+				for _, team := range gotTeams {
+					Convey(fmt.Sprintf("for team with id: %s", team.ID), func() {
+						expectedTeam, exists := mapOfExpectedTeams[team.ID]
+						So(exists, ShouldBeTrue)
+						So(team, ShouldResemble, expectedTeam.Team)
+
+						if exists {
+							expectedTeam.count += 1
+							mapOfExpectedTeams[team.ID] = expectedTeam
+							So(expectedTeam.count, ShouldEqual, 1)
+						}
+					})
+				}
+			})
+		})
 	})
 }

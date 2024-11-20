@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -43,7 +44,10 @@ var (
 	metricContextKey     ContextKey = "metric"
 	statesContextKey     ContextKey = "states"
 	limitsContextKey     ContextKey = "limits"
-	anonymousUser                   = "anonymous"
+	searchTextContextKey ContextKey = "searchText"
+	sortOrderContextKey  ContextKey = "sort"
+
+	anonymousUser = "anonymous"
 )
 
 // GetDatabase gets moira.Database realization from request context.
@@ -185,4 +189,14 @@ func GetStates(request *http.Request) map[string]struct{} {
 // GetLimits returns configured limits.
 func GetLimits(request *http.Request) api.LimitsConfig {
 	return request.Context().Value(limitsContextKey).(api.LimitsConfig)
+}
+
+// GetSearchText returns search text regexp.
+func GetSearchText(request *http.Request) *regexp.Regexp {
+	return request.Context().Value(searchTextContextKey).(*regexp.Regexp)
+}
+
+// GetSortOrder returns api.SortOrder.
+func GetSortOrder(request *http.Request) api.SortOrder {
+	return request.Context().Value(sortOrderContextKey).(api.SortOrder)
 }

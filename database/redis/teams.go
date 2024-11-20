@@ -23,6 +23,14 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 	return nil
 }
 
+func (connector *DbConnector) GetAllTeams() ([]moira.Team, error) {
+	c := *connector.client
+
+	response := c.HGetAll(connector.context, teamsKey)
+
+	return reply.UnmarshalAllTeams(response)
+}
+
 // GetTeam retrieves team from redis by it's id.
 func (connector *DbConnector) GetTeam(teamID string) (moira.Team, error) {
 	c := *connector.client

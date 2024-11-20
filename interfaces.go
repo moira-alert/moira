@@ -143,6 +143,7 @@ type Database interface {
 	// Teams management
 	SaveTeam(teamID string, team Team) error
 	GetTeam(teamID string) (Team, error)
+	GetAllTeams() ([]Team, error)
 	SaveTeamsAndUsers(teamID string, users []string, usersTeams map[string][]string) error
 	GetUserTeams(userID string) ([]string, error)
 	GetTeamUsers(teamID string) ([]string, error)
