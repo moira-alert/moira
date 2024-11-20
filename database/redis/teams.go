@@ -27,7 +27,7 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 		return fmt.Errorf("failed to get team: %w", err)
 	}
 
-	for i := 0; i < teamSaveAttempts; i++ {
+	for range teamSaveAttempts {
 		// need to use watch here because if team name is updated
 		// we also need to change name in moira-teams-names set
 		err = c.Watch(
