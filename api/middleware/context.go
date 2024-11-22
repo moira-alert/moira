@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -347,6 +348,66 @@ func LimitsContext(limit api.LimitsConfig) func(next http.Handler) http.Handler 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ctx := context.WithValue(request.Context(), limitsContextKey, limit)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// SearchTextContext compiles and puts search text regex to request context.
+func SearchTextContext(defaultRegex *regexp.Regexp) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			var searchTextRegex *regexp.Regexp
+
+			searchText := urlValues.Get("searchText")
+			if searchText != "" {
+				searchTextRegex, err = regexp.Compile(searchText)
+				if err != nil {
+					render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("failed to parse searchText template '%s': %w", searchText, err))) //nolint
+					return
+				}
+			} else {
+				searchTextRegex = defaultRegex
+			}
+
+			ctx := context.WithValue(request.Context(), searchTextContextKey, searchTextRegex)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// SortOrderContext puts sort order to request context.
+func SortOrderContext(defaultSortOrder api.SortOrder) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			queryParamName := "sort"
+
+			var sortOrder api.SortOrder
+			if !urlValues.Has(queryParamName) {
+				sortOrder = defaultSortOrder
+			} else {
+				sortVal := api.SortOrder(urlValues.Get(queryParamName))
+				switch sortVal {
+				case api.NoSortOrder, api.AscSortOrder, api.DescSortOrder:
+					sortOrder = sortVal
+				default:
+					sortOrder = defaultSortOrder
+				}
+			}
+
+			ctx := context.WithValue(request.Context(), sortOrderContextKey, sortOrder)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}

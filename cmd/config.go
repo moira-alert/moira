@@ -48,6 +48,10 @@ type RedisConfig struct {
 	WriteTimeout string `yaml:"write_timeout"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
+	// Minimum backoff between retries. Used to calculate exponential backoff. Default value is 0
+	MinRetryBackoff string `yaml:"min_retry_backoff"`
+	// Maximum backoff between retries. Used to calculate exponential backoff. Default value is 0
+	MaxRetryBackoff string `yaml:"max_retry_backoff"`
 	// Enables read-only commands on slave nodes.
 	ReadOnly bool `yaml:"read_only"`
 	// Allows routing read-only commands to the **closest** master or slave node.
@@ -68,6 +72,8 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 		SentinelUsername: config.SentinelUsername,
 		SentinelPassword: config.SentinelPassword,
 		MaxRetries:       config.MaxRetries,
+		MinRetryBackoff:  to.Duration(config.MinRetryBackoff),
+		MaxRetryBackoff:  to.Duration(config.MaxRetryBackoff),
 		MetricsTTL:       to.Duration(config.MetricsTTL),
 		DialTimeout:      to.Duration(config.DialTimeout),
 		ReadTimeout:      to.Duration(config.ReadTimeout),

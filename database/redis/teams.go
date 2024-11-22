@@ -27,7 +27,7 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 		return fmt.Errorf("failed to get team: %w", err)
 	}
 
-	for i := 0; i < teamSaveAttempts; i++ {
+	for range teamSaveAttempts {
 		// need to use watch here because if team name is updated
 		// we also need to change name in moira-teams-names set
 		err = c.Watch(
@@ -111,6 +111,14 @@ func (connector *DbConnector) getTeamIDByNameInTx(tx *redis.Tx, teamName string)
 	}
 
 	return teamID, nil
+}
+
+func (connector *DbConnector) GetAllTeams() ([]moira.Team, error) {
+	c := *connector.client
+
+	response := c.HGetAll(connector.context, teamsKey)
+
+	return reply.UnmarshalAllTeams(response)
 }
 
 // GetTeam retrieves team from redis by it's id.
