@@ -100,12 +100,41 @@ func (TeamMembers) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// TeamSettings is a structure that contains info about team: contacts and subscriptions.
 type TeamSettings struct {
 	TeamID        string                   `json:"team_id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
 	Contacts      []moira.ContactData      `json:"contacts"`
 	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
 }
 
+// Render is a function that implements chi Renderer interface for TeamSettings.
 func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+// TeamsList is a structure that represents a list of existing teams in db.
+type TeamsList struct {
+	List  []TeamModel `json:"list"`
+	Page  int64       `json:"page" example:"0" format:"int64"`
+	Size  int64       `json:"size" example:"100" format:"int64"`
+	Total int64       `json:"total" example:"10" format:"int64"`
+}
+
+// Render is a function that implements chi Renderer interface for TeamsList.
+func (TeamsList) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+// NewTeamsList constructs TeamsList out of []moira.Team.
+// TeamsList.Page, TeamsList.Size and TeamsList.Total are not filled.
+func NewTeamsList(teams []moira.Team) TeamsList {
+	models := make([]TeamModel, 0, len(teams))
+
+	for _, team := range teams {
+		models = append(models, NewTeamModel(team))
+	}
+
+	return TeamsList{
+		List: models,
+	}
 }

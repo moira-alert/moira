@@ -4,20 +4,27 @@ import "time"
 
 // DatabaseConfig - Redis database connection config.
 type DatabaseConfig struct {
+	Addrs []string
+
+	Username string
+	Password string
+
 	MasterName       string
-	Addrs            []string
-	Username         string
-	Password         string
 	SentinelPassword string
 	SentinelUsername string
-	MetricsTTL       time.Duration
-	DialTimeout      time.Duration
-	ReadTimeout      time.Duration
-	WriteTimeout     time.Duration
-	MaxRetries       int
-	ReadOnly         bool
-	RouteByLatency   bool
-	RouteRandomly    bool
+
+	MetricsTTL   time.Duration
+	DialTimeout  time.Duration
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+
+	MaxRetries      int
+	MinRetryBackoff time.Duration
+	MaxRetryBackoff time.Duration
+
+	ReadOnly       bool
+	RouteByLatency bool
+	RouteRandomly  bool
 }
 
 type NotificationHistoryConfig struct {

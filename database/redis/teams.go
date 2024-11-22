@@ -113,6 +113,14 @@ func (connector *DbConnector) getTeamIDByNameInTx(tx *redis.Tx, teamName string)
 	return teamID, nil
 }
 
+func (connector *DbConnector) GetAllTeams() ([]moira.Team, error) {
+	c := *connector.client
+
+	response := c.HGetAll(connector.context, teamsKey)
+
+	return reply.UnmarshalAllTeams(response)
+}
+
 // GetTeam retrieves team from redis by it's id.
 func (connector *DbConnector) GetTeam(teamID string) (moira.Team, error) {
 	c := *connector.client

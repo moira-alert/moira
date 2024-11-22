@@ -3,6 +3,8 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/go-redis/redis/v8"
@@ -84,6 +86,65 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 
 	teamModel := dto.NewTeamModel(team)
 	return teamModel, nil
+}
+
+// SearchTeams is a controller function that returns all teams.
+func SearchTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, sortOrder api.SortOrder) (dto.TeamsList, *api.ErrorResponse) {
+	teams, err := dataBase.GetAllTeams()
+	if err != nil {
+		return dto.TeamsList{}, api.ErrorInternalServer(fmt.Errorf("cannot get teams from database: %w", err))
+	}
+
+	filteredTeams := make([]moira.Team, 0)
+	for _, team := range teams {
+		if textRegexp.MatchString(team.Name) || textRegexp.MatchString(team.ID) {
+			filteredTeams = append(filteredTeams, team)
+		}
+	}
+
+	teams = filteredTeams
+
+	if sortOrder == api.AscSortOrder || sortOrder == api.DescSortOrder {
+		slices.SortFunc(teams, func(first, second moira.Team) int {
+			cmpRes := strings.Compare(strings.ToLower(first.Name), strings.ToLower(second.Name))
+			if sortOrder == api.DescSortOrder {
+				return cmpRes * -1
+			} else {
+				return cmpRes
+			}
+		})
+	}
+
+	total := int64(len(teams))
+
+	if page < 0 || (page > 0 && size < 0) {
+		return dto.TeamsList{
+			List:  []dto.TeamModel{},
+			Page:  page,
+			Size:  size,
+			Total: total,
+		}, nil
+	}
+
+	if page >= 0 && size >= 0 {
+		shift := page * size
+		if shift < int64(len(teams)) {
+			teams = teams[shift:]
+		} else {
+			teams = []moira.Team{}
+		}
+
+		if size <= int64(len(teams)) {
+			teams = teams[:size]
+		}
+	}
+
+	model := dto.NewTeamsList(teams)
+	model.Page = page
+	model.Size = size
+	model.Total = total
+
+	return model, nil
 }
 
 // GetUserTeams is a controller function that returns a teams in which user is a member bu user ID.
