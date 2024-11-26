@@ -88,6 +88,15 @@ func Test_webConfig_getDefault(t *testing.T) {
 			API: apiConfig{
 				Listen:     ":8081",
 				EnableCORS: false,
+				Limits: LimitsConfig{
+					Trigger: TriggerLimitsConfig{
+						MaxNameSize: api.DefaultTriggerNameMaxSize,
+					},
+					Team: TeamLimitsConfig{
+						MaxNameSize:        api.DefaultTeamNameMaxSize,
+						MaxDescriptionSize: api.DefaultTeamDescriptionMaxSize,
+					},
+				},
 			},
 			Web: webConfig{
 				RemoteAllowed: false,
@@ -246,5 +255,40 @@ func Test_webConfig_getSettings(t *testing.T) {
 				},
 			},
 		})
+	})
+}
+
+func Test_webConfig_validate(t *testing.T) {
+	Convey("With empty web config", t, func() {
+		config := webConfig{}
+
+		err := config.validate()
+		So(err, ShouldBeNil)
+	})
+
+	Convey("With invalid contact template pattern", t, func() {
+		config := webConfig{
+			ContactsTemplate: []webContact{
+				{
+					ValidationRegex: "**",
+				},
+			},
+		}
+
+		err := config.validate()
+		So(err, ShouldNotBeNil)
+	})
+
+	Convey("With valid contact template pattern", t, func() {
+		config := webConfig{
+			ContactsTemplate: []webContact{
+				{
+					ValidationRegex: ".*",
+				},
+			},
+		}
+
+		err := config.validate()
+		So(err, ShouldBeNil)
 	})
 }

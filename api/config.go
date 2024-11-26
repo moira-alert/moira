@@ -38,6 +38,7 @@ type Config struct {
 	MetricsTTL    map[moira.ClusterKey]time.Duration
 	Flags         FeatureFlags
 	Authorization Authorization
+	Limits        LimitsConfig
 }
 
 // WebConfig is container for web ui configuration parameters.
@@ -59,4 +60,49 @@ type MetricSourceCluster struct {
 
 func (WebConfig) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+const (
+	// DefaultTriggerNameMaxSize which will be used while validating dto.Trigger.
+	DefaultTriggerNameMaxSize = 200
+)
+
+// LimitsConfig contains limits for some entities.
+type LimitsConfig struct {
+	// Trigger contains limits for triggers.
+	Trigger TriggerLimits
+	// Trigger contains limits for teams.
+	Team TeamLimits
+}
+
+// TriggerLimits contains all limits applied for triggers.
+type TriggerLimits struct {
+	// MaxNameSize is the amount of characters allowed in trigger name.
+	MaxNameSize int
+}
+
+// GetTestLimitsConfig is used for testing.
+func GetTestLimitsConfig() LimitsConfig {
+	return LimitsConfig{
+		Trigger: TriggerLimits{
+			MaxNameSize: DefaultTriggerNameMaxSize,
+		},
+		Team: TeamLimits{
+			MaxNameSize:        DefaultTeamNameMaxSize,
+			MaxDescriptionSize: DefaultTeamDescriptionMaxSize,
+		},
+	}
+}
+
+const (
+	DefaultTeamNameMaxSize        = 100
+	DefaultTeamDescriptionMaxSize = 1000
+)
+
+// TeamLimits contains all limits applied for triggers.
+type TeamLimits struct {
+	// MaxNameSize is the amount of characters allowed in team name.
+	MaxNameSize int
+	// MaxNameSize is the amount of characters allowed in team description.
+	MaxDescriptionSize int
 }

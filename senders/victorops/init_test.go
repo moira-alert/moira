@@ -1,10 +1,11 @@
 package victorops
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/victorops/api"
 	"go.uber.org/mock/gomock"
@@ -25,9 +26,12 @@ func TestInit(t *testing.T) {
 		sender := Sender{ImageStores: map[string]moira.ImageStore{
 			"s3": imageStore,
 		}}
-		Convey("Empty map", func() {
+
+		validatorErr := validator.ValidationErrors{}
+
+		Convey("With empty routing url", func() {
 			err := sender.Init(map[string]interface{}{}, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("cannot read the routing url from the yaml config"))
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{
 				ImageStores: map[string]moira.ImageStore{
 					"s3": imageStore,

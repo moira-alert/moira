@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source/retries"
 	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira/image_store/s3"
@@ -47,6 +48,10 @@ type RedisConfig struct {
 	WriteTimeout string `yaml:"write_timeout"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
+	// Minimum backoff between retries. Used to calculate exponential backoff. Default value is 0
+	MinRetryBackoff string `yaml:"min_retry_backoff"`
+	// Maximum backoff between retries. Used to calculate exponential backoff. Default value is 0
+	MaxRetryBackoff string `yaml:"max_retry_backoff"`
 	// Enables read-only commands on slave nodes.
 	ReadOnly bool `yaml:"read_only"`
 	// Allows routing read-only commands to the **closest** master or slave node.
@@ -60,18 +65,22 @@ type RedisConfig struct {
 // GetSettings returns redis config parsed from moira config files.
 func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 	return redis.DatabaseConfig{
-		MasterName:     config.MasterName,
-		Addrs:          strings.Split(config.Addrs, ","),
-		Username:       config.Username,
-		Password:       config.Password,
-		MaxRetries:     config.MaxRetries,
-		MetricsTTL:     to.Duration(config.MetricsTTL),
-		DialTimeout:    to.Duration(config.DialTimeout),
-		ReadTimeout:    to.Duration(config.ReadTimeout),
-		WriteTimeout:   to.Duration(config.WriteTimeout),
-		ReadOnly:       config.ReadOnly,
-		RouteByLatency: config.RouteByLatency,
-		RouteRandomly:  config.RouteRandomly,
+		MasterName:       config.MasterName,
+		Addrs:            strings.Split(config.Addrs, ","),
+		Username:         config.Username,
+		Password:         config.Password,
+		SentinelUsername: config.SentinelUsername,
+		SentinelPassword: config.SentinelPassword,
+		MaxRetries:       config.MaxRetries,
+		MinRetryBackoff:  to.Duration(config.MinRetryBackoff),
+		MaxRetryBackoff:  to.Duration(config.MaxRetryBackoff),
+		MetricsTTL:       to.Duration(config.MetricsTTL),
+		DialTimeout:      to.Duration(config.DialTimeout),
+		ReadTimeout:      to.Duration(config.ReadTimeout),
+		WriteTimeout:     to.Duration(config.WriteTimeout),
+		ReadOnly:         config.ReadOnly,
+		RouteByLatency:   config.RouteByLatency,
+		RouteRandomly:    config.RouteRandomly,
 	}
 }
 
@@ -228,15 +237,54 @@ type remoteCommon interface {
 	getRemoteCommon() *RemoteCommonConfig
 }
 
+// RetriesConfig is a settings for retry policy when performing requests to remote sources.
+// Stop retrying when ONE of the following conditions is satisfied:
+//   - Time passed since first try is greater than MaxElapsedTime;
+//   - Already MaxRetriesCount done.
+type RetriesConfig struct {
+	// InitialInterval between requests.
+	InitialInterval string `yaml:"initial_interval"`
+	// RandomizationFactor is used in exponential backoff to add some randomization
+	// when calculating next interval between requests.
+	// It will be used in multiplication like:
+	//	RandomizedInterval = RetryInterval * (random value in range [1 - RandomizationFactor, 1 + RandomizationFactor])
+	RandomizationFactor float64 `yaml:"randomization_factor"`
+	// Each new RetryInterval will be multiplied on Multiplier.
+	Multiplier float64 `yaml:"multiplier"`
+	// MaxInterval is the cap for RetryInterval. Note that it doesn't cap the RandomizedInterval.
+	MaxInterval string `yaml:"max_interval"`
+	// MaxElapsedTime caps the time passed from first try. If time passed is greater than MaxElapsedTime than stop retrying.
+	MaxElapsedTime string `yaml:"max_elapsed_time"`
+	// MaxRetriesCount is the amount of allowed retries. So at most MaxRetriesCount will be performed.
+	MaxRetriesCount uint64 `yaml:"max_retries_count"`
+}
+
+func (config RetriesConfig) getRetriesSettings() retries.Config {
+	return retries.Config{
+		InitialInterval:     to.Duration(config.InitialInterval),
+		RandomizationFactor: config.RandomizationFactor,
+		Multiplier:          config.Multiplier,
+		MaxInterval:         to.Duration(config.MaxInterval),
+		MaxElapsedTime:      to.Duration(config.MaxElapsedTime),
+		MaxRetriesCount:     config.MaxRetriesCount,
+	}
+}
+
 // GraphiteRemoteConfig is remote graphite settings structure.
 type GraphiteRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
-	// Timeout for remote requests
+	// Timeout for remote requests.
 	Timeout string `yaml:"timeout"`
-	// Username for basic auth
+	// Username for basic auth.
 	User string `yaml:"user"`
-	// Password for basic auth
+	// Password for basic auth.
 	Password string `yaml:"password"`
+	// Retries configuration for general requests to remote graphite.
+	Retries RetriesConfig `yaml:"retries"`
+	// HealthcheckTimeout is timeout for remote api health check requests.
+	HealthcheckTimeout string `yaml:"health_check_timeout"`
+	// HealthCheckRetries configuration for healthcheck requests to remote graphite.
+	HealthCheckRetries RetriesConfig `yaml:"health_check_retries"`
 }
 
 func (config GraphiteRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
@@ -246,12 +294,15 @@ func (config GraphiteRemoteConfig) getRemoteCommon() *RemoteCommonConfig {
 // GetRemoteSourceSettings returns remote config parsed from moira config files.
 func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSource.Config {
 	return &graphiteRemoteSource.Config{
-		URL:           config.URL,
-		CheckInterval: to.Duration(config.CheckInterval),
-		MetricsTTL:    to.Duration(config.MetricsTTL),
-		Timeout:       to.Duration(config.Timeout),
-		User:          config.User,
-		Password:      config.Password,
+		URL:                config.URL,
+		CheckInterval:      to.Duration(config.CheckInterval),
+		MetricsTTL:         to.Duration(config.MetricsTTL),
+		Timeout:            to.Duration(config.Timeout),
+		User:               config.User,
+		Password:           config.Password,
+		Retries:            config.Retries.getRetriesSettings(),
+		HealthcheckTimeout: to.Duration(config.HealthcheckTimeout),
+		HealthcheckRetries: config.HealthCheckRetries.getRetriesSettings(),
 	}
 }
 

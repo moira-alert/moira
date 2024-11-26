@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -20,6 +21,7 @@ func (key ContextKey) String() string {
 var (
 	databaseKey          ContextKey = "database"
 	searcherKey          ContextKey = "searcher"
+	contactsTemplateKey  ContextKey = "contactsTemplate"
 	triggerIDKey         ContextKey = "triggerID"
 	clustersMetricTTLKey ContextKey = "clustersMetricTTL"
 	populateKey          ContextKey = "populated"
@@ -41,12 +43,21 @@ var (
 	authKey              ContextKey = "auth"
 	metricContextKey     ContextKey = "metric"
 	statesContextKey     ContextKey = "states"
-	anonymousUser                   = "anonymous"
+	limitsContextKey     ContextKey = "limits"
+	searchTextContextKey ContextKey = "searchText"
+	sortOrderContextKey  ContextKey = "sort"
+
+	anonymousUser = "anonymous"
 )
 
 // GetDatabase gets moira.Database realization from request context.
 func GetDatabase(request *http.Request) moira.Database {
 	return request.Context().Value(databaseKey).(moira.Database)
+}
+
+// GetContactsTemplate gets contacts template from request context.
+func GetContactsTemplate(request *http.Request) []api.WebContact {
+	return request.Context().Value(contactsTemplateKey).([]api.WebContact)
 }
 
 // GetLogin gets user login string from request context, which was sets in UserContext middleware.
@@ -173,4 +184,19 @@ func GetMetric(request *http.Request) string {
 // GetStates is used to retrieve trigger state.
 func GetStates(request *http.Request) map[string]struct{} {
 	return request.Context().Value(statesContextKey).(map[string]struct{})
+}
+
+// GetLimits returns configured limits.
+func GetLimits(request *http.Request) api.LimitsConfig {
+	return request.Context().Value(limitsContextKey).(api.LimitsConfig)
+}
+
+// GetSearchText returns search text regexp.
+func GetSearchText(request *http.Request) *regexp.Regexp {
+	return request.Context().Value(searchTextContextKey).(*regexp.Regexp)
+}
+
+// GetSortOrder returns api.SortOrder.
+func GetSortOrder(request *http.Request) api.SortOrder {
+	return request.Context().Value(sortOrderContextKey).(api.SortOrder)
 }

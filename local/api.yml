@@ -2,6 +2,8 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
+  min_retry_backoff: 1s
+  max_retry_backoff: 10s
 telemetry:
   graphite:
     enabled: true
@@ -17,8 +19,21 @@ graphite_remote:
     cluster_name: Graphite 1
     url: "http://graphite:80/render"
     check_interval: 60s
-    timeout: 60s
     metrics_ttl: 168h
+    timeout: 60s
+    retries:
+      initial_interval: 60s
+      randomization_factor: 0.5
+      multiplier: 1.5
+      max_interval: 120s
+      max_retries_count: 3
+    health_check_timeout: 6s
+    health_check_retries:
+      initial_interval: 20s
+      randomization_factor: 0.5
+      multiplier: 1.5
+      max_interval: 80s
+      max_retries_count: 3
 prometheus_remote:
   - cluster_id: default
     cluster_name: Prometheus 1
@@ -37,6 +52,12 @@ prometheus_remote:
 api:
   listen: ":8081"
   enable_cors: false
+  limits:
+    trigger:
+      max_name_size: 200
+    team:
+      max_name_size: 100
+      max_description_size: 1000
 web:
   contacts_template:
     - type: mail
