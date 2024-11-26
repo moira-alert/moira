@@ -51,8 +51,13 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate unique id for team"))
 		}
 	}
+
 	err := dataBase.SaveTeam(teamID, team.ToMoiraTeam())
 	if err != nil {
+		if errors.Is(err, database.ErrTeamWithNameAlreadyExists) {
+			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot save team: %w", err))
+		}
+
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", err))
 	}
 
@@ -356,6 +361,10 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 func UpdateTeam(dataBase moira.Database, teamID string, team dto.TeamModel) (dto.SaveTeamResponse, *api.ErrorResponse) {
 	err := dataBase.SaveTeam(teamID, team.ToMoiraTeam())
 	if err != nil {
+		if errors.Is(err, database.ErrTeamWithNameAlreadyExists) {
+			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot save team: %w", err))
+		}
+
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", err))
 	}
 	return dto.SaveTeamResponse{ID: teamID}, nil

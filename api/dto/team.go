@@ -1,17 +1,17 @@
 package dto
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"unicode/utf8"
 
+	"github.com/moira-alert/moira/api/middleware"
+
 	"github.com/moira-alert/moira"
 )
 
-const (
-	teamNameLimit        = 100
-	teamDescriptionLimit = 1000
-)
+var errEmptyTeamName = errors.New("team name cannot be empty")
 
 // TeamModel is a structure that represents team entity in HTTP transfer.
 type TeamModel struct {
@@ -31,15 +31,20 @@ func NewTeamModel(team moira.Team) TeamModel {
 
 // Bind is a method that implements Binder interface from chi and checks that validity of data in request.
 func (t TeamModel) Bind(request *http.Request) error {
+	limits := middleware.GetLimits(request)
+
 	if t.Name == "" {
-		return fmt.Errorf("team name cannot be empty")
+		return errEmptyTeamName
 	}
-	if utf8.RuneCountInString(t.Name) > teamNameLimit {
-		return fmt.Errorf("team name cannot be longer than %d characters", teamNameLimit)
+
+	if utf8.RuneCountInString(t.Name) > limits.Team.MaxNameSize {
+		return fmt.Errorf("team name cannot be longer than %d characters", limits.Team.MaxNameSize)
 	}
-	if utf8.RuneCountInString(t.Description) > teamDescriptionLimit {
-		return fmt.Errorf("team description cannot be longer than %d characters", teamNameLimit)
+
+	if utf8.RuneCountInString(t.Description) > limits.Team.MaxDescriptionSize {
+		return fmt.Errorf("team description cannot be longer than %d characters", limits.Team.MaxDescriptionSize)
 	}
+
 	return nil
 }
 

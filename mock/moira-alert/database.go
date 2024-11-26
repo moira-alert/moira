@@ -730,6 +730,21 @@ func (mr *MockDatabaseMockRecorder) GetTeam(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeam", reflect.TypeOf((*MockDatabase)(nil).GetTeam), arg0)
 }
 
+// GetTeamByName mocks base method.
+func (m *MockDatabase) GetTeamByName(arg0 string) (moira.Team, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTeamByName", arg0)
+	ret0, _ := ret[0].(moira.Team)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTeamByName indicates an expected call of GetTeamByName.
+func (mr *MockDatabaseMockRecorder) GetTeamByName(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamByName", reflect.TypeOf((*MockDatabase)(nil).GetTeamByName), arg0)
+}
+
 // GetTeamContactIDs mocks base method.
 func (m *MockDatabase) GetTeamContactIDs(arg0 string) ([]string, error) {
 	m.ctrl.T.Helper()

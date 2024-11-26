@@ -56,6 +56,8 @@ type apiConfig struct {
 type LimitsConfig struct {
 	// Trigger contains the limits applied to triggers.
 	Trigger TriggerLimitsConfig `yaml:"trigger"`
+	// Team contains the limits applied to teams.
+	Team TeamLimitsConfig `yaml:"team"`
 }
 
 // TriggerLimitsConfig represents the limits which will be applied to all triggers.
@@ -64,11 +66,23 @@ type TriggerLimitsConfig struct {
 	MaxNameSize int `yaml:"max_name_size"`
 }
 
+// TeamLimitsConfig represents the limits which will be applied to all teams.
+type TeamLimitsConfig struct {
+	// MaxNameSize is the max amount of characters allowed in team name.
+	MaxNameSize int `yaml:"max_name_size"`
+	// MaxDescriptionSize is the max amount of characters allowed in team description.
+	MaxDescriptionSize int `yaml:"max_description_size"`
+}
+
 // ToLimits converts LimitsConfig to api.LimitsConfig.
 func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 	return api.LimitsConfig{
 		Trigger: api.TriggerLimits{
 			MaxNameSize: conf.Trigger.MaxNameSize,
+		},
+		Team: api.TeamLimits{
+			MaxNameSize:        conf.Team.MaxNameSize,
+			MaxDescriptionSize: conf.Team.MaxDescriptionSize,
 		},
 	}
 }
@@ -258,6 +272,10 @@ func getDefault() config {
 			Limits: LimitsConfig{
 				Trigger: TriggerLimitsConfig{
 					MaxNameSize: api.DefaultTriggerNameMaxSize,
+				},
+				Team: TeamLimitsConfig{
+					MaxNameSize:        api.DefaultTeamNameMaxSize,
+					MaxDescriptionSize: api.DefaultTeamDescriptionMaxSize,
 				},
 			},
 		},

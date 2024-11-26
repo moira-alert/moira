@@ -1,11 +1,17 @@
 package redis
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
+
+const teamSaveAttempts = 3
 
 // SaveTeam saves team into redis.
 func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
@@ -13,14 +19,98 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 
 	teamBytes, err := reply.MarshallTeam(team)
 	if err != nil {
-		return fmt.Errorf("save team error: %w", err)
+		return fmt.Errorf("failed to marshal team: %w", err)
 	}
 
+	existedTeam, err := connector.GetTeam(teamID)
+	if err != nil && !errors.Is(err, database.ErrNil) {
+		return fmt.Errorf("failed to get team: %w", err)
+	}
+
+	for range teamSaveAttempts {
+		// need to use watch here because if team name is updated
+		// we also need to change name in moira-teams-names set
+		err = c.Watch(
+			connector.context,
+			func(tx *redis.Tx) error {
+				return connector.saveTeamNameInTx(tx, teamID, team.Name, existedTeam.Name)
+			},
+			teamsByNamesKey)
+
+		if err == nil {
+			break
+		}
+
+		if !errors.Is(err, redis.TxFailedErr) {
+			return err
+		}
+	}
+
+	// save team
 	err = c.HSet(connector.context, teamsKey, teamID, teamBytes).Err()
 	if err != nil {
-		return fmt.Errorf("save team redis error: %w", err)
+		return fmt.Errorf("failed to save team metadata: %w", err)
 	}
-	return nil
+
+	return err
+}
+
+func (connector *DbConnector) saveTeamNameInTx(
+	tx *redis.Tx,
+	teamID string,
+	newTeamName string,
+	existedTeamName string,
+) error {
+	teamWithSuchNameID, err := connector.getTeamIDByNameInTx(tx, newTeamName)
+	if err != nil && !errors.Is(err, database.ErrNil) {
+		return err
+	}
+
+	// team with such id does not exist but another team with such name exists
+	if teamWithSuchNameID != "" && teamWithSuchNameID != teamID {
+		return database.ErrTeamWithNameAlreadyExists
+	}
+
+	newTeamLowercaseName := strings.ToLower(newTeamName)
+	existedTeamLowercaseName := strings.ToLower(existedTeamName)
+
+	_, err = tx.TxPipelined(
+		connector.context,
+		func(pipe redis.Pipeliner) error {
+			updateTeamName := existedTeamName != "" && existedTeamLowercaseName != newTeamLowercaseName
+
+			// if team.Name is changed
+			if updateTeamName {
+				// remove old team.Name from team names redis hash
+				err = pipe.HDel(connector.context, teamsByNamesKey, existedTeamLowercaseName).Err()
+				if err != nil {
+					return fmt.Errorf("failed to update team name: %w", err)
+				}
+			}
+
+			// save new team.Name to team names redis hash
+			err = pipe.HSet(connector.context, teamsByNamesKey, newTeamLowercaseName, teamID).Err()
+			if err != nil {
+				return fmt.Errorf("failed to save team name: %w", err)
+			}
+
+			return nil
+		})
+
+	return err
+}
+
+func (connector *DbConnector) getTeamIDByNameInTx(tx *redis.Tx, teamName string) (string, error) {
+	teamID, err := tx.HGet(connector.context, teamsByNamesKey, strings.ToLower(teamName)).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return "", database.ErrNil
+		}
+
+		return "", fmt.Errorf("failed to check team name existence: %w", err)
+	}
+
+	return teamID, nil
 }
 
 func (connector *DbConnector) GetAllTeams() ([]moira.Team, error) {
@@ -43,6 +133,22 @@ func (connector *DbConnector) GetTeam(teamID string) (moira.Team, error) {
 	team.ID = teamID
 
 	return team, nil
+}
+
+// GetTeamByName retrieves team from redis by its name.
+func (connector *DbConnector) GetTeamByName(name string) (moira.Team, error) {
+	c := *connector.client
+
+	teamID, err := c.HGet(connector.context, teamsByNamesKey, strings.ToLower(name)).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return moira.Team{}, database.ErrNil
+		}
+
+		return moira.Team{}, fmt.Errorf("failed to get team by name: %w", err)
+	}
+
+	return connector.GetTeam(teamID)
 }
 
 // SaveTeamsAndUsers is a function that saves users for one team and teams for bunch of users in one transaction.
@@ -118,32 +224,48 @@ func (connector *DbConnector) IsTeamContainUser(teamID, userID string) (bool, er
 func (connector *DbConnector) DeleteTeam(teamID, userID string) error {
 	c := *connector.client
 
-	pipe := c.TxPipeline()
-
-	err := pipe.SRem(connector.context, userTeamsKey(userID), teamID).Err()
+	team, err := connector.GetTeam(teamID)
 	if err != nil {
-		return fmt.Errorf("failed to remove team from user's teams: %w", err)
+		if errors.Is(err, database.ErrNil) {
+			return nil
+		}
+
+		return fmt.Errorf("failed to get team to delete: %w", err)
 	}
 
-	err = pipe.Del(connector.context, teamUsersKey(teamID)).Err()
+	err = c.HDel(connector.context, teamsByNamesKey, strings.ToLower(team.Name)).Err()
 	if err != nil {
-		return fmt.Errorf("failed to remove team users: %w", err)
+		return fmt.Errorf("failed to remove team name: %w", err)
 	}
 
-	err = pipe.HDel(connector.context, teamsKey, teamID).Err()
-	if err != nil {
-		return fmt.Errorf("failed to remove team metadata: %w", err)
-	}
+	_, err = c.TxPipelined(
+		connector.context,
+		func(pipe redis.Pipeliner) error {
+			err = pipe.SRem(connector.context, userTeamsKey(userID), teamID).Err()
+			if err != nil {
+				return fmt.Errorf("failed to remove team from user's teams: %w", err)
+			}
 
-	_, err = pipe.Exec(connector.context)
-	if err != nil {
-		return fmt.Errorf("cannot commit transaction and delete team: %w", err)
-	}
+			err = pipe.Del(connector.context, teamUsersKey(teamID)).Err()
+			if err != nil {
+				return fmt.Errorf("failed to remove team users: %w", err)
+			}
 
-	return nil
+			err = pipe.HDel(connector.context, teamsKey, teamID).Err()
+			if err != nil {
+				return fmt.Errorf("failed to remove team metadata: %w", err)
+			}
+
+			return nil
+		})
+
+	return err
 }
 
-const teamsKey = "moira-teams"
+const (
+	teamsKey        = "moira-teams"
+	teamsByNamesKey = "moira-teams-by-names"
+)
 
 func userTeamsKey(userID string) string {
 	return fmt.Sprintf("moira-userTeams:%s", userID)
