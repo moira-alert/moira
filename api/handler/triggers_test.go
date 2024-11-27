@@ -207,13 +207,12 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		Convey("for graphite remote", func() {
 			triggerDTO.TriggerSource = moira.GraphiteRemote
 			body, _ := json.Marshal(triggerDTO)
+			testLogger, _ := logging.GetLogger("Test")
 
 			Convey("when ErrRemoteTriggerResponse returned", func() {
 				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 				request.Header.Add("content-type", "application/json")
 				request = request.WithContext(setValuesToRequestCtx(request.Context(), allSourceProvider, api.GetTestLimitsConfig()))
-
-				testLogger, _ := logging.GetLogger("Test")
 
 				request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
 
@@ -232,8 +231,6 @@ func TestGetTriggerFromRequest(t *testing.T) {
 				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 				request.Header.Add("content-type", "application/json")
 				request = request.WithContext(setValuesToRequestCtx(request.Context(), allSourceProvider, api.GetTestLimitsConfig()))
-
-				testLogger, _ := logging.GetLogger("Test")
 
 				request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
 
