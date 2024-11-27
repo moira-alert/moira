@@ -5,14 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	"github.com/moira-alert/moira/metric_source/remote"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metric_source/remote"
 
 	prometheus "github.com/prometheus/client_golang/api/prometheus/v1"
 
