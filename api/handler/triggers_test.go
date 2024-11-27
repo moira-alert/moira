@@ -5,15 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metric_source/remote"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
-
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	"github.com/moira-alert/moira/metric_source/remote"
 
 	prometheus "github.com/prometheus/client_golang/api/prometheus/v1"
 
@@ -196,27 +195,53 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		}
 
 		Convey("for graphite remote", func() {
-			triggerDTO.TriggerSource = moira.GraphiteRemote
-			body, _ := json.Marshal(triggerDTO)
+			Convey("when ErrRemoteTriggerResponse returned", func() {
+				triggerDTO.TriggerSource = moira.GraphiteRemote
+				body, _ := json.Marshal(triggerDTO)
 
-			request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
-			request.Header.Add("content-type", "application/json")
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
+				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+				request.Header.Add("content-type", "application/json")
+				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
 
-			testLogger, _ := logging.GetLogger("Test")
+				testLogger, _ := logging.GetLogger("Test")
 
-			request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
+				request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
 
-			var returnedErr error = remote.ErrRemoteTriggerResponse{
-				InternalError: fmt.Errorf(""),
-			}
+				var returnedErr error = remote.ErrRemoteTriggerResponse{
+					InternalError: fmt.Errorf(""),
+				}
 
-			graphiteRemoteSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(nil, returnedErr)
+				graphiteRemoteSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, returnedErr)
 
-			_, errRsp := getTriggerFromRequest(request)
-			So(errRsp, ShouldResemble, api.ErrorRemoteServerUnavailable(returnedErr))
+				_, errRsp := getTriggerFromRequest(request)
+				So(errRsp, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("error from graphite remote: %w", returnedErr)))
+			})
+
+			Convey("when ErrRemoteUnavailable", func() {
+				triggerDTO.TriggerSource = moira.GraphiteRemote
+				body, _ := json.Marshal(triggerDTO)
+
+				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+				request.Header.Add("content-type", "application/json")
+				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
+				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
+
+				testLogger, _ := logging.GetLogger("Test")
+
+				request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
+
+				var returnedErr error = remote.ErrRemoteUnavailable{
+					InternalError: fmt.Errorf(""),
+				}
+
+				graphiteRemoteSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, returnedErr)
+
+				_, errRsp := getTriggerFromRequest(request)
+				So(errRsp, ShouldResemble, api.ErrorRemoteServerUnavailable(returnedErr))
+			})
 		})
 
 		Convey("for prometheus remote", func() {
