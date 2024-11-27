@@ -260,7 +260,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 			render.Render(writer, request, errRsp) //nolint
 			return
 		case remote.ErrRemoteTriggerResponse:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("error from graphite remote: %w", err)))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("error from graphite remote: %w", err))) //nolint
 			return
 		case *prometheus.Error:
 			render.Render(writer, request, errorResponseOnPrometheusError(typedErr)) //nolint
