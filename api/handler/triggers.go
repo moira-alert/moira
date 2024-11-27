@@ -234,10 +234,10 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) (time.Du
 //	@tags		trigger
 //	@accept		json
 //	@produce	json
-//	@param		trigger	body		dto.Trigger						true	"Trigger data"
-//	@success	200		{object}	dto.TriggerCheckResponse		"Validation is done, see response body for validation result"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		trigger	body		dto.Trigger								true	"Trigger data"
+//	@success	200		{object}	dto.TriggerCheckResponse				"Validation is done, see response body for validation result"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error"
 //	@failure	503		{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
 //	@router		/trigger/check [put]
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
