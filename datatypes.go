@@ -255,7 +255,7 @@ type ScheduleData struct {
 // ScheduleDataDay represents week day of schedule.
 type ScheduleDataDay struct {
 	Enabled bool    `json:"enabled" example:"true"`
-	Name    DayName `json:"name,omitempty" example:"Mon" validate:"oneof=Mon Tue Wed Thu Fri Sat Sun"`
+	Name    DayName `json:"name,omitempty" example:"Mon" swaggertype:"string" validate:"oneof=Mon Tue Wed Thu Fri Sat Sun"`
 }
 
 // DayName represents the day name used in ScheduleDataDay.
