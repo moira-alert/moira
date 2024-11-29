@@ -249,7 +249,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			// TODO: move ErrInvalidExpression to separate case
 
-			// Errors above are skipped because if there are error from local source then it will be caught in
+			// Errors above are skipped because if there is an error from local source then it will be caught in
 			// dto.TargetVerification and will be explained in detail.
 		case remote.ErrRemoteUnavailable:
 			errRsp := api.ErrorRemoteServerUnavailable(err)
