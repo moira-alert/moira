@@ -46,6 +46,8 @@ type RedisConfig struct {
 	ReadTimeout string `yaml:"read_timeout"`
 	// Write-operation timeout. Default is ReadTimeout seconds.
 	WriteTimeout string `yaml:"write_timeout"`
+	// MaxRetries count of redirects.
+	MaxRedirects int `yaml:"max_redirects"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
 	// Minimum backoff between retries. Used to calculate exponential backoff. Default value is 0
@@ -71,6 +73,7 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 		Password:         config.Password,
 		SentinelUsername: config.SentinelUsername,
 		SentinelPassword: config.SentinelPassword,
+		MaxRedirects:     config.MaxRedirects,
 		MaxRetries:       config.MaxRetries,
 		MinRetryBackoff:  to.Duration(config.MinRetryBackoff),
 		MaxRetryBackoff:  to.Duration(config.MaxRetryBackoff),
