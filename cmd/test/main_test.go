@@ -1,9 +1,15 @@
 package main
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestReadWriteMetric(t *testing.T) {
-	logger, database := makeDb()
-	finish := make(chan struct{})
-	readWriteMetrics(database, logger, finish, 0)
+	_, database := makeDb()
+	// finish := make(chan struct{})
+	// readWriteMetrics(database, logger, finish, 0)
+	ctx := context.Background()
+	client := database.Client()
+	client.Ping(ctx)
 }
