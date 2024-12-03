@@ -2,8 +2,6 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
-  min_retry_backoff: 1s
-  max_retry_backoff: 10s
 telemetry:
   graphite:
     enabled: true
