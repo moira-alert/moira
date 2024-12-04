@@ -18,6 +18,7 @@ type DatabaseConfig struct {
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 
+	MaxRedirects    int
 	MaxRetries      int
 	MinRetryBackoff time.Duration
 	MaxRetryBackoff time.Duration
