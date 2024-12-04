@@ -136,10 +136,11 @@ type webContact struct {
 }
 
 type featureFlags struct {
-	IsPlottingDefaultOn              bool `yaml:"is_plotting_default_on"`
-	IsPlottingAvailable              bool `yaml:"is_plotting_available"`
-	IsSubscriptionToAllTagsAvailable bool `yaml:"is_subscription_to_all_tags_available"`
-	IsReadonlyEnabled                bool `yaml:"is_readonly_enabled"`
+	IsPlottingDefaultOn              bool   `yaml:"is_plotting_default_on"`
+	IsPlottingAvailable              bool   `yaml:"is_plotting_available"`
+	IsSubscriptionToAllTagsAvailable bool   `yaml:"is_subscription_to_all_tags_available"`
+	IsReadonlyEnabled                bool   `yaml:"is_readonly_enabled"`
+	CelebrationMode                  string `yaml:"celebration_mode"`
 }
 
 func (config *apiConfig) getSettings(
@@ -247,7 +248,17 @@ func (config *webConfig) getFeatureFlags() api.FeatureFlags {
 		IsPlottingAvailable:              config.FeatureFlags.IsPlottingAvailable,
 		IsSubscriptionToAllTagsAvailable: config.FeatureFlags.IsSubscriptionToAllTagsAvailable,
 		IsReadonlyEnabled:                config.FeatureFlags.IsReadonlyEnabled,
+		CelebrationMode:                  getCelebrationMode(config.FeatureFlags.CelebrationMode),
 	}
+}
+
+func getCelebrationMode(mode string) api.CelebrationMode {
+	celebrationMode := api.CelebrationMode(mode)
+	if api.IsAvailableCelebrationMode(celebrationMode) {
+		return celebrationMode
+	}
+
+	return ""
 }
 
 func getDefault() config {

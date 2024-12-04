@@ -258,6 +258,18 @@ func Test_webConfig_getSettings(t *testing.T) {
 	})
 }
 
+func Test_webConfig_getCelebrationMode(t *testing.T) {
+	Convey("Available celebration mode, should return mode", t, func() {
+		celebrationMode := getCelebrationMode("new_year")
+		So(celebrationMode, ShouldEqual, api.CelebrationMode("new_year"))
+	})
+
+	Convey("Not available celebration mode, should return empty string", t, func() {
+		celebrationMode := getCelebrationMode("blablabla")
+		So(celebrationMode, ShouldEqual, "")
+	})
+}
+
 func Test_webConfig_validate(t *testing.T) {
 	Convey("With empty web config", t, func() {
 		config := webConfig{}
