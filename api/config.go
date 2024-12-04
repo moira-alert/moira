@@ -29,15 +29,15 @@ type FeatureFlags struct {
 // CelebrationMode is type for celebrate Moira.
 type CelebrationMode string
 
-const newYear = "new_year"
+const newYear CelebrationMode = "new_year"
 
 // AvailableCelebrationMode map with available celebration mode.
-var availableCelebrationMode = map[string]struct{}{
+var availableCelebrationMode = map[CelebrationMode]struct{}{
 	newYear: {},
 }
 
 // IsAvailableCelebrationMode return is mode available or not.
-func IsAvailableCelebrationMode(mode string) bool {
+func IsAvailableCelebrationMode(mode CelebrationMode) bool {
 	_, ok := availableCelebrationMode[mode]
 
 	return ok

@@ -253,8 +253,9 @@ func (config *webConfig) getFeatureFlags() api.FeatureFlags {
 }
 
 func getCelebrationMode(mode string) api.CelebrationMode {
-	if api.IsAvailableCelebrationMode(mode) {
-		return api.CelebrationMode(mode)
+	celebrationMode := api.CelebrationMode(mode)
+	if api.IsAvailableCelebrationMode(celebrationMode) {
+		return celebrationMode
 	}
 
 	return ""
