@@ -19,10 +19,28 @@ type WebContact struct {
 
 // FeatureFlags is struct to manage feature flags.
 type FeatureFlags struct {
-	IsPlottingDefaultOn              bool `json:"isPlottingDefaultOn" example:"false"`
-	IsPlottingAvailable              bool `json:"isPlottingAvailable" example:"true"`
-	IsSubscriptionToAllTagsAvailable bool `json:"isSubscriptionToAllTagsAvailable" example:"false"`
-	IsReadonlyEnabled                bool `json:"isReadonlyEnabled" example:"false"`
+	IsPlottingDefaultOn              bool            `json:"isPlottingDefaultOn" example:"false"`
+	IsPlottingAvailable              bool            `json:"isPlottingAvailable" example:"true"`
+	IsSubscriptionToAllTagsAvailable bool            `json:"isSubscriptionToAllTagsAvailable" example:"false"`
+	IsReadonlyEnabled                bool            `json:"isReadonlyEnabled" example:"false"`
+	CelebrationMode                  CelebrationMode `json:"celebrationMode" example:"new_year"`
+}
+
+// CelebrationMode is type for celebrate Moira.
+type CelebrationMode string
+
+const newYear = "new_year"
+
+// AvailableCelebrationMode map with available celebration mode.
+var availableCelebrationMode = map[string]struct{}{
+	newYear: {},
+}
+
+// IsAvailableCelebrationMode return is mode available or not.
+func IsAvailableCelebrationMode(mode string) bool {
+	_, ok := availableCelebrationMode[mode]
+
+	return ok
 }
 
 // Sentry - config for sentry settings.
@@ -58,7 +76,7 @@ type MetricSourceCluster struct {
 	ClusterName   string              `json:"cluster_name" example:"Graphite Remote Prod"`
 }
 
-func (WebConfig) Render(w http.ResponseWriter, r *http.Request) error {
+func (WebConfig) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
