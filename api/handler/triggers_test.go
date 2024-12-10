@@ -66,6 +66,17 @@ func TestGetTriggerFromRequest(t *testing.T) {
 	fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
 
+	setValuesToRequestCtx := func(
+		ctx context.Context,
+		metricSourceProvider *metricSource.SourceProvider,
+		limits api.LimitsConfig,
+	) context.Context {
+		ctx = middleware.SetContextValueForTest(ctx, "metricSourceProvider", metricSourceProvider)
+		ctx = middleware.SetContextValueForTest(ctx, "limits", limits)
+
+		return ctx
+	}
+
 	Convey("Given a correct payload", t, func() {
 		triggerWarnValue := 0.0
 		triggerErrorValue := 1.0
@@ -106,8 +117,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 		request.Header.Add("content-type", "application/json")
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
+		request = request.WithContext(setValuesToRequestCtx(request.Context(), sourceProvider, api.GetTestLimitsConfig()))
 
 		triggerDTO.Schedule.Days = moira.GetFilledScheduleDataDays(false)
 		triggerDTO.Schedule.Days[0].Enabled = true
@@ -148,8 +158,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 
 		request := httptest.NewRequest(http.MethodPut, "/trigger", strings.NewReader(body))
 		request.Header.Add("content-type", "application/json")
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
+		request = request.WithContext(setValuesToRequestCtx(request.Context(), sourceProvider, api.GetTestLimitsConfig()))
 
 		Convey("Parser should return en error", func() {
 			_, err := getTriggerFromRequest(request)
@@ -198,25 +207,43 @@ func TestGetTriggerFromRequest(t *testing.T) {
 		Convey("for graphite remote", func() {
 			triggerDTO.TriggerSource = moira.GraphiteRemote
 			body, _ := json.Marshal(triggerDTO)
-
-			request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
-			request.Header.Add("content-type", "application/json")
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
-			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
-
 			testLogger, _ := logging.GetLogger("Test")
 
-			request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
+			Convey("when ErrRemoteTriggerResponse returned", func() {
+				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+				request.Header.Add("content-type", "application/json")
+				request = request.WithContext(setValuesToRequestCtx(request.Context(), allSourceProvider, api.GetTestLimitsConfig()))
 
-			var returnedErr error = remote.ErrRemoteTriggerResponse{
-				InternalError: fmt.Errorf(""),
-			}
+				request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
 
-			graphiteRemoteSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(nil, returnedErr)
+				var returnedErr error = remote.ErrRemoteTriggerResponse{
+					InternalError: fmt.Errorf(""),
+				}
 
-			_, errRsp := getTriggerFromRequest(request)
-			So(errRsp, ShouldResemble, api.ErrorRemoteServerUnavailable(returnedErr))
+				graphiteRemoteSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, returnedErr)
+
+				_, errRsp := getTriggerFromRequest(request)
+				So(errRsp, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("error from graphite remote: %w", returnedErr)))
+			})
+
+			Convey("when ErrRemoteUnavailable", func() {
+				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+				request.Header.Add("content-type", "application/json")
+				request = request.WithContext(setValuesToRequestCtx(request.Context(), allSourceProvider, api.GetTestLimitsConfig()))
+
+				request = middleware.WithLogEntry(request, middleware.NewLogEntry(testLogger, request))
+
+				var returnedErr error = remote.ErrRemoteUnavailable{
+					InternalError: fmt.Errorf(""),
+				}
+
+				graphiteRemoteSrc.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(nil, returnedErr)
+
+				_, errRsp := getTriggerFromRequest(request)
+				So(errRsp, ShouldResemble, api.ErrorRemoteServerUnavailable(returnedErr))
+			})
 		})
 
 		Convey("for prometheus remote", func() {
@@ -226,8 +253,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 			Convey("with error type = bad_data got bad request", func() {
 				request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 				request.Header.Add("content-type", "application/json")
-				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
-				request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
+				request = request.WithContext(setValuesToRequestCtx(request.Context(), allSourceProvider, api.GetTestLimitsConfig()))
 
 				var returnedErr error = &prometheus.Error{
 					Type: prometheus.ErrBadData,
@@ -253,8 +279,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 				for _, errType := range otherTypes {
 					request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 					request.Header.Add("content-type", "application/json")
-					request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", allSourceProvider))
-					request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", api.GetTestLimitsConfig()))
+					request = request.WithContext(setValuesToRequestCtx(request.Context(), allSourceProvider, api.GetTestLimitsConfig()))
 
 					var returnedErr error = &prometheus.Error{
 						Type: errType,
