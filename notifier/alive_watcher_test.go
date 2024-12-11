@@ -104,9 +104,7 @@ func TestAliveWatcher_Start(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		aliveWatcher.Start(ctx)
 
-		select {
-		case <-time.After(time.Second * 3):
-			cancel()
-		}
+		time.Sleep(time.Second * 3)
+		cancel()
 	})
 }
