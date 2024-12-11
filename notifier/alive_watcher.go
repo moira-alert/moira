@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
+// AliveWatcher is responsible for checking notifier state and marking notifier.alive metrics.
 type AliveWatcher struct {
 	logger          moira.Logger
 	database        moira.Database
@@ -15,6 +16,7 @@ type AliveWatcher struct {
 	notifierMetrics *metrics.NotifierMetrics
 }
 
+// NewAliveWatcher is an initializer for AliveWatcher.
 func NewAliveWatcher(
 	logger moira.Logger,
 	database moira.Database,
@@ -29,6 +31,8 @@ func NewAliveWatcher(
 	}
 }
 
+// Start starts the checking loop in separate goroutine.
+// Use context.WithCancel, context.WithTimeout etc. to terminate check loop.
 func (watcher *AliveWatcher) Start(ctx context.Context) {
 	go watcher.stateChecker(ctx)
 }
