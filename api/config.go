@@ -23,7 +23,7 @@ type FeatureFlags struct {
 	IsPlottingAvailable              bool            `json:"isPlottingAvailable" example:"true"`
 	IsSubscriptionToAllTagsAvailable bool            `json:"isSubscriptionToAllTagsAvailable" example:"false"`
 	IsReadonlyEnabled                bool            `json:"isReadonlyEnabled" example:"false"`
-	CelebrationMode                  CelebrationMode `json:"celebrationMode" example:"new_year"`
+	CelebrationMode                  CelebrationMode `json:"celebrationMode" swaggertype:"string" example:"new_year"`
 }
 
 // CelebrationMode is type for celebrate Moira.

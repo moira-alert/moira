@@ -110,7 +110,7 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 //	@success	200	{object}	dto.NotificationsList			"Notification have been deleted"
 //	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/notification [delete]
+//	@router		/notification/all [delete]
 func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllNotifications(database); errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint

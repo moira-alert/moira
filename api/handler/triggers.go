@@ -192,13 +192,15 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error()))
 		case api.ErrInvalidRequestContent:
 			return nil, api.ErrorInvalidRequest(err)
-		case remote.ErrRemoteTriggerResponse:
+		case remote.ErrRemoteUnavailable:
 			response := api.ErrorRemoteServerUnavailable(err)
 			middleware.GetLoggerEntry(request).Error().
 				String("status", response.StatusText).
 				Error(err).
 				Msg("Remote server unavailable")
 			return nil, response
+		case remote.ErrRemoteTriggerResponse:
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("error from graphite remote: %w", err))
 		case *json.UnmarshalTypeError:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
 		case *prometheus.Error:
@@ -232,10 +234,11 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) (time.Du
 //	@tags		trigger
 //	@accept		json
 //	@produce	json
-//	@param		trigger	body		dto.Trigger						true	"Trigger data"
-//	@success	200		{object}	dto.TriggerCheckResponse		"Validation is done, see response body for validation result"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		trigger	body		dto.Trigger								true	"Trigger data"
+//	@success	200		{object}	dto.TriggerCheckResponse				"Validation is done, see response body for validation result"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@failure	503		{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
 //	@router		/trigger/check [put]
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
@@ -246,10 +249,22 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			// TODO: move ErrInvalidExpression to separate case
 
-			// These errors are skipped because if there are error from local source then it will be caught in
+			// Errors above are skipped because if there is an error from local source then it will be caught in
 			// dto.TargetVerification and will be explained in detail.
+		case remote.ErrRemoteUnavailable:
+			errRsp := api.ErrorRemoteServerUnavailable(err)
+			middleware.GetLoggerEntry(request).Error().
+				String("status", errRsp.StatusText).
+				Error(err).
+				Msg("Remote server unavailable")
+			render.Render(writer, request, errRsp) //nolint
+			return
+		case remote.ErrRemoteTriggerResponse:
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("error from graphite remote: %w", err))) //nolint
+			return
 		case *prometheus.Error:
 			render.Render(writer, request, errorResponseOnPrometheusError(typedErr)) //nolint
+			return
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
