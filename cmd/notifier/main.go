@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -99,6 +100,7 @@ func main() {
 	}
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+
 	sender := notifier.NewNotifier(
 		database,
 		logger,
@@ -155,6 +157,12 @@ func main() {
 	}
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)
+
+	aliveWatcher := notifier.NewAliveWatcher(logger, database, notifierConfig, notifierMetrics)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	aliveWatcher.Start(ctx)
+	defer cancel()
 
 	logger.Info().
 		String("moira_version", MoiraVersion).
