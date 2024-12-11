@@ -1,12 +1,12 @@
 package notifier
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
 
 	"github.com/moira-alert/moira"
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
@@ -27,20 +27,15 @@ func initAliveMeter(mockCtrl *gomock.Controller) (*mock_metrics.MockRegistry, *m
 }
 
 func TestAliveWatcher_checkNotifierState(t *testing.T) {
-	logger, _ = logging.GetLogger("test alive watcher")
-
 	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
 
-	testConf := Config{
-		CheckNotifierStateTimeout: time.Second * 10,
-	}
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	mockRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
 	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, "")
 
-	aliveWatcher := NewAliveWatcher(logger, dataBase, testConf, testNotifierMetrics)
+	aliveWatcher := NewAliveWatcher(nil, dataBase, Config{}, testNotifierMetrics)
 
 	Convey("checkNotifierState", t, func() {
 		Convey("when OK", func() {
@@ -75,5 +70,43 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 				aliveWatcher.checkNotifierState()
 			}
 		})
+	})
+}
+
+func TestAliveWatcher_Start(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	logger := mock_moira_alert.NewMockLogger(mockCtrl)
+	eventsBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
+	logger.EXPECT().Info().Return(eventsBuilder).AnyTimes()
+
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	testConf := Config{
+		CheckNotifierStateTimeout: time.Second,
+	}
+
+	mockRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
+	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, "")
+
+	aliveWatcher := NewAliveWatcher(logger, dataBase, testConf, testNotifierMetrics)
+
+	Convey("AliveWatcher stops on cancel", t, func() {
+		eventsBuilder.EXPECT().Interface("check_timeout_seconds", testConf.CheckNotifierStateTimeout.Seconds()).Return(eventsBuilder)
+		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher started")
+
+		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher stopped")
+
+		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil).AnyTimes()
+		mockAliveMeter.EXPECT().Mark(int64(1)).AnyTimes()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		aliveWatcher.Start(ctx)
+
+		select {
+		case <-time.After(time.Second * 3):
+			cancel()
+		}
 	})
 }

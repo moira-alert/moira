@@ -2,7 +2,6 @@ package notifier
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -54,13 +53,10 @@ func (watcher *AliveWatcher) stateChecker(ctx context.Context) {
 
 func (watcher *AliveWatcher) checkNotifierState() {
 	state, _ := watcher.database.GetNotifierState()
-	fmt.Println(state)
 	if state != moira.SelfStateOK {
 		watcher.notifierMetrics.MarkNotifierIsAlive(false)
-		fmt.Println("Marked as not alive")
 		return
 	}
 
 	watcher.notifierMetrics.MarkNotifierIsAlive(true)
-	fmt.Println("Marked as alive")
 }

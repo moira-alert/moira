@@ -1,6 +1,8 @@
 package metrics
 
-import "time"
+import (
+	"time"
+)
 
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
@@ -73,6 +75,7 @@ func (metrics *NotifierMetrics) MarkSendingFailed() {
 func (metrics *NotifierMetrics) MarkNotifierIsAlive(isAlive bool) {
 	if isAlive {
 		metrics.notifierIsAlive.Mark(1)
+		return
 	}
 
 	metrics.notifierIsAlive.Mark(0)
