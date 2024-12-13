@@ -35,7 +35,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 	mockRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
 	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, "")
 
-	aliveWatcher := NewAliveWatcher(nil, dataBase, Config{}, testNotifierMetrics)
+	aliveWatcher := NewAliveWatcher(nil, dataBase, 0, testNotifierMetrics)
 
 	Convey("checkNotifierState", t, func() {
 		Convey("when OK", func() {
@@ -83,17 +83,19 @@ func TestAliveWatcher_Start(t *testing.T) {
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	testConf := Config{
-		CheckNotifierStateTimeout: time.Second,
-	}
+	const (
+		testCheckNotifierStateTimeout = time.Second
+	)
 
 	mockRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
 	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, "")
 
-	aliveWatcher := NewAliveWatcher(logger, dataBase, testConf, testNotifierMetrics)
+	aliveWatcher := NewAliveWatcher(logger, dataBase, testCheckNotifierStateTimeout, testNotifierMetrics)
 
 	Convey("AliveWatcher stops on cancel", t, func() {
-		eventsBuilder.EXPECT().Interface("check_timeout_seconds", testConf.CheckNotifierStateTimeout.Seconds()).Return(eventsBuilder)
+		eventsBuilder.EXPECT().
+			Interface("check_timeout_seconds", testCheckNotifierStateTimeout.Seconds()).
+			Return(eventsBuilder)
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher started")
 
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher stopped")

@@ -158,7 +158,12 @@ func main() {
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)
 
-	aliveWatcher := notifier.NewAliveWatcher(logger, database, notifierConfig, notifierMetrics)
+	aliveWatcher := notifier.NewAliveWatcher(
+		logger,
+		database,
+		notifierConfig.CheckNotifierStateTimeout,
+		notifierMetrics,
+	)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	aliveWatcher.Start(ctx)

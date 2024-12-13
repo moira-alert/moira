@@ -10,24 +10,24 @@ import (
 
 // AliveWatcher is responsible for checking notifier state and marking notifier.alive metrics.
 type AliveWatcher struct {
-	logger          moira.Logger
-	database        moira.Database
-	config          Config
-	notifierMetrics *metrics.NotifierMetrics
+	logger                    moira.Logger
+	database                  moira.Database
+	checkNotifierStateTimeout time.Duration
+	notifierMetrics           *metrics.NotifierMetrics
 }
 
 // NewAliveWatcher is an initializer for AliveWatcher.
 func NewAliveWatcher(
 	logger moira.Logger,
 	database moira.Database,
-	config Config,
+	checkNotifierStateTimeout time.Duration,
 	notifierMetrics *metrics.NotifierMetrics,
 ) *AliveWatcher {
 	return &AliveWatcher{
-		logger:          logger,
-		database:        database,
-		config:          config,
-		notifierMetrics: notifierMetrics,
+		logger:                    logger,
+		database:                  database,
+		checkNotifierStateTimeout: checkNotifierStateTimeout,
+		notifierMetrics:           notifierMetrics,
 	}
 }
 
@@ -39,10 +39,10 @@ func (watcher *AliveWatcher) Start(ctx context.Context) {
 
 func (watcher *AliveWatcher) stateChecker(ctx context.Context) {
 	watcher.logger.Info().
-		Interface("check_timeout_seconds", watcher.config.CheckNotifierStateTimeout.Seconds()).
+		Interface("check_timeout_seconds", watcher.checkNotifierStateTimeout.Seconds()).
 		Msg("Moira Notifier alive watcher started")
 
-	ticker := time.NewTicker(watcher.config.CheckNotifierStateTimeout)
+	ticker := time.NewTicker(watcher.checkNotifierStateTimeout)
 
 	for {
 		select {
