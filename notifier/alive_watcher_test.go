@@ -97,7 +97,6 @@ func TestAliveWatcher_Start(t *testing.T) {
 			Interface("check_timeout_seconds", testCheckNotifierStateTimeout.Seconds()).
 			Return(eventsBuilder)
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher started")
-
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher stopped")
 
 		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil).AnyTimes()
@@ -108,5 +107,6 @@ func TestAliveWatcher_Start(t *testing.T) {
 
 		time.Sleep(time.Second * 3)
 		cancel()
+		time.Sleep(time.Millisecond)
 	})
 }
