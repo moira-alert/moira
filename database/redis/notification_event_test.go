@@ -33,6 +33,11 @@ func TestNotificationEvents(t *testing.T) {
 	dataBase.Flush()
 	defer dataBase.Flush()
 
+	const (
+		defaultFrom = "-inf"
+		defaultTo   = "+inf"
+	)
+
 	Convey("Notification events manipulation", t, func() {
 		Convey("Test push-get-get count-fetch", func() {
 			Convey("Should no events", func() {
@@ -40,7 +45,7 @@ func TestNotificationEvents(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
 
-				total := dataBase.GetNotificationEventCount(triggerID, 0)
+				total := dataBase.GetNotificationEventCount(triggerID, defaultFrom, defaultTo)
 				So(total, ShouldEqual, 0)
 
 				actual1, err := dataBase.FetchNotificationEvent()
@@ -73,7 +78,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total := dataBase.GetNotificationEventCount(triggerID, 0)
+				total := dataBase.GetNotificationEventCount(triggerID, defaultFrom, defaultTo)
 				So(total, ShouldEqual, 1)
 
 				actual1, err := dataBase.FetchNotificationEvent()
@@ -102,7 +107,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total := dataBase.GetNotificationEventCount(triggerID, 0)
+				total := dataBase.GetNotificationEventCount(triggerID, defaultFrom, defaultTo)
 				So(total, ShouldEqual, 1)
 			})
 
@@ -148,7 +153,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total := dataBase.GetNotificationEventCount(triggerID1, 0)
+				total := dataBase.GetNotificationEventCount(triggerID1, defaultFrom, defaultTo)
 				So(total, ShouldEqual, 1)
 
 				actual, err = dataBase.GetNotificationEvents(triggerID2, 0, 1, allTimeFrom, allTimeTo)
@@ -164,7 +169,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total = dataBase.GetNotificationEventCount(triggerID2, 0)
+				total = dataBase.GetNotificationEventCount(triggerID2, defaultFrom, defaultTo)
 				So(total, ShouldEqual, 1)
 			})
 
@@ -193,7 +198,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total := dataBase.GetNotificationEventCount(triggerID1, 0)
+				total := dataBase.GetNotificationEventCount(triggerID1, defaultFrom, defaultTo)
 				So(total, ShouldEqual, 1)
 			})
 
@@ -239,16 +244,16 @@ func TestNotificationEvents(t *testing.T) {
 				},
 			})
 
-			total := dataBase.GetNotificationEventCount(triggerID3, 0)
+			total := dataBase.GetNotificationEventCount(triggerID3, defaultFrom, defaultTo)
 			So(total, ShouldEqual, 1)
 
-			total = dataBase.GetNotificationEventCount(triggerID3, now-1)
+			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now-1, 10), defaultTo)
 			So(total, ShouldEqual, 1)
 
-			total = dataBase.GetNotificationEventCount(triggerID3, now)
+			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now, 10), defaultTo)
 			So(total, ShouldEqual, 1)
 
-			total = dataBase.GetNotificationEventCount(triggerID3, now+1)
+			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now+1, 10), defaultTo)
 			So(total, ShouldEqual, 0)
 
 			actual, err = dataBase.GetNotificationEvents(triggerID3, 1, 1, allTimeFrom, allTimeTo)
@@ -285,6 +290,9 @@ func TestNotificationEvents(t *testing.T) {
 				actual, err := dataBase.GetNotificationEvents(triggerID3, 0, 1, strconv.FormatInt(now-2, 10), strconv.FormatInt(now-1, 10))
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, []*moira.NotificationEvent{})
+
+				eventCount := dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now-2, 10), strconv.FormatInt(now-1, 10))
+				So(eventCount, ShouldEqual, 0)
 			})
 
 			Convey("returns event in time range", func() {
@@ -300,6 +308,9 @@ func TestNotificationEvents(t *testing.T) {
 						Values:    map[string]float64{},
 					},
 				})
+
+				eventCount := dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now-1, 10), strconv.FormatInt(now+1, 10))
+				So(eventCount, ShouldEqual, 1)
 			})
 		})
 
@@ -369,7 +380,7 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 		err = dataBase.PushNotificationEvent(&newNotificationEvent, true)
 		So(err, ShouldNotBeNil)
 
-		total := dataBase.GetNotificationEventCount("123", 0)
+		total := dataBase.GetNotificationEventCount("123", "-inf", "+inf")
 		So(total, ShouldEqual, 0)
 
 		actual2, err := dataBase.FetchNotificationEvent()
