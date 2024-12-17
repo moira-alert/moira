@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -885,4 +887,90 @@ func isTriggerCreated(response *http.Response) bool {
 	const expected = "trigger created"
 
 	return actual.Message == expected
+}
+
+func TestGetTriggerNoisiness(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+	database = mockDB
+
+	getRequestTriggerNoisiness := func(from, to string) *http.Request {
+		request := httptest.NewRequest("GET", "/trigger/noisiness", nil)
+		request.Header.Add("content-type", "application/json")
+
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "page", int64(0)))
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "size", int64(-1)))
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "from", from))
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "to", to))
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "sort", api.AscSortOrder))
+
+		return request
+	}
+
+	testTrigger := moira.TriggerCheck{
+		Trigger: moira.Trigger{
+			ID: "triggerID",
+		},
+	}
+
+	Convey("Test get trigger noisiness", t, func() {
+		now := time.Now()
+
+		from := strconv.FormatInt(now.Add(time.Second*-3).Unix(), 10)
+		to := strconv.FormatInt(now.Unix(), 10)
+
+		Convey("with ok", func() {
+			responseWriter := httptest.NewRecorder()
+
+			mockDB.EXPECT().GetAllTriggerIDs().Return([]string{testTrigger.ID}, nil)
+			mockDB.EXPECT().GetNotificationEventCount(testTrigger.ID, from, to).Return(int64(1))
+			mockDB.EXPECT().GetTriggerChecks([]string{testTrigger.ID}).Return([]*moira.TriggerCheck{&testTrigger}, nil)
+
+			getTriggerNoisiness(responseWriter, getRequestTriggerNoisiness(from, to))
+
+			response := responseWriter.Result()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+
+			var gotDTO dto.TriggerNoisinessList
+			err = json.Unmarshal(contentBytes, &gotDTO)
+			So(err, ShouldBeNil)
+			So(&gotDTO, ShouldResemble, &dto.TriggerNoisinessList{
+				List: []dto.TriggerNoisiness{
+					{
+						TriggerCheck: testTrigger,
+						EventsCount:  1,
+					},
+				},
+				Page:  0,
+				Size:  -1,
+				Total: 1,
+			})
+		})
+
+		Convey("with error from db", func() {
+			responseWriter := httptest.NewRecorder()
+			errFromDB := errors.New("some DB error")
+
+			mockDB.EXPECT().GetAllTriggerIDs().Return(nil, errFromDB)
+
+			getTriggerNoisiness(responseWriter, getRequestTriggerNoisiness(from, to))
+
+			response := responseWriter.Result()
+
+			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+
+			expectedContentBytes, err := json.Marshal(api.ErrorInternalServer(errFromDB))
+			So(err, ShouldBeNil)
+			So(string(contentBytes), ShouldResemble, string(expectedContentBytes)+"\n")
+		})
+	})
 }

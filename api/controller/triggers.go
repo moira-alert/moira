@@ -252,8 +252,8 @@ func GetTriggerNoisiness(
 			triggerIDsWithEventsCount = []triggerIDWithEventsCount{}
 		}
 
-		if size <= total {
-			triggerIDsWithEventsCount = triggerIDsWithEventsCount[:total]
+		if size <= int64(len(triggerIDsWithEventsCount)) {
+			triggerIDsWithEventsCount = triggerIDsWithEventsCount[:size]
 		}
 	}
 
