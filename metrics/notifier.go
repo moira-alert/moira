@@ -1,6 +1,8 @@
 package metrics
 
-import "time"
+import (
+	"time"
+)
 
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
@@ -16,6 +18,7 @@ type NotifierMetrics struct {
 	PlotsBuildDurationMs           Histogram
 	PlotsEvaluateTriggerDurationMs Histogram
 	fetchNotificationsDurationMs   Histogram
+	notifierIsAlive                Meter
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
@@ -33,6 +36,7 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		PlotsBuildDurationMs:           registry.NewHistogram("plots", "build", "duration", "ms"),
 		PlotsEvaluateTriggerDurationMs: registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
 		fetchNotificationsDurationMs:   registry.NewHistogram("fetch", "notifications", "duration", "ms"),
+		notifierIsAlive:                registry.NewMeter("", "alive"),
 	}
 }
 
@@ -65,4 +69,14 @@ func (metrics *NotifierMetrics) MarkSendersFailedMetrics(contactType string) {
 // MarkSendingFailed marks metrics when notifications were unsuccessfully sent.
 func (metrics *NotifierMetrics) MarkSendingFailed() {
 	metrics.SendingFailed.Mark(1)
+}
+
+// MarkNotifierIsAlive marks metric value.
+func (metrics *NotifierMetrics) MarkNotifierIsAlive(isAlive bool) {
+	if isAlive {
+		metrics.notifierIsAlive.Mark(1)
+		return
+	}
+
+	metrics.notifierIsAlive.Mark(0)
 }
