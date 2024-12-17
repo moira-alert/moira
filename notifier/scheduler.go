@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -124,7 +125,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				if from.Before(beginning) {
 					from = beginning
 				}
-				count := scheduler.database.GetNotificationEventCount(event.TriggerID, from.Unix())
+				count := scheduler.database.GetNotificationEventCount(event.TriggerID, strconv.FormatInt(from.Unix(), 10), "+inf")
 				if count >= level.count {
 					next = now.Add(level.delay)
 					logger.Debug().

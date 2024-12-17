@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"slices"
+	"strings"
 
 	"github.com/gofrs/uuid"
 
@@ -212,4 +214,116 @@ func triggerExists(database moira.Database, triggerID string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func GetTriggerNoisiness(
+	database moira.Database,
+	page, size int64,
+	from, to string,
+	sortOrder api.SortOrder,
+) (*dto.TriggerNoisinessList, *api.ErrorResponse) {
+	triggerIDs, err := database.GetAllTriggerIDs()
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	triggerIDsWithEventsCount := getTriggerIDsWithEventsCount(database, triggerIDs, from, to)
+
+	sortTriggerIDsByEventsCount(triggerIDsWithEventsCount, sortOrder)
+
+	total := int64(len(triggerIDsWithEventsCount))
+
+	resDto := dto.TriggerNoisinessList{
+		List:  []dto.TriggerNoisiness{},
+		Page:  page,
+		Size:  size,
+		Total: total,
+	}
+
+	if page < 0 || (page > 0 && size < 0) {
+		return &resDto, nil
+	}
+
+	if page >= 0 && size >= 0 {
+		shift := page * size
+		if shift < total {
+			triggerIDsWithEventsCount = triggerIDsWithEventsCount[shift:]
+		} else {
+			triggerIDsWithEventsCount = []triggerIDWithEventsCount{}
+		}
+
+		if size <= total {
+			triggerIDsWithEventsCount = triggerIDsWithEventsCount[:total]
+		}
+	}
+
+	triggerChecks, err := getTriggerChecks(database, onlyTriggerIDs(triggerIDsWithEventsCount))
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	if len(triggerChecks) != len(triggerIDsWithEventsCount) {
+		return nil, api.ErrorInternalServer(fmt.Errorf("failed to fetch triggers for such range"))
+	}
+
+	resDto.List = make([]dto.TriggerNoisiness, 0, len(triggerChecks))
+	for i := range triggerChecks {
+		resDto.List = append(resDto.List, dto.TriggerNoisiness{
+			TriggerCheck: triggerChecks[i],
+			EventsCount:  triggerIDsWithEventsCount[i].eventsCount,
+		})
+	}
+
+	return &resDto, nil
+}
+
+type triggerIDWithEventsCount struct {
+	triggerID   string
+	eventsCount int64
+}
+
+func getTriggerIDsWithEventsCount(
+	database moira.Database,
+	triggerIDs []string,
+	from, to string,
+) []triggerIDWithEventsCount {
+	resultTriggerIDs := make([]triggerIDWithEventsCount, 0, len(triggerIDs))
+
+	for _, triggerID := range triggerIDs {
+		eventsCount := database.GetNotificationEventCount(triggerID, from, to)
+		resultTriggerIDs = append(resultTriggerIDs, triggerIDWithEventsCount{
+			triggerID:   triggerID,
+			eventsCount: eventsCount,
+		})
+	}
+
+	return resultTriggerIDs
+}
+
+func sortTriggerIDsByEventsCount(idsWithCount []triggerIDWithEventsCount, sortOrder api.SortOrder) {
+	if sortOrder == api.AscSortOrder || sortOrder == api.DescSortOrder {
+		slices.SortFunc(idsWithCount, func(first, second triggerIDWithEventsCount) int {
+			cmpRes := first.eventsCount - second.eventsCount
+
+			if cmpRes == 0 {
+				return strings.Compare(first.triggerID, second.triggerID)
+			}
+
+			if sortOrder == api.DescSortOrder {
+				cmpRes *= -1
+			}
+
+			return int(cmpRes)
+		})
+	}
+}
+
+func onlyTriggerIDs(idsWithCount []triggerIDWithEventsCount) []string {
+	triggerIDs := make([]string, 0, len(idsWithCount))
+
+	for _, idWithCount := range idsWithCount {
+		triggerIDs = append(triggerIDs, idWithCount.triggerID)
+	}
+
+	return triggerIDs
 }

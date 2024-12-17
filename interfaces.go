@@ -62,7 +62,7 @@ type Database interface {
 	// NotificationEvent storing
 	GetNotificationEvents(triggerID string, page, size int64, from, to string) ([]*NotificationEvent, error)
 	PushNotificationEvent(event *NotificationEvent, ui bool) error
-	GetNotificationEventCount(triggerID string, from int64) int64
+	GetNotificationEventCount(triggerID string, from, to string) int64
 	FetchNotificationEvent() (NotificationEvent, error)
 	RemoveAllNotificationEvents() error
 
