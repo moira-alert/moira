@@ -56,6 +56,8 @@ type notifierConfig struct {
 	MaxFailAttemptToSendAvailable int `yaml:"max_fail_attempt_to_send_available"`
 	// Specify log level by entities
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
+	// CheckNotifierStateTimeout is the timeout between marking *.alive.count metric based on notifier state.
+	CheckNotifierStateTimeout string `yaml:"check_notifier_state_timeout"`
 }
 
 type selfStateConfig struct {
@@ -116,6 +118,7 @@ func getDefault() config {
 			Timezone:                      "UTC",
 			ReadBatchSize:                 int(notifier.NotificationsLimitUnlimited),
 			MaxFailAttemptToSendAvailable: 3,
+			CheckNotifierStateTimeout:     "10s",
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8093",
@@ -202,6 +205,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		MaxFailAttemptToSendAvailable: config.MaxFailAttemptToSendAvailable,
 		LogContactsToLevel:            contacts,
 		LogSubscriptionsToLevel:       subscriptions,
+		CheckNotifierStateTimeout:     to.Duration(config.CheckNotifierStateTimeout),
 	}
 }
 

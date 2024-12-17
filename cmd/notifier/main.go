@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -99,6 +100,7 @@ func main() {
 	}
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+
 	sender := notifier.NewNotifier(
 		database,
 		logger,
@@ -119,7 +121,7 @@ func main() {
 
 	// Start moira self state checker
 	if config.Notifier.SelfState.getSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings(), metrics.ConfigureHeartBeatMetrics(telemetry.Metrics))
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).
@@ -155,6 +157,17 @@ func main() {
 	}
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)
+
+	aliveWatcher := notifier.NewAliveWatcher(
+		logger,
+		database,
+		notifierConfig.CheckNotifierStateTimeout,
+		notifierMetrics,
+	)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	aliveWatcher.Start(ctx)
+	defer cancel()
 
 	logger.Info().
 		String("moira_version", MoiraVersion).

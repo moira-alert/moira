@@ -3,8 +3,6 @@ package selfstate
 import (
 	"time"
 
-	"github.com/moira-alert/moira/metrics"
-
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 
 	"gopkg.in/tomb.v2"
@@ -30,9 +28,15 @@ type SelfCheckWorker struct {
 }
 
 // NewSelfCheckWorker creates SelfCheckWorker.
-func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config, metrics *metrics.HeartBeatMetrics) *SelfCheckWorker {
-	heartbeats := createStandardHeartbeats(logger, database, config, metrics)
-	return &SelfCheckWorker{Logger: logger, Database: database, Notifier: notifier, Config: config, heartbeats: heartbeats}
+func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config) *SelfCheckWorker {
+	heartbeats := createStandardHeartbeats(logger, database, config)
+	return &SelfCheckWorker{
+		Logger:     logger,
+		Database:   database,
+		Notifier:   notifier,
+		Config:     config,
+		heartbeats: heartbeats,
+	}
 }
 
 // Start self check worker.
@@ -49,6 +53,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 			selfCheck.Database.NewLock(selfStateLockName, selfStateLockTTL),
 			selfCheck.selfStateChecker,
 		).Run(selfCheck.tomb.Dying())
+
 		return nil
 	})
 
@@ -61,7 +66,7 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config, metrics *metrics.HeartBeatMetrics) []heartbeat.Heartbeater {
+func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config) []heartbeat.Heartbeater {
 	heartbeats := make([]heartbeat.Heartbeater, 0)
 
 	if hb := heartbeat.GetDatabase(conf.RedisDisconnectDelaySeconds, logger, database); hb != nil {
@@ -80,7 +85,7 @@ func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf
 		heartbeats = append(heartbeats, hb)
 	}
 
-	if hb := heartbeat.GetNotifier(logger, database, metrics); hb != nil {
+	if hb := heartbeat.GetNotifier(logger, database); hb != nil {
 		heartbeats = append(heartbeats, hb)
 	}
 
