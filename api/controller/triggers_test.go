@@ -1192,3 +1192,83 @@ func TestGetUnusedTriggerIDs(t *testing.T) {
 		So(actual, ShouldResemble, expected)
 	})
 }
+
+func TestGetTriggerNoisiness(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	const (
+		defaultFrom   = "-inf"
+		defaultTo     = "+inf"
+		zeroPage      = int64(0)
+		allEventsSize = int64(-1)
+	)
+
+	Convey("TestGetTriggerNoisiness", t, func() {
+		Convey("with error from db", func() {
+			errFromDB := errors.New("some err")
+			dataBase.EXPECT().GetAllTriggerIDs().Return([]string{}, errFromDB)
+
+			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
+			So(err, ShouldResemble, api.ErrorInternalServer(errFromDB))
+			So(triggerNoisinessList, ShouldBeNil)
+		})
+
+		Convey("with no triggers", func() {
+			dataBase.EXPECT().GetAllTriggerIDs().Return([]string{}, nil)
+
+			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
+			So(err, ShouldBeNil)
+			So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+				List:  []dto.TriggerNoisiness{},
+				Page:  zeroPage,
+				Size:  allEventsSize,
+				Total: 0,
+			})
+		})
+
+		const (
+			triggerID1 = "first-trigger"
+			triggerID2 = "second-trigger"
+		)
+
+		trigger1 := moira.TriggerCheck{
+			Trigger: moira.Trigger{
+				ID: triggerID1,
+			},
+		}
+
+		trigger2 := moira.TriggerCheck{
+			Trigger: moira.Trigger{
+				ID: triggerID2,
+			},
+		}
+
+		Convey("with triggers no events", func() {
+			dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+			dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(0))
+			dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(0))
+			dataBase.EXPECT().GetTriggerChecks([]string{triggerID1, triggerID2}).
+				Return([]moira.TriggerCheck{trigger1, trigger2}, nil)
+
+			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
+			So(err, ShouldBeNil)
+			So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+				List: []dto.TriggerNoisiness{
+					{
+						TriggerCheck: trigger1,
+						EventsCount:  0,
+					},
+					{
+						TriggerCheck: trigger2,
+						EventsCount:  0,
+					},
+				},
+				Page:  zeroPage,
+				Size:  allEventsSize,
+				Total: 2,
+			})
+		})
+	})
+}

@@ -240,7 +240,7 @@ func GetTriggerNoisiness(
 		Total: total,
 	}
 
-	if page < 0 || (page > 0 && size < 0) {
+	if page < 0 || (page > 0 && size < 0) || total == 0 {
 		return &resDto, nil
 	}
 
