@@ -931,6 +931,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			getTriggerNoisiness(responseWriter, getRequestTriggerNoisiness(from, to))
 
 			response := responseWriter.Result()
+			defer response.Body.Close()
 
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 
@@ -962,6 +963,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			getTriggerNoisiness(responseWriter, getRequestTriggerNoisiness(from, to))
 
 			response := responseWriter.Result()
+			defer response.Body.Close()
 
 			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
 
