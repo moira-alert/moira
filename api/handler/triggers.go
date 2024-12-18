@@ -418,14 +418,14 @@ func getSearchRequestString(request *http.Request) string {
 //	@id			get-triggers-noisiness
 //	@tags		trigger
 //	@produce	json
-//	@param		size		query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"	default(100)
-//	@param		p			query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"			default(0)
-//	@param		from		query		string							false	"Start time of the time range"															default(-3hours)
-//	@param		to			query		string							false	"End time of the time range"															default(now)
-//	@param		sort		query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
-//	@success	200	{object}	dto.TriggerNoisinessList				"Get noisiness for triggers in range"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		size	query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
+//	@param		p		query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
+//	@param		from	query		string							false	"Start time of the time range"																			default(-3hours)
+//	@param		to		query		string							false	"End time of the time range"																			default(now)
+//	@param		sort	query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
+//	@success	200		{object}	dto.TriggerNoisinessList		"Get noisiness for triggers in range"
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/trigger/noisiness [get]
 func getTriggerNoisiness(writer http.ResponseWriter, request *http.Request) {
 	size := middleware.GetSize(request)
