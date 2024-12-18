@@ -909,7 +909,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 		return request
 	}
 
-	testTrigger := moira.TriggerCheck{
+	testTriggerCheck := moira.TriggerCheck{
 		Trigger: moira.Trigger{
 			ID: "triggerID",
 		},
@@ -924,9 +924,9 @@ func TestGetTriggerNoisiness(t *testing.T) {
 		Convey("with ok", func() {
 			responseWriter := httptest.NewRecorder()
 
-			mockDB.EXPECT().GetAllTriggerIDs().Return([]string{testTrigger.ID}, nil)
-			mockDB.EXPECT().GetNotificationEventCount(testTrigger.ID, from, to).Return(int64(1))
-			mockDB.EXPECT().GetTriggerChecks([]string{testTrigger.ID}).Return([]*moira.TriggerCheck{&testTrigger}, nil)
+			mockDB.EXPECT().GetAllTriggerIDs().Return([]string{testTriggerCheck.ID}, nil)
+			mockDB.EXPECT().GetNotificationEventCount(testTriggerCheck.ID, from, to).Return(int64(1))
+			mockDB.EXPECT().GetTriggerChecks([]string{testTriggerCheck.ID}).Return([]*moira.TriggerCheck{&testTriggerCheck}, nil)
 
 			getTriggerNoisiness(responseWriter, getRequestTriggerNoisiness(from, to))
 
@@ -944,8 +944,10 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			So(&gotDTO, ShouldResemble, &dto.TriggerNoisinessList{
 				List: []dto.TriggerNoisiness{
 					{
-						TriggerCheck: testTrigger,
-						EventsCount:  1,
+						Trigger: dto.Trigger{
+							TriggerModel: dto.CreateTriggerModel(&testTriggerCheck.Trigger),
+						},
+						EventsCount: 1,
 					},
 				},
 				Page:  0,

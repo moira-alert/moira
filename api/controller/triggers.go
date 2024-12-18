@@ -257,20 +257,23 @@ func GetTriggerNoisiness(
 		}
 	}
 
-	triggerChecks, err := getTriggerChecks(database, onlyTriggerIDs(triggerIDsWithEventsCount))
+	triggers, err := getTriggerChecks(database, onlyTriggerIDs(triggerIDsWithEventsCount))
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if len(triggerChecks) != len(triggerIDsWithEventsCount) {
+	if len(triggers) != len(triggerIDsWithEventsCount) {
 		return nil, api.ErrorInternalServer(fmt.Errorf("failed to fetch triggers for such range"))
 	}
 
-	resDto.List = make([]dto.TriggerNoisiness, 0, len(triggerChecks))
-	for i := range triggerChecks {
+	resDto.List = make([]dto.TriggerNoisiness, 0, len(triggers))
+	for i := range triggers {
 		resDto.List = append(resDto.List, dto.TriggerNoisiness{
-			TriggerCheck: triggerChecks[i],
-			EventsCount:  triggerIDsWithEventsCount[i].eventsCount,
+			Trigger: dto.Trigger{
+				TriggerModel: dto.CreateTriggerModel(&triggers[i].Trigger),
+				Throttling:   triggers[i].Throttling,
+			},
+			EventsCount: triggerIDsWithEventsCount[i].eventsCount,
 		})
 	}
 

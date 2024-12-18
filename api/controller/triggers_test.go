@@ -1233,13 +1233,13 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			triggerID2 = "second-trigger"
 		)
 
-		trigger1 := moira.TriggerCheck{
+		triggerCheck1 := moira.TriggerCheck{
 			Trigger: moira.Trigger{
 				ID: triggerID1,
 			},
 		}
 
-		trigger2 := moira.TriggerCheck{
+		triggerCheck2 := moira.TriggerCheck{
 			Trigger: moira.Trigger{
 				ID: triggerID2,
 			},
@@ -1250,19 +1250,23 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(0))
 			dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(0))
 			dataBase.EXPECT().GetTriggerChecks([]string{triggerID1, triggerID2}).
-				Return([]*moira.TriggerCheck{&trigger1, &trigger2}, nil)
+				Return([]*moira.TriggerCheck{&triggerCheck1, &triggerCheck2}, nil)
 
 			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
 			So(err, ShouldBeNil)
 			So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
 				List: []dto.TriggerNoisiness{
 					{
-						TriggerCheck: trigger1,
-						EventsCount:  0,
+						Trigger: dto.Trigger{
+							TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
+						},
+						EventsCount: 0,
 					},
 					{
-						TriggerCheck: trigger2,
-						EventsCount:  0,
+						Trigger: dto.Trigger{
+							TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
+						},
+						EventsCount: 0,
 					},
 				},
 				Page:  zeroPage,
@@ -1277,19 +1281,23 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
 				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
 				dataBase.EXPECT().GetTriggerChecks([]string{triggerID1, triggerID2}).
-					Return([]*moira.TriggerCheck{&trigger1, &trigger2}, nil)
+					Return([]*moira.TriggerCheck{&triggerCheck1, &triggerCheck2}, nil)
 
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.AscSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
 					List: []dto.TriggerNoisiness{
 						{
-							TriggerCheck: trigger1,
-							EventsCount:  1,
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
+							},
+							EventsCount: 1,
 						},
 						{
-							TriggerCheck: trigger2,
-							EventsCount:  2,
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
+							},
+							EventsCount: 2,
 						},
 					},
 					Page:  zeroPage,
@@ -1303,19 +1311,23 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
 				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
 				dataBase.EXPECT().GetTriggerChecks([]string{triggerID2, triggerID1}).
-					Return([]*moira.TriggerCheck{&trigger2, &trigger1}, nil)
+					Return([]*moira.TriggerCheck{&triggerCheck2, &triggerCheck1}, nil)
 
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
 					List: []dto.TriggerNoisiness{
 						{
-							TriggerCheck: trigger2,
-							EventsCount:  2,
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
+							},
+							EventsCount: 2,
 						},
 						{
-							TriggerCheck: trigger1,
-							EventsCount:  1,
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
+							},
+							EventsCount: 1,
 						},
 					},
 					Page:  zeroPage,
@@ -1345,15 +1357,17 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
 				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
 				dataBase.EXPECT().GetTriggerChecks([]string{triggerID2}).
-					Return([]*moira.TriggerCheck{&trigger2}, nil)
+					Return([]*moira.TriggerCheck{&triggerCheck2}, nil)
 
 				triggerNoisinessList, err = GetTriggerNoisiness(dataBase, zeroPage, 1, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
 					List: []dto.TriggerNoisiness{
 						{
-							TriggerCheck: trigger2,
-							EventsCount:  2,
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
+							},
+							EventsCount: 2,
 						},
 					},
 					Page:  zeroPage,
@@ -1365,15 +1379,17 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
 				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
 				dataBase.EXPECT().GetTriggerChecks([]string{triggerID1}).
-					Return([]*moira.TriggerCheck{&trigger1}, nil)
+					Return([]*moira.TriggerCheck{&triggerCheck1}, nil)
 
 				triggerNoisinessList, err = GetTriggerNoisiness(dataBase, 1, 1, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
 					List: []dto.TriggerNoisiness{
 						{
-							TriggerCheck: trigger1,
-							EventsCount:  1,
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
+							},
+							EventsCount: 1,
 						},
 					},
 					Page:  1,
@@ -1433,7 +1449,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
 			dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
 			dataBase.EXPECT().GetTriggerChecks([]string{triggerID2, triggerID1}).
-				Return([]*moira.TriggerCheck{&trigger2}, nil)
+				Return([]*moira.TriggerCheck{&triggerCheck2}, nil)
 
 			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
 			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("failed to fetch triggers for such range")))

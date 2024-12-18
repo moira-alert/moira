@@ -565,7 +565,7 @@ func (TriggersSearchResultDeleteResponse) Render(http.ResponseWriter, *http.Requ
 
 // TriggerNoisiness represents TriggerCheck with amount of events for this trigger.
 type TriggerNoisiness struct {
-	moira.TriggerCheck
+	Trigger
 	// EventsCount for the trigger.
 	EventsCount int64 `json:"events_count"`
 }
