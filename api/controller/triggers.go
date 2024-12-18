@@ -216,6 +216,8 @@ func triggerExists(database moira.Database, triggerID string) (bool, error) {
 	return true, nil
 }
 
+// GetTriggerNoisiness get triggers with amount of events (within time range [from, to])
+// and sorts by events_count according to sortOrder.
 func GetTriggerNoisiness(
 	database moira.Database,
 	page, size int64,
