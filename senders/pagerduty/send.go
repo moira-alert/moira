@@ -22,6 +22,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err != nil {
 		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %w. ", contact.Value, err)
 	}
+
 	return nil
 }
 
@@ -62,10 +63,16 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Details:   details,
 	}
 
+	action := "trigger"
+	if events.GetSubjectState() == moira.StateOK {
+		action = "resolve"
+	}
+
 	event := pagerduty.V2Event{
 		RoutingKey: contact.Value,
-		Action:     "trigger",
+		Action:     action,
 		Payload:    payload,
+		DedupKey:   trigger.ID,
 	}
 
 	if len(plots) > 0 && sender.imageStoreConfigured {
