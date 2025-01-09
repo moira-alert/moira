@@ -19,11 +19,14 @@ const (
 	triggerID3 = "F0F4A5B9-637C-4933-AA0D-88B9798A2630" //nolint
 )
 
-var (
+const (
 	allTimeFrom = "-inf"
 	allTimeTo   = "+inf"
-	now         = time.Now().Unix()
-	value       = float64(0)
+)
+
+var (
+	now   = time.Now().Unix()
+	value = float64(0)
 )
 
 // nolint
@@ -33,11 +36,6 @@ func TestNotificationEvents(t *testing.T) {
 	dataBase.Flush()
 	defer dataBase.Flush()
 
-	const (
-		defaultFrom = "-inf"
-		defaultTo   = "+inf"
-	)
-
 	Convey("Notification events manipulation", t, func() {
 		Convey("Test push-get-get count-fetch", func() {
 			Convey("Should no events", func() {
@@ -45,7 +43,7 @@ func TestNotificationEvents(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
 
-				total := dataBase.GetNotificationEventCount(triggerID, defaultFrom, defaultTo)
+				total := dataBase.GetNotificationEventCount(triggerID, allTimeFrom, allTimeTo)
 				So(total, ShouldEqual, 0)
 
 				actual1, err := dataBase.FetchNotificationEvent()
@@ -78,7 +76,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total := dataBase.GetNotificationEventCount(triggerID, defaultFrom, defaultTo)
+				total := dataBase.GetNotificationEventCount(triggerID, allTimeFrom, allTimeTo)
 				So(total, ShouldEqual, 1)
 
 				actual1, err := dataBase.FetchNotificationEvent()
@@ -107,7 +105,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total := dataBase.GetNotificationEventCount(triggerID, defaultFrom, defaultTo)
+				total := dataBase.GetNotificationEventCount(triggerID, allTimeFrom, allTimeTo)
 				So(total, ShouldEqual, 1)
 			})
 
@@ -153,7 +151,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total := dataBase.GetNotificationEventCount(triggerID1, defaultFrom, defaultTo)
+				total := dataBase.GetNotificationEventCount(triggerID1, allTimeFrom, allTimeTo)
 				So(total, ShouldEqual, 1)
 
 				actual, err = dataBase.GetNotificationEvents(triggerID2, 0, 1, allTimeFrom, allTimeTo)
@@ -169,7 +167,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total = dataBase.GetNotificationEventCount(triggerID2, defaultFrom, defaultTo)
+				total = dataBase.GetNotificationEventCount(triggerID2, allTimeFrom, allTimeTo)
 				So(total, ShouldEqual, 1)
 			})
 
@@ -198,7 +196,7 @@ func TestNotificationEvents(t *testing.T) {
 					},
 				})
 
-				total := dataBase.GetNotificationEventCount(triggerID1, defaultFrom, defaultTo)
+				total := dataBase.GetNotificationEventCount(triggerID1, allTimeFrom, allTimeTo)
 				So(total, ShouldEqual, 1)
 			})
 
@@ -244,16 +242,16 @@ func TestNotificationEvents(t *testing.T) {
 				},
 			})
 
-			total := dataBase.GetNotificationEventCount(triggerID3, defaultFrom, defaultTo)
+			total := dataBase.GetNotificationEventCount(triggerID3, allTimeFrom, allTimeTo)
 			So(total, ShouldEqual, 1)
 
-			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now-1, 10), defaultTo)
+			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now-1, 10), allTimeTo)
 			So(total, ShouldEqual, 1)
 
-			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now, 10), defaultTo)
+			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now, 10), allTimeTo)
 			So(total, ShouldEqual, 1)
 
-			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now+1, 10), defaultTo)
+			total = dataBase.GetNotificationEventCount(triggerID3, strconv.FormatInt(now+1, 10), allTimeTo)
 			So(total, ShouldEqual, 0)
 
 			actual, err = dataBase.GetNotificationEvents(triggerID3, 1, 1, allTimeFrom, allTimeTo)
@@ -380,7 +378,7 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 		err = dataBase.PushNotificationEvent(&newNotificationEvent, true)
 		So(err, ShouldNotBeNil)
 
-		total := dataBase.GetNotificationEventCount("123", "-inf", "+inf")
+		total := dataBase.GetNotificationEventCount("123", allTimeFrom, allTimeFrom)
 		So(total, ShouldEqual, 0)
 
 		actual2, err := dataBase.FetchNotificationEvent()

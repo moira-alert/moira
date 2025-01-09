@@ -85,6 +85,8 @@ func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerP
 	return notification
 }
 
+const allTimeTo = "+inf"
+
 func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.NotificationEvent,
 	logger moira.Logger,
 ) (time.Time, bool) {
@@ -125,7 +127,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				if from.Before(beginning) {
 					from = beginning
 				}
-				count := scheduler.database.GetNotificationEventCount(event.TriggerID, strconv.FormatInt(from.Unix(), 10), "+inf")
+				count := scheduler.database.GetNotificationEventCount(event.TriggerID, strconv.FormatInt(from.Unix(), 10), allTimeTo)
 				if count >= level.count {
 					next = now.Add(level.delay)
 					logger.Debug().
