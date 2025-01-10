@@ -1924,3 +1924,71 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 		})
 	})
 }
+
+func TestTriggerChecker_handleFetchError(t *testing.T) {
+	Convey("Test handleFetchError", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		logger, _ := logging.GetLogger("Test")
+
+		var retention int64 = 10
+		metric := "some.metric"
+		testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
+
+		trigger := &moira.Trigger{
+			ID:            "test trigger",
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
+		}
+		triggerChecker := TriggerChecker{
+			triggerID: trigger.ID,
+			from:      testTime - 5*retention,
+			until:     testTime,
+			trigger:   trigger,
+			database:  dataBase,
+			logger:    logger,
+			ttlState:  moira.TTLStateNODATA,
+			lastCheck: &moira.CheckData{
+				State:     moira.StateOK,
+				Timestamp: testTime - retention,
+				Metrics: map[string]moira.MetricState{
+					metric: {
+						State:     moira.StateOK,
+						Timestamp: testTime - 4*retention - 1,
+					},
+				},
+			},
+		}
+
+		Convey("with ErrTriggerHasEmptyTargets, ErrTriggerHasOnlyWildcards", func() {
+			errorList := []error{
+				ErrTriggerHasEmptyTargets{},
+				ErrTriggerHasOnlyWildcards{},
+			}
+
+			Convey("when triggerChecker.ttl == 0", func() {
+				for i, givenErr := range errorList {
+					Convey(fmt.Sprintf("Case %v: %T", i+1, givenErr), func() {
+						expectedCheckData := moira.CheckData{
+							Score:     int64(1_000),
+							Metrics:   triggerChecker.lastCheck.Metrics,
+							State:     triggerChecker.ttlState.ToTriggerState(),
+							Timestamp: triggerChecker.until,
+							Message:   givenErr.Error(),
+						}
+
+						dataBase.EXPECT().SetTriggerLastCheck(
+							triggerChecker.triggerID,
+							&expectedCheckData,
+							triggerChecker.trigger.ClusterKey(),
+						).Return(nil)
+
+						err := triggerChecker.handleFetchError(newCheckData(triggerChecker.lastCheck, triggerChecker.until), givenErr)
+						So(err, ShouldBeNil)
+					})
+				}
+			})
+		})
+	})
+}
