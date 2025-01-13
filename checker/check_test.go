@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/remote"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira/metrics"
@@ -1932,7 +1934,7 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
 
-		var retention int64 = 10
+		//var retention int64 = 10
 		metric := "some.metric"
 		testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
 
@@ -1943,7 +1945,7 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 		}
 		triggerChecker := TriggerChecker{
 			triggerID: trigger.ID,
-			from:      testTime - 5*retention,
+			from:      testTime - 50,
 			until:     testTime,
 			trigger:   trigger,
 			database:  dataBase,
@@ -1951,11 +1953,11 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 			ttlState:  moira.TTLStateNODATA,
 			lastCheck: &moira.CheckData{
 				State:     moira.StateOK,
-				Timestamp: testTime - retention,
+				Timestamp: testTime - 10,
 				Metrics: map[string]moira.MetricState{
 					metric: {
 						State:     moira.StateOK,
-						Timestamp: testTime - 4*retention - 1,
+						Timestamp: testTime - 41,
 					},
 				},
 			},
@@ -2029,6 +2031,50 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 						So(err, ShouldBeNil)
 					})
 				}
+			})
+		})
+
+		Convey("with graphite remote unavailable", func() {
+			givenErr := remote.ErrRemoteUnavailable{
+				InternalError: errors.New("some err"),
+			}
+
+			Convey("time since last successful check >= triggerChecker.ttl", func() {
+				triggerChecker.ttl = 10
+				triggerChecker.lastCheck.LastSuccessfulCheckTimestamp = triggerChecker.until - 20
+
+				expectedCheckData := moira.CheckData{
+					Score:                        int64(100_000),
+					Metrics:                      triggerChecker.lastCheck.Metrics,
+					State:                        moira.StateEXCEPTION,
+					Timestamp:                    triggerChecker.until,
+					EventTimestamp:               triggerChecker.until,
+					LastSuccessfulCheckTimestamp: triggerChecker.lastCheck.LastSuccessfulCheckTimestamp,
+					Message: fmt.Sprintf(
+						"Remote server unavailable. Trigger is not checked for %d seconds",
+						triggerChecker.until-triggerChecker.lastCheck.LastSuccessfulCheckTimestamp),
+					MetricsToTargetRelation: map[string]string{},
+				}
+
+				dataBase.EXPECT().PushNotificationEvent(
+					&moira.NotificationEvent{
+						IsTriggerEvent: true,
+						TriggerID:      triggerChecker.triggerID,
+						State:          moira.StateEXCEPTION,
+						OldState:       triggerChecker.lastCheck.State,
+						Timestamp:      triggerChecker.until,
+						Metric:         triggerChecker.trigger.Name,
+					},
+					true,
+				).Return(nil).Times(2)
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&expectedCheckData,
+					triggerChecker.trigger.ClusterKey(),
+				).Return(nil).Times(1)
+
+				err := triggerChecker.handleFetchError(newCheckData(triggerChecker.lastCheck, triggerChecker.until), givenErr)
+				So(err, ShouldBeNil)
 			})
 		})
 	})
