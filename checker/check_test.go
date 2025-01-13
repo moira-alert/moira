@@ -1968,21 +1968,62 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 			}
 
 			Convey("when triggerChecker.ttl == 0", func() {
+				triggerChecker.ttl = 0
+
 				for i, givenErr := range errorList {
 					Convey(fmt.Sprintf("Case %v: %T", i+1, givenErr), func() {
 						expectedCheckData := moira.CheckData{
-							Score:     int64(1_000),
-							Metrics:   triggerChecker.lastCheck.Metrics,
-							State:     triggerChecker.ttlState.ToTriggerState(),
-							Timestamp: triggerChecker.until,
-							Message:   givenErr.Error(),
+							Score:                   int64(1_000),
+							Metrics:                 triggerChecker.lastCheck.Metrics,
+							State:                   triggerChecker.ttlState.ToTriggerState(),
+							Timestamp:               triggerChecker.until,
+							Message:                 givenErr.Error(),
+							MetricsToTargetRelation: map[string]string{},
 						}
 
 						dataBase.EXPECT().SetTriggerLastCheck(
 							triggerChecker.triggerID,
 							&expectedCheckData,
 							triggerChecker.trigger.ClusterKey(),
-						).Return(nil)
+						).Return(nil).Times(1)
+
+						err := triggerChecker.handleFetchError(newCheckData(triggerChecker.lastCheck, triggerChecker.until), givenErr)
+						So(err, ShouldBeNil)
+					})
+				}
+			})
+
+			Convey("when triggerChecker.ttl != 0", func() {
+				triggerChecker.ttl = 600
+
+				for i, givenErr := range errorList {
+					Convey(fmt.Sprintf("Case %v: %T", i+1, givenErr), func() {
+						expectedCheckData := moira.CheckData{
+							Score:                   int64(1_000),
+							Metrics:                 triggerChecker.lastCheck.Metrics,
+							State:                   triggerChecker.ttlState.ToTriggerState(),
+							Timestamp:               triggerChecker.until,
+							EventTimestamp:          triggerChecker.until,
+							Message:                 givenErr.Error(),
+							MetricsToTargetRelation: map[string]string{},
+						}
+
+						dataBase.EXPECT().PushNotificationEvent(
+							&moira.NotificationEvent{
+								IsTriggerEvent: true,
+								TriggerID:      triggerChecker.triggerID,
+								State:          triggerChecker.ttlState.ToTriggerState(),
+								OldState:       triggerChecker.lastCheck.State,
+								Timestamp:      triggerChecker.until,
+								Metric:         triggerChecker.trigger.Name,
+							},
+							true,
+						).Return(nil).Times(1)
+						dataBase.EXPECT().SetTriggerLastCheck(
+							triggerChecker.triggerID,
+							&expectedCheckData,
+							triggerChecker.trigger.ClusterKey(),
+						).Return(nil).Times(1)
 
 						err := triggerChecker.handleFetchError(newCheckData(triggerChecker.lastCheck, triggerChecker.until), givenErr)
 						So(err, ShouldBeNil)
