@@ -1934,7 +1934,6 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
 
-		//var retention int64 = 10
 		metric := "some.metric"
 		testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
 
