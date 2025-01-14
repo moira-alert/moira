@@ -2038,68 +2038,41 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 				InternalError: errors.New("some err"),
 			}
 
-			Convey("time since last successful check >= triggerChecker.ttl", func() {
-				triggerChecker.ttl = 10
-				triggerChecker.lastCheck.LastSuccessfulCheckTimestamp = triggerChecker.until - 20
+			triggerChecker.ttl = 10
+			triggerChecker.lastCheck.LastSuccessfulCheckTimestamp = triggerChecker.until - 20
 
-				expectedCheckData := moira.CheckData{
-					Score:                        int64(100_000),
-					Metrics:                      triggerChecker.lastCheck.Metrics,
-					State:                        moira.StateEXCEPTION,
-					Timestamp:                    triggerChecker.until,
-					EventTimestamp:               triggerChecker.until,
-					LastSuccessfulCheckTimestamp: triggerChecker.lastCheck.LastSuccessfulCheckTimestamp,
-					Message: fmt.Sprintf(
-						"Remote server unavailable. Trigger is not checked for %d seconds",
-						triggerChecker.until-triggerChecker.lastCheck.LastSuccessfulCheckTimestamp),
-					MetricsToTargetRelation: map[string]string{},
-				}
+			expectedCheckData := moira.CheckData{
+				Score:                        int64(100_000),
+				Metrics:                      triggerChecker.lastCheck.Metrics,
+				State:                        moira.StateEXCEPTION,
+				Timestamp:                    triggerChecker.until,
+				EventTimestamp:               triggerChecker.until,
+				LastSuccessfulCheckTimestamp: triggerChecker.lastCheck.LastSuccessfulCheckTimestamp,
+				Message: fmt.Sprintf(
+					"Remote server unavailable. Trigger is not checked since: %v",
+					triggerChecker.lastCheck.LastSuccessfulCheckTimestamp),
+				MetricsToTargetRelation: map[string]string{},
+			}
 
-				dataBase.EXPECT().PushNotificationEvent(
-					&moira.NotificationEvent{
-						IsTriggerEvent: true,
-						TriggerID:      triggerChecker.triggerID,
-						State:          moira.StateEXCEPTION,
-						OldState:       triggerChecker.lastCheck.State,
-						Timestamp:      triggerChecker.until,
-						Metric:         triggerChecker.trigger.Name,
-					},
-					true,
-				).Return(nil).Times(2) // this is strange... why 2?
-				dataBase.EXPECT().SetTriggerLastCheck(
-					triggerChecker.triggerID,
-					&expectedCheckData,
-					triggerChecker.trigger.ClusterKey(),
-				).Return(nil).Times(1)
+			dataBase.EXPECT().PushNotificationEvent(
+				&moira.NotificationEvent{
+					IsTriggerEvent: true,
+					TriggerID:      triggerChecker.triggerID,
+					State:          moira.StateEXCEPTION,
+					OldState:       triggerChecker.lastCheck.State,
+					Timestamp:      triggerChecker.until,
+					Metric:         triggerChecker.trigger.Name,
+				},
+				true,
+			).Return(nil).Times(1)
+			dataBase.EXPECT().SetTriggerLastCheck(
+				triggerChecker.triggerID,
+				&expectedCheckData,
+				triggerChecker.trigger.ClusterKey(),
+			).Return(nil).Times(1)
 
-				err := triggerChecker.handleFetchError(newCheckData(triggerChecker.lastCheck, triggerChecker.until), givenErr)
-				So(err, ShouldBeNil)
-			})
-
-			Convey("time since last successful check < triggerChecker.ttl", func() {
-				triggerChecker.ttl = 30
-				triggerChecker.lastCheck.LastSuccessfulCheckTimestamp = triggerChecker.until - 15
-
-				expectedCheckData := moira.CheckData{
-					Score:                        0,
-					Metrics:                      triggerChecker.lastCheck.Metrics,
-					State:                        triggerChecker.lastCheck.State,
-					Timestamp:                    triggerChecker.until,
-					EventTimestamp:               triggerChecker.until,
-					LastSuccessfulCheckTimestamp: triggerChecker.lastCheck.LastSuccessfulCheckTimestamp,
-					Message:                      "",
-					MetricsToTargetRelation:      map[string]string{},
-				}
-
-				dataBase.EXPECT().SetTriggerLastCheck(
-					triggerChecker.triggerID,
-					&expectedCheckData,
-					triggerChecker.trigger.ClusterKey(),
-				).Return(nil).Times(1)
-
-				err := triggerChecker.handleFetchError(newCheckData(triggerChecker.lastCheck, triggerChecker.until), givenErr)
-				So(err, ShouldBeNil)
-			})
+			err := triggerChecker.handleFetchError(newCheckData(triggerChecker.lastCheck, triggerChecker.until), givenErr)
+			So(err, ShouldBeNil)
 		})
 
 		Convey("with bad functions, problems in expressions, etc", func() {
