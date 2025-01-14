@@ -170,27 +170,6 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 	)
 }
 
-func (triggerChecker *TriggerChecker) reactOnSourceUnavailableError(checkData moira.CheckData, err error) moira.CheckData {
-	timeSinceLastSuccessfulCheck := checkData.Timestamp - checkData.LastSuccessfulCheckTimestamp
-	if timeSinceLastSuccessfulCheck >= triggerChecker.ttl {
-		checkData.State = moira.StateEXCEPTION
-		checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
-
-		var comparingErr error
-		checkData, comparingErr = triggerChecker.compareTriggerStates(checkData)
-		if comparingErr != nil {
-			triggerChecker.logger.Error().
-				Error(comparingErr).
-				String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
-				Msg("cannot compare trigger states")
-		}
-	}
-
-	logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
-
-	return checkData
-}
-
 // handleUndefinedError is a function that check error with undefined type.
 func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.CheckData, err error) error {
 	triggerChecker.metrics.CheckError.Mark(1)
