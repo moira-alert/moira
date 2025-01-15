@@ -58,6 +58,7 @@ type ErrEvalExpr struct {
 	target        string
 }
 
+// ErrorEvalExpression creates ErrEvalExpr with given err and target.
 func ErrorEvalExpression(err error, target string) ErrEvalExpr {
 	return ErrEvalExpr{
 		internalError: err,
