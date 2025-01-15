@@ -278,16 +278,78 @@ func TestTriggerValidation(t *testing.T) {
 			Convey("do not have asterisk", func() {
 				trigger.Targets = []string{"sumSeries(some.test.series.*)"}
 				tr := Trigger{trigger, throttling}
+
 				fetchResult.EXPECT().GetPatterns().Return([]string{"some.test.series.*"}, nil).AnyTimes()
+
 				err := tr.Bind(request)
 				So(err, ShouldBeNil)
 			})
 			Convey("have asterisk", func() {
 				trigger.Targets = []string{"sumSeries(*)"}
 				tr := Trigger{trigger, throttling}
+
 				fetchResult.EXPECT().GetPatterns().Return([]string{"*"}, nil).AnyTimes()
+
 				err := tr.Bind(request)
 				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed})
+			})
+
+			Convey("regexps in pattern", func() {
+				type testcase struct {
+					givenTargets   []string
+					expectedErrRsp error
+					caseDesc       string
+				}
+
+				testcases := []testcase{
+					{
+						givenTargets:   []string{"seriesByTag('Name=some.metric', 'Team=Moira', 'Env=~Env1|Env2')"},
+						expectedErrRsp: nil,
+						caseDesc:       "with ' and at the end of query",
+					},
+					{
+						givenTargets:   []string{"seriesByTag(\"Name=some.metric\", \"Team=Moira\", \"Env=~Env1|Env2\")"},
+						expectedErrRsp: nil,
+						caseDesc:       "with \" and at the end of query",
+					},
+					{
+						givenTargets:   []string{"seriesByTag('Name=some.metric', 'Env=~Env1|Env2', 'Team=Moira')"},
+						expectedErrRsp: nil,
+						caseDesc:       "with ' in the middle of query",
+					},
+					{
+						givenTargets:   []string{"seriesByTag(\"Name=some.metric\", \"Env=~Env1|Env2\", \"Team=Moira\")"},
+						expectedErrRsp: nil,
+						caseDesc:       "with \" in the middle of query",
+					},
+					{
+						givenTargets:   []string{"seriesByTag('Name=some.metric', 'Env=~Env1|Env2'   , 'Team=Moira')"},
+						expectedErrRsp: nil,
+						caseDesc:       "in the middle of query with some spaces",
+					},
+					{
+						givenTargets:   []string{"seriesByTag('Name=some.metric', 'Team=Moira', 'Env=~Env1|Env2'        )"},
+						expectedErrRsp: nil,
+						caseDesc:       "at the end of query with some spaces",
+					},
+					{
+						givenTargets:   []string{"seriesByTag('Name=some.metric', \"Vasya=~Pupkin|Ivanov\" , 'Team=Moira', 'Env=~Env1|Env2'        )"},
+						expectedErrRsp: nil,
+						caseDesc:       "more than one regexp",
+					},
+				}
+
+				for i, singleCase := range testcases {
+					Convey(fmt.Sprintf("Case %v: %s", i+1, singleCase.caseDesc), func() {
+						trigger.Targets = singleCase.givenTargets
+						tr := Trigger{trigger, throttling}
+
+						fetchResult.EXPECT().GetPatterns().Return(singleCase.givenTargets, nil).AnyTimes()
+
+						err := tr.Bind(request)
+						So(err, ShouldResemble, singleCase.expectedErrRsp)
+					})
+				}
 			})
 		})
 	})

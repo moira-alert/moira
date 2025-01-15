@@ -360,27 +360,25 @@ func checkRegexpInPattern(pattern string) error {
 		regExpInTagValueOpLen = len(regExpInTagValueOp)
 	)
 
+	endingRegexp := regexp.MustCompile(`["'][[:space:]]*[,)]`)
+
 	if strings.Contains(regExpInTagValueOp, pattern) {
-		indexOfRegexp := strings.Index(regExpInTagValueOp, pattern)
-		for indexOfRegexp != -1 {
-			indexOfRegexp += regExpInTagValueOpLen
+		indexOfTagValueRegexp := strings.Index(regExpInTagValueOp, pattern)
+		for indexOfTagValueRegexp != -1 {
+			indexOfTagValueRegexp += regExpInTagValueOpLen
 
-			endOfRegexp := -1
-			for _, possibleEnding := range []string{`",`, `")`, `',`, `')`} {
-				endOfRegexp = strings.Index(possibleEnding, pattern[indexOfRegexp:])
-			}
-
-			if endOfRegexp == -1 {
+			endOfTagValueRegexp := endingRegexp.FindStringIndex(pattern[indexOfTagValueRegexp:])
+			if endOfTagValueRegexp == nil {
 				return fmt.Errorf("unclosed tag value in pattern: %s", pattern)
 			}
 
-			_, err := regexp.Compile(pattern[indexOfRegexp:endOfRegexp])
+			_, err := regexp.Compile(pattern[indexOfTagValueRegexp:endOfTagValueRegexp[0]])
 			if err != nil {
 				return fmt.Errorf("invalid regular expression in trigger pattern: %s, err: %w",
-					pattern[indexOfRegexp:endOfRegexp], err)
+					pattern[indexOfTagValueRegexp:endOfTagValueRegexp[0]], err)
 			}
 
-			indexOfRegexp = strings.Index(regExpInTagValueOp, pattern[endOfRegexp:])
+			indexOfTagValueRegexp = strings.Index(regExpInTagValueOp, pattern[endOfTagValueRegexp[1]:])
 		}
 	}
 
