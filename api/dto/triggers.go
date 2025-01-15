@@ -47,7 +47,7 @@ var (
 )
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
-var asteriskPattern = "*"
+const asteriskPattern = "*"
 
 type TriggersList struct {
 	Page  *int64               `json:"page,omitempty" format:"int64" extensions:"x-nullable"`
@@ -252,12 +252,17 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
-	// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
-	for _, pattern := range trigger.Patterns {
-		if pattern == asteriskPattern {
-			return api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed}
-		}
+	err = checkResolvedPatterns(trigger)
+	if err != nil {
+		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
+
+	//// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
+	//for _, pattern := range trigger.Patterns {
+	//	if pattern == asteriskPattern {
+	//		return api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed}
+	//	}
+	//}
 
 	if trigger.Schedule == nil {
 		trigger.Schedule = moira.NewDefaultScheduleData()
@@ -331,6 +336,55 @@ func checkScheduleFilling(gotSchedule *moira.ScheduleData) (*moira.ScheduleData,
 	newSchedule.EndOffset = gotSchedule.EndOffset
 
 	return newSchedule, nil
+}
+
+func checkResolvedPatterns(trigger *Trigger) error {
+	for _, pattern := range trigger.Patterns {
+		// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
+		if pattern == asteriskPattern {
+			return errAsteriskPatternNotAllowed
+		}
+
+		err := checkRegexpInPattern(pattern)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkRegexpInPattern(pattern string) error {
+	const (
+		regExpInTagValueOp    = "=~"
+		regExpInTagValueOpLen = len(regExpInTagValueOp)
+	)
+
+	if strings.Contains(regExpInTagValueOp, pattern) {
+		indexOfRegexp := strings.Index(regExpInTagValueOp, pattern)
+		for indexOfRegexp != -1 {
+			indexOfRegexp += regExpInTagValueOpLen
+
+			endOfRegexp := -1
+			for _, possibleEnding := range []string{`",`, `")`, `',`, `')`} {
+				endOfRegexp = strings.Index(possibleEnding, pattern[indexOfRegexp:])
+			}
+
+			if endOfRegexp == -1 {
+				return fmt.Errorf("unclosed tag value in pattern: %s", pattern)
+			}
+
+			_, err := regexp.Compile(pattern[indexOfRegexp:endOfRegexp])
+			if err != nil {
+				return fmt.Errorf("invalid regular expression in trigger pattern: %s, err: %w",
+					pattern[indexOfRegexp:endOfRegexp], err)
+			}
+
+			indexOfRegexp = strings.Index(regExpInTagValueOp, pattern[endOfRegexp:])
+		}
+	}
+
+	return nil
 }
 
 func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) error {
