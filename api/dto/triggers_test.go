@@ -384,7 +384,19 @@ func TestTriggerValidation(t *testing.T) {
 									Expr: "(?!",
 								}),
 						},
-						caseDesc: "with bad regexp (incorrect use of '*')",
+						caseDesc: "with bad regexp '(?1'",
+					},
+					{
+						givenTargets: []string{"seriesByTag('name=other.metric','Env=Env1', 'App=Moira-API', 'ResCode=~(4**)')"},
+						expectedErrRsp: api.ErrInvalidRequestContent{
+							ValidationError: fmt.Errorf(
+								"bad regexp in tag 'ResCode': %w",
+								&syntax.Error{
+									Code: syntax.ErrInvalidRepeatOp,
+									Expr: "**",
+								}),
+						},
+						caseDesc: "with bad regexp '(4**)'",
 					},
 				}
 
