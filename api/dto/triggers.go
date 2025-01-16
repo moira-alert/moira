@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/moira-alert/moira/filter"
 	"github.com/moira-alert/moira/templating"
 
 	"github.com/moira-alert/moira"
@@ -355,30 +356,21 @@ func checkResolvedPatterns(trigger *Trigger) error {
 }
 
 func checkRegexpInPattern(pattern string) error {
-	const (
-		regExpInTagValueOp    = "=~"
-		regExpInTagValueOpLen = len(regExpInTagValueOp)
-	)
+	if !strings.HasPrefix(pattern, "seriesByTag") {
+		return nil
+	}
 
-	endingRegexp := regexp.MustCompile(`["'][[:space:]]*[,)]`)
+	tagSpecs, err := filter.ParseSeriesByTag(pattern)
+	if err != nil {
+		return err
+	}
 
-	if strings.Contains(regExpInTagValueOp, pattern) {
-		indexOfTagValueRegexp := strings.Index(regExpInTagValueOp, pattern)
-		for indexOfTagValueRegexp != -1 {
-			indexOfTagValueRegexp += regExpInTagValueOpLen
-
-			endOfTagValueRegexp := endingRegexp.FindStringIndex(pattern[indexOfTagValueRegexp:])
-			if endOfTagValueRegexp == nil {
-				return fmt.Errorf("unclosed tag value in pattern: %s", pattern)
-			}
-
-			_, err := regexp.Compile(pattern[indexOfTagValueRegexp:endOfTagValueRegexp[0]])
+	for _, spec := range tagSpecs {
+		if spec.Operator == filter.MatchOperator || spec.Operator == filter.NotMatchOperator {
+			_, err = regexp.Compile(spec.Value)
 			if err != nil {
-				return fmt.Errorf("invalid regular expression in trigger pattern: %s, err: %w",
-					pattern[indexOfTagValueRegexp:endOfTagValueRegexp[0]], err)
+				return fmt.Errorf("bad regexp in tag '%s': %w", spec.Name, err)
 			}
-
-			indexOfTagValueRegexp = strings.Index(regExpInTagValueOp, pattern[endOfTagValueRegexp[1]:])
 		}
 	}
 

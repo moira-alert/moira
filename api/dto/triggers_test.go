@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"regexp/syntax"
 	"slices"
 	"strings"
 	"testing"
@@ -328,14 +329,38 @@ func TestTriggerValidation(t *testing.T) {
 						caseDesc:       "in the middle of query with some spaces",
 					},
 					{
-						givenTargets:   []string{"seriesByTag('Name=some.metric', 'Team=Moira', 'Env=~Env1|Env2'        )"},
-						expectedErrRsp: nil,
-						caseDesc:       "at the end of query with some spaces",
-					},
-					{
-						givenTargets:   []string{"seriesByTag('Name=some.metric', \"Vasya=~Pupkin|Ivanov\" , 'Team=Moira', 'Env=~Env1|Env2'        )"},
+						givenTargets:   []string{"seriesByTag('Name=some.metric', \"Vasya=~.*\" , 'Team=Moira', 'Env=~Env1|Env2')"},
 						expectedErrRsp: nil,
 						caseDesc:       "more than one regexp",
+					},
+					{
+						givenTargets: []string{"seriesByTag('Name=some.metric', \"Vasya=~+\", 'Team=Moira', 'BestTeam=Moira', 'Env=~Env1|Env2')"},
+						expectedErrRsp: api.ErrInvalidRequestContent{
+							ValidationError: fmt.Errorf(
+								"bad regexp in tag 'Vasya': %w",
+								&syntax.Error{
+									Code: syntax.ErrMissingRepeatArgument,
+									Expr: "+",
+								}),
+						},
+						caseDesc: "with bad regexp (only '+')",
+					},
+					{
+						givenTargets: []string{"seriesByTag('Name=some.metric', \"Vasya=~*\", 'Team=Moira', 'BestTeam=Moira', 'Env=~Env1|Env2')"},
+						expectedErrRsp: api.ErrInvalidRequestContent{
+							ValidationError: fmt.Errorf(
+								"bad regexp in tag 'Vasya': %w",
+								&syntax.Error{
+									Code: syntax.ErrMissingRepeatArgument,
+									Expr: "*",
+								}),
+						},
+						caseDesc: "with bad regexp (only '*')",
+					},
+					{
+						givenTargets:   []string{"seriesByTag('Name=some.metric', \"Vasya=~\" , 'Team=Moira', 'Env=~Env1|Env2')"},
+						expectedErrRsp: nil,
+						caseDesc:       "with empty regexp",
 					},
 				}
 
