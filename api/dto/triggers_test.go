@@ -304,37 +304,37 @@ func TestTriggerValidation(t *testing.T) {
 
 				testcases := []testcase{
 					{
-						givenTargets:   []string{"seriesByTag('Name=some.metric', 'Team=Moira', 'Env=~Env1|Env2')"},
+						givenTargets:   []string{"seriesByTag('name=some.metric', 'Team=Moira', 'Env=~Env1|Env2')"},
 						expectedErrRsp: nil,
 						caseDesc:       "with ' and at the end of query",
 					},
 					{
-						givenTargets:   []string{"seriesByTag(\"Name=some.metric\", \"Team=Moira\", \"Env=~Env1|Env2\")"},
+						givenTargets:   []string{"seriesByTag(\"name=some.metric\", \"Team=Moira\", \"Env=~Env1|Env2\")"},
 						expectedErrRsp: nil,
 						caseDesc:       "with \" and at the end of query",
 					},
 					{
-						givenTargets:   []string{"seriesByTag('Name=some.metric', 'Env=~Env1|Env2', 'Team=Moira')"},
+						givenTargets:   []string{"seriesByTag('name=some.metric', 'Env=~Env1|Env2', 'Team=Moira')"},
 						expectedErrRsp: nil,
 						caseDesc:       "with ' in the middle of query",
 					},
 					{
-						givenTargets:   []string{"seriesByTag(\"Name=some.metric\", \"Env=~Env1|Env2\", \"Team=Moira\")"},
+						givenTargets:   []string{"seriesByTag(\"name=some.metric\", \"Env=~Env1|Env2\", \"Team=Moira\")"},
 						expectedErrRsp: nil,
 						caseDesc:       "with \" in the middle of query",
 					},
 					{
-						givenTargets:   []string{"seriesByTag('Name=some.metric', 'Env=~Env1|Env2'   , 'Team=Moira')"},
+						givenTargets:   []string{"seriesByTag('name=some.metric', 'Env=~Env1|Env2'   , 'Team=Moira')"},
 						expectedErrRsp: nil,
 						caseDesc:       "in the middle of query with some spaces",
 					},
 					{
-						givenTargets:   []string{"seriesByTag('Name=some.metric', \"Vasya=~.*\" , 'Team=Moira', 'Env=~Env1|Env2')"},
+						givenTargets:   []string{"seriesByTag('name=some.metric', \"Vasya=~.*\" , 'Team=Moira', 'Env=~Env1|Env2')"},
 						expectedErrRsp: nil,
 						caseDesc:       "more than one regexp",
 					},
 					{
-						givenTargets: []string{"seriesByTag('Name=some.metric', \"Vasya=~+\", 'Team=Moira', 'BestTeam=Moira', 'Env=~Env1|Env2')"},
+						givenTargets: []string{"seriesByTag('name=some.metric', \"Vasya=~+\", 'Team=Moira', 'BestTeam=Moira', 'Env=~Env1|Env2')"},
 						expectedErrRsp: api.ErrInvalidRequestContent{
 							ValidationError: fmt.Errorf(
 								"bad regexp in tag 'Vasya': %w",
@@ -346,7 +346,7 @@ func TestTriggerValidation(t *testing.T) {
 						caseDesc: "with bad regexp (only '+')",
 					},
 					{
-						givenTargets: []string{"seriesByTag('Name=some.metric', \"Vasya=~*\", 'Team=Moira', 'BestTeam=Moira', 'Env=~Env1|Env2')"},
+						givenTargets: []string{"seriesByTag('name=some.metric', \"Vasya=~*\", 'Team=Moira', 'BestTeam=Moira', 'Env=~Env1|Env2')"},
 						expectedErrRsp: api.ErrInvalidRequestContent{
 							ValidationError: fmt.Errorf(
 								"bad regexp in tag 'Vasya': %w",
@@ -358,9 +358,33 @@ func TestTriggerValidation(t *testing.T) {
 						caseDesc: "with bad regexp (only '*')",
 					},
 					{
-						givenTargets:   []string{"seriesByTag('Name=some.metric', \"Vasya=~\" , 'Team=Moira', 'Env=~Env1|Env2')"},
+						givenTargets:   []string{"seriesByTag('name=some.metric', \"Vasya=~\" , 'Team=Moira', 'Env=~Env1|Env2')"},
 						expectedErrRsp: nil,
 						caseDesc:       "with empty regexp",
+					},
+					{
+						givenTargets: []string{"seriesByTag('name=another.metric','Env=Env3','App=Moira','op=~*POST*')"},
+						expectedErrRsp: api.ErrInvalidRequestContent{
+							ValidationError: fmt.Errorf(
+								"bad regexp in tag 'op': %w",
+								&syntax.Error{
+									Code: syntax.ErrMissingRepeatArgument,
+									Expr: "*",
+								}),
+						},
+						caseDesc: "with bad regexp (incorrect use of '*')",
+					},
+					{
+						givenTargets: []string{"seriesByTag('name=other.metric','Env=Env1', 'App=Moira-API', 'ResCode=~^(?!200)')"},
+						expectedErrRsp: api.ErrInvalidRequestContent{
+							ValidationError: fmt.Errorf(
+								"bad regexp in tag 'ResCode': %w",
+								&syntax.Error{
+									Code: syntax.ErrInvalidPerlOp,
+									Expr: "(?!",
+								}),
+						},
+						caseDesc: "with bad regexp (incorrect use of '*')",
 					},
 				}
 
