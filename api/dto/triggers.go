@@ -258,13 +258,6 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
 
-	//// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
-	//for _, pattern := range trigger.Patterns {
-	//	if pattern == asteriskPattern {
-	//		return api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed}
-	//	}
-	//}
-
 	if trigger.Schedule == nil {
 		trigger.Schedule = moira.NewDefaultScheduleData()
 	} else {
