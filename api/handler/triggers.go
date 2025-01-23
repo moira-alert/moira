@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-graphite/carbonapi/date"
 	prometheus "github.com/prometheus/client_golang/api/prometheus/v1"
 
 	"github.com/go-chi/chi"
@@ -434,22 +433,18 @@ func getTriggerNoisiness(writer http.ResponseWriter, request *http.Request) {
 	toStr := middleware.GetToStr(request)
 	sort := middleware.GetSortOrder(request)
 
-	if fromStr != "-inf" {
-		from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
-		if from == 0 {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr))) //nolint
-			return
-		}
-		fromStr = strconv.FormatInt(from, 10)
+	var err error
+
+	fromStr, err = validateFromStr(fromStr)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
 	}
 
-	if toStr != "+inf" {
-		to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
-		if to == 0 {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
-			return
-		}
-		toStr = strconv.FormatInt(to, 10)
+	toStr, err = validateToStr(toStr)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
 	}
 
 	triggersNoisinessList, errorResponse := controller.GetTriggerNoisiness(database, page, size, fromStr, toStr, sort)

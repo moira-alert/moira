@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
-	"time"
-
-	"github.com/go-graphite/carbonapi/date"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -52,23 +48,18 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	page := middleware.GetPage(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
+	var err error
 
-	if fromStr != "-inf" {
-		from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
-		if from == 0 {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr))) //nolint
-			return
-		}
-		fromStr = strconv.FormatInt(from, 10)
+	fromStr, err = validateFromStr(fromStr)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
 	}
 
-	if toStr != "+inf" {
-		to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
-		if to == 0 {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
-			return
-		}
-		toStr = strconv.FormatInt(to, 10)
+	toStr, err = validateToStr(toStr)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
 	}
 
 	metricStr := middleware.GetMetric(request)
@@ -80,9 +71,9 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 
 	states := middleware.GetStates(request)
 
-	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size, fromStr, toStr, metricRegexp, states)
+	eventsList, errRsp := controller.GetTriggerEvents(database, triggerID, page, size, fromStr, toStr, metricRegexp, states)
 	if err != nil {
-		render.Render(writer, request, err) //nolint
+		render.Render(writer, request, errRsp) //nolint
 		return
 	}
 	if err := render.Render(writer, request, eventsList); err != nil {
