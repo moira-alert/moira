@@ -48,15 +48,9 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	page := middleware.GetPage(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
-	var err error
 
-	fromStr, err = validateFromStr(fromStr)
-	if err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-		return
-	}
-
-	toStr, err = validateToStr(toStr)
+	validator := DateRangeValidator{AllowInf: true}
+	fromStr, toStr, err := validator.ValidateDateRangeStrings(fromStr, toStr)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
