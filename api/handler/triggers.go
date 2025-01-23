@@ -423,6 +423,7 @@ func getSearchRequestString(request *http.Request) string {
 //	@param		to		query		string							false	"End time of the time range"																			default(now)
 //	@param		sort	query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
 //	@success	200		{object}	dto.TriggerNoisinessList		"Get noisiness for triggers in range"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure	422		{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/trigger/noisiness [get]
