@@ -1342,7 +1342,6 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
 				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
 				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
-				dataBase.EXPECT().GetTriggerChecks([]string{}).Return([]*moira.TriggerCheck{}, nil)
 
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, 0, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)

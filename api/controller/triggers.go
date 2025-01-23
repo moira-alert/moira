@@ -242,21 +242,9 @@ func GetTriggerNoisiness(
 		Total: total,
 	}
 
-	if page < 0 || (page > 0 && size < 0) || total == 0 {
+	triggerIDsWithEventsCount = applyPagination[triggerIDWithEventsCount](page, size, total, triggerIDsWithEventsCount)
+	if len(triggerIDsWithEventsCount) == 0 {
 		return &resDto, nil
-	}
-
-	if page >= 0 && size >= 0 {
-		shift := page * size
-		if shift < total {
-			triggerIDsWithEventsCount = triggerIDsWithEventsCount[shift:]
-		} else {
-			triggerIDsWithEventsCount = []triggerIDWithEventsCount{}
-		}
-
-		if size <= int64(len(triggerIDsWithEventsCount)) {
-			triggerIDsWithEventsCount = triggerIDsWithEventsCount[:size]
-		}
 	}
 
 	triggers, err := getTriggerChecks(database, onlyTriggerIDs(triggerIDsWithEventsCount))
