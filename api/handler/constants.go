@@ -22,3 +22,10 @@ const (
 	getAllTeamsDefaultSize          = -1
 	getAllTeamsDefaultRegexTemplate = ".*"
 )
+
+const (
+	getTriggerNoisinessDefaultPage = 0
+	getTriggerNoisinessDefaultSize = -1
+	getTriggerNoisinessDefaultFrom = "-3hour"
+	getTriggerNoisinessDefaultTo   = "now"
+)

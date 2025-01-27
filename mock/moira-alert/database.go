@@ -491,17 +491,17 @@ func (mr *MockDatabaseMockRecorder) GetMetricsValues(arg0, arg1, arg2 any) *gomo
 }
 
 // GetNotificationEventCount mocks base method.
-func (m *MockDatabase) GetNotificationEventCount(arg0 string, arg1 int64) int64 {
+func (m *MockDatabase) GetNotificationEventCount(arg0, arg1, arg2 string) int64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotificationEventCount", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetNotificationEventCount", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int64)
 	return ret0
 }
 
 // GetNotificationEventCount indicates an expected call of GetNotificationEventCount.
-func (mr *MockDatabaseMockRecorder) GetNotificationEventCount(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetNotificationEventCount(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEventCount", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEventCount), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEventCount", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEventCount), arg0, arg1, arg2)
 }
 
 // GetNotificationEvents mocks base method.
