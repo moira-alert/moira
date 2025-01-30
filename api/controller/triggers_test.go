@@ -1221,7 +1221,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
 			So(err, ShouldBeNil)
 			So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-				List:  []dto.TriggerNoisiness{},
+				List:  []*dto.TriggerNoisiness{},
 				Page:  zeroPage,
 				Size:  allEventsSize,
 				Total: 0,
@@ -1255,7 +1255,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
 			So(err, ShouldBeNil)
 			So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-				List: []dto.TriggerNoisiness{
+				List: []*dto.TriggerNoisiness{
 					{
 						Trigger: dto.Trigger{
 							TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
@@ -1286,7 +1286,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.AscSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-					List: []dto.TriggerNoisiness{
+					List: []*dto.TriggerNoisiness{
 						{
 							Trigger: dto.Trigger{
 								TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
@@ -1316,7 +1316,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-					List: []dto.TriggerNoisiness{
+					List: []*dto.TriggerNoisiness{
 						{
 							Trigger: dto.Trigger{
 								TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
@@ -1346,7 +1346,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, 0, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-					List:  []dto.TriggerNoisiness{},
+					List:  []*dto.TriggerNoisiness{},
 					Page:  zeroPage,
 					Size:  0,
 					Total: 2,
@@ -1361,7 +1361,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				triggerNoisinessList, err = GetTriggerNoisiness(dataBase, zeroPage, 1, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-					List: []dto.TriggerNoisiness{
+					List: []*dto.TriggerNoisiness{
 						{
 							Trigger: dto.Trigger{
 								TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
@@ -1383,7 +1383,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				triggerNoisinessList, err = GetTriggerNoisiness(dataBase, 1, 1, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-					List: []dto.TriggerNoisiness{
+					List: []*dto.TriggerNoisiness{
 						{
 							Trigger: dto.Trigger{
 								TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
@@ -1405,7 +1405,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, 1, -1, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-					List:  []dto.TriggerNoisiness{},
+					List:  []*dto.TriggerNoisiness{},
 					Page:  1,
 					Size:  -1,
 					Total: 2,
@@ -1420,7 +1420,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, -1, -1, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-					List:  []dto.TriggerNoisiness{},
+					List:  []*dto.TriggerNoisiness{},
 					Page:  -1,
 					Size:  -1,
 					Total: 2,
@@ -1435,7 +1435,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, -1, 1, defaultFrom, defaultTo, api.DescSortOrder)
 				So(err, ShouldBeNil)
 				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
-					List:  []dto.TriggerNoisiness{},
+					List:  []*dto.TriggerNoisiness{},
 					Page:  -1,
 					Size:  1,
 					Total: 2,

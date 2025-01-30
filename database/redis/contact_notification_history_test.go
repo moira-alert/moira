@@ -387,3 +387,13 @@ func toEventsMap(events []*moira.NotificationEventHistoryItem) map[string][]*moi
 	}
 	return m
 }
+
+func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
+	Convey("Test counting events in notification history", t, func() {
+		logger, _ := logging.GetLogger("dataBase")
+		dataBase := NewTestDatabase(logger)
+		dataBase.Flush()
+		defer dataBase.Flush()
+
+	})
+}

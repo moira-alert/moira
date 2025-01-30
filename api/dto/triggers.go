@@ -575,12 +575,7 @@ func (*TriggerNoisiness) Render(http.ResponseWriter, *http.Request) error {
 }
 
 // TriggerNoisinessList represents list of TriggerNoisiness.
-type TriggerNoisinessList struct {
-	List  []TriggerNoisiness `json:"list"`
-	Page  int64              `json:"page" example:"0" format:"int64"`
-	Size  int64              `json:"size" example:"100" format:"int64"`
-	Total int64              `json:"total" example:"10" format:"int64"`
-}
+type TriggerNoisinessList ListDto[*TriggerNoisiness]
 
 func (*TriggerNoisinessList) Render(http.ResponseWriter, *http.Request) error {
 	return nil

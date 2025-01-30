@@ -25,6 +25,18 @@ type Contact struct {
 	TeamID string `json:"team_id,omitempty"`
 }
 
+// FromMoiraContactData converts moira.ContactData data into Contact.
+func FromMoiraContactData(data moira.ContactData) Contact {
+	return Contact{
+		Type:   data.Type,
+		Name:   data.Name,
+		Value:  data.Value,
+		ID:     data.ID,
+		User:   data.User,
+		TeamID: data.Team,
+	}
+}
+
 func (*Contact) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
@@ -39,5 +51,23 @@ func (contact *Contact) Bind(r *http.Request) error {
 	if contact.User != "" && contact.TeamID != "" {
 		return fmt.Errorf("contact cannot have both the user field and the team_id field filled in")
 	}
+	return nil
+}
+
+// ContactNoisiness represents Contact with amount of events for this contact.
+type ContactNoisiness struct {
+	Contact
+	// EventsCount for the contact.
+	EventsCount int64 `json:"events_count"`
+}
+
+func (*ContactNoisiness) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+// ContactNoisinessList represents list of ContactNoisiness.
+type ContactNoisinessList ListDto[*ContactNoisiness]
+
+func (*ContactNoisinessList) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }

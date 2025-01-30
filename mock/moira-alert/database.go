@@ -211,6 +211,21 @@ func (mr *MockDatabaseMockRecorder) CleanupOutdatedPatternMetrics() *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanupOutdatedPatternMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanupOutdatedPatternMetrics))
 }
 
+// CountEventsInNotificationHistory mocks base method.
+func (m *MockDatabase) CountEventsInNotificationHistory(arg0 []string, arg1, arg2 string) ([]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountEventsInNotificationHistory", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountEventsInNotificationHistory indicates an expected call of CountEventsInNotificationHistory.
+func (mr *MockDatabaseMockRecorder) CountEventsInNotificationHistory(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountEventsInNotificationHistory", reflect.TypeOf((*MockDatabase)(nil).CountEventsInNotificationHistory), arg0, arg1, arg2)
+}
+
 // CreateTags mocks base method.
 func (m *MockDatabase) CreateTags(arg0 []string) error {
 	m.ctrl.T.Helper()

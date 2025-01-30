@@ -160,3 +160,29 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 		return nil
 	})
 }
+
+func (connector *DbConnector) CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]int64, error) {
+	pipe := connector.Client().TxPipeline()
+	ctx := connector.Context()
+
+	for _, id := range contactIDs {
+		pipe.ZCount(ctx, contactNotificationKeyWithID(id), from, to)
+	}
+
+	cmds, err := pipe.Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	eventsCount := make([]int64, 0, len(cmds))
+	for _, cmd := range cmds {
+		count, err := cmd.(*redis.IntCmd).Result()
+		if err != nil {
+			return nil, err
+		}
+
+		eventsCount = append(eventsCount, count)
+	}
+
+	return eventsCount, nil
+}
