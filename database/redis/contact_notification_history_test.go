@@ -2,6 +2,7 @@ package redis
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -329,7 +330,7 @@ func TestCleanUpOutdatedNotificationHistory(t *testing.T) {
 		})
 
 		Convey("with prepared events", func() {
-			storeErr := storeOutdatedNotificationHistoryItems(dataBase, append(outdatedEvents, notOutdatedEvents...))
+			storeErr := storeNotificationHistoryItems(dataBase, append(outdatedEvents, notOutdatedEvents...))
 			So(storeErr, ShouldBeNil)
 
 			err := dataBase.CleanUpOutdatedNotificationHistory(testTTL)
@@ -358,7 +359,7 @@ func TestCleanUpOutdatedNotificationHistory(t *testing.T) {
 	})
 }
 
-func storeOutdatedNotificationHistoryItems(connector *DbConnector, notificationEvents []*moira.NotificationEventHistoryItem) error {
+func storeNotificationHistoryItems(connector *DbConnector, notificationEvents []*moira.NotificationEventHistoryItem) error {
 	client := connector.Client()
 
 	pipe := client.TxPipeline()
@@ -395,5 +396,102 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 		dataBase.Flush()
 		defer dataBase.Flush()
 
+		baseTimeStamp := time.Now().Unix()
+
+		contactIDs := []string{
+			"first-id",
+			"second-id",
+			"third-id",
+		}
+
+		timestampRanges := []int64{
+			baseTimeStamp - 4,
+			baseTimeStamp - 1,
+			baseTimeStamp,
+			baseTimeStamp + 1,
+		}
+
+		notificationHistoryItems := make([]*moira.NotificationEventHistoryItem, 0, len(contactIDs)*len(timestampRanges))
+		for _, contactID := range contactIDs {
+			for _, timestamp := range timestampRanges {
+				notificationHistoryItems = append(notificationHistoryItems,
+					&moira.NotificationEventHistoryItem{
+						ContactID: contactID,
+						TimeStamp: timestamp,
+					})
+			}
+		}
+
+		notificationHistoryItems[len(timestampRanges)].TimeStamp = baseTimeStamp - 2
+
+		err := storeNotificationHistoryItems(dataBase, notificationHistoryItems)
+		So(err, ShouldBeNil)
+
+		Convey("with one contactID", func() {
+			Convey("events from -inf to +inf", func() {
+				eventCounts, err := dataBase.CountEventsInNotificationHistory(contactIDs[:1], allTimeFrom, allTimeTo)
+				So(err, ShouldBeNil)
+				So(eventCounts, ShouldResemble, []int64{4})
+			})
+
+			Convey("events from fixed timestamp to +inf", func() {
+				eventCounts, err := dataBase.CountEventsInNotificationHistory(
+					contactIDs[:1],
+					strconv.FormatInt(baseTimeStamp-2, 10),
+					allTimeTo)
+				So(err, ShouldBeNil)
+				So(eventCounts, ShouldResemble, []int64{3})
+			})
+
+			Convey("events from fixed timestamp to fixed timestamp", func() {
+				eventCounts, err := dataBase.CountEventsInNotificationHistory(
+					contactIDs[:1],
+					strconv.FormatInt(baseTimeStamp-2, 10),
+					strconv.FormatInt(baseTimeStamp, 10))
+				So(err, ShouldBeNil)
+				So(eventCounts, ShouldResemble, []int64{2})
+			})
+
+			Convey("events from -inf to fixed timestamp", func() {
+				eventCounts, err := dataBase.CountEventsInNotificationHistory(
+					contactIDs[:1],
+					allTimeFrom,
+					strconv.FormatInt(baseTimeStamp-2, 10))
+				So(err, ShouldBeNil)
+				So(eventCounts, ShouldResemble, []int64{1})
+			})
+		})
+
+		Convey("with several contactID", func() {
+			Convey("all time", func() {
+				eventCounts, err := dataBase.CountEventsInNotificationHistory(contactIDs[:2], allTimeFrom, allTimeTo)
+				So(err, ShouldBeNil)
+				So(eventCounts, ShouldResemble, []int64{4, 4})
+			})
+
+			Convey("events from fixed timestamp to +inf", func() {
+				eventCounts, err := dataBase.CountEventsInNotificationHistory(contactIDs[:2],
+					strconv.FormatInt(baseTimeStamp-3, 10),
+					allTimeTo)
+				So(err, ShouldBeNil)
+				So(eventCounts, ShouldResemble, []int64{3, 4})
+			})
+
+			Convey("events from fixed timestamp to fixed timestamp", func() {
+				eventCounts, err := dataBase.CountEventsInNotificationHistory(contactIDs[:2],
+					strconv.FormatInt(baseTimeStamp-3, 10),
+					strconv.FormatInt(baseTimeStamp, 10))
+				So(err, ShouldBeNil)
+				So(eventCounts, ShouldResemble, []int64{2, 3})
+			})
+
+			Convey("events from -inf to fixed timestamp", func() {
+				eventCounts, err := dataBase.CountEventsInNotificationHistory(contactIDs[:2],
+					allTimeFrom,
+					strconv.FormatInt(baseTimeStamp, 10))
+				So(err, ShouldBeNil)
+				So(eventCounts, ShouldResemble, []int64{3, 3})
+			})
+		})
 	})
 }
