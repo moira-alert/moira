@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -997,6 +998,156 @@ func TestSendTestContactNotification(t *testing.T) {
 
 			So(actual, ShouldResemble, expected)
 			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
+}
+
+func Test_getContactNoisiness(t *testing.T) {
+	Convey("Test get contact noisiness", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
+		database = mockDb
+
+		contacts := []*moira.ContactData{
+			{
+				ID: "contact-id-1",
+			},
+			{
+				ID: "contact-id-2",
+			},
+			{
+				ID: "contact-id-3",
+			},
+			{
+				ID: "contact-id-4",
+			},
+		}
+
+		setContextValues := func(ctx context.Context, from, to string, page, size int64, sortOrder api.SortOrder) context.Context {
+			ctx = middleware.SetContextValueForTest(ctx, "from", from)
+			ctx = middleware.SetContextValueForTest(ctx, "to", to)
+			ctx = middleware.SetContextValueForTest(ctx, "page", page)
+			ctx = middleware.SetContextValueForTest(ctx, "size", size)
+			ctx = middleware.SetContextValueForTest(ctx, "sort", sortOrder)
+
+			return ctx
+		}
+
+		givenFrom := "-1hour"
+		givenTo := "-1m"
+		givenPage := int64(1)
+		givenSize := int64(3)
+		givenSortOrder := api.AscSortOrder
+
+		validator := DateRangeValidator{AllowInf: true}
+		parsedFrom, parsedTo, err := validator.ValidateDateRangeStrings(givenFrom, givenTo)
+		So(err, ShouldBeNil)
+
+		Convey("get noisiness ok", func() {
+			expectedDTO := dto.ContactNoisinessList{
+				Page:  givenPage,
+				Size:  givenSize,
+				Total: 4,
+				List: []*dto.ContactNoisiness{
+					{
+						Contact:     dto.FromMoiraContactData(*contacts[3]),
+						EventsCount: 7,
+					},
+				},
+			}
+			expectedBytes, err := json.Marshal(expectedDTO)
+			So(err, ShouldBeNil)
+			expectedBytes = append(expectedBytes, '\n')
+
+			mockDb.EXPECT().GetAllContacts().Return(contacts, nil).Times(1)
+			mockDb.EXPECT().CountEventsInNotificationHistory(
+				[]string{"contact-id-1", "contact-id-2", "contact-id-3", "contact-id-4"},
+				parsedFrom,
+				parsedTo).
+				Return([]int64{0, 5, 2, 7}, nil).Times(1)
+
+			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)
+			testRequest = testRequest.WithContext(setContextValues(
+				testRequest.Context(),
+				givenFrom, givenTo,
+				givenPage, givenSize,
+				givenSortOrder))
+
+			responseWriter := httptest.NewRecorder()
+
+			getContactNoisiness(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			So(contentBytes, ShouldResemble, expectedBytes)
+		})
+
+		Convey("error from db leads to 500", func() {
+			someErrFromDb := errors.New("error from db")
+			expectedDTO := api.ErrorInternalServer(someErrFromDb)
+			expectedBytes, err := json.Marshal(expectedDTO)
+			So(err, ShouldBeNil)
+			expectedBytes = append(expectedBytes, '\n')
+
+			mockDb.EXPECT().GetAllContacts().Return(nil, someErrFromDb).Times(1)
+
+			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)
+			testRequest = testRequest.WithContext(setContextValues(
+				testRequest.Context(),
+				givenFrom, givenTo,
+				givenPage, givenSize,
+				givenSortOrder))
+
+			responseWriter := httptest.NewRecorder()
+
+			getContactNoisiness(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			So(contentBytes, ShouldResemble, expectedBytes)
+		})
+
+		Convey("bad date range param leads to 400", func() {
+			givenFrom = "abra"
+			givenTo = "cadabra"
+
+			validator = DateRangeValidator{AllowInf: true}
+			parsedFrom, parsedTo, err = validator.ValidateDateRangeStrings(givenFrom, givenTo)
+			So(err, ShouldNotBeNil)
+
+			expectedDTO := api.ErrorInvalidRequest(err)
+			expectedBytes, err := json.Marshal(expectedDTO)
+			So(err, ShouldBeNil)
+			expectedBytes = append(expectedBytes, '\n')
+
+			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)
+			testRequest = testRequest.WithContext(setContextValues(
+				testRequest.Context(),
+				givenFrom, givenTo,
+				givenPage, givenSize,
+				givenSortOrder))
+
+			responseWriter := httptest.NewRecorder()
+
+			getContactNoisiness(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			So(contentBytes, ShouldResemble, expectedBytes)
 		})
 	})
 }
