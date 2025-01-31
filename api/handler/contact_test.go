@@ -1042,8 +1042,8 @@ func Test_getContactNoisiness(t *testing.T) {
 		givenSortOrder := api.AscSortOrder
 
 		validator := DateRangeValidator{AllowInf: true}
-		parsedFrom, parsedTo, err := validator.ValidateDateRangeStrings(givenFrom, givenTo)
-		So(err, ShouldBeNil)
+		parsedFrom, parsedTo, errValidating := validator.ValidateDateRangeStrings(givenFrom, givenTo)
+		So(errValidating, ShouldBeNil)
 
 		Convey("get noisiness ok", func() {
 			expectedDTO := dto.ContactNoisinessList{
@@ -1122,7 +1122,7 @@ func Test_getContactNoisiness(t *testing.T) {
 			givenTo = "cadabra"
 
 			validator = DateRangeValidator{AllowInf: true}
-			parsedFrom, parsedTo, err = validator.ValidateDateRangeStrings(givenFrom, givenTo)
+			_, _, err := validator.ValidateDateRangeStrings(givenFrom, givenTo)
 			So(err, ShouldNotBeNil)
 
 			expectedDTO := api.ErrorInvalidRequest(err)
