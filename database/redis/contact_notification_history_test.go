@@ -493,5 +493,14 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 				So(eventCounts, ShouldResemble, []int64{3, 3})
 			})
 		})
+
+		Convey("with no existing contact id", func() {
+			eventCounts, err := dataBase.CountEventsInNotificationHistory(
+				append(contactIDs[:2], "forth-id"),
+				allTimeFrom,
+				allTimeTo)
+			So(err, ShouldBeNil)
+			So(eventCounts, ShouldResemble, []int64{4, 4, 0})
+		})
 	})
 }

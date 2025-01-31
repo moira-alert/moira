@@ -2,6 +2,7 @@ package redis
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -177,7 +178,7 @@ func (connector *DbConnector) CountEventsInNotificationHistory(contactIDs []stri
 	eventsCount := make([]int64, 0, len(cmds))
 	for _, cmd := range cmds {
 		count, err := cmd.(*redis.IntCmd).Result()
-		if err != nil {
+		if err != nil && !errors.Is(err, redis.Nil) {
 			return nil, err
 		}
 

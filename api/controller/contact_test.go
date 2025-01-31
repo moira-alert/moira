@@ -1080,3 +1080,105 @@ func TestValidateContact(t *testing.T) {
 		})
 	})
 }
+
+func TestGetContactNoisiness(t *testing.T) {
+	Convey("Test get contact noisiness", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+		const (
+			allTimeFrom      = "-inf"
+			allTimeTo        = "+inf"
+			zeroPage         = int64(0)
+			allEventsSize    = int64(-1)
+			defaultSortOrder = api.DescSortOrder
+		)
+
+		contacts := []*moira.ContactData{
+			{
+				ID: "contactID1",
+			},
+			{
+				ID: "contactID2",
+			},
+			{
+				ID: "contactID3",
+			},
+		}
+
+		Convey("On error, when getting all contacts, return 500", func() {
+			someErr := errors.New("error from db")
+
+			dataBase.EXPECT().GetAllContacts().Return(nil, someErr).Times(1)
+
+			gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, defaultSortOrder)
+			So(gotDTO, ShouldBeNil)
+			So(gotErrRsp, ShouldResemble, api.ErrorInternalServer(someErr))
+		})
+
+		Convey("On error, when getting events count for contacts, return 500", func() {
+			someErr := errors.New("error from db")
+
+			dataBase.EXPECT().GetAllContacts().Return(contacts, nil).Times(1)
+			dataBase.EXPECT().
+				CountEventsInNotificationHistory([]string{"contactID1", "contactID2", "contactID3"}, allTimeFrom, allTimeTo).
+				Return(nil, someErr).
+				Times(1)
+
+			gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, defaultSortOrder)
+			So(gotDTO, ShouldBeNil)
+			So(gotErrRsp, ShouldResemble, api.ErrorInternalServer(someErr))
+		})
+
+		Convey("No errors from db, noisiness got and sorted", func() {
+			Convey("with desc sort order", func() {
+				dataBase.EXPECT().GetAllContacts().Return(contacts, nil).Times(1)
+				dataBase.EXPECT().CountEventsInNotificationHistory(
+					[]string{"contactID1", "contactID2", "contactID3"},
+					allTimeFrom,
+					allTimeTo).
+					Return([]int64{2, 3, 1}, nil).Times(1)
+
+				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.DescSortOrder)
+				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
+					Page:  zeroPage,
+					Size:  allEventsSize,
+					Total: 3,
+					List: makeContactNoisinessSlice(
+						[]*moira.ContactData{
+							contacts[1],
+							contacts[0],
+							contacts[2],
+						},
+						[]int64{3, 2, 1}),
+				})
+				So(gotErrRsp, ShouldBeNil)
+			})
+
+			Convey("with asc sort order", func() {
+				dataBase.EXPECT().GetAllContacts().Return(contacts, nil).Times(1)
+				dataBase.EXPECT().CountEventsInNotificationHistory(
+					[]string{"contactID1", "contactID2", "contactID3"},
+					allTimeFrom,
+					allTimeTo).
+					Return([]int64{2, 3, 1}, nil).Times(1)
+
+				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.AscSortOrder)
+				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
+					Page:  zeroPage,
+					Size:  allEventsSize,
+					Total: 3,
+					List: makeContactNoisinessSlice(
+						[]*moira.ContactData{
+							contacts[2],
+							contacts[0],
+							contacts[1],
+						},
+						[]int64{1, 2, 3}),
+				})
+				So(gotErrRsp, ShouldBeNil)
+			})
+		})
+	})
+}
