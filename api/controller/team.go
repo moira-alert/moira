@@ -499,7 +499,7 @@ func CheckUserPermissionsForTeam(
 func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, *api.ErrorResponse) {
 	teamSettings := dto.TeamSettings{
 		TeamID:        teamID,
-		Contacts:      make([]moira.ContactData, 0),
+		Contacts:      make([]dto.TeamContact, 0),
 		Subscriptions: make([]moira.SubscriptionData, 0),
 	}
 
@@ -526,10 +526,21 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
+
 	for _, contact := range contacts {
-		if contact != nil {
-			teamSettings.Contacts = append(teamSettings.Contacts, *contact)
+		if contact == nil {
+			continue
 		}
+
+		teamSettings.Contacts = append(teamSettings.Contacts, dto.TeamContact{
+			ID:     contact.ID,
+			Name:   contact.Name,
+			User:   contact.User,
+			TeamID: contact.Team,
+			Team:   contact.Team,
+			Type:   contact.Type,
+			Value:  contact.Value,
+		})
 	}
 	return teamSettings, nil
 }
