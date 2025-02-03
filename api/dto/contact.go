@@ -58,7 +58,7 @@ func (contact *Contact) Bind(r *http.Request) error {
 type ContactNoisiness struct {
 	Contact
 	// EventsCount for the contact.
-	EventsCount int64 `json:"events_count"`
+	EventsCount uint64 `json:"events_count"`
 }
 
 func (*ContactNoisiness) Render(w http.ResponseWriter, r *http.Request) error {

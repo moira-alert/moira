@@ -212,10 +212,10 @@ func (mr *MockDatabaseMockRecorder) CleanupOutdatedPatternMetrics() *gomock.Call
 }
 
 // CountEventsInNotificationHistory mocks base method.
-func (m *MockDatabase) CountEventsInNotificationHistory(arg0 []string, arg1, arg2 string) ([]int64, error) {
+func (m *MockDatabase) CountEventsInNotificationHistory(arg0 []string, arg1, arg2 string) ([]uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CountEventsInNotificationHistory", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]int64)
+	ret0, _ := ret[0].([]uint64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

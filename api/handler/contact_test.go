@@ -1066,7 +1066,7 @@ func Test_getContactNoisiness(t *testing.T) {
 				[]string{"contact-id-1", "contact-id-2", "contact-id-3", "contact-id-4"},
 				parsedFrom,
 				parsedTo).
-				Return([]int64{0, 5, 2, 7}, nil).Times(1)
+				Return([]uint64{0, 5, 2, 7}, nil).Times(1)
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)
 			testRequest = testRequest.WithContext(setContextValues(

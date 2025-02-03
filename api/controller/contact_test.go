@@ -1138,7 +1138,7 @@ func TestGetContactNoisiness(t *testing.T) {
 					[]string{"contactID1", "contactID2", "contactID3"},
 					allTimeFrom,
 					allTimeTo).
-					Return([]int64{2, 3, 1}, nil).Times(1)
+					Return([]uint64{2, 3, 1}, nil).Times(1)
 
 				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.DescSortOrder)
 				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
@@ -1151,7 +1151,7 @@ func TestGetContactNoisiness(t *testing.T) {
 							contacts[0],
 							contacts[2],
 						},
-						[]int64{3, 2, 1}),
+						[]uint64{3, 2, 1}),
 				})
 				So(gotErrRsp, ShouldBeNil)
 			})
@@ -1162,7 +1162,7 @@ func TestGetContactNoisiness(t *testing.T) {
 					[]string{"contactID1", "contactID2", "contactID3"},
 					allTimeFrom,
 					allTimeTo).
-					Return([]int64{2, 3, 1}, nil).Times(1)
+					Return([]uint64{2, 3, 1}, nil).Times(1)
 
 				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.AscSortOrder)
 				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
@@ -1175,7 +1175,7 @@ func TestGetContactNoisiness(t *testing.T) {
 							contacts[0],
 							contacts[1],
 						},
-						[]int64{1, 2, 3}),
+						[]uint64{1, 2, 3}),
 				})
 				So(gotErrRsp, ShouldBeNil)
 			})

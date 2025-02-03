@@ -339,7 +339,7 @@ func getOnlyIDs(contactsData []*moira.ContactData) []string {
 	return ids
 }
 
-func makeContactNoisinessSlice(contacts []*moira.ContactData, eventsCount []int64) []*dto.ContactNoisiness {
+func makeContactNoisinessSlice(contacts []*moira.ContactData, eventsCount []uint64) []*dto.ContactNoisiness {
 	noisiness := make([]*dto.ContactNoisiness, 0, len(contacts))
 
 	for i, contact := range contacts {
@@ -356,7 +356,12 @@ func makeContactNoisinessSlice(contacts []*moira.ContactData, eventsCount []int6
 func sortContactNoisinessByEventsCount(noisiness []*dto.ContactNoisiness, sortOrder api.SortOrder) {
 	if sortOrder == api.AscSortOrder || sortOrder == api.DescSortOrder {
 		slices.SortFunc(noisiness, func(first, second *dto.ContactNoisiness) int {
-			cmpRes := first.EventsCount - second.EventsCount
+			cmpRes := 0
+			if first.EventsCount > second.EventsCount {
+				cmpRes = 1
+			} else if second.EventsCount > first.EventsCount {
+				cmpRes = -1
+			}
 
 			if cmpRes == 0 {
 				return strings.Compare(first.ID, second.ID)

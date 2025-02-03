@@ -163,7 +163,7 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 }
 
 // CountEventsInNotificationHistory returns the amount of events in time range (from, to) for given contact ids.
-func (connector *DbConnector) CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]int64, error) {
+func (connector *DbConnector) CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]uint64, error) {
 	pipe := connector.Client().TxPipeline()
 	ctx := connector.Context()
 
@@ -176,9 +176,9 @@ func (connector *DbConnector) CountEventsInNotificationHistory(contactIDs []stri
 		return nil, err
 	}
 
-	eventsCount := make([]int64, 0, len(cmds))
+	eventsCount := make([]uint64, 0, len(cmds))
 	for _, cmd := range cmds {
-		count, err := cmd.(*redis.IntCmd).Result()
+		count, err := cmd.(*redis.IntCmd).Uint64()
 		if err != nil && !errors.Is(err, redis.Nil) {
 			return nil, err
 		}
