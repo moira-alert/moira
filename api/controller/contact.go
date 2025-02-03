@@ -371,7 +371,7 @@ func sortContactNoisinessByEventsCount(noisiness []*dto.ContactNoisiness, sortOr
 				cmpRes *= -1
 			}
 
-			return int(cmpRes)
+			return cmpRes
 		})
 	}
 }
