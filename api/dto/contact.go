@@ -66,7 +66,7 @@ func (*ContactNoisiness) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 // ContactNoisinessList represents list of ContactNoisiness.
-type ContactNoisinessList ListDto[*ContactNoisiness]
+type ContactNoisinessList ListDTO[*ContactNoisiness]
 
 func (*ContactNoisinessList) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil

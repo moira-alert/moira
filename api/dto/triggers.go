@@ -612,7 +612,7 @@ func (*TriggerNoisiness) Render(http.ResponseWriter, *http.Request) error {
 }
 
 // TriggerNoisinessList represents list of TriggerNoisiness.
-type TriggerNoisinessList ListDto[*TriggerNoisiness]
+type TriggerNoisinessList ListDTO[*TriggerNoisiness]
 
 func (*TriggerNoisinessList) Render(http.ResponseWriter, *http.Request) error {
 	return nil
