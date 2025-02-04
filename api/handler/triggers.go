@@ -32,6 +32,12 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 
 		router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllTriggers)
 		router.With(middleware.AdminOnlyMiddleware()).Get("/unused", getUnusedTriggers)
+		router.With(
+			middleware.AdminOnlyMiddleware(),
+			middleware.Paginate(getTriggerNoisinessDefaultPage, getTriggerNoisinessDefaultSize),
+			middleware.DateRange(getTriggerNoisinessDefaultFrom, getTriggerNoisinessDefaultTo),
+			middleware.SortOrderContext(api.DescSortOrder),
+		).Get("/noisiness", getTriggerNoisiness)
 
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
@@ -403,4 +409,46 @@ func getSearchRequestString(request *http.Request) string {
 	searchText = strings.ToLower(searchText)
 	searchText, _ = url.PathUnescape(searchText)
 	return searchText
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get triggers noisiness
+//	@id			get-triggers-noisiness
+//	@tags		trigger
+//	@produce	json
+//	@param		size	query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
+//	@param		p		query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
+//	@param		from	query		string							false	"Start time of the time range"																			default(-3hours)
+//	@param		to		query		string							false	"End time of the time range"																			default(now)
+//	@param		sort	query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
+//	@success	200		{object}	dto.TriggerNoisinessList		"Get noisiness for triggers in range"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger/noisiness [get]
+func getTriggerNoisiness(writer http.ResponseWriter, request *http.Request) {
+	size := middleware.GetSize(request)
+	page := middleware.GetPage(request)
+	fromStr := middleware.GetFromStr(request)
+	toStr := middleware.GetToStr(request)
+	sort := middleware.GetSortOrder(request)
+
+	validator := DateRangeValidator{AllowInf: true}
+	fromStr, toStr, err := validator.ValidateDateRangeStrings(fromStr, toStr)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	triggersNoisinessList, errorResponse := controller.GetTriggerNoisiness(database, page, size, fromStr, toStr, sort)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, triggersNoisinessList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
 }
