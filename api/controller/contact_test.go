@@ -48,14 +48,28 @@ func TestGetAllContacts(t *testing.T) {
 		dataBase.EXPECT().GetAllContacts().Return(contacts, nil)
 		actual, err := GetAllContacts(dataBase)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, &dto.ContactList{List: contacts})
+		expectedContacts := []dto.TeamContact{
+			{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Type:  "mail",
+				User:  "user1",
+				Value: "good@mail.com",
+			},
+			{
+				ID:    uuid.Must(uuid.NewV4()).String(),
+				Type:  "pushover",
+				User:  "user2",
+				Value: "ggg1",
+			},
+		}
+		So(actual, ShouldResemble, &dto.ContactList{List: expectedContacts})
 	})
 
 	Convey("No contacts", t, func() {
 		dataBase.EXPECT().GetAllContacts().Return(make([]*moira.ContactData, 0), nil)
 		contacts, err := GetAllContacts(dataBase)
 		So(err, ShouldBeNil)
-		So(contacts, ShouldResemble, &dto.ContactList{List: make([]*moira.ContactData, 0)})
+		So(contacts, ShouldResemble, &dto.ContactList{List: make([]dto.TeamContact, 0)})
 	})
 }
 

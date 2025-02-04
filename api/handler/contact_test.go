@@ -53,7 +53,7 @@ func TestGetAllContacts(t *testing.T) {
 			database = mockDb
 
 			expected := &dto.ContactList{
-				List: []*moira.ContactData{
+				List: []dto.TeamContact{
 					{
 						ID:    defaultContact,
 						Type:  "mail",
