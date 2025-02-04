@@ -31,6 +31,7 @@ var (
 	pageKey              ContextKey = "page"
 	sizeKey              ContextKey = "size"
 	pagerIDKey           ContextKey = "pagerID"
+	pagerTTLKey					 ContextKey = "pagerTTL"
 	createPagerKey       ContextKey = "createPager"
 	fromKey              ContextKey = "from"
 	toKey                ContextKey = "to"
@@ -119,6 +120,11 @@ func GetPagerID(request *http.Request) string {
 // GetCreatePager is a function that gets createPager value from request context, which was sets in Pager middleware.
 func GetCreatePager(request *http.Request) bool {
 	return request.Context().Value(createPagerKey).(bool)
+}
+
+// GetPagerTTL is a function that gets pagerTtlKey value from request context, which was sets in Pager middleware.
+func GetPagerTTL(request *http.Request) time.Duration {
+	return request.Context().Value(pagerTTLKey).(time.Duration)
 }
 
 // GetFromStr gets 'from' value from request context, which was sets in DateRange middleware.

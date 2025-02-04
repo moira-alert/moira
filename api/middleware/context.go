@@ -146,7 +146,7 @@ func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handl
 }
 
 // Pager is a function that takes pager id from query.
-func Pager(defaultCreatePager bool, defaultPagerID string) func(next http.Handler) http.Handler {
+func Pager(defaultCreatePager bool, defaultPagerID string, defaultPagerTTL time.Duration) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			urlValues, err := url.ParseQuery(request.URL.RawQuery)
@@ -165,9 +165,18 @@ func Pager(defaultCreatePager bool, defaultPagerID string) func(next http.Handle
 				createPager = defaultCreatePager
 			}
 
+			var pagerTTL time.Duration
+			pagerTTLRaw, err := strconv.ParseUint(urlValues.Get("pagerTTL"), 10, 64)
+			if err == nil {
+				pagerTTL = time.Duration(pagerTTLRaw)
+			} else {
+				pagerTTL = defaultPagerTTL
+			}
+
 			ctxPager := context.WithValue(request.Context(), pagerIDKey, pagerID)
 			ctxSize := context.WithValue(ctxPager, createPagerKey, createPager)
-			next.ServeHTTP(writer, request.WithContext(ctxSize))
+			ctxTTL := context.WithValue(ctxSize, pagerTTLKey, pagerTTL)
+			next.ServeHTTP(writer, request.WithContext(ctxTTL))
 		})
 	}
 }

@@ -25,7 +25,7 @@ import (
 	"github.com/moira-alert/moira/expression"
 )
 
-func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher) func(chi.Router) {
+func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher, limitsConfig *api.TriggerLimits) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
@@ -42,10 +42,10 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
-		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
-		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
-		// ToDo: DEPRECATED method. Remove in Moira 2.6
-		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", searchTriggers)
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "", limitsConfig.PagerTTL)).Get("/search", searchTriggers)
+		router.With(middleware.Pager(false, "", limitsConfig.PagerTTL)).Delete("/search/pager", deletePager)
+		// TODO: DEPRECATED method. Remove in Moira 2.6
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "", limitsConfig.PagerTTL)).Get("/page", searchTriggers)
 	}
 }
 
@@ -330,6 +330,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
+		PagerTTL:							 middleware.GetPagerTTL(request),
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)

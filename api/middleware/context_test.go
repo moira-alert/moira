@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/moira-alert/moira/api"
 
@@ -165,6 +166,7 @@ func TestPagerMiddleware(t *testing.T) {
 	Convey("checking correctness of parameters", t, func() {
 		defaultCreatePager := false
 		defaultPagerID := "test"
+		defaultPagerTTL := time.Hour
 
 		Convey("with correct parameters", func() {
 			parameters := []string{"pagerID=test&createPager=true", "pagerID=test", "createPager=true", "", "pagerID=-1&createPager=true", "pagerID=test&createPager=-1"}
@@ -172,7 +174,7 @@ func TestPagerMiddleware(t *testing.T) {
 			for _, param := range parameters {
 				testRequestOk(
 					"/test?"+param,
-					Pager(defaultCreatePager, defaultPagerID),
+					Pager(defaultCreatePager, defaultPagerID, defaultPagerTTL),
 					nil)
 			}
 		})
@@ -180,7 +182,7 @@ func TestPagerMiddleware(t *testing.T) {
 		Convey("with wrong url query parameters", func() {
 			testRequestFails(
 				"/test?pagerID=test%&createPager=true",
-				Pager(defaultCreatePager, defaultPagerID),
+				Pager(defaultCreatePager, defaultPagerID, defaultPagerTTL),
 				nil,
 				expectedBadRequest,
 				http.StatusBadRequest)

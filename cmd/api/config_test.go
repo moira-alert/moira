@@ -91,6 +91,7 @@ func Test_webConfig_getDefault(t *testing.T) {
 				Limits: LimitsConfig{
 					Trigger: TriggerLimitsConfig{
 						MaxNameSize: api.DefaultTriggerNameMaxSize,
+						PagerTTL: api.DefaultTriggerPagerTTL,
 					},
 					Team: TeamLimitsConfig{
 						MaxNameSize:        api.DefaultTeamNameMaxSize,

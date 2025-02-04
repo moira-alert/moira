@@ -532,6 +532,7 @@ type SearchOptions struct {
 	NeedSearchByCreatedBy bool
 	CreatePager           bool
 	PagerID               string
+	PagerTTL							time.Duration
 }
 
 // MaintenanceCheck set maintenance user, time.

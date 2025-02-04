@@ -83,6 +83,7 @@ func (WebConfig) Render(http.ResponseWriter, *http.Request) error {
 const (
 	// DefaultTriggerNameMaxSize which will be used while validating dto.Trigger.
 	DefaultTriggerNameMaxSize = 200
+	DefaultTriggerPagerTTL = time.Second * 1800
 )
 
 // LimitsConfig contains limits for some entities.
@@ -97,6 +98,7 @@ type LimitsConfig struct {
 type TriggerLimits struct {
 	// MaxNameSize is the amount of characters allowed in trigger name.
 	MaxNameSize int
+	PagerTTL time.Duration
 }
 
 // GetTestLimitsConfig is used for testing.
@@ -104,6 +106,7 @@ func GetTestLimitsConfig() LimitsConfig {
 	return LimitsConfig{
 		Trigger: TriggerLimits{
 			MaxNameSize: DefaultTriggerNameMaxSize,
+			PagerTTL: DefaultTriggerPagerTTL,
 		},
 		Team: TeamLimits{
 			MaxNameSize:        DefaultTeamNameMaxSize,

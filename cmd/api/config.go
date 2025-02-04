@@ -64,6 +64,7 @@ type LimitsConfig struct {
 type TriggerLimitsConfig struct {
 	// MaxNameSize is the max amount of characters allowed in trigger name.
 	MaxNameSize int `yaml:"max_name_size"`
+	PagerTTL time.Duration `yaml:"pager_ttl"`
 }
 
 // TeamLimitsConfig represents the limits which will be applied to all teams.
@@ -79,6 +80,7 @@ func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 	return api.LimitsConfig{
 		Trigger: api.TriggerLimits{
 			MaxNameSize: conf.Trigger.MaxNameSize,
+			PagerTTL: conf.Trigger.PagerTTL,
 		},
 		Team: api.TeamLimits{
 			MaxNameSize:        conf.Team.MaxNameSize,
@@ -283,6 +285,7 @@ func getDefault() config {
 			Limits: LimitsConfig{
 				Trigger: TriggerLimitsConfig{
 					MaxNameSize: api.DefaultTriggerNameMaxSize,
+					PagerTTL: api.DefaultTriggerPagerTTL,
 				},
 				Team: TeamLimitsConfig{
 					MaxNameSize:        api.DefaultTeamNameMaxSize,

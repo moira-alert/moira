@@ -112,7 +112,7 @@ func NewHandler(
 			router.Route("/user", user)
 			router.With(moiramiddle.Triggers(
 				apiConfig.MetricsTTL,
-			)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
+			)).Route("/trigger", triggers(metricSourceProvider, searchIndex, &apiConfig.Limits.Trigger))
 			router.Route("/tag", tag)
 			router.Route("/pattern", pattern)
 			router.Route("/event", event)
