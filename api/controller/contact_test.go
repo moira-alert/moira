@@ -50,13 +50,13 @@ func TestGetAllContacts(t *testing.T) {
 		So(err, ShouldBeNil)
 		expectedContacts := []dto.TeamContact{
 			{
-				ID:    uuid.Must(uuid.NewV4()).String(),
+				ID:    contacts[0].ID,
 				Type:  "mail",
 				User:  "user1",
 				Value: "good@mail.com",
 			},
 			{
-				ID:    uuid.Must(uuid.NewV4()).String(),
+				ID:    contacts[1].ID,
 				Type:  "pushover",
 				User:  "user2",
 				Value: "ggg1",
