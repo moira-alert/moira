@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/moira-alert/moira/filter"
 	"github.com/moira-alert/moira/templating"
 
 	"github.com/moira-alert/moira"
@@ -47,7 +48,7 @@ var (
 )
 
 // TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved.
-var asteriskPattern = "*"
+const asteriskPattern = "*"
 
 type TriggersList struct {
 	Page  *int64               `json:"page,omitempty" format:"int64" extensions:"x-nullable"`
@@ -252,11 +253,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
-	// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
-	for _, pattern := range trigger.Patterns {
-		if pattern == asteriskPattern {
-			return api.ErrInvalidRequestContent{ValidationError: errAsteriskPatternNotAllowed}
-		}
+	err = checkResolvedPatterns(trigger)
+	if err != nil {
+		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
 
 	if trigger.Schedule == nil {
@@ -331,6 +330,44 @@ func checkScheduleFilling(gotSchedule *moira.ScheduleData) (*moira.ScheduleData,
 	newSchedule.EndOffset = gotSchedule.EndOffset
 
 	return newSchedule, nil
+}
+
+func checkResolvedPatterns(trigger *Trigger) error {
+	for _, pattern := range trigger.Patterns {
+		// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
+		if pattern == asteriskPattern {
+			return errAsteriskPatternNotAllowed
+		}
+
+		err := checkRegexpInPattern(pattern)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkRegexpInPattern(pattern string) error {
+	if !strings.HasPrefix(pattern, "seriesByTag") {
+		return nil
+	}
+
+	tagSpecs, err := filter.ParseSeriesByTag(pattern)
+	if err != nil {
+		return err
+	}
+
+	for _, spec := range tagSpecs {
+		if spec.Operator == filter.MatchOperator || spec.Operator == filter.NotMatchOperator {
+			_, err = regexp.Compile(spec.Value)
+			if err != nil {
+				return fmt.Errorf("bad regexp in tag '%s': %w", spec.Name, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) error {
