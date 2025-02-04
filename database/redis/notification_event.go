@@ -68,11 +68,11 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 }
 
 // GetNotificationEventCount returns planned notifications count from given timestamp.
-func (connector *DbConnector) GetNotificationEventCount(triggerID string, from int64) int64 {
+func (connector *DbConnector) GetNotificationEventCount(triggerID string, from, to string) int64 {
 	ctx := connector.context
 	c := *connector.client
 
-	count, _ := c.ZCount(ctx, triggerEventsKey(triggerID), strconv.FormatInt(from, 10), "+inf").Result()
+	count, _ := c.ZCount(ctx, triggerEventsKey(triggerID), from, to).Result()
 	return count
 }
 

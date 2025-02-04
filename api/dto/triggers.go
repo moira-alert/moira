@@ -599,3 +599,26 @@ type TriggersSearchResultDeleteResponse struct {
 func (TriggersSearchResultDeleteResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
+
+// TriggerNoisiness represents TriggerCheck with amount of events for this trigger.
+type TriggerNoisiness struct {
+	Trigger
+	// EventsCount for the trigger.
+	EventsCount int64 `json:"events_count"`
+}
+
+func (*TriggerNoisiness) Render(http.ResponseWriter, *http.Request) error {
+	return nil
+}
+
+// TriggerNoisinessList represents list of TriggerNoisiness.
+type TriggerNoisinessList struct {
+	List  []TriggerNoisiness `json:"list"`
+	Page  int64              `json:"page" example:"0" format:"int64"`
+	Size  int64              `json:"size" example:"100" format:"int64"`
+	Total int64              `json:"total" example:"10" format:"int64"`
+}
+
+func (*TriggerNoisinessList) Render(http.ResponseWriter, *http.Request) error {
+	return nil
+}
