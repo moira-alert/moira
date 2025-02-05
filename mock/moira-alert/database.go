@@ -1503,17 +1503,17 @@ func (mr *MockDatabaseMockRecorder) SaveTrigger(arg0, arg1 any) *gomock.Call {
 }
 
 // SaveTriggersSearchResults mocks base method.
-func (m *MockDatabase) SaveTriggersSearchResults(arg0 string, arg1 []*moira.SearchResult) error {
+func (m *MockDatabase) SaveTriggersSearchResults(arg0 string, arg1 []*moira.SearchResult, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveTriggersSearchResults", arg0, arg1)
+	ret := m.ctrl.Call(m, "SaveTriggersSearchResults", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveTriggersSearchResults indicates an expected call of SaveTriggersSearchResults.
-func (mr *MockDatabaseMockRecorder) SaveTriggersSearchResults(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveTriggersSearchResults(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).SaveTriggersSearchResults), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).SaveTriggersSearchResults), arg0, arg1, arg2)
 }
 
 // SetNotifierState mocks base method.

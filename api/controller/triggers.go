@@ -100,7 +100,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 			return nil, api.ErrorInternalServer(err)
 		}
 		options.PagerID = uuid4.String()
-		err = database.SaveTriggersSearchResults(options.PagerID, searchResults)
+		err = database.SaveTriggersSearchResults(options.PagerID, searchResults, options.PagerTTL)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}

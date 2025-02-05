@@ -9,10 +9,8 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-const triggersSearchResultsExpire = time.Second * 1800
-
 // SaveTriggersSearchResults is a function that takes an ID of pager and saves it to redis.
-func (connector *DbConnector) SaveTriggersSearchResults(searchResultsID string, searchResults []*moira.SearchResult) error {
+func (connector *DbConnector) SaveTriggersSearchResults(searchResultsID string, searchResults []*moira.SearchResult, recordTTL time.Duration) error {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
 
@@ -27,7 +25,7 @@ func (connector *DbConnector) SaveTriggersSearchResults(searchResultsID string, 
 			return fmt.Errorf("failed to PUSH: %w", err)
 		}
 	}
-	if err := pipe.Expire(ctx, resultsID, triggersSearchResultsExpire).Err(); err != nil {
+	if err := pipe.Expire(ctx, resultsID, recordTTL).Err(); err != nil {
 		return fmt.Errorf("failed to set expire time: %w", err)
 	}
 	response, err := pipe.Exec(ctx)

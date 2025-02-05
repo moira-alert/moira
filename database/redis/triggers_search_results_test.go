@@ -3,6 +3,7 @@ package redis
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -96,7 +97,7 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 	defer dataBase.Flush()
 
 	Convey("Search Results Manipulation", t, func() {
-		err := dataBase.SaveTriggersSearchResults(searchResultsID, searchResults)
+		err := dataBase.SaveTriggersSearchResults(searchResultsID, searchResults, time.Hour)
 		So(err, ShouldBeNil)
 
 		actual, total, err := dataBase.GetTriggersSearchResults(searchResultsID, 0, -1)
@@ -176,7 +177,7 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 		dataBase.Flush()
 		b.Run(fmt.Sprintf("Benchmark%d", limit), func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
-				dataBase.SaveTriggersSearchResults(fmt.Sprintf("test_%d_%d", limit, n), data) //nolint
+				dataBase.SaveTriggersSearchResults(fmt.Sprintf("test_%d_%d", limit, n), data, time.Hour) //nolint
 			}
 		})
 	}
