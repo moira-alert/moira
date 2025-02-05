@@ -4,6 +4,8 @@ package dto
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/moira-alert/moira"
 )
 
 type ContactList struct {
