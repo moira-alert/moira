@@ -304,13 +304,12 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@tags			trigger
 //	@produce		json
 //	@param			onlyProblems	query		boolean							false	"Only include problems"	default(false)
-//	@param			text					query		string							false	"Search text"			default(cpu)
-//	@param			p							query		integer							false	"Page number"			default(0)
-//	@param			size					query		integer							false	"Page size"				default(10)
-//	@param			createPager 	query		boolean							false	"Create pager"		default(false)
-//	@param			pagerID				query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//  @param			pagerTTL			query		time.Duration				false	"Pager TTL"				default(30m)
-//	@param			createdBy			query		string							false	"Created By"			default(moira.team)
+//	@param			text			query		string							false	"Search text"			default(cpu)
+//	@param			p				query		integer							false	"Page number"			default(0)
+//	@param			size			query		integer							false	"Page size"				default(10)
+//	@param			createPager		query		boolean							false	"Create pager"			default(false)
+//	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param			createdBy		query		string							false	"Created By"			default(moira.team)
 //	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
 //	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found"
@@ -331,7 +330,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
-		PagerTTL:							 middleware.GetPagerTTL(request),
+		PagerTTL:              middleware.GetPagerTTL(request),
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)

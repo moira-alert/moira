@@ -61,7 +61,9 @@ type LimitsConfig struct {
 	Team TeamLimitsConfig `yaml:"team"`
 }
 
+// PagerLimits represents the limits which will be applied to all pagers.
 type PagerLimits struct {
+	// TTL is the amount of time that the pager will be exist
 	TTL time.Duration `yaml:"ttl"`
 }
 

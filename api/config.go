@@ -83,7 +83,7 @@ func (WebConfig) Render(http.ResponseWriter, *http.Request) error {
 const (
 	// DefaultTriggerNameMaxSize which will be used while validating dto.Trigger.
 	DefaultTriggerNameMaxSize = 200
-	DefaultTriggerPagerTTL = time.Minute * 30
+	DefaultTriggerPagerTTL    = time.Minute * 30
 )
 
 // PagerLimits contains all limits applied for pagers.
