@@ -4,12 +4,10 @@ package dto
 import (
 	"fmt"
 	"net/http"
-
-	"github.com/moira-alert/moira"
 )
 
 type ContactList struct {
-	List []*moira.ContactData `json:"list"`
+	List []TeamContact `json:"list"`
 }
 
 func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {

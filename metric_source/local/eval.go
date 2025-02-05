@@ -95,10 +95,7 @@ func (eval *evaluator) Eval(
 		} else if isErrUnknownFunction(err) {
 			err = ErrorUnknownFunction(err)
 		} else {
-			err = ErrEvalExpr{
-				target:        exp.ToString(),
-				internalError: err,
-			}
+			err = ErrorEvalExpression(err, exp.ToString())
 		}
 	}
 

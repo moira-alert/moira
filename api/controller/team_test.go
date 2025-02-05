@@ -912,18 +912,44 @@ func TestGetTeamSettings(t *testing.T) {
 
 	Convey("Success get team settings", t, func() {
 		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
-		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+
+		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+		contactsDto := []dto.TeamContact{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+
 		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
 		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
+
 		settings, err := GetTeamSettings(database, teamID)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, dto.TeamSettings{
 			TeamID:        teamID,
-			Contacts:      []moira.ContactData{*contacts[0], *contacts[1]},
+			Contacts:      contactsDto,
+			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
+		})
+	})
+
+	Convey("Success get team settings with team_id", t, func() {
+		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+
+		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
+		contacts := []*moira.ContactData{{ID: contactIDs[0], Team: teamID}, {ID: contactIDs[1], Team: teamID}}
+		contactsDto := []dto.TeamContact{{ID: contactIDs[0], Team: teamID, TeamID: teamID}, {ID: contactIDs[1], Team: teamID, TeamID: teamID}}
+
+		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
+		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
+		database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
+		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
+
+		settings, err := GetTeamSettings(database, teamID)
+		So(err, ShouldBeNil)
+		So(settings, ShouldResemble, dto.TeamSettings{
+			TeamID:        teamID,
+			Contacts:      contactsDto,
 			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
 		})
 	})
@@ -937,7 +963,7 @@ func TestGetTeamSettings(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, dto.TeamSettings{
 			TeamID:        teamID,
-			Contacts:      make([]moira.ContactData, 0),
+			Contacts:      make([]dto.TeamContact, 0),
 			Subscriptions: make([]moira.SubscriptionData, 0),
 		})
 	})
