@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -81,7 +82,7 @@ func TestSender_Init(t *testing.T) {
 				"timeout": 120,
 			}
 			sender := Sender{}
-			expectedHeaders := defaultHeaders
+			expectedHeaders := maps.Clone(defaultHeaders)
 			expectedHeaders["testHeader"] = "test"
 
 			err := sender.Init(settings, logger, location, dateTimeFormat)
@@ -99,8 +100,33 @@ func TestSender_Init(t *testing.T) {
 				log: logger,
 			})
 		})
+
+		Convey("With url and metricsMarker", func() {
+			settings := map[string]interface{}{
+				"url":            testURL,
+				"metrics_marker": &stubMetricsMarker{},
+			}
+
+			sender := Sender{}
+			err := sender.Init(settings, logger, location, dateTimeFormat)
+			So(err, ShouldBeNil)
+			So(sender, ShouldResemble, Sender{
+				url:     testURL,
+				headers: defaultHeaders,
+				client: &http.Client{
+					Timeout:   30 * time.Second,
+					Transport: &http.Transport{DisableKeepAlives: true},
+				},
+				log:           logger,
+				metricsMarker: &stubMetricsMarker{},
+			})
+		})
 	})
 }
+
+type stubMetricsMarker struct{}
+
+func (marker *stubMetricsMarker) MarkDeliveryFailed() {}
 
 func TestSender_SendEvents(t *testing.T) {
 	Convey("Receive test webhook", t, func() {

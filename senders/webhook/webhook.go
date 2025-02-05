@@ -8,6 +8,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/senders"
 )
 
 // Structure that represents the Webhook configuration in the YAML file.
@@ -22,13 +23,14 @@ type config struct {
 
 // Sender implements moira sender interface via webhook.
 type Sender struct {
-	url      string
-	body     string
-	user     string
-	password string
-	headers  map[string]string
-	client   *http.Client
-	log      moira.Logger
+	url           string
+	body          string
+	user          string
+	password      string
+	headers       map[string]string
+	client        *http.Client
+	log           moira.Logger
+	metricsMarker senders.MetricsMarker
 }
 
 // Init read yaml config.
@@ -67,6 +69,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.client = &http.Client{
 		Timeout:   time.Duration(timeout) * time.Second,
 		Transport: &http.Transport{DisableKeepAlives: true},
+	}
+
+	senderSettingsMap := senderSettings.(map[string]interface{})
+	if val, ok := senderSettingsMap["metrics_marker"]; ok {
+		sender.metricsMarker = val.(senders.MetricsMarker)
 	}
 
 	return nil
@@ -108,4 +115,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func isAllowedResponseCode(responseCode int) bool {
 	return (responseCode >= http.StatusOK) && (responseCode < http.StatusMultipleChoices)
+}
+
+func (sender *Sender) markDeliveryFailed() {
+	if sender.metricsMarker != nil {
+		sender.metricsMarker.MarkDeliveryFailed()
+	}
 }

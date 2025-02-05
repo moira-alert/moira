@@ -15,6 +15,7 @@ type NotifierMetrics struct {
 	SendersOkMetrics               MetersCollection
 	SendersFailedMetrics           MetersCollection
 	SendersDroppedNotifications    MetersCollection
+	SendersDeliveryFailed          MetersCollection
 	PlotsBuildDurationMs           Histogram
 	PlotsEvaluateTriggerDurationMs Histogram
 	fetchNotificationsDurationMs   Histogram
@@ -33,6 +34,7 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		SendersOkMetrics:               NewMetersCollection(registry),
 		SendersFailedMetrics:           NewMetersCollection(registry),
 		SendersDroppedNotifications:    NewMetersCollection(registry),
+		SendersDeliveryFailed:          NewMetersCollection(registry),
 		PlotsBuildDurationMs:           registry.NewHistogram("plots", "build", "duration", "ms"),
 		PlotsEvaluateTriggerDurationMs: registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
 		fetchNotificationsDurationMs:   registry.NewHistogram("fetch", "notifications", "duration", "ms"),
@@ -79,4 +81,11 @@ func (metrics *NotifierMetrics) MarkNotifierIsAlive(isAlive bool) {
 	}
 
 	metrics.notifierIsAlive.Mark(0)
+}
+
+// MarkDeliveryFailed marks metric as 1 by contact type for not delivered notifications.
+func (metrics *NotifierMetrics) MarkDeliveryFailed(contactType string) {
+	if metric, found := metrics.SendersDeliveryFailed.GetRegisteredMeter(contactType); found {
+		metric.Mark(1)
+	}
 }

@@ -3,9 +3,11 @@ package notifier
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
 	"github.com/moira-alert/moira/senders/mattermost"
@@ -112,6 +114,11 @@ func (notifier *StandardNotifier) registerMetrics(senderContactType string) {
 	notifier.metrics.SendersDroppedNotifications.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped")
 }
 
+const (
+	senderMetricsEnabledKey = "enable_metrics"
+	senderMetricsMarkerKey  = "metrics_marker"
+)
+
 // RegisterSender adds sender for notification type and registers metrics.
 func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error {
 	senderType, ok := senderSettings["sender_type"].(string)
@@ -126,6 +133,24 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 
 	if _, ok := notifier.senders[senderContactType]; ok {
 		return fmt.Errorf("failed to initialize sender [%s], err [%w]", senderContactType, ErrSenderRegistered)
+	}
+
+	if senderMetricsEnabledVal, ok := senderSettings[senderMetricsEnabledKey]; ok {
+		if senderMetricsEnabledValStr, converted := senderMetricsEnabledVal.(string); converted {
+			enabled, err := strconv.ParseBool(senderMetricsEnabledValStr)
+			if err != nil {
+				notifier.logger.Warning().
+					Error(err).
+					String("sender_contact_type", senderContactType).
+					String("sender_type", senderType).
+					String(senderMetricsEnabledKey, senderMetricsEnabledValStr).
+					Msg(fmt.Sprintf("Bad value in '%s' config field for sender", senderMetricsEnabledKey))
+			}
+
+			if enabled {
+				senderSettings[senderMetricsMarkerKey] = newSenderMetricsMarker(notifier.metrics, senderContactType)
+			}
+		}
 	}
 
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
@@ -169,4 +194,22 @@ func (notifier *StandardNotifier) StopSenders() {
 
 func getGraphiteSenderIdent(ident string) string {
 	return strings.ReplaceAll(ident, " ", "_")
+}
+
+type senderMetricsMarker struct {
+	notifierMetrics *metrics.NotifierMetrics
+	contactType     string
+}
+
+func newSenderMetricsMarker(notifierMetrics *metrics.NotifierMetrics, senderContactType string) *senderMetricsMarker {
+	notifierMetrics.SendersDeliveryFailed.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_failed")
+
+	return &senderMetricsMarker{
+		notifierMetrics: notifierMetrics,
+		contactType:     senderContactType,
+	}
+}
+
+func (marker *senderMetricsMarker) MarkDeliveryFailed() {
+	marker.notifierMetrics.MarkDeliveryFailed(marker.contactType)
 }
