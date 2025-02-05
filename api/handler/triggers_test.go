@@ -942,7 +942,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			err = json.Unmarshal(contentBytes, &gotDTO)
 			So(err, ShouldBeNil)
 			So(&gotDTO, ShouldResemble, &dto.TriggerNoisinessList{
-				List: []dto.TriggerNoisiness{
+				List: []*dto.TriggerNoisiness{
 					{
 						Trigger: dto.Trigger{
 							TriggerModel: dto.CreateTriggerModel(&testTriggerCheck.Trigger),
