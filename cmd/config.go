@@ -62,6 +62,10 @@ type RedisConfig struct {
 	// Allows routing read-only commands to the **random** master or slave node.
 	// It automatically enables ReadOnly.
 	RouteRandomly bool `yaml:"route_randomly"`
+	// Time to await for a client from client pool. Default value is 4s.
+	PoolTimeout string `yaml:"pool_timeout"`
+	// Size of client pool. Default value is 5 * GOMAXPROCS.
+	PoolSize int `yaml:"pool_size"`
 }
 
 // GetSettings returns redis config parsed from moira config files.
