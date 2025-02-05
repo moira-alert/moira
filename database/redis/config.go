@@ -23,6 +23,9 @@ type DatabaseConfig struct {
 	MinRetryBackoff time.Duration
 	MaxRetryBackoff time.Duration
 
+	PoolTimeout time.Duration
+	PoolSize    int
+
 	ReadOnly       bool
 	RouteByLatency bool
 	RouteRandomly  bool
