@@ -103,12 +103,29 @@ func (TeamMembers) Render(w http.ResponseWriter, r *http.Request) error {
 // TeamSettings is a structure that contains info about team: contacts and subscriptions.
 type TeamSettings struct {
 	TeamID        string                   `json:"team_id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
-	Contacts      []moira.ContactData      `json:"contacts"`
+	Contacts      []TeamContact            `json:"contacts"`
 	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
 }
 
 // Render is a function that implements chi Renderer interface for TeamSettings.
 func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+// TODO: Replace with dto.Contact after the next release.
+type TeamContact struct {
+	Type   string `json:"type" example:"mail"`
+	Name   string `json:"name,omitempty" example:"Mail Alerts"`
+	Value  string `json:"value" example:"devops@example.com"`
+	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User   string `json:"user,omitempty" example:""`
+	TeamID string `json:"team_id,omitempty"`
+	// This field is deprecated
+	Team string `json:"team,omitempty"`
+}
+
+// Render is a function that implements chi Renderer interface for TeamContact.
+func (TeamContact) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 

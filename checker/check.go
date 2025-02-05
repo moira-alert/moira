@@ -132,24 +132,17 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 				triggerChecker.trigger.ClusterKey(),
 			)
 		}
-	case remote.ErrRemoteTriggerResponse:
-		timeSinceLastSuccessfulCheck := checkData.Timestamp - checkData.LastSuccessfulCheckTimestamp
-		if timeSinceLastSuccessfulCheck >= triggerChecker.ttl {
-			checkData.State = moira.StateEXCEPTION
-			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
+	case remote.ErrRemoteUnavailable:
+		checkData.State = moira.StateEXCEPTION
+		checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked since: %v", checkData.LastSuccessfulCheckTimestamp)
 
-			var comparingErr error
-			checkData, comparingErr = triggerChecker.compareTriggerStates(checkData)
-			if comparingErr != nil {
-				triggerChecker.logger.Error().
-					Error(comparingErr).
-					String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
-					Msg("cannot compare trigger states")
-			}
-		}
-
-		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
-	case local.ErrUnknownFunction, local.ErrEvalExpr:
+		triggerChecker.logger.Error().
+			String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
+			String("trigger.cluster_id", triggerChecker.trigger.ClusterId.String()).
+			String("trigger.source", triggerChecker.trigger.TriggerSource.String()).
+			Error(err).
+			Msg("Trigger check failed")
+	case local.ErrUnknownFunction, local.ErrEvalExpr, remote.ErrRemoteTriggerResponse:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
 		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
