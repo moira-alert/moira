@@ -169,7 +169,7 @@ func TestPagerMiddleware(t *testing.T) {
 		defaultPagerTTL := time.Hour
 
 		Convey("with correct parameters", func() {
-			parameters := []string{"pagerID=test&createPager=true", "pagerID=test", "createPager=true", "", "pagerID=-1&createPager=true", "pagerID=test&createPager=-1"}
+			parameters := []string{"pagerID=test&createPager=true", "pagerID=test", "createPager=true", "", "pagerID=-1&createPager=true", "pagerID=test&createPager=-1", "pagerTTL=1000"}
 
 			for _, param := range parameters {
 				testRequestOk(

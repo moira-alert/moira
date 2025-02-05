@@ -25,7 +25,7 @@ import (
 	"github.com/moira-alert/moira/expression"
 )
 
-func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher, limitsConfig *api.TriggerLimits) func(chi.Router) {
+func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher, pagerLimitsConfig *api.PagerLimits) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
@@ -42,10 +42,10 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
-		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "", limitsConfig.PagerTTL)).Get("/search", searchTriggers)
-		router.With(middleware.Pager(false, "", limitsConfig.PagerTTL)).Delete("/search/pager", deletePager)
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "", pagerLimitsConfig.TTL)).Get("/search", searchTriggers)
+		router.With(middleware.Pager(false, "", pagerLimitsConfig.TTL)).Delete("/search/pager", deletePager)
 		// TODO: DEPRECATED method. Remove in Moira 2.6
-		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "", limitsConfig.PagerTTL)).Get("/page", searchTriggers)
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "", pagerLimitsConfig.TTL)).Get("/page", searchTriggers)
 	}
 }
 
@@ -304,12 +304,13 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@tags			trigger
 //	@produce		json
 //	@param			onlyProblems	query		boolean							false	"Only include problems"	default(false)
-//	@param			text			query		string							false	"Search text"			default(cpu)
-//	@param			p				query		integer							false	"Page number"			default(0)
-//	@param			size			query		integer							false	"Page size"				default(10)
-//	@param			createPager		query		boolean							false	"Create pager"			default(false)
-//	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param			createdBy		query		string							false	"Created By"			default(moira.team)
+//	@param			text					query		string							false	"Search text"			default(cpu)
+//	@param			p							query		integer							false	"Page number"			default(0)
+//	@param			size					query		integer							false	"Page size"				default(10)
+//	@param			createPager 	query		boolean							false	"Create pager"		default(false)
+//	@param			pagerID				query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//  @param			pagerTTL			query		time.Duration				false	"Pager TTL"				default(30m)
+//	@param			createdBy			query		string							false	"Created By"			default(moira.team)
 //	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
 //	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found"

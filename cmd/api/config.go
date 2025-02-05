@@ -54,17 +54,21 @@ type apiConfig struct {
 
 // LimitsConfig contains configurable moira limits.
 type LimitsConfig struct {
+	Pager PagerLimits `yaml:"pager"`
 	// Trigger contains the limits applied to triggers.
 	Trigger TriggerLimitsConfig `yaml:"trigger"`
 	// Team contains the limits applied to teams.
 	Team TeamLimitsConfig `yaml:"team"`
 }
 
+type PagerLimits struct {
+	TTL time.Duration `yaml:"ttl"`
+}
+
 // TriggerLimitsConfig represents the limits which will be applied to all triggers.
 type TriggerLimitsConfig struct {
 	// MaxNameSize is the max amount of characters allowed in trigger name.
 	MaxNameSize int `yaml:"max_name_size"`
-	PagerTTL time.Duration `yaml:"pager_ttl"`
 }
 
 // TeamLimitsConfig represents the limits which will be applied to all teams.
@@ -78,9 +82,11 @@ type TeamLimitsConfig struct {
 // ToLimits converts LimitsConfig to api.LimitsConfig.
 func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 	return api.LimitsConfig{
+		Pager: api.PagerLimits{
+			TTL: conf.Pager.TTL,
+		},
 		Trigger: api.TriggerLimits{
 			MaxNameSize: conf.Trigger.MaxNameSize,
-			PagerTTL: conf.Trigger.PagerTTL,
 		},
 		Team: api.TeamLimits{
 			MaxNameSize:        conf.Team.MaxNameSize,
@@ -283,9 +289,11 @@ func getDefault() config {
 			Listen:     ":8081",
 			EnableCORS: false,
 			Limits: LimitsConfig{
+				Pager: PagerLimits{
+					TTL: api.DefaultTriggerPagerTTL,
+				},
 				Trigger: TriggerLimitsConfig{
 					MaxNameSize: api.DefaultTriggerNameMaxSize,
-					PagerTTL: api.DefaultTriggerPagerTTL,
 				},
 				Team: TeamLimitsConfig{
 					MaxNameSize:        api.DefaultTeamNameMaxSize,
