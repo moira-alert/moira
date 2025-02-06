@@ -220,5 +220,5 @@ func (marker *senderMetricsMarker) MarkDeliveryFailed() {
 
 // MarkDeliveryOK marks for defined in constructor contact type that delivery of notification succeed.
 func (marker *senderMetricsMarker) MarkDeliveryOK() {
-	marker.notifierMetrics.MarkDeliveryFailed(marker.contactType)
+	marker.notifierMetrics.MarkDeliveryOK(marker.contactType)
 }
