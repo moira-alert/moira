@@ -136,23 +136,37 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	}
 
 	if senderMetricsEnabledVal, ok := senderSettings[senderMetricsEnabledKey]; ok {
-		if senderMetricsEnabledValStr, converted := senderMetricsEnabledVal.(string); converted {
-			enabled, err := strconv.ParseBool(senderMetricsEnabledValStr)
+		var (
+			enabled = false
+			err     error
+		)
+
+		switch convertedVal := senderMetricsEnabledVal.(type) {
+		case string:
+			enabled, err = strconv.ParseBool(convertedVal)
 			if err != nil {
 				notifier.logger.Warning().
 					Error(err).
 					String("sender_contact_type", senderContactType).
 					String("sender_type", senderType).
-					String(senderMetricsEnabledKey, senderMetricsEnabledValStr).
+					String(senderMetricsEnabledKey, convertedVal).
 					Msg(fmt.Sprintf("Bad value in '%s' config field for sender", senderMetricsEnabledKey))
 			}
+		case bool:
+			enabled = convertedVal
+		default:
+			enabled = false
+		}
 
-			if enabled {
-				senderSettings[senderMetricsKey] = metrics.ConfigureSenderMetrics(
-					notifier.metrics,
-					getGraphiteSenderIdent(senderContactType),
-					senderContactType)
-			}
+		if enabled {
+			senderSettings[senderMetricsKey] = metrics.ConfigureSenderMetrics(
+				notifier.metrics,
+				getGraphiteSenderIdent(senderContactType),
+				senderContactType)
+			notifier.logger.Info().
+				String("sender_contact_type", senderContactType).
+				String("sender_type", senderType).
+				Msg("Enable sender metrics")
 		}
 	}
 

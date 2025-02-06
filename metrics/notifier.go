@@ -35,6 +35,7 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		SendersOkMetrics:               NewMetersCollection(registry),
 		SendersFailedMetrics:           NewMetersCollection(registry),
 		SendersDroppedNotifications:    NewMetersCollection(registry),
+		SendersDeliveryOK:              NewMetersCollection(registry),
 		SendersDeliveryFailed:          NewMetersCollection(registry),
 		PlotsBuildDurationMs:           registry.NewHistogram("plots", "build", "duration", "ms"),
 		PlotsEvaluateTriggerDurationMs: registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
