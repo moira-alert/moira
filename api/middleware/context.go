@@ -165,17 +165,9 @@ func Pager(defaultCreatePager bool, defaultPagerID string, defaultPagerTTL time.
 				createPager = defaultCreatePager
 			}
 
-			var pagerTTL time.Duration
-			pagerTTLRaw, err := strconv.ParseUint(urlValues.Get("pagerTTL"), 10, 64)
-			if err == nil {
-				pagerTTL = time.Duration(pagerTTLRaw)
-			} else {
-				pagerTTL = defaultPagerTTL
-			}
-
 			ctxPager := context.WithValue(request.Context(), pagerIDKey, pagerID)
 			ctxSize := context.WithValue(ctxPager, createPagerKey, createPager)
-			ctxTTL := context.WithValue(ctxSize, pagerTTLKey, pagerTTL)
+			ctxTTL := context.WithValue(ctxSize, pagerTTLKey, defaultPagerTTL)
 			next.ServeHTTP(writer, request.WithContext(ctxTTL))
 		})
 	}
