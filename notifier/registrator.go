@@ -116,7 +116,7 @@ func (notifier *StandardNotifier) registerMetrics(senderContactType string) {
 
 const (
 	senderMetricsEnabledKey = "enable_metrics"
-	senderMetricsMarkerKey  = "metrics_marker"
+	senderMetricsKey        = "sender_metrics"
 )
 
 // RegisterSender adds sender for notification type and registers metrics.
@@ -148,7 +148,10 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 			}
 
 			if enabled {
-				senderSettings[senderMetricsMarkerKey] = newSenderMetricsMarker(notifier.metrics, senderContactType)
+				senderSettings[senderMetricsKey] = metrics.ConfigureSenderMetrics(
+					notifier.metrics,
+					getGraphiteSenderIdent(senderContactType),
+					senderContactType)
 			}
 		}
 	}
@@ -194,31 +197,4 @@ func (notifier *StandardNotifier) StopSenders() {
 
 func getGraphiteSenderIdent(ident string) string {
 	return strings.ReplaceAll(ident, " ", "_")
-}
-
-type senderMetricsMarker struct {
-	notifierMetrics *metrics.NotifierMetrics
-	contactType     string
-}
-
-func newSenderMetricsMarker(notifierMetrics *metrics.NotifierMetrics, senderContactType string) *senderMetricsMarker {
-	graphiteIdent := getGraphiteSenderIdent(senderContactType)
-
-	notifierMetrics.SendersDeliveryFailed.RegisterMeter(senderContactType, graphiteIdent, "delivery_failed")
-	notifierMetrics.SendersDeliveryOK.RegisterMeter(senderContactType, graphiteIdent, "delivery_ok")
-
-	return &senderMetricsMarker{
-		notifierMetrics: notifierMetrics,
-		contactType:     senderContactType,
-	}
-}
-
-// MarkDeliveryFailed marks for defined in constructor contact type that delivery of notification failed.
-func (marker *senderMetricsMarker) MarkDeliveryFailed() {
-	marker.notifierMetrics.MarkDeliveryFailed(marker.contactType)
-}
-
-// MarkDeliveryOK marks for defined in constructor contact type that delivery of notification succeed.
-func (marker *senderMetricsMarker) MarkDeliveryOK() {
-	marker.notifierMetrics.MarkDeliveryOK(marker.contactType)
 }

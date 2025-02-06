@@ -16,9 +16,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
-	mock_senders "github.com/moira-alert/moira/mock/notifier/senders"
-
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metrics"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
@@ -107,11 +106,11 @@ func TestSender_Init(t *testing.T) {
 		})
 
 		Convey("With url and metricsMarker", func() {
-			metricsMarker := mock_senders.NewMockMetricsMarker(mockCtrl)
+			senderMetrics := &metrics.SenderMetrics{}
 
 			settings := map[string]interface{}{
 				"url":            testURL,
-				"metrics_marker": metricsMarker,
+				"sender_metrics": senderMetrics,
 			}
 
 			sender := Sender{}
@@ -124,8 +123,8 @@ func TestSender_Init(t *testing.T) {
 					Timeout:   30 * time.Second,
 					Transport: &http.Transport{DisableKeepAlives: true},
 				},
-				log:           logger,
-				metricsMarker: metricsMarker,
+				log:     logger,
+				metrics: senderMetrics,
 			})
 		})
 	})
