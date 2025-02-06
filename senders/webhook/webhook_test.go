@@ -16,9 +16,11 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
+	mock_senders "github.com/moira-alert/moira/mock/notifier/senders"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 const (
@@ -41,6 +43,9 @@ var (
 
 func TestSender_Init(t *testing.T) {
 	Convey("Test Init function", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
 		validatorErr := validator.ValidationErrors{}
 
 		Convey("With empty url", func() {
@@ -102,9 +107,11 @@ func TestSender_Init(t *testing.T) {
 		})
 
 		Convey("With url and metricsMarker", func() {
+			metricsMarker := mock_senders.NewMockMetricsMarker(mockCtrl)
+
 			settings := map[string]interface{}{
 				"url":            testURL,
-				"metrics_marker": &stubMetricsMarker{},
+				"metrics_marker": metricsMarker,
 			}
 
 			sender := Sender{}
@@ -118,15 +125,11 @@ func TestSender_Init(t *testing.T) {
 					Transport: &http.Transport{DisableKeepAlives: true},
 				},
 				log:           logger,
-				metricsMarker: &stubMetricsMarker{},
+				metricsMarker: metricsMarker,
 			})
 		})
 	})
 }
-
-type stubMetricsMarker struct{}
-
-func (marker *stubMetricsMarker) MarkDeliveryFailed() {}
 
 func TestSender_SendEvents(t *testing.T) {
 	Convey("Receive test webhook", t, func() {

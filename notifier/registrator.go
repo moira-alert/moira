@@ -202,7 +202,10 @@ type senderMetricsMarker struct {
 }
 
 func newSenderMetricsMarker(notifierMetrics *metrics.NotifierMetrics, senderContactType string) *senderMetricsMarker {
-	notifierMetrics.SendersDeliveryFailed.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_failed")
+	graphiteIdent := getGraphiteSenderIdent(senderContactType)
+
+	notifierMetrics.SendersDeliveryFailed.RegisterMeter(senderContactType, graphiteIdent, "delivery_failed")
+	notifierMetrics.SendersDeliveryOK.RegisterMeter(senderContactType, graphiteIdent, "delivery_ok")
 
 	return &senderMetricsMarker{
 		notifierMetrics: notifierMetrics,
@@ -210,6 +213,12 @@ func newSenderMetricsMarker(notifierMetrics *metrics.NotifierMetrics, senderCont
 	}
 }
 
+// MarkDeliveryFailed marks for defined in constructor contact type that delivery of notification failed.
 func (marker *senderMetricsMarker) MarkDeliveryFailed() {
+	marker.notifierMetrics.MarkDeliveryFailed(marker.contactType)
+}
+
+// MarkDeliveryOK marks for defined in constructor contact type that delivery of notification succeed.
+func (marker *senderMetricsMarker) MarkDeliveryOK() {
 	marker.notifierMetrics.MarkDeliveryFailed(marker.contactType)
 }

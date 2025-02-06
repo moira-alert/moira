@@ -29,4 +29,6 @@ mockgen -destination=mock/moira-alert/prometheus_api.go -package=mock_moira_aler
 mockgen -destination=mock/moira-alert/database_stats.go -package=mock_moira_alert github.com/moira-alert/moira/database/stats StatsReporter
 mockgen -destination=mock/notifier/telegram/bot.go -package=mock_telegram github.com/moira-alert/moira/senders/telegram Bot
 
+mockgen -destination=mock/notifier/senders/metrics_marker.go -package=mock_senders github.com/moira-alert/moira/senders MetricsMarker
+
 git add mock/*

@@ -122,3 +122,9 @@ func (sender *Sender) markDeliveryFailed() {
 		sender.metricsMarker.MarkDeliveryFailed()
 	}
 }
+
+func (sender *Sender) markDeliveryOK() {
+	if sender.metricsMarker != nil {
+		sender.metricsMarker.MarkDeliveryOK()
+	}
+}

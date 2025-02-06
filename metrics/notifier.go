@@ -15,6 +15,7 @@ type NotifierMetrics struct {
 	SendersOkMetrics               MetersCollection
 	SendersFailedMetrics           MetersCollection
 	SendersDroppedNotifications    MetersCollection
+	SendersDeliveryOK              MetersCollection
 	SendersDeliveryFailed          MetersCollection
 	PlotsBuildDurationMs           Histogram
 	PlotsEvaluateTriggerDurationMs Histogram
@@ -83,9 +84,16 @@ func (metrics *NotifierMetrics) MarkNotifierIsAlive(isAlive bool) {
 	metrics.notifierIsAlive.Mark(0)
 }
 
-// MarkDeliveryFailed marks metric as 1 by contact type for not delivered notifications.
+// MarkDeliveryFailed marks metric as 1 by contact type for not delivered notification.
 func (metrics *NotifierMetrics) MarkDeliveryFailed(contactType string) {
 	if metric, found := metrics.SendersDeliveryFailed.GetRegisteredMeter(contactType); found {
+		metric.Mark(1)
+	}
+}
+
+// MarkDeliveryOK marks metric as 1 by contact type for successfully delivered notification.
+func (metrics *NotifierMetrics) MarkDeliveryOK(contactType string) {
+	if metric, found := metrics.SendersDeliveryOK.GetRegisteredMeter(contactType); found {
 		metric.Mark(1)
 	}
 }
