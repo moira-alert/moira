@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/metrics"
+	mock_metrics "github.com/moira-alert/moira/mock/moira-alert/metrics"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -55,6 +57,68 @@ func TestRegisterSender(t *testing.T) {
 				"contact_type": "test_contact_new",
 			}
 
+			sender.EXPECT().Init(senderSettings, standardNotifier.logger, standardNotifier.config.Location, standardNotifier.config.DateTimeFormat)
+
+			err := standardNotifier.RegisterSender(senderSettings, sender)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Successfully register sender with damaged enable_metrics", func() {
+			sendersOkMetrics := mock_metrics.NewMockMetersCollection(mockCtrl)
+			sendersFailedMetrics := mock_metrics.NewMockMetersCollection(mockCtrl)
+			sendersDroppedNotifications := mock_metrics.NewMockMetersCollection(mockCtrl)
+
+			notifierMetrics := &metrics.NotifierMetrics{
+				SendersOkMetrics:            sendersOkMetrics,
+				SendersFailedMetrics:        sendersFailedMetrics,
+				SendersDroppedNotifications: sendersDroppedNotifications,
+			}
+			standardNotifier.metrics = notifierMetrics
+
+			senderContactType := "test_contact_new_1"
+			senderSettings := map[string]interface{}{
+				"sender_type":    "test_type",
+				"contact_type":   "test_contact_new_1",
+				"enable_metrics": "abracdabra",
+			}
+
+			sendersOkMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
+			sendersFailedMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed").Times(1)
+			sendersDroppedNotifications.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped").Times(1)
+			sender.EXPECT().Init(senderSettings, standardNotifier.logger, standardNotifier.config.Location, standardNotifier.config.DateTimeFormat)
+
+			err := standardNotifier.RegisterSender(senderSettings, sender)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Successfully register sender with enable_metrics = true", func() {
+			sendersOkMetrics := mock_metrics.NewMockMetersCollection(mockCtrl)
+			sendersFailedMetrics := mock_metrics.NewMockMetersCollection(mockCtrl)
+			sendersDroppedNotifications := mock_metrics.NewMockMetersCollection(mockCtrl)
+			sendersDeliveryOK := mock_metrics.NewMockMetersCollection(mockCtrl)
+			sendersDeliveryFailed := mock_metrics.NewMockMetersCollection(mockCtrl)
+
+			notifierMetrics := &metrics.NotifierMetrics{
+				SendersOkMetrics:            sendersOkMetrics,
+				SendersFailedMetrics:        sendersFailedMetrics,
+				SendersDroppedNotifications: sendersDroppedNotifications,
+				SendersDeliveryOK:           sendersDeliveryOK,
+				SendersDeliveryFailed:       sendersDeliveryFailed,
+			}
+			standardNotifier.metrics = notifierMetrics
+
+			senderContactType := "test_contact_new_2"
+			senderSettings := map[string]interface{}{
+				"sender_type":    "test_type",
+				"contact_type":   senderContactType,
+				"enable_metrics": "true",
+			}
+
+			sendersOkMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
+			sendersFailedMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed").Times(1)
+			sendersDroppedNotifications.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped").Times(1)
+			sendersDeliveryOK.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_ok").Times(1)
+			sendersDeliveryFailed.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_failed").Times(1)
 			sender.EXPECT().Init(senderSettings, standardNotifier.logger, standardNotifier.config.Location, standardNotifier.config.DateTimeFormat)
 
 			err := standardNotifier.RegisterSender(senderSettings, sender)
