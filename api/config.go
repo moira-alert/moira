@@ -84,7 +84,7 @@ const (
 	// DefaultTriggerNameMaxSize which will be used while validating dto.Trigger.
 	DefaultTriggerNameMaxSize = 200
 	// DefaultTriggerPagerTTL which will be used via trigger creation.
-	DefaultTriggerPagerTTL    = time.Minute * 30
+	DefaultTriggerPagerTTL = time.Minute * 30
 )
 
 // PagerLimits contains all limits applied for pagers.
