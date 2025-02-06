@@ -136,7 +136,7 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked since: %v", checkData.LastSuccessfulCheckTimestamp)
 
-		triggerChecker.logger.Error().
+		triggerChecker.logger.Warning().
 			String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
 			String("trigger.cluster_id", triggerChecker.trigger.ClusterId.String()).
 			String("trigger.source", triggerChecker.trigger.TriggerSource.String()).
@@ -169,7 +169,7 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	checkData.State = moira.StateEXCEPTION
 	checkData.Message = err.Error()
 
-	triggerChecker.logger.Error().
+	triggerChecker.logger.Warning().
 		String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
 		String("trigger.cluster_id", triggerChecker.trigger.ClusterId.String()).
 		String("trigger.source", triggerChecker.trigger.TriggerSource.String()).
