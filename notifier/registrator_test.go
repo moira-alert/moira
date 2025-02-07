@@ -107,28 +107,22 @@ func TestRegisterSender(t *testing.T) {
 			}
 			standardNotifier.metrics = notifierMetrics
 
-			for i, enableMetricsVal := range []interface{}{"true", true} {
-				Convey(
-					fmt.Sprintf("Case %v: Successfully register sender with '%s' = %v", i+1, senderMetricsEnabledKey, enableMetricsVal),
-					func() {
-						senderContactType := fmt.Sprintf("test_contact_new__%v", i)
-						senderSettings := map[string]interface{}{
-							"sender_type":    "test_type",
-							"contact_type":   senderContactType,
-							"enable_metrics": enableMetricsVal,
-						}
-
-						sendersOkMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
-						sendersFailedMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed").Times(1)
-						sendersDroppedNotifications.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped").Times(1)
-						sendersDeliveryOK.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_ok").Times(1)
-						sendersDeliveryFailed.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_failed").Times(1)
-						sender.EXPECT().Init(senderSettings, standardNotifier.logger, standardNotifier.config.Location, standardNotifier.config.DateTimeFormat)
-
-						err := standardNotifier.RegisterSender(senderSettings, sender)
-						So(err, ShouldBeNil)
-					})
+			senderContactType := "test_contact_new_2"
+			senderSettings := map[string]interface{}{
+				"sender_type":    "test_type",
+				"contact_type":   senderContactType,
+				"enable_metrics": senderContactType,
 			}
+
+			sendersOkMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
+			sendersFailedMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed").Times(1)
+			sendersDroppedNotifications.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped").Times(1)
+			sendersDeliveryOK.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_ok").Times(1)
+			sendersDeliveryFailed.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_failed").Times(1)
+			sender.EXPECT().Init(senderSettings, standardNotifier.logger, standardNotifier.config.Location, standardNotifier.config.DateTimeFormat)
+
+			err := standardNotifier.RegisterSender(senderSettings, sender)
+			So(err, ShouldBeNil)
 		})
 	})
 }

@@ -116,15 +116,3 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 func isAllowedResponseCode(responseCode int) bool {
 	return (responseCode >= http.StatusOK) && (responseCode < http.StatusMultipleChoices)
 }
-
-func (sender *Sender) markDeliveryFailed() {
-	if sender.metrics != nil {
-		sender.metrics.SenderDeliveryFailed.Mark(1)
-	}
-}
-
-func (sender *Sender) markDeliveryOK() {
-	if sender.metrics != nil {
-		sender.metrics.SenderDeliveryOK.Mark(1)
-	}
-}

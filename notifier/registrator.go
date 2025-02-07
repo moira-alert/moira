@@ -3,7 +3,6 @@ package notifier
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/moira-alert/moira"
@@ -135,39 +134,15 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 		return fmt.Errorf("failed to initialize sender [%s], err [%w]", senderContactType, ErrSenderRegistered)
 	}
 
-	if senderMetricsEnabledVal, ok := senderSettings[senderMetricsEnabledKey]; ok {
-		var (
-			enabled = false
-			err     error
-		)
-
-		switch convertedVal := senderMetricsEnabledVal.(type) {
-		case string:
-			enabled, err = strconv.ParseBool(convertedVal)
-			if err != nil {
-				notifier.logger.Warning().
-					Error(err).
-					String("sender_contact_type", senderContactType).
-					String("sender_type", senderType).
-					String(senderMetricsEnabledKey, convertedVal).
-					Msg(fmt.Sprintf("Bad value in '%s' config field for sender", senderMetricsEnabledKey))
-			}
-		case bool:
-			enabled = convertedVal
-		default:
-			enabled = false
-		}
-
-		if enabled {
-			senderSettings[senderMetricsKey] = metrics.ConfigureSenderMetrics(
-				notifier.metrics,
-				getGraphiteSenderIdent(senderContactType),
-				senderContactType)
-			notifier.logger.Info().
-				String("sender_contact_type", senderContactType).
-				String("sender_type", senderType).
-				Msg("Enable sender metrics")
-		}
+	if senderMetricsEnabled, ok := senderSettings[senderMetricsEnabledKey].(bool); ok && senderMetricsEnabled {
+		senderSettings[senderMetricsKey] = metrics.ConfigureSenderMetrics(
+			notifier.metrics,
+			getGraphiteSenderIdent(senderContactType),
+			senderContactType)
+		notifier.logger.Info().
+			String("sender_contact_type", senderContactType).
+			String("sender_type", senderType).
+			Msg("Enable sender metrics")
 	}
 
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
