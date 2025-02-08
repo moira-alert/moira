@@ -111,7 +111,7 @@ func TestRegisterSender(t *testing.T) {
 			senderSettings := map[string]interface{}{
 				"sender_type":    "test_type",
 				"contact_type":   senderContactType,
-				"enable_metrics": senderContactType,
+				"enable_metrics": true,
 			}
 
 			sendersOkMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
