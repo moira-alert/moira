@@ -25,7 +25,7 @@ import (
 	"github.com/moira-alert/moira/expression"
 )
 
-func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher, pagerLimitsConfig *api.PagerLimits) func(chi.Router) {
+func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
@@ -42,16 +42,10 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
-		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", enrich(searchTriggers, pagerLimitsConfig))
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
 		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
 		// TODO: DEPRECATED method. Remove in Moira 2.6
-		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", enrich(searchTriggers, pagerLimitsConfig))
-	}
-}
-
-func enrich[T interface{}](original func(T, http.ResponseWriter, *http.Request), value T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		original(value, w, r)
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", searchTriggers)
 	}
 }
 
@@ -322,7 +316,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@failure		422				{object}	api.ErrorRenderExample			"Render error"
 //	@failure		500				{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router			/trigger/search [get]
-func searchTriggers(pagerLimitsConfig *api.PagerLimits, writer http.ResponseWriter, request *http.Request) {
+func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
 
 	createdBy, ok := getTriggerCreatedBy(request)
@@ -336,7 +330,7 @@ func searchTriggers(pagerLimitsConfig *api.PagerLimits, writer http.ResponseWrit
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
-		PagerTTL:              pagerLimitsConfig.TTL,
+		PagerTTL:              middleware.GetLimits(request).Pager.TTL,
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
