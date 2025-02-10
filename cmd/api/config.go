@@ -54,6 +54,7 @@ type apiConfig struct {
 
 // LimitsConfig contains configurable moira limits.
 type LimitsConfig struct {
+	// Pager contains the limits applied to pagers.
 	Pager PagerLimits `yaml:"pager"`
 	// Trigger contains the limits applied to triggers.
 	Trigger TriggerLimitsConfig `yaml:"trigger"`
