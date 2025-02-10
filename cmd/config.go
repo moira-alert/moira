@@ -88,6 +88,8 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 		ReadOnly:         config.ReadOnly,
 		RouteByLatency:   config.RouteByLatency,
 		RouteRandomly:    config.RouteRandomly,
+		PoolTimeout:      to.Duration(config.PoolTimeout),
+		PoolSize:         config.PoolSize,
 	}
 }
 
