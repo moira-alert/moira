@@ -42,10 +42,16 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
-		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "", pagerLimitsConfig.TTL)).Get("/search", searchTriggers)
-		router.With(middleware.Pager(false, "", pagerLimitsConfig.TTL)).Delete("/search/pager", deletePager)
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", enrich(searchTriggers, pagerLimitsConfig))
+		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
 		// TODO: DEPRECATED method. Remove in Moira 2.6
-		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "", pagerLimitsConfig.TTL)).Get("/page", searchTriggers)
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", enrich(searchTriggers, pagerLimitsConfig))
+	}
+}
+
+func enrich[T interface{}](original func(T, http.ResponseWriter, *http.Request), value T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		original(value, w, r)
 	}
 }
 
@@ -316,7 +322,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@failure		422				{object}	api.ErrorRenderExample			"Render error"
 //	@failure		500				{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router			/trigger/search [get]
-func searchTriggers(writer http.ResponseWriter, request *http.Request) {
+func searchTriggers(pagerLimitsConfig *api.PagerLimits, writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
 
 	createdBy, ok := getTriggerCreatedBy(request)
@@ -330,7 +336,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
-		PagerTTL:              middleware.GetPagerTTL(request),
+		PagerTTL:              pagerLimitsConfig.TTL,
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
