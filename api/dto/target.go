@@ -104,7 +104,7 @@ var (
 
 type ProblemOfTarget struct {
 	Argument    string            `json:"argument" example:"consolidateBy"`
-	Type        typeOfProblem     `json:"type,omitempty" example:"warn"`
+	Type        typeOfProblem     `json:"type,omitempty" example:"warn" swaggertype:"string"` //nolint:govet
 	Description string            `json:"description,omitempty" example:"This function affects only visual graph representation. It is meaningless in Moira"`
 	Position    int               `json:"position" example:"0"`
 	Problems    []ProblemOfTarget `json:"problems,omitempty"`
