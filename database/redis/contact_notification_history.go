@@ -162,7 +162,7 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 	})
 }
 
-// CountEventsInNotificationHistory returns the amount of events in time range (from, to) for given contact ids.
+// CountEventsInNotificationHistory returns the number of events in time range (from, to) for given contact ids.
 func (connector *DbConnector) CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]uint64, error) {
 	pipe := connector.Client().TxPipeline()
 	ctx := connector.Context()
