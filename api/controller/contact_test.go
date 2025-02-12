@@ -1152,20 +1152,31 @@ func TestGetContactNoisiness(t *testing.T) {
 					[]string{"contactID1", "contactID2", "contactID3"},
 					allTimeFrom,
 					allTimeTo).
-					Return([]uint64{2, 3, 1}, nil).Times(1)
+					Return([]*moira.ContactIDWithNotificationCount{
+						{ID: "contactID1", Count: 2},
+						{ID: "contactID2", Count: 3},
+						{ID: "contactID3", Count: 1},
+					}, nil).Times(1)
 
 				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.DescSortOrder)
 				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
 					Page:  zeroPage,
 					Size:  allEventsSize,
 					Total: 3,
-					List: makeContactNoisinessSlice(
-						[]*moira.ContactData{
-							contacts[1],
-							contacts[0],
-							contacts[2],
+					List: []*dto.ContactNoisiness{
+						{
+							Contact:     dto.FromMoiraContactData(*contacts[1]),
+							EventsCount: 3,
 						},
-						[]uint64{3, 2, 1}),
+						{
+							Contact:     dto.FromMoiraContactData(*contacts[0]),
+							EventsCount: 2,
+						},
+						{
+							Contact:     dto.FromMoiraContactData(*contacts[2]),
+							EventsCount: 1,
+						},
+					},
 				})
 				So(gotErrRsp, ShouldBeNil)
 			})
@@ -1176,20 +1187,31 @@ func TestGetContactNoisiness(t *testing.T) {
 					[]string{"contactID1", "contactID2", "contactID3"},
 					allTimeFrom,
 					allTimeTo).
-					Return([]uint64{2, 3, 1}, nil).Times(1)
+					Return([]*moira.ContactIDWithNotificationCount{
+						{ID: "contactID1", Count: 2},
+						{ID: "contactID2", Count: 3},
+						{ID: "contactID3", Count: 1},
+					}, nil).Times(1)
 
 				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.AscSortOrder)
 				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
 					Page:  zeroPage,
 					Size:  allEventsSize,
 					Total: 3,
-					List: makeContactNoisinessSlice(
-						[]*moira.ContactData{
-							contacts[2],
-							contacts[0],
-							contacts[1],
+					List: []*dto.ContactNoisiness{
+						{
+							Contact:     dto.FromMoiraContactData(*contacts[2]),
+							EventsCount: 1,
 						},
-						[]uint64{1, 2, 3}),
+						{
+							Contact:     dto.FromMoiraContactData(*contacts[0]),
+							EventsCount: 2,
+						},
+						{
+							Contact:     dto.FromMoiraContactData(*contacts[1]),
+							EventsCount: 3,
+						},
+					},
 				})
 				So(gotErrRsp, ShouldBeNil)
 			})

@@ -323,12 +323,12 @@ func GetContactNoisiness(
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	eventCounts, err := database.CountEventsInNotificationHistory(getOnlyIDs(contacts), from, to)
+	idsWithEventsCount, err := database.CountEventsInNotificationHistory(getOnlyIDs(contacts), from, to)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	noisinessSlice := makeContactNoisinessSlice(contacts, eventCounts)
+	noisinessSlice := makeContactNoisinessSlice(contacts, idsWithEventsCount)
 
 	sortContactNoisinessByEventsCount(noisinessSlice, sortOrder)
 	total := int64(len(noisinessSlice))
@@ -351,14 +351,14 @@ func getOnlyIDs(contactsData []*moira.ContactData) []string {
 	return ids
 }
 
-func makeContactNoisinessSlice(contacts []*moira.ContactData, eventsCount []uint64) []*dto.ContactNoisiness {
+func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount []*moira.ContactIDWithNotificationCount) []*dto.ContactNoisiness {
 	noisiness := make([]*dto.ContactNoisiness, 0, len(contacts))
 
 	for i, contact := range contacts {
 		noisiness = append(noisiness,
 			&dto.ContactNoisiness{
 				Contact:     dto.FromMoiraContactData(*contact),
-				EventsCount: eventsCount[i],
+				EventsCount: idsWithEventsCount[i].Count,
 			})
 	}
 

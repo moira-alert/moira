@@ -431,7 +431,9 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 			Convey("events from -inf to +inf", func() {
 				eventCounts, err := dataBase.CountEventsInNotificationHistory(contactIDs[:1], allTimeFrom, allTimeTo)
 				So(err, ShouldBeNil)
-				So(eventCounts, ShouldResemble, []uint64{4})
+				So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+					{ID: contactIDs[0], Count: 4},
+				})
 			})
 
 			Convey("events from fixed timestamp to +inf", func() {
@@ -440,7 +442,9 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 					strconv.FormatInt(baseTimeStamp-2, 10),
 					allTimeTo)
 				So(err, ShouldBeNil)
-				So(eventCounts, ShouldResemble, []uint64{3})
+				So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+					{ID: contactIDs[0], Count: 3},
+				})
 			})
 
 			Convey("events from fixed timestamp to fixed timestamp", func() {
@@ -449,7 +453,9 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 					strconv.FormatInt(baseTimeStamp-2, 10),
 					strconv.FormatInt(baseTimeStamp, 10))
 				So(err, ShouldBeNil)
-				So(eventCounts, ShouldResemble, []uint64{2})
+				So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+					{ID: contactIDs[0], Count: 2},
+				})
 			})
 
 			Convey("events from -inf to fixed timestamp", func() {
@@ -458,7 +464,9 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 					allTimeFrom,
 					strconv.FormatInt(baseTimeStamp-2, 10))
 				So(err, ShouldBeNil)
-				So(eventCounts, ShouldResemble, []uint64{1})
+				So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+					{ID: contactIDs[0], Count: 1},
+				})
 			})
 		})
 
@@ -466,7 +474,10 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 			Convey("all time", func() {
 				eventCounts, err := dataBase.CountEventsInNotificationHistory(contactIDs[:2], allTimeFrom, allTimeTo)
 				So(err, ShouldBeNil)
-				So(eventCounts, ShouldResemble, []uint64{4, 4})
+				So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+					{ID: contactIDs[0], Count: 4},
+					{ID: contactIDs[1], Count: 4},
+				})
 			})
 
 			Convey("events from fixed timestamp to +inf", func() {
@@ -474,7 +485,10 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 					strconv.FormatInt(baseTimeStamp-3, 10),
 					allTimeTo)
 				So(err, ShouldBeNil)
-				So(eventCounts, ShouldResemble, []uint64{3, 4})
+				So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+					{ID: contactIDs[0], Count: 3},
+					{ID: contactIDs[1], Count: 4},
+				})
 			})
 
 			Convey("events from fixed timestamp to fixed timestamp", func() {
@@ -482,7 +496,10 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 					strconv.FormatInt(baseTimeStamp-3, 10),
 					strconv.FormatInt(baseTimeStamp, 10))
 				So(err, ShouldBeNil)
-				So(eventCounts, ShouldResemble, []uint64{2, 3})
+				So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+					{ID: contactIDs[0], Count: 2},
+					{ID: contactIDs[1], Count: 3},
+				})
 			})
 
 			Convey("events from -inf to fixed timestamp", func() {
@@ -490,7 +507,10 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 					allTimeFrom,
 					strconv.FormatInt(baseTimeStamp, 10))
 				So(err, ShouldBeNil)
-				So(eventCounts, ShouldResemble, []uint64{3, 3})
+				So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+					{ID: contactIDs[0], Count: 3},
+					{ID: contactIDs[1], Count: 3},
+				})
 			})
 		})
 
@@ -500,7 +520,11 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 				allTimeFrom,
 				allTimeTo)
 			So(err, ShouldBeNil)
-			So(eventCounts, ShouldResemble, []uint64{4, 4, 0})
+			So(eventCounts, ShouldResemble, []*moira.ContactIDWithNotificationCount{
+				{ID: contactIDs[0], Count: 4},
+				{ID: contactIDs[1], Count: 4},
+				{ID: "forth-id", Count: 0},
+			})
 		})
 	})
 }

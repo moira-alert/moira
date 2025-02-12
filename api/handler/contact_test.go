@@ -1066,7 +1066,12 @@ func Test_getContactNoisiness(t *testing.T) {
 				[]string{"contact-id-1", "contact-id-2", "contact-id-3", "contact-id-4"},
 				parsedFrom,
 				parsedTo).
-				Return([]uint64{0, 5, 2, 7}, nil).Times(1)
+				Return([]*moira.ContactIDWithNotificationCount{
+					{ID: "contact-id-1", Count: 0},
+					{ID: "contact-id-2", Count: 5},
+					{ID: "contact-id-3", Count: 2},
+					{ID: "contact-id-4", Count: 7},
+				}, nil).Times(1)
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)
 			testRequest = testRequest.WithContext(setContextValues(
