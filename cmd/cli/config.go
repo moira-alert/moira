@@ -26,7 +26,7 @@ func getDefault() config {
 		LogFile:         "stdout",
 		LogLevel:        "info",
 		LogPrettyFormat: false,
-		Redis: cmd.DefaultRedisConfig(),
+		Redis:           cmd.DefaultRedisConfig(),
 		Cleanup: cleanupConfig{
 			Whitelist:                          []string{},
 			CleanupMetricsDuration:             "-168h",
