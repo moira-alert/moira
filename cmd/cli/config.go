@@ -26,11 +26,7 @@ func getDefault() config {
 		LogFile:         "stdout",
 		LogLevel:        "info",
 		LogPrettyFormat: false,
-		Redis: cmd.RedisConfig{
-			Addrs:       "localhost:6379",
-			MetricsTTL:  "1h",
-			DialTimeout: "500ms",
-		},
+		Redis: cmd.DefaultRedisConfig(),
 		Cleanup: cleanupConfig{
 			Whitelist:                          []string{},
 			CleanupMetricsDuration:             "-168h",

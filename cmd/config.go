@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/moira-alert/moira"
@@ -42,13 +43,13 @@ type RedisConfig struct {
 	MetricsTTL string `yaml:"metrics_ttl"`
 	// Dial connection timeout. Default is 500ms.
 	DialTimeout string `yaml:"dial_timeout"`
-	// Read-operation timeout. Default is 3000ms.
+	// Read-operation timeout. Default is 3s.
 	ReadTimeout string `yaml:"read_timeout"`
-	// Write-operation timeout. Default is ReadTimeout seconds.
+	// Write-operation timeout. Default is 3s.
 	WriteTimeout string `yaml:"write_timeout"`
-	// MaxRetries count of redirects.
+	// MaxRetries count of redirects. Default value is 3.
 	MaxRedirects int `yaml:"max_redirects"`
-	// MaxRetries count of retries.
+	// MaxRetries count of retries. Default value is 3.
 	MaxRetries int `yaml:"max_retries"`
 	// Minimum backoff between retries. Used to calculate exponential backoff. Default value is 0
 	MinRetryBackoff string `yaml:"min_retry_backoff"`
@@ -64,8 +65,27 @@ type RedisConfig struct {
 	RouteRandomly bool `yaml:"route_randomly"`
 	// Time to await for a client from client pool. Default value is 4s.
 	PoolTimeout string `yaml:"pool_timeout"`
-	// Size of client pool. Default value is 5 * GOMAXPROCS.
+	// Constant part of the client pool size. Default value is 0.
+	// Total size of client pool is PoolSizePerProc * GOMAXPROCS + PoolSize
 	PoolSize int `yaml:"pool_size"`
+	// CPU-dependant of the client pool size. Default value is 5.
+	// Total size of client pool is PoolSizePerProc * GOMAXPROCS + PoolSize
+	PoolSizePerProc int `yaml:"pool_size"`
+}
+
+func DefaultRedisConfig() RedisConfig {
+	return RedisConfig{
+		Addrs:           "localhost:6379",
+		MetricsTTL:      "1h",
+		MaxRetries:      3,
+		MaxRedirects:    3,
+		DialTimeout:     "500ms",
+		ReadTimeout:     "3s",
+		WriteTimeout:    "3s",
+		PoolTimeout:     "4s",
+		PoolSize:        0,
+		PoolSizePerProc: 5,
+	}
 }
 
 // GetSettings returns redis config parsed from moira config files.
@@ -89,7 +109,7 @@ func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
 		RouteByLatency:   config.RouteByLatency,
 		RouteRandomly:    config.RouteRandomly,
 		PoolTimeout:      to.Duration(config.PoolTimeout),
-		PoolSize:         config.PoolSize,
+		PoolSize:         config.PoolSize + runtime.GOMAXPROCS(0)*config.PoolSizePerProc,
 	}
 }
 
