@@ -50,7 +50,7 @@ type Database interface {
 
 	// SearchResult AKA pager storing
 	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)
-	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult) error
+	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult, recordTTL time.Duration) error
 	IsTriggersSearchResultsExist(pagerID string) (bool, error)
 	DeleteTriggersSearchResults(pagerID string) error
 

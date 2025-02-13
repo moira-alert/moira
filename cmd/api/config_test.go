@@ -89,6 +89,9 @@ func Test_webConfig_getDefault(t *testing.T) {
 				Listen:     ":8081",
 				EnableCORS: false,
 				Limits: LimitsConfig{
+					Pager: PagerLimits{
+						TTL: api.DefaultTriggerPagerTTL,
+					},
 					Trigger: TriggerLimitsConfig{
 						MaxNameSize: api.DefaultTriggerNameMaxSize,
 					},

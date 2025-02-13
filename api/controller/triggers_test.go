@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
@@ -604,10 +605,11 @@ func TestSearchTriggers(t *testing.T) {
 			searchOptions.Page = 0
 			searchOptions.Size = -1
 			searchOptions.CreatePager = true
+			searchOptions.PagerTTL = time.Hour * 2
 			exp = 31
 			gomock.InOrder(
 				mockIndex.EXPECT().SearchTriggers(searchOptions).Return(triggerSearchResults, exp, nil),
-				mockDatabase.EXPECT().SaveTriggersSearchResults(gomock.Any(), triggerSearchResults).Return(nil).Do(func(pID string, _ interface{}) {
+				mockDatabase.EXPECT().SaveTriggersSearchResults(gomock.Any(), triggerSearchResults, gomock.Any()).Return(nil).Do(func(pID string, _ interface{}, _ interface{}) {
 					searchOptions.PagerID = pID
 				}),
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil),
