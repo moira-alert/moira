@@ -25,8 +25,8 @@ type Contact struct {
 	TeamID string `json:"team_id,omitempty"`
 }
 
-// FromMoiraContactData converts moira.ContactData data into Contact.
-func FromMoiraContactData(data moira.ContactData) Contact {
+// NewContact init Contact with data from moira.ContactData.
+func NewContact(data moira.ContactData) Contact {
 	return Contact{
 		Type:   data.Type,
 		Name:   data.Name,

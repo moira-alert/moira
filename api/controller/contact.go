@@ -357,7 +357,7 @@ func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount
 	for i, contact := range contacts {
 		noisiness = append(noisiness,
 			&dto.ContactNoisiness{
-				Contact:     dto.FromMoiraContactData(*contact),
+				Contact:     dto.NewContact(*contact),
 				EventsCount: idsWithEventsCount[i].Count,
 			})
 	}

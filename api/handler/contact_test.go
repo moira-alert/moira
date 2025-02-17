@@ -1052,7 +1052,7 @@ func Test_getContactNoisiness(t *testing.T) {
 				Total: 4,
 				List: []*dto.ContactNoisiness{
 					{
-						Contact:     dto.FromMoiraContactData(*contacts[3]),
+						Contact:     dto.NewContact(*contacts[3]),
 						EventsCount: 7,
 					},
 				},
