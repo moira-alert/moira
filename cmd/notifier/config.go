@@ -83,11 +83,7 @@ type selfStateConfig struct {
 
 func getDefault() config {
 	return config{
-		Redis: cmd.RedisConfig{
-			Addrs:       "localhost:6379",
-			MetricsTTL:  "1h",
-			DialTimeout: "500ms",
-		},
+		Redis: cmd.DefaultRedisConfig(),
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",
 			LogLevel:        "info",
