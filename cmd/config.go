@@ -70,7 +70,7 @@ type RedisConfig struct {
 	PoolSize int `yaml:"pool_size"`
 	// CPU-dependant of the client pool size. Default value is 5.
 	// Total size of client pool is PoolSizePerProc * GOMAXPROCS + PoolSize
-	PoolSizePerProc int `yaml:"pool_size"`
+	PoolSizePerProc int `yaml:"pool_size_per_proc"`
 }
 
 func DefaultRedisConfig() RedisConfig {
