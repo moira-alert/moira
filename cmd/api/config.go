@@ -274,12 +274,7 @@ func getCelebrationMode(mode string) api.CelebrationMode {
 
 func getDefault() config {
 	return config{
-		Redis: cmd.RedisConfig{
-			Addrs:       "localhost:6379",
-			MetricsTTL:  "1h",
-			DialTimeout: "500ms",
-			MaxRetries:  3,
-		},
+		Redis: cmd.DefaultRedisConfig(),
 		NotificationHistory: cmd.NotificationHistoryConfig{
 			NotificationHistoryTTL: "48h",
 		},
