@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -306,4 +308,82 @@ func validateContact(contactsTemplate []api.WebContact, contact moira.ContactDat
 	}
 
 	return nil
+}
+
+// GetContactNoisiness get contacts with amount of notification events (within time range [from, to])
+// and sorts by events_count according to sortOrder.
+func GetContactNoisiness(
+	database moira.Database,
+	page, size int64,
+	from, to string,
+	sortOrder api.SortOrder,
+) (*dto.ContactNoisinessList, *api.ErrorResponse) {
+	contacts, err := database.GetAllContacts()
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	idsWithEventsCount, err := database.CountEventsInNotificationHistory(getOnlyIDs(contacts), from, to)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	noisinessSlice := makeContactNoisinessSlice(contacts, idsWithEventsCount)
+
+	sortContactNoisinessByEventsCount(noisinessSlice, sortOrder)
+	total := int64(len(noisinessSlice))
+
+	return &dto.ContactNoisinessList{
+		Page:  page,
+		Size:  size,
+		Total: total,
+		List:  applyPagination[*dto.ContactNoisiness](page, size, total, noisinessSlice),
+	}, nil
+}
+
+func getOnlyIDs(contactsData []*moira.ContactData) []string {
+	ids := make([]string, 0, len(contactsData))
+
+	for _, data := range contactsData {
+		ids = append(ids, data.ID)
+	}
+
+	return ids
+}
+
+func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount []*moira.ContactIDWithNotificationCount) []*dto.ContactNoisiness {
+	noisiness := make([]*dto.ContactNoisiness, 0, len(contacts))
+
+	for i, contact := range contacts {
+		noisiness = append(noisiness,
+			&dto.ContactNoisiness{
+				Contact:     dto.NewContact(*contact),
+				EventsCount: idsWithEventsCount[i].Count,
+			})
+	}
+
+	return noisiness
+}
+
+func sortContactNoisinessByEventsCount(noisiness []*dto.ContactNoisiness, sortOrder api.SortOrder) {
+	if sortOrder == api.AscSortOrder || sortOrder == api.DescSortOrder {
+		slices.SortFunc(noisiness, func(first, second *dto.ContactNoisiness) int {
+			cmpRes := 0
+			if first.EventsCount > second.EventsCount {
+				cmpRes = 1
+			} else if second.EventsCount > first.EventsCount {
+				cmpRes = -1
+			}
+
+			if cmpRes == 0 {
+				return strings.Compare(first.ID, second.ID)
+			}
+
+			if sortOrder == api.DescSortOrder {
+				cmpRes *= -1
+			}
+
+			return cmpRes
+		})
+	}
 }

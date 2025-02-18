@@ -236,7 +236,7 @@ func GetTriggerNoisiness(
 	total := int64(len(triggerIDsWithEventsCount))
 
 	resDto := dto.TriggerNoisinessList{
-		List:  []dto.TriggerNoisiness{},
+		List:  []*dto.TriggerNoisiness{},
 		Page:  page,
 		Size:  size,
 		Total: total,
@@ -256,9 +256,9 @@ func GetTriggerNoisiness(
 		return nil, api.ErrorInternalServer(fmt.Errorf("failed to fetch triggers for such range"))
 	}
 
-	resDto.List = make([]dto.TriggerNoisiness, 0, len(triggers))
+	resDto.List = make([]*dto.TriggerNoisiness, 0, len(triggers))
 	for i := range triggers {
-		resDto.List = append(resDto.List, dto.TriggerNoisiness{
+		resDto.List = append(resDto.List, &dto.TriggerNoisiness{
 			Trigger: dto.Trigger{
 				TriggerModel: dto.CreateTriggerModel(&triggers[i].Trigger),
 				Throttling:   triggers[i].Throttling,
