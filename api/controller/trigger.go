@@ -16,18 +16,18 @@ const maxTriggerLockAttempts = 30
 
 // UpdateTrigger update trigger data and trigger metrics in last state.
 func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
-	_, err := dataBase.GetTrigger(triggerID)
+	existedTrigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", triggerID))
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
-	return saveTrigger(dataBase, trigger.ToMoiraTrigger(), triggerID, timeSeriesNames)
+	return saveTrigger(dataBase, &existedTrigger, trigger.ToMoiraTrigger(), triggerID, timeSeriesNames)
 }
 
 // saveTrigger create or update trigger data and update trigger metrics in last state.
-func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+func saveTrigger(dataBase moira.Database, existedTrigger, newTrigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if err := dataBase.AcquireTriggerCheckLock(triggerID, maxTriggerLockAttempts); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -37,7 +37,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if !errors.Is(err, database.ErrNil) {
+	if !errors.Is(err, database.ErrNil) && metricEvaluationRulesChanged(existedTrigger, newTrigger) {
 		for metric := range lastCheck.Metrics {
 			if _, ok := timeSeriesNames[metric]; !ok {
 				lastCheck.RemoveMetricState(metric)
@@ -46,8 +46,8 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 		lastCheck.RemoveMetricsToTargetRelation()
 	} else {
 		triggerState := moira.StateNODATA
-		if trigger.TTLState != nil {
-			triggerState = trigger.TTLState.ToTriggerState()
+		if newTrigger.TTLState != nil {
+			triggerState = newTrigger.TTLState.ToTriggerState()
 		}
 		lastCheck = moira.CheckData{
 			Metrics: make(map[string]moira.MetricState),
@@ -56,11 +56,11 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 		lastCheck.UpdateScore()
 	}
 
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, newTrigger.ClusterKey()); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if err = dataBase.SaveTrigger(triggerID, trigger); err != nil {
+	if err = dataBase.SaveTrigger(triggerID, newTrigger); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
@@ -69,6 +69,92 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 		Message: "trigger updated",
 	}
 	return &resp, nil
+}
+
+func metricEvaluationRulesChanged(existedTrigger, newTrigger *moira.Trigger) bool {
+	if existedTrigger == nil {
+		return true
+	}
+
+	// maybe number of targets has changed
+	if len(existedTrigger.Targets) != len(newTrigger.Targets) {
+		return true
+	}
+
+	// maybe number one of targets has changed
+	for i := range existedTrigger.Targets {
+		if existedTrigger.Targets[i] != newTrigger.Targets[i] {
+			return true
+		}
+	}
+
+	// maybe trigger type changed
+	if existedTrigger.TriggerType != newTrigger.TriggerType {
+		return true
+	}
+
+	// maybe warn value changed
+	if existedTrigger.WarnValue != nil && newTrigger.WarnValue != nil {
+		if *existedTrigger.WarnValue != *newTrigger.WarnValue {
+			return true
+		}
+	} else if !(existedTrigger.WarnValue == nil && newTrigger.WarnValue == nil) {
+		return true
+	}
+
+	// maybe error value changed
+	if existedTrigger.ErrorValue != nil && newTrigger.ErrorValue != nil {
+		if *existedTrigger.ErrorValue != *newTrigger.ErrorValue {
+			return true
+		}
+	} else if !(existedTrigger.ErrorValue == nil && newTrigger.ErrorValue == nil) {
+		return true
+	}
+
+	// maybe TTLState changed
+	if existedTrigger.TTLState != nil && newTrigger.TTLState != nil {
+		if *existedTrigger.TTLState != *newTrigger.TTLState {
+			return true
+		}
+	} else if !(existedTrigger.TTLState == nil && newTrigger.TTLState == nil) {
+		return true
+	}
+
+	// maybe expression changed
+	if existedTrigger.Expression != nil && newTrigger.Expression != nil {
+		if *existedTrigger.Expression != *newTrigger.Expression {
+			return true
+		}
+	} else if !(existedTrigger.Expression == nil && newTrigger.Expression == nil) {
+		return true
+	}
+
+	// maybe python expression changed
+	if existedTrigger.PythonExpression != nil && newTrigger.PythonExpression != nil {
+		if *existedTrigger.PythonExpression != *newTrigger.PythonExpression {
+			return true
+		}
+	} else if !(existedTrigger.PythonExpression == nil && newTrigger.PythonExpression == nil) {
+		return true
+	}
+
+	// maybe trigger source or cluster changed
+	if existedTrigger.ClusterKey().String() != newTrigger.ClusterKey().String() {
+		return true
+	}
+
+	// maybe alone metrics changed
+	if len(existedTrigger.AloneMetrics) != len(newTrigger.AloneMetrics) {
+		return true
+	}
+
+	for targetID := range existedTrigger.AloneMetrics {
+		if _, ok := newTrigger.AloneMetrics[targetID]; !ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 // GetTrigger gets trigger with his throttling - next allowed message time.
