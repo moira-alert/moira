@@ -108,9 +108,9 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 }
 
 func (notifier *StandardNotifier) registerMetrics(senderContactType string) {
-	notifier.metrics.SendersOkMetrics.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok")
-	notifier.metrics.SendersFailedMetrics.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed")
-	notifier.metrics.SendersDroppedNotifications.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped")
+	notifier.metrics.ContactsSendingNotificationsOK.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok")
+	notifier.metrics.ContactsSendingNotificationsFailed.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed")
+	notifier.metrics.ContactsDroppedNotifications.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped")
 }
 
 const (

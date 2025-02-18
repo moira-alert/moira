@@ -69,9 +69,9 @@ func TestRegisterSender(t *testing.T) {
 			sendersDroppedNotifications := mock_metrics.NewMockMetersCollection(mockCtrl)
 
 			notifierMetrics := &metrics.NotifierMetrics{
-				SendersOkMetrics:            sendersOkMetrics,
-				SendersFailedMetrics:        sendersFailedMetrics,
-				SendersDroppedNotifications: sendersDroppedNotifications,
+				ContactsSendingNotificationsOK:     sendersOkMetrics,
+				ContactsSendingNotificationsFailed: sendersFailedMetrics,
+				ContactsDroppedNotifications:       sendersDroppedNotifications,
 			}
 			standardNotifier.metrics = notifierMetrics
 
@@ -99,11 +99,11 @@ func TestRegisterSender(t *testing.T) {
 			sendersDeliveryFailed := mock_metrics.NewMockMetersCollection(mockCtrl)
 
 			notifierMetrics := &metrics.NotifierMetrics{
-				SendersOkMetrics:            sendersOkMetrics,
-				SendersFailedMetrics:        sendersFailedMetrics,
-				SendersDroppedNotifications: sendersDroppedNotifications,
-				SendersDeliveryOK:           sendersDeliveryOK,
-				SendersDeliveryFailed:       sendersDeliveryFailed,
+				ContactsSendingNotificationsOK:      sendersOkMetrics,
+				ContactsSendingNotificationsFailed:  sendersFailedMetrics,
+				ContactsDroppedNotifications:        sendersDroppedNotifications,
+				ContactsDeliveryNotificationsOK:     sendersDeliveryOK,
+				ContactsDeliveryNotificationsFailed: sendersDeliveryFailed,
 			}
 			standardNotifier.metrics = notifierMetrics
 
