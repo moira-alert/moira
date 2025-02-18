@@ -17,6 +17,12 @@ import (
 func contact(router chi.Router) {
 	router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllContacts)
 	router.Put("/", createNewContact)
+	router.With(
+		middleware.AdminOnlyMiddleware(),
+		middleware.Paginate(getContactNoisinessDefaultPage, getContactNoisinessDefaultSize),
+		middleware.DateRange(getContactNoisinessDefaultFrom, getContactNoisinessDefaultTo),
+		middleware.SortOrderContext(api.DescSortOrder),
+	).Get("/noisiness", getContactNoisiness)
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
@@ -222,5 +228,47 @@ func sendTestContactNotification(writer http.ResponseWriter, request *http.Reque
 	err := controller.SendTestContactNotification(database, contactID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get contacts noisiness
+//	@id			get-contacts-noisiness
+//	@tags		contact
+//	@produce	json
+//	@param		size	query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
+//	@param		p		query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
+//	@param		from	query		string							false	"Start time of the time range"																			default(-3hours)
+//	@param		to		query		string							false	"End time of the time range"																			default(now)
+//	@param		sort	query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
+//	@success	200		{object}	dto.ContactNoisinessList		"Get noisiness for contacts in range"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/contact/noisiness [get]
+func getContactNoisiness(writer http.ResponseWriter, request *http.Request) {
+	size := middleware.GetSize(request)
+	page := middleware.GetPage(request)
+	fromStr := middleware.GetFromStr(request)
+	toStr := middleware.GetToStr(request)
+	sort := middleware.GetSortOrder(request)
+
+	validator := DateRangeValidator{AllowInf: true}
+	fromStr, toStr, err := validator.ValidateDateRangeStrings(fromStr, toStr)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	contactNoisinessList, errRsp := controller.GetContactNoisiness(database, page, size, fromStr, toStr, sort)
+	if errRsp != nil {
+		render.Render(writer, request, errRsp) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, contactNoisinessList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
 	}
 }

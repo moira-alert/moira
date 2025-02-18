@@ -29,3 +29,10 @@ const (
 	getTriggerNoisinessDefaultFrom = "-3hour"
 	getTriggerNoisinessDefaultTo   = "now"
 )
+
+const (
+	getContactNoisinessDefaultPage = 0
+	getContactNoisinessDefaultSize = -1
+	getContactNoisinessDefaultFrom = "-3hour"
+	getContactNoisinessDefaultTo   = "now"
+)
