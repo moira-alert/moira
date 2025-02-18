@@ -56,6 +56,7 @@ func TestSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	trigger := moira.Trigger{ID: triggerID}
 	lastCheck := moira.CheckData{
@@ -72,85 +73,87 @@ func TestSaveTrigger(t *testing.T) {
 		MetricsToTargetRelation: map[string]string{},
 	}
 
-	Convey("No timeSeries", t, func() {
-		Convey("No last check", func() {
-			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
-			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
-			dataBase.EXPECT().
-				SetTriggerLastCheck(
-					triggerID,
-					&moira.CheckData{
-						Metrics: make(map[string]moira.MetricState),
-						State:   moira.StateNODATA,
-						Score:   1000,
-					},
-					trigger.ClusterKey()).
-				Return(nil)
-			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
-			So(err, ShouldBeNil)
-			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-		})
-		Convey("Has last check", func() {
-			actualLastCheck := lastCheck
-			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
-			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &emptyLastCheck, trigger.ClusterKey()).Return(nil)
-			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
-			So(err, ShouldBeNil)
-			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-		})
-	})
-
-	Convey("Has timeSeries", t, func() {
-		Convey("No last check", func() {
-			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
-			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
-			dataBase.EXPECT().
-				SetTriggerLastCheck(
-					triggerID,
-					&moira.CheckData{
-						Metrics: make(map[string]moira.MetricState),
-						State:   moira.StateNODATA,
-						Score:   1000,
-					},
-					trigger.ClusterKey()).
-				Return(nil)
-			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
-			So(err, ShouldBeNil)
-			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+	Convey("With no existing trigger", t, func() {
+		Convey("No timeSeries", func() {
+			Convey("No last check", func() {
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+				dataBase.EXPECT().
+					SetTriggerLastCheck(
+						triggerID,
+						&moira.CheckData{
+							Metrics: make(map[string]moira.MetricState),
+							State:   moira.StateNODATA,
+							Score:   1000,
+						},
+						trigger.ClusterKey()).
+					Return(nil)
+				dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+				resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
+				So(err, ShouldBeNil)
+				So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+			})
+			Convey("Has last check", func() {
+				actualLastCheck := lastCheck
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &emptyLastCheck, trigger.ClusterKey()).Return(nil)
+				dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+				resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
+				So(err, ShouldBeNil)
+				So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+			})
 		})
 
-		Convey("Has last check", func() {
-			actualLastCheck := moira.CheckData{
-				Metrics: map[string]moira.MetricState{
-					"super.metric1": {},
-					"super.metric2": {},
-				},
-				MetricsToTargetRelation: map[string]string{
-					"t2": "super.metric3",
-				},
-			}
-			expectedLastCheck := &moira.CheckData{
-				Metrics: map[string]moira.MetricState{
-					"super.metric1": {},
-					"super.metric2": {},
-				},
-				MetricsToTargetRelation: make(map[string]string),
-			}
-			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
-			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, expectedLastCheck, trigger.ClusterKey()).Return(nil)
-			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
-			So(err, ShouldBeNil)
-			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+		Convey("Has timeSeries", func() {
+			Convey("No last check", func() {
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+				dataBase.EXPECT().
+					SetTriggerLastCheck(
+						triggerID,
+						&moira.CheckData{
+							Metrics: make(map[string]moira.MetricState),
+							State:   moira.StateNODATA,
+							Score:   1000,
+						},
+						trigger.ClusterKey()).
+					Return(nil)
+				dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+				resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
+				So(err, ShouldBeNil)
+				So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+			})
+
+			Convey("Has last check", func() {
+				actualLastCheck := moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"super.metric1": {},
+						"super.metric2": {},
+					},
+					MetricsToTargetRelation: map[string]string{
+						"t2": "super.metric3",
+					},
+				}
+				expectedLastCheck := &moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"super.metric1": {},
+						"super.metric2": {},
+					},
+					MetricsToTargetRelation: make(map[string]string),
+				}
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, expectedLastCheck, trigger.ClusterKey()).Return(nil)
+				dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+				resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
+				So(err, ShouldBeNil)
+				So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+			})
 		})
 	})
 
