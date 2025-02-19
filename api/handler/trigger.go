@@ -196,7 +196,7 @@ func fillTemplate(request *http.Request, trigger dto.Trigger) *api.ErrorResponse
 	}
 
 	newDescription, err := trigger.PopulatedDescription(eventsList.List)
-	if errResponse != nil {
+	if err != nil {
 		return api.ErrorRender(err)
 	}
 
