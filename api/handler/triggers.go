@@ -133,7 +133,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if trigger.Desc != nil {
-		err := trigger.PopulatedDescription(moira.NotificationEvents{{}})
+		_, err := trigger.PopulatedDescription(moira.NotificationEvents{{}})
 		if err != nil {
 			render.Render(writer, request, api.ErrorRender(err)) //nolint
 			return

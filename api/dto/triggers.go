@@ -510,20 +510,20 @@ func (*Trigger) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
-func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) error {
+func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) (*string, error) {
+	var emptyString = ""
+
 	if trigger.Desc == nil {
-		return nil
+		return &emptyString, nil
 	}
 
 	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(trigger.Name, events.ToTemplateEvents())
-	description, err := triggerDescriptionPopulater.Populate(*trigger.Desc)
+	newDescription, err := triggerDescriptionPopulater.Populate(*trigger.Desc)
 	if err != nil {
-		return fmt.Errorf("you have an error in your Go template: %v", err)
+		return &emptyString, fmt.Errorf("you have an error in your Go template: %v", err)
 	}
 
-	*trigger.Desc = description
-
-	return nil
+	return &newDescription, nil
 }
 
 type TriggerCheckResponse struct {
