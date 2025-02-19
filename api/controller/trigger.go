@@ -37,13 +37,21 @@ func saveTrigger(dataBase moira.Database, existedTrigger, newTrigger *moira.Trig
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if !errors.Is(err, database.ErrNil) && metricEvaluationRulesChanged(existedTrigger, newTrigger) {
-		for metric := range lastCheck.Metrics {
-			if _, ok := timeSeriesNames[metric]; !ok {
-				lastCheck.RemoveMetricState(metric)
-			}
+	if !errors.Is(err, database.ErrNil) {
+		modifyLastCheck := true
+
+		if len(timeSeriesNames) == 0 && !metricEvaluationRulesChanged(existedTrigger, newTrigger) {
+			modifyLastCheck = false
 		}
-		lastCheck.RemoveMetricsToTargetRelation()
+
+		if modifyLastCheck {
+			for metric := range lastCheck.Metrics {
+				if _, ok := timeSeriesNames[metric]; !ok {
+					lastCheck.RemoveMetricState(metric)
+				}
+			}
+			lastCheck.RemoveMetricsToTargetRelation()
+		}
 	} else {
 		triggerState := moira.StateNODATA
 		if newTrigger.TTLState != nil {
