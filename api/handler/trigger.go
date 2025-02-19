@@ -164,7 +164,7 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if err := fillTemplate(request, *trigger); err != nil {
+	if err := fillTemplate(request, trigger); err != nil {
 		middleware.GetLoggerEntry(request).Warning().
 			Error(err.Err).
 			Msg("Failed to check template")
@@ -175,7 +175,7 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func fillTemplate(request *http.Request, trigger dto.Trigger) *api.ErrorResponse {
+func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorResponse {
 	if !middleware.GetPopulated(request) {
 		return nil
 	}
