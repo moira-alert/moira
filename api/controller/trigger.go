@@ -102,47 +102,27 @@ func metricEvaluationRulesChanged(existedTrigger, newTrigger *moira.Trigger) boo
 	}
 
 	// maybe warn value changed
-	if existedTrigger.WarnValue != nil && newTrigger.WarnValue != nil {
-		if *existedTrigger.WarnValue != *newTrigger.WarnValue {
-			return true
-		}
-	} else if !(existedTrigger.WarnValue == nil && newTrigger.WarnValue == nil) {
+	if !equalTwoPointerValues(existedTrigger.WarnValue, newTrigger.WarnValue) {
 		return true
 	}
 
 	// maybe error value changed
-	if existedTrigger.ErrorValue != nil && newTrigger.ErrorValue != nil {
-		if *existedTrigger.ErrorValue != *newTrigger.ErrorValue {
-			return true
-		}
-	} else if !(existedTrigger.ErrorValue == nil && newTrigger.ErrorValue == nil) {
+	if !equalTwoPointerValues(existedTrigger.ErrorValue, newTrigger.ErrorValue) {
 		return true
 	}
 
 	// maybe TTLState changed
-	if existedTrigger.TTLState != nil && newTrigger.TTLState != nil {
-		if *existedTrigger.TTLState != *newTrigger.TTLState {
-			return true
-		}
-	} else if !(existedTrigger.TTLState == nil && newTrigger.TTLState == nil) {
+	if !equalTwoPointerValues(existedTrigger.TTLState, newTrigger.TTLState) {
 		return true
 	}
 
 	// maybe expression changed
-	if existedTrigger.Expression != nil && newTrigger.Expression != nil {
-		if *existedTrigger.Expression != *newTrigger.Expression {
-			return true
-		}
-	} else if !(existedTrigger.Expression == nil && newTrigger.Expression == nil) {
+	if !equalTwoPointerValues(existedTrigger.Expression, newTrigger.Expression) {
 		return true
 	}
 
 	// maybe python expression changed
-	if existedTrigger.PythonExpression != nil && newTrigger.PythonExpression != nil {
-		if *existedTrigger.PythonExpression != *newTrigger.PythonExpression {
-			return true
-		}
-	} else if !(existedTrigger.PythonExpression == nil && newTrigger.PythonExpression == nil) {
+	if !equalTwoPointerValues(existedTrigger.PythonExpression, newTrigger.PythonExpression) {
 		return true
 	}
 
@@ -163,6 +143,14 @@ func metricEvaluationRulesChanged(existedTrigger, newTrigger *moira.Trigger) boo
 	}
 
 	return false
+}
+
+func equalTwoPointerValues[T comparable](first, second *T) bool {
+	if first != nil && second != nil {
+		return *first == *second
+	}
+
+	return first == nil && second == nil
 }
 
 // GetTrigger gets trigger with his throttling - next allowed message time.

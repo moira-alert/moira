@@ -540,3 +540,179 @@ func TestSetTriggerMaintenance(t *testing.T) {
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
+
+func Test_metricEvaluationRulesChanged(t *testing.T) {
+	Convey("Test metricEvaluationRulesChanged", t, func() {
+		type testcase struct {
+			desc                string
+			givenExistedTrigger *moira.Trigger
+			givenNewTrigger     *moira.Trigger
+			expectedResult      bool
+		}
+
+		var (
+			floatValueOne                float64 = 1.0
+			floatValueEqualToValueOne    float64 = 1.0
+			floatValueNotEqualToValueOne float64 = 2.0
+
+			stringValueOne                = "some str"
+			stringValueEqualToValueOne    = "some str"
+			stringValueNotEqualToValueOne = "another str"
+		)
+
+		cases := []testcase{
+			{
+				desc:                "with nil existed trigger",
+				givenExistedTrigger: nil,
+				givenNewTrigger:     &moira.Trigger{},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different number of targets",
+				givenExistedTrigger: &moira.Trigger{Targets: []string{"hello"}},
+				givenNewTrigger:     &moira.Trigger{Targets: []string{"user", "bye"}},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different targets",
+				givenExistedTrigger: &moira.Trigger{Targets: []string{"hello", "mama"}},
+				givenNewTrigger:     &moira.Trigger{Targets: []string{"user", "bye"}},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different trigger type",
+				givenExistedTrigger: &moira.Trigger{TriggerType: moira.ExpressionTrigger},
+				givenNewTrigger:     &moira.Trigger{TriggerType: moira.FallingTrigger},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with warn value not set for one",
+				givenExistedTrigger: &moira.Trigger{WarnValue: nil},
+				givenNewTrigger:     &moira.Trigger{WarnValue: &floatValueOne},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with warn value not set for other",
+				givenExistedTrigger: &moira.Trigger{WarnValue: &floatValueOne},
+				givenNewTrigger:     &moira.Trigger{WarnValue: nil},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different warn values",
+				givenExistedTrigger: &moira.Trigger{WarnValue: &floatValueOne},
+				givenNewTrigger:     &moira.Trigger{WarnValue: &floatValueNotEqualToValueOne},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with same warn values",
+				givenExistedTrigger: &moira.Trigger{WarnValue: &floatValueOne},
+				givenNewTrigger:     &moira.Trigger{WarnValue: &floatValueEqualToValueOne},
+				expectedResult:      false,
+			},
+			{
+				desc:                "with error value not set for one",
+				givenExistedTrigger: &moira.Trigger{ErrorValue: nil},
+				givenNewTrigger:     &moira.Trigger{ErrorValue: &floatValueOne},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with error value not set for other",
+				givenExistedTrigger: &moira.Trigger{ErrorValue: &floatValueOne},
+				givenNewTrigger:     &moira.Trigger{ErrorValue: nil},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different error values",
+				givenExistedTrigger: &moira.Trigger{ErrorValue: &floatValueOne},
+				givenNewTrigger:     &moira.Trigger{ErrorValue: &floatValueNotEqualToValueOne},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with same error values",
+				givenExistedTrigger: &moira.Trigger{ErrorValue: &floatValueOne},
+				givenNewTrigger:     &moira.Trigger{ErrorValue: &floatValueEqualToValueOne},
+				expectedResult:      false,
+			},
+			{
+				desc:                "with ttl state not set for one",
+				givenExistedTrigger: &moira.Trigger{TTLState: nil},
+				givenNewTrigger:     &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with ttl state not set for other",
+				givenExistedTrigger: &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				givenNewTrigger:     &moira.Trigger{TTLState: nil},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different ttl states",
+				givenExistedTrigger: &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				givenNewTrigger:     &moira.Trigger{TTLState: &moira.TTLStateERROR},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with same ttl state",
+				givenExistedTrigger: &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				givenNewTrigger:     &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				expectedResult:      false,
+			},
+			{
+				desc:                "with expression not set for one",
+				givenExistedTrigger: &moira.Trigger{Expression: nil},
+				givenNewTrigger:     &moira.Trigger{Expression: &stringValueOne},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with expression not set for other",
+				givenExistedTrigger: &moira.Trigger{Expression: &stringValueOne},
+				givenNewTrigger:     &moira.Trigger{Expression: nil},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different expressions",
+				givenExistedTrigger: &moira.Trigger{Expression: &stringValueOne},
+				givenNewTrigger:     &moira.Trigger{Expression: &stringValueNotEqualToValueOne},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with same expression",
+				givenExistedTrigger: &moira.Trigger{Expression: &stringValueOne},
+				givenNewTrigger:     &moira.Trigger{Expression: &stringValueEqualToValueOne},
+				expectedResult:      false,
+			},
+			{
+				desc:                "with different trigger source",
+				givenExistedTrigger: &moira.Trigger{TriggerSource: moira.PrometheusRemote},
+				givenNewTrigger:     &moira.Trigger{TriggerSource: moira.GraphiteLocal},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different cluster id",
+				givenExistedTrigger: &moira.Trigger{ClusterId: moira.DefaultCluster},
+				givenNewTrigger:     &moira.Trigger{ClusterId: moira.ClusterNotSet},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different number of alone metrics",
+				givenExistedTrigger: &moira.Trigger{AloneMetrics: map[string]bool{"t1": true, "t2": true}},
+				givenNewTrigger:     &moira.Trigger{AloneMetrics: map[string]bool{"t1": true, "t2": true, "t3": true}},
+				expectedResult:      true,
+			},
+			{
+				desc:                "with different alone metrics",
+				givenExistedTrigger: &moira.Trigger{AloneMetrics: map[string]bool{"t1": true, "t2": true}},
+				givenNewTrigger:     &moira.Trigger{AloneMetrics: map[string]bool{"t1": true, "t3": true}},
+				expectedResult:      true,
+			},
+		}
+
+		for i, tc := range cases {
+			Convey(fmt.Sprintf("Case %v: %s", i+1, tc.desc), func() {
+				So(metricEvaluationRulesChanged(tc.givenExistedTrigger, tc.givenNewTrigger),
+					ShouldResemble,
+					tc.expectedResult)
+			})
+		}
+	})
+}
