@@ -8,6 +8,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // Structure that represents the Webhook configuration in the YAML file.
@@ -29,6 +30,7 @@ type Sender struct {
 	headers  map[string]string
 	client   *http.Client
 	log      moira.Logger
+	metrics  *metrics.SenderMetrics
 }
 
 // Init read yaml config.
@@ -67,6 +69,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.client = &http.Client{
 		Timeout:   time.Duration(timeout) * time.Second,
 		Transport: &http.Transport{DisableKeepAlives: true},
+	}
+
+	senderSettingsMap := senderSettings.(map[string]interface{})
+	if val, ok := senderSettingsMap["sender_metrics"]; ok {
+		sender.metrics = val.(*metrics.SenderMetrics)
 	}
 
 	return nil

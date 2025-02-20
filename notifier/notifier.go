@@ -142,17 +142,17 @@ func (notifier *StandardNotifier) GetReadBatchSize() int64 {
 
 func (notifier *StandardNotifier) reschedule(pkg *NotificationPackage, reason string) {
 	if pkg.DontResend {
-		notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
+		notifier.metrics.MarkContactDroppedNotifications(pkg.Contact.Type)
 		return
 	}
 
 	notifier.metrics.MarkSendingFailed()
-	notifier.metrics.MarkSendersFailedMetrics(pkg.Contact.Type)
+	notifier.metrics.MarkContactSendingNotificationFailed(pkg.Contact.Type)
 
 	logger := getLogWithPackageContext(&notifier.logger, pkg, &notifier.config)
 
 	if notifier.needToStop(pkg.FailCount) {
-		notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
+		notifier.metrics.MarkContactDroppedNotifications(pkg.Contact.Type)
 		logger.Error().
 			Msg("Stop resending. Notification interval is timed out")
 		return
@@ -227,7 +227,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 		if err == nil {
-			notifier.metrics.MarkSendersOkMetrics(pkg.Contact.Type)
+			notifier.metrics.MarkContactSendingNotificationOK(pkg.Contact.Type)
 			continue
 		}
 		switch e := err.(type) { // nolint:errorlint
@@ -235,7 +235,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			log.Warning().
 				Error(e).
 				Msg("Cannot send to broken contact")
-			notifier.metrics.MarkSendersDroppedNotifications(pkg.Contact.Type)
+			notifier.metrics.MarkContactDroppedNotifications(pkg.Contact.Type)
 		default:
 			if pkg.FailCount > notifier.config.MaxFailAttemptToSendAvailable {
 				log.Error().

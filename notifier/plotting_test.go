@@ -197,10 +197,10 @@ func TestFetchAvailableSeries(t *testing.T) {
 		to     = 67
 	)
 	Convey("Run fetchAvailableSeries", t, func() {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-		source := mockMetricSource.NewMockMetricSource(mockCtrl)
-		result := mockMetricSource.NewMockFetchResult(mockCtrl)
+		mockController := gomock.NewController(t)
+		defer mockController.Finish()
+		source := mockMetricSource.NewMockMetricSource(mockController)
+		result := mockMetricSource.NewMockFetchResult(mockController)
 
 		Convey("without errors", func() {
 			gomock.InOrder(
