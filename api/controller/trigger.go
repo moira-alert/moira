@@ -38,13 +38,9 @@ func saveTrigger(dataBase moira.Database, existedTrigger, newTrigger *moira.Trig
 	}
 
 	if !errors.Is(err, database.ErrNil) {
-		modifyLastCheck := true
-
-		if len(timeSeriesNames) == 0 && !metricEvaluationRulesChanged(existedTrigger, newTrigger) {
-			modifyLastCheck = false
-		}
-
-		if modifyLastCheck {
+		// sometimes we have no time series names but have important information in LastCheck.Metrics (for example maintenance)
+		// so on empty timeSeries we will modify LastCheck only if metric evaluation rules changed (targets, expression, etc.)
+		if len(timeSeriesNames) != 0 || metricEvaluationRulesChanged(existedTrigger, newTrigger) {
 			for metric := range lastCheck.Metrics {
 				if _, ok := timeSeriesNames[metric]; !ok {
 					lastCheck.RemoveMetricState(metric)
