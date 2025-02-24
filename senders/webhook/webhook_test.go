@@ -110,7 +110,7 @@ func TestSender_Init(t *testing.T) {
 
 			settings := map[string]interface{}{
 				"url":            testURL,
-				"sender_metrics": senderMetrics,
+				senderMetricsKey: senderMetrics,
 			}
 
 			sender := Sender{}

@@ -33,6 +33,8 @@ type Sender struct {
 	metrics  *metrics.SenderMetrics
 }
 
+const senderMetricsKey = "sender_metrics"
+
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
@@ -72,7 +74,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 
 	senderSettingsMap := senderSettings.(map[string]interface{})
-	if val, ok := senderSettingsMap["sender_metrics"]; ok {
+	if val, ok := senderSettingsMap[senderMetricsKey]; ok {
 		sender.metrics = val.(*metrics.SenderMetrics)
 	}
 
