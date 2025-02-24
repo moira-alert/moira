@@ -2,6 +2,7 @@ package redis
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -159,4 +160,34 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 
 		return nil
 	})
+}
+
+// CountEventsInNotificationHistory returns the number of events in time range (from, to) for given contact ids.
+func (connector *DbConnector) CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*moira.ContactIDWithNotificationCount, error) {
+	pipe := connector.Client().TxPipeline()
+	ctx := connector.Context()
+
+	for _, id := range contactIDs {
+		pipe.ZCount(ctx, contactNotificationKeyWithID(id), from, to)
+	}
+
+	cmds, err := pipe.Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	eventsCount := make([]*moira.ContactIDWithNotificationCount, 0, len(cmds))
+	for i, cmd := range cmds {
+		count, err := cmd.(*redis.IntCmd).Uint64()
+		if err != nil && !errors.Is(err, redis.Nil) {
+			return nil, err
+		}
+
+		eventsCount = append(eventsCount, &moira.ContactIDWithNotificationCount{
+			ID:    contactIDs[i],
+			Count: count,
+		})
+	}
+
+	return eventsCount, nil
 }

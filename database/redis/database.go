@@ -70,6 +70,9 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		MinRetryBackoff: config.MinRetryBackoff,
 		MaxRetryBackoff: config.MaxRetryBackoff,
 
+		PoolTimeout: config.PoolTimeout,
+		PoolSize:    config.PoolSize,
+
 		ReadOnly:       config.ReadOnly,
 		RouteByLatency: config.RouteByLatency,
 		RouteRandomly:  config.RouteRandomly,
