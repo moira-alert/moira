@@ -162,9 +162,8 @@ func is4xxCode(statusCode int64) bool {
 	return statusCode >= 400 && statusCode < 500
 }
 
-
 func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorResponse {
-	type victoriaMetricsError = prometheus.ErrorType;
+	type victoriaMetricsError = prometheus.ErrorType
 
 	// In github.com/prometheus/client_golang/api/prometheus/v1 Error has field `Type`
 	// which can be used to understand "the reason" of error. There are some constants in the lib.
@@ -172,7 +171,7 @@ func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorRespons
 	case prometheus.ErrBadData:
 		return api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", promErr))
 
-	// If any error was occured from prometheus, we should return RemoteServiceUnavailable status.
+	// If any error was occurred from prometheus, we should return RemoteServiceUnavailable status.
 	case prometheus.ErrServer, victoriaMetricsError(strconv.Itoa(http.StatusServiceUnavailable)):
 		return api.ErrorRemoteServerUnavailable(fmt.Errorf("remote server error: %w", promErr))
 
