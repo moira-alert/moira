@@ -221,8 +221,6 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, api.ErrorInternalServer(err)
 		}
 	}
-	// TODO: Should be transferred to render.Bind function
-	trigger.UpdatedBy = middleware.GetLogin(request)
 
 	return trigger, nil
 }
