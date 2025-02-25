@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
 	"github.com/moira-alert/moira/senders/mattermost"
@@ -107,10 +108,15 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 }
 
 func (notifier *StandardNotifier) registerMetrics(senderContactType string) {
-	notifier.metrics.SendersOkMetrics.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok")
-	notifier.metrics.SendersFailedMetrics.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed")
-	notifier.metrics.SendersDroppedNotifications.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped")
+	notifier.metrics.ContactsSendingNotificationsOK.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok")
+	notifier.metrics.ContactsSendingNotificationsFailed.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed")
+	notifier.metrics.ContactsDroppedNotifications.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped")
 }
+
+const (
+	senderMetricsEnabledKey = "enable_metrics"
+	senderMetricsKey        = "sender_metrics"
+)
 
 // RegisterSender adds sender for notification type and registers metrics.
 func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error {
@@ -126,6 +132,17 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 
 	if _, ok := notifier.senders[senderContactType]; ok {
 		return fmt.Errorf("failed to initialize sender [%s], err [%w]", senderContactType, ErrSenderRegistered)
+	}
+
+	if senderMetricsEnabled, ok := senderSettings[senderMetricsEnabledKey].(bool); ok && senderMetricsEnabled {
+		senderSettings[senderMetricsKey] = metrics.ConfigureSenderMetrics(
+			notifier.metrics,
+			getGraphiteSenderIdent(senderContactType),
+			senderContactType)
+		notifier.logger.Info().
+			String("sender_contact_type", senderContactType).
+			String("sender_type", senderType).
+			Msg("Enable sender metrics")
 	}
 
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
