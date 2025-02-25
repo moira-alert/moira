@@ -2,10 +2,10 @@ package datatypes
 
 // DeliveryCheckerDatabase is used by senders that can track if the notification was delivered.
 type DeliveryCheckerDatabase interface {
-	// AddNotificationsToCheckDelivery must be used than you want for some alerts to be checked if they have been delivered.
-	AddNotificationsToCheckDelivery(contactType string, timestamp int64, data string) error
-	// GetNotificationsToCheckDelivery must be used to get alerts that need to be checked.
-	GetNotificationsToCheckDelivery(contactType string, from string, to string) ([]string, error)
-	// RemoveNotificationsToCheckDelivery removes already checked alerts.
-	RemoveNotificationsToCheckDelivery(contactType string, from string, to string) (int64, error)
+	// AddDeliveryChecksData must be used to store data need for performing delivery checks.
+	AddDeliveryChecksData(contactType string, timestamp int64, data string) error
+	// GetDeliveryChecksData must be used to get data need for performing delivery checks.
+	GetDeliveryChecksData(contactType string, from string, to string) ([]string, error)
+	// RemoveDeliveryChecksData must remove already used data for performing delivery checks.
+	RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error)
 }

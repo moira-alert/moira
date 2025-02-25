@@ -7,8 +7,8 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// AddNotificationsToCheckDelivery adds given data to sorted by timestamp set relative to contact type.
-func (connector *DbConnector) AddNotificationsToCheckDelivery(contactType string, timestamp int64, data string) error {
+// AddDeliveryChecksData adds given data to sorted by timestamp set relative to contact type.
+func (connector *DbConnector) AddDeliveryChecksData(contactType string, timestamp int64, data string) error {
 	client := connector.Client()
 	ctx := connector.Context()
 
@@ -21,8 +21,8 @@ func (connector *DbConnector) AddNotificationsToCheckDelivery(contactType string
 		}).Err()
 }
 
-// GetNotificationsToCheckDelivery reads data from for given tim range relative to contact type.
-func (connector *DbConnector) GetNotificationsToCheckDelivery(contactType string, from string, to string) ([]string, error) {
+// GetDeliveryChecksData reads data from for given tim range relative to contact type.
+func (connector *DbConnector) GetDeliveryChecksData(contactType string, from string, to string) ([]string, error) {
 	client := connector.Client()
 	ctx := connector.Context()
 
@@ -46,8 +46,8 @@ func (connector *DbConnector) GetNotificationsToCheckDelivery(contactType string
 	return res, nil
 }
 
-// RemoveNotificationsToCheckDelivery removes data from for given time range relative to contact type.
-func (connector *DbConnector) RemoveNotificationsToCheckDelivery(contactType string, from string, to string) (int64, error) {
+// RemoveDeliveryChecksData removes data from for given time range relative to contact type.
+func (connector *DbConnector) RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error) {
 	client := connector.Client()
 	ctx := connector.Context()
 
