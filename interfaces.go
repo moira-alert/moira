@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/go-chart"
+	"github.com/moira-alert/moira/datatypes"
 	"github.com/moira-alert/moira/logging"
 	"gopkg.in/tomb.v2"
 )
@@ -159,6 +160,9 @@ type Database interface {
 	CleanUpAbandonedRetentions() error
 	RemoveMetricsByPrefix(pattern string) error
 	RemoveAllMetrics() error
+
+	// Delivery checks
+	datatypes.DeliveryCheckerDatabase
 }
 
 // Lock implements lock abstraction.

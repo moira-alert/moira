@@ -8,6 +8,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/datatypes"
 	"github.com/moira-alert/moira/metrics"
 )
 
@@ -31,6 +32,7 @@ type Sender struct {
 	client   *http.Client
 	log      moira.Logger
 	metrics  *metrics.SenderMetrics
+	Database datatypes.DeliveryCheckerDatabase
 }
 
 const senderMetricsKey = "sender_metrics"
