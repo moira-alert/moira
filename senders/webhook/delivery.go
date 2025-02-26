@@ -77,6 +77,9 @@ func (sender *Sender) performDeliveryChecks() error {
 	}
 
 	checksData := unmarshalChecksData(sender.log, marshaledData)
+
+	// TODO: group check datas by url
+
 	performAgainChecksData := make([]deliveryCheckData, 0)
 	var (
 		deliverOK     int64
@@ -131,8 +134,18 @@ func (sender *Sender) performDeliveryChecks() error {
 			deliverFailed += 1
 		case moira.DeliveryStateUserException:
 			// TODO: what do here?
+		default:
+			// TODO: can be same as Pending or UserException ?
 		}
 	}
+
+	// TODO: store checks data that needs to be checked again
+	// TODO: clean outdated check infos
+
+	sender.metrics.ContactDeliveryNotificationOK.Mark(deliverOK)
+	sender.metrics.ContactDeliveryNotificationFailed.Mark(deliverFailed)
+
+	return nil
 }
 
 func unmarshalChecksData(logger moira.Logger, marshaledData []string) []deliveryCheckData {
@@ -187,4 +200,25 @@ func (sender *Sender) doCheckRequest(checkData deliveryCheckData) (int, map[stri
 	}
 
 	return rsp.StatusCode, rspMap, nil
+}
+
+func (sender *Sender) storeChecksDataToCheckAgain(checksData []deliveryCheckData) error {
+	if len(checksData) == 0 {
+		return nil
+	}
+
+	scheduleAtTimestamp := sender.clock.NowUnix() + int64(sender.deliveryCfg.ReschedulingDelay)
+
+	for _, data := range checksData {
+		encoded, err := json.Marshal(data)
+		if err != nil {
+			sender.log.Warning().
+				Error(err).
+				Msg("failed to marshal data to check again")
+			continue
+		}
+
+		// TODO: retry operations
+		err := sender.Database.AddDeliveryChecksData(sender.contactType, scheduleAtTimestamp, string(encoded))
+	}
 }

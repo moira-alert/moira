@@ -41,7 +41,9 @@ type deliveryCheckConfig struct {
 	//	- moira.DeliveryStateFailed
 	CheckTemplate string `mapstructure:"check_template" validate:"required_if=Enabled true"`
 	// CheckTimeout is the timeout (in seconds) between checking notifications delivery.
-	CheckTimeout int `mapstructure:"check_timeout"`
+	CheckTimeout      uint64 `mapstructure:"check_timeout"`
+	MaxAttemptsCount  uint64 `mapstructure:"max_attempts_count"`
+	ReschedulingDelay uint64
 }
 
 // Sender implements moira sender interface via webhook.
