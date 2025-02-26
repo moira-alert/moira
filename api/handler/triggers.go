@@ -171,7 +171,7 @@ func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorRespons
 	case prometheus.ErrBadData:
 		return api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", promErr))
 
-	// If any error was occurred from prometheus, we should return RemoteServiceUnavailable status.
+	// If any error has occurred in prometheus, we should return RemoteServiceUnavailable status.
 	case prometheus.ErrServer, victoriaMetricsError(strconv.Itoa(http.StatusServiceUnavailable)):
 		return api.ErrorRemoteServerUnavailable(fmt.Errorf("remote server error: %w", promErr))
 
