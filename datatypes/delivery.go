@@ -9,3 +9,16 @@ type DeliveryCheckerDatabase interface {
 	// RemoveDeliveryChecksData must remove already used data for performing delivery checks.
 	RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error)
 }
+
+const (
+	// DeliveryStateOK means that alert was successfully delivered.
+	DeliveryStateOK = "OK"
+	// DeliveryStatePending means that alert has not yet been delivered.
+	DeliveryStatePending = "PENDING"
+	// DeliveryStateFailed means that alert was not delivered.
+	DeliveryStateFailed = "FAILED"
+	// DeliveryStateException means that error occurred during checking (not by user fault). For example, connection problems, etc.
+	DeliveryStateException = "EXCEPTION"
+	// DeliveryStateUserException means that error occurred during checking (by user fault). For example, bad template in config.
+	DeliveryStateUserException = "USER_EXCEPTION"
+)

@@ -14,12 +14,35 @@ import (
 
 // Structure that represents the Webhook configuration in the YAML file.
 type config struct {
-	URL      string            `mapstructure:"url" validate:"required"`
-	Body     string            `mapstructure:"body"`
-	Headers  map[string]string `mapstructure:"headers"`
-	User     string            `mapstructure:"user"`
-	Password string            `mapstructure:"password"`
-	Timeout  int               `mapstructure:"timeout"`
+	ContactType   string              `mapstructure:"contact_type"`
+	URL           string              `mapstructure:"url" validate:"required"`
+	Body          string              `mapstructure:"body"`
+	Headers       map[string]string   `mapstructure:"headers"`
+	User          string              `mapstructure:"user"`
+	Password      string              `mapstructure:"password"`
+	Timeout       int                 `mapstructure:"timeout"`
+	DeliveryCheck deliveryCheckConfig `mapstructure:"delivery_check"`
+}
+
+type deliveryCheckConfig struct {
+	// Enabled the delivery checking or not.
+	Enabled bool `mapstructure:"enabled"`
+	// URLTemplate is need to build url for GET HTTP request, used for delivery checking.
+	// Template is filled based on contact data, trigger data and response got after sending POST request.
+	URLTemplate string `mapstructure:"url_template" validate:"required_if=Enabled true"`
+	// Headers for delivery check request.
+	Headers map[string]string `mapstructure:"headers"`
+	// User for delivery check request.
+	User string `mapstructure:"user"`
+	// Password for delivery check request.
+	Password string `mapstructure:"password"`
+	// CheckTemplate must calculate the notification delivery state based on the response for delivery. Must return one of:
+	//	- datatypes.DeliveryStateOK
+	//	- datatypes.DeliveryStatePending
+	//	- datatypes.DeliveryStateFailed
+	CheckTemplate string `mapstructure:"check_template" validate:"required_if=Enabled true"`
+	// CheckTimeout is the timeout (in seconds) between checking notifications delivery.
+	CheckTimeout int `mapstructure:"check_timeout"`
 }
 
 // Sender implements moira sender interface via webhook.
