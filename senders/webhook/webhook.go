@@ -46,15 +46,18 @@ type deliveryCheckConfig struct {
 
 // Sender implements moira sender interface via webhook.
 type Sender struct {
-	url      string
-	body     string
-	user     string
-	password string
-	headers  map[string]string
-	client   *http.Client
-	log      moira.Logger
-	metrics  *metrics.SenderMetrics
-	Database moira.DeliveryCheckerDatabase
+	url         string
+	body        string
+	user        string
+	password    string
+	headers     map[string]string
+	contactType string
+	client      *http.Client
+	log         moira.Logger
+	metrics     *metrics.SenderMetrics
+	Database    moira.DeliveryCheckerDatabase
+	deliveryCfg deliveryCheckConfig
+	clock       moira.Clock
 }
 
 const senderMetricsKey = "sender_metrics"
@@ -102,6 +105,8 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		sender.metrics = val.(*metrics.SenderMetrics)
 	}
 
+	// TODO: init all needed for delivery checking
+
 	return nil
 }
 
@@ -135,6 +140,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		}
 		return fmt.Errorf("invalid status code: %d, server response: %s", response.StatusCode, serverResponse)
 	}
+
+	// TODO: if delivery check enabled schedule value for check
 
 	return nil
 }
