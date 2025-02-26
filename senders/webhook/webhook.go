@@ -8,7 +8,6 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/datatypes"
 	"github.com/moira-alert/moira/metrics"
 )
 
@@ -37,9 +36,9 @@ type deliveryCheckConfig struct {
 	// Password for delivery check request.
 	Password string `mapstructure:"password"`
 	// CheckTemplate must calculate the notification delivery state based on the response for delivery. Must return one of:
-	//	- datatypes.DeliveryStateOK
-	//	- datatypes.DeliveryStatePending
-	//	- datatypes.DeliveryStateFailed
+	//	- moira.DeliveryStateOK
+	//	- moira.DeliveryStatePending
+	//	- moira.DeliveryStateFailed
 	CheckTemplate string `mapstructure:"check_template" validate:"required_if=Enabled true"`
 	// CheckTimeout is the timeout (in seconds) between checking notifications delivery.
 	CheckTimeout int `mapstructure:"check_timeout"`
@@ -55,7 +54,7 @@ type Sender struct {
 	client   *http.Client
 	log      moira.Logger
 	metrics  *metrics.SenderMetrics
-	Database datatypes.DeliveryCheckerDatabase
+	Database moira.DeliveryCheckerDatabase
 }
 
 const senderMetricsKey = "sender_metrics"

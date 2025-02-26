@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/moira-alert/go-chart"
-	"github.com/moira-alert/moira/datatypes"
 	"github.com/moira-alert/moira/logging"
 	"gopkg.in/tomb.v2"
 )
@@ -162,7 +161,19 @@ type Database interface {
 	RemoveAllMetrics() error
 
 	// Delivery checks
-	datatypes.DeliveryCheckerDatabase
+	DeliveryCheckerDatabase
+}
+
+// DeliveryCheckerDatabase is used by senders that can track if the notification was delivered.
+type DeliveryCheckerDatabase interface {
+	// AddDeliveryChecksData must be used to store data need for performing delivery checks.
+	AddDeliveryChecksData(contactType string, timestamp int64, data string) error
+	// GetDeliveryChecksData must be used to get data need for performing delivery checks.
+	GetDeliveryChecksData(contactType string, from string, to string) ([]string, error)
+	// RemoveDeliveryChecksData must remove already used data for performing delivery checks.
+	RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error)
+	// NewLock creates Lock
+	NewLock(name string, ttl time.Duration) Lock
 }
 
 // Lock implements lock abstraction.
