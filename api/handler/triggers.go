@@ -181,7 +181,7 @@ func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorRespons
 		return api.ErrorInternalServer(promErr)
 	}
 
-	// In other cases we are trying to classificate error as client error or server.
+	// In other cases we are trying to classify error as client error or server.
 	statusCode, err := strconv.ParseInt(string(promErr.Type), 10, 64)
 	if err != nil {
 		return api.ErrorInternalServer(promErr)
