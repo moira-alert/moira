@@ -275,6 +275,8 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
+	trigger.UpdatedBy = middleware.GetLogin(request)
+
 	return nil
 }
 
