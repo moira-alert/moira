@@ -275,7 +275,6 @@ func TestGetTriggerFromRequest(t *testing.T) {
 					prometheus.ErrClient,
 					prometheus.ErrExec,
 					prometheus.ErrTimeout,
-					prometheus.ErrServer,
 				}
 
 				for _, errType := range otherTypes {
@@ -430,7 +429,6 @@ func TestCreateTriggerHandler(t *testing.T) {
 
 	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
-	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
@@ -443,51 +441,102 @@ func TestCreateTriggerHandler(t *testing.T) {
 	mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 	database = mockDb
 
+	mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any()).AnyTimes()
+	mockDb.EXPECT().GetTriggerLastCheck(gomock.Any()).AnyTimes()
+	mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).AnyTimes()
+
 	Convey("When createTrigger was called with normal input", t, func() {
 		urls := []string{
 			"/",
 			fmt.Sprintf("/trigger?%s", validateFlag),
 		}
 
-		for _, url := range urls {
-			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
-			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
-			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
-			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
-
-			triggerWarnValue := float64(10)
-			triggerErrorValue := float64(15)
-			triggerDTO := dto.Trigger{
-				TriggerModel: dto.TriggerModel{
-					Name:          "Test trigger",
-					Tags:          []string{"123"},
-					WarnValue:     &triggerWarnValue,
-					ErrorValue:    &triggerErrorValue,
-					Targets:       []string{"my.metric"},
-					TriggerSource: moira.GraphiteLocal,
-				},
+		Convey("should return RemoteServerUnavailable if remote unavailable, ", func() {
+			fetchRemoteErrorTypes := []prometheus.ErrorType{
+				// Prometheus error format
+				prometheus.ErrServer,
+				// VictoriaMetrics error format
+				"503",
 			}
-			jsonTrigger, _ := json.Marshal(triggerDTO)
-			testRequest := httptest.NewRequest("", url, bytes.NewBuffer(jsonTrigger))
-			testRequest.Header.Add("content-type", "application/json")
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "clustersMetricTTL", MakeTestTTLs()))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "limits", api.GetTestLimitsConfig()))
 
-			responseWriter := httptest.NewRecorder()
-			createTrigger(responseWriter, testRequest)
+			for _, fetchRemoteErrorType := range fetchRemoteErrorTypes {
+				prometheusRemote := mock_metric_source.NewMockMetricSource(mockCtrl)
+				prometheusRemote.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+				prometheusRemote.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, &prometheus.Error{Type: fetchRemoteErrorType}).AnyTimes()
+				sourceProvider := metricSource.CreateTestMetricSourceProvider(nil, nil, prometheusRemote)
 
-			Convey(fmt.Sprintf("should return success message, url=%s", url), func() {
-				response := responseWriter.Result()
-				defer response.Body.Close()
-				So(response.StatusCode, ShouldEqual, http.StatusOK)
-				So(isTriggerCreated(response), ShouldBeTrue)
-			})
-		}
+				for _, url := range urls {
+					triggerWarnValue := float64(10)
+					triggerErrorValue := float64(15)
+					triggerDTO := dto.Trigger{
+						TriggerModel: dto.TriggerModel{
+							Name:          "Test trigger",
+							Tags:          []string{"123"},
+							WarnValue:     &triggerWarnValue,
+							ErrorValue:    &triggerErrorValue,
+							Targets:       []string{"my.metric"},
+							TriggerSource: moira.PrometheusRemote,
+						},
+					}
+					jsonTrigger, _ := json.Marshal(triggerDTO)
+					testRequest := httptest.NewRequest("", url, bytes.NewBuffer(jsonTrigger))
+					testRequest.Header.Add("content-type", "application/json")
+					testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
+					testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "clustersMetricTTL", MakeTestTTLs()))
+					testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "limits", api.GetTestLimitsConfig()))
+
+					responseWriter := httptest.NewRecorder()
+					createTrigger(responseWriter, testRequest)
+
+					Convey(fmt.Sprintf("url=%s, error=%s", url, fetchRemoteErrorType), func() {
+						response := responseWriter.Result()
+						defer response.Body.Close()
+						So(response.StatusCode, ShouldEqual, http.StatusServiceUnavailable)
+						So(isTriggerCreated(response), ShouldBeFalse)
+					})
+				}
+			}
+		})
+
+		Convey("should return success message, url=", func() {
+			sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
+			for _, url := range urls {
+				triggerWarnValue := float64(10)
+				triggerErrorValue := float64(15)
+				triggerDTO := dto.Trigger{
+					TriggerModel: dto.TriggerModel{
+						Name:          "Test trigger",
+						Tags:          []string{"123"},
+						WarnValue:     &triggerWarnValue,
+						ErrorValue:    &triggerErrorValue,
+						Targets:       []string{"my.metric"},
+						TriggerSource: moira.GraphiteLocal,
+					},
+				}
+				jsonTrigger, _ := json.Marshal(triggerDTO)
+				testRequest := httptest.NewRequest("", url, bytes.NewBuffer(jsonTrigger))
+				testRequest.Header.Add("content-type", "application/json")
+				testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
+				testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "clustersMetricTTL", MakeTestTTLs()))
+				testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "limits", api.GetTestLimitsConfig()))
+
+				responseWriter := httptest.NewRecorder()
+				createTrigger(responseWriter, testRequest)
+
+				Convey(url, func() {
+					response := responseWriter.Result()
+					defer response.Body.Close()
+					So(response.StatusCode, ShouldEqual, http.StatusOK)
+					So(isTriggerCreated(response), ShouldBeTrue)
+				})
+			}
+		})
 	})
 
 	Convey("When createTrigger was called with empty targets", t, func() {
+		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 		urls := []string{
 			"/",
 			fmt.Sprintf("/trigger?%s", validateFlag),
@@ -525,6 +574,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 	})
 
 	Convey("When createTrigger was called with target with warning function", t, func() {
+		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
 		trigger := dto.Trigger{
@@ -540,12 +590,6 @@ func TestCreateTriggerHandler(t *testing.T) {
 		jsonTrigger, _ := json.Marshal(trigger)
 
 		Convey("without validate like before", func() {
-			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
-			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
-			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
-			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
-
 			request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
@@ -564,12 +608,6 @@ func TestCreateTriggerHandler(t *testing.T) {
 		})
 
 		Convey("with validate", func() {
-			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
-			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
-			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
-			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
-
 			request := httptest.NewRequest("", fmt.Sprintf("/trigger?%s", validateFlag), bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
@@ -612,6 +650,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 	})
 
 	Convey("When createTrigger was called with target with bad (error) function", t, func() {
+		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
 		triggerDTO := dto.Trigger{
@@ -627,12 +666,6 @@ func TestCreateTriggerHandler(t *testing.T) {
 		jsonTrigger, _ := json.Marshal(triggerDTO)
 
 		Convey("without validate like before", func() {
-			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
-			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
-			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
-			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
-
 			request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
