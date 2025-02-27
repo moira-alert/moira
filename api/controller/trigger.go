@@ -117,11 +117,6 @@ func metricEvaluationRulesChanged(existedTrigger, newTrigger *moira.Trigger) boo
 		return true
 	}
 
-	// maybe python expression changed
-	if !equalTwoPointerValues(existedTrigger.PythonExpression, newTrigger.PythonExpression) {
-		return true
-	}
-
 	// maybe trigger source or cluster changed
 	if existedTrigger.ClusterKey().String() != newTrigger.ClusterKey().String() {
 		return true
