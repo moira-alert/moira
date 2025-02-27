@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -25,8 +24,7 @@ type deliveryCheckData struct {
 	URL           string            `json:"url"`
 	PreviousState string            `json:"previous_state"`
 	Contact       moira.ContactData `json:"contact"`
-	Trigger       moira.TriggerData `json:"trigger"`
-	AttemptsCount uint              `json:"attempts_count"`
+	AttemptsCount uint64            `json:"attempts_count"`
 }
 
 func webhookLockKey(contactType string) string {
@@ -64,9 +62,9 @@ func (sender *Sender) deliveryCheckerAction(stop <-chan struct{}) error {
 }
 
 func (sender *Sender) performDeliveryChecks() error {
-	now := sender.clock.NowUnix()
+	fetchTimestamp := sender.clock.NowUnix()
 
-	marshaledData, err := sender.Database.GetDeliveryChecksData(sender.contactType, "-inf", strconv.FormatInt(now, 10))
+	marshaledData, err := sender.Database.GetDeliveryChecksData(sender.contactType, "-inf", strconv.FormatInt(fetchTimestamp, 10))
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {
 			// nothing to check
@@ -123,24 +121,16 @@ func (sender *Sender) performDeliveryChecks() error {
 				Msg("error while populating check template")
 		}
 
-		switch resState {
-		case moira.DeliveryStateOK:
-			deliverOK += 1
-		case moira.DeliveryStatePending, moira.DeliveryStateException:
-			// TODO: use checksData[i].AttemptsCount
-			checksData[i].PreviousState = resState
-			performAgainChecksData = append(performAgainChecksData, checksData[i])
-		case moira.DeliveryStateFailed:
-			deliverFailed += 1
-		case moira.DeliveryStateUserException:
-			// TODO: what do here?
-		default:
-			// TODO: can be same as Pending or UserException ?
+		newCheckData, scheduleAgain := handleStateTransition(checksData[i], resState, sender.deliveryCfg.MaxAttemptsCount, &deliverOK, &deliverFailed)
+		if scheduleAgain {
+			performAgainChecksData = append(performAgainChecksData, newCheckData)
 		}
 	}
 
 	// TODO: store checks data that needs to be checked again
+	sender.storeChecksDataToCheckAgain(performAgainChecksData)
 	// TODO: clean outdated check infos
+	sender.removeOutdatedDeliveryChecks(fetchTimestamp)
 
 	sender.metrics.ContactDeliveryNotificationOK.Mark(deliverOK)
 	sender.metrics.ContactDeliveryNotificationFailed.Mark(deliverFailed)
@@ -168,43 +158,9 @@ func unmarshalChecksData(logger moira.Logger, marshaledData []string) []delivery
 	return checksData
 }
 
-func (sender *Sender) doCheckRequest(checkData deliveryCheckData) (int, map[string]interface{}, error) {
-	req, err := http.NewRequest(http.MethodGet, checkData.URL, nil)
-	if err != nil {
-		return 0, nil, fmt.Errorf("failed to create new request: %w", err)
-	}
-
-	if sender.deliveryCfg.User != "" && sender.deliveryCfg.Password != "" {
-		req.SetBasicAuth(sender.user, sender.password)
-	}
-
-	for k, v := range sender.deliveryCfg.Headers {
-		req.Header.Set(k, v)
-	}
-
-	rsp, err := sender.client.Do(req)
-	if err != nil {
-		return 0, nil, fmt.Errorf("failed to do request: %w", err)
-	}
-	defer func() { _ = rsp.Body.Close() }()
-
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	if err != nil {
-		return 0, nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	var rspMap map[string]interface{}
-	err = json.Unmarshal(bodyBytes, &rspMap)
-	if err != nil {
-		return 0, nil, fmt.Errorf("failed to unmarshal body into json: %w", err)
-	}
-
-	return rsp.StatusCode, rspMap, nil
-}
-
-func (sender *Sender) storeChecksDataToCheckAgain(checksData []deliveryCheckData) error {
+func (sender *Sender) storeChecksDataToCheckAgain(checksData []deliveryCheckData) {
 	if len(checksData) == 0 {
-		return nil
+		return
 	}
 
 	scheduleAtTimestamp := sender.clock.NowUnix() + int64(sender.deliveryCfg.ReschedulingDelay)
@@ -219,6 +175,104 @@ func (sender *Sender) storeChecksDataToCheckAgain(checksData []deliveryCheckData
 		}
 
 		// TODO: retry operations
-		err := sender.Database.AddDeliveryChecksData(sender.contactType, scheduleAtTimestamp, string(encoded))
+		err = sender.Database.AddDeliveryChecksData(sender.contactType, scheduleAtTimestamp, string(encoded))
+		if err != nil {
+			sender.log.Error().
+				String("check.url", data.URL).
+				Error(err).
+				Msg("failed to store check data")
+			continue
+		}
+	}
+}
+
+func (sender *Sender) removeOutdatedDeliveryChecks(lastFetchTimestamp int64) error {
+	_, err := sender.Database.RemoveDeliveryChecksData(sender.contactType, "-inf", strconv.FormatInt(lastFetchTimestamp, 1))
+	return err
+}
+
+func (sender *Sender) scheduleDeliveryCheck(atTimestamp int64, sendAlertResponseBody []byte, contact moira.ContactData) error {
+	var rspData map[string]interface{}
+	err := json.Unmarshal(sendAlertResponseBody, &rspData)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal send alert response into json: %w", err)
+	}
+
+	urlPopulater := templating.NewWebhookDeliveryCheckURLPopulater(
+		&templating.Contact{
+			Type:  contact.Type,
+			Value: contact.Value,
+		},
+		rspData)
+
+	requestURL, err := urlPopulater.Populate(sender.deliveryCfg.URLTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to fill url template with data: %w", err)
+	}
+
+	if err = validateURL(requestURL); err != nil {
+		return fmt.Errorf("got bad url for check request: %w", err)
+	}
+
+	checkData := deliveryCheckData{
+		URL:           requestURL,
+		PreviousState: moira.DeliveryStatePending,
+		Contact:       contact,
+		AttemptsCount: 0,
+	}
+
+	encodedCheckData, err := json.Marshal(checkData)
+	if err != nil {
+		return fmt.Errorf("failed to encode check data: %w", err)
+	}
+
+	err = sender.Database.AddDeliveryChecksData(sender.contactType, atTimestamp, string(encodedCheckData))
+	if err != nil {
+		return fmt.Errorf("failed to save check data: %w", err)
+	}
+
+	return nil
+}
+
+func validateURL(requestURL string) error {
+	urlStruct, err := url.Parse(requestURL)
+	if err != nil {
+		return err
+	}
+
+	if !(urlStruct.Scheme == "http://" || urlStruct.Scheme == "https://") {
+		return fmt.Errorf("bad url scheme: %s", urlStruct.Scheme)
+	}
+
+	if urlStruct.Host == "" {
+		return fmt.Errorf("host is empty")
+	}
+
+	return nil
+}
+
+func handleStateTransition(checkData deliveryCheckData, newState string, maxAttemptsCount uint64, deliveryOK, deliveryFailed *int64) (deliveryCheckData, bool) {
+	switch newState {
+	case moira.DeliveryStateOK:
+		*deliveryOK += 1
+		return deliveryCheckData{}, false
+	case moira.DeliveryStatePending, moira.DeliveryStateException:
+		if checkData.AttemptsCount < maxAttemptsCount {
+			checkData.PreviousState = newState
+			return checkData, true
+		}
+
+		// TODO: mark delivery check dropped
+		return deliveryCheckData{}, false
+	case moira.DeliveryStateFailed:
+		*deliveryFailed += 1
+		return checkData, false
+	case moira.DeliveryStateUserException:
+		// TODO: mark delivery check stopped
+		return deliveryCheckData{}, false
+	default:
+		// TODO: mark delivery check stopped
+		// TODO: log unknown result of filing check template
+		return deliveryCheckData{}, false
 	}
 }

@@ -2,9 +2,10 @@ package webhook
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
+	"fmt"
 	"html"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,7 +14,38 @@ import (
 	"github.com/moira-alert/moira/templating"
 )
 
-func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
+func buildRequest(
+	logger moira.Logger,
+	method string,
+	requestURL string,
+	body []byte,
+	user string,
+	password string,
+	headers map[string]string,
+) (*http.Request, error) {
+	request, err := http.NewRequest(method, requestURL, bytes.NewBuffer(body))
+	if err != nil {
+		return request, err
+	}
+
+	if user != "" && password != "" {
+		request.SetBasicAuth(user, password)
+	}
+
+	for k, v := range headers {
+		request.Header.Set(k, v)
+	}
+
+	logger.Debug().
+		String("method", request.Method).
+		String("url", request.URL.String()).
+		String("body", string(body)).
+		Msg("Created request")
+
+	return request, nil
+}
+
+func (sender *Sender) buildSendAlertRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
 	if sender.url == moira.VariableContactValue {
 		sender.log.Warning().
 			String("potentially_dangerous_url", sender.url).
@@ -26,26 +58,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 		return nil, err
 	}
 
-	request, err := http.NewRequestWithContext(context.Background(), http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return request, err
-	}
-
-	if sender.user != "" && sender.password != "" {
-		request.SetBasicAuth(sender.user, sender.password)
-	}
-
-	for k, v := range sender.headers {
-		request.Header.Set(k, v)
-	}
-
-	sender.log.Debug().
-		String("method", request.Method).
-		String("url", request.URL.String()).
-		String("body", bytes.NewBuffer(requestBody).String()).
-		Msg("Created request")
-
-	return request, nil
+	return buildRequest(sender.log, http.MethodPost, requestURL, requestBody, sender.user, sender.password, sender.headers)
 }
 
 func (sender *Sender) buildRequestBody(
@@ -121,4 +134,43 @@ func buildRequestURL(template string, trigger moira.TriggerData, contact moira.C
 	}
 
 	return template
+}
+
+func (sender *Sender) buildDeliveryCheckRequest(checkData deliveryCheckData) (*http.Request, error) {
+	return buildRequest(sender.log, http.MethodGet, checkData.URL, nil, sender.deliveryCfg.User, sender.deliveryCfg.Password, sender.deliveryCfg.Headers)
+}
+
+func performRequest(client *http.Client, request *http.Request) (int, []byte, error) {
+	rsp, err := client.Do(request)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to perform request: %w", err)
+	}
+	defer rsp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	return rsp.StatusCode, bodyBytes, nil
+}
+
+func (sender *Sender) doCheckRequest(checkData deliveryCheckData) (int, map[string]interface{}, error) {
+	req, err := sender.buildDeliveryCheckRequest(checkData)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	statusCode, body, err := performRequest(sender.client, req)
+	if err != nil {
+		return 0, nil, fmt.Errorf("check delivery request failed: %w", err)
+	}
+
+	var rspMap map[string]interface{}
+	err = json.Unmarshal(body, &rspMap)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to unmarshal body into json: %w", err)
+	}
+
+	return statusCode, rspMap, nil
 }

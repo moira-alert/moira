@@ -2,12 +2,12 @@ package webhook
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/metrics"
 )
 
@@ -43,8 +43,14 @@ type deliveryCheckConfig struct {
 	// CheckTimeout is the timeout (in seconds) between checking notifications delivery.
 	CheckTimeout      uint64 `mapstructure:"check_timeout"`
 	MaxAttemptsCount  uint64 `mapstructure:"max_attempts_count"`
-	ReschedulingDelay uint64
+	ReschedulingDelay uint64 `mapstructure:"rescheduling_delay"`
 }
+
+const (
+	defaultCheckTimeout      = 60
+	defaultMaxAttemptsCount  = 5
+	defaultReschedulingDelay = 45
+)
 
 // Sender implements moira sender interface via webhook.
 type Sender struct {
@@ -67,6 +73,13 @@ const senderMetricsKey = "sender_metrics"
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+	cfg.DeliveryCheck = deliveryCheckConfig{
+		Enabled:           false,
+		CheckTimeout:      defaultCheckTimeout,
+		MaxAttemptsCount:  defaultMaxAttemptsCount,
+		ReschedulingDelay: defaultReschedulingDelay,
+	}
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to webhook config: %w", err)
@@ -107,43 +120,41 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		sender.metrics = val.(*metrics.SenderMetrics)
 	}
 
-	// TODO: init all needed for delivery checking
+	sender.deliveryCfg = cfg.DeliveryCheck
+	sender.clock = clock.NewSystemClock()
 
 	return nil
 }
 
 // SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	request, err := sender.buildRequest(events, contact, trigger, plots, throttled)
-	if request != nil {
-		defer request.Body.Close()
-	}
-
+	request, err := sender.buildSendAlertRequest(events, contact, trigger, plots, throttled)
 	if err != nil {
 		return fmt.Errorf("failed to build request: %w", err)
 	}
+	defer request.Body.Close()
 
-	response, err := sender.client.Do(request)
-	if response != nil {
-		defer response.Body.Close()
-	}
-
+	responseStatusCode, responseBody, err := performRequest(sender.client, request)
 	if err != nil {
-		return fmt.Errorf("failed to perform request: %w", err)
+		return fmt.Errorf("send alert request failed: %w", err)
 	}
 
-	if !isAllowedResponseCode(response.StatusCode) {
-		var serverResponse string
-		responseBody, err := io.ReadAll(response.Body)
+	if !isAllowedResponseCode(responseStatusCode) {
+		return fmt.Errorf("invalid status code: %d, server response: %s", responseStatusCode, string(responseBody))
+	}
+
+	if sender.deliveryCfg.Enabled {
+		err = sender.scheduleDeliveryCheck(sender.clock.NowUnix(), responseBody, contact)
 		if err != nil {
-			serverResponse = fmt.Sprintf("failed to read response body: %s", err.Error())
-		} else {
-			serverResponse = string(responseBody)
+			sender.log.Error().
+				Error(err).
+				String(moira.LogFieldNameContactID, contact.ID).
+				String(moira.LogFieldNameContactType, contact.Type).
+				String(moira.LogFieldNameContactValue, contact.Value).
+				String("body", string(responseBody)).
+				Msg("failed to schedule delivery check")
 		}
-		return fmt.Errorf("invalid status code: %d, server response: %s", response.StatusCode, serverResponse)
 	}
-
-	// TODO: if delivery check enabled schedule value for check
 
 	return nil
 }
