@@ -27,7 +27,7 @@ type deliveryCheckConfig struct {
 	// Enabled the delivery checking or not.
 	Enabled bool `mapstructure:"enabled"`
 	// URLTemplate is need to build url for GET HTTP request, used for delivery checking.
-	// Template is filled based on contact data, trigger data and response got after sending POST request.
+	// Template is filled based on contact data and response, got on sending POST request.
 	URLTemplate string `mapstructure:"url_template" validate:"required_if=Enabled true"`
 	// Headers for delivery check request.
 	Headers map[string]string `mapstructure:"headers"`
