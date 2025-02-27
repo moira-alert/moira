@@ -41,7 +41,7 @@ func trigger(router chi.Router) {
 //	@param		validate	query		bool									false	"For validating targets"
 //	@param		body		body		dto.Trigger								true	"Trigger data"
 //	@success	200			{object}	dto.SaveTriggerResponse					"Updated trigger"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	400			{object}	interface{}								"Bad request from client"
 //	@failure	404			{object}	api.ErrorNotFoundExample				"Resource not found"
 //	@failure	422			{object}	api.ErrorRenderExample					"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
