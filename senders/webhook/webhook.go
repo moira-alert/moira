@@ -133,6 +133,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.deliveryConfig = cfg.DeliveryCheck
 	sender.clock = clock.NewSystemClock()
 	if sender.deliveryConfig.Enabled {
+		if sender.metrics == nil {
+			return fmt.Errorf("with enabled delivery check, sender must have 'enable_metrcis: true'")
+		}
+
 		go sender.runDeliveryCheckWorker()
 	}
 
