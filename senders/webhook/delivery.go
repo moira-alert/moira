@@ -62,7 +62,7 @@ func (sender *Sender) deliveryCheckerAction(stop <-chan struct{}) error {
 			return nil
 
 		case <-checkTicker.C:
-			if err := sender.performDeliveryChecks(); err != nil {
+			if err := sender.checkNotificationsDelivery(); err != nil {
 				sender.log.Error().
 					Error(err).
 					Msg("failed to perform delivery check")
@@ -71,7 +71,7 @@ func (sender *Sender) deliveryCheckerAction(stop <-chan struct{}) error {
 	}
 }
 
-func (sender *Sender) performDeliveryChecks() error {
+func (sender *Sender) checkNotificationsDelivery() error {
 	fetchTimestamp := sender.clock.NowUnix()
 
 	marshaledData, err := sender.Database.GetDeliveryChecksData(sender.contactType, "-inf", strconv.FormatInt(fetchTimestamp, 10))
