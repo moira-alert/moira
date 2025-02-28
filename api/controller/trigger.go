@@ -27,7 +27,7 @@ func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID
 }
 
 // saveTrigger create or update trigger data and update trigger metrics in last state.
-func saveTrigger(dataBase moira.Database, existedTrigger, newTrigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+func saveTrigger(dataBase moira.Database, oldTrigger, newTrigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if err := dataBase.AcquireTriggerCheckLock(triggerID, maxTriggerLockAttempts); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -40,7 +40,7 @@ func saveTrigger(dataBase moira.Database, existedTrigger, newTrigger *moira.Trig
 	if !errors.Is(err, database.ErrNil) {
 		// sometimes we have no time series names but have important information in LastCheck.Metrics (for example maintenance)
 		// so on empty timeSeries we will modify LastCheck only if metric evaluation rules changed (targets, expression, etc.)
-		if len(timeSeriesNames) != 0 || metricEvaluationRulesChanged(existedTrigger, newTrigger) {
+		if len(timeSeriesNames) != 0 || metricEvaluationRulesChanged(oldTrigger, newTrigger) {
 			for metric := range lastCheck.Metrics {
 				if _, ok := timeSeriesNames[metric]; !ok {
 					lastCheck.RemoveMetricState(metric)
@@ -75,59 +75,50 @@ func saveTrigger(dataBase moira.Database, existedTrigger, newTrigger *moira.Trig
 	return &resp, nil
 }
 
-func metricEvaluationRulesChanged(existedTrigger, newTrigger *moira.Trigger) bool {
-	if existedTrigger == nil {
+func metricEvaluationRulesChanged(oldTrigger, newTrigger *moira.Trigger) bool {
+	if oldTrigger == nil {
 		return true
 	}
 
-	// maybe number of targets has changed
-	if len(existedTrigger.Targets) != len(newTrigger.Targets) {
+	if len(oldTrigger.Targets) != len(newTrigger.Targets) {
 		return true
 	}
 
-	// maybe number one of targets has changed
-	for i := range existedTrigger.Targets {
-		if existedTrigger.Targets[i] != newTrigger.Targets[i] {
+	for i := range oldTrigger.Targets {
+		if oldTrigger.Targets[i] != newTrigger.Targets[i] {
 			return true
 		}
 	}
 
-	// maybe trigger type changed
-	if existedTrigger.TriggerType != newTrigger.TriggerType {
+	if oldTrigger.TriggerType != newTrigger.TriggerType {
 		return true
 	}
 
-	// maybe warn value changed
-	if !equalTwoPointerValues(existedTrigger.WarnValue, newTrigger.WarnValue) {
+	if !equalTwoPointerValues(oldTrigger.WarnValue, newTrigger.WarnValue) {
 		return true
 	}
 
-	// maybe error value changed
-	if !equalTwoPointerValues(existedTrigger.ErrorValue, newTrigger.ErrorValue) {
+	if !equalTwoPointerValues(oldTrigger.ErrorValue, newTrigger.ErrorValue) {
 		return true
 	}
 
-	// maybe TTLState changed
-	if !equalTwoPointerValues(existedTrigger.TTLState, newTrigger.TTLState) {
+	if !equalTwoPointerValues(oldTrigger.TTLState, newTrigger.TTLState) {
 		return true
 	}
 
-	// maybe expression changed
-	if !equalTwoPointerValues(existedTrigger.Expression, newTrigger.Expression) {
+	if !equalTwoPointerValues(oldTrigger.Expression, newTrigger.Expression) {
 		return true
 	}
 
-	// maybe trigger source or cluster changed
-	if existedTrigger.ClusterKey().String() != newTrigger.ClusterKey().String() {
+	if oldTrigger.ClusterKey().String() != newTrigger.ClusterKey().String() {
 		return true
 	}
 
-	// maybe alone metrics changed
-	if len(existedTrigger.AloneMetrics) != len(newTrigger.AloneMetrics) {
+	if len(oldTrigger.AloneMetrics) != len(newTrigger.AloneMetrics) {
 		return true
 	}
 
-	for targetID := range existedTrigger.AloneMetrics {
+	for targetID := range oldTrigger.AloneMetrics {
 		if _, ok := newTrigger.AloneMetrics[targetID]; !ok {
 			return true
 		}
