@@ -21,3 +21,53 @@ func NewWebhookBodyPopulater(contact *Contact) *webhookBodyPopulater {
 func (templateData *webhookBodyPopulater) Populate(tmpl string) (string, error) {
 	return populate(tmpl, templateData)
 }
+
+type webhookDeliveryCheckURLPopulater struct {
+	Contact           *Contact
+	SendAlertResponse map[string]interface{}
+}
+
+// NewWebhookDeliveryCheckURLPopulater creates a new webhook url populater with provided template contact
+// and body from response got on send alert request.
+func NewWebhookDeliveryCheckURLPopulater(contact *Contact, sendAlertResponse map[string]interface{}) *webhookDeliveryCheckURLPopulater {
+	return &webhookDeliveryCheckURLPopulater{
+		Contact:           contact,
+		SendAlertResponse: sendAlertResponse,
+	}
+}
+
+// Populate populates the given template with contact data and response got on send alert request.
+func (templateData *webhookDeliveryCheckURLPopulater) Populate(tmpl string) (string, error) {
+	return populate(tmpl, templateData)
+}
+
+type webhookDeliveryCheckPopulater struct {
+	Contact               *Contact
+	DeliveryCheckResponse map[string]interface{}
+	StateConstants        map[string]string
+}
+
+func NewWebhookDeliveryCheckPopulater(contact *Contact, sendRsp map[string]interface{}) *webhookDeliveryCheckPopulater {
+	return &webhookDeliveryCheckPopulater{
+		Contact:               contact,
+		DeliveryCheckResponse: sendRsp,
+		StateConstants: map[string]string{
+			constantNameDeliveryStateOK:        "OK",
+			constantNameDeliveryStatePending:   "PENDING",
+			constantNameDeliveryStateFailed:    "FAILED",
+			constantNameDeliveryStateException: "EXCEPTION",
+		},
+	}
+}
+
+const (
+	constantNameDeliveryStateOK        = "DeliveryStateOK"
+	constantNameDeliveryStatePending   = "DeliveryStatePending"
+	constantNameDeliveryStateFailed    = "DeliveryStateFailed"
+	constantNameDeliveryStateException = "DeliveryStateException"
+)
+
+// Populate populates the given template with contact data, response got on send alert request and delivery state constants.
+func (templateData *webhookDeliveryCheckPopulater) Populate(tmpl string) (string, error) {
+	return populate(tmpl, templateData)
+}
