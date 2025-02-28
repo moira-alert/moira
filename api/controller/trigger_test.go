@@ -56,6 +56,7 @@ func TestSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	trigger := moira.Trigger{ID: triggerID}
 	lastCheck := moira.CheckData{
@@ -72,48 +73,95 @@ func TestSaveTrigger(t *testing.T) {
 		MetricsToTargetRelation: map[string]string{},
 	}
 
-	Convey("No timeSeries", t, func() {
-		Convey("No last check", func() {
-			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
-			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any(), trigger.ClusterKey()).Return(nil)
-			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
-			So(err, ShouldBeNil)
-			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+	Convey("With no existing trigger", t, func() {
+		Convey("No timeSeries", func() {
+			Convey("No last check", func() {
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+				dataBase.EXPECT().
+					SetTriggerLastCheck(
+						triggerID,
+						&moira.CheckData{
+							Metrics: make(map[string]moira.MetricState),
+							State:   moira.StateNODATA,
+							Score:   1000,
+						},
+						trigger.ClusterKey()).
+					Return(nil)
+				dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+				resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
+				So(err, ShouldBeNil)
+				So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+			})
+			Convey("Has last check", func() {
+				actualLastCheck := lastCheck
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &emptyLastCheck, trigger.ClusterKey()).Return(nil)
+				dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+				resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
+				So(err, ShouldBeNil)
+				So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+			})
 		})
-		Convey("Has last check", func() {
-			actualLastCheck := lastCheck
-			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
-			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &emptyLastCheck, trigger.ClusterKey()).Return(nil)
-			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
-			So(err, ShouldBeNil)
-			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-		})
-	})
 
-	Convey("Has timeSeries", t, func() {
-		actualLastCheck := lastCheck
-		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
-		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any(), trigger.ClusterKey()).Return(nil)
-		dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-		resp, err := saveTrigger(dataBase, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
-		So(err, ShouldBeNil)
-		So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-		So(actualLastCheck, ShouldResemble, lastCheck)
+		Convey("Has timeSeries", func() {
+			Convey("No last check", func() {
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+				dataBase.EXPECT().
+					SetTriggerLastCheck(
+						triggerID,
+						&moira.CheckData{
+							Metrics: make(map[string]moira.MetricState),
+							State:   moira.StateNODATA,
+							Score:   1000,
+						},
+						trigger.ClusterKey()).
+					Return(nil)
+				dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+				resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
+				So(err, ShouldBeNil)
+				So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+			})
+
+			Convey("Has last check", func() {
+				actualLastCheck := moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"super.metric1": {},
+						"super.metric2": {},
+					},
+					MetricsToTargetRelation: map[string]string{
+						"t2": "super.metric3",
+					},
+				}
+				expectedLastCheck := &moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"super.metric1": {},
+						"super.metric2": {},
+					},
+					MetricsToTargetRelation: make(map[string]string),
+				}
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, expectedLastCheck, trigger.ClusterKey()).Return(nil)
+				dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+				resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
+				So(err, ShouldBeNil)
+				So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+			})
+		})
 	})
 
 	Convey("Errors", t, func() {
 		Convey("AcquireTriggerCheckLock error", func() {
 			expected := fmt.Errorf("acquireTriggerCheckLock error")
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(expected)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(resp, ShouldBeNil)
 		})
@@ -123,7 +171,7 @@ func TestSaveTrigger(t *testing.T) {
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(resp, ShouldBeNil)
 		})
@@ -134,7 +182,7 @@ func TestSaveTrigger(t *testing.T) {
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any(), trigger.ClusterKey()).Return(expected)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(resp, ShouldBeNil)
 		})
@@ -146,7 +194,7 @@ func TestSaveTrigger(t *testing.T) {
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any(), trigger.ClusterKey()).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(expected)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(resp, ShouldBeNil)
 		})
@@ -177,7 +225,7 @@ func TestVariousTtlState(t *testing.T) {
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
 		})
@@ -192,7 +240,7 @@ func TestVariousTtlState(t *testing.T) {
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
 		})
@@ -207,7 +255,7 @@ func TestVariousTtlState(t *testing.T) {
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
 		})
@@ -222,7 +270,7 @@ func TestVariousTtlState(t *testing.T) {
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
 		})
@@ -237,7 +285,7 @@ func TestVariousTtlState(t *testing.T) {
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck, trigger.ClusterKey()).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, nil, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
 		})
@@ -490,5 +538,181 @@ func TestSetTriggerMaintenance(t *testing.T) {
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, "", int64(0)).Return(expected)
 		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance, "", 0)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+}
+
+func Test_metricEvaluationRulesChanged(t *testing.T) {
+	Convey("Test metricEvaluationRulesChanged", t, func() {
+		type testcase struct {
+			desc            string
+			givenOldTrigger *moira.Trigger
+			givenNewTrigger *moira.Trigger
+			expectedResult  bool
+		}
+
+		var (
+			floatValueOne                float64 = 1.0
+			floatValueEqualToValueOne    float64 = 1.0
+			floatValueNotEqualToValueOne float64 = 2.0
+
+			stringValueOne                = "some str"
+			stringValueEqualToValueOne    = "some str"
+			stringValueNotEqualToValueOne = "another str"
+		)
+
+		cases := []testcase{
+			{
+				desc:            "with nil existed trigger",
+				givenOldTrigger: nil,
+				givenNewTrigger: &moira.Trigger{},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different number of targets",
+				givenOldTrigger: &moira.Trigger{Targets: []string{"hello"}},
+				givenNewTrigger: &moira.Trigger{Targets: []string{"user", "bye"}},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different targets",
+				givenOldTrigger: &moira.Trigger{Targets: []string{"hello", "mama"}},
+				givenNewTrigger: &moira.Trigger{Targets: []string{"user", "bye"}},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different trigger type",
+				givenOldTrigger: &moira.Trigger{TriggerType: moira.ExpressionTrigger},
+				givenNewTrigger: &moira.Trigger{TriggerType: moira.FallingTrigger},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with warn value not set for one",
+				givenOldTrigger: &moira.Trigger{WarnValue: nil},
+				givenNewTrigger: &moira.Trigger{WarnValue: &floatValueOne},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with warn value not set for other",
+				givenOldTrigger: &moira.Trigger{WarnValue: &floatValueOne},
+				givenNewTrigger: &moira.Trigger{WarnValue: nil},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different warn values",
+				givenOldTrigger: &moira.Trigger{WarnValue: &floatValueOne},
+				givenNewTrigger: &moira.Trigger{WarnValue: &floatValueNotEqualToValueOne},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with same warn values",
+				givenOldTrigger: &moira.Trigger{WarnValue: &floatValueOne},
+				givenNewTrigger: &moira.Trigger{WarnValue: &floatValueEqualToValueOne},
+				expectedResult:  false,
+			},
+			{
+				desc:            "with error value not set for one",
+				givenOldTrigger: &moira.Trigger{ErrorValue: nil},
+				givenNewTrigger: &moira.Trigger{ErrorValue: &floatValueOne},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with error value not set for other",
+				givenOldTrigger: &moira.Trigger{ErrorValue: &floatValueOne},
+				givenNewTrigger: &moira.Trigger{ErrorValue: nil},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different error values",
+				givenOldTrigger: &moira.Trigger{ErrorValue: &floatValueOne},
+				givenNewTrigger: &moira.Trigger{ErrorValue: &floatValueNotEqualToValueOne},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with same error values",
+				givenOldTrigger: &moira.Trigger{ErrorValue: &floatValueOne},
+				givenNewTrigger: &moira.Trigger{ErrorValue: &floatValueEqualToValueOne},
+				expectedResult:  false,
+			},
+			{
+				desc:            "with ttl state not set for one",
+				givenOldTrigger: &moira.Trigger{TTLState: nil},
+				givenNewTrigger: &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with ttl state not set for other",
+				givenOldTrigger: &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				givenNewTrigger: &moira.Trigger{TTLState: nil},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different ttl states",
+				givenOldTrigger: &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				givenNewTrigger: &moira.Trigger{TTLState: &moira.TTLStateERROR},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with same ttl state",
+				givenOldTrigger: &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				givenNewTrigger: &moira.Trigger{TTLState: &moira.TTLStateNODATA},
+				expectedResult:  false,
+			},
+			{
+				desc:            "with expression not set for one",
+				givenOldTrigger: &moira.Trigger{Expression: nil},
+				givenNewTrigger: &moira.Trigger{Expression: &stringValueOne},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with expression not set for other",
+				givenOldTrigger: &moira.Trigger{Expression: &stringValueOne},
+				givenNewTrigger: &moira.Trigger{Expression: nil},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different expressions",
+				givenOldTrigger: &moira.Trigger{Expression: &stringValueOne},
+				givenNewTrigger: &moira.Trigger{Expression: &stringValueNotEqualToValueOne},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with same expression",
+				givenOldTrigger: &moira.Trigger{Expression: &stringValueOne},
+				givenNewTrigger: &moira.Trigger{Expression: &stringValueEqualToValueOne},
+				expectedResult:  false,
+			},
+			{
+				desc:            "with different trigger source",
+				givenOldTrigger: &moira.Trigger{TriggerSource: moira.PrometheusRemote},
+				givenNewTrigger: &moira.Trigger{TriggerSource: moira.GraphiteLocal},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different cluster id",
+				givenOldTrigger: &moira.Trigger{ClusterId: moira.DefaultCluster},
+				givenNewTrigger: &moira.Trigger{ClusterId: moira.ClusterNotSet},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different number of alone metrics",
+				givenOldTrigger: &moira.Trigger{AloneMetrics: map[string]bool{"t1": true, "t2": true}},
+				givenNewTrigger: &moira.Trigger{AloneMetrics: map[string]bool{"t1": true, "t2": true, "t3": true}},
+				expectedResult:  true,
+			},
+			{
+				desc:            "with different alone metrics",
+				givenOldTrigger: &moira.Trigger{AloneMetrics: map[string]bool{"t1": true, "t2": true}},
+				givenNewTrigger: &moira.Trigger{AloneMetrics: map[string]bool{"t1": true, "t3": true}},
+				expectedResult:  true,
+			},
+		}
+
+		for i, tc := range cases {
+			Convey(fmt.Sprintf("Case %v: %s", i+1, tc.desc), func() {
+				So(metricEvaluationRulesChanged(tc.givenOldTrigger, tc.givenNewTrigger),
+					ShouldResemble,
+					tc.expectedResult)
+			})
+		}
 	})
 }
