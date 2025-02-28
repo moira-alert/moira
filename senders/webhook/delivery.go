@@ -270,13 +270,11 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 }
 
 func addDeliveryCheckFieldsToLog(eventBuilder logging.EventBuilder, url string, rspCode int, body string, contact moira.ContactData) logging.EventBuilder {
-	return eventBuilder.
+	return addContactFieldsToLog(eventBuilder, contact).
 		String(logFieldNameDeliveryCheckUrl, url).
 		Int(logFieldNameDeliveryCheckResponseCode, rspCode).
-		String(logFieldNameDeliveryCheckResponseBody, body).
-		String(moira.LogFieldNameContactID, contact.ID).
-		String(moira.LogFieldNameContactType, contact.Type).
-		String(moira.LogFieldNameContactValue, contact.Value)
+		String(logFieldNameDeliveryCheckResponseBody, body)
+
 }
 
 func handleStateTransition(checkData deliveryCheckData, newState string, maxAttemptsCount uint64, counter *deliveryTypesCounter) (deliveryCheckData, bool) {

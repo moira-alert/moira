@@ -9,6 +9,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/clock"
+	"github.com/moira-alert/moira/logging"
 	"github.com/moira-alert/moira/metrics"
 )
 
@@ -156,16 +157,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if sender.deliveryConfig.Enabled {
-		// TODO: refactor logging
-
 		var rspData map[string]interface{}
 		err = json.Unmarshal(responseBody, &rspData)
 		if err != nil {
-			sender.log.Error().
-				Error(err).
-				String(moira.LogFieldNameContactID, contact.ID).
-				String(moira.LogFieldNameContactType, contact.Type).
-				String(moira.LogFieldNameContactValue, contact.Value).
+			addContactFieldsToLog(
+				sender.log.Error().Error(err),
+				contact).
 				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
 				Msg("failed to schedule delivery check because of not unmarshalling")
 			return nil
@@ -173,11 +170,9 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 		checkData, err := prepareDeliveryCheck(contact, rspData, sender.deliveryConfig.URLTemplate)
 		if err != nil {
-			sender.log.Error().
-				Error(err).
-				String(moira.LogFieldNameContactID, contact.ID).
-				String(moira.LogFieldNameContactType, contact.Type).
-				String(moira.LogFieldNameContactValue, contact.Value).
+			addContactFieldsToLog(
+				sender.log.Error().Error(err),
+				contact).
 				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
 				Msg("failed to prepare delivery check")
 			return nil
@@ -185,11 +180,9 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 		err = sender.scheduleDeliveryChecks([]deliveryCheckData{checkData}, sender.clock.NowUnix())
 		if err != nil {
-			sender.log.Error().
-				Error(err).
-				String(moira.LogFieldNameContactID, contact.ID).
-				String(moira.LogFieldNameContactType, contact.Type).
-				String(moira.LogFieldNameContactValue, contact.Value).
+			addContactFieldsToLog(
+				sender.log.Error().Error(err),
+				contact).
 				String(logFieldNameDeliveryCheckUrl, checkData.URL).
 				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
 				Msg("failed to prepare delivery check")
@@ -202,4 +195,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func isAllowedResponseCode(responseCode int) bool {
 	return (responseCode >= http.StatusOK) && (responseCode < http.StatusMultipleChoices)
+}
+
+func addContactFieldsToLog(eventBuilder logging.EventBuilder, contact moira.ContactData) logging.EventBuilder {
+	return eventBuilder.
+		String(moira.LogFieldNameContactID, contact.ID).
+		String(moira.LogFieldNameContactType, contact.Type).
+		String(moira.LogFieldNameContactValue, contact.Value)
 }
