@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -155,15 +156,44 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if sender.deliveryConfig.Enabled {
-		err = sender.scheduleDeliveryCheck(sender.clock.NowUnix(), responseBody, contact)
+		// TODO: refactor logging
+
+		var rspData map[string]interface{}
+		err = json.Unmarshal(responseBody, &rspData)
 		if err != nil {
 			sender.log.Error().
 				Error(err).
 				String(moira.LogFieldNameContactID, contact.ID).
 				String(moira.LogFieldNameContactType, contact.Type).
 				String(moira.LogFieldNameContactValue, contact.Value).
-				String("body", string(responseBody)).
-				Msg("failed to schedule delivery check")
+				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+				Msg("failed to schedule delivery check because of not unmarshalling")
+			return nil
+		}
+
+		checkData, err := prepareDeliveryCheck(contact, rspData, sender.deliveryConfig.URLTemplate)
+		if err != nil {
+			sender.log.Error().
+				Error(err).
+				String(moira.LogFieldNameContactID, contact.ID).
+				String(moira.LogFieldNameContactType, contact.Type).
+				String(moira.LogFieldNameContactValue, contact.Value).
+				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+				Msg("failed to prepare delivery check")
+			return nil
+		}
+
+		err = sender.scheduleDeliveryChecks([]deliveryCheckData{checkData}, sender.clock.NowUnix())
+		if err != nil {
+			sender.log.Error().
+				Error(err).
+				String(moira.LogFieldNameContactID, contact.ID).
+				String(moira.LogFieldNameContactType, contact.Type).
+				String(moira.LogFieldNameContactValue, contact.Value).
+				String(logFieldNameDeliveryCheckUrl, checkData.URL).
+				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+				Msg("failed to prepare delivery check")
+			return nil
 		}
 	}
 
