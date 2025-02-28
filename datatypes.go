@@ -965,3 +965,12 @@ const (
 	// DeliveryStateUserException means that error occurred during checking (by user fault). For example, bad template in config.
 	DeliveryStateUserException = "USER_EXCEPTION"
 )
+
+// DeliveryStatesSet contains all available delivery states.
+var DeliveryStatesSet = map[string]struct{}{
+	DeliveryStateOK:            {},
+	DeliveryStatePending:       {},
+	DeliveryStateFailed:        {},
+	DeliveryStateException:     {},
+	DeliveryStateUserException: {},
+}

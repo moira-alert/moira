@@ -52,8 +52,8 @@ func (sender *Sender) buildSendAlertRequest(events moira.NotificationEvents, con
 			Msg("Found potentially dangerous url template, api contact validation is advised")
 	}
 
-	requestURL := buildRequestURL(sender.url, trigger, contact)
-	requestBody, err := sender.buildRequestBody(events, contact, trigger, plots, throttled)
+	requestURL := buildSendAlertRequestURL(sender.url, trigger, contact)
+	requestBody, err := sender.buildSendAlertRequestBody(events, contact, trigger, plots, throttled)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (sender *Sender) buildSendAlertRequest(events moira.NotificationEvents, con
 	return buildRequest(sender.log, http.MethodPost, requestURL, requestBody, sender.user, sender.password, sender.headers)
 }
 
-func (sender *Sender) buildRequestBody(
+func (sender *Sender) buildSendAlertRequestBody(
 	events moira.NotificationEvents,
 	contact moira.ContactData,
 	trigger moira.TriggerData,
@@ -69,7 +69,7 @@ func (sender *Sender) buildRequestBody(
 	throttled bool,
 ) ([]byte, error) {
 	if sender.body == "" {
-		return buildDefaultRequestBody(events, contact, trigger, plots, throttled)
+		return buildDefaultSendAlertRequestBody(events, contact, trigger, plots, throttled)
 	}
 
 	webhookBodyPopulater := templating.NewWebhookBodyPopulater(contact.ToTemplateContact())
@@ -81,7 +81,7 @@ func (sender *Sender) buildRequestBody(
 	return []byte(html.UnescapeString(populatedBody)), nil
 }
 
-func buildDefaultRequestBody(
+func buildDefaultSendAlertRequestBody(
 	events moira.NotificationEvents,
 	contact moira.ContactData,
 	trigger moira.TriggerData,
@@ -116,7 +116,7 @@ func buildDefaultRequestBody(
 	return json.Marshal(requestPayload)
 }
 
-func buildRequestURL(template string, trigger moira.TriggerData, contact moira.ContactData) string {
+func buildSendAlertRequestURL(template string, trigger moira.TriggerData, contact moira.ContactData) string {
 	templateVariables := map[string]string{
 		moira.VariableContactID:    contact.ID,
 		moira.VariableContactValue: contact.Value,
@@ -155,7 +155,7 @@ func performRequest(client *http.Client, request *http.Request) (int, []byte, er
 	return rsp.StatusCode, bodyBytes, nil
 }
 
-func (sender *Sender) doCheckRequest(checkData deliveryCheckData) (int, map[string]interface{}, error) {
+func (sender *Sender) doDeliveryCheckRequest(checkData deliveryCheckData) (int, []byte, error) {
 	req, err := sender.buildDeliveryCheckRequest(checkData)
 	if err != nil {
 		return 0, nil, err
@@ -166,11 +166,5 @@ func (sender *Sender) doCheckRequest(checkData deliveryCheckData) (int, map[stri
 		return 0, nil, fmt.Errorf("check delivery request failed: %w", err)
 	}
 
-	var rspMap map[string]interface{}
-	err = json.Unmarshal(body, &rspMap)
-	if err != nil {
-		return 0, nil, fmt.Errorf("failed to unmarshal body into json: %w", err)
-	}
-
-	return statusCode, rspMap, nil
+	return statusCode, body, nil
 }

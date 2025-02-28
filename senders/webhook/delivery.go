@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/logging"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/templating"
 	"github.com/moira-alert/moira/worker"
@@ -19,6 +20,13 @@ const (
 	webhookDeliveryCheckLockKeyPrefix = "moira-webhook-delivery-check-lock:"
 	webhookDeliveryCheckLockTTL       = 30 * time.Second
 	workerName                        = "WebhookDeliveryChecker"
+)
+
+const (
+	logFieldNameDeliveryCheckUrl          = "delivery.check.url"
+	logFieldNameDeliveryCheckResponseCode = "delivery.check.response.code"
+	logFieldNameDeliveryCheckResponseBody = "delivery.check.response.body"
+	logFieldNameDeliveryCheckUnknownState = "delivery.check.unknown.state"
 )
 
 type deliveryCheckData struct {
@@ -77,58 +85,23 @@ func (sender *Sender) performDeliveryChecks() error {
 
 	checksData := unmarshalChecksData(sender.log, marshaledData)
 
-	// TODO: group check datas by url
+	// TODO: remove duplicates of checks data
 
-	performAgainChecksData := make([]deliveryCheckData, 0)
+	checkAgainChecksData := make([]deliveryCheckData, 0)
 	counter := deliveryTypesCounter{}
 
 	for i := range checksData {
-		checksData[i].AttemptsCount += 1
-		rspCode, rspBody, err := sender.doCheckRequest(checksData[i])
-		if err != nil {
-			sender.log.Warning().
-				Error(err).
-				String("url", checksData[i].URL).
-				Int("delivery.check.response.code", rspCode).
-				Msg("check request failed")
+		var deliveryState string
+		checksData[i], deliveryState = sender.performSingleDeliveryCheck(checksData[i])
 
-			// TODO: new state moira.DeliveryStateException, need to handle it
-			continue
-		}
-
-		if !isAllowedResponseCode(rspCode) {
-			sender.log.Warning().
-				Int("delivery.check.response.code", rspCode).
-				Interface("delivery.check.response.body", rspBody).
-				Msg("not allowed response code")
-
-			// TODO: new state moira.DeliveryStateException, need to handle it
-			continue
-		}
-
-		populater := templating.NewWebhookDeliveryCheckPopulater(
-			&templating.Contact{
-				Type:  checksData[i].Contact.Type,
-				Value: checksData[i].Contact.Value,
-			},
-			rspBody)
-
-		resState, err := populater.Populate(sender.deliveryConfig.CheckTemplate)
-		if err != nil {
-			resState = moira.DeliveryStateUserException
-			sender.log.Error().
-				Error(err).
-				Msg("error while populating check template")
-		}
-
-		newCheckData, scheduleAgain := handleStateTransition(checksData[i], resState, sender.deliveryConfig.MaxAttemptsCount, &counter)
+		newCheckData, scheduleAgain := handleStateTransition(checksData[i], deliveryState, sender.deliveryConfig.MaxAttemptsCount, &counter)
 		if scheduleAgain {
-			performAgainChecksData = append(performAgainChecksData, newCheckData)
+			checkAgainChecksData = append(checkAgainChecksData, newCheckData)
 		}
 	}
 
 	// TODO: store checks data that needs to be checked again
-	sender.storeChecksDataToCheckAgain(performAgainChecksData)
+	sender.storeChecksDataToCheckAgain(checkAgainChecksData)
 	// TODO: clean outdated check infos
 	sender.removeOutdatedDeliveryChecks(fetchTimestamp)
 
@@ -256,6 +229,74 @@ type deliveryTypesCounter struct {
 	deliveryStopped int64
 }
 
+func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (deliveryCheckData, string) {
+	var deliveryState string
+	checkData.AttemptsCount += 1
+
+	rspCode, rspBody, err := sender.doDeliveryCheckRequest(checkData)
+	if err != nil {
+		addDeliveryCheckFieldsToLog(
+			sender.log.Error().Error(err),
+			checkData.URL, rspCode, string(rspBody)).
+			Msg("check request failed")
+
+		return checkData, moira.DeliveryStateException
+	}
+
+	if !isAllowedResponseCode(rspCode) {
+		addDeliveryCheckFieldsToLog(
+			sender.log.Error().Error(err),
+			checkData.URL, rspCode, string(rspBody)).
+			Msg("not allowed response code")
+
+		return checkData, moira.DeliveryStateException
+	}
+
+	var unmarshalledBody map[string]interface{}
+	err = json.Unmarshal(rspBody, &unmarshalledBody)
+	if err != nil {
+		addDeliveryCheckFieldsToLog(
+			sender.log.Error().Error(err),
+			checkData.URL, rspCode, string(rspBody)).
+			Msg("failed to unmarshal response")
+
+		return checkData, moira.DeliveryStateException
+	}
+
+	populater := templating.NewWebhookDeliveryCheckPopulater(
+		&templating.Contact{
+			Type:  checkData.Contact.Type,
+			Value: checkData.Contact.Value,
+		},
+		unmarshalledBody)
+
+	deliveryState, err = populater.Populate(sender.deliveryConfig.CheckTemplate)
+	if err != nil {
+		addDeliveryCheckFieldsToLog(
+			sender.log.Error().Error(err),
+			checkData.URL, rspCode, string(rspBody)).
+			Msg("error while populating check template")
+
+		return checkData, moira.DeliveryStateUserException
+	}
+
+	if _, ok := moira.DeliveryStatesSet[deliveryState]; !ok {
+		addDeliveryCheckFieldsToLog(
+			sender.log.Error().String(logFieldNameDeliveryCheckUnknownState, deliveryState),
+			checkData.URL, rspCode, string(rspBody)).
+			Msg("check template returned unknown delivery state")
+	}
+
+	return checkData, deliveryState
+}
+
+func addDeliveryCheckFieldsToLog(eventBuilder logging.EventBuilder, url string, rspCode int, body string) logging.EventBuilder {
+	return eventBuilder.
+		String(logFieldNameDeliveryCheckUrl, url).
+		Int(logFieldNameDeliveryCheckResponseCode, rspCode).
+		String(logFieldNameDeliveryCheckResponseBody, body)
+}
+
 func handleStateTransition(checkData deliveryCheckData, newState string, maxAttemptsCount uint64, counter *deliveryTypesCounter) (deliveryCheckData, bool) {
 	switch newState {
 	case moira.DeliveryStateOK:
@@ -277,7 +318,6 @@ func handleStateTransition(checkData deliveryCheckData, newState string, maxAtte
 		return deliveryCheckData{}, false
 	default:
 		counter.deliveryStopped += 1
-		// TODO: log unknown result of filing check template
 		return deliveryCheckData{}, false
 	}
 }
