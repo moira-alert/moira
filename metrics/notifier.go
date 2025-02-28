@@ -6,21 +6,22 @@ import (
 
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
-	SubsMalformed                       Meter
-	EventsReceived                      Meter
-	EventsMalformed                     Meter
-	EventsProcessingFailed              Meter
-	EventsByState                       MetersCollection
-	SendingFailed                       Meter
-	ContactsSendingNotificationsOK      MetersCollection
-	ContactsSendingNotificationsFailed  MetersCollection
-	ContactsDroppedNotifications        MetersCollection
-	ContactsDeliveryNotificationsOK     MetersCollection
-	ContactsDeliveryNotificationsFailed MetersCollection
-	PlotsBuildDurationMs                Histogram
-	PlotsEvaluateTriggerDurationMs      Histogram
-	fetchNotificationsDurationMs        Histogram
-	notifierIsAlive                     Meter
+	SubsMalformed                              Meter
+	EventsReceived                             Meter
+	EventsMalformed                            Meter
+	EventsProcessingFailed                     Meter
+	EventsByState                              MetersCollection
+	SendingFailed                              Meter
+	ContactsSendingNotificationsOK             MetersCollection
+	ContactsSendingNotificationsFailed         MetersCollection
+	ContactsDroppedNotifications               MetersCollection
+	ContactsDeliveryNotificationsOK            MetersCollection
+	ContactsDeliveryNotificationsFailed        MetersCollection
+	ContactsDeliveryNotificationsChecksStopped MetersCollection
+	PlotsBuildDurationMs                       Histogram
+	PlotsEvaluateTriggerDurationMs             Histogram
+	fetchNotificationsDurationMs               Histogram
+	notifierIsAlive                            Meter
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
