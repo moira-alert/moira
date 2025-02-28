@@ -31,6 +31,7 @@ type Sender struct {
 	client   *http.Client
 	log      moira.Logger
 	metrics  *metrics.SenderMetrics
+	Database moira.DeliveryCheckerDatabase
 }
 
 const senderMetricsKey = "sender_metrics"

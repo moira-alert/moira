@@ -514,7 +514,7 @@ func (*Trigger) Render(http.ResponseWriter, *http.Request) error {
 
 // PopulatedDescription returns new trigger description after template populating.
 func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) (*string, error) {
-	var emptyString = ""
+	emptyString := ""
 
 	if trigger.Desc == nil {
 		return &emptyString, nil
