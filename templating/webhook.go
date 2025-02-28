@@ -1,7 +1,5 @@
 package templating
 
-import "github.com/moira-alert/moira"
-
 // Contact represents a template contact with fields allowed for use in templates.
 type Contact struct {
 	Type  string
@@ -54,10 +52,10 @@ func NewWebhookDeliveryCheckPopulater(contact *Contact, sendRsp map[string]inter
 		Contact:               contact,
 		DeliveryCheckResponse: sendRsp,
 		StateConstants: map[string]string{
-			constantNameDeliveryStateOK:        moira.DeliveryStateOK,
-			constantNameDeliveryStatePending:   moira.DeliveryStatePending,
-			constantNameDeliveryStateFailed:    moira.DeliveryStateFailed,
-			constantNameDeliveryStateException: moira.DeliveryStateException,
+			constantNameDeliveryStateOK:        "OK",
+			constantNameDeliveryStatePending:   "PENDING",
+			constantNameDeliveryStateFailed:    "FAILED",
+			constantNameDeliveryStateException: "EXCEPTION",
 		},
 	}
 }

@@ -156,7 +156,7 @@ func (sender *Sender) scheduleDeliveryChecks(checksData []deliveryCheckData, tim
 }
 
 func (sender *Sender) removeOutdatedDeliveryChecks(lastFetchTimestamp int64) error {
-	_, err := sender.Database.RemoveDeliveryChecksData(sender.contactType, "-inf", strconv.FormatInt(lastFetchTimestamp, 1))
+	_, err := sender.Database.RemoveDeliveryChecksData(sender.contactType, "-inf", strconv.FormatInt(lastFetchTimestamp, 10))
 	return err
 }
 
@@ -274,7 +274,6 @@ func addDeliveryCheckFieldsToLog(eventBuilder logging.EventBuilder, url string, 
 		String(logFieldNameDeliveryCheckUrl, url).
 		Int(logFieldNameDeliveryCheckResponseCode, rspCode).
 		String(logFieldNameDeliveryCheckResponseBody, body)
-
 }
 
 func handleStateTransition(checkData deliveryCheckData, newState string, maxAttemptsCount uint64, counter *deliveryTypesCounter) (deliveryCheckData, bool) {

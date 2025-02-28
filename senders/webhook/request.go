@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -23,7 +24,7 @@ func buildRequest(
 	password string,
 	headers map[string]string,
 ) (*http.Request, error) {
-	request, err := http.NewRequest(method, requestURL, bytes.NewBuffer(body))
+	request, err := http.NewRequestWithContext(context.Background(), method, requestURL, bytes.NewBuffer(body))
 	if err != nil {
 		return request, err
 	}
