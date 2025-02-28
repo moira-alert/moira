@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/templating"
 	"github.com/moira-alert/moira/worker"
 )
@@ -79,10 +80,7 @@ func (sender *Sender) performDeliveryChecks() error {
 	// TODO: group check datas by url
 
 	performAgainChecksData := make([]deliveryCheckData, 0)
-	var (
-		deliverOK     int64
-		deliverFailed int64
-	)
+	counter := deliveryTypesCounter{}
 
 	for i := range checksData {
 		checksData[i].AttemptsCount += 1
@@ -93,7 +91,8 @@ func (sender *Sender) performDeliveryChecks() error {
 				String("url", checksData[i].URL).
 				Int("delivery.check.response.code", rspCode).
 				Msg("check request failed")
-			checksData[i].PreviousState = moira.DeliveryStateException
+
+			// TODO: new state moira.DeliveryStateException, need to handle it
 			continue
 		}
 
@@ -102,7 +101,8 @@ func (sender *Sender) performDeliveryChecks() error {
 				Int("delivery.check.response.code", rspCode).
 				Interface("delivery.check.response.body", rspBody).
 				Msg("not allowed response code")
-			checksData[i].PreviousState = moira.DeliveryStateException
+
+			// TODO: new state moira.DeliveryStateException, need to handle it
 			continue
 		}
 
@@ -121,7 +121,7 @@ func (sender *Sender) performDeliveryChecks() error {
 				Msg("error while populating check template")
 		}
 
-		newCheckData, scheduleAgain := handleStateTransition(checksData[i], resState, sender.deliveryConfig.MaxAttemptsCount, &deliverOK, &deliverFailed)
+		newCheckData, scheduleAgain := handleStateTransition(checksData[i], resState, sender.deliveryConfig.MaxAttemptsCount, &counter)
 		if scheduleAgain {
 			performAgainChecksData = append(performAgainChecksData, newCheckData)
 		}
@@ -132,8 +132,7 @@ func (sender *Sender) performDeliveryChecks() error {
 	// TODO: clean outdated check infos
 	sender.removeOutdatedDeliveryChecks(fetchTimestamp)
 
-	sender.metrics.ContactDeliveryNotificationOK.Mark(deliverOK)
-	sender.metrics.ContactDeliveryNotificationFailed.Mark(deliverFailed)
+	markMetrics(sender.metrics, &counter)
 
 	return nil
 }
@@ -251,10 +250,16 @@ func validateURL(requestURL string) error {
 	return nil
 }
 
-func handleStateTransition(checkData deliveryCheckData, newState string, maxAttemptsCount uint64, deliveryOK, deliveryFailed *int64) (deliveryCheckData, bool) {
+type deliveryTypesCounter struct {
+	deliveryOK      int64
+	deliveryFailed  int64
+	deliveryStopped int64
+}
+
+func handleStateTransition(checkData deliveryCheckData, newState string, maxAttemptsCount uint64, counter *deliveryTypesCounter) (deliveryCheckData, bool) {
 	switch newState {
 	case moira.DeliveryStateOK:
-		*deliveryOK += 1
+		counter.deliveryOK += 1
 		return deliveryCheckData{}, false
 	case moira.DeliveryStatePending, moira.DeliveryStateException:
 		if checkData.AttemptsCount < maxAttemptsCount {
@@ -262,17 +267,23 @@ func handleStateTransition(checkData deliveryCheckData, newState string, maxAtte
 			return checkData, true
 		}
 
-		// TODO: mark delivery check dropped
+		counter.deliveryStopped += 1
 		return deliveryCheckData{}, false
 	case moira.DeliveryStateFailed:
-		*deliveryFailed += 1
+		counter.deliveryFailed += 1
 		return checkData, false
 	case moira.DeliveryStateUserException:
-		// TODO: mark delivery check stopped
+		counter.deliveryStopped += 1
 		return deliveryCheckData{}, false
 	default:
-		// TODO: mark delivery check stopped
+		counter.deliveryStopped += 1
 		// TODO: log unknown result of filing check template
 		return deliveryCheckData{}, false
 	}
+}
+
+func markMetrics(senderMetrics *metrics.SenderMetrics, counter *deliveryTypesCounter) {
+	senderMetrics.ContactDeliveryNotificationOK.Mark(counter.deliveryOK)
+	senderMetrics.ContactDeliveryNotificationFailed.Mark(counter.deliveryFailed)
+	senderMetrics.ContactDeliveryNotificationCheckStopped.Mark(counter.deliveryStopped)
 }
