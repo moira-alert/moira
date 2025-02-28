@@ -41,7 +41,7 @@ func (sender *Sender) runDeliveryCheckWorker() {
 }
 
 func (sender *Sender) deliveryCheckerAction(stop <-chan struct{}) error {
-	checkTicker := time.NewTicker(time.Duration(sender.deliveryCfg.CheckTimeout) * time.Second)
+	checkTicker := time.NewTicker(time.Duration(sender.deliveryConfig.CheckTimeout) * time.Second)
 
 	sender.log.Info().Msg(workerName + " started")
 	for {
@@ -113,7 +113,7 @@ func (sender *Sender) performDeliveryChecks() error {
 			},
 			rspBody)
 
-		resState, err := populater.Populate(sender.deliveryCfg.CheckTemplate)
+		resState, err := populater.Populate(sender.deliveryConfig.CheckTemplate)
 		if err != nil {
 			resState = moira.DeliveryStateUserException
 			sender.log.Error().
@@ -121,7 +121,7 @@ func (sender *Sender) performDeliveryChecks() error {
 				Msg("error while populating check template")
 		}
 
-		newCheckData, scheduleAgain := handleStateTransition(checksData[i], resState, sender.deliveryCfg.MaxAttemptsCount, &deliverOK, &deliverFailed)
+		newCheckData, scheduleAgain := handleStateTransition(checksData[i], resState, sender.deliveryConfig.MaxAttemptsCount, &deliverOK, &deliverFailed)
 		if scheduleAgain {
 			performAgainChecksData = append(performAgainChecksData, newCheckData)
 		}
@@ -163,7 +163,7 @@ func (sender *Sender) storeChecksDataToCheckAgain(checksData []deliveryCheckData
 		return
 	}
 
-	scheduleAtTimestamp := sender.clock.NowUnix() + int64(sender.deliveryCfg.ReschedulingDelay)
+	scheduleAtTimestamp := sender.clock.NowUnix() + int64(sender.deliveryConfig.ReschedulingDelay)
 
 	for _, data := range checksData {
 		encoded, err := json.Marshal(data)
@@ -205,7 +205,7 @@ func (sender *Sender) scheduleDeliveryCheck(atTimestamp int64, sendAlertResponse
 		},
 		rspData)
 
-	requestURL, err := urlPopulater.Populate(sender.deliveryCfg.URLTemplate)
+	requestURL, err := urlPopulater.Populate(sender.deliveryConfig.URLTemplate)
 	if err != nil {
 		return fmt.Errorf("failed to fill url template with data: %w", err)
 	}

@@ -137,7 +137,7 @@ func buildRequestURL(template string, trigger moira.TriggerData, contact moira.C
 }
 
 func (sender *Sender) buildDeliveryCheckRequest(checkData deliveryCheckData) (*http.Request, error) {
-	return buildRequest(sender.log, http.MethodGet, checkData.URL, nil, sender.deliveryCfg.User, sender.deliveryCfg.Password, sender.deliveryCfg.Headers)
+	return buildRequest(sender.log, http.MethodGet, checkData.URL, nil, sender.deliveryConfig.User, sender.deliveryConfig.Password, sender.deliveryConfig.Headers)
 }
 
 func performRequest(client *http.Client, request *http.Request) (int, []byte, error) {

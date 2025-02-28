@@ -39,10 +39,14 @@ type deliveryCheckConfig struct {
 	//	- moira.DeliveryStateOK
 	//	- moira.DeliveryStatePending
 	//	- moira.DeliveryStateFailed
+	//	- moira.DeliveryStateException
 	CheckTemplate string `mapstructure:"check_template" validate:"required_if=Enabled true"`
 	// CheckTimeout is the timeout (in seconds) between checking notifications delivery.
-	CheckTimeout      uint64 `mapstructure:"check_timeout"`
-	MaxAttemptsCount  uint64 `mapstructure:"max_attempts_count"`
+	CheckTimeout uint64 `mapstructure:"check_timeout"`
+	// MaxAttemptsCount will be performed to understand if the notification was delivered or not.
+	// After that delivery checks will stop.
+	MaxAttemptsCount uint64 `mapstructure:"max_attempts_count"`
+	// ReschedulingDelay is added to the clock.NowUnix() than schedule next check attempt.
 	ReschedulingDelay uint64 `mapstructure:"rescheduling_delay"`
 }
 
@@ -54,18 +58,27 @@ const (
 
 // Sender implements moira sender interface via webhook.
 type Sender struct {
-	url         string
-	body        string
-	user        string
-	password    string
-	headers     map[string]string
-	contactType string
-	client      *http.Client
-	log         moira.Logger
-	metrics     *metrics.SenderMetrics
-	Database    moira.DeliveryCheckerDatabase
-	deliveryCfg deliveryCheckConfig
-	clock       moira.Clock
+	url            string
+	body           string
+	user           string
+	password       string
+	headers        map[string]string
+	contactType    string
+	client         *http.Client
+	log            moira.Logger
+	metrics        *metrics.SenderMetrics
+	Database       moira.DeliveryCheckerDatabase
+	deliveryConfig deliveryCheckConfig
+	clock          moira.Clock
+}
+
+func getDefaultDeliveryCheckConfig() deliveryCheckConfig {
+	return deliveryCheckConfig{
+		Enabled:           false,
+		CheckTimeout:      defaultCheckTimeout,
+		MaxAttemptsCount:  defaultMaxAttemptsCount,
+		ReschedulingDelay: defaultReschedulingDelay,
+	}
 }
 
 const senderMetricsKey = "sender_metrics"
@@ -73,12 +86,7 @@ const senderMetricsKey = "sender_metrics"
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
-	cfg.DeliveryCheck = deliveryCheckConfig{
-		Enabled:           false,
-		CheckTimeout:      defaultCheckTimeout,
-		MaxAttemptsCount:  defaultMaxAttemptsCount,
-		ReschedulingDelay: defaultReschedulingDelay,
-	}
+	cfg.DeliveryCheck = getDefaultDeliveryCheckConfig()
 
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
@@ -120,8 +128,11 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		sender.metrics = val.(*metrics.SenderMetrics)
 	}
 
-	sender.deliveryCfg = cfg.DeliveryCheck
+	sender.deliveryConfig = cfg.DeliveryCheck
 	sender.clock = clock.NewSystemClock()
+	if sender.deliveryConfig.Enabled {
+		go sender.runDeliveryCheckWorker()
+	}
 
 	return nil
 }
@@ -143,7 +154,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("invalid status code: %d, server response: %s", responseStatusCode, string(responseBody))
 	}
 
-	if sender.deliveryCfg.Enabled {
+	if sender.deliveryConfig.Enabled {
 		err = sender.scheduleDeliveryCheck(sender.clock.NowUnix(), responseBody, contact)
 		if err != nil {
 			sender.log.Error().

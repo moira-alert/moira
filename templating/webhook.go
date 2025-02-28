@@ -1,5 +1,7 @@
 package templating
 
+import "github.com/moira-alert/moira"
+
 // Contact represents a template contact with fields allowed for use in templates.
 type Contact struct {
 	Type  string
@@ -23,18 +25,20 @@ func (templateData *webhookBodyPopulater) Populate(tmpl string) (string, error) 
 }
 
 type webhookDeliveryCheckURLPopulater struct {
-	Contact      *Contact
-	SendResponse map[string]interface{}
+	Contact           *Contact
+	SendAlertResponse map[string]interface{}
 }
 
-func NewWebhookDeliveryCheckURLPopulater(contact *Contact, sendRsp map[string]interface{}) *webhookDeliveryCheckURLPopulater {
+// NewWebhookDeliveryCheckURLPopulater creates a new webhook url populater with provided template contact
+// and body from response got on send alert request.
+func NewWebhookDeliveryCheckURLPopulater(contact *Contact, sendAlertResponse map[string]interface{}) *webhookDeliveryCheckURLPopulater {
 	return &webhookDeliveryCheckURLPopulater{
-		Contact:      contact,
-		SendResponse: sendRsp,
+		Contact:           contact,
+		SendAlertResponse: sendAlertResponse,
 	}
 }
 
-// Populate populates the given template with contact data.
+// Populate populates the given template with contact data and response got on send alert request.
 func (templateData *webhookDeliveryCheckURLPopulater) Populate(tmpl string) (string, error) {
 	return populate(tmpl, templateData)
 }
@@ -42,16 +46,30 @@ func (templateData *webhookDeliveryCheckURLPopulater) Populate(tmpl string) (str
 type webhookDeliveryCheckPopulater struct {
 	Contact               *Contact
 	DeliveryCheckResponse map[string]interface{}
+	StateConstants        map[string]string
 }
 
 func NewWebhookDeliveryCheckPopulater(contact *Contact, sendRsp map[string]interface{}) *webhookDeliveryCheckPopulater {
 	return &webhookDeliveryCheckPopulater{
 		Contact:               contact,
 		DeliveryCheckResponse: sendRsp,
+		StateConstants: map[string]string{
+			constantNameDeliveryStateOK:        moira.DeliveryStateOK,
+			constantNameDeliveryStatePending:   moira.DeliveryStatePending,
+			constantNameDeliveryStateFailed:    moira.DeliveryStateFailed,
+			constantNameDeliveryStateException: moira.DeliveryStateException,
+		},
 	}
 }
 
-// Populate populates the given template with contact data.
+const (
+	constantNameDeliveryStateOK        = "DeliveryStateOK"
+	constantNameDeliveryStatePending   = "DeliveryStatePending"
+	constantNameDeliveryStateFailed    = "DeliveryStateFailed"
+	constantNameDeliveryStateException = "DeliveryStateException"
+)
+
+// Populate populates the given template with contact data, response got on send alert request and delivery state constants.
 func (templateData *webhookDeliveryCheckPopulater) Populate(tmpl string) (string, error) {
 	return populate(tmpl, templateData)
 }
