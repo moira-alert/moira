@@ -172,7 +172,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 			return nil
 		}
 
-		checkData, err := prepareDeliveryCheck(contact, rspData, sender.deliveryConfig.URLTemplate)
+		checkData, err := prepareDeliveryCheck(contact, rspData, sender.deliveryConfig.URLTemplate, trigger.ID)
 		if err != nil {
 			addContactFieldsToLog(
 				sender.log.Error().Error(err),

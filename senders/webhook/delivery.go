@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"time"
 
@@ -31,10 +32,18 @@ const (
 )
 
 type deliveryCheckData struct {
-	URL           string            `json:"url"`
-	PreviousState string            `json:"previous_state"`
-	Contact       moira.ContactData `json:"contact"`
-	AttemptsCount uint64            `json:"attempts_count"`
+	// Timestamp at which it was scheduled.
+	Timestamp int64 `json:"timestamp"`
+	// URL for delivery check request.
+	URL string `json:"url"`
+	// PreviousState of delivery check.
+	PreviousState string `json:"previous_state"`
+	// Contact related to delivery check.
+	Contact moira.ContactData `json:"contact"`
+	// TriggerID for which notification was generated.
+	TriggerID string `json:"trigger_id"`
+	// AttemptsCount of performing delivery check.
+	AttemptsCount uint64 `json:"attempts_count"`
 }
 
 func webhookLockKey(contactType string) string {
@@ -85,8 +94,11 @@ func (sender *Sender) checkNotificationsDelivery() error {
 	}
 
 	checksData := unmarshalChecksData(sender.log, marshaledData)
+	if len(checksData) == 0 {
+		return nil
+	}
 
-	// TODO: remove duplicates of checks data
+	checksData = removeDuplicatedChecksData(checksData)
 
 	checkAgainChecksData := make([]deliveryCheckData, 0)
 	counter := deliveryTypesCounter{}
@@ -105,15 +117,22 @@ func (sender *Sender) checkNotificationsDelivery() error {
 		if prevDeliveryStopped != counter.deliveryStopped {
 			addContactFieldsToLog(sender.log.Error(), checksData[i].Contact).
 				String(logFieldNameDeliveryCheckUrl, checksData[i].URL).
+				String(moira.LogFieldNameTriggerID, checksData[i].TriggerID).
 				Msg("stop delivery checks")
 		}
 	}
 
-	// TODO: store checks data that needs to be checked again
-	// TODO: handle error
-	sender.scheduleDeliveryChecks(checkAgainChecksData, sender.clock.NowUnix()+int64(sender.deliveryConfig.ReschedulingDelay))
-	// TODO: clean outdated check infos
-	sender.removeOutdatedDeliveryChecks(fetchTimestamp)
+	err = sender.scheduleDeliveryChecks(checkAgainChecksData, sender.clock.NowUnix()+int64(sender.deliveryConfig.ReschedulingDelay))
+	if err != nil {
+		return fmt.Errorf("failed to reschedule delivery checks: %w", err)
+	}
+
+	err = sender.removeOutdatedDeliveryChecks(fetchTimestamp)
+	if err != nil {
+		sender.log.Warning().
+			Error(err).
+			Msg("failed to remove outdated delivery checks")
+	}
 
 	markMetrics(sender.metrics, &counter)
 
@@ -140,18 +159,46 @@ func unmarshalChecksData(logger moira.Logger, marshaledData []string) []delivery
 	return checksData
 }
 
+func removeDuplicatedChecksData(checksData []deliveryCheckData) []deliveryCheckData {
+	deduplicated := make([]deliveryCheckData, 0, len(checksData))
+	uniqueMap := make(map[string]deliveryCheckData, len(checksData))
+
+	for _, checkData := range checksData {
+		key := fmt.Sprintf("%s_%s_%s_%s", checkData.URL, checkData.Contact.ID, checkData.Contact.Value, checkData.TriggerID)
+		if oldCheckData, ok := uniqueMap[key]; ok {
+			if oldCheckData.AttemptsCount < checkData.AttemptsCount {
+				uniqueMap[key] = checkData
+			}
+		} else {
+			uniqueMap[key] = checkData
+		}
+	}
+
+	for _, checkData := range uniqueMap {
+		deduplicated = append(deduplicated, checkData)
+	}
+
+	slices.SortFunc(deduplicated, func(first, second deliveryCheckData) int {
+		return int(first.Timestamp - second.Timestamp)
+	})
+
+	return deduplicated
+}
+
 func (sender *Sender) scheduleDeliveryChecks(checksData []deliveryCheckData, timestamp int64) error {
 	if len(checksData) == 0 {
 		return nil
 	}
 
 	for _, data := range checksData {
+		data.Timestamp = timestamp
+
 		encoded, err := json.Marshal(data)
 		if err != nil {
 			return fmt.Errorf("failed to marshal check data: %w", err)
 		}
 
-		// TODO: retry operations
+		// TODO: retry operations?
 		err = sender.Database.AddDeliveryChecksData(sender.contactType, timestamp, string(encoded))
 		if err != nil {
 			return fmt.Errorf("failed to store check data: %w", err)
@@ -166,7 +213,7 @@ func (sender *Sender) removeOutdatedDeliveryChecks(lastFetchTimestamp int64) err
 	return err
 }
 
-func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{}, urlTemplate string) (deliveryCheckData, error) {
+func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{}, urlTemplate string, triggerID string) (deliveryCheckData, error) {
 	urlPopulater := templating.NewWebhookDeliveryCheckURLPopulater(
 		&templating.Contact{
 			Type:  contact.Type,
@@ -187,6 +234,7 @@ func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{},
 		URL:           requestURL,
 		PreviousState: moira.DeliveryStatePending,
 		Contact:       contact,
+		TriggerID:     triggerID,
 		AttemptsCount: 0,
 	}, nil
 }
@@ -222,7 +270,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 	if err != nil {
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
-			checkData.URL, rspCode, string(rspBody), checkData.Contact).
+			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
 			Msg("check request failed")
 
 		return checkData, moira.DeliveryStateException
@@ -231,7 +279,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 	if !isAllowedResponseCode(rspCode) {
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
-			checkData.URL, rspCode, string(rspBody), checkData.Contact).
+			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
 			Msg("not allowed response code")
 
 		return checkData, moira.DeliveryStateException
@@ -242,7 +290,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 	if err != nil {
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
-			checkData.URL, rspCode, string(rspBody), checkData.Contact).
+			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
 			Msg("failed to unmarshal response")
 
 		return checkData, moira.DeliveryStateException
@@ -259,7 +307,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 	if err != nil {
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
-			checkData.URL, rspCode, string(rspBody), checkData.Contact).
+			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
 			Msg("error while populating check template")
 
 		return checkData, moira.DeliveryStateUserException
@@ -268,18 +316,19 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 	if _, ok := moira.DeliveryStatesSet[deliveryState]; !ok {
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().String(logFieldNameDeliveryCheckUnknownState, deliveryState),
-			checkData.URL, rspCode, string(rspBody), checkData.Contact).
+			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
 			Msg("check template returned unknown delivery state")
 	}
 
 	return checkData, deliveryState
 }
 
-func addDeliveryCheckFieldsToLog(eventBuilder logging.EventBuilder, url string, rspCode int, body string, contact moira.ContactData) logging.EventBuilder {
+func addDeliveryCheckFieldsToLog(eventBuilder logging.EventBuilder, url string, rspCode int, body string, contact moira.ContactData, triggerID string) logging.EventBuilder {
 	return addContactFieldsToLog(eventBuilder, contact).
 		String(logFieldNameDeliveryCheckUrl, url).
 		Int(logFieldNameDeliveryCheckResponseCode, rspCode).
-		String(logFieldNameDeliveryCheckResponseBody, body)
+		String(logFieldNameDeliveryCheckResponseBody, body).
+		String(moira.LogFieldNameTriggerID, triggerID)
 }
 
 func handleStateTransition(checkData deliveryCheckData, newState string, maxAttemptsCount uint64, counter *deliveryTypesCounter) (deliveryCheckData, bool) {
