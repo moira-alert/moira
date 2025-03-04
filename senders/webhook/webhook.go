@@ -81,6 +81,9 @@ func getDefaultDeliveryCheckConfig() deliveryCheckConfig {
 		CheckTimeout:      defaultCheckTimeout,
 		MaxAttemptsCount:  defaultMaxAttemptsCount,
 		ReschedulingDelay: defaultReschedulingDelay,
+		Headers: map[string]string{
+			"User-Agent": "Moira",
+		},
 	}
 }
 

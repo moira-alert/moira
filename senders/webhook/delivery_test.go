@@ -2,6 +2,9 @@ package webhook
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/moira-alert/moira"
@@ -111,5 +114,134 @@ func Test_markMetrics(t *testing.T) {
 		deliverStoppedMeter.EXPECT().Mark(counter.deliveryStopped).Times(1)
 
 		markMetrics(senderMetrics, counter)
+	})
+}
+
+func TestSender_performSingleDeliveryCheck(t *testing.T) {
+	const (
+		user     = "rmuser"
+		password = "rmpassword"
+	)
+
+	headers := map[string]string{
+		"User-Agent": "Moira",
+		"HeaderOne":  "1",
+		"HeaderTwo":  "two",
+	}
+
+	sender := Sender{
+		log: logger,
+		deliveryConfig: deliveryCheckConfig{
+			User:     user,
+			Password: password,
+			Headers:  headers,
+		},
+	}
+
+	availableResponses := []string{
+		`{"some_value":"#"}`,
+		`{"some_value":"abracadabra"}`,
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodGet {
+			writer.WriteHeader(http.StatusMethodNotAllowed)
+			writer.Write([]byte(fmt.Sprintf("expected request with GET method, got: %s", request.Method))) //nolint
+			return
+		}
+
+		status, err := testRequestHeaders(request, headers, user, password)
+		if err != nil {
+			writer.WriteHeader(status)
+			writer.Write([]byte(err.Error())) //nolint
+			return
+		}
+
+		strIndex := request.URL.Query().Get("bodyIdx")
+		index, err := strconv.ParseInt(strIndex, 10, 64)
+		if err != nil {
+			writer.WriteHeader(http.StatusBadRequest)
+			writer.Write([]byte(fmt.Sprintf("failed to parse query param 'bodyIdx': %s", err))) //nolint
+			return
+		}
+
+		if index < 0 || index >= int64(len(availableResponses)) {
+			writer.WriteHeader(http.StatusBadRequest)
+			writer.Write([]byte(fmt.Sprintf("index out of range %v of %v", index, len(availableResponses)))) //nolint
+			return
+		}
+
+		writer.WriteHeader(http.StatusOK)
+		writer.Write([]byte(availableResponses[index])) //nolint
+	}))
+	defer ts.Close()
+
+	Convey("Test performing single delivery check", t, func() {
+		Convey("with not allowed response code", func() {
+			sender.client = ts.Client()
+
+			checkData := deliveryCheckData{
+				URL:           ts.URL + "/?bodyIdx=a",
+				AttemptsCount: 1,
+			}
+
+			newCheckData, newState := sender.performSingleDeliveryCheck(checkData)
+			So(newState, ShouldResemble, moira.DeliveryStateException)
+			So(newCheckData, ShouldResemble, deliveryCheckData{
+				URL:           checkData.URL,
+				AttemptsCount: checkData.AttemptsCount + 1,
+			})
+		})
+
+		Convey("with allowed response code, with DeliveryStateOK expected", func() {
+			sender.client = ts.Client()
+			sender.deliveryConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+
+			checkData := deliveryCheckData{
+				URL:           ts.URL + "/?bodyIdx=0",
+				AttemptsCount: 1,
+			}
+
+			newCheckData, newState := sender.performSingleDeliveryCheck(checkData)
+			So(newState, ShouldResemble, moira.DeliveryStateOK)
+			So(newCheckData, ShouldResemble, deliveryCheckData{
+				URL:           checkData.URL,
+				AttemptsCount: checkData.AttemptsCount + 1,
+			})
+		})
+
+		Convey("with allowed response code, with DeliveryStatePending expected", func() {
+			sender.client = ts.Client()
+			sender.deliveryConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+
+			checkData := deliveryCheckData{
+				URL:           ts.URL + "/?bodyIdx=1",
+				AttemptsCount: 2,
+			}
+
+			newCheckData, newState := sender.performSingleDeliveryCheck(checkData)
+			So(newState, ShouldResemble, moira.DeliveryStatePending)
+			So(newCheckData, ShouldResemble, deliveryCheckData{
+				URL:           checkData.URL,
+				AttemptsCount: checkData.AttemptsCount + 1,
+			})
+		})
+
+		Convey("with allowed response code but unknown state returned", func() {
+			sender.client = ts.Client()
+			sender.deliveryConfig.CheckTemplate = `{{ .DeliveryCheckResponse.some_value }}`
+
+			checkData := deliveryCheckData{
+				URL:           ts.URL + "/?bodyIdx=1",
+				AttemptsCount: 3,
+			}
+
+			newCheckData, newState := sender.performSingleDeliveryCheck(checkData)
+			So(newState, ShouldResemble, "abracadabra")
+			So(newCheckData, ShouldResemble, deliveryCheckData{
+				URL:           checkData.URL,
+				AttemptsCount: checkData.AttemptsCount + 1,
+			})
+		})
 	})
 }

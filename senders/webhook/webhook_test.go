@@ -191,7 +191,12 @@ func TestSender_SendEvents(t *testing.T) {
 						w.WriteHeader(status)
 						w.Write([]byte(err.Error())) //nolint
 					}
-					status, err = testRequestHeaders(r)
+					status, err = testRequestHeaders(r,
+						map[string]string{
+							"Content-Type": "application/json",
+						},
+						testUser,
+						testPass)
 					if err != nil {
 						w.WriteHeader(status)
 						w.Write([]byte(err.Error())) //nolint
@@ -230,11 +235,15 @@ func testRequestURL(r *http.Request) (int, error) {
 	return http.StatusCreated, nil
 }
 
-func testRequestHeaders(r *http.Request) (int, error) {
+func testRequestHeaders(r *http.Request, customExpectedHeaders map[string]string, expectedUser, expectedPassword string) (int, error) {
 	expectedHeaders := map[string]string{
-		"User-Agent":   "Moira",
-		"Content-Type": "application/json",
+		"User-Agent": "Moira",
 	}
+
+	for headerName, headerValue := range customExpectedHeaders {
+		expectedHeaders[headerName] = headerValue
+	}
+
 	for headerName, headerValue := range expectedHeaders {
 		actualHeaderValue := r.Header.Get(headerName)
 		if actualHeaderValue != headerValue {
@@ -248,9 +257,9 @@ func testRequestHeaders(r *http.Request) (int, error) {
 	}
 	authPair := strings.SplitN(string(authPayload), ":", 2)
 	actualUser, actualPass := authPair[0], authPair[1]
-	if actualUser != testUser || actualPass != testPass {
+	if actualUser != expectedUser || actualPass != expectedPassword {
 		actualCred := fmt.Sprintf("user: %s, pass: %s", actualUser, actualPass)
-		expectedCred := fmt.Sprintf("user: %s, pass: %s", testUser, testPass)
+		expectedCred := fmt.Sprintf("user: %s, pass: %s", expectedUser, expectedPassword)
 		return http.StatusBadRequest, fmt.Errorf("invalid credentials: %s\nexpected: %s", actualCred, expectedCred)
 	}
 	return http.StatusCreated, nil
