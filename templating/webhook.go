@@ -47,18 +47,20 @@ type webhookDeliveryCheckPopulater struct {
 	Contact               *Contact
 	DeliveryCheckResponse map[string]interface{}
 	StateConstants        map[string]string
+	TriggerID             string
 }
 
-func NewWebhookDeliveryCheckPopulater(contact *Contact, sendRsp map[string]interface{}) *webhookDeliveryCheckPopulater {
+func NewWebhookDeliveryCheckPopulater(contact *Contact, deliveryCheckResponse map[string]interface{}, triggerID string) *webhookDeliveryCheckPopulater {
 	return &webhookDeliveryCheckPopulater{
 		Contact:               contact,
-		DeliveryCheckResponse: sendRsp,
+		DeliveryCheckResponse: deliveryCheckResponse,
 		StateConstants: map[string]string{
 			constantNameDeliveryStateOK:        "OK",
 			constantNameDeliveryStatePending:   "PENDING",
 			constantNameDeliveryStateFailed:    "FAILED",
 			constantNameDeliveryStateException: "EXCEPTION",
 		},
+		TriggerID: triggerID,
 	}
 }
 

@@ -219,7 +219,8 @@ func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{},
 			Type:  contact.Type,
 			Value: contact.Value,
 		},
-		rsp)
+		rsp,
+		triggerID)
 
 	requestURL, err := urlPopulater.Populate(urlTemplate)
 	if err != nil {
@@ -303,7 +304,8 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 			Type:  checkData.Contact.Type,
 			Value: checkData.Contact.Value,
 		},
-		unmarshalledBody)
+		unmarshalledBody,
+		checkData.TriggerID)
 
 	deliveryState, err = populater.Populate(sender.deliveryConfig.CheckTemplate)
 	if err != nil {

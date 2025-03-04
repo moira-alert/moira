@@ -134,3 +134,45 @@ func Test_TemplateWebhookDeliveryCheckURL(t *testing.T) {
 		})
 	})
 }
+
+func Test_TemplateWebhookDeliveryCheckState(t *testing.T) {
+	Convey("Test populating webhook delivery check template", t, func() {
+		template := `{{ .Contact.Type }}/{{ .Contact.Value }}/{{ .DeliveryCheckResponse.some_field }}/{{ .TriggerID }}/{{ .StateConstants.DeliveryStateOK }}`
+
+		Convey("with nil values", func() {
+			populater := NewWebhookDeliveryCheckPopulater(nil, nil, "")
+
+			actual, err := populater.Populate(template)
+			So(err, ShouldNotBeNil)
+			So(actual, ShouldResemble, template)
+		})
+
+		Convey("with empty values", func() {
+			populater := NewWebhookDeliveryCheckPopulater(&Contact{}, map[string]interface{}{}, "")
+
+			expected := "////OK"
+
+			actual, err := populater.Populate(template)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("with filled values", func() {
+			populater := NewWebhookDeliveryCheckPopulater(
+				&Contact{
+					Type:  "slack",
+					Value: "some_value",
+				},
+				map[string]interface{}{
+					"some_field": 10,
+				},
+				"some_trigger_id")
+
+			expected := "slack/some_value/10/some_trigger_id/OK"
+
+			actual, err := populater.Populate(template)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, expected)
+		})
+	})
+}
