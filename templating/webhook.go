@@ -25,14 +25,16 @@ func (templateData *webhookBodyPopulater) Populate(tmpl string) (string, error) 
 type webhookDeliveryCheckURLPopulater struct {
 	Contact           *Contact
 	SendAlertResponse map[string]interface{}
+	TriggerID         string
 }
 
 // NewWebhookDeliveryCheckURLPopulater creates a new webhook url populater with provided template contact
 // and body from response got on send alert request.
-func NewWebhookDeliveryCheckURLPopulater(contact *Contact, sendAlertResponse map[string]interface{}) *webhookDeliveryCheckURLPopulater {
+func NewWebhookDeliveryCheckURLPopulater(contact *Contact, sendAlertResponse map[string]interface{}, triggerID string) *webhookDeliveryCheckURLPopulater {
 	return &webhookDeliveryCheckURLPopulater{
 		Contact:           contact,
 		SendAlertResponse: sendAlertResponse,
+		TriggerID:         triggerID,
 	}
 }
 

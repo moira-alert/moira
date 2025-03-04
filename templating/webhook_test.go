@@ -72,3 +72,65 @@ func Test_TemplateWebhookBody(t *testing.T) {
 		})
 	})
 }
+
+func Test_TemplateWebhookDeliveryCheckURL(t *testing.T) {
+	Convey("Test populating webhook delivery check url template", t, func() {
+		template := "https://example.url/delivery/check/{{ .Contact.Type }}/{{ .SendAlertResponse.requestID }}/{{ .TriggerID }}"
+
+		Convey("with nil data", func() {
+			populater := NewWebhookDeliveryCheckURLPopulater(
+				nil, nil, "")
+
+			actual, err := populater.Populate(template)
+			So(err, ShouldNotBeNil)
+			So(actual, ShouldResemble, template)
+		})
+
+		Convey("with empty data", func() {
+			populater := NewWebhookDeliveryCheckURLPopulater(
+				&Contact{}, map[string]interface{}{}, "")
+
+			expected := "https://example.url/delivery/check///"
+
+			actual, err := populater.Populate(template)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("with filled data and str requestID", func() {
+			populater := NewWebhookDeliveryCheckURLPopulater(
+				&Contact{
+					Type:  "slack",
+					Value: "some_value",
+				},
+				map[string]interface{}{
+					"requestID": "test_id",
+				},
+				"")
+
+			expected := "https://example.url/delivery/check/slack/test_id/"
+
+			actual, err := populater.Populate(template)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("with filled data and number in requestID", func() {
+			populater := NewWebhookDeliveryCheckURLPopulater(
+				&Contact{
+					Type:  "slack",
+					Value: "some_value",
+				},
+				map[string]interface{}{
+					"requestID": 125,
+				},
+				"some_trigger_id")
+
+			expected := "https://example.url/delivery/check/slack/125/some_trigger_id"
+
+			actual, err := populater.Populate(template)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, expected)
+		})
+	})
+}
