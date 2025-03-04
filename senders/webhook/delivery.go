@@ -92,6 +92,8 @@ func (sender *Sender) checkNotificationsDelivery() error {
 	counter := deliveryTypesCounter{}
 
 	for i := range checksData {
+		prevDeliveryStopped := counter.deliveryStopped
+
 		var deliveryState string
 		checksData[i], deliveryState = sender.performSingleDeliveryCheck(checksData[i])
 
@@ -100,7 +102,11 @@ func (sender *Sender) checkNotificationsDelivery() error {
 			checkAgainChecksData = append(checkAgainChecksData, newCheckData)
 		}
 
-		// TODO: log stopped delivery check
+		if prevDeliveryStopped != counter.deliveryStopped {
+			addContactFieldsToLog(sender.log.Error(), checksData[i].Contact).
+				String(logFieldNameDeliveryCheckUrl, checksData[i].URL).
+				Msg("stop delivery checks")
+		}
 	}
 
 	// TODO: store checks data that needs to be checked again
