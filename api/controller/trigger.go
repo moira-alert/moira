@@ -94,19 +94,19 @@ func metricEvaluationRulesChanged(oldTrigger, newTrigger *moira.Trigger) bool {
 		return true
 	}
 
-	if !equalTwoPointerValues(oldTrigger.WarnValue, newTrigger.WarnValue) {
+	if !moira.EqualTwoPointerValues(oldTrigger.WarnValue, newTrigger.WarnValue) {
 		return true
 	}
 
-	if !equalTwoPointerValues(oldTrigger.ErrorValue, newTrigger.ErrorValue) {
+	if !moira.EqualTwoPointerValues(oldTrigger.ErrorValue, newTrigger.ErrorValue) {
 		return true
 	}
 
-	if !equalTwoPointerValues(oldTrigger.TTLState, newTrigger.TTLState) {
+	if !moira.EqualTwoPointerValues(oldTrigger.TTLState, newTrigger.TTLState) {
 		return true
 	}
 
-	if !equalTwoPointerValues(oldTrigger.Expression, newTrigger.Expression) {
+	if !moira.EqualTwoPointerValues(oldTrigger.Expression, newTrigger.Expression) {
 		return true
 	}
 
@@ -125,14 +125,6 @@ func metricEvaluationRulesChanged(oldTrigger, newTrigger *moira.Trigger) bool {
 	}
 
 	return false
-}
-
-func equalTwoPointerValues[T comparable](first, second *T) bool {
-	if first != nil && second != nil {
-		return *first == *second
-	}
-
-	return first == nil && second == nil
 }
 
 // GetTrigger gets trigger with his throttling - next allowed message time.
