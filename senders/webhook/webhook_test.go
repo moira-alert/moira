@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	. "github.com/smartystreets/goconvey/convey"
@@ -70,7 +71,9 @@ func TestSender_Init(t *testing.T) {
 					Timeout:   30 * time.Second,
 					Transport: &http.Transport{DisableKeepAlives: true},
 				},
-				log: logger,
+				log:            logger,
+				deliveryConfig: getDefaultDeliveryCheckConfig(),
+				clock:          clock.NewSystemClock(),
 			})
 		})
 
@@ -101,11 +104,13 @@ func TestSender_Init(t *testing.T) {
 					Timeout:   120 * time.Second,
 					Transport: &http.Transport{DisableKeepAlives: true},
 				},
-				log: logger,
+				log:            logger,
+				deliveryConfig: getDefaultDeliveryCheckConfig(),
+				clock:          clock.NewSystemClock(),
 			})
 		})
 
-		Convey("With url and metricsMarker", func() {
+		Convey("With url and sender metrics", func() {
 			senderMetrics := &metrics.SenderMetrics{}
 
 			settings := map[string]interface{}{
@@ -123,8 +128,54 @@ func TestSender_Init(t *testing.T) {
 					Timeout:   30 * time.Second,
 					Transport: &http.Transport{DisableKeepAlives: true},
 				},
-				log:     logger,
-				metrics: senderMetrics,
+				log:            logger,
+				metrics:        senderMetrics,
+				deliveryConfig: getDefaultDeliveryCheckConfig(),
+				clock:          clock.NewSystemClock(),
+			})
+		})
+
+		Convey("With delivery checks enabled", func() {
+			Convey("but empty url_template", func() {
+				settings := map[string]interface{}{
+					"url": testURL,
+					"delivery_check": map[string]interface{}{
+						"enabled": true,
+					},
+				}
+
+				sender := Sender{}
+				err := sender.Init(settings, logger, location, dateTimeFormat)
+				So(errors.As(err, &validatorErr), ShouldBeTrue)
+			})
+
+			Convey("but empty check_template", func() {
+				settings := map[string]interface{}{
+					"url": testURL,
+					"delivery_check": map[string]interface{}{
+						"enabled":      true,
+						"url_template": "https://example.com/",
+					},
+				}
+
+				sender := Sender{}
+				err := sender.Init(settings, logger, location, dateTimeFormat)
+				So(errors.As(err, &validatorErr), ShouldBeTrue)
+			})
+
+			Convey("but nil sender metrics", func() {
+				settings := map[string]interface{}{
+					"url": testURL,
+					"delivery_check": map[string]interface{}{
+						"enabled":        true,
+						"url_template":   "https://example.com/",
+						"check_template": "{{ if eq .DeliveryCheckResponse.someValues 0 }}.DeliveryStateOK{{ else }}.DeliveryStatePending{{ end }}",
+					},
+				}
+
+				sender := Sender{}
+				err := sender.Init(settings, logger, location, dateTimeFormat)
+				So(err, ShouldResemble, errNilMetricsOnDeliveryCheck)
 			})
 		})
 	})

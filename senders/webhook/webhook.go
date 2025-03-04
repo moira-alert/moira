@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -85,6 +86,8 @@ func getDefaultDeliveryCheckConfig() deliveryCheckConfig {
 
 const senderMetricsKey = "sender_metrics"
 
+var errNilMetricsOnDeliveryCheck = errors.New("with enabled delivery check, webhook sender must have 'enable_metrics: true'")
+
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
@@ -134,8 +137,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	sender.clock = clock.NewSystemClock()
 	if sender.deliveryConfig.Enabled {
 		if sender.metrics == nil {
-			return fmt.Errorf("with enabled delivery check, sender must have 'enable_metrcis: true'")
+			return errNilMetricsOnDeliveryCheck
 		}
+
+		// TODO: add example responses to config to check url_template and check_template
 
 		go sender.runDeliveryCheckWorker()
 	}

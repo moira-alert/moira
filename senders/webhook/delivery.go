@@ -226,6 +226,8 @@ func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{},
 		return deliveryCheckData{}, fmt.Errorf("failed to fill url template with data: %w", err)
 	}
 
+	requestURL = url.PathEscape(requestURL)
+
 	if err = validateURL(requestURL); err != nil {
 		return deliveryCheckData{}, fmt.Errorf("got bad url for check request: %w", err)
 	}
