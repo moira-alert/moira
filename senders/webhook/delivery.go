@@ -36,8 +36,6 @@ type deliveryCheckData struct {
 	Timestamp int64 `json:"timestamp"`
 	// URL for delivery check request.
 	URL string `json:"url"`
-	// PreviousState of delivery check.
-	PreviousState string `json:"previous_state"`
 	// Contact related to delivery check.
 	Contact moira.ContactData `json:"contact"`
 	// TriggerID for which notification was generated.
@@ -235,7 +233,6 @@ func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{},
 
 	return deliveryCheckData{
 		URL:           requestURL,
-		PreviousState: moira.DeliveryStatePending,
 		Contact:       contact,
 		TriggerID:     triggerID,
 		AttemptsCount: 0,
@@ -342,7 +339,6 @@ func handleStateTransition(checkData deliveryCheckData, newState string, maxAtte
 		return deliveryCheckData{}, false
 	case moira.DeliveryStatePending, moira.DeliveryStateException:
 		if checkData.AttemptsCount < maxAttemptsCount {
-			checkData.PreviousState = newState
 			return checkData, true
 		}
 
@@ -361,6 +357,10 @@ func handleStateTransition(checkData deliveryCheckData, newState string, maxAtte
 }
 
 func markMetrics(senderMetrics *metrics.SenderMetrics, counter *deliveryTypesCounter) {
+	if senderMetrics == nil || counter == nil {
+		return
+	}
+
 	senderMetrics.ContactDeliveryNotificationOK.Mark(counter.deliveryOK)
 	senderMetrics.ContactDeliveryNotificationFailed.Mark(counter.deliveryFailed)
 	senderMetrics.ContactDeliveryNotificationCheckStopped.Mark(counter.deliveryStopped)
