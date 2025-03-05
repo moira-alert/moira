@@ -329,6 +329,7 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 			sender.log.Error().Error(err),
 			contact).
 			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+			String(moira.LogFieldNameTriggerID, triggerID).
 			Msg("failed to schedule delivery check because of not unmarshalling")
 		return
 	}
@@ -339,6 +340,7 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 			sender.log.Error().Error(err),
 			contact).
 			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+			String(moira.LogFieldNameTriggerID, triggerID).
 			Msg("failed to prepare delivery check")
 		return
 	}
@@ -350,6 +352,7 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 			contact).
 			String(logFieldNameDeliveryCheckUrl, checkData.URL).
 			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+			String(moira.LogFieldNameTriggerID, triggerID).
 			Msg("failed to prepare delivery check")
 		return
 	}

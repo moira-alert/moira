@@ -75,7 +75,7 @@ func Test_TemplateWebhookBody(t *testing.T) {
 
 func Test_TemplateWebhookDeliveryCheckURL(t *testing.T) {
 	Convey("Test populating webhook delivery check url template", t, func() {
-		template := "https://example.url/delivery/check/{{ .Contact.Type }}/{{ .SendAlertResponse.requestID }}/{{ .TriggerID }}"
+		template := "https://example.url/delivery/check/{{ .SendAlertResponse.requestID }}/{{ .Contact.Type }}/{{ .TriggerID }}"
 
 		Convey("with nil data", func() {
 			populater := NewWebhookDeliveryCheckURLPopulater(
@@ -108,7 +108,7 @@ func Test_TemplateWebhookDeliveryCheckURL(t *testing.T) {
 				},
 				"")
 
-			expected := "https://example.url/delivery/check/slack/test_id/"
+			expected := "https://example.url/delivery/check/test_id/slack/"
 
 			actual, err := populater.Populate(template)
 			So(err, ShouldBeNil)
@@ -126,7 +126,7 @@ func Test_TemplateWebhookDeliveryCheckURL(t *testing.T) {
 				},
 				"some_trigger_id")
 
-			expected := "https://example.url/delivery/check/slack/125/some_trigger_id"
+			expected := "https://example.url/delivery/check/125/slack/some_trigger_id"
 
 			actual, err := populater.Populate(template)
 			So(err, ShouldBeNil)
