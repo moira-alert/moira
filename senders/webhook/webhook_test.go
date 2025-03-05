@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
@@ -19,6 +20,8 @@ import (
 	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
@@ -71,9 +74,9 @@ func TestSender_Init(t *testing.T) {
 					Timeout:   30 * time.Second,
 					Transport: &http.Transport{DisableKeepAlives: true},
 				},
-				log:            logger,
-				deliveryConfig: getDefaultDeliveryCheckConfig(),
-				clock:          clock.NewSystemClock(),
+				log:                 logger,
+				deliveryCheckConfig: getDefaultDeliveryCheckConfig(),
+				clock:               clock.NewSystemClock(),
 			})
 		})
 
@@ -104,9 +107,9 @@ func TestSender_Init(t *testing.T) {
 					Timeout:   120 * time.Second,
 					Transport: &http.Transport{DisableKeepAlives: true},
 				},
-				log:            logger,
-				deliveryConfig: getDefaultDeliveryCheckConfig(),
-				clock:          clock.NewSystemClock(),
+				log:                 logger,
+				deliveryCheckConfig: getDefaultDeliveryCheckConfig(),
+				clock:               clock.NewSystemClock(),
 			})
 		})
 
@@ -128,10 +131,10 @@ func TestSender_Init(t *testing.T) {
 					Timeout:   30 * time.Second,
 					Transport: &http.Transport{DisableKeepAlives: true},
 				},
-				log:            logger,
-				metrics:        senderMetrics,
-				deliveryConfig: getDefaultDeliveryCheckConfig(),
-				clock:          clock.NewSystemClock(),
+				log:                 logger,
+				metrics:             senderMetrics,
+				deliveryCheckConfig: getDefaultDeliveryCheckConfig(),
+				clock:               clock.NewSystemClock(),
 			})
 		})
 
@@ -182,47 +185,95 @@ func TestSender_Init(t *testing.T) {
 }
 
 func TestSender_SendEvents(t *testing.T) {
-	Convey("Receive test webhook", t, func() {
-		ts := httptest.NewServer(
-			http.HandlerFunc(
-				func(w http.ResponseWriter, r *http.Request) {
-					status, err := testRequestURL(r)
-					if err != nil {
-						w.WriteHeader(status)
-						w.Write([]byte(err.Error())) //nolint
-					}
-					status, err = testRequestHeaders(r,
-						map[string]string{
-							"Content-Type": "application/json",
-						},
-						testUser,
-						testPass)
-					if err != nil {
-						w.WriteHeader(status)
-						w.Write([]byte(err.Error())) //nolint
-					}
-					status, err = testRequestBody(r)
-					if err != nil {
-						w.Write([]byte(err.Error())) //nolint
-						w.WriteHeader(status)
-					}
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	body := `{"requestID": "some-request-id"}`
+
+	ts := httptest.NewServer(
+		http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				status, err := testRequestURL(r)
+				if err != nil {
 					w.WriteHeader(status)
-				},
-			),
-		)
-		defer ts.Close()
+					w.Write([]byte(err.Error())) //nolint
+				}
+				status, err = testRequestHeaders(r,
+					map[string]string{
+						"Content-Type": "application/json",
+					},
+					testUser,
+					testPass)
+				if err != nil {
+					w.WriteHeader(status)
+					w.Write([]byte(err.Error())) //nolint
+				}
+				status, err = testRequestBody(r)
+				if err != nil {
+					w.Write([]byte(err.Error())) //nolint
+					w.WriteHeader(status)
+				}
+				w.WriteHeader(status)
+				w.Write([]byte(body))
+			},
+		),
+	)
+	defer ts.Close()
 
-		senderSettings := map[string]interface{}{
-			"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
-			"user":     testUser,
-			"password": testPass,
-		}
-		sender := Sender{}
-		err := sender.Init(senderSettings, logger, time.UTC, "")
-		So(err, ShouldBeNil)
+	Convey("Receive test webhook", t, func() {
+		Convey("with delivery check disabled", func() {
+			senderSettings := map[string]interface{}{
+				"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
+				"user":     testUser,
+				"password": testPass,
+			}
+			sender := Sender{}
+			err := sender.Init(senderSettings, logger, time.UTC, "")
+			So(err, ShouldBeNil)
 
-		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
-		So(err, ShouldBeNil)
+			err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("with delivery check enabled", func() {
+			mockDB := mock_moira_alert.NewMockDeliveryCheckerDatabase(mockCtrl)
+			mockClock := mock_clock.NewMockClock(mockCtrl)
+
+			sender := Sender{
+				contactType:         testContact.Type,
+				url:                 fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
+				user:                testUser,
+				password:            testPass,
+				headers:             defaultHeaders,
+				log:                 logger,
+				metrics:             &metrics.SenderMetrics{},
+				Database:            mockDB,
+				clock:               mockClock,
+				client:              ts.Client(),
+				deliveryCheckConfig: getDefaultDeliveryCheckConfig(),
+			}
+			sender.deliveryCheckConfig.Enabled = true
+			sender.deliveryCheckConfig.URLTemplate = "http://example.com/{{ .SendAlertResponse.requestID }}"
+			sender.deliveryCheckConfig.CheckTemplate = "{{ .StateConstants.DeliveryCheckOK }}"
+
+			timestamp := int64(12345)
+			expectedDeliveryCheckData := deliveryCheckData{
+				Timestamp:     timestamp,
+				URL:           "http://example.com/some-request-id",
+				Contact:       testContact,
+				TriggerID:     testTrigger.ID,
+				AttemptsCount: 0,
+			}
+
+			marshaled, err := json.Marshal(expectedDeliveryCheckData)
+			So(err, ShouldBeNil)
+
+			mockClock.EXPECT().NowUnix().Return(timestamp).Times(1)
+			mockDB.EXPECT().AddDeliveryChecksData(testContact.Type, timestamp, string(marshaled)).Return(nil).Times(1)
+
+			err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
+			So(err, ShouldBeNil)
+		})
 	})
 }
 

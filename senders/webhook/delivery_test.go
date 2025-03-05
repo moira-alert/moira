@@ -131,7 +131,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 
 	sender := Sender{
 		log: logger,
-		deliveryConfig: deliveryCheckConfig{
+		deliveryCheckConfig: deliveryCheckConfig{
 			User:     user,
 			Password: password,
 			Headers:  headers,
@@ -195,7 +195,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 
 		Convey("with allowed response code, with DeliveryStateOK expected", func() {
 			sender.client = ts.Client()
-			sender.deliveryConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
 
 			checkData := deliveryCheckData{
 				URL:           ts.URL + "/?bodyIdx=0",
@@ -212,7 +212,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 
 		Convey("with allowed response code, with DeliveryStatePending expected", func() {
 			sender.client = ts.Client()
-			sender.deliveryConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
 
 			checkData := deliveryCheckData{
 				URL:           ts.URL + "/?bodyIdx=1",
@@ -229,7 +229,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 
 		Convey("with allowed response code but unknown state returned", func() {
 			sender.client = ts.Client()
-			sender.deliveryConfig.CheckTemplate = `{{ .DeliveryCheckResponse.some_value }}`
+			sender.deliveryCheckConfig.CheckTemplate = `{{ .DeliveryCheckResponse.some_value }}`
 
 			checkData := deliveryCheckData{
 				URL:           ts.URL + "/?bodyIdx=1",

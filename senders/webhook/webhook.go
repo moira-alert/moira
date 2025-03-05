@@ -1,7 +1,6 @@
 package webhook
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -61,18 +60,18 @@ const (
 
 // Sender implements moira sender interface via webhook.
 type Sender struct {
-	url            string
-	body           string
-	user           string
-	password       string
-	headers        map[string]string
-	contactType    string
-	client         *http.Client
-	log            moira.Logger
-	metrics        *metrics.SenderMetrics
-	Database       moira.DeliveryCheckerDatabase
-	deliveryConfig deliveryCheckConfig
-	clock          moira.Clock
+	url                 string
+	body                string
+	user                string
+	password            string
+	headers             map[string]string
+	contactType         string
+	client              *http.Client
+	log                 moira.Logger
+	metrics             *metrics.SenderMetrics
+	Database            moira.DeliveryCheckerDatabase
+	deliveryCheckConfig deliveryCheckConfig
+	clock               moira.Clock
 }
 
 func getDefaultDeliveryCheckConfig() deliveryCheckConfig {
@@ -136,9 +135,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		sender.metrics = val.(*metrics.SenderMetrics)
 	}
 
-	sender.deliveryConfig = cfg.DeliveryCheck
+	sender.deliveryCheckConfig = cfg.DeliveryCheck
 	sender.clock = clock.NewSystemClock()
-	if sender.deliveryConfig.Enabled {
+	if sender.deliveryCheckConfig.Enabled {
 		if sender.metrics == nil {
 			return errNilMetricsOnDeliveryCheck
 		}
@@ -168,38 +167,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("invalid status code: %d, server response: %s", responseStatusCode, string(responseBody))
 	}
 
-	if sender.deliveryConfig.Enabled {
-		var rspData map[string]interface{}
-		err = json.Unmarshal(responseBody, &rspData)
-		if err != nil {
-			addContactFieldsToLog(
-				sender.log.Error().Error(err),
-				contact).
-				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
-				Msg("failed to schedule delivery check because of not unmarshalling")
-			return nil
-		}
-
-		checkData, err := prepareDeliveryCheck(contact, rspData, sender.deliveryConfig.URLTemplate, trigger.ID)
-		if err != nil {
-			addContactFieldsToLog(
-				sender.log.Error().Error(err),
-				contact).
-				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
-				Msg("failed to prepare delivery check")
-			return nil
-		}
-
-		err = sender.scheduleDeliveryChecks([]deliveryCheckData{checkData}, sender.clock.NowUnix())
-		if err != nil {
-			addContactFieldsToLog(
-				sender.log.Error().Error(err),
-				contact).
-				String(logFieldNameDeliveryCheckUrl, checkData.URL).
-				String(logFieldNameSendNotificationResponseBody, string(responseBody)).
-				Msg("failed to prepare delivery check")
-			return nil
-		}
+	if sender.deliveryCheckConfig.Enabled {
+		sender.scheduleDeliveryCheck(contact, trigger.ID, responseBody)
 	}
 
 	return nil

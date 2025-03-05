@@ -58,7 +58,7 @@ func (sender *Sender) runDeliveryCheckWorker() {
 }
 
 func (sender *Sender) deliveryCheckerAction(stop <-chan struct{}) error {
-	checkTicker := time.NewTicker(time.Duration(sender.deliveryConfig.CheckTimeout) * time.Second)
+	checkTicker := time.NewTicker(time.Duration(sender.deliveryCheckConfig.CheckTimeout) * time.Second)
 
 	sender.log.Info().Msg(workerName + " started")
 	for {
@@ -107,7 +107,7 @@ func (sender *Sender) checkNotificationsDelivery() error {
 		var deliveryState string
 		checksData[i], deliveryState = sender.performSingleDeliveryCheck(checksData[i])
 
-		newCheckData, scheduleAgain := handleStateTransition(checksData[i], deliveryState, sender.deliveryConfig.MaxAttemptsCount, &counter)
+		newCheckData, scheduleAgain := handleStateTransition(checksData[i], deliveryState, sender.deliveryCheckConfig.MaxAttemptsCount, &counter)
 		if scheduleAgain {
 			checkAgainChecksData = append(checkAgainChecksData, newCheckData)
 		}
@@ -120,7 +120,7 @@ func (sender *Sender) checkNotificationsDelivery() error {
 		}
 	}
 
-	err = sender.scheduleDeliveryChecks(checkAgainChecksData, sender.clock.NowUnix()+int64(sender.deliveryConfig.ReschedulingDelay))
+	err = sender.addDeliveryChecks(checkAgainChecksData, sender.clock.NowUnix()+int64(sender.deliveryCheckConfig.ReschedulingDelay))
 	if err != nil {
 		return fmt.Errorf("failed to reschedule delivery checks: %w", err)
 	}
@@ -183,7 +183,7 @@ func removeDuplicatedChecksData(checksData []deliveryCheckData) []deliveryCheckD
 	return deduplicated
 }
 
-func (sender *Sender) scheduleDeliveryChecks(checksData []deliveryCheckData, timestamp int64) error {
+func (sender *Sender) addDeliveryChecks(checksData []deliveryCheckData, timestamp int64) error {
 	if len(checksData) == 0 {
 		return nil
 	}
@@ -209,51 +209,6 @@ func (sender *Sender) scheduleDeliveryChecks(checksData []deliveryCheckData, tim
 func (sender *Sender) removeOutdatedDeliveryChecks(lastFetchTimestamp int64) error {
 	_, err := sender.Database.RemoveDeliveryChecksData(sender.contactType, "-inf", strconv.FormatInt(lastFetchTimestamp, 10))
 	return err
-}
-
-func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{}, urlTemplate string, triggerID string) (deliveryCheckData, error) {
-	urlPopulater := templating.NewWebhookDeliveryCheckURLPopulater(
-		&templating.Contact{
-			Type:  contact.Type,
-			Value: contact.Value,
-		},
-		rsp,
-		triggerID)
-
-	requestURL, err := urlPopulater.Populate(urlTemplate)
-	if err != nil {
-		return deliveryCheckData{}, fmt.Errorf("failed to fill url template with data: %w", err)
-	}
-
-	requestURL = url.PathEscape(requestURL)
-
-	if err = validateURL(requestURL); err != nil {
-		return deliveryCheckData{}, fmt.Errorf("got bad url for check request: %w", err)
-	}
-
-	return deliveryCheckData{
-		URL:           requestURL,
-		Contact:       contact,
-		TriggerID:     triggerID,
-		AttemptsCount: 0,
-	}, nil
-}
-
-func validateURL(requestURL string) error {
-	urlStruct, err := url.Parse(requestURL)
-	if err != nil {
-		return err
-	}
-
-	if !(urlStruct.Scheme == "http://" || urlStruct.Scheme == "https://") {
-		return fmt.Errorf("bad url scheme: %s", urlStruct.Scheme)
-	}
-
-	if urlStruct.Host == "" {
-		return fmt.Errorf("host is empty")
-	}
-
-	return nil
 }
 
 type deliveryTypesCounter struct {
@@ -304,7 +259,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 		unmarshalledBody,
 		checkData.TriggerID)
 
-	deliveryState, err = populater.Populate(sender.deliveryConfig.CheckTemplate)
+	deliveryState, err = populater.Populate(sender.deliveryCheckConfig.CheckTemplate)
 	if err != nil {
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
@@ -364,4 +319,81 @@ func markMetrics(senderMetrics *metrics.SenderMetrics, counter *deliveryTypesCou
 	senderMetrics.ContactDeliveryNotificationOK.Mark(counter.deliveryOK)
 	senderMetrics.ContactDeliveryNotificationFailed.Mark(counter.deliveryFailed)
 	senderMetrics.ContactDeliveryNotificationCheckStopped.Mark(counter.deliveryStopped)
+}
+
+func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID string, responseBody []byte) {
+	var rspData map[string]interface{}
+	err := json.Unmarshal(responseBody, &rspData)
+	if err != nil {
+		addContactFieldsToLog(
+			sender.log.Error().Error(err),
+			contact).
+			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+			Msg("failed to schedule delivery check because of not unmarshalling")
+		return
+	}
+
+	checkData, err := prepareDeliveryCheck(contact, rspData, sender.deliveryCheckConfig.URLTemplate, triggerID)
+	if err != nil {
+		addContactFieldsToLog(
+			sender.log.Error().Error(err),
+			contact).
+			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+			Msg("failed to prepare delivery check")
+		return
+	}
+
+	err = sender.addDeliveryChecks([]deliveryCheckData{checkData}, sender.clock.NowUnix())
+	if err != nil {
+		addContactFieldsToLog(
+			sender.log.Error().Error(err),
+			contact).
+			String(logFieldNameDeliveryCheckUrl, checkData.URL).
+			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
+			Msg("failed to prepare delivery check")
+		return
+	}
+}
+
+func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{}, urlTemplate string, triggerID string) (deliveryCheckData, error) {
+	urlPopulater := templating.NewWebhookDeliveryCheckURLPopulater(
+		&templating.Contact{
+			Type:  contact.Type,
+			Value: contact.Value,
+		},
+		rsp,
+		triggerID)
+
+	requestURL, err := urlPopulater.Populate(urlTemplate)
+	if err != nil {
+		return deliveryCheckData{}, fmt.Errorf("failed to fill url template with data: %w", err)
+	}
+
+	if err = validateURL(requestURL); err != nil {
+		return deliveryCheckData{}, fmt.Errorf("got bad url for check request: %w, url: %s", err, requestURL)
+	}
+
+	return deliveryCheckData{
+		URL:           requestURL,
+		Contact:       contact,
+		TriggerID:     triggerID,
+		AttemptsCount: 0,
+	}, nil
+}
+
+func validateURL(requestURL string) error {
+	urlStruct, err := url.Parse(requestURL)
+	if err != nil {
+		return err
+	}
+
+	if !(urlStruct.Scheme == "http" || urlStruct.Scheme == "https") {
+		return fmt.Errorf("bad url scheme: %s", urlStruct.Scheme)
+	}
+
+	if urlStruct.Host == "" {
+		return fmt.Errorf("host is empty")
+	}
+
+	return nil
 }
