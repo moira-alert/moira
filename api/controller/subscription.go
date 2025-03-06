@@ -64,11 +64,11 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 	subscription.TeamID = teamID
 	data := moira.SubscriptionData(*subscription)
 	if len(data.Tags) > 0 {
-		areTagsSystemOrUsers, err := areTagsCorrespondingTo(data.Tags, dataBase)
+		areTagsOneKind, err := areTagsAllSystemOrNot(data.Tags, dataBase)
 		if err != nil {
 			return api.ErrorInternalServer(err)
 		}
-		if !areTagsSystemOrUsers {
+		if !areTagsOneKind {
 			return api.ErrorInvalidRequest(fmt.Errorf("subscription tags should be only user-defined or only system"))
 		}
 	}
@@ -78,7 +78,7 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 	return nil
 }
 
-func areTagsCorrespondingTo(tags []string, dataBase moira.Database) (bool, error) {
+func areTagsAllSystemOrNot(tags []string, dataBase moira.Database) (bool, error) {
 	systemTags, err := dataBase.GetSystemTagNames()
 	if err != nil {
 		return false, err
