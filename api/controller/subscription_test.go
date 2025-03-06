@@ -207,6 +207,42 @@ func TestCreateSubscription(t *testing.T) {
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("subscription with this ID already exists")))
 		})
 
+		Convey("Success create subscription with tags", func() {
+			subscription := &dto.Subscription{
+				ID: uuid.Must(uuid.NewV4()).String(),
+				Tags: []string{"tag1", "tag2"},
+			}
+			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			dataBase.EXPECT().GetSystemTagNames().Return([]string{"system-tag1"}, nil)
+			err := CreateSubscription(dataBase, auth, login, "", subscription)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success create subscription with all system tags", func() {
+			subscription := &dto.Subscription{
+				ID: uuid.Must(uuid.NewV4()).String(),
+				Tags: []string{"system-tag1", "system-tag2"},
+			}
+			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
+			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+			dataBase.EXPECT().GetSystemTagNames().Return([]string{"system-tag1", "system-tag2"}, nil)
+			err := CreateSubscription(dataBase, auth, login, "", subscription)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Error create subscription with mixed tags", func() {
+			subscription := &dto.Subscription{
+				ID: uuid.Must(uuid.NewV4()).String(),
+				Tags: []string{"system-tag1", "tag2"},
+			}
+			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
+			dataBase.EXPECT().GetSystemTagNames().Return([]string{"system-tag1", "system-tag2"}, nil)
+			err := CreateSubscription(dataBase, auth, login, "", subscription)
+			expected := fmt.Errorf("subscription tags should be only user-defined or only system")
+			So(err, ShouldResemble, api.ErrorInvalidRequest(expected))
+		})
+
 		Convey("Error get subscription", func() {
 			subscription := &dto.Subscription{
 				ID: uuid.Must(uuid.NewV4()).String(),

@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -62,10 +63,35 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 	}
 	subscription.TeamID = teamID
 	data := moira.SubscriptionData(*subscription)
+	if len(data.Tags) > 0 {
+		areTagsSystemOrUsers, err := areTagsCorrespondingTo(data.Tags, dataBase)
+		if err != nil {
+			return api.ErrorInternalServer(err)
+		}
+		if !areTagsSystemOrUsers {
+			return api.ErrorInvalidRequest(fmt.Errorf("subscription tags should be only user-defined or only system"))
+		}
+	}
 	if err := dataBase.SaveSubscription(&data); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil
+}
+
+func areTagsCorrespondingTo(tags []string, dataBase moira.Database) (bool, error) {
+	systemTags, err := dataBase.GetSystemTagNames()
+	if err != nil {
+		return false, err
+	}
+
+	pivot := slices.Contains(systemTags, tags[0])
+
+	for _, tag := range tags {
+		if slices.Contains(systemTags, tag) != pivot {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 // GetSubscription returns subscription by it's id.
