@@ -114,6 +114,7 @@ func NewHandler(
 				apiConfig.MetricsTTL,
 			)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
 			router.Route("/tag", tag)
+			router.Route("/system-tag", systemTag)
 			router.Route("/pattern", pattern)
 			router.Route("/event", event)
 			router.Route("/subscription", subscription)
