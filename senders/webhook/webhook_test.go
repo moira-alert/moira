@@ -82,10 +82,11 @@ func TestSender_Init(t *testing.T) {
 
 		Convey("With full provided data", func() {
 			settings := map[string]interface{}{
-				"url":      testURL,
-				"body":     testBody,
-				"user":     testUser,
-				"password": testPass,
+				"contact_type": testContact.Type,
+				"url":          testURL,
+				"body":         testBody,
+				"user":         testUser,
+				"password":     testPass,
 				"headers": map[string]string{
 					"testHeader": "test",
 				},
@@ -98,11 +99,12 @@ func TestSender_Init(t *testing.T) {
 			err := sender.Init(settings, logger, location, dateTimeFormat)
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{
-				url:      testURL,
-				body:     testBody,
-				user:     testUser,
-				password: testPass,
-				headers:  expectedHeaders,
+				contactType: testContact.Type,
+				url:         testURL,
+				body:        testBody,
+				user:        testUser,
+				password:    testPass,
+				headers:     expectedHeaders,
 				client: &http.Client{
 					Timeout:   120 * time.Second,
 					Transport: &http.Transport{DisableKeepAlives: true},

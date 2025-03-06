@@ -104,6 +104,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("webhook config validation error: %w", err)
 	}
 
+	sender.contactType = cfg.ContactType
 	sender.url = cfg.URL
 	sender.body = cfg.Body
 	sender.user, sender.password = cfg.User, cfg.Password
