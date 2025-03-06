@@ -7,11 +7,34 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+// SyncSystemTags removes old system tags and creates new.
+func (connector *DbConnector) SyncSystemTags(tags []string) error {
+	pipe := (*connector.client).TxPipeline()
+	ctx := connector.context
+	pipe.Del(ctx, systemTagsKey)
+	for _, tag := range tags {
+		pipe.SAdd(ctx, systemTagsKey, tag)
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		return fmt.Errorf("failed to EXEC: %w", err)
+	}
+	return nil
+}
+
 // GetTagNames returns all tags from set with tag data.
 func (connector *DbConnector) GetTagNames() ([]string, error) {
+	return connector.getAllTagsFrom(tagsKey)
+}
+
+// GetSystemTagNames returns all system tags from set with system tag data.
+func (connector *DbConnector) GetSystemTagNames() ([]string, error) {
+	return connector.getAllTagsFrom(systemTagsKey)
+}
+
+func (connector *DbConnector) getAllTagsFrom(tagsIndexKey string) ([]string, error) {
 	c := *connector.client
 
-	tagNames, err := c.SMembers(connector.context, tagsKey).Result()
+	tagNames, err := c.SMembers(connector.context, tagsIndexKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve tags: %w", err)
 	}
@@ -105,7 +128,10 @@ func (connector *DbConnector) CleanUpAbandonedTags() (int, error) {
 	return count, nil
 }
 
-var tagsKey = "moira-tags"
+var (
+	tagsKey       = "moira-tags"
+	systemTagsKey = "moira-system-tags"
+)
 
 func tagTriggersKey(tagName string) string {
 	return "{moira-tag-triggers}:" + tagName

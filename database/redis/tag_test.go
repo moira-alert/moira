@@ -1,11 +1,57 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func TestSystemTagSync(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+	client := *dataBase.client
+
+	Convey("System tags", t, func() {
+		Convey("Should be synced ", func() {
+			cases := []struct {
+				old []string
+				new []string
+			}{
+				{
+					old: []string{"1", "2", "3"},
+					new: []string{"1", "3", "4"},
+				},
+				{
+					old: []string{"1", "2", "3"},
+					new: []string{},
+				},
+				{
+					old: []string{"1", "2", "3"},
+					new: []string{"2"},
+				},
+			}
+			for _, pair := range cases {
+				Convey(fmt.Sprintf("%v -> %v", pair.old, pair.new), func() {
+					oldTags := pair.old
+					newTags := pair.new
+					err := dataBase.SyncSystemTags(oldTags)
+					So(err, ShouldBeNil)
+					storedOldTags := client.SMembers(dataBase.context, systemTagsKey).Val()
+					So(storedOldTags, ShouldResemble, oldTags)
+
+					err = dataBase.SyncSystemTags(newTags)
+					So(err, ShouldBeNil)
+					storedNewTags := client.SMembers(dataBase.context, systemTagsKey).Val()
+					So(storedNewTags, ShouldResemble, newTags)
+				})
+			}
+		})
+	})
+}
 
 func TestTagStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
