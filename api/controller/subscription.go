@@ -84,7 +84,6 @@ func areTagsAllSystemOrNot(tags []string, dataBase moira.Database) (bool, error)
 	}
 
 	systemTags, err := dataBase.GetSystemTagNames()
-
 	if err != nil {
 		return false, err
 	}
