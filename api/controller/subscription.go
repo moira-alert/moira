@@ -79,7 +79,13 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 }
 
 func areTagsAllSystemOrNot(tags []string, dataBase moira.Database) (bool, error) {
+
+	if len(tags) < 2 {
+		return true, nil
+	}
+
 	systemTags, err := dataBase.GetSystemTagNames()
+
 	if err != nil {
 		return false, err
 	}
