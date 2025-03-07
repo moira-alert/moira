@@ -15,9 +15,11 @@ func (connector *DbConnector) ReplaceSystemTags(tags []string) error {
 	for _, tag := range tags {
 		pipe.SAdd(ctx, systemTagsKey, tag)
 	}
+
 	if _, err := pipe.Exec(ctx); err != nil {
 		return fmt.Errorf("failed to EXEC: %w", err)
 	}
+
 	return nil
 }
 
