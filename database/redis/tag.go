@@ -7,7 +7,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// SyncSystemTags removes old system tags and creates new.
+// ReplaceSystemTags removes old system tags and creates new.
 func (connector *DbConnector) ReplaceSystemTags(tags []string) error {
 	pipe := (*connector.client).TxPipeline()
 	ctx := connector.context
