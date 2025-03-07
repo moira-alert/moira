@@ -8,7 +8,7 @@ import (
 )
 
 // SyncSystemTags removes old system tags and creates new.
-func (connector *DbConnector) SyncSystemTags(tags []string) error {
+func (connector *DbConnector) ReplaceSystemTags(tags []string) error {
 	pipe := (*connector.client).TxPipeline()
 	ctx := connector.context
 	pipe.Del(ctx, systemTagsKey)
