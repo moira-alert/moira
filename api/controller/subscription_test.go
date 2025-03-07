@@ -209,7 +209,7 @@ func TestCreateSubscription(t *testing.T) {
 
 		Convey("Success create subscription with tags", func() {
 			subscription := &dto.Subscription{
-				ID: uuid.Must(uuid.NewV4()).String(),
+				ID:   uuid.Must(uuid.NewV4()).String(),
 				Tags: []string{"tag1", "tag2"},
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
@@ -221,7 +221,7 @@ func TestCreateSubscription(t *testing.T) {
 
 		Convey("Success create subscription with all system tags", func() {
 			subscription := &dto.Subscription{
-				ID: uuid.Must(uuid.NewV4()).String(),
+				ID:   uuid.Must(uuid.NewV4()).String(),
 				Tags: []string{"system-tag1", "system-tag2"},
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
@@ -233,7 +233,7 @@ func TestCreateSubscription(t *testing.T) {
 
 		Convey("Error create subscription with mixed tags", func() {
 			subscription := &dto.Subscription{
-				ID: uuid.Must(uuid.NewV4()).String(),
+				ID:   uuid.Must(uuid.NewV4()).String(),
 				Tags: []string{"system-tag1", "tag2"},
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
