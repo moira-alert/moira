@@ -35,7 +35,7 @@ func systemTag(router chi.Router) {
 //	@success	200	{object}	dto.TagsData					"Tags fetched successfully"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/tag [get]
+//	@router		/system-tag [get]
 func getAllSystemTags(writer http.ResponseWriter, request *http.Request) {
 	tagData, err := controller.GetAllSystemTags(database)
 	if err != nil {

@@ -92,15 +92,6 @@ func sortTagNames(tagsNames []string) []string {
 	return tagsNames
 }
 
-func getTagNamesSorted(database moira.Database) ([]string, error) {
-	tagsNames, err := database.GetTagNames()
-	if err != nil {
-		return nil, err
-	}
-	sort.SliceStable(tagsNames, func(i, j int) bool { return strings.ToLower(tagsNames[i]) < strings.ToLower(tagsNames[j]) })
-	return tagsNames, nil
-}
-
 // CreateTags create tags with tag names.
 func CreateTags(database moira.Database, tags *dto.TagsData) *api.ErrorResponse {
 	if err := database.CreateTags(tags.TagNames); err != nil {
