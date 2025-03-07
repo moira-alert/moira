@@ -38,12 +38,12 @@ func TestSystemTagSync(t *testing.T) {
 				Convey(fmt.Sprintf("%v -> %v", pair.old, pair.new), func() {
 					oldTags := pair.old
 					newTags := pair.new
-					err := dataBase.SyncSystemTags(oldTags)
+					err := dataBase.ReplaceSystemTags(oldTags)
 					So(err, ShouldBeNil)
 					storedOldTags := client.SMembers(dataBase.context, systemTagsKey).Val()
 					So(storedOldTags, ShouldResemble, oldTags)
 
-					err = dataBase.SyncSystemTags(newTags)
+					err = dataBase.ReplaceSystemTags(newTags)
 					So(err, ShouldBeNil)
 					storedNewTags := client.SMembers(dataBase.context, systemTagsKey).Val()
 					So(storedNewTags, ShouldResemble, newTags)
