@@ -7,6 +7,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
 
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
@@ -32,8 +33,10 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	}
 }
 
-func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.NotificationEvent {
-	var events []moira.NotificationEvent
+type NotificationEventAndCheckTags struct{moira.NotificationEvent; heartbeat.CheckTags}
+
+func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []NotificationEventAndCheckTags {
+	var events []NotificationEventAndCheckTags
 
 	for _, heartbeat := range selfCheck.heartbeats {
 		currentValue, hasErrors, err := heartbeat.Check(nowTS)
@@ -44,7 +47,10 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.Notif
 		}
 
 		if hasErrors {
-			events = append(events, generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue))
+			events = append(events,	NotificationEventAndCheckTags{
+				NotificationEvent: generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue),
+				CheckTags: heartbeat.GetCheckTags(),
+			})
 			if heartbeat.NeedTurnOffNotifier() {
 				selfCheck.setNotifierState(moira.SelfStateERROR)
 			}
@@ -58,7 +64,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.Notif
 	return events
 }
 
-func (selfCheck *SelfCheckWorker) sendNotification(events []moira.NotificationEvent, nowTS int64) int64 {
+func (selfCheck *SelfCheckWorker) sendNotification(events []NotificationEventAndCheckTags, nowTS int64) int64 {
 	eventsJSON, _ := json.Marshal(events)
 	selfCheck.Logger.Error().
 		Int("number_of_events", len(events)).
@@ -77,7 +83,38 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64)
 	return nextSendErrorMessage
 }
 
-func (selfCheck *SelfCheckWorker) sendErrorMessages(events []moira.NotificationEvent) {
+func (selfCheck *SelfCheckWorker) eventsToContacts(events []NotificationEventAndCheckTags) ([]struct{*moira.ContactData; *moira.NotificationEvents}, error) {
+	result := make(map[*moira.ContactData][]moira.NotificationEvent)
+	for _, event := range events {
+		if len(event.CheckTags) == 0 {
+			continue
+		}
+
+		subscriptions, err := selfCheck.Database.GetTagsSubscriptions(event.CheckTags)
+		if err != nil {
+			return nil, err
+		}
+		for _, subscription := range subscriptions {
+			contacts, err := selfCheck.Database.GetContacts(subscription.Contacts)
+			if err != nil {
+				return nil, err
+			}
+			for _, contact := range contacts {
+				result[contact] = append(result[contact], event.NotificationEvent)
+			}
+		}
+	}
+
+	var resultList []struct{*moira.ContactData; *moira.NotificationEvents}
+	for contact, events := range result {
+		r := moira.NotificationEvents(events)
+		resultList = append(resultList, struct{*moira.ContactData; *moira.NotificationEvents}{contact, &r})
+	}
+
+	return resultList, nil
+}
+
+func (selfCheck *SelfCheckWorker) sendErrorMessages(events []NotificationEventAndCheckTags) {
 	var sendingWG sync.WaitGroup
 
 	for _, adminContact := range selfCheck.Config.Contacts {
@@ -90,7 +127,29 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events []moira.NotificationE
 				Name:       "Moira health check",
 				ErrorValue: float64(0),
 			},
-			Events:     events,
+			Events:     moira.Map(events, func(et NotificationEventAndCheckTags) moira.NotificationEvent { return et.NotificationEvent }),
+			DontResend: true,
+		}
+
+		selfCheck.Notifier.Send(&pkg, &sendingWG)
+		sendingWG.Wait()
+	}
+
+	eventsAndContacts, err := selfCheck.eventsToContacts(events)
+	if err != nil {
+		selfCheck.Logger.Warning().
+		Error(err).
+		Msg("Sending notifications via subscriptions has failed")
+	}
+
+	for _, contactAndEvent := range eventsAndContacts {
+		pkg := notifier.NotificationPackage{
+			Contact: *contactAndEvent.ContactData,
+			Trigger: moira.TriggerData{
+				Name: "Moira health check",
+				ErrorValue: float64(0),
+			},
+			Events: *contactAndEvent.NotificationEvents,
 			DontResend: true,
 		}
 

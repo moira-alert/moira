@@ -60,6 +60,14 @@ type notifierConfig struct {
 	CheckNotifierStateTimeout string `yaml:"check_notifier_state_timeout"`
 }
 
+type selfStateCheckTagsConfig struct {
+	Database []string
+	Filter []string
+	LocalChecker []string
+	RemoteChecker []string
+	Notifier []string
+}
+
 type selfStateConfig struct {
 	// If true, Self state monitor will be enabled
 	Enabled bool `yaml:"enabled"`
@@ -79,6 +87,7 @@ type selfStateConfig struct {
 	NoticeInterval string `yaml:"notice_interval"`
 	// Self state monitor check interval
 	CheckInterval string `yaml:"check_interval"`
+	CheckTags	selfStateCheckTagsConfig `yaml:"check_tags"`
 }
 
 func getDefault() config {
@@ -230,5 +239,6 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		CheckInterval:                  checkInterval,
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
+		CheckTags:											selfstate.CheckTags(config.CheckTags),
 	}
 }

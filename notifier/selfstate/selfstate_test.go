@@ -55,22 +55,96 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 }
 
 func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
-	mock := configureWorker(t, true)
-
 	Convey("Should call notifier send", t, func() {
+		mock := configureWorker(t, true)
 		err := mock.selfCheckWorker.Start()
 		So(err, ShouldBeNil)
 
 		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
-		var events []moira.NotificationEvent
+		var events []NotificationEventAndCheckTags
 		mock.selfCheckWorker.sendErrorMessages(events)
 
 		err = mock.selfCheckWorker.Stop()
 		So(err, ShouldBeNil)
+		mock.mockCtrl.Finish()
 	})
+}
 
-	mock.mockCtrl.Finish()
+func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
+	Convey("Should resemble events to contacts trought system tags", t, func() {
+		contact := moira.ContactData{
+			ID: "some-contact",
+			Type: "my_type",
+			Value: "123",
+		}
+
+		notifAndTags := []NotificationEventAndCheckTags{
+			{
+				NotificationEvent: moira.NotificationEvent{
+					Metric: "Triggered!!!",
+				},
+				CheckTags: heartbeat.CheckTags{
+					"sys-tag1",
+				},
+			},
+			{
+				NotificationEvent: moira.NotificationEvent{
+					Metric: "Some another problem!!!",
+				},
+				CheckTags: heartbeat.CheckTags{
+					"sys-tag2", "sys-tag-common",
+				},
+			},
+		}
+
+		expected := []struct{*moira.ContactData; *moira.NotificationEvents}{
+			{
+				ContactData: &contact,
+				NotificationEvents: &moira.NotificationEvents{
+					{
+						Metric: "Triggered!!!",
+					},
+					{
+						Metric: "Some another problem!!!",
+					},
+				},
+			},
+		}
+
+		mockCtrl := gomock.NewController(t)
+		database := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+		database.EXPECT().GetTagsSubscriptions([]string{"sys-tag1"}).Return([]*moira.SubscriptionData{
+			{
+				ID: "sub-1",
+				Contacts: []string{contact.ID},
+			},
+		}, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{"sys-tag2", "sys-tag-common"}).Return([]*moira.SubscriptionData{
+			{
+				ID: "sub-2",
+				Contacts: []string{contact.ID},
+			},
+		}, nil)
+
+		database.EXPECT().GetContacts([]string{contact.ID}).Return([]*moira.ContactData{
+			&contact,
+		}, nil).Times(2)
+
+		logger, _ := logging.GetLogger("SelfState")
+		notif := mock_notifier.NewMockNotifier(mockCtrl)
+
+		mock := &selfCheckWorkerMock{
+			selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}),
+			mockCtrl: mockCtrl,
+		}
+
+		actual, err := mock.selfCheckWorker.eventsToContacts(notifAndTags)
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+		mock.mockCtrl.Finish()
+	})
 }
 
 func TestSelfCheckWorker_Start(t *testing.T) {
@@ -112,6 +186,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().NeedToCheckOthers().Return(false)
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
+			first.EXPECT().GetCheckTags().Return([]string{})
 			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
@@ -130,6 +205,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().NeedTurnOffNotifier().Return(true)
 			first.EXPECT().NeedToCheckOthers().Return(false)
+			first.EXPECT().GetCheckTags().Return([]string{})
 			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(err)
 			mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 

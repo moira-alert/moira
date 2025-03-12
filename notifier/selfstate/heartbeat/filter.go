@@ -12,7 +12,7 @@ type filter struct {
 	firstCheckWasSuccessful bool
 }
 
-func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
+func GetFilter(delay int64, checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
 	if delay > 0 {
 		return &filter{
 			heartbeat: heartbeat{
@@ -20,6 +20,7 @@ func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartb
 				database:            database,
 				delay:               delay,
 				lastSuccessfulCheck: time.Now().Unix(),
+				checkTags:					 checkTags,
 			},
 			firstCheckWasSuccessful: false,
 		}
@@ -67,4 +68,8 @@ func (check filter) NeedToCheckOthers() bool {
 
 func (filter) GetErrorMessage() string {
 	return "Moira-Filter does not receive metrics"
+}
+
+func (check filter) GetCheckTags() CheckTags {
+	return check.checkTags
 }

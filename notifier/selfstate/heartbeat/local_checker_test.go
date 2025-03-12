@@ -23,9 +23,9 @@ func TestCheckDelay_Check(t *testing.T) {
 		database := check.database.(*mock_moira_alert.MockDatabase)
 
 		Convey("Test creation localChecker", func() {
-			expected := &localChecker{heartbeat: heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now}}
-			So(GetLocalChecker(0, check.logger, check.database), ShouldBeNil)
-			So(GetLocalChecker(1, check.logger, check.database), ShouldResemble, expected)
+			expected := &localChecker{heartbeat: heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now, checkTags: check.checkTags}}
+			So(GetLocalChecker(0, check.checkTags, check.logger, check.database), ShouldBeNil)
+			So(GetLocalChecker(1, check.checkTags, check.logger, check.database), ShouldResemble, expected)
 		})
 
 		Convey("GraphiteLocalChecker error handling test", func() {
@@ -83,6 +83,7 @@ func TestCheckDelay_Check(t *testing.T) {
 func createGraphiteLocalCheckerTest(t *testing.T) (*localChecker, *gomock.Controller) {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("CheckDelay")
+	checkTags := []string{}
 
-	return GetLocalChecker(120, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*localChecker), mockCtrl
+	return GetLocalChecker(120, checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*localChecker), mockCtrl
 }

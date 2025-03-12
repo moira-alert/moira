@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+// CheckTags represents a tags that should be used in selfstate's checks to invoke subscriptions.
+type CheckTags struct {
+	Database []string
+	Filter []string
+	LocalChecker []string
+	RemoteChecker []string
+	Notifier []string
+}
+
 // Config is representation of self state worker settings like moira admins contacts and threshold values for checked services.
 type Config struct {
 	Enabled                        bool
@@ -15,6 +24,7 @@ type Config struct {
 	NoticeIntervalSeconds          int64
 	CheckInterval                  time.Duration
 	Contacts                       []map[string]string
+	CheckTags											 CheckTags
 }
 
 func (config *Config) checkConfig(senders map[string]bool) error {

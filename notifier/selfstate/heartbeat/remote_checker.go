@@ -11,13 +11,14 @@ type remoteChecker struct {
 	count int64
 }
 
-func GetRemoteChecker(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
+func GetRemoteChecker(delay int64, checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
 	if delay > 0 {
 		return &remoteChecker{heartbeat: heartbeat{
 			logger:              logger,
 			database:            database,
 			delay:               delay,
 			lastSuccessfulCheck: time.Now().Unix(),
+			checkTags:					 checkTags,
 		}}
 	}
 	return nil
@@ -57,4 +58,8 @@ func (remoteChecker) NeedToCheckOthers() bool {
 
 func (remoteChecker) GetErrorMessage() string {
 	return "Moira-Remote-Checker does not check remote triggers"
+}
+
+func (check *remoteChecker) GetCheckTags() CheckTags {
+	return check.checkTags
 }
