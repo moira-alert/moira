@@ -4,7 +4,9 @@ on:
   push:
     branches:
       - master
-      - release/[0-9]+.[0-9]+.[0-9]+
+      - release/*
+    tags:
+      - "v*"
 
 jobs:
   validate-spec:
@@ -31,7 +33,7 @@ jobs:
       - run: make validate-spec
 
       - name: Save build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: specfile
           path: docs/swagger.yaml
@@ -48,7 +50,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download spec file artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4.6.1
         with:
           name: specfile
           path: docs
