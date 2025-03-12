@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
@@ -48,12 +49,32 @@ var (
 	ErrMissingContactType = errors.New("failed to retrieve sender contact type from sender settings")
 )
 
+const (
+	deliveryCheckWorkerLockPrefix = "moira-delivery-check-lock:"
+	deliveryCheckLockTTL          = 30 * time.Second
+)
+
+func workerDeliveryCheckLockKey(contactType string) string {
+	return deliveryCheckWorkerLockPrefix + contactType
+}
+
 // RegisterSenders watch on senders config and register all configured senders.
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
-		switch senderSettings["sender_type"] {
+
+		senderType, ok := senderSettings["sender_type"].(string)
+		if !ok {
+			return ErrMissingSenderType
+		}
+
+		senderContactType, ok := senderSettings["contact_type"].(string)
+		if !ok {
+			return ErrMissingContactType
+		}
+
+		switch senderType {
 		case mailSender:
 			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
 		case pushoverSender:
@@ -73,7 +94,10 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		case twilioSmsSender, twilioVoiceSender:
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
 		case webhookSender:
-			err = notifier.RegisterSender(senderSettings, &webhook.Sender{Database: connector})
+			workerLock := connector.NewLock(workerDeliveryCheckLockKey(senderContactType), deliveryCheckLockTTL)
+			_ = workerLock
+
+			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
 		case opsgenieSender:
 			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
 		case victoropsSender:
@@ -85,7 +109,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		// case "phone":
 		// 	err = notifier.RegisterSender(senderSettings, &kontur.SmsSender{})
 		default:
-			return fmt.Errorf("unknown sender type [%s]", senderSettings["sender_type"])
+			return fmt.Errorf("unknown sender type [%s]", senderType)
 		}
 
 		if err != nil {
