@@ -258,3 +258,13 @@ func ValidateStruct(s any) error {
 	validator := validator.New()
 	return validator.Struct(s)
 }
+
+// EqualTwoPointerValues checks that both pointers is not nil and if they both are not nil compares values
+// that they are pointed to.
+func EqualTwoPointerValues[T comparable](first, second *T) bool {
+	if first != nil && second != nil {
+		return *first == *second
+	}
+
+	return first == nil && second == nil
+}
