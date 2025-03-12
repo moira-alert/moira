@@ -11,9 +11,7 @@ package mock_moira_alert
 
 import (
 	reflect "reflect"
-	time "time"
 
-	moira "github.com/moira-alert/moira"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -69,31 +67,17 @@ func (mr *MockDeliveryCheckerDatabaseMockRecorder) GetDeliveryChecksData(arg0, a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).GetDeliveryChecksData), arg0, arg1, arg2)
 }
 
-// NewLock mocks base method.
-func (m *MockDeliveryCheckerDatabase) NewLock(arg0 string, arg1 time.Duration) moira.Lock {
+// RemoveDelivemoryChecksData mocks base method.
+func (m *MockDeliveryCheckerDatabase) RemoveDelivemoryChecksData(arg0, arg1, arg2 string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewLock", arg0, arg1)
-	ret0, _ := ret[0].(moira.Lock)
-	return ret0
-}
-
-// NewLock indicates an expected call of NewLock.
-func (mr *MockDeliveryCheckerDatabaseMockRecorder) NewLock(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewLock", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).NewLock), arg0, arg1)
-}
-
-// RemoveDeliveryChecksData mocks base method.
-func (m *MockDeliveryCheckerDatabase) RemoveDeliveryChecksData(arg0, arg1, arg2 string) (int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveDeliveryChecksData", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "RemoveDelivemoryChecksData", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// RemoveDeliveryChecksData indicates an expected call of RemoveDeliveryChecksData.
-func (mr *MockDeliveryCheckerDatabaseMockRecorder) RemoveDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+// RemoveDelivemoryChecksData indicates an expected call of RemoveDelivemoryChecksData.
+func (mr *MockDeliveryCheckerDatabaseMockRecorder) RemoveDelivemoryChecksData(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).RemoveDeliveryChecksData), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDelivemoryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).RemoveDelivemoryChecksData), arg0, arg1, arg2)
 }
