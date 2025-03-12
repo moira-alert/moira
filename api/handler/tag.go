@@ -39,7 +39,7 @@ func systemTag(router chi.Router) {
 func getAllSystemTags(writer http.ResponseWriter, request *http.Request) {
 	checksConfig := middleware.GetSelfStateChecksConfig(request)
 	tagsSet := checksConfig.GetUniqueSystemTags()
-	tagData := dto.TagsData {
+	tagData := dto.TagsData{
 		TagNames: tagsSet,
 	}
 

@@ -422,4 +422,3 @@ func SelfStateChecksContext(selfstateCheckConfig selfstate.ChecksConfig) func(ne
 		})
 	}
 }
-

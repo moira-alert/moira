@@ -47,7 +47,7 @@ var (
 	limitsContextKey     ContextKey = "limits"
 	searchTextContextKey ContextKey = "searchText"
 	sortOrderContextKey  ContextKey = "sort"
-	selfStateChecksKey	 ContextKey	= "selfstateChecks"
+	selfStateChecksKey   ContextKey = "selfstateChecks"
 
 	anonymousUser = "anonymous"
 )

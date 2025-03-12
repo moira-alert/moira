@@ -21,7 +21,7 @@ type config struct {
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
 	Remotes             cmd.RemotesConfig             `yaml:",inline"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
-	Checks							cmd.ChecksConfig							`yaml:"selfstate_checks"`
+	Checks              cmd.ChecksConfig              `yaml:"selfstate_checks"`
 }
 
 func toCheckConfig(checksConfig cmd.ChecksConfig) *selfstate.ChecksConfig {

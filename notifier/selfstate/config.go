@@ -12,11 +12,11 @@ type HeartbeatConfig struct {
 }
 
 type ChecksConfig struct {
-	Database HeartbeatConfig
-	Filter HeartbeatConfig
-	LocalChecker HeartbeatConfig
+	Database      HeartbeatConfig
+	Filter        HeartbeatConfig
+	LocalChecker  HeartbeatConfig
 	RemoteChecker HeartbeatConfig
-	Notifier HeartbeatConfig
+	Notifier      HeartbeatConfig
 }
 
 // Config is representation of self state worker settings like moira admins contacts and threshold values for checked services.
@@ -29,7 +29,7 @@ type Config struct {
 	NoticeIntervalSeconds          int64
 	CheckInterval                  time.Duration
 	Contacts                       []map[string]string
-	Checks												 ChecksConfig
+	Checks                         ChecksConfig
 }
 
 func (config *Config) checkConfig(senders map[string]bool) error {

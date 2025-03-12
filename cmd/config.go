@@ -378,15 +378,15 @@ type heartbeatConfig struct {
 }
 
 type ChecksConfig struct {
-	Database heartbeatConfig `yaml:"database"`
-	Filter heartbeatConfig `yaml:"filter"`
-	LocalChecker heartbeatConfig `yaml:"local_checker"`
-	RemoteChecker heartbeatConfig	`yaml:"remote_checker"`
-	Notifier heartbeatConfig `yaml:"notifier"`
+	Database      heartbeatConfig `yaml:"database"`
+	Filter        heartbeatConfig `yaml:"filter"`
+	LocalChecker  heartbeatConfig `yaml:"local_checker"`
+	RemoteChecker heartbeatConfig `yaml:"remote_checker"`
+	Notifier      heartbeatConfig `yaml:"notifier"`
 }
 
 type SelfStateChecksConfig struct {
-	Heartbeats ChecksConfig	`yaml:"heartbeats"`
+	Heartbeats ChecksConfig `yaml:"heartbeats"`
 }
 
 // ReadConfig parses config file by the given path into Moira-used type.

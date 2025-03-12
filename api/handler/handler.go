@@ -44,6 +44,10 @@ func NewHandler(
 	if webConfig != nil {
 		contactsTemplate = webConfig.Contacts
 	}
+	var checksConfig selfstate.ChecksConfig
+	if selfstateConfig != nil {
+		checksConfig = *selfstateConfig
+	}
 
 	contactsTemplateMiddleware := moiramiddle.ContactsTemplateContext(contactsTemplate)
 
@@ -53,7 +57,7 @@ func NewHandler(
 	router.Use(moiramiddle.RequestLogger(log))
 	router.Use(middleware.NoCache)
 	router.Use(moiramiddle.LimitsContext(apiConfig.Limits))
-	router.Use(moiramiddle.SelfStateChecksContext(*selfstateConfig))
+	router.Use(moiramiddle.SelfStateChecksContext(checksConfig))
 
 	router.NotFound(notFoundHandler)
 	router.MethodNotAllowed(methodNotAllowedHandler)
