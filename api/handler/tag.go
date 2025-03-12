@@ -37,13 +37,13 @@ func systemTag(router chi.Router) {
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/system-tag [get]
 func getAllSystemTags(writer http.ResponseWriter, request *http.Request) {
-	tagData, err := controller.GetAllSystemTags(database)
-	if err != nil {
-		render.Render(writer, request, err) //nolint
-		return
+	checksConfig := middleware.GetSelfStateChecksConfig(request)
+	tagsSet := checksConfig.GetUniqueSystemTags()
+	tagData := dto.TagsData {
+		TagNames: tagsSet,
 	}
 
-	if err := render.Render(writer, request, tagData); err != nil {
+	if err := render.Render(writer, request, &tagData); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}

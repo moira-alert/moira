@@ -182,7 +182,7 @@ func TestCreateSubscription(t *testing.T) {
 		Convey("Success create", func() {
 			subscription := dto.Subscription{ID: ""}
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, auth, login, "", &subscription)
+			err := CreateSubscription(dataBase, auth, login, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
 		})
 
@@ -192,7 +192,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			dataBase.EXPECT().GetSubscription(sub.ID).Return(moira.SubscriptionData{}, database.ErrNil)
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, auth, login, "", sub)
+			err := CreateSubscription(dataBase, auth, login, "", []string{}, sub)
 			So(err, ShouldBeNil)
 			So(sub.User, ShouldResemble, login)
 			So(sub.ID, ShouldResemble, sub.ID)
@@ -203,7 +203,7 @@ func TestCreateSubscription(t *testing.T) {
 				ID: uuid.Must(uuid.NewV4()).String(),
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, nil)
-			err := CreateSubscription(dataBase, auth, login, "", subscription)
+			err := CreateSubscription(dataBase, auth, login, "", []string{}, subscription)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("subscription with this ID already exists")))
 		})
 
@@ -214,8 +214,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			dataBase.EXPECT().GetSystemTagNames().Return([]string{"system-tag1"}, nil)
-			err := CreateSubscription(dataBase, auth, login, "", subscription)
+			err := CreateSubscription(dataBase, auth, login, "", []string{"system-tag1"}, subscription)
 			So(err, ShouldBeNil)
 		})
 
@@ -226,8 +225,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			dataBase.EXPECT().GetSystemTagNames().Return([]string{"system-tag1", "system-tag2"}, nil)
-			err := CreateSubscription(dataBase, auth, login, "", subscription)
+			err := CreateSubscription(dataBase, auth, login, "", []string{"system-tag1", "system-tag2"}, subscription)
 			So(err, ShouldBeNil)
 		})
 
@@ -237,8 +235,7 @@ func TestCreateSubscription(t *testing.T) {
 				Tags: []string{"system-tag1", "tag2"},
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, database.ErrNil)
-			dataBase.EXPECT().GetSystemTagNames().Return([]string{"system-tag1", "system-tag2"}, nil)
-			err := CreateSubscription(dataBase, auth, login, "", subscription)
+			err := CreateSubscription(dataBase, auth, login, "", []string{"system-tag1", "system-tag2"}, subscription)
 			expected := fmt.Errorf("subscription tags should be only user-defined or only system")
 			So(err, ShouldResemble, api.ErrorInvalidRequest(expected))
 		})
@@ -249,7 +246,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, err)
-			expected := CreateSubscription(dataBase, auth, login, "", subscription)
+			expected := CreateSubscription(dataBase, auth, login, "", []string{}, subscription)
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		})
 
@@ -257,7 +254,7 @@ func TestCreateSubscription(t *testing.T) {
 			subscription := dto.Subscription{ID: ""}
 			expected := fmt.Errorf("oooops! Can not create subscription")
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(expected)
-			err := CreateSubscription(dataBase, auth, login, "", &subscription)
+			err := CreateSubscription(dataBase, auth, login, "", []string{}, &subscription)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		})
 	})
@@ -265,7 +262,7 @@ func TestCreateSubscription(t *testing.T) {
 		Convey("Success create", func() {
 			subscription := dto.Subscription{ID: ""}
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, auth, "", teamID, &subscription)
+			err := CreateSubscription(dataBase, auth, "", teamID, []string{}, &subscription)
 			So(err, ShouldBeNil)
 		})
 
@@ -275,7 +272,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			dataBase.EXPECT().GetSubscription(sub.ID).Return(moira.SubscriptionData{}, database.ErrNil)
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, auth, "", teamID, sub)
+			err := CreateSubscription(dataBase, auth, "", teamID, []string{}, sub)
 			So(err, ShouldBeNil)
 			So(sub.TeamID, ShouldResemble, teamID)
 			So(sub.ID, ShouldResemble, sub.ID)
@@ -286,7 +283,7 @@ func TestCreateSubscription(t *testing.T) {
 				ID: uuid.Must(uuid.NewV4()).String(),
 			}
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, nil)
-			err := CreateSubscription(dataBase, auth, "", teamID, subscription)
+			err := CreateSubscription(dataBase, auth, "", teamID, []string{}, subscription)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("subscription with this ID already exists")))
 		})
 
@@ -296,7 +293,7 @@ func TestCreateSubscription(t *testing.T) {
 			}
 			err := fmt.Errorf("oooops! Can not write contact")
 			dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, err)
-			expected := CreateSubscription(dataBase, auth, "", teamID, subscription)
+			expected := CreateSubscription(dataBase, auth, "", teamID, []string{}, subscription)
 			So(expected, ShouldResemble, api.ErrorInternalServer(err))
 		})
 
@@ -304,13 +301,13 @@ func TestCreateSubscription(t *testing.T) {
 			subscription := dto.Subscription{ID: ""}
 			expected := fmt.Errorf("oooops! Can not create subscription")
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(expected)
-			err := CreateSubscription(dataBase, auth, "", teamID, &subscription)
+			err := CreateSubscription(dataBase, auth, "", teamID, []string{}, &subscription)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		})
 	})
 	Convey("Error on create with both: userLogin and teamID specified", t, func() {
 		subscription := &dto.Subscription{}
-		err := CreateSubscription(dataBase, auth, login, teamID, subscription)
+		err := CreateSubscription(dataBase, auth, login, teamID, []string{}, subscription)
 		So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("CreateSubscription: cannot create subscription when both userLogin and teamID specified")))
 	})
 }
@@ -332,7 +329,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 				User: userLogin,
 			}
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, auth, userLogin, "", &subscription)
+			err := CreateSubscription(dataBase, auth, userLogin, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
 			So(subscription.User, ShouldEqual, userLogin)
 		})
@@ -342,7 +339,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 				User: adminLogin,
 			}
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, auth, adminLogin, "", &subscription)
+			err := CreateSubscription(dataBase, auth, adminLogin, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
 			So(subscription.User, ShouldEqual, adminLogin)
 		})
@@ -352,7 +349,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 				User: adminLogin,
 			}
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, auth, userLogin, "", &subscription)
+			err := CreateSubscription(dataBase, auth, userLogin, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
 			So(subscription.User, ShouldEqual, userLogin)
 		})
@@ -362,7 +359,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 				User: userLogin,
 			}
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
-			err := CreateSubscription(dataBase, auth, adminLogin, "", &subscription)
+			err := CreateSubscription(dataBase, auth, adminLogin, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
 			So(subscription.User, ShouldEqual, userLogin)
 		})

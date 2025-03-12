@@ -15,6 +15,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
 // DatabaseContext sets to requests context configured database.
@@ -412,3 +413,13 @@ func SortOrderContext(defaultSortOrder api.SortOrder) func(next http.Handler) ht
 		})
 	}
 }
+
+func SelfStateChecksContext(selfstateCheckConfig selfstate.ChecksConfig) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), selfStateChecksKey, selfstateCheckConfig)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+

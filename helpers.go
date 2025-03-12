@@ -258,3 +258,15 @@ func ValidateStruct(s any) error {
 	validator := validator.New()
 	return validator.Struct(s)
 }
+
+func GetUniqueValues[T comparable](objs ...T) []T {
+	set := make(map[T]struct{})
+	for _, obj := range objs {
+		set[obj] = struct{}{}
+	}
+	res := make([]T, 0, len(set))
+	for key := range set {
+		res = append(res, key)
+	}
+	return res
+}

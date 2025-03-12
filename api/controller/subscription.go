@@ -37,7 +37,7 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 }
 
 // CreateSubscription create or update subscription.
-func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLogin, teamID string, subscription *dto.Subscription) *api.ErrorResponse {
+func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLogin, teamID string, systemTags []string, subscription *dto.Subscription) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateSubscription: cannot create subscription when both userLogin and teamID specified"))
 	}
@@ -64,11 +64,8 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 	subscription.TeamID = teamID
 	data := moira.SubscriptionData(*subscription)
 	if len(data.Tags) > 0 {
-		areTagsOneKind, err := areTagsAllSystemOrNot(data.Tags, dataBase)
-		if err != nil {
-			return api.ErrorInternalServer(err)
-		}
-		if !areTagsOneKind {
+		areTagsOfSameKind := areAllTagsOfSameKind(data.Tags, systemTags)
+		if !areTagsOfSameKind {
 			return api.ErrorInvalidRequest(fmt.Errorf("subscription tags should be only user-defined or only system"))
 		}
 	}
@@ -78,24 +75,19 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 	return nil
 }
 
-func areTagsAllSystemOrNot(tags []string, dataBase moira.Database) (bool, error) {
-	if len(tags) < 2 {
-		return true, nil
-	}
-
-	systemTags, err := dataBase.GetSystemTagNames()
-	if err != nil {
-		return false, err
+func areAllTagsOfSameKind(tags []string, systemTags []string) bool {
+	if len(tags) < 2 || len(systemTags) == 0 {
+		return true
 	}
 
 	pivot := slices.Contains(systemTags, tags[0])
 
 	for _, tag := range tags {
 		if slices.Contains(systemTags, tag) != pivot {
-			return false, nil
+			return false
 		}
 	}
-	return true, nil
+	return true
 }
 
 // GetSubscription returns subscription by it's id.
