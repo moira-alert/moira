@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,12 +14,13 @@ import (
 
 // Structure that represents the Webhook configuration in the YAML file.
 type config struct {
-	URL      string            `mapstructure:"url" validate:"required"`
-	Body     string            `mapstructure:"body"`
-	Headers  map[string]string `mapstructure:"headers"`
-	User     string            `mapstructure:"user"`
-	Password string            `mapstructure:"password"`
-	Timeout  int               `mapstructure:"timeout"`
+	URL         string            `mapstructure:"url" validate:"required"`
+	Body        string            `mapstructure:"body"`
+	Headers     map[string]string `mapstructure:"headers"`
+	User        string            `mapstructure:"user"`
+	Password    string            `mapstructure:"password"`
+	Timeout     int               `mapstructure:"timeout"`
+	InsecureTLS bool              `mapstructure:"insecure_tls"`
 }
 
 // Sender implements moira sender interface via webhook.
@@ -69,8 +71,13 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.log = logger
 	sender.client = &http.Client{
-		Timeout:   time.Duration(timeout) * time.Second,
-		Transport: &http.Transport{DisableKeepAlives: true},
+		Timeout: time.Duration(timeout) * time.Second,
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: cfg.InsecureTLS,
+			},
+		},
 	}
 
 	senderSettingsMap := senderSettings.(map[string]interface{})
