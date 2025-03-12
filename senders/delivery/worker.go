@@ -29,16 +29,19 @@ type jsonable interface {
 	json.Unmarshaler
 }
 
+// CheckAction represents action that is performed to check the delivery of notifications.
 type CheckAction[T jsonable] interface {
 	CheckNotificationsDelivery(fetchedDeliveryChecks []T, counter *TypesCounter) []T
 }
 
+// TypesCounter contains counters for different types of delivery statuses.
 type TypesCounter struct {
 	DeliveryOK            int64
 	DeliveryFailed        int64
 	DeliveryChecksStopped int64
 }
 
+// Checker
 type Checker[T jsonable] struct {
 	contactType       string
 	workerName        string
@@ -76,6 +79,7 @@ func NewChecker[T jsonable](
 	}
 }
 
+// Run the Checker in a worker. It is recommended to call this function in separate goroutine.
 func (checker *Checker[T]) Run(stop <-chan struct{}) {
 	worker.NewWorker(
 		checker.workerName,

@@ -44,6 +44,26 @@ type deliveryCheckData struct {
 	AttemptsCount uint64 `json:"attempts_count"`
 }
 
+var (
+	errNilDataToMarshal = errors.New("failed to marshal delivery check because it is nil")
+)
+
+// MarshalJSON encodes deliveryCheckData into json.
+func (data *deliveryCheckData) MarshalJSON() ([]byte, error) {
+	if data == nil {
+		return nil, errNilDataToMarshal
+	}
+
+	return json.Marshal(data)
+}
+
+// UnmarshalJSON decodes deliveryCheckData from json.
+func (data *deliveryCheckData) UnmarshalJSON(bytes []byte) error {
+	*data = deliveryCheckData{}
+
+	return json.Unmarshal(bytes, data)
+}
+
 func webhookLockKey(contactType string) string {
 	return webhookDeliveryCheckLockKeyPrefix + contactType
 }
