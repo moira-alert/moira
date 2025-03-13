@@ -59,26 +59,13 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 	return &tagsStatistics, nil
 }
 
-// GetAllSystemTags gets all system tag names.
-func GetAllSystemTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
-	tags, err := database.GetSystemTagNames()
-	if err != nil {
-		return nil, api.ErrorInternalServer(err)
-	}
-	tags = sortTagNames(tags)
-	tagsData := &dto.TagsData{
-		TagNames: tags,
-	}
-
-	return tagsData, nil
-}
-
 // GetAllTags gets all tag names.
 func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
 	tags, err := database.GetTagNames()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	tags = sortTagNames(tags)
 	tagsData := &dto.TagsData{
 		TagNames: tags,
@@ -89,6 +76,7 @@ func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
 
 func sortTagNames(tagsNames []string) []string {
 	sort.SliceStable(tagsNames, func(i, j int) bool { return strings.ToLower(tagsNames[i]) < strings.ToLower(tagsNames[j]) })
+
 	return tagsNames
 }
 

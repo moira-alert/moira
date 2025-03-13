@@ -1,7 +1,9 @@
 package moira
 
 import (
+	"fmt"
 	"math"
+	"slices"
 	"testing"
 	"time"
 
@@ -84,31 +86,55 @@ func TestGetStringListsDiff(t *testing.T) {
 	})
 }
 
-func TestGetStringListsUnion(t *testing.T) {
-	Convey("Test Get Union between string lists", t, func() {
-		{
-			union := GetStringListsUnion()
-			So(union, ShouldResemble, []string{})
+func TestGetUniqueValues(t *testing.T) {
+	Convey("Test Get Unique Values of list", t, func() {
+		cases := []struct {
+			input    []string
+			expected []string
+		}{
+			{
+				input:    []string{},
+				expected: []string{},
+			},
+			{
+				input:    []string{"a"},
+				expected: []string{"a"},
+			},
+			{
+				input:    []string{"a", "b"},
+				expected: []string{"a", "b"},
+			},
+			{
+				input:    []string{"a", "a"},
+				expected: []string{"a"},
+			},
+			{
+				input:    []string{"a", "a", "b", "b", "c", "c"},
+				expected: []string{"a", "b", "c"},
+			},
+			{
+				input:    []string{"a", "A", "b", "B"},
+				expected: []string{"A", "B", "a", "b"},
+			},
+			{
+				input:    []string{"a", "!", "@", "a", "!"},
+				expected: []string{"!", "@", "a"},
+			},
+			{
+				input:    []string{"1", "2", "2", "3", "1"},
+				expected: []string{"1", "2", "3"},
+			},
+			{
+				input:    []string{"", "", "a", "b", ""},
+				expected: []string{"", "a", "b"},
+			},
 		}
-		{
-			union := GetStringListsUnion(nil)
-			So(union, ShouldResemble, []string{})
-		}
-		{
-			union := GetStringListsUnion(nil, nil)
-			So(union, ShouldResemble, []string{})
-		}
-		{
-			first := []string{"1", "2", "3"}
-			second := []string{"1", "2", "3"}
-			union := GetStringListsUnion(first, second)
-			So(union, ShouldResemble, []string{"1", "2", "3"})
-		}
-		{
-			first := []string{"1", "2", "3"}
-			second := []string{"4", "5", "6"}
-			union := GetStringListsUnion(first, second)
-			So(union, ShouldResemble, []string{"1", "2", "3", "4", "5", "6"})
+		for _, variant := range cases {
+			Convey(fmt.Sprintf("with %v -> %v", variant.input, variant.expected), func() {
+				actual := GetUniqueValues(variant.input...)
+				slices.Sort(actual)
+				So(actual, ShouldResemble, variant.expected)
+			})
 		}
 	})
 }

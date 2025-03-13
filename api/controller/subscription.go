@@ -63,15 +63,18 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 	}
 	subscription.TeamID = teamID
 	data := moira.SubscriptionData(*subscription)
+
 	if len(data.Tags) > 0 {
 		areTagsOfSameKind := areAllTagsOfSameKind(data.Tags, systemTags)
 		if !areTagsOfSameKind {
 			return api.ErrorInvalidRequest(fmt.Errorf("subscription tags should be only user-defined or only system"))
 		}
 	}
+
 	if err := dataBase.SaveSubscription(&data); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }
 

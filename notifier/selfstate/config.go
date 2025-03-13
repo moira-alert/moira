@@ -7,10 +7,12 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+// HeartbeatConfig represents a heartbeat-specific settings.
 type HeartbeatConfig struct {
 	SystemTags []string
 }
 
+// ChecksConfig represents a checks list.
 type ChecksConfig struct {
 	Database      HeartbeatConfig
 	Filter        HeartbeatConfig
