@@ -138,7 +138,8 @@ func TestRegisterSendersWithUnknownType(t *testing.T) {
 		DateTimeFormat:   dateTimeFormat,
 		Senders: []map[string]interface{}{
 			{
-				"sender_type": "some_type",
+				"sender_type":  "some_type",
+				"contact_type": "some_contact_type",
 			},
 		},
 	}

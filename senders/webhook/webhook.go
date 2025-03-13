@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -22,6 +23,7 @@ type config struct {
 	User          string              `mapstructure:"user"`
 	Password      string              `mapstructure:"password"`
 	Timeout       int                 `mapstructure:"timeout"`
+	InsecureTLS   bool                `mapstructure:"insecure_tls"`
 	DeliveryCheck deliveryCheckConfig `mapstructure:"delivery_check"`
 }
 
@@ -127,8 +129,13 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.log = logger
 	sender.client = &http.Client{
-		Timeout:   time.Duration(timeout) * time.Second,
-		Transport: &http.Transport{DisableKeepAlives: true},
+		Timeout: time.Duration(timeout) * time.Second,
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: cfg.InsecureTLS,
+			},
+		},
 	}
 
 	senderSettingsMap := senderSettings.(map[string]interface{})

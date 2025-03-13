@@ -11,9 +11,7 @@ package mock_moira_alert
 
 import (
 	reflect "reflect"
-	time "time"
 
-	moira "github.com/moira-alert/moira"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -67,20 +65,6 @@ func (m *MockDeliveryCheckerDatabase) GetDeliveryChecksData(arg0, arg1, arg2 str
 func (mr *MockDeliveryCheckerDatabaseMockRecorder) GetDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).GetDeliveryChecksData), arg0, arg1, arg2)
-}
-
-// NewLock mocks base method.
-func (m *MockDeliveryCheckerDatabase) NewLock(arg0 string, arg1 time.Duration) moira.Lock {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewLock", arg0, arg1)
-	ret0, _ := ret[0].(moira.Lock)
-	return ret0
-}
-
-// NewLock indicates an expected call of NewLock.
-func (mr *MockDeliveryCheckerDatabaseMockRecorder) NewLock(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewLock", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).NewLock), arg0, arg1)
 }
 
 // RemoveDeliveryChecksData mocks base method.

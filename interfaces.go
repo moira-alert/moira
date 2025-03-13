@@ -172,8 +172,6 @@ type DeliveryCheckerDatabase interface {
 	GetDeliveryChecksData(contactType string, from string, to string) ([]string, error)
 	// RemoveDeliveryChecksData must remove already used data for performing delivery checks.
 	RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error)
-	// NewLock creates Lock
-	NewLock(name string, ttl time.Duration) Lock
 }
 
 // Lock implements lock abstraction.

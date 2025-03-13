@@ -3,6 +3,7 @@ package webhook
 import (
 	"bufio"
 	"bytes"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -71,8 +72,13 @@ func TestSender_Init(t *testing.T) {
 				url:     testURL,
 				headers: defaultHeaders,
 				client: &http.Client{
-					Timeout:   30 * time.Second,
-					Transport: &http.Transport{DisableKeepAlives: true},
+					Timeout: 30 * time.Second,
+					Transport: &http.Transport{
+						DisableKeepAlives: true,
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: false,
+						},
+					},
 				},
 				log:                 logger,
 				deliveryCheckConfig: getDefaultDeliveryCheckConfig(),
@@ -90,7 +96,8 @@ func TestSender_Init(t *testing.T) {
 				"headers": map[string]string{
 					"testHeader": "test",
 				},
-				"timeout": 120,
+				"timeout":      120,
+				"insecure_tls": true,
 			}
 			sender := Sender{}
 			expectedHeaders := maps.Clone(defaultHeaders)
@@ -106,8 +113,13 @@ func TestSender_Init(t *testing.T) {
 				password:    testPass,
 				headers:     expectedHeaders,
 				client: &http.Client{
-					Timeout:   120 * time.Second,
-					Transport: &http.Transport{DisableKeepAlives: true},
+					Timeout: 120 * time.Second,
+					Transport: &http.Transport{
+						DisableKeepAlives: true,
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: true,
+						},
+					},
 				},
 				log:                 logger,
 				deliveryCheckConfig: getDefaultDeliveryCheckConfig(),
@@ -130,8 +142,13 @@ func TestSender_Init(t *testing.T) {
 				url:     testURL,
 				headers: defaultHeaders,
 				client: &http.Client{
-					Timeout:   30 * time.Second,
-					Transport: &http.Transport{DisableKeepAlives: true},
+					Timeout: 30 * time.Second,
+					Transport: &http.Transport{
+						DisableKeepAlives: true,
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: false,
+						},
+					},
 				},
 				log:                 logger,
 				metrics:             senderMetrics,
