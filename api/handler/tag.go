@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
@@ -95,12 +93,7 @@ func createTags(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	checksConfig := middleware.GetSelfStateChecksConfig(request)
-	if moira.Subset(tags.TagNames, checksConfig.GetUniqueSystemTags()) {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("tags should not be contained in system tags list")))
-		return
-	}
-
-	if err := controller.CreateTags(database, &tags); err != nil {
+	if err := controller.CreateTags(database, &tags, &checksConfig); err != nil {
 		render.Render(writer, request, err) //nolint
 	}
 }

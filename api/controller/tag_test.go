@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/notifier/selfstate"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
@@ -51,14 +52,14 @@ func TestCreateTags(t *testing.T) {
 	Convey("Success with empty tags", t, func() {
 		database.EXPECT().CreateTags(emptyTags.TagNames).Return(nil).Times(1)
 
-		err := CreateTags(database, emptyTags)
+		err := CreateTags(database, emptyTags, &selfstate.ChecksConfig{})
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Success with many tags", t, func() {
 		database.EXPECT().CreateTags(tags.TagNames).Return(nil).Times(1)
 
-		err := CreateTags(database, tags)
+		err := CreateTags(database, tags, &selfstate.ChecksConfig{})
 		So(err, ShouldBeNil)
 	})
 
@@ -66,7 +67,7 @@ func TestCreateTags(t *testing.T) {
 		expectedErr := fmt.Errorf("some error")
 		database.EXPECT().CreateTags(tags.TagNames).Return(expectedErr).Times(1)
 
-		err := CreateTags(database, tags)
+		err := CreateTags(database, tags, &selfstate.ChecksConfig{})
 		So(err, ShouldResemble, api.ErrorInternalServer(expectedErr))
 	})
 }
