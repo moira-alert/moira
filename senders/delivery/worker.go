@@ -12,8 +12,7 @@ import (
 
 const (
 	workerNameSuffix                    = "DeliveryChecker"
-	LogFieldDeliveryCheckPrefix         = "delivery.check."
-	logFieldNameDeliveryCheckWorkerName = LogFieldDeliveryCheckPrefix + "worker.name"
+	logFieldNameDeliveryCheckWorkerName = LogFieldPrefix + "worker.name"
 )
 
 type checksStorage interface {

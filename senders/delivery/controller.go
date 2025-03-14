@@ -11,6 +11,8 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
+// ChecksController is used to add new data to perform delivery checks and to run the checksWorker, that
+// reads data from moira.DeliveryCheckerDatabase and perform checks.
 type ChecksController struct {
 	database    moira.DeliveryCheckerDatabase
 	lock        moira.Lock
@@ -18,6 +20,7 @@ type ChecksController struct {
 	contactType string
 }
 
+// NewChecksController creates new ChecksController.
 func NewChecksController(db moira.DeliveryCheckerDatabase, lock moira.Lock, contactType string) *ChecksController {
 	return &ChecksController{
 		database:    db,
@@ -27,6 +30,7 @@ func NewChecksController(db moira.DeliveryCheckerDatabase, lock moira.Lock, cont
 	}
 }
 
+// AddDeliveryChecksData schedules delivery check for given timestamp with given data.
 func (controller *ChecksController) AddDeliveryChecksData(timestamp int64, data string) error {
 	return controller.database.AddDeliveryChecksData(controller.contactType, timestamp, data)
 }
@@ -61,6 +65,7 @@ func (controller *ChecksController) removeDeliveryChecksData(from string, to str
 	return err
 }
 
+// RunDeliveryChecksWorker creates and runs delivery checks worker in separate goroutine.
 func (controller *ChecksController) RunDeliveryChecksWorker(
 	stop <-chan struct{},
 	logger moira.Logger,
