@@ -5,10 +5,10 @@ defaults:
 on:
   push:
     branches:
-    - master
-    - release/*
-  tags:
-    - "v*"
+      - master
+      - release/*
+    tags:
+      - "v*"
 
 jobs:
   removespec:
