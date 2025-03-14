@@ -4,6 +4,8 @@ package dto
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/moira-alert/moira"
 )
 
 type ContactList struct {
@@ -23,6 +25,18 @@ type Contact struct {
 	TeamID string `json:"team_id,omitempty"`
 }
 
+// NewContact init Contact with data from moira.ContactData.
+func NewContact(data moira.ContactData) Contact {
+	return Contact{
+		Type:   data.Type,
+		Name:   data.Name,
+		Value:  data.Value,
+		ID:     data.ID,
+		User:   data.User,
+		TeamID: data.Team,
+	}
+}
+
 func (*Contact) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
@@ -37,5 +51,23 @@ func (contact *Contact) Bind(r *http.Request) error {
 	if contact.User != "" && contact.TeamID != "" {
 		return fmt.Errorf("contact cannot have both the user field and the team_id field filled in")
 	}
+	return nil
+}
+
+// ContactNoisiness represents Contact with amount of events for this contact.
+type ContactNoisiness struct {
+	Contact
+	// EventsCount for the contact.
+	EventsCount uint64 `json:"events_count"`
+}
+
+func (*ContactNoisiness) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+// ContactNoisinessList represents list of ContactNoisiness.
+type ContactNoisinessList ListDTO[*ContactNoisiness]
+
+func (*ContactNoisinessList) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }

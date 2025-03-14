@@ -40,7 +40,7 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID (%s) already exists", trigger.ID))
 		}
 	}
-	resp, err := saveTrigger(dataBase, trigger.ToMoiraTrigger(), trigger.ID, timeSeriesNames)
+	resp, err := saveTrigger(dataBase, nil, trigger.ToMoiraTrigger(), trigger.ID, timeSeriesNames)
 	if resp != nil {
 		resp.Message = "trigger created"
 	}
@@ -100,7 +100,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 			return nil, api.ErrorInternalServer(err)
 		}
 		options.PagerID = uuid4.String()
-		err = database.SaveTriggersSearchResults(options.PagerID, searchResults)
+		err = database.SaveTriggersSearchResults(options.PagerID, searchResults, options.PagerTTL)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
@@ -236,7 +236,7 @@ func GetTriggerNoisiness(
 	total := int64(len(triggerIDsWithEventsCount))
 
 	resDto := dto.TriggerNoisinessList{
-		List:  []dto.TriggerNoisiness{},
+		List:  []*dto.TriggerNoisiness{},
 		Page:  page,
 		Size:  size,
 		Total: total,
@@ -256,9 +256,9 @@ func GetTriggerNoisiness(
 		return nil, api.ErrorInternalServer(fmt.Errorf("failed to fetch triggers for such range"))
 	}
 
-	resDto.List = make([]dto.TriggerNoisiness, 0, len(triggers))
+	resDto.List = make([]*dto.TriggerNoisiness, 0, len(triggers))
 	for i := range triggers {
-		resDto.List = append(resDto.List, dto.TriggerNoisiness{
+		resDto.List = append(resDto.List, &dto.TriggerNoisiness{
 			Trigger: dto.Trigger{
 				TriggerModel: dto.CreateTriggerModel(&triggers[i].Trigger),
 				Throttling:   triggers[i].Throttling,

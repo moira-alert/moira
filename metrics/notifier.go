@@ -6,37 +6,41 @@ import (
 
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
-	SubsMalformed                  Meter
-	EventsReceived                 Meter
-	EventsMalformed                Meter
-	EventsProcessingFailed         Meter
-	EventsByState                  MetersCollection
-	SendingFailed                  Meter
-	SendersOkMetrics               MetersCollection
-	SendersFailedMetrics           MetersCollection
-	SendersDroppedNotifications    MetersCollection
-	PlotsBuildDurationMs           Histogram
-	PlotsEvaluateTriggerDurationMs Histogram
-	fetchNotificationsDurationMs   Histogram
-	notifierIsAlive                Meter
+	SubsMalformed                       Meter
+	EventsReceived                      Meter
+	EventsMalformed                     Meter
+	EventsProcessingFailed              Meter
+	EventsByState                       MetersCollection
+	SendingFailed                       Meter
+	ContactsSendingNotificationsOK      MetersCollection
+	ContactsSendingNotificationsFailed  MetersCollection
+	ContactsDroppedNotifications        MetersCollection
+	ContactsDeliveryNotificationsOK     MetersCollection
+	ContactsDeliveryNotificationsFailed MetersCollection
+	PlotsBuildDurationMs                Histogram
+	PlotsEvaluateTriggerDurationMs      Histogram
+	fetchNotificationsDurationMs        Histogram
+	notifierIsAlive                     Meter
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
 func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics {
 	return &NotifierMetrics{
-		SubsMalformed:                  registry.NewMeter("subs", "malformed"),
-		EventsReceived:                 registry.NewMeter("events", "received"),
-		EventsMalformed:                registry.NewMeter("events", "malformed"),
-		EventsProcessingFailed:         registry.NewMeter("events", "failed"),
-		EventsByState:                  NewMetersCollection(registry),
-		SendingFailed:                  registry.NewMeter("sending", "failed"),
-		SendersOkMetrics:               NewMetersCollection(registry),
-		SendersFailedMetrics:           NewMetersCollection(registry),
-		SendersDroppedNotifications:    NewMetersCollection(registry),
-		PlotsBuildDurationMs:           registry.NewHistogram("plots", "build", "duration", "ms"),
-		PlotsEvaluateTriggerDurationMs: registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
-		fetchNotificationsDurationMs:   registry.NewHistogram("fetch", "notifications", "duration", "ms"),
-		notifierIsAlive:                registry.NewMeter("", "alive"),
+		SubsMalformed:                       registry.NewMeter("subs", "malformed"),
+		EventsReceived:                      registry.NewMeter("events", "received"),
+		EventsMalformed:                     registry.NewMeter("events", "malformed"),
+		EventsProcessingFailed:              registry.NewMeter("events", "failed"),
+		EventsByState:                       NewMetersCollection(registry),
+		SendingFailed:                       registry.NewMeter("sending", "failed"),
+		ContactsSendingNotificationsOK:      NewMetersCollection(registry),
+		ContactsSendingNotificationsFailed:  NewMetersCollection(registry),
+		ContactsDroppedNotifications:        NewMetersCollection(registry),
+		ContactsDeliveryNotificationsOK:     NewMetersCollection(registry),
+		ContactsDeliveryNotificationsFailed: NewMetersCollection(registry),
+		PlotsBuildDurationMs:                registry.NewHistogram("plots", "build", "duration", "ms"),
+		PlotsEvaluateTriggerDurationMs:      registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
+		fetchNotificationsDurationMs:        registry.NewHistogram("fetch", "notifications", "duration", "ms"),
+		notifierIsAlive:                     registry.NewMeter("", "alive"),
 	}
 }
 
@@ -45,23 +49,23 @@ func (metrics *NotifierMetrics) UpdateFetchNotificationsDurationMs(fetchNotifica
 	metrics.fetchNotificationsDurationMs.Update(time.Since(fetchNotificationsStartTime).Milliseconds())
 }
 
-// MarkSendersDroppedNotifications marks metrics as 1 by contactType for dropped notifications.
-func (metrics *NotifierMetrics) MarkSendersDroppedNotifications(contactType string) {
-	if metric, found := metrics.SendersDroppedNotifications.GetRegisteredMeter(contactType); found {
+// MarkContactDroppedNotifications marks metrics as 1 by contactType for dropped notifications.
+func (metrics *NotifierMetrics) MarkContactDroppedNotifications(contactType string) {
+	if metric, found := metrics.ContactsDroppedNotifications.GetRegisteredMeter(contactType); found {
 		metric.Mark(1)
 	}
 }
 
-// MarkSendersOkMetrics marks metrics as 1 by contactType when notifications were successfully sent.
-func (metrics *NotifierMetrics) MarkSendersOkMetrics(contactType string) {
-	if metric, found := metrics.SendersOkMetrics.GetRegisteredMeter(contactType); found {
+// MarkContactSendingNotificationOK marks metrics as 1 by contactType when notifications were successfully sent.
+func (metrics *NotifierMetrics) MarkContactSendingNotificationOK(contactType string) {
+	if metric, found := metrics.ContactsSendingNotificationsOK.GetRegisteredMeter(contactType); found {
 		metric.Mark(1)
 	}
 }
 
-// MarkSendersFailedMetrics marks metrics as 1 by contactType when notifications were unsuccessfully sent.
-func (metrics *NotifierMetrics) MarkSendersFailedMetrics(contactType string) {
-	if metric, found := metrics.SendersFailedMetrics.GetRegisteredMeter(contactType); found {
+// MarkContactSendingNotificationFailed marks metrics as 1 by contactType when notifications were unsuccessfully sent.
+func (metrics *NotifierMetrics) MarkContactSendingNotificationFailed(contactType string) {
+	if metric, found := metrics.ContactsSendingNotificationsFailed.GetRegisteredMeter(contactType); found {
 		metric.Mark(1)
 	}
 }

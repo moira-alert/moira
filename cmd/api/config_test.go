@@ -75,10 +75,16 @@ func Test_webConfig_getDefault(t *testing.T) {
 	Convey("Flags successfully filled", t, func() {
 		expectedResult := config{
 			Redis: cmd.RedisConfig{
-				Addrs:       "localhost:6379",
-				MetricsTTL:  "1h",
-				DialTimeout: "500ms",
-				MaxRetries:  3,
+				Addrs:           "localhost:6379",
+				MetricsTTL:      "1h",
+				MaxRetries:      3,
+				MaxRedirects:    3,
+				DialTimeout:     "500ms",
+				ReadTimeout:     "3s",
+				WriteTimeout:    "3s",
+				PoolTimeout:     "4s",
+				PoolSize:        0,
+				PoolSizePerProc: 5,
 			},
 			Logger: cmd.LoggerConfig{
 				LogFile:         "stdout",
@@ -89,6 +95,9 @@ func Test_webConfig_getDefault(t *testing.T) {
 				Listen:     ":8081",
 				EnableCORS: false,
 				Limits: LimitsConfig{
+					Pager: PagerLimits{
+						TTL: api.DefaultTriggerPagerTTL,
+					},
 					Trigger: TriggerLimitsConfig{
 						MaxNameSize: api.DefaultTriggerNameMaxSize,
 					},

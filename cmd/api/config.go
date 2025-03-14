@@ -54,10 +54,18 @@ type apiConfig struct {
 
 // LimitsConfig contains configurable moira limits.
 type LimitsConfig struct {
+	// Pager contains the limits applied to pagers.
+	Pager PagerLimits `yaml:"pager"`
 	// Trigger contains the limits applied to triggers.
 	Trigger TriggerLimitsConfig `yaml:"trigger"`
 	// Team contains the limits applied to teams.
 	Team TeamLimitsConfig `yaml:"team"`
+}
+
+// PagerLimits represents the limits which will be applied to all pagers.
+type PagerLimits struct {
+	// TTL is the amount of time that the pager will be exist
+	TTL time.Duration `yaml:"ttl"`
 }
 
 // TriggerLimitsConfig represents the limits which will be applied to all triggers.
@@ -77,6 +85,9 @@ type TeamLimitsConfig struct {
 // ToLimits converts LimitsConfig to api.LimitsConfig.
 func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 	return api.LimitsConfig{
+		Pager: api.PagerLimits{
+			TTL: conf.Pager.TTL,
+		},
 		Trigger: api.TriggerLimits{
 			MaxNameSize: conf.Trigger.MaxNameSize,
 		},
@@ -263,12 +274,7 @@ func getCelebrationMode(mode string) api.CelebrationMode {
 
 func getDefault() config {
 	return config{
-		Redis: cmd.RedisConfig{
-			Addrs:       "localhost:6379",
-			MetricsTTL:  "1h",
-			DialTimeout: "500ms",
-			MaxRetries:  3,
-		},
+		Redis: cmd.DefaultRedisConfig(),
 		NotificationHistory: cmd.NotificationHistoryConfig{
 			NotificationHistoryTTL: "48h",
 		},
@@ -281,6 +287,9 @@ func getDefault() config {
 			Listen:     ":8081",
 			EnableCORS: false,
 			Limits: LimitsConfig{
+				Pager: PagerLimits{
+					TTL: api.DefaultTriggerPagerTTL,
+				},
 				Trigger: TriggerLimitsConfig{
 					MaxNameSize: api.DefaultTriggerNameMaxSize,
 				},

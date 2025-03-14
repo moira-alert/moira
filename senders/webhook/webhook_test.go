@@ -3,9 +3,11 @@ package webhook
 import (
 	"bufio"
 	"bytes"
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -15,9 +17,10 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
-
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metrics"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 const (
@@ -40,6 +43,9 @@ var (
 
 func TestSender_Init(t *testing.T) {
 	Convey("Test Init function", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
 		validatorErr := validator.ValidationErrors{}
 
 		Convey("With empty url", func() {
@@ -62,8 +68,13 @@ func TestSender_Init(t *testing.T) {
 				url:     testURL,
 				headers: defaultHeaders,
 				client: &http.Client{
-					Timeout:   30 * time.Second,
-					Transport: &http.Transport{DisableKeepAlives: true},
+					Timeout: 30 * time.Second,
+					Transport: &http.Transport{
+						DisableKeepAlives: true,
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: false,
+						},
+					},
 				},
 				log: logger,
 			})
@@ -78,10 +89,11 @@ func TestSender_Init(t *testing.T) {
 				"headers": map[string]string{
 					"testHeader": "test",
 				},
-				"timeout": 120,
+				"timeout":      120,
+				"insecure_tls": true,
 			}
 			sender := Sender{}
-			expectedHeaders := defaultHeaders
+			expectedHeaders := maps.Clone(defaultHeaders)
 			expectedHeaders["testHeader"] = "test"
 
 			err := sender.Init(settings, logger, location, dateTimeFormat)
@@ -93,10 +105,43 @@ func TestSender_Init(t *testing.T) {
 				password: testPass,
 				headers:  expectedHeaders,
 				client: &http.Client{
-					Timeout:   120 * time.Second,
-					Transport: &http.Transport{DisableKeepAlives: true},
+					Timeout: 120 * time.Second,
+					Transport: &http.Transport{
+						DisableKeepAlives: true,
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: true,
+						},
+					},
 				},
 				log: logger,
+			})
+		})
+
+		Convey("With url and metricsMarker", func() {
+			senderMetrics := &metrics.SenderMetrics{}
+
+			settings := map[string]interface{}{
+				"url":            testURL,
+				senderMetricsKey: senderMetrics,
+			}
+
+			sender := Sender{}
+			err := sender.Init(settings, logger, location, dateTimeFormat)
+			So(err, ShouldBeNil)
+			So(sender, ShouldResemble, Sender{
+				url:     testURL,
+				headers: defaultHeaders,
+				client: &http.Client{
+					Timeout: 30 * time.Second,
+					Transport: &http.Transport{
+						DisableKeepAlives: true,
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: false,
+						},
+					},
+				},
+				log:     logger,
+				metrics: senderMetrics,
 			})
 		})
 	})

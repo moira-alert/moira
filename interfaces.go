@@ -50,7 +50,7 @@ type Database interface {
 
 	// SearchResult AKA pager storing
 	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)
-	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult) error
+	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult, recordTTL time.Duration) error
 	IsTriggersSearchResultsExist(pagerID string) (bool, error)
 	DeleteTriggersSearchResults(pagerID string) error
 
@@ -95,6 +95,7 @@ type Database interface {
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 	PushContactNotificationToHistory(notification *ScheduledNotification) error
 	CleanUpOutdatedNotificationHistory(ttl int64) error
+	CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*ContactIDWithNotificationCount, error)
 
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)

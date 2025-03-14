@@ -275,6 +275,8 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
+	trigger.UpdatedBy = middleware.GetLogin(request)
+
 	return nil
 }
 
@@ -510,20 +512,21 @@ func (*Trigger) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
-func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) error {
+// PopulatedDescription returns new trigger description after template populating.
+func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) (*string, error) {
+	emptyString := ""
+
 	if trigger.Desc == nil {
-		return nil
+		return &emptyString, nil
 	}
 
 	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(trigger.Name, events.ToTemplateEvents())
-	description, err := triggerDescriptionPopulater.Populate(*trigger.Desc)
+	newDescription, err := triggerDescriptionPopulater.Populate(*trigger.Desc)
 	if err != nil {
-		return fmt.Errorf("you have an error in your Go template: %v", err)
+		return &emptyString, fmt.Errorf("you have an error in your Go template: %v", err)
 	}
 
-	*trigger.Desc = description
-
-	return nil
+	return &newDescription, nil
 }
 
 type TriggerCheckResponse struct {
@@ -612,12 +615,7 @@ func (*TriggerNoisiness) Render(http.ResponseWriter, *http.Request) error {
 }
 
 // TriggerNoisinessList represents list of TriggerNoisiness.
-type TriggerNoisinessList struct {
-	List  []TriggerNoisiness `json:"list"`
-	Page  int64              `json:"page" example:"0" format:"int64"`
-	Size  int64              `json:"size" example:"100" format:"int64"`
-	Total int64              `json:"total" example:"10" format:"int64"`
-}
+type TriggerNoisinessList ListDTO[*TriggerNoisiness]
 
 func (*TriggerNoisinessList) Render(http.ResponseWriter, *http.Request) error {
 	return nil

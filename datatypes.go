@@ -222,6 +222,16 @@ func (contact *ContactData) ToTemplateContact() *templating.Contact {
 	}
 }
 
+// IDWithCount represents the number of objects for entity with given ID.
+type IDWithCount struct {
+	ID    string
+	Count uint64
+}
+
+// ContactIDWithNotificationCount represents the number of events from notification history,
+// for specified contact id.
+type ContactIDWithNotificationCount IDWithCount
+
 // SubscriptionData represents user subscription.
 type SubscriptionData struct {
 	Contacts          []string     `json:"contacts" example:"acd2db98-1659-4a2f-b227-52d71f6e3ba1"`
@@ -532,6 +542,7 @@ type SearchOptions struct {
 	NeedSearchByCreatedBy bool
 	CreatePager           bool
 	PagerID               string
+	PagerTTL              time.Duration
 }
 
 // MaintenanceCheck set maintenance user, time.

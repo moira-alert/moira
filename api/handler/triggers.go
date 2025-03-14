@@ -44,7 +44,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
 		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
-		// ToDo: DEPRECATED method. Remove in Moira 2.6
+		// TODO: DEPRECATED method. Remove in Moira 2.6
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", searchTriggers)
 	}
 }
@@ -106,7 +106,7 @@ func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@param		validate	query		bool									false	"For validating targets"
 //	@param		trigger		body		dto.Trigger								true	"Trigger data"
 //	@success	200			{object}	dto.SaveTriggerResponse					"Trigger created successfully"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	400			{object}	interface{}								"Bad request from client. Could be api.ErrorInvalidRequestExample or dto.SaveTriggerResponse"
 //	@failure	422			{object}	api.ErrorRenderExample					"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
 //	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
@@ -133,7 +133,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if trigger.Desc != nil {
-		err := trigger.PopulatedDescription(moira.NotificationEvents{{}})
+		_, err := trigger.PopulatedDescription(moira.NotificationEvents{{}})
 		if err != nil {
 			render.Render(writer, request, api.ErrorRender(err)) //nolint
 			return
@@ -163,25 +163,31 @@ func is4xxCode(statusCode int64) bool {
 }
 
 func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorResponse {
+	type victoriaMetricsError = prometheus.ErrorType
+
 	// In github.com/prometheus/client_golang/api/prometheus/v1 Error has field `Type`
 	// which can be used to understand "the reason" of error. There are some constants in the lib.
-	if promErr.Type == prometheus.ErrBadData {
+	switch promErr.Type {
+	case prometheus.ErrBadData:
 		return api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", promErr))
-	}
+
+	// If any error has occurred in prometheus, we should return RemoteServiceUnavailable status.
+	case prometheus.ErrServer, victoriaMetricsError(strconv.Itoa(http.StatusServiceUnavailable)):
+		return api.ErrorRemoteServerUnavailable(fmt.Errorf("remote server error: %w", promErr))
 
 	// VictoriaMetrics also supports prometheus api, BUT puts status code into Error.Type.
 	// So we can't just use constants from prometheus api client lib.
+	case victoriaMetricsError(strconv.Itoa(http.StatusUnauthorized)), victoriaMetricsError(strconv.Itoa(http.StatusForbidden)):
+		return api.ErrorInternalServer(promErr)
+	}
+
+	// In other cases we are trying to classify error as client error or server.
 	statusCode, err := strconv.ParseInt(string(promErr.Type), 10, 64)
 	if err != nil {
 		return api.ErrorInternalServer(promErr)
 	}
 
-	codes4xxLeadTo500 := map[int64]struct{}{
-		http.StatusUnauthorized: {},
-		http.StatusForbidden:    {},
-	}
-
-	if _, leadTo500 := codes4xxLeadTo500[statusCode]; is4xxCode(statusCode) && !leadTo500 {
+	if is4xxCode(statusCode) {
 		return api.ErrorInvalidRequest(promErr)
 	}
 
@@ -215,7 +221,6 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, api.ErrorInternalServer(err)
 		}
 	}
-	trigger.UpdatedBy = middleware.GetLogin(request)
 
 	return trigger, nil
 }
@@ -330,6 +335,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
+		PagerTTL:              middleware.GetLimits(request).Pager.TTL,
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
