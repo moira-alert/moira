@@ -35,7 +35,7 @@ func TestSetHealthWithAuth(t *testing.T) {
 			SupportEmail: "test",
 			Contacts:     []api.WebContact{},
 		}
-		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig)
+		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
 
 		Convey("Admin tries to set notifier state", func() {
 			mockDb.EXPECT().SetNotifierState("OK").Return(nil).Times(1)

@@ -3,7 +3,23 @@ package selfstate
 import (
 	"fmt"
 	"time"
+
+	"github.com/moira-alert/moira"
 )
+
+// HeartbeatConfig represents a heartbeat-specific settings.
+type HeartbeatConfig struct {
+	SystemTags []string
+}
+
+// ChecksConfig represents a checks list.
+type ChecksConfig struct {
+	Database      HeartbeatConfig
+	Filter        HeartbeatConfig
+	LocalChecker  HeartbeatConfig
+	RemoteChecker HeartbeatConfig
+	Notifier      HeartbeatConfig
+}
 
 // Config is representation of self state worker settings like moira admins contacts and threshold values for checked services.
 type Config struct {
@@ -15,6 +31,7 @@ type Config struct {
 	NoticeIntervalSeconds          int64
 	CheckInterval                  time.Duration
 	Contacts                       []map[string]string
+	Checks                         ChecksConfig
 }
 
 func (config *Config) checkConfig(senders map[string]bool) error {
@@ -34,4 +51,14 @@ func (config *Config) checkConfig(senders map[string]bool) error {
 	}
 
 	return nil
+}
+
+func (checksConfig *ChecksConfig) GetUniqueSystemTags() []string {
+	systemTags := make([]string, 0)
+	systemTags = append(systemTags, checksConfig.Database.SystemTags...)
+	systemTags = append(systemTags, checksConfig.Filter.SystemTags...)
+	systemTags = append(systemTags, checksConfig.LocalChecker.SystemTags...)
+	systemTags = append(systemTags, checksConfig.RemoteChecker.SystemTags...)
+	systemTags = append(systemTags, checksConfig.Notifier.SystemTags...)
+	return moira.GetUniqueValues(systemTags...)
 }
