@@ -58,6 +58,14 @@ type ErrEvalExpr struct {
 	target        string
 }
 
+// ErrorEvalExpression creates ErrEvalExpr with given err and target.
+func ErrorEvalExpression(err error, target string) ErrEvalExpr {
+	return ErrEvalExpr{
+		internalError: err,
+		target:        target,
+	}
+}
+
 // Error is implementation of golang error interface for ErrEvalExpr struct.
 func (err ErrEvalExpr) Error() string {
 	return fmt.Sprintf("failed to evaluate target '%s': %s", err.target, err.internalError.Error())
