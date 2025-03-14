@@ -9,6 +9,7 @@ go install go.uber.org/mock/mockgen@v0.4.0
 mockgen -destination=mock/moira-alert/locks.go -package=mock_moira_alert github.com/moira-alert/moira Lock
 mockgen -destination=mock/moira-alert/mutex.go -package=mock_moira_alert github.com/moira-alert/moira Mutex
 mockgen -destination=mock/moira-alert/database.go -package=mock_moira_alert github.com/moira-alert/moira Database
+mockgen -destination=mock/moira-alert/delivery_checker_database.go -package=mock_moira_alert github.com/moira-alert/moira DeliveryCheckerDatabase
 mockgen -destination=mock/moira-alert/image_store.go -package=mock_moira_alert github.com/moira-alert/moira ImageStore
 mockgen -destination=mock/moira-alert/logger.go -package=mock_moira_alert github.com/moira-alert/moira Logger
 mockgen -destination=mock/moira-alert/event_builder.go -package=mock_moira_alert github.com/moira-alert/moira/logging EventBuilder

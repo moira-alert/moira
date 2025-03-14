@@ -6,41 +6,43 @@ import (
 
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
-	SubsMalformed                       Meter
-	EventsReceived                      Meter
-	EventsMalformed                     Meter
-	EventsProcessingFailed              Meter
-	EventsByState                       MetersCollection
-	SendingFailed                       Meter
-	ContactsSendingNotificationsOK      MetersCollection
-	ContactsSendingNotificationsFailed  MetersCollection
-	ContactsDroppedNotifications        MetersCollection
-	ContactsDeliveryNotificationsOK     MetersCollection
-	ContactsDeliveryNotificationsFailed MetersCollection
-	PlotsBuildDurationMs                Histogram
-	PlotsEvaluateTriggerDurationMs      Histogram
-	fetchNotificationsDurationMs        Histogram
-	notifierIsAlive                     Meter
+	SubsMalformed                              Meter
+	EventsReceived                             Meter
+	EventsMalformed                            Meter
+	EventsProcessingFailed                     Meter
+	EventsByState                              MetersCollection
+	SendingFailed                              Meter
+	ContactsSendingNotificationsOK             MetersCollection
+	ContactsSendingNotificationsFailed         MetersCollection
+	ContactsDroppedNotifications               MetersCollection
+	ContactsDeliveryNotificationsOK            MetersCollection
+	ContactsDeliveryNotificationsFailed        MetersCollection
+	ContactsDeliveryNotificationsChecksStopped MetersCollection
+	PlotsBuildDurationMs                       Histogram
+	PlotsEvaluateTriggerDurationMs             Histogram
+	fetchNotificationsDurationMs               Histogram
+	notifierIsAlive                            Meter
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
 func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics {
 	return &NotifierMetrics{
-		SubsMalformed:                       registry.NewMeter("subs", "malformed"),
-		EventsReceived:                      registry.NewMeter("events", "received"),
-		EventsMalformed:                     registry.NewMeter("events", "malformed"),
-		EventsProcessingFailed:              registry.NewMeter("events", "failed"),
-		EventsByState:                       NewMetersCollection(registry),
-		SendingFailed:                       registry.NewMeter("sending", "failed"),
-		ContactsSendingNotificationsOK:      NewMetersCollection(registry),
-		ContactsSendingNotificationsFailed:  NewMetersCollection(registry),
-		ContactsDroppedNotifications:        NewMetersCollection(registry),
-		ContactsDeliveryNotificationsOK:     NewMetersCollection(registry),
-		ContactsDeliveryNotificationsFailed: NewMetersCollection(registry),
-		PlotsBuildDurationMs:                registry.NewHistogram("plots", "build", "duration", "ms"),
-		PlotsEvaluateTriggerDurationMs:      registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
-		fetchNotificationsDurationMs:        registry.NewHistogram("fetch", "notifications", "duration", "ms"),
-		notifierIsAlive:                     registry.NewMeter("", "alive"),
+		SubsMalformed:                              registry.NewMeter("subs", "malformed"),
+		EventsReceived:                             registry.NewMeter("events", "received"),
+		EventsMalformed:                            registry.NewMeter("events", "malformed"),
+		EventsProcessingFailed:                     registry.NewMeter("events", "failed"),
+		EventsByState:                              NewMetersCollection(registry),
+		SendingFailed:                              registry.NewMeter("sending", "failed"),
+		ContactsSendingNotificationsOK:             NewMetersCollection(registry),
+		ContactsSendingNotificationsFailed:         NewMetersCollection(registry),
+		ContactsDroppedNotifications:               NewMetersCollection(registry),
+		ContactsDeliveryNotificationsOK:            NewMetersCollection(registry),
+		ContactsDeliveryNotificationsFailed:        NewMetersCollection(registry),
+		ContactsDeliveryNotificationsChecksStopped: NewMetersCollection(registry),
+		PlotsBuildDurationMs:                       registry.NewHistogram("plots", "build", "duration", "ms"),
+		PlotsEvaluateTriggerDurationMs:             registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
+		fetchNotificationsDurationMs:               registry.NewHistogram("fetch", "notifications", "duration", "ms"),
+		notifierIsAlive:                            registry.NewMeter("", "alive"),
 	}
 }
 
