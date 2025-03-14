@@ -8,7 +8,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
 // GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs.
@@ -82,8 +81,8 @@ func sortTagNames(tagsNames []string) []string {
 }
 
 // CreateTags create tags with tag names.
-func CreateTags(database moira.Database, tags *dto.TagsData, checksConfig *selfstate.ChecksConfig) *api.ErrorResponse {
-	if len(tags.TagNames) > 0 && moira.Subset(tags.TagNames, checksConfig.GetUniqueSystemTags()) {
+func CreateTags(database moira.Database, tags *dto.TagsData, systemTags []string) *api.ErrorResponse {
+	if len(moira.Intersect(tags.TagNames, systemTags)) > 0 {
 		return api.ErrorInvalidRequest(fmt.Errorf("tags should not be contained in system tags list"))
 	}
 

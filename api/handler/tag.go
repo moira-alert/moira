@@ -93,7 +93,7 @@ func createTags(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	checksConfig := middleware.GetSelfStateChecksConfig(request)
-	if err := controller.CreateTags(database, &tags, &checksConfig); err != nil {
+	if err := controller.CreateTags(database, &tags, checksConfig.GetUniqueSystemTags()); err != nil {
 		render.Render(writer, request, err) //nolint
 	}
 }

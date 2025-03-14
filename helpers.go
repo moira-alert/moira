@@ -117,6 +117,35 @@ func Subset(first, second []string) bool {
 	return true
 }
 
+// Intersect returns the intersection of multiple arrays.
+func Intersect[T comparable](lists ...[]T) []T {
+	if len(lists) == 0 {
+		return []T{}
+	}
+
+	intersection := make(map[T]bool)
+	for _, value := range lists[0] {
+		intersection[value] = true
+	}
+
+	for _, stringList := range lists[1:] {
+		currentSet := make(map[T]bool)
+		for _, value := range stringList {
+			if intersection[value] {
+				currentSet[value] = true
+			}
+		}
+		intersection = currentSet
+	}
+
+	result := make([]T, 0, len(intersection))
+	for value := range intersection {
+		result = append(result, value)
+	}
+
+	return result
+}
+
 // GetStringListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
 func GetStringListsDiff(stringLists ...[]string) []string {
 	if len(stringLists) == 0 {

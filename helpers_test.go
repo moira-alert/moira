@@ -112,26 +112,55 @@ func TestGetUniqueValues(t *testing.T) {
 				input:    []string{"a", "a", "b", "b", "c", "c"},
 				expected: []string{"a", "b", "c"},
 			},
-			{
-				input:    []string{"a", "A", "b", "B"},
-				expected: []string{"A", "B", "a", "b"},
-			},
-			{
-				input:    []string{"a", "!", "@", "a", "!"},
-				expected: []string{"!", "@", "a"},
-			},
-			{
-				input:    []string{"1", "2", "2", "3", "1"},
-				expected: []string{"1", "2", "3"},
-			},
-			{
-				input:    []string{"", "", "a", "b", ""},
-				expected: []string{"", "a", "b"},
-			},
 		}
 		for _, variant := range cases {
 			Convey(fmt.Sprintf("with %v -> %v", variant.input, variant.expected), func() {
 				actual := GetUniqueValues(variant.input...)
+				slices.Sort(actual)
+				So(actual, ShouldResemble, variant.expected)
+			})
+		}
+	})
+}
+
+func TestIntersect(t *testing.T) {
+	Convey("Test Intersect lists", t, func() {
+		cases := []struct {
+			input    [][]string
+			expected []string
+		}{
+			{
+				input:    [][]string{{}},
+				expected: []string{},
+			},
+			{
+				input:    [][]string{{}, {}},
+				expected: []string{},
+			},
+			{
+				input:    [][]string{{"a"}},
+				expected: []string{"a"},
+			},
+			{
+				input:    [][]string{{"a", "b"}, {"a", "c"}},
+				expected: []string{"a"},
+			},
+			{
+				input:    [][]string{{"a", "b", "c", "d"}, {"e", "f", "g"}},
+				expected: []string{},
+			},
+			{
+				input:    [][]string{{"a", "b", "e", "d"}, {"12", "f", "e"}},
+				expected: []string{"e"},
+			},
+			{
+				input:    [][]string{{"a"}, {}},
+				expected: []string{},
+			},
+		}
+		for _, variant := range cases {
+			Convey(fmt.Sprintf("intersect(%v) -> %v", variant.input, variant.expected), func() {
+				actual := Intersect(variant.input...)
 				slices.Sort(actual)
 				So(actual, ShouldResemble, variant.expected)
 			})

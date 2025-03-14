@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	"github.com/moira-alert/moira/notifier/selfstate"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
@@ -52,14 +51,14 @@ func TestCreateTags(t *testing.T) {
 	Convey("Success with empty tags", t, func() {
 		database.EXPECT().CreateTags(emptyTags.TagNames).Return(nil).Times(1)
 
-		err := CreateTags(database, emptyTags, &selfstate.ChecksConfig{})
+		err := CreateTags(database, emptyTags, []string{})
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Success with many tags", t, func() {
 		database.EXPECT().CreateTags(tags.TagNames).Return(nil).Times(1)
 
-		err := CreateTags(database, tags, &selfstate.ChecksConfig{})
+		err := CreateTags(database, tags, []string{})
 		So(err, ShouldBeNil)
 	})
 
@@ -67,8 +66,30 @@ func TestCreateTags(t *testing.T) {
 		expectedErr := fmt.Errorf("some error")
 		database.EXPECT().CreateTags(tags.TagNames).Return(expectedErr).Times(1)
 
-		err := CreateTags(database, tags, &selfstate.ChecksConfig{})
+		err := CreateTags(database, tags, []string{})
 		So(err, ShouldResemble, api.ErrorInternalServer(expectedErr))
+	})
+
+	Convey("Success with no intersection of system tags", t, func() {
+		tags := &dto.TagsData{
+			TagNames: []string{"tag1", "tag2"},
+		}
+		systemTags := []string{"sys-tag"}
+		database.EXPECT().CreateTags(tags.TagNames).Return(nil).Times(1)
+
+		err := CreateTags(database, tags, systemTags)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Error with no intersection of system tags", t, func() {
+		expectedErr := fmt.Errorf("tags should not be contained in system tags list")
+		tags := &dto.TagsData{
+			TagNames: []string{"sys-tag", "tag2"},
+		}
+		systemTags := []string{"sys-tag"}
+
+		err := CreateTags(database, tags, systemTags)
+		So(err, ShouldResemble, api.ErrorInvalidRequest(expectedErr))
 	})
 }
 
