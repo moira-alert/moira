@@ -13,7 +13,8 @@ import (
 
 const (
 	workerNameSuffix                    = "DeliveryChecker"
-	logFieldNameDeliveryCheckWorkerName = "delivery.check.worker.name"
+	LogFieldDeliveryCheckPrefix         = "delivery.check."
+	logFieldNameDeliveryCheckWorkerName = LogFieldDeliveryCheckPrefix + "worker.name"
 )
 
 type checksStorage interface {
@@ -98,9 +99,7 @@ func (checksWorker *checksWorker) checkNotificationsDelivery() error {
 		return nil
 	}
 
-	counter := TypesCounter{}
-
-	checkAgainChecksData := checksWorker.checkAction.CheckNotificationsDelivery(marshaledData, &counter)
+	checkAgainChecksData, counter := checksWorker.checkAction.CheckNotificationsDelivery(marshaledData)
 
 	err = checksWorker.storage.addManyDeliveryChecksData(checksWorker.clock.NowUnix()+int64(checksWorker.reschedulingDelay), checkAgainChecksData)
 	if err != nil {
@@ -119,7 +118,7 @@ func (checksWorker *checksWorker) checkNotificationsDelivery() error {
 	return nil
 }
 
-func markMetrics(senderMetrics *metrics.SenderMetrics, counter *TypesCounter) {
+func markMetrics(senderMetrics *metrics.SenderMetrics, counter *moira.DeliveryTypesCounter) {
 	if senderMetrics == nil || counter == nil {
 		return
 	}
