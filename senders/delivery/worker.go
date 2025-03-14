@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/worker"
 )
@@ -36,6 +35,7 @@ type checksWorker struct {
 
 func newChecksWorker(
 	logger moira.Logger,
+	clock moira.Clock,
 	workerName string,
 	checkTimeout time.Duration,
 	reschedulingDelay uint64,
@@ -47,7 +47,7 @@ func newChecksWorker(
 
 	return &checksWorker{
 		logger:            logger,
-		clock:             clock.NewSystemClock(),
+		clock:             clock,
 		workerName:        workerName,
 		checkTimeout:      checkTimeout,
 		reschedulingDelay: reschedulingDelay,

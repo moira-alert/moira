@@ -85,6 +85,7 @@ func TestSender_checkNotificationsDelivery(t *testing.T) {
 
 	testChecksWorker := newChecksWorker(
 		logger,
+		mockClock,
 		"test_delivery_checks_worker",
 		time.Second,
 		reschedulingDelay,
@@ -92,7 +93,6 @@ func TestSender_checkNotificationsDelivery(t *testing.T) {
 		senderMetrics,
 		mockCheckAction,
 	)
-	testChecksWorker.clock = mockClock
 
 	fetchedChecks := []string{
 		"check data 1",

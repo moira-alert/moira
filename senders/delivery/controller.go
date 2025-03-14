@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics"
 )
@@ -13,6 +14,7 @@ import (
 type ChecksController struct {
 	database    moira.DeliveryCheckerDatabase
 	lock        moira.Lock
+	clock       moira.Clock
 	contactType string
 }
 
@@ -20,6 +22,7 @@ func NewChecksController(db moira.DeliveryCheckerDatabase, lock moira.Lock, cont
 	return &ChecksController{
 		database:    db,
 		lock:        lock,
+		clock:       clock.NewSystemClock(),
 		contactType: contactType,
 	}
 }
@@ -30,7 +33,7 @@ func (controller *ChecksController) AddDeliveryChecksData(timestamp int64, data 
 
 func (controller *ChecksController) addManyDeliveryChecksData(timestamp int64, data []string) error {
 	for _, singleData := range data {
-		err := controller.database.AddDeliveryChecksData(controller.contactType, timestamp, singleData)
+		err := controller.AddDeliveryChecksData(timestamp, singleData)
 		if err != nil {
 			return fmt.Errorf("failed to store check data: %w", err)
 		}
@@ -68,6 +71,7 @@ func (controller *ChecksController) RunDeliveryChecksWorker(
 ) {
 	checkWorker := newChecksWorker(
 		logger,
+		controller.clock,
 		controller.contactType+" "+workerNameSuffix,
 		checkTimeout,
 		reschedulingDelay,
