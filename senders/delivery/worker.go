@@ -42,7 +42,7 @@ func newChecksWorker(
 	metrics *metrics.SenderMetrics,
 	checkAction CheckAction,
 ) *checksWorker {
-	logger = logger.String(logFieldNameDeliveryCheckWorkerName, workerName)
+	logger = logger.Clone().String(logFieldNameDeliveryCheckWorkerName, workerName)
 
 	return &checksWorker{
 		logger:            logger,
