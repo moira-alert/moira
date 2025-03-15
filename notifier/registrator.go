@@ -8,6 +8,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
+	"github.com/moira-alert/moira/senders/delivery"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
 	"github.com/moira-alert/moira/senders/mattermost"
@@ -95,7 +96,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
 		case webhookSender:
 			workerLock := connector.NewLock(workerDeliveryCheckLockKey(senderContactType), deliveryCheckLockTTL)
-			_ = workerLock
+			controller := delivery.NewChecksController(connector, workerLock, senderContactType)
+			_ = controller
 
 			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
 		case opsgenieSender:
