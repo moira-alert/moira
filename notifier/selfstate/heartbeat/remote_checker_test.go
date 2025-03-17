@@ -25,8 +25,8 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 
 		Convey("Checking the created graphite remote checker", func() {
 			expected := &remoteChecker{heartbeat: heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now, checkTags: check.checkTags}}
-			So(GetRemoteChecker(0, check.checkTags, check.logger, check.database), ShouldBeNil)
-			So(GetRemoteChecker(1, check.checkTags, check.logger, check.database), ShouldResemble, expected)
+			So(GetRemoteChecker(0, now, check.checkTags, check.logger, check.database), ShouldBeNil)
+			So(GetRemoteChecker(1, now, check.checkTags, check.logger, check.database), ShouldResemble, expected)
 		})
 
 		Convey("GraphiteRemoteChecker error handling test", func() {
@@ -85,5 +85,5 @@ func createGraphiteRemoteCheckerTest(t *testing.T) (*remoteChecker, *gomock.Cont
 	logger, _ := logging.GetLogger("MetricDelay")
 	checkTags := []string{}
 
-	return GetRemoteChecker(120, checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*remoteChecker), mockCtrl
+	return GetRemoteChecker(120, time.Now().Unix(), checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*remoteChecker), mockCtrl
 }

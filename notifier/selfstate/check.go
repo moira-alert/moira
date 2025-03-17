@@ -48,7 +48,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []Notificatio
 
 		if hasErrors {
 			events = append(events,	NotificationEventAndCheckTags{
-				NotificationEvent: generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue),
+				NotificationEvent: generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue, nowTS),
 				CheckTags: heartbeat.GetCheckTags(),
 			})
 			if heartbeat.NeedTurnOffNotifier() {
@@ -158,10 +158,10 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events []NotificationEventAn
 	}
 }
 
-func generateNotificationEvent(message string, currentValue int64) moira.NotificationEvent {
+func generateNotificationEvent(message string, currentValue, timestamp int64) moira.NotificationEvent {
 	val := float64(currentValue)
 	return moira.NotificationEvent{
-		Timestamp: time.Now().Unix(),
+		Timestamp: timestamp,
 		OldState:  moira.StateNODATA,
 		State:     moira.StateERROR,
 		Metric:    message,
