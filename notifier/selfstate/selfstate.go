@@ -69,23 +69,23 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config) []heartbeat.Heartbeater {
 	heartbeats := make([]heartbeat.Heartbeater, 0)
 
-	if hb := heartbeat.GetDatabase(conf.RedisDisconnectDelaySeconds, conf.CheckTags.Database, logger, database); hb != nil {
+	if hb := heartbeat.GetDatabase(conf.RedisDisconnectDelaySeconds, conf.Checks.Database.SystemTags, logger, database); hb != nil {
 		heartbeats = append(heartbeats, hb)
 	}
 
-	if hb := heartbeat.GetFilter(conf.LastMetricReceivedDelaySeconds, conf.CheckTags.Filter, logger, database); hb != nil {
+	if hb := heartbeat.GetFilter(conf.LastMetricReceivedDelaySeconds, conf.Checks.Filter.SystemTags, logger, database); hb != nil {
 		heartbeats = append(heartbeats, hb)
 	}
 
-	if hb := heartbeat.GetLocalChecker(conf.LastCheckDelaySeconds, conf.CheckTags.LocalChecker, logger, database); hb != nil && hb.NeedToCheckOthers() {
+	if hb := heartbeat.GetLocalChecker(conf.LastCheckDelaySeconds, conf.Checks.LocalChecker.SystemTags, logger, database); hb != nil && hb.NeedToCheckOthers() {
 		heartbeats = append(heartbeats, hb)
 	}
 
-	if hb := heartbeat.GetRemoteChecker(conf.LastRemoteCheckDelaySeconds, conf.CheckTags.RemoteChecker, logger, database); hb != nil && hb.NeedToCheckOthers() {
+	if hb := heartbeat.GetRemoteChecker(conf.LastRemoteCheckDelaySeconds, conf.Checks.RemoteChecker.SystemTags, logger, database); hb != nil && hb.NeedToCheckOthers() {
 		heartbeats = append(heartbeats, hb)
 	}
 
-	if hb := heartbeat.GetNotifier(conf.CheckTags.Notifier, logger, database); hb != nil {
+	if hb := heartbeat.GetNotifier(conf.Checks.Notifier.SystemTags, logger, database); hb != nil {
 		heartbeats = append(heartbeats, hb)
 	}
 
