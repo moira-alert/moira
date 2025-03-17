@@ -685,21 +685,6 @@ func (mr *MockDatabaseMockRecorder) GetSubscriptions(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetSubscriptions), arg0)
 }
 
-// GetSystemTagNames mocks base method.
-func (m *MockDatabase) GetSystemTagNames() ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSystemTagNames")
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSystemTagNames indicates an expected call of GetSystemTagNames.
-func (mr *MockDatabaseMockRecorder) GetSystemTagNames() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSystemTagNames", reflect.TypeOf((*MockDatabase)(nil).GetSystemTagNames))
-}
-
 // GetTagNames mocks base method.
 func (m *MockDatabase) GetTagNames() ([]string, error) {
 	m.ctrl.T.Helper()
@@ -1644,20 +1629,6 @@ func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb, arg1 *moira.Subscr
 func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0, arg1)
-}
-
-// ReplaceSystemTags mocks base method.
-func (m *MockDatabase) ReplaceSystemTags(arg0 []string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReplaceSystemTags", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ReplaceSystemTags indicates an expected call of ReplaceSystemTags.
-func (mr *MockDatabaseMockRecorder) ReplaceSystemTags(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceSystemTags", reflect.TypeOf((*MockDatabase)(nil).ReplaceSystemTags), arg0)
 }
 
 // UpdateMetricsHeartbeat mocks base method.
