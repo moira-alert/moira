@@ -89,7 +89,8 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64)
 func (selfCheck *SelfCheckWorker) eventsToContacts(events []NotificationEventAndCheckTags) ([]struct {
 	*moira.ContactData
 	*moira.NotificationEvents
-}, error) {
+}, error,
+) {
 	result := make(map[*moira.ContactData][]moira.NotificationEvent)
 	for _, event := range events {
 		if len(event.CheckTags) == 0 {
@@ -111,10 +112,10 @@ func (selfCheck *SelfCheckWorker) eventsToContacts(events []NotificationEventAnd
 		}
 	}
 
-	var resultList []struct {
+	resultList := make([]struct {
 		*moira.ContactData
 		*moira.NotificationEvents
-	}
+	}, 0, len(result))
 	for contact, events := range result {
 		r := moira.NotificationEvents(events)
 		resultList = append(resultList, struct {
