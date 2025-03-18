@@ -199,6 +199,22 @@ func TestSender_Init(t *testing.T) {
 				err := sender.Init(settings, logger, location, dateTimeFormat)
 				So(err, ShouldResemble, errNilMetricsOnDeliveryCheck)
 			})
+
+			Convey("but nil controller", func() {
+				settings := map[string]interface{}{
+					"url": testURL,
+					"delivery_check": map[string]interface{}{
+						"enabled":        true,
+						"url_template":   "https://example.com/",
+						"check_template": "{{ if eq .DeliveryCheckResponse.someValues 0 }}.DeliveryStateOK{{ else }}.DeliveryStatePending{{ end }}",
+					},
+					senderMetricsKey: &metrics.SenderMetrics{},
+				}
+
+				sender := Sender{}
+				err := sender.Init(settings, logger, location, dateTimeFormat)
+				So(err, ShouldResemble, errControllerIsNil)
+			})
 		})
 	})
 }

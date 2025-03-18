@@ -29,14 +29,15 @@ type config struct {
 
 // Sender implements moira sender interface via webhook.
 type Sender struct {
-	url                 string
-	body                string
-	user                string
-	password            string
-	headers             map[string]string
-	client              *http.Client
-	log                 moira.Logger
-	metrics             *metrics.SenderMetrics
+	url      string
+	body     string
+	user     string
+	password string
+	headers  map[string]string
+	client   *http.Client
+	log      moira.Logger
+	metrics  *metrics.SenderMetrics
+	// Controller for delivery checks. Must NOT be nil when Sender.Init is called with delivery checks enabled.
 	Controller          *delivery.ChecksController
 	clock               moira.Clock
 	deliveryCheckConfig deliveryCheckConfig
@@ -89,7 +90,10 @@ const (
 
 const senderMetricsKey = "sender_metrics"
 
-var errNilMetricsOnDeliveryCheck = errors.New("with enabled delivery check, webhook sender must have 'enable_metrics: true'")
+var (
+	errNilMetricsOnDeliveryCheck = errors.New("with enabled delivery check, webhook sender must have 'enable_metrics: true'")
+	errControllerIsNil           = errors.New("with enabled delivery check, field Controller of webhook sender must be initialized before calling Sender.Init")
+)
 
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
@@ -146,6 +150,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if sender.deliveryCheckConfig.Enabled {
 		if sender.metrics == nil {
 			return errNilMetricsOnDeliveryCheck
+		}
+
+		if sender.Controller == nil {
+			return errControllerIsNil
 		}
 
 		// TODO: add example responses to config and check url_template and check_template
