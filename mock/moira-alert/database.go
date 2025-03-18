@@ -685,21 +685,6 @@ func (mr *MockDatabaseMockRecorder) GetSubscriptions(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetSubscriptions), arg0)
 }
 
-// GetSystemTagNames mocks base method.
-func (m *MockDatabase) GetSystemTagNames() ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSystemTagNames")
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSystemTagNames indicates an expected call of GetSystemTagNames.
-func (mr *MockDatabaseMockRecorder) GetSystemTagNames() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSystemTagNames", reflect.TypeOf((*MockDatabase)(nil).GetSystemTagNames))
-}
-
 // GetTagNames mocks base method.
 func (m *MockDatabase) GetTagNames() ([]string, error) {
 	m.ctrl.T.Helper()
