@@ -18,7 +18,7 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 			contact).
 			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
 			String(moira.LogFieldNameTriggerID, triggerID).
-			Msg("failed to schedule delivery check because of not unmarshalling")
+			Msg("Failed to schedule delivery check because of not unmarshalling")
 		return
 	}
 
@@ -29,7 +29,7 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 			contact).
 			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
 			String(moira.LogFieldNameTriggerID, triggerID).
-			Msg("failed to prepare delivery check")
+			Msg("Failed to prepare delivery check")
 		return
 	}
 
@@ -41,7 +41,7 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 			String(logFieldNameDeliveryCheckUrl, checkData.URL).
 			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
 			String(moira.LogFieldNameTriggerID, triggerID).
-			Msg("failed to schedule delivery check")
+			Msg("Failed to schedule delivery check")
 		return
 	}
 }

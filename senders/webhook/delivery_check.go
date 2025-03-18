@@ -29,10 +29,13 @@ type deliveryCheckData struct {
 	AttemptsCount uint64 `json:"attempts_count"`
 }
 
-func (sender *Sender) CheckNotificationsDelivery(fetchedDeliveryChecks []string) ([]string, moira.DeliveryTypesCounter) {
+// CheckNotificationsDelivery performs delivery checks for data fetched from db.
+// Returns check data, that need to be scheduled again and moira.DeliveryTypesCounter,
+// that contains the results of performing delivery checks for this iteration.
+func (sender *Sender) CheckNotificationsDelivery(fetchedData []string) ([]string, moira.DeliveryTypesCounter) {
 	counter := moira.DeliveryTypesCounter{}
 
-	checksData := sender.unmarshalChecksData(fetchedDeliveryChecks)
+	checksData := sender.unmarshalChecksData(fetchedData)
 	if len(checksData) == 0 {
 		return nil, counter
 	}
@@ -52,12 +55,17 @@ func (sender *Sender) CheckNotificationsDelivery(fetchedDeliveryChecks []string)
 			checkAgainChecksData = append(checkAgainChecksData, newCheckData)
 		}
 
-		if prevDeliveryStopped != counter.DeliveryChecksStopped || deliveryState == moira.DeliveryStateFailed {
-			addContactFieldsToLog(sender.log.Error(), checksData[i].Contact).
+		if !scheduleAgain {
+			eventBuilder := sender.log.Warning()
+			if prevDeliveryStopped != counter.DeliveryChecksStopped {
+				eventBuilder = sender.log.Error()
+			}
+
+			addContactFieldsToLog(eventBuilder, checksData[i].Contact).
 				String(logFieldNameDeliveryCheckUrl, checksData[i].URL).
 				String(moira.LogFieldNameTriggerID, checksData[i].TriggerID).
 				String(delivery.LogFieldPrefix+"state", deliveryState).
-				Msg("stop delivery checks")
+				Msg("Stop delivery checks")
 		}
 	}
 
@@ -68,7 +76,7 @@ func (sender *Sender) CheckNotificationsDelivery(fetchedDeliveryChecks []string)
 			addContactFieldsToLog(sender.log.Warning(), data.Contact).
 				String(logFieldNameDeliveryCheckUrl, data.URL).
 				String(moira.LogFieldNameTriggerID, data.TriggerID).
-				Msg("failed to marshal delivery check to check again")
+				Msg("Failed to marshal delivery check to check again")
 			continue
 		}
 
@@ -88,7 +96,7 @@ func (sender *Sender) unmarshalChecksData(marshaledData []string) []deliveryChec
 			sender.log.Warning().
 				String("encoded_data", encoded).
 				Error(err).
-				Msg("failed to unmarshal encoded data")
+				Msg("Failed to unmarshal encoded data")
 			continue
 		}
 
@@ -126,7 +134,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
 			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
-			Msg("check request failed")
+			Msg("Check request failed")
 
 		return checkData, moira.DeliveryStateException
 	}
@@ -135,7 +143,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
 			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
-			Msg("not allowed response code")
+			Msg("Not allowed response code")
 
 		return checkData, moira.DeliveryStateException
 	}
@@ -146,7 +154,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
 			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
-			Msg("failed to unmarshal response")
+			Msg("Failed to unmarshal response")
 
 		return checkData, moira.DeliveryStateException
 	}
@@ -164,7 +172,7 @@ func (sender *Sender) performSingleDeliveryCheck(checkData deliveryCheckData) (d
 		addDeliveryCheckFieldsToLog(
 			sender.log.Error().Error(err),
 			checkData.URL, rspCode, string(rspBody), checkData.Contact, checkData.TriggerID).
-			Msg("error while populating check template")
+			Msg("Error while populating check template")
 
 		return checkData, moira.DeliveryStateUserException
 	}
