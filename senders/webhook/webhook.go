@@ -156,7 +156,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			return errControllerIsNil
 		}
 
-		// TODO: add example responses to config and check url_template and check_template
+		// TODO: add example responses to config and check filling url_template and check_template
 
 		go sender.Controller.RunDeliveryChecksWorker(
 			nil,
