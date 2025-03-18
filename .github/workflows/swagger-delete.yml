@@ -5,8 +5,10 @@ defaults:
 on:
   push:
     branches:
-    - master
-    - release/[0-9]+.[0-9]+.[0-9]+
+      - master
+      - release/*
+    tags:
+      - "v*"
 
 jobs:
   removespec:
