@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
 
+// HeartbeatNotificationEvent contains NotificationEvent and CheckTags.
 type HeartbeatNotificationEvent struct {
 	moira.NotificationEvent
 	heartbeat.CheckTags
