@@ -52,10 +52,11 @@ func (sender *Sender) CheckNotificationsDelivery(fetchedDeliveryChecks []string)
 			checkAgainChecksData = append(checkAgainChecksData, newCheckData)
 		}
 
-		if prevDeliveryStopped != counter.DeliveryChecksStopped {
+		if prevDeliveryStopped != counter.DeliveryChecksStopped || deliveryState == moira.DeliveryStateFailed {
 			addContactFieldsToLog(sender.log.Error(), checksData[i].Contact).
 				String(logFieldNameDeliveryCheckUrl, checksData[i].URL).
 				String(moira.LogFieldNameTriggerID, checksData[i].TriggerID).
+				String(delivery.LogFieldPrefix+"state", deliveryState).
 				Msg("stop delivery checks")
 		}
 	}
