@@ -12,8 +12,8 @@ type notifier struct {
 
 func GetNotifier(checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
 	return &notifier{heartbeat{
-		database: database,
-		logger: logger,
+		database:  database,
+		logger:    logger,
 		checkTags: checkTags,
 	}}
 }

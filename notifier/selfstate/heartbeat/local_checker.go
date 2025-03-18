@@ -14,7 +14,7 @@ func GetLocalChecker(delay, lastSuccessfulCheck int64, checkTags []string, logge
 			database:            database,
 			delay:               delay,
 			lastSuccessfulCheck: lastSuccessfulCheck,
-			checkTags:					 checkTags,
+			checkTags:           checkTags,
 		}}
 	}
 	return nil
@@ -57,6 +57,7 @@ func (check localChecker) NeedTurnOffNotifier() bool {
 func (localChecker) GetErrorMessage() string {
 	return "Moira-Checker does not check triggers"
 }
+
 func (check *localChecker) GetCheckTags() CheckTags {
-	return check.checkTags;
+	return check.checkTags
 }

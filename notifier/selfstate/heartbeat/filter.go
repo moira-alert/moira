@@ -16,7 +16,7 @@ func GetFilter(delay, lastSuccessfulCheck int64, checkTags []string, logger moir
 				database:            database,
 				delay:               delay,
 				lastSuccessfulCheck: lastSuccessfulCheck,
-				checkTags:					 checkTags,
+				checkTags:           checkTags,
 			},
 			firstCheckWasSuccessful: false,
 		}

@@ -21,6 +21,6 @@ type heartbeat struct {
 	logger   moira.Logger
 	database moira.Database
 
-	checkTags []string
+	checkTags                  []string
 	delay, lastSuccessfulCheck int64
 }

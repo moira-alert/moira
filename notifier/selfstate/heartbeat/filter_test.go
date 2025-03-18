@@ -29,7 +29,7 @@ func TestFilter(t *testing.T) {
 					logger:              check.logger,
 					delay:               1,
 					lastSuccessfulCheck: now,
-					checkTags: check.checkTags,
+					checkTags:           check.checkTags,
 				},
 			}
 

@@ -14,7 +14,7 @@ func GetRemoteChecker(delay, lastSuccessfulCheck int64, checkTags []string, logg
 			database:            database,
 			delay:               delay,
 			lastSuccessfulCheck: lastSuccessfulCheck,
-			checkTags:					 checkTags,
+			checkTags:           checkTags,
 		}}
 	}
 	return nil

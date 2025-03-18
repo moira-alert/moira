@@ -30,22 +30,22 @@ func TestSelfCheckWorker_check(t *testing.T) {
 
 			for _, contact := range worker.conf.Contacts {
 				toAdminPack := notifier2.NotificationPackage{
-					Trigger:    moira.TriggerData{
-						Name: "Moira health check",
+					Trigger: moira.TriggerData{
+						Name:       "Moira health check",
 						ErrorValue: float64(0),
 					},
-					Contact:    moira.ContactData{
-						Type: contact["type"],
+					Contact: moira.ContactData{
+						Type:  contact["type"],
 						Value: contact["value"],
 					},
 					DontResend: true,
 					Events: []moira.NotificationEvent{
 						{
 							Timestamp: nowTS,
-							OldState: moira.StateNODATA,
-							State: moira.StateERROR,
-							Metric: "Redis disconnected",
-							Value: &val,
+							OldState:  moira.StateNODATA,
+							State:     moira.StateERROR,
+							Metric:    "Redis disconnected",
+							Value:     &val,
 						},
 					},
 				}
@@ -55,22 +55,22 @@ func TestSelfCheckWorker_check(t *testing.T) {
 
 			toUsersPack := notifier2.NotificationPackage{
 				Trigger: moira.TriggerData{
-					Name: "Moira health check",
+					Name:       "Moira health check",
 					ErrorValue: float64(0),
 				},
 				Contact: moira.ContactData{
-					ID: "contact1",
-					Type: "user-mail",
+					ID:    "contact1",
+					Type:  "user-mail",
 					Value: "user@userdomain.com",
 				},
 				DontResend: true,
 				Events: []moira.NotificationEvent{
 					{
 						Timestamp: nowTS,
-						OldState: moira.StateNODATA,
-						State: moira.StateERROR,
-						Metric: "Redis disconnected",
-						Value: &val,
+						OldState:  moira.StateNODATA,
+						State:     moira.StateERROR,
+						Metric:    "Redis disconnected",
+						Value:     &val,
 					},
 				},
 			}
@@ -98,7 +98,7 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 		NoticeIntervalSeconds:          60,
 		LastRemoteCheckDelaySeconds:    120,
 		CheckInterval:                  1 * time.Second,
-		Checks:													ChecksConfig{
+		Checks: ChecksConfig{
 			Database: HeartbeatConfig{
 				SystemTags: []string{"sys-tag-database", "moira-fatal"},
 			},
@@ -123,18 +123,18 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 	notif := mock_notifier.NewMockNotifier(mockCtrl)
 	return &selfCheckWorkerMock{
 		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
-		database: database,
-		notif: notif,
-		conf: conf,
-		mockCtrl: mockCtrl,
+		database:        database,
+		notif:           notif,
+		conf:            conf,
+		mockCtrl:        mockCtrl,
 	}
 }
 
 func fillDatabase(database *mock_moira_alert.MockDatabase) {
 	contacts := []*moira.ContactData{
 		{
-			ID: "contact1",
-			Type: "user-mail",
+			ID:    "contact1",
+			Type:  "user-mail",
 			Value: "user@userdomain.com",
 		},
 	}
@@ -143,9 +143,8 @@ func fillDatabase(database *mock_moira_alert.MockDatabase) {
 	database.EXPECT().GetTagsSubscriptions([]string{"sys-tag-database", "moira-fatal"}).Return([]*moira.SubscriptionData{
 		{
 			Contacts: []string{"contact1"},
-			Tags: []string{"sys-tag-database", "moira-fatal"},
-			Enabled: true,
+			Tags:     []string{"sys-tag-database", "moira-fatal"},
+			Enabled:  true,
 		},
 	}, nil)
 }
-

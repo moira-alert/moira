@@ -74,8 +74,8 @@ func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
 func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 	Convey("Should resemble events to contacts trought system tags", t, func() {
 		contact := moira.ContactData{
-			ID: "some-contact",
-			Type: "my_type",
+			ID:    "some-contact",
+			Type:  "my_type",
 			Value: "123",
 		}
 
@@ -98,7 +98,10 @@ func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 			},
 		}
 
-		expected := []struct{*moira.ContactData; *moira.NotificationEvents}{
+		expected := []struct {
+			*moira.ContactData
+			*moira.NotificationEvents
+		}{
 			{
 				ContactData: &contact,
 				NotificationEvents: &moira.NotificationEvents{
@@ -117,13 +120,13 @@ func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 
 		database.EXPECT().GetTagsSubscriptions([]string{"sys-tag1"}).Return([]*moira.SubscriptionData{
 			{
-				ID: "sub-1",
+				ID:       "sub-1",
 				Contacts: []string{contact.ID},
 			},
 		}, nil)
 		database.EXPECT().GetTagsSubscriptions([]string{"sys-tag2", "sys-tag-common"}).Return([]*moira.SubscriptionData{
 			{
-				ID: "sub-2",
+				ID:       "sub-2",
 				Contacts: []string{contact.ID},
 			},
 		}, nil)
@@ -137,7 +140,7 @@ func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 
 		mock := &selfCheckWorkerMock{
 			selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}),
-			mockCtrl: mockCtrl,
+			mockCtrl:        mockCtrl,
 		}
 
 		actual, err := mock.selfCheckWorker.eventsToContacts(notifAndTags)

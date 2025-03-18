@@ -33,7 +33,10 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	}
 }
 
-type NotificationEventAndCheckTags struct{moira.NotificationEvent; heartbeat.CheckTags}
+type NotificationEventAndCheckTags struct {
+	moira.NotificationEvent
+	heartbeat.CheckTags
+}
 
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []NotificationEventAndCheckTags {
 	var events []NotificationEventAndCheckTags
@@ -47,9 +50,9 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []Notificatio
 		}
 
 		if hasErrors {
-			events = append(events,	NotificationEventAndCheckTags{
+			events = append(events, NotificationEventAndCheckTags{
 				NotificationEvent: generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue, nowTS),
-				CheckTags: heartbeat.GetCheckTags(),
+				CheckTags:         heartbeat.GetCheckTags(),
 			})
 			if heartbeat.NeedTurnOffNotifier() {
 				selfCheck.setNotifierState(moira.SelfStateERROR)
@@ -83,7 +86,10 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64)
 	return nextSendErrorMessage
 }
 
-func (selfCheck *SelfCheckWorker) eventsToContacts(events []NotificationEventAndCheckTags) ([]struct{*moira.ContactData; *moira.NotificationEvents}, error) {
+func (selfCheck *SelfCheckWorker) eventsToContacts(events []NotificationEventAndCheckTags) ([]struct {
+	*moira.ContactData
+	*moira.NotificationEvents
+}, error) {
 	result := make(map[*moira.ContactData][]moira.NotificationEvent)
 	for _, event := range events {
 		if len(event.CheckTags) == 0 {
@@ -105,10 +111,16 @@ func (selfCheck *SelfCheckWorker) eventsToContacts(events []NotificationEventAnd
 		}
 	}
 
-	var resultList []struct{*moira.ContactData; *moira.NotificationEvents}
+	var resultList []struct {
+		*moira.ContactData
+		*moira.NotificationEvents
+	}
 	for contact, events := range result {
 		r := moira.NotificationEvents(events)
-		resultList = append(resultList, struct{*moira.ContactData; *moira.NotificationEvents}{contact, &r})
+		resultList = append(resultList, struct {
+			*moira.ContactData
+			*moira.NotificationEvents
+		}{contact, &r})
 	}
 
 	return resultList, nil
@@ -138,18 +150,18 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events []NotificationEventAn
 	eventsAndContacts, err := selfCheck.eventsToContacts(events)
 	if err != nil {
 		selfCheck.Logger.Warning().
-		Error(err).
-		Msg("Sending notifications via subscriptions has failed")
+			Error(err).
+			Msg("Sending notifications via subscriptions has failed")
 	}
 
 	for _, contactAndEvent := range eventsAndContacts {
 		pkg := notifier.NotificationPackage{
 			Contact: *contactAndEvent.ContactData,
 			Trigger: moira.TriggerData{
-				Name: "Moira health check",
+				Name:       "Moira health check",
 				ErrorValue: float64(0),
 			},
-			Events: *contactAndEvent.NotificationEvents,
+			Events:     *contactAndEvent.NotificationEvents,
 			DontResend: true,
 		}
 

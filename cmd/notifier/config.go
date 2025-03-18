@@ -252,6 +252,6 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		CheckInterval:                  checkInterval,
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
-		Checks:													toCheckConfig(config.Checks),
+		Checks:                         toCheckConfig(config.Checks),
 	}
 }
