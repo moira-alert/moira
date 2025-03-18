@@ -10,6 +10,11 @@ import (
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
 
+type HeartbeatNotificationEvent struct {
+	moira.NotificationEvent
+	heartbeat.CheckTags
+}
+
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	selfCheck.Logger.Info().Msg("Moira Notifier Self State Monitor started")
 
@@ -33,13 +38,8 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	}
 }
 
-type NotificationEventAndCheckTags struct {
-	moira.NotificationEvent
-	heartbeat.CheckTags
-}
-
-func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []NotificationEventAndCheckTags {
-	var events []NotificationEventAndCheckTags
+func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []HeartbeatNotificationEvent {
+	var events []HeartbeatNotificationEvent
 
 	for _, heartbeat := range selfCheck.heartbeats {
 		currentValue, hasErrors, err := heartbeat.Check(nowTS)
@@ -50,7 +50,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []Notificatio
 		}
 
 		if hasErrors {
-			events = append(events, NotificationEventAndCheckTags{
+			events = append(events, HeartbeatNotificationEvent{
 				NotificationEvent: generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue, nowTS),
 				CheckTags:         heartbeat.GetCheckTags(),
 			})
@@ -67,7 +67,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []Notificatio
 	return events
 }
 
-func (selfCheck *SelfCheckWorker) sendNotification(events []NotificationEventAndCheckTags, nowTS int64) int64 {
+func (selfCheck *SelfCheckWorker) sendNotification(events []HeartbeatNotificationEvent, nowTS int64) int64 {
 	eventsJSON, _ := json.Marshal(events)
 	selfCheck.Logger.Error().
 		Int("number_of_events", len(events)).
@@ -86,7 +86,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64)
 	return nextSendErrorMessage
 }
 
-func (selfCheck *SelfCheckWorker) eventsToContacts(events []NotificationEventAndCheckTags) ([]struct {
+func (selfCheck *SelfCheckWorker) getContactsToNotify(events []HeartbeatNotificationEvent) ([]struct {
 	*moira.ContactData
 	*moira.NotificationEvents
 }, error,
@@ -127,7 +127,7 @@ func (selfCheck *SelfCheckWorker) eventsToContacts(events []NotificationEventAnd
 	return resultList, nil
 }
 
-func (selfCheck *SelfCheckWorker) sendErrorMessages(events []NotificationEventAndCheckTags) {
+func (selfCheck *SelfCheckWorker) sendErrorMessages(events []HeartbeatNotificationEvent) {
 	var sendingWG sync.WaitGroup
 
 	for _, adminContact := range selfCheck.Config.Contacts {
@@ -140,7 +140,7 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events []NotificationEventAn
 				Name:       "Moira health check",
 				ErrorValue: float64(0),
 			},
-			Events:     moira.Map(events, func(et NotificationEventAndCheckTags) moira.NotificationEvent { return et.NotificationEvent }),
+			Events:     moira.Map(events, func(et HeartbeatNotificationEvent) moira.NotificationEvent { return et.NotificationEvent }),
 			DontResend: true,
 		}
 
@@ -148,7 +148,7 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events []NotificationEventAn
 		sendingWG.Wait()
 	}
 
-	eventsAndContacts, err := selfCheck.eventsToContacts(events)
+	eventsAndContacts, err := selfCheck.getContactsToNotify(events)
 	if err != nil {
 		selfCheck.Logger.Warning().
 			Error(err).

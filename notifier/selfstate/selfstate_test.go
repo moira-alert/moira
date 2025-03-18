@@ -62,7 +62,7 @@ func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
 
 		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
-		var events []NotificationEventAndCheckTags
+		var events []HeartbeatNotificationEvent
 		mock.selfCheckWorker.sendErrorMessages(events)
 
 		err = mock.selfCheckWorker.Stop()
@@ -79,7 +79,7 @@ func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 			Value: "123",
 		}
 
-		notifAndTags := []NotificationEventAndCheckTags{
+		notifAndTags := []HeartbeatNotificationEvent{
 			{
 				NotificationEvent: moira.NotificationEvent{
 					Metric: "Triggered!!!",
@@ -143,7 +143,7 @@ func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 			mockCtrl:        mockCtrl,
 		}
 
-		actual, err := mock.selfCheckWorker.eventsToContacts(notifAndTags)
+		actual, err := mock.selfCheckWorker.getContactsToNotify(notifAndTags)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
 		mock.mockCtrl.Finish()
