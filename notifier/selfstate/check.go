@@ -156,6 +156,10 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events []HeartbeatNotificati
 	}
 
 	for _, contactAndEvent := range eventsAndContacts {
+		if contactAndEvent.ContactData == nil || contactAndEvent.NotificationEvents == nil {
+			continue
+		}
+
 		pkg := notifier.NotificationPackage{
 			Contact: *contactAndEvent.ContactData,
 			Trigger: moira.TriggerData{
