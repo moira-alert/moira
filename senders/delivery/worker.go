@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	workerNameSuffix                    = "DeliveryChecker"
+	workerNameSuffix                    = "delivery checker"
 	logFieldNameDeliveryCheckWorkerName = LogFieldPrefix + "worker.name"
 )
 

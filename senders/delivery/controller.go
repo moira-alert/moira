@@ -77,7 +77,7 @@ func (controller *ChecksController) RunDeliveryChecksWorker(
 	checkWorker := newChecksWorker(
 		logger,
 		controller.clock,
-		controller.contactType+" "+workerNameSuffix,
+		makeWorkerName(controller.contactType),
 		checkTimeout,
 		reschedulingDelay,
 		controller,
@@ -86,4 +86,8 @@ func (controller *ChecksController) RunDeliveryChecksWorker(
 	)
 
 	go checkWorker.run(controller.lock, stop)
+}
+
+func makeWorkerName(contactType string) string {
+	return contactType + " " + workerNameSuffix
 }
