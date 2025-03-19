@@ -10,37 +10,32 @@ import (
 )
 
 func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID string, responseBody []byte) {
+	extendedLogger := addContactFieldsToLog(sender.log.Clone(), contact).
+		String(moira.LogFieldNameTriggerID, triggerID).
+		String(logFieldNameSendNotificationResponseBody, string(responseBody))
+
 	var rspData map[string]interface{}
 	err := json.Unmarshal(responseBody, &rspData)
 	if err != nil {
-		addContactFieldsToLog(
-			sender.log.Error().Error(err),
-			contact).
-			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
-			String(moira.LogFieldNameTriggerID, triggerID).
+		extendedLogger.Error().
+			Error(err).
 			Msg("Failed to schedule delivery check because of not unmarshalling")
 		return
 	}
 
 	checkData, err := prepareDeliveryCheck(contact, rspData, sender.deliveryCheckConfig.URLTemplate, triggerID)
 	if err != nil {
-		addContactFieldsToLog(
-			sender.log.Error().Error(err),
-			contact).
-			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
-			String(moira.LogFieldNameTriggerID, triggerID).
+		extendedLogger.Error().
+			Error(err).
 			Msg("Failed to prepare delivery check")
 		return
 	}
 
+	extendedLogger = extendedLogger.String(logFieldNameDeliveryCheckUrl, checkData.URL)
 	err = sender.addDeliveryChecks(checkData, sender.clock.NowUnix())
 	if err != nil {
-		addContactFieldsToLog(
-			sender.log.Error().Error(err),
-			contact).
-			String(logFieldNameDeliveryCheckUrl, checkData.URL).
-			String(logFieldNameSendNotificationResponseBody, string(responseBody)).
-			String(moira.LogFieldNameTriggerID, triggerID).
+		extendedLogger.Error().
+			Error(err).
 			Msg("Failed to schedule delivery check")
 		return
 	}

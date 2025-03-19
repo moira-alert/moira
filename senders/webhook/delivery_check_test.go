@@ -155,7 +155,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 				AttemptsCount: 1,
 			}
 
-			newCheckData, newState := sender.performSingleDeliveryCheck(checkData)
+			newCheckData, newState := sender.performSingleDeliveryCheck(&sender.log, checkData)
 			So(newState, ShouldResemble, moira.DeliveryStateException)
 			So(newCheckData, ShouldResemble, deliveryCheckData{
 				URL:           checkData.URL,
@@ -172,7 +172,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 				AttemptsCount: 1,
 			}
 
-			newCheckData, newState := sender.performSingleDeliveryCheck(checkData)
+			newCheckData, newState := sender.performSingleDeliveryCheck(&sender.log, checkData)
 			So(newState, ShouldResemble, moira.DeliveryStateOK)
 			So(newCheckData, ShouldResemble, deliveryCheckData{
 				URL:           checkData.URL,
@@ -189,7 +189,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 				AttemptsCount: 2,
 			}
 
-			newCheckData, newState := sender.performSingleDeliveryCheck(checkData)
+			newCheckData, newState := sender.performSingleDeliveryCheck(&sender.log, checkData)
 			So(newState, ShouldResemble, moira.DeliveryStatePending)
 			So(newCheckData, ShouldResemble, deliveryCheckData{
 				URL:           checkData.URL,
@@ -206,7 +206,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 				AttemptsCount: 3,
 			}
 
-			newCheckData, newState := sender.performSingleDeliveryCheck(checkData)
+			newCheckData, newState := sender.performSingleDeliveryCheck(&sender.log, checkData)
 			So(newState, ShouldResemble, "abracadabra")
 			So(newCheckData, ShouldResemble, deliveryCheckData{
 				URL:           checkData.URL,

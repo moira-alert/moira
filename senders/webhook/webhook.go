@@ -199,7 +199,14 @@ func isAllowedResponseCode(responseCode int) bool {
 	return (responseCode >= http.StatusOK) && (responseCode < http.StatusMultipleChoices)
 }
 
-func addContactFieldsToLog(eventBuilder logging.EventBuilder, contact moira.ContactData) logging.EventBuilder {
+func addContactFieldsToLog(logger moira.Logger, contact moira.ContactData) moira.Logger {
+	return logger.
+		String(moira.LogFieldNameContactID, contact.ID).
+		String(moira.LogFieldNameContactType, contact.Type).
+		String(moira.LogFieldNameContactValue, contact.Value)
+}
+
+func addContactFieldsToEventBuilder(eventBuilder logging.EventBuilder, contact moira.ContactData) logging.EventBuilder {
 	return eventBuilder.
 		String(moira.LogFieldNameContactID, contact.ID).
 		String(moira.LogFieldNameContactType, contact.Type).
