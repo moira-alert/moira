@@ -10,7 +10,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/clock"
-	"github.com/moira-alert/moira/logging"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/senders/delivery"
 )
@@ -197,18 +196,4 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func isAllowedResponseCode(responseCode int) bool {
 	return (responseCode >= http.StatusOK) && (responseCode < http.StatusMultipleChoices)
-}
-
-func addContactFieldsToLog(logger moira.Logger, contact moira.ContactData) moira.Logger {
-	return logger.
-		String(moira.LogFieldNameContactID, contact.ID).
-		String(moira.LogFieldNameContactType, contact.Type).
-		String(moira.LogFieldNameContactValue, contact.Value)
-}
-
-func addContactFieldsToEventBuilder(eventBuilder logging.EventBuilder, contact moira.ContactData) logging.EventBuilder {
-	return eventBuilder.
-		String(moira.LogFieldNameContactID, contact.ID).
-		String(moira.LogFieldNameContactType, contact.Type).
-		String(moira.LogFieldNameContactValue, contact.Value)
 }

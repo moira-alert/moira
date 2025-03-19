@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/logging"
 	"github.com/moira-alert/moira/senders/delivery"
 	"github.com/moira-alert/moira/templating"
 )
@@ -180,12 +181,6 @@ func (sender *Sender) performSingleDeliveryCheck(extendedLogger *moira.Logger, c
 	return checkData, deliveryState
 }
 
-func addDeliveryCheckFieldsToLog(logger moira.Logger, rspCode int, body string) moira.Logger {
-	return logger.
-		Int(logFieldNameDeliveryCheckResponseCode, rspCode).
-		String(logFieldNameDeliveryCheckResponseBody, body)
-}
-
 func handleStateTransition(checkData deliveryCheckData, newState string, maxAttemptsCount uint64, counter *moira.DeliveryTypesCounter) (deliveryCheckData, bool) {
 	switch newState {
 	case moira.DeliveryStateOK:
@@ -208,4 +203,24 @@ func handleStateTransition(checkData deliveryCheckData, newState string, maxAtte
 		counter.DeliveryChecksStopped += 1
 		return deliveryCheckData{}, false
 	}
+}
+
+func addDeliveryCheckFieldsToLog(logger moira.Logger, rspCode int, body string) moira.Logger {
+	return logger.
+		Int(logFieldNameDeliveryCheckResponseCode, rspCode).
+		String(logFieldNameDeliveryCheckResponseBody, body)
+}
+
+func addContactFieldsToLog(logger moira.Logger, contact moira.ContactData) moira.Logger {
+	return logger.
+		String(moira.LogFieldNameContactID, contact.ID).
+		String(moira.LogFieldNameContactType, contact.Type).
+		String(moira.LogFieldNameContactValue, contact.Value)
+}
+
+func addContactFieldsToEventBuilder(eventBuilder logging.EventBuilder, contact moira.ContactData) logging.EventBuilder {
+	return eventBuilder.
+		String(moira.LogFieldNameContactID, contact.ID).
+		String(moira.LogFieldNameContactType, contact.Type).
+		String(moira.LogFieldNameContactValue, contact.Value)
 }
