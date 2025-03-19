@@ -63,7 +63,7 @@ func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
 
 		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
-		var events []HeartbeatNotificationEvent
+		var events []heartbeatNotificationEvent
 		mock.selfCheckWorker.sendErrorMessages(events)
 
 		err = mock.selfCheckWorker.Stop()
@@ -80,7 +80,7 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 			Value: "123",
 		}
 
-		notifAndTags := []HeartbeatNotificationEvent{
+		notifAndTags := []heartbeatNotificationEvent{
 			{
 				NotificationEvent: moira.NotificationEvent{
 					Metric: "Triggered!!!",
