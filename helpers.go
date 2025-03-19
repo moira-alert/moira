@@ -17,7 +17,7 @@ type BytesScanner struct {
 	emitEmptySlice bool
 }
 
-// Select applies a transformation function to each element in the input slice and returns a new slice with the transformed elements.
+// Map applies a transformation function to each element in the input slice and returns a new slice with the transformed elements.
 func Map[T any, R any](input []T, transform func(T) R) []R {
 	result := make([]R, len(input))
 	for i, v := range input {

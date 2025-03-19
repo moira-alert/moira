@@ -87,12 +87,8 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64)
 	return nextSendErrorMessage
 }
 
-func (selfCheck *SelfCheckWorker) getContactsToNotify(events []HeartbeatNotificationEvent) ([]struct {
-	*moira.ContactData
-	*moira.NotificationEvents
-}, error,
-) {
-	result := make(map[*moira.ContactData][]moira.NotificationEvent)
+func (selfCheck *SelfCheckWorker) constructUserNotification(events []HeartbeatNotificationEvent) ([]*notifier.NotificationPackage, error) {
+	contactToEvents := make(map[*moira.ContactData][]moira.NotificationEvent)
 	for _, event := range events {
 		if len(event.CheckTags) == 0 {
 			continue
@@ -108,29 +104,60 @@ func (selfCheck *SelfCheckWorker) getContactsToNotify(events []HeartbeatNotifica
 				return nil, err
 			}
 			for _, contact := range contacts {
-				result[contact] = append(result[contact], event.NotificationEvent)
+				contactToEvents[contact] = append(contactToEvents[contact], event.NotificationEvent)
 			}
 		}
 	}
 
-	resultList := make([]struct {
-		*moira.ContactData
-		*moira.NotificationEvents
-	}, 0, len(result))
-	for contact, events := range result {
-		r := moira.NotificationEvents(events)
-		resultList = append(resultList, struct {
-			*moira.ContactData
-			*moira.NotificationEvents
-		}{contact, &r})
+	notificationPkgs := make([]*notifier.NotificationPackage, 0, len(contactToEvents))
+	for contact, events := range contactToEvents {
+		notificationPkgs = append(notificationPkgs, &notifier.NotificationPackage{
+			Contact: *contact,
+			Trigger: moira.TriggerData{
+				Name:       "Moira health check",
+				ErrorValue: float64(0),
+			},
+			Events:     events,
+			DontResend: true,
+		})
 	}
 
-	return resultList, nil
+	return notificationPkgs, nil
 }
 
 func (selfCheck *SelfCheckWorker) sendErrorMessages(events []HeartbeatNotificationEvent) {
 	var sendingWG sync.WaitGroup
 
+	selfCheck.sendNotificationToAdmins(moira.Map(
+		events,
+		func(et HeartbeatNotificationEvent) moira.NotificationEvent { return et.NotificationEvent },
+	),
+		&sendingWG,
+	)
+	sendingWG.Wait()
+
+	selfCheck.sendNotificationToUsers(events, &sendingWG)
+	sendingWG.Wait()
+}
+
+func (selfCheck *SelfCheckWorker) sendNotificationToUsers(events []HeartbeatNotificationEvent, sendingWG *sync.WaitGroup) {
+	notificationPackages, err := selfCheck.constructUserNotification(events)
+	if err != nil {
+		selfCheck.Logger.Warning().
+			Error(err).
+			Msg("Sending notifications via subscriptions has failed")
+	}
+
+	for _, pkg := range notificationPackages {
+		if pkg == nil {
+			continue
+		}
+
+		selfCheck.Notifier.Send(pkg, sendingWG)
+	}
+}
+
+func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.NotificationEvent, sendingWG *sync.WaitGroup) {
 	for _, adminContact := range selfCheck.Config.Contacts {
 		pkg := notifier.NotificationPackage{
 			Contact: moira.ContactData{
@@ -141,38 +168,11 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events []HeartbeatNotificati
 				Name:       "Moira health check",
 				ErrorValue: float64(0),
 			},
-			Events:     moira.Map(events, func(et HeartbeatNotificationEvent) moira.NotificationEvent { return et.NotificationEvent }),
+			Events:     events,
 			DontResend: true,
 		}
 
-		selfCheck.Notifier.Send(&pkg, &sendingWG)
-		sendingWG.Wait()
-	}
-
-	eventsAndContacts, err := selfCheck.getContactsToNotify(events)
-	if err != nil {
-		selfCheck.Logger.Warning().
-			Error(err).
-			Msg("Sending notifications via subscriptions has failed")
-	}
-
-	for _, contactAndEvent := range eventsAndContacts {
-		if contactAndEvent.ContactData == nil || contactAndEvent.NotificationEvents == nil {
-			continue
-		}
-
-		pkg := notifier.NotificationPackage{
-			Contact: *contactAndEvent.ContactData,
-			Trigger: moira.TriggerData{
-				Name:       "Moira health check",
-				ErrorValue: float64(0),
-			},
-			Events:     *contactAndEvent.NotificationEvents,
-			DontResend: true,
-		}
-
-		selfCheck.Notifier.Send(&pkg, &sendingWG)
-		sendingWG.Wait()
+		selfCheck.Notifier.Send(&pkg, sendingWG)
 	}
 }
 

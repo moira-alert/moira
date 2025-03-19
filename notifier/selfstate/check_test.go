@@ -17,41 +17,35 @@ import (
 
 func TestSelfCheckWorker_check(t *testing.T) {
 	Convey("Check should", t, func() {
+		Convey("Send notifications to admins only on database error", func() {
+			worker := createWorker(t)
+			redisError := fmt.Errorf("Redis connection timeout")
+			worker.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), redisError)
+			worker.database.EXPECT().SetNotifierState(gomock.Any()).Return(redisError)
+			worker.database.EXPECT().GetTagsSubscriptions(gomock.Any()).Return(nil, redisError)
+
+			var sendingWG sync.WaitGroup
+			var timeDelta int64 = 100
+			nowTS := time.Now().Unix() + timeDelta
+			val := float64(timeDelta)
+
+			registerAdminNotification(worker, nowTS, "Redis disconnected", val, &sendingWG)
+
+			worker.selfCheckWorker.check(nowTS, 10)
+		})
+
 		Convey("Send notifications to admins and users on single heartbeat error", func() {
 			var timeDelta int64 = 100
 			nowTS := time.Now().Unix() + timeDelta
 			worker := createWorker(t)
 
 			fillDatabase(worker.database)
-			worker.database.EXPECT().GetChecksUpdatesCount().Return(int64(0), fmt.Errorf(""))
+			worker.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), fmt.Errorf("Redis connection timeout")) // NOTE: needs to fail database check and do not check other heartbeats.
 
 			val := float64(timeDelta)
 			var sendingWG sync.WaitGroup
 
-			for _, contact := range worker.conf.Contacts {
-				toAdminPack := notifier2.NotificationPackage{
-					Trigger: moira.TriggerData{
-						Name:       "Moira health check",
-						ErrorValue: float64(0),
-					},
-					Contact: moira.ContactData{
-						Type:  contact["type"],
-						Value: contact["value"],
-					},
-					DontResend: true,
-					Events: []moira.NotificationEvent{
-						{
-							Timestamp: nowTS,
-							OldState:  moira.StateNODATA,
-							State:     moira.StateERROR,
-							Metric:    "Redis disconnected",
-							Value:     &val,
-						},
-					},
-				}
-
-				worker.notif.EXPECT().Send(&toAdminPack, &sendingWG).Times(1)
-			}
+			registerAdminNotification(worker, nowTS, "Redis disconnected", val, &sendingWG)
 
 			toUsersPack := notifier2.NotificationPackage{
 				Trigger: moira.TriggerData{
@@ -80,6 +74,33 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			worker.selfCheckWorker.check(nowTS, 10)
 		})
 	})
+}
+
+func registerAdminNotification(worker *selfCheckWorkerMock, nowTS int64, eventMetric string, eventValue float64, sendingWG *sync.WaitGroup) {
+	for _, contact := range worker.conf.Contacts {
+		toAdminPack := notifier2.NotificationPackage{
+			Trigger: moira.TriggerData{
+				Name:       "Moira health check",
+				ErrorValue: float64(0),
+			},
+			Contact: moira.ContactData{
+				Type:  contact["type"],
+				Value: contact["value"],
+			},
+			DontResend: true,
+			Events: []moira.NotificationEvent{
+				{
+					Timestamp: nowTS,
+					OldState:  moira.StateNODATA,
+					State:     moira.StateERROR,
+					Metric:    eventMetric,
+					Value:     &eventValue,
+				},
+			},
+		}
+
+		worker.notif.EXPECT().Send(&toAdminPack, sendingWG).Times(1)
+	}
 }
 
 func createWorker(t *testing.T) *selfCheckWorkerMock {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	mock_heartbeat "github.com/moira-alert/moira/mock/heartbeat"
+	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 
 	"github.com/moira-alert/moira"
@@ -71,7 +72,7 @@ func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
 	})
 }
 
-func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
+func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 	Convey("Should resemble events to contacts trought system tags", t, func() {
 		contact := moira.ContactData{
 			ID:    "some-contact",
@@ -98,13 +99,14 @@ func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 			},
 		}
 
-		expected := []struct {
-			*moira.ContactData
-			*moira.NotificationEvents
-		}{
+		expected := []*notifier.NotificationPackage{
 			{
-				ContactData: &contact,
-				NotificationEvents: &moira.NotificationEvents{
+				Contact: contact,
+				Trigger: moira.TriggerData{
+					Name:       "Moira health check",
+					ErrorValue: float64(0),
+				},
+				Events: []moira.NotificationEvent{
 					{
 						Metric: "Triggered!!!",
 					},
@@ -112,6 +114,7 @@ func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 						Metric: "Some another problem!!!",
 					},
 				},
+				DontResend: true,
 			},
 		}
 
@@ -143,7 +146,7 @@ func TestSelfCheckWorker_eventsToContacts(t *testing.T) {
 			mockCtrl:        mockCtrl,
 		}
 
-		actual, err := mock.selfCheckWorker.getContactsToNotify(notifAndTags)
+		actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
 		mock.mockCtrl.Finish()
