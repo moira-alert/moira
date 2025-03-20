@@ -58,7 +58,7 @@ func (sender *Sender) CheckNotificationsDelivery(fetchedData []string) ([]string
 			checkAgainChecksData = append(checkAgainChecksData, newCheckData)
 		}
 
-		if !scheduleAgain {
+		if !scheduleAgain && deliveryState != moira.DeliveryStateOK {
 			eventBuilder := extendedLogger.Warning()
 			if prevDeliveryStopped != counter.DeliveryChecksStopped {
 				eventBuilder = extendedLogger.Error()
