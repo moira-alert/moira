@@ -17,6 +17,15 @@ type BytesScanner struct {
 	emitEmptySlice bool
 }
 
+// Map applies a transformation function to each element in the input slice and returns a new slice with the transformed elements.
+func Map[T any, R any](input []T, transform func(T) R) []R {
+	result := make([]R, len(input))
+	for i, v := range input {
+		result[i] = transform(v)
+	}
+	return result
+}
+
 // HasNext checks if next subslice available or not.
 func (it *BytesScanner) HasNext() bool {
 	return it.index < len(it.source) || it.emitEmptySlice
