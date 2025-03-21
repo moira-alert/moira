@@ -3,7 +3,6 @@ package webhook
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/templating"
@@ -55,7 +54,7 @@ func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{},
 		return deliveryCheckData{}, fmt.Errorf("failed to fill url template with data: %w", err)
 	}
 
-	if err = validateURL(requestURL); err != nil {
+	if err = moira.ValidateURL(requestURL); err != nil {
 		return deliveryCheckData{}, fmt.Errorf("got bad url for check request: %w, url: %s", err, requestURL)
 	}
 
@@ -65,23 +64,6 @@ func prepareDeliveryCheck(contact moira.ContactData, rsp map[string]interface{},
 		TriggerID:     triggerID,
 		AttemptsCount: 0,
 	}, nil
-}
-
-func validateURL(requestURL string) error {
-	urlStruct, err := url.Parse(requestURL)
-	if err != nil {
-		return err
-	}
-
-	if !(urlStruct.Scheme == "http" || urlStruct.Scheme == "https") {
-		return fmt.Errorf("bad url scheme: %s", urlStruct.Scheme)
-	}
-
-	if urlStruct.Host == "" {
-		return fmt.Errorf("host is empty")
-	}
-
-	return nil
 }
 
 func (sender *Sender) addDeliveryChecks(data deliveryCheckData, timestamp int64) error {
