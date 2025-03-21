@@ -9,6 +9,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
 // ContextKey used as key of api request context values.
@@ -46,6 +47,7 @@ var (
 	limitsContextKey     ContextKey = "limits"
 	searchTextContextKey ContextKey = "searchText"
 	sortOrderContextKey  ContextKey = "sort"
+	selfStateChecksKey   ContextKey = "selfstateChecks"
 
 	anonymousUser = "anonymous"
 )
@@ -199,4 +201,9 @@ func GetSearchText(request *http.Request) *regexp.Regexp {
 // GetSortOrder returns api.SortOrder.
 func GetSortOrder(request *http.Request) api.SortOrder {
 	return request.Context().Value(sortOrderContextKey).(api.SortOrder)
+}
+
+// GetSelfStateChecksConfig returns selfstate.ChecksConfig.
+func GetSelfStateChecksConfig(request *http.Request) selfstate.ChecksConfig {
+	return request.Context().Value(selfStateChecksKey).(selfstate.ChecksConfig)
 }

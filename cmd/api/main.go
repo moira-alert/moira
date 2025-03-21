@@ -136,6 +136,7 @@ func main() {
 	defer statsManager.Stop() //nolint
 
 	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
+	selfStateChecksConfig := toCheckConfig(applicationConfig.Checks)
 
 	httpHandler := handler.NewHandler(
 		database,
@@ -144,6 +145,7 @@ func main() {
 		apiConfig,
 		metricSourceProvider,
 		webConfig,
+		selfStateChecksConfig,
 	)
 
 	server := &http.Server{

@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -36,7 +37,7 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 }
 
 // CreateSubscription create or update subscription.
-func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLogin, teamID string, subscription *dto.Subscription) *api.ErrorResponse {
+func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLogin, teamID string, systemTags []string, subscription *dto.Subscription) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateSubscription: cannot create subscription when both userLogin and teamID specified"))
 	}
@@ -62,10 +63,34 @@ func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLo
 	}
 	subscription.TeamID = teamID
 	data := moira.SubscriptionData(*subscription)
+
+	if len(data.Tags) > 0 {
+		areTagsOfSameKind := areAllTagsOfSameKind(data.Tags, systemTags)
+		if !areTagsOfSameKind {
+			return api.ErrorInvalidRequest(fmt.Errorf("subscription tags should be only user-defined or only system"))
+		}
+	}
+
 	if err := dataBase.SaveSubscription(&data); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
+}
+
+func areAllTagsOfSameKind(tags []string, systemTags []string) bool {
+	if len(tags) < 2 || len(systemTags) == 0 {
+		return true
+	}
+
+	pivot := slices.Contains(systemTags, tags[0])
+
+	for _, tag := range tags {
+		if slices.Contains(systemTags, tag) != pivot {
+			return false
+		}
+	}
+	return true
 }
 
 // GetSubscription returns subscription by it's id.

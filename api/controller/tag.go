@@ -61,29 +61,31 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 
 // GetAllTags gets all tag names.
 func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
-	tagsNames, err := getTagNamesSorted(database)
+	tags, err := database.GetTagNames()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
+	tags = sortTagNames(tags)
 	tagsData := &dto.TagsData{
-		TagNames: tagsNames,
+		TagNames: tags,
 	}
 
 	return tagsData, nil
 }
 
-func getTagNamesSorted(database moira.Database) ([]string, error) {
-	tagsNames, err := database.GetTagNames()
-	if err != nil {
-		return nil, err
-	}
+func sortTagNames(tagsNames []string) []string {
 	sort.SliceStable(tagsNames, func(i, j int) bool { return strings.ToLower(tagsNames[i]) < strings.ToLower(tagsNames[j]) })
-	return tagsNames, nil
+
+	return tagsNames
 }
 
 // CreateTags create tags with tag names.
-func CreateTags(database moira.Database, tags *dto.TagsData) *api.ErrorResponse {
+func CreateTags(database moira.Database, tags *dto.TagsData, systemTags []string) *api.ErrorResponse {
+	if len(moira.Intersect(tags.TagNames, systemTags)) > 0 {
+		return api.ErrorInvalidRequest(fmt.Errorf("tags should not be contained in system tags list"))
+	}
+
 	if err := database.CreateTags(tags.TagNames); err != nil {
 		return api.ErrorInternalServer(err)
 	}

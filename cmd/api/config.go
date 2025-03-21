@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
 type config struct {
@@ -20,6 +21,27 @@ type config struct {
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
 	Remotes             cmd.RemotesConfig             `yaml:",inline"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
+	Checks              cmd.ChecksConfig              `yaml:"selfstate_checks"`
+}
+
+func toCheckConfig(checksConfig cmd.ChecksConfig) *selfstate.ChecksConfig {
+	return &selfstate.ChecksConfig{
+		Database: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Database.SystemTags,
+		},
+		Filter: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Filter.SystemTags,
+		},
+		LocalChecker: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.LocalChecker.SystemTags,
+		},
+		RemoteChecker: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.RemoteChecker.SystemTags,
+		},
+		Notifier: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Notifier.SystemTags,
+		},
+	}
 }
 
 // ClustersMetricTTL parses TTLs of all clusters provided in config.

@@ -1,20 +1,17 @@
 package heartbeat
 
-import (
-	"time"
-
-	"github.com/moira-alert/moira"
-)
+import "github.com/moira-alert/moira"
 
 type databaseHeartbeat struct{ heartbeat }
 
-func GetDatabase(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
+func GetDatabase(delay, lastSuccessfulCheck int64, checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
 	if delay > 0 {
 		return &databaseHeartbeat{heartbeat{
 			logger:              logger,
 			database:            database,
 			delay:               delay,
-			lastSuccessfulCheck: time.Now().Unix(),
+			lastSuccessfulCheck: lastSuccessfulCheck,
+			checkTags:           checkTags,
 		}}
 	}
 	return nil
@@ -49,4 +46,8 @@ func (databaseHeartbeat) NeedToCheckOthers() bool {
 
 func (databaseHeartbeat) GetErrorMessage() string {
 	return "Redis disconnected"
+}
+
+func (check *databaseHeartbeat) GetCheckTags() CheckTags {
+	return check.checkTags
 }

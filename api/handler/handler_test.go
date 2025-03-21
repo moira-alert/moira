@@ -33,7 +33,7 @@ func TestReadonlyMode(t *testing.T) {
 			SupportEmail: "test",
 			Contacts:     []api.WebContact{},
 		}
-		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig)
+		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
 
 		Convey("Get notifier health", func() {
 			mockDb.EXPECT().GetNotifierState().Return("OK", nil).Times(1)
@@ -127,7 +127,7 @@ func TestAdminOnly(t *testing.T) {
 		SupportEmail: "test",
 		Contacts:     []api.WebContact{},
 	}
-	handler := NewHandler(mockDb, logger, nil, config, nil, webConfig)
+	handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
 
 	Convey("Get all contacts", t, func() {
 		Convey("For non-admin", func() {
