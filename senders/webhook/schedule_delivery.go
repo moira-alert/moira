@@ -14,8 +14,8 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 		String(moira.LogFieldNameTriggerID, triggerID).
 		String(logFieldNameSendNotificationResponseBody, string(responseBody))
 
-	var rspData map[string]interface{}
-	err := json.Unmarshal(responseBody, &rspData)
+	var responseData map[string]interface{}
+	err := json.Unmarshal(responseBody, &responseData)
 	if err != nil {
 		extendedLogger.Error().
 			Error(err).
@@ -23,7 +23,7 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 		return
 	}
 
-	checkData, err := prepareDeliveryCheck(contact, rspData, sender.deliveryCheckConfig.URLTemplate, triggerID)
+	checkData, err := prepareDeliveryCheck(contact, responseData, sender.deliveryCheckConfig.URLTemplate, triggerID)
 	if err != nil {
 		extendedLogger.Error().
 			Error(err).

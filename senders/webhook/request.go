@@ -24,7 +24,7 @@ func buildRequest(
 	password string,
 	headers map[string]string,
 ) (*http.Request, error) {
-	request, err := http.NewRequestWithContext(context.Background(), method, requestURL, bytes.NewBuffer(body))
+	request, err := http.NewRequestWithContext(context.TODO(), method, requestURL, bytes.NewBuffer(body))
 	if err != nil {
 		return request, err
 	}

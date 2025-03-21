@@ -157,17 +157,21 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 		// TODO: add example responses to config and check filling url_template and check_template
 
-		go sender.Controller.RunDeliveryChecksWorker(
-			nil,
-			sender.log,
-			time.Duration(sender.deliveryCheckConfig.CheckTimeout)*time.Second,
-			sender.deliveryCheckConfig.ReschedulingDelay,
-			sender.metrics,
-			sender,
-		)
+		go sender.runDeliveryCheckWorker()
 	}
 
 	return nil
+}
+
+func (sender *Sender) runDeliveryCheckWorker() {
+	sender.Controller.RunDeliveryChecksWorker(
+		nil,
+		sender.log,
+		time.Duration(sender.deliveryCheckConfig.CheckTimeout)*time.Second,
+		sender.deliveryCheckConfig.ReschedulingDelay,
+		sender.metrics,
+		sender,
+	)
 }
 
 // SendEvents implements Sender interface Send.

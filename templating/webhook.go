@@ -50,6 +50,8 @@ type webhookDeliveryCheckPopulater struct {
 	TriggerID             string
 }
 
+// NewWebhookDeliveryCheckPopulater creates a new webhook delivery check populater with provided template contact,
+// triggerID and body from response got on delivery check request.
 func NewWebhookDeliveryCheckPopulater(contact *Contact, deliveryCheckResponse map[string]interface{}, triggerID string) *webhookDeliveryCheckPopulater {
 	return &webhookDeliveryCheckPopulater{
 		Contact:               contact,
