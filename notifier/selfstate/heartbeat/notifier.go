@@ -7,28 +7,28 @@ import (
 )
 
 type notifier struct {
-	heartbeat
+	db  moira.Database
+	log moira.Logger
 }
 
-func GetNotifier(checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
-	return &notifier{heartbeat{
-		database:  database,
-		logger:    logger,
-		checkTags: checkTags,
-	}}
+func GetNotifier(logger moira.Logger, database moira.Database) Heartbeater {
+	return &notifier{
+		db:  database,
+		log: logger,
+	}
 }
 
 func (check notifier) Check(int64) (int64, bool, error) {
-	state, _ := check.database.GetNotifierState()
+	state, _ := check.db.GetNotifierState()
 	if state != moira.SelfStateOK {
-		check.logger.Error().
+		check.log.Error().
 			String("error", check.GetErrorMessage()).
 			Msg("Notifier is not healthy")
 
 		return 0, true, nil
 	}
 
-	check.logger.Debug().
+	check.log.Debug().
 		String("state", state).
 		Msg("Notifier is healthy")
 
@@ -44,10 +44,6 @@ func (notifier) NeedToCheckOthers() bool {
 }
 
 func (check notifier) GetErrorMessage() string {
-	state, _ := check.database.GetNotifierState()
+	state, _ := check.db.GetNotifierState()
 	return fmt.Sprintf("Moira-Notifier does not send messages. State: %v", state)
-}
-
-func (check *notifier) GetCheckTags() CheckTags {
-	return check.checkTags
 }
