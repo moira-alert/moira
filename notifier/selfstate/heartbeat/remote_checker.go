@@ -1,20 +1,23 @@
 package heartbeat
 
-import "github.com/moira-alert/moira"
+import (
+	"time"
+
+	"github.com/moira-alert/moira"
+)
 
 type remoteChecker struct {
 	heartbeat
 	count int64
 }
 
-func GetRemoteChecker(delay, lastSuccessfulCheck int64, checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
+func GetRemoteChecker(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
 	if delay > 0 {
 		return &remoteChecker{heartbeat: heartbeat{
 			logger:              logger,
 			database:            database,
 			delay:               delay,
-			lastSuccessfulCheck: lastSuccessfulCheck,
-			checkTags:           checkTags,
+			lastSuccessfulCheck: time.Now().Unix(),
 		}}
 	}
 	return nil
@@ -54,8 +57,4 @@ func (remoteChecker) NeedToCheckOthers() bool {
 
 func (remoteChecker) GetErrorMessage() string {
 	return "Moira-Remote-Checker does not check remote triggers"
-}
-
-func (check *remoteChecker) GetCheckTags() CheckTags {
-	return check.checkTags
 }

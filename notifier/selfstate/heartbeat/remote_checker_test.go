@@ -24,9 +24,9 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 		database := check.database.(*mock_moira_alert.MockDatabase)
 
 		Convey("Checking the created graphite remote checker", func() {
-			expected := &remoteChecker{heartbeat: heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now, checkTags: check.checkTags}}
-			So(GetRemoteChecker(0, now, check.checkTags, check.logger, check.database), ShouldBeNil)
-			So(GetRemoteChecker(1, now, check.checkTags, check.logger, check.database), ShouldResemble, expected)
+			expected := &remoteChecker{heartbeat: heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now}}
+			So(GetRemoteChecker(0, check.logger, check.database), ShouldBeNil)
+			So(GetRemoteChecker(1, check.logger, check.database), ShouldResemble, expected)
 		})
 
 		Convey("GraphiteRemoteChecker error handling test", func() {
@@ -83,7 +83,6 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 func createGraphiteRemoteCheckerTest(t *testing.T) (*remoteChecker, *gomock.Controller) {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
-	checkTags := []string{}
 
-	return GetRemoteChecker(120, time.Now().Unix(), checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*remoteChecker), mockCtrl
+	return GetRemoteChecker(120, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*remoteChecker), mockCtrl
 }

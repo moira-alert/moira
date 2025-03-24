@@ -29,12 +29,11 @@ func TestFilter(t *testing.T) {
 					logger:              check.logger,
 					delay:               1,
 					lastSuccessfulCheck: now,
-					checkTags:           check.checkTags,
 				},
 			}
 
-			So(GetFilter(0, now, check.checkTags, check.logger, check.database), ShouldBeNil)
-			So(GetFilter(1, now, check.checkTags, check.logger, check.database), ShouldResemble, expected)
+			So(GetFilter(0, check.logger, check.database), ShouldBeNil)
+			So(GetFilter(1, check.logger, check.database), ShouldResemble, expected)
 		})
 
 		Convey("Filter error handling test", func() {
@@ -92,7 +91,6 @@ func TestFilter(t *testing.T) {
 func createFilterTest(t *testing.T) (*filter, *gomock.Controller) {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
-	checkTags := []string{}
 
-	return GetFilter(60, time.Now().Unix(), checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*filter), mockCtrl
+	return GetFilter(60, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*filter), mockCtrl
 }

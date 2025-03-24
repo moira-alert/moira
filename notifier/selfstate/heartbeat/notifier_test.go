@@ -18,7 +18,7 @@ func TestNotifierState(t *testing.T) {
 		check := createNotifierStateTest(t)
 
 		Convey("Test get notifier delay", func() {
-			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+			check.db.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -27,7 +27,7 @@ func TestNotifierState(t *testing.T) {
 		})
 
 		Convey("Test get notification", func() {
-			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil).Times(2)
+			check.db.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil).Times(2)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -45,7 +45,6 @@ func TestNotifierState(t *testing.T) {
 func createNotifierStateTest(t *testing.T) *notifier {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
-	checkTags := []string{}
 
-	return GetNotifier(checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*notifier)
+	return GetNotifier(logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*notifier)
 }
