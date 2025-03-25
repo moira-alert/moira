@@ -1,10 +1,6 @@
 package heartbeat
 
-import (
-	"time"
-
-	"github.com/moira-alert/moira"
-)
+import "github.com/moira-alert/moira"
 
 type filter struct {
 	heartbeat
@@ -12,14 +8,15 @@ type filter struct {
 	firstCheckWasSuccessful bool
 }
 
-func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
+func GetFilter(delay, lastSuccessfulCheck int64, checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
 	if delay > 0 {
 		return &filter{
 			heartbeat: heartbeat{
 				logger:              logger,
 				database:            database,
 				delay:               delay,
-				lastSuccessfulCheck: time.Now().Unix(),
+				lastSuccessfulCheck: lastSuccessfulCheck,
+				checkTags:           checkTags,
 			},
 			firstCheckWasSuccessful: false,
 		}
@@ -67,4 +64,8 @@ func (check filter) NeedToCheckOthers() bool {
 
 func (filter) GetErrorMessage() string {
 	return "Moira-Filter does not receive metrics"
+}
+
+func (check filter) GetCheckTags() CheckTags {
+	return check.checkTags
 }

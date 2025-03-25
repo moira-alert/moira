@@ -1,23 +1,20 @@
 package heartbeat
 
-import (
-	"time"
-
-	"github.com/moira-alert/moira"
-)
+import "github.com/moira-alert/moira"
 
 type localChecker struct {
 	heartbeat
 	count int64
 }
 
-func GetLocalChecker(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
+func GetLocalChecker(delay, lastSuccessfulCheck int64, checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
 	if delay > 0 {
 		return &localChecker{heartbeat: heartbeat{
 			logger:              logger,
 			database:            database,
 			delay:               delay,
-			lastSuccessfulCheck: time.Now().Unix(),
+			lastSuccessfulCheck: lastSuccessfulCheck,
+			checkTags:           checkTags,
 		}}
 	}
 	return nil
@@ -59,4 +56,8 @@ func (check localChecker) NeedTurnOffNotifier() bool {
 
 func (localChecker) GetErrorMessage() string {
 	return "Moira-Checker does not check triggers"
+}
+
+func (check *localChecker) GetCheckTags() CheckTags {
+	return check.checkTags
 }

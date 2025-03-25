@@ -79,6 +79,28 @@ type selfStateConfig struct {
 	NoticeInterval string `yaml:"notice_interval"`
 	// Self state monitor check interval
 	CheckInterval string `yaml:"check_interval"`
+	// Checks contains the configuration for selfstate checks
+	Checks cmd.ChecksConfig `yaml:"selfstate_checks"`
+}
+
+func toCheckConfig(checksConfig cmd.ChecksConfig) selfstate.ChecksConfig {
+	return selfstate.ChecksConfig{
+		Database: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Database.SystemTags,
+		},
+		Filter: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Filter.SystemTags,
+		},
+		LocalChecker: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.LocalChecker.SystemTags,
+		},
+		RemoteChecker: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.RemoteChecker.SystemTags,
+		},
+		Notifier: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Notifier.SystemTags,
+		},
+	}
 }
 
 func getDefault() config {
@@ -230,5 +252,6 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		CheckInterval:                  checkInterval,
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
+		Checks:                         toCheckConfig(config.Checks),
 	}
 }
