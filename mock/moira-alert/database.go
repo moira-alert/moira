@@ -55,6 +55,20 @@ func (mr *MockDatabaseMockRecorder) AcquireTriggerCheckLock(arg0, arg1 any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcquireTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).AcquireTriggerCheckLock), arg0, arg1)
 }
 
+// AddDeliveryChecksData mocks base method.
+func (m *MockDatabase) AddDeliveryChecksData(arg0 string, arg1 int64, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddDeliveryChecksData", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddDeliveryChecksData indicates an expected call of AddDeliveryChecksData.
+func (mr *MockDatabaseMockRecorder) AddDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).AddDeliveryChecksData), arg0, arg1, arg2)
+}
+
 // AddNotification mocks base method.
 func (m *MockDatabase) AddNotification(arg0 *moira.ScheduledNotification) error {
 	m.ctrl.T.Helper()
@@ -444,6 +458,21 @@ func (m *MockDatabase) GetContacts(arg0 []string) ([]*moira.ContactData, error) 
 func (mr *MockDatabaseMockRecorder) GetContacts(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContacts", reflect.TypeOf((*MockDatabase)(nil).GetContacts), arg0)
+}
+
+// GetDeliveryChecksData mocks base method.
+func (m *MockDatabase) GetDeliveryChecksData(arg0, arg1, arg2 string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeliveryChecksData", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeliveryChecksData indicates an expected call of GetDeliveryChecksData.
+func (mr *MockDatabaseMockRecorder) GetDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).GetDeliveryChecksData), arg0, arg1, arg2)
 }
 
 // GetMetricRetention mocks base method.
@@ -1205,6 +1234,21 @@ func (m *MockDatabase) RemoveContact(arg0 string) error {
 func (mr *MockDatabaseMockRecorder) RemoveContact(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveContact", reflect.TypeOf((*MockDatabase)(nil).RemoveContact), arg0)
+}
+
+// RemoveDeliveryChecksData mocks base method.
+func (m *MockDatabase) RemoveDeliveryChecksData(arg0, arg1, arg2 string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveDeliveryChecksData", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveDeliveryChecksData indicates an expected call of RemoveDeliveryChecksData.
+func (mr *MockDatabaseMockRecorder) RemoveDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).RemoveDeliveryChecksData), arg0, arg1, arg2)
 }
 
 // RemoveMetricRetention mocks base method.
