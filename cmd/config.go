@@ -373,6 +373,22 @@ type ImageStoreConfig struct {
 	S3 s3.Config `yaml:"s3"`
 }
 
+type heartbeatConfig struct {
+	SystemTags []string `yaml:"tags"`
+}
+
+type ChecksConfig struct {
+	Database      heartbeatConfig `yaml:"database"`
+	Filter        heartbeatConfig `yaml:"filter"`
+	LocalChecker  heartbeatConfig `yaml:"local_checker"`
+	RemoteChecker heartbeatConfig `yaml:"remote_checker"`
+	Notifier      heartbeatConfig `yaml:"notifier"`
+}
+
+type SelfStateChecksConfig struct {
+	Heartbeats ChecksConfig `yaml:"heartbeats"`
+}
+
 // ReadConfig parses config file by the given path into Moira-used type.
 func ReadConfig(configFileName string, config interface{}) error {
 	configYaml, err := os.ReadFile(configFileName)
