@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/notifier/selfstate"
 	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
 
@@ -35,12 +36,17 @@ func NewHandler(
 	apiConfig *api.Config,
 	metricSourceProvider *metricSource.SourceProvider,
 	webConfig *api.WebConfig,
+	selfstateConfig *selfstate.ChecksConfig,
 ) http.Handler {
 	database = db
 	searchIndex = index
 	var contactsTemplate []api.WebContact
 	if webConfig != nil {
 		contactsTemplate = webConfig.Contacts
+	}
+	var checksConfig selfstate.ChecksConfig
+	if selfstateConfig != nil {
+		checksConfig = *selfstateConfig
 	}
 
 	contactsTemplateMiddleware := moiramiddle.ContactsTemplateContext(contactsTemplate)
@@ -51,6 +57,7 @@ func NewHandler(
 	router.Use(moiramiddle.RequestLogger(log))
 	router.Use(middleware.NoCache)
 	router.Use(moiramiddle.LimitsContext(apiConfig.Limits))
+	router.Use(moiramiddle.SelfStateChecksContext(checksConfig))
 
 	router.NotFound(notFoundHandler)
 	router.MethodNotAllowed(methodNotAllowedHandler)
@@ -114,6 +121,7 @@ func NewHandler(
 				apiConfig.MetricsTTL,
 			)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
 			router.Route("/tag", tag)
+			router.Route("/system-tag", systemTag)
 			router.Route("/pattern", pattern)
 			router.Route("/event", event)
 			router.Route("/subscription", subscription)

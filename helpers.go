@@ -101,6 +101,35 @@ func Subset(first, second []string) bool {
 	return true
 }
 
+// Intersect returns the intersection of multiple arrays.
+func Intersect[T comparable](lists ...[]T) []T {
+	if len(lists) == 0 {
+		return []T{}
+	}
+
+	intersection := make(map[T]bool)
+	for _, value := range lists[0] {
+		intersection[value] = true
+	}
+
+	for _, stringList := range lists[1:] {
+		currentSet := make(map[T]bool)
+		for _, value := range stringList {
+			if intersection[value] {
+				currentSet[value] = true
+			}
+		}
+		intersection = currentSet
+	}
+
+	result := make([]T, 0, len(intersection))
+	for value := range intersection {
+		result = append(result, value)
+	}
+
+	return result
+}
+
 // GetStringListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
 func GetStringListsDiff(stringLists ...[]string) []string {
 	if len(stringLists) == 0 {
@@ -122,27 +151,6 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 		}
 	}
 	return result
-}
-
-// GetStringListsUnion returns the union set of stringLists.
-func GetStringListsUnion(stringLists ...[]string) []string {
-	if len(stringLists) == 0 {
-		return []string{}
-	}
-
-	values := make([]string, 0)
-
-	uniqueValues := make(map[string]bool)
-	for _, stringList := range stringLists {
-		for _, value := range stringList {
-			if _, ok := uniqueValues[value]; !ok {
-				values = append(values, value)
-				uniqueValues[value] = true
-			}
-		}
-	}
-
-	return values
 }
 
 // GetTriggerListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
@@ -259,6 +267,21 @@ func MergeToSorted[T Comparable](arr1, arr2 []T) ([]T, error) {
 func ValidateStruct(s any) error {
 	validator := validator.New()
 	return validator.Struct(s)
+}
+
+// GetUniqueValues gets a collection and return unique items of collection in random order.
+func GetUniqueValues[T comparable](objs ...T) []T {
+	set := make(map[T]struct{})
+	for _, obj := range objs {
+		set[obj] = struct{}{}
+	}
+
+	res := make([]T, 0, len(set))
+	for key := range set {
+		res = append(res, key)
+	}
+
+	return res
 }
 
 // EqualTwoPointerValues checks that both pointers is not nil and if they both are not nil compares values

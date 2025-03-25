@@ -22,6 +22,33 @@ func tag(router chi.Router) {
 	})
 }
 
+func systemTag(router chi.Router) {
+	router.Get("/", getAllSystemTags)
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get all system tags
+//	@id			get-all-system-tags
+//	@tags		tag
+//	@produce	json
+//	@success	200	{object}	dto.TagsData					"Tags fetched successfully"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/system-tag [get]
+func getAllSystemTags(writer http.ResponseWriter, request *http.Request) {
+	checksConfig := middleware.GetSelfStateChecksConfig(request)
+	tagsSet := checksConfig.GetUniqueSystemTags()
+	tagData := dto.TagsData{
+		TagNames: tagsSet,
+	}
+
+	if err := render.Render(writer, request, &tagData); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
 // nolint: gofmt,goimports
 //
 //	@summary	Get all tags
@@ -65,7 +92,8 @@ func createTags(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if err := controller.CreateTags(database, &tags); err != nil {
+	checksConfig := middleware.GetSelfStateChecksConfig(request)
+	if err := controller.CreateTags(database, &tags, checksConfig.GetUniqueSystemTags()); err != nil {
 		render.Render(writer, request, err) //nolint
 	}
 }
