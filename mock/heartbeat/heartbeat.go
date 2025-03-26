@@ -12,6 +12,7 @@ package mock_heartbeat
 import (
 	reflect "reflect"
 
+	heartbeat "github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -52,6 +53,20 @@ func (m *MockHeartbeater) Check(arg0 int64) (int64, bool, error) {
 func (mr *MockHeartbeaterMockRecorder) Check(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockHeartbeater)(nil).Check), arg0)
+}
+
+// GetCheckTags mocks base method.
+func (m *MockHeartbeater) GetCheckTags() heartbeat.CheckTags {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCheckTags")
+	ret0, _ := ret[0].(heartbeat.CheckTags)
+	return ret0
+}
+
+// GetCheckTags indicates an expected call of GetCheckTags.
+func (mr *MockHeartbeaterMockRecorder) GetCheckTags() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCheckTags", reflect.TypeOf((*MockHeartbeater)(nil).GetCheckTags))
 }
 
 // GetErrorMessage mocks base method.
