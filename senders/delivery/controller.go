@@ -72,7 +72,7 @@ func (controller *ChecksController) RunDeliveryChecksWorker(
 	checkTimeout time.Duration,
 	reschedulingDelay uint64,
 	metrics *metrics.SenderMetrics,
-	checkAction CheckAction,
+	checker NotificationDeliveryChecker,
 ) {
 	checkWorker := newChecksWorker(
 		logger,
@@ -82,7 +82,7 @@ func (controller *ChecksController) RunDeliveryChecksWorker(
 		reschedulingDelay,
 		controller,
 		metrics,
-		checkAction,
+		checker,
 	)
 
 	go checkWorker.run(controller.lock, stop)

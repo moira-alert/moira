@@ -158,7 +158,7 @@ func TestChecksController_RunDeliveryChecksWorker(t *testing.T) {
 	mockLock := mock_moira_alert.NewMockLock(mockCtrl)
 	mockClock := mock_clock.NewMockClock(mockCtrl)
 	logger, _ := logging.GetLogger("test delivery")
-	mockCheckAction := mock_delivery.NewMockCheckAction(mockCtrl)
+	mockDeliveryChecker := mock_delivery.NewMockNotificationDeliveryChecker(mockCtrl)
 
 	const (
 		testContactType   = "test_contact_type"
@@ -186,7 +186,7 @@ func TestChecksController_RunDeliveryChecksWorker(t *testing.T) {
 				checkTimeout,
 				reschedulingDelay,
 				nil,
-				mockCheckAction,
+				mockDeliveryChecker,
 			)
 
 			time.Sleep(checkTimeout + 100*time.Millisecond)
@@ -212,7 +212,7 @@ func TestChecksController_RunDeliveryChecksWorker(t *testing.T) {
 				checkTimeout,
 				reschedulingDelay,
 				nil,
-				mockCheckAction,
+				mockDeliveryChecker,
 			)
 
 			time.Sleep(checkTimeout + 100*time.Millisecond)
