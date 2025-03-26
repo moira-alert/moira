@@ -2,7 +2,6 @@ package webhook
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/logging"
@@ -106,16 +105,28 @@ func (sender *Sender) unmarshalChecksData(marshaledData []string) []deliveryChec
 
 func removeDuplicatedChecksData(checksData []deliveryCheckData) []deliveryCheckData {
 	deduplicated := make([]deliveryCheckData, 0)
-	uniqueMap := make(map[string]int, len(checksData))
+
+	type key struct {
+		url          string
+		contactID    string
+		contactValue string
+		triggerID    string
+	}
+	uniqueMap := make(map[key]int, len(checksData))
 
 	for _, checkData := range checksData {
-		key := fmt.Sprintf("%s_%s_%s_%s", checkData.URL, checkData.Contact.ID, checkData.Contact.Value, checkData.TriggerID)
-		if prevCheckDataIndex, ok := uniqueMap[key]; ok {
+		checkDataKey := key{
+			url:          checkData.URL,
+			contactID:    checkData.Contact.ID,
+			contactValue: checkData.Contact.Value,
+			triggerID:    checkData.TriggerID,
+		}
+		if prevCheckDataIndex, ok := uniqueMap[checkDataKey]; ok {
 			if deduplicated[prevCheckDataIndex].AttemptsCount < checkData.AttemptsCount {
 				deduplicated[prevCheckDataIndex] = checkData
 			}
 		} else {
-			uniqueMap[key] = len(deduplicated)
+			uniqueMap[checkDataKey] = len(deduplicated)
 			deduplicated = append(deduplicated, checkData)
 		}
 	}
