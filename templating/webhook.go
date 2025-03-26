@@ -46,7 +46,6 @@ func (templateData *webhookDeliveryCheckURLPopulater) Populate(tmpl string) (str
 type webhookDeliveryCheckPopulater struct {
 	Contact               *Contact
 	DeliveryCheckResponse map[string]interface{}
-	StateConstants        map[string]string
 	TriggerID             string
 }
 
@@ -56,22 +55,9 @@ func NewWebhookDeliveryCheckPopulater(contact *Contact, deliveryCheckResponse ma
 	return &webhookDeliveryCheckPopulater{
 		Contact:               contact,
 		DeliveryCheckResponse: deliveryCheckResponse,
-		StateConstants: map[string]string{
-			constantNameDeliveryStateOK:        "OK",
-			constantNameDeliveryStatePending:   "PENDING",
-			constantNameDeliveryStateFailed:    "FAILED",
-			constantNameDeliveryStateException: "EXCEPTION",
-		},
-		TriggerID: triggerID,
+		TriggerID:             triggerID,
 	}
 }
-
-const (
-	constantNameDeliveryStateOK        = "DeliveryStateOK"
-	constantNameDeliveryStatePending   = "DeliveryStatePending"
-	constantNameDeliveryStateFailed    = "DeliveryStateFailed"
-	constantNameDeliveryStateException = "DeliveryStateException"
-)
 
 // Populate populates the given template with contact data, response got on send alert request and delivery state constants.
 func (templateData *webhookDeliveryCheckPopulater) Populate(tmpl string) (string, error) {

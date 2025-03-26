@@ -165,7 +165,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 
 		Convey("with allowed response code, with DeliveryStateOK expected", func() {
 			sender.client = ts.Client()
-			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}OK{{ else }}PENDING{{ end }}`
 
 			checkData := deliveryCheckData{
 				URL:           ts.URL + "/?bodyIdx=0",
@@ -182,7 +182,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 
 		Convey("with allowed response code, with DeliveryStatePending expected", func() {
 			sender.client = ts.Client()
-			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.some_value "#" }}OK{{ else }}PENDING{{ end }}`
 
 			checkData := deliveryCheckData{
 				URL:           ts.URL + "/?bodyIdx=1",
@@ -255,7 +255,7 @@ func TestSender_CheckNotificationsDelivery(t *testing.T) {
 
 	Convey("Test CheckNotificationsDelivery", t, func() {
 		Convey("with unique checks data", func() {
-			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.important_field "?" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.important_field "?" }}OK{{ else }}PENDING{{ end }}`
 
 			expectedFetchedDeliveryChecks := []deliveryCheckData{
 				{
@@ -295,7 +295,7 @@ func TestSender_CheckNotificationsDelivery(t *testing.T) {
 		})
 
 		Convey("with duplicated check data", func() {
-			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.important_field "?" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.important_field "?" }}OK{{ else }}PENDING{{ end }}`
 
 			expectedFetchedDeliveryChecks := []deliveryCheckData{
 				{
@@ -335,7 +335,7 @@ func TestSender_CheckNotificationsDelivery(t *testing.T) {
 		})
 
 		Convey("with no checks to check again", func() {
-			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.important_field "?" }}{{ .StateConstants.DeliveryStateOK }}{{ else }}{{ .StateConstants.DeliveryStatePending }}{{ end }}`
+			sender.deliveryCheckConfig.CheckTemplate = `{{ if eq .DeliveryCheckResponse.important_field "?" }}OK{{ else }}PENDING{{ end }}`
 
 			expectedFetchedDeliveryChecks := []deliveryCheckData{
 				{

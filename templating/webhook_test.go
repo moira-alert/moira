@@ -137,7 +137,7 @@ func Test_TemplateWebhookDeliveryCheckURL(t *testing.T) {
 
 func Test_TemplateWebhookDeliveryCheckState(t *testing.T) {
 	Convey("Test populating webhook delivery check template", t, func() {
-		template := `{{ .Contact.Type }}/{{ .Contact.Value }}/{{ .DeliveryCheckResponse.some_field }}/{{ .TriggerID }}/{{ .StateConstants.DeliveryStateOK }}`
+		template := `{{ .Contact.Type }}/{{ .Contact.Value }}/{{ .DeliveryCheckResponse.some_field }}/{{ .TriggerID }}/OK`
 
 		Convey("with nil values", func() {
 			populater := NewWebhookDeliveryCheckPopulater(nil, nil, "")

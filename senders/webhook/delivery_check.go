@@ -184,6 +184,7 @@ func (sender *Sender) performSingleDeliveryCheck(extendedLogger *moira.Logger, c
 
 	if _, ok := moira.DeliveryStatesSet[deliveryState]; !ok {
 		(*extendedLogger).Error().
+			String(logFieldNameDeliveryCheckUnknownState, deliveryState).
 			Msg("check template returned unknown delivery state")
 	}
 

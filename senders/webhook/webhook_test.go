@@ -191,7 +191,7 @@ func TestSender_Init(t *testing.T) {
 					"delivery_check": map[string]interface{}{
 						"enabled":        true,
 						"url_template":   "https://example.com/",
-						"check_template": "{{ if eq .DeliveryCheckResponse.someValues 0 }}.DeliveryStateOK{{ else }}.DeliveryStatePending{{ end }}",
+						"check_template": "{{ if eq .DeliveryCheckResponse.someValues 0 }}OK{{ else }}PENDING{{ end }}",
 					},
 				}
 
@@ -206,7 +206,7 @@ func TestSender_Init(t *testing.T) {
 					"delivery_check": map[string]interface{}{
 						"enabled":        true,
 						"url_template":   "https://example.com/",
-						"check_template": "{{ if eq .DeliveryCheckResponse.someValues 0 }}.DeliveryStateOK{{ else }}.DeliveryStatePending{{ end }}",
+						"check_template": "{{ if eq .DeliveryCheckResponse.someValues 0 }}OK{{ else }}PENDING{{ end }}",
 					},
 					senderMetricsKey: &metrics.SenderMetrics{},
 				}
@@ -291,7 +291,7 @@ func TestSender_SendEvents(t *testing.T) {
 			}
 			sender.deliveryCheckConfig.Enabled = true
 			sender.deliveryCheckConfig.URLTemplate = "http://example.com/{{ .SendAlertResponse.requestID }}"
-			sender.deliveryCheckConfig.CheckTemplate = "{{ .StateConstants.DeliveryCheckOK }}"
+			sender.deliveryCheckConfig.CheckTemplate = "OK"
 
 			timestamp := int64(12345)
 			expectedDeliveryCheckData := deliveryCheckData{
