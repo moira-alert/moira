@@ -81,7 +81,7 @@ func TestSender_checkNotificationsDelivery(t *testing.T) {
 	testContactType := "test_contact_type"
 
 	controller := NewChecksController(mockDB, nil, testContactType)
-	mockCheckAction := mock_delivery.NewMockCheckAction(mockCtrl)
+	mockDeliveryChecker := mock_delivery.NewMockNotificationDeliveryChecker(mockCtrl)
 
 	testChecksWorker := newChecksWorker(
 		logger,
@@ -91,7 +91,7 @@ func TestSender_checkNotificationsDelivery(t *testing.T) {
 		reschedulingDelay,
 		controller,
 		senderMetrics,
-		mockCheckAction,
+		mockDeliveryChecker,
 	)
 
 	fetchedChecks := []string{
@@ -125,7 +125,7 @@ func TestSender_checkNotificationsDelivery(t *testing.T) {
 			mockClock.EXPECT().NowUnix().Return(timestamp).Times(1)
 			storeTimestamp := timestamp + int64(reschedulingDelay)
 
-			mockCheckAction.EXPECT().CheckNotificationsDelivery(fetchedChecks).
+			mockDeliveryChecker.EXPECT().CheckNotificationsDelivery(fetchedChecks).
 				Return(
 					fetchedChecks[1:],
 					moira.DeliveryTypesCounter{
@@ -152,7 +152,7 @@ func TestSender_checkNotificationsDelivery(t *testing.T) {
 			timestamp := int64(123457)
 			mockClock.EXPECT().NowUnix().Return(timestamp).Times(1)
 
-			mockCheckAction.EXPECT().CheckNotificationsDelivery(fetchedChecks).
+			mockDeliveryChecker.EXPECT().CheckNotificationsDelivery(fetchedChecks).
 				Return(
 					nil,
 					moira.DeliveryTypesCounter{

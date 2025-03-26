@@ -29,7 +29,7 @@ type checksWorker struct {
 	reschedulingDelay uint64
 	storage           checksStorage
 	metrics           *metrics.SenderMetrics
-	checkAction       CheckAction
+	checker           NotificationDeliveryChecker
 }
 
 func newChecksWorker(
@@ -40,7 +40,7 @@ func newChecksWorker(
 	reschedulingDelay uint64,
 	storage checksStorage,
 	metrics *metrics.SenderMetrics,
-	checkAction CheckAction,
+	checker NotificationDeliveryChecker,
 ) *checksWorker {
 	logger = logger.Clone().String(logFieldNameDeliveryCheckWorkerName, workerName)
 
@@ -52,7 +52,7 @@ func newChecksWorker(
 		reschedulingDelay: reschedulingDelay,
 		storage:           storage,
 		metrics:           metrics,
-		checkAction:       checkAction,
+		checker:           checker,
 	}
 }
 
@@ -98,7 +98,7 @@ func (checksWorker *checksWorker) checkNotificationsDelivery() error {
 		return nil
 	}
 
-	checkAgainChecksData, counter := checksWorker.checkAction.CheckNotificationsDelivery(marshaledData)
+	checkAgainChecksData, counter := checksWorker.checker.CheckNotificationsDelivery(marshaledData)
 
 	err = checksWorker.storage.addManyDeliveryChecksData(checksWorker.clock.NowUnix()+int64(checksWorker.reschedulingDelay), checkAgainChecksData)
 	if err != nil {
