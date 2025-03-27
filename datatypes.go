@@ -952,3 +952,13 @@ type SchedulerParams struct {
 	// SendFail is amount of failed send attempts
 	SendFail int
 }
+
+// DeliveryTypesCounter contains counters for different types of delivery statuses.
+type DeliveryTypesCounter struct {
+	// DeliveryOK is the number of notifications successfully delivered.
+	DeliveryOK int64
+	// DeliveryFailed is the number of notifications definitely not delivered.
+	DeliveryFailed int64
+	// DeliveryChecksStopped is the number of notifications for which delivery checks have been stopped.
+	DeliveryChecksStopped int64
+}

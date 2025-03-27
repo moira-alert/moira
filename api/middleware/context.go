@@ -414,6 +414,7 @@ func SortOrderContext(defaultSortOrder api.SortOrder) func(next http.Handler) ht
 	}
 }
 
+// SelfStateChecksContext sets selfstate check configuration to request context.
 func SelfStateChecksContext(selfstateCheckConfig selfstate.ChecksConfig) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
