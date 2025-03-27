@@ -2,7 +2,9 @@ package moira
 
 import (
 	"bytes"
+	"fmt"
 	"math"
+	"net/url"
 	"strings"
 	"time"
 
@@ -299,4 +301,22 @@ func EqualTwoPointerValues[T comparable](first, second *T) bool {
 	}
 
 	return first == nil && second == nil
+}
+
+// ValidateURL returns error on invalid url.
+func ValidateURL(requestUrl string) error {
+	urlStruct, err := url.ParseRequestURI(requestUrl)
+	if err != nil {
+		return err
+	}
+
+	if !(urlStruct.Scheme == "http" || urlStruct.Scheme == "https") {
+		return fmt.Errorf("bad url scheme: %s", urlStruct.Scheme)
+	}
+
+	if urlStruct.Host == "" {
+		return fmt.Errorf("host is empty")
+	}
+
+	return nil
 }
