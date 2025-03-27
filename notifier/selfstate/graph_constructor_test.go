@@ -10,9 +10,12 @@ import (
 
 func TestConstructHeartbeatsGraph(t *testing.T) {
 	Convey("ConstructHeartbeatsGraph should", t, func() {
-		cases := []struct{input []heartbeat.Heartbeater; expected [][]heartbeat.Heartbeater} {
+		cases := []struct {
+			input    []heartbeat.Heartbeater
+			expected [][]heartbeat.Heartbeater
+		}{
 			{
-				input: []heartbeat.Heartbeater{},
+				input:    []heartbeat.Heartbeater{},
 				expected: [][]heartbeat.Heartbeater(nil),
 			},
 			{
@@ -61,11 +64,11 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 					createHeartbeat("first", false),
 					createHeartbeat("second", true),
 					createHeartbeat("third", true),
-					createHeartbeat("fouth", false),
+					createHeartbeat("fourth", false),
 				},
 				expected: [][]heartbeat.Heartbeater{
 					{createHeartbeat("first", false)},
-					{createHeartbeat("fouth", false)},
+					{createHeartbeat("fourth", false)},
 					{createHeartbeat("second", true), createHeartbeat("third", true)},
 				},
 			},
@@ -74,11 +77,11 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 					createHeartbeat("first", true),
 					createHeartbeat("second", false),
 					createHeartbeat("third", true),
-					createHeartbeat("fouth", false),
+					createHeartbeat("fourth", false),
 				},
 				expected: [][]heartbeat.Heartbeater{
 					{createHeartbeat("second", false)},
-					{createHeartbeat("fouth", false)},
+					{createHeartbeat("fourth", false)},
 					{createHeartbeat("first", true), createHeartbeat("third", true)},
 				},
 			},
@@ -95,16 +98,15 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 
 func createHeartbeat(name string, needToCheckOthers bool) heartbeat.Heartbeater {
 	return fakeHeartbeater{
-		name: name,
+		name:              name,
 		needToCheckOthers: needToCheckOthers,
 	}
 }
 
 type fakeHeartbeater struct {
-	name string
+	name              string
 	needToCheckOthers bool
 }
-
 
 func (h fakeHeartbeater) Check(int64) (int64, bool, error) {
 	return 0, false, nil
@@ -125,4 +127,3 @@ func (h fakeHeartbeater) GetErrorMessage() string {
 func (h fakeHeartbeater) GetCheckTags() heartbeat.CheckTags {
 	return []string{}
 }
-

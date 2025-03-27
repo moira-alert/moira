@@ -9,11 +9,15 @@ import (
 )
 
 func TestMergeLayerResults(t *testing.T) {
-	Convey("MergeLayerResults shoud return expected", t, func(){
-		testCases := []struct{desc string; input []heartbeaterCheckResult; expected graphExecutionResult}{
+	Convey("MergeLayerResults shoud return expected", t, func() {
+		testCases := []struct {
+			desc     string
+			input    []heartbeaterCheckResult
+			expected graphExecutionResult
+		}{
 			{
-				desc: "if empty layer results",
-				input: []heartbeaterCheckResult{},
+				desc:     "if empty layer results",
+				input:    []heartbeaterCheckResult{},
 				expected: graphExecutionResult{0, false, false, nil, nil},
 			},
 			{
@@ -62,7 +66,7 @@ func TestMergeLayerResults(t *testing.T) {
 		}
 
 		for _, testCase := range testCases {
-			Convey(fmt.Sprintf("%v", testCase.desc), func(){
+			Convey(fmt.Sprintf("%v", testCase.desc), func() {
 				actual, err := mergeLayerResults(testCase.input...)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, testCase.expected)
@@ -72,16 +76,20 @@ func TestMergeLayerResults(t *testing.T) {
 }
 
 func TestExecuteGraph(t *testing.T) {
-	Convey("ExecuteGraph should return expected", t, func(){
-		testCases := []struct{desc string; input [][]heartbeat.Heartbeater; expected graphExecutionResult}{
+	Convey("ExecuteGraph should return expected", t, func() {
+		testCases := []struct {
+			desc     string
+			input    [][]heartbeat.Heartbeater
+			expected graphExecutionResult
+		}{
 			{
-				desc: "if graph is empty",
-				input: [][]heartbeat.Heartbeater{},
+				desc:     "if graph is empty",
+				input:    [][]heartbeat.Heartbeater{},
 				expected: graphExecutionResult{0, false, false, nil, nil},
 			},
 			{
-				desc: "if graph contains one empty layer",
-				input: [][]heartbeat.Heartbeater{{}},
+				desc:     "if graph contains one empty layer",
+				input:    [][]heartbeat.Heartbeater{{}},
 				expected: graphExecutionResult{0, false, false, nil, nil},
 			},
 			{
@@ -130,7 +138,7 @@ func TestExecuteGraph(t *testing.T) {
 		}
 
 		for _, testCase := range testCases {
-			Convey(fmt.Sprintf("%v", testCase.desc), func(){
+			Convey(fmt.Sprintf("%v", testCase.desc), func() {
 				actual, err := ExecuteGraph(testCase.input, 0)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, testCase.expected)
@@ -142,7 +150,6 @@ func TestExecuteGraph(t *testing.T) {
 type simpleHeartbeater struct {
 	checkResult heartbeaterCheckResult
 }
-
 
 func (h simpleHeartbeater) Check(int64) (int64, bool, error) {
 	return h.checkResult.currentValue, h.checkResult.hasErrors, h.checkResult.error
@@ -163,4 +170,3 @@ func (h simpleHeartbeater) GetErrorMessage() string {
 func (h simpleHeartbeater) GetCheckTags() heartbeat.CheckTags {
 	return h.checkResult.checkTags
 }
-

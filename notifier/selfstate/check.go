@@ -44,7 +44,6 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 
 	checksGraph := ConstructHeartbeatsGraph(selfCheck.heartbeats)
 	checksResult, err := ExecuteGraph(checksGraph, nowTS)
-
 	if err != nil {
 		selfCheck.Logger.Error().
 			Error(err).
@@ -55,7 +54,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 		errorMessage := strings.Join(checksResult.errorMessages, "\n")
 		events = append(events, heartbeatNotificationEvent{
 			NotificationEvent: generateNotificationEvent(errorMessage, checksResult.currentValue, nowTS),
-			CheckTags: checksResult.checksTags,
+			CheckTags:         checksResult.checksTags,
 		})
 
 		if checksResult.needTurnOffNotifier {

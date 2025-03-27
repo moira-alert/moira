@@ -22,4 +22,3 @@ func ConstructHeartbeatsGraph(heartbeats []heartbeat.Heartbeater) [][]heartbeat.
 
 	return graph
 }
-

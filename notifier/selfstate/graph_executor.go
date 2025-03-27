@@ -9,20 +9,20 @@ import (
 )
 
 type graphExecutionResult struct {
-	currentValue int64
-	hasErrors bool
+	currentValue        int64
+	hasErrors           bool
 	needTurnOffNotifier bool
-	errorMessages []string
-	checksTags []string
+	errorMessages       []string
+	checksTags          []string
 }
 
 type heartbeaterCheckResult struct {
-	currentValue int64
-	hasErrors bool
-	error error
+	currentValue        int64
+	hasErrors           bool
+	error               error
 	needTurnOffNotifier bool
-	errorMessage string
-	checkTags []string
+	errorMessage        string
+	checkTags           []string
 }
 
 func ExecuteGraph(graph [][]heartbeat.Heartbeater, nowTS int64) (graphExecutionResult, error) {
@@ -34,11 +34,11 @@ func ExecuteGraph(graph [][]heartbeat.Heartbeater, nowTS int64) (graphExecutionR
 		}
 	}
 	return graphExecutionResult{
-		currentValue: 0,
-		hasErrors: false,
+		currentValue:        0,
+		hasErrors:           false,
 		needTurnOffNotifier: false,
-		errorMessages: nil,
-		checksTags: nil,
+		errorMessages:       nil,
+		checksTags:          nil,
 	}, nil
 }
 
@@ -50,7 +50,7 @@ func runHeartbeatersLayer(graphLayer []heartbeat.Heartbeater, nowTS int64, wg *s
 	}
 	wg.Wait()
 	close(results)
-	arr := make([]heartbeaterCheckResult, len(results))
+	arr := make([]heartbeaterCheckResult, 0, len(results))
 	for r := range results {
 		arr = append(arr, r)
 	}
@@ -71,12 +71,12 @@ func runHeartbeaterCheck(heartbeater heartbeat.Heartbeater, nowTS int64, wg *syn
 		checkTags = heartbeater.GetCheckTags()
 	}
 	resultChan <- heartbeaterCheckResult{
-		currentValue: currentValue,
-		hasErrors: hasErrors,
+		currentValue:        currentValue,
+		hasErrors:           hasErrors,
 		needTurnOffNotifier: needTurnOffNotifier,
-		errorMessage: errorMessage,
-		checkTags: checkTags,
-		error: err,
+		errorMessage:        errorMessage,
+		checkTags:           checkTags,
+		error:               err,
 	}
 	wg.Done()
 }
@@ -96,4 +96,3 @@ func mergeLayerResults(results ...heartbeaterCheckResult) (graphExecutionResult,
 
 	return result, errs
 }
-
