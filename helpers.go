@@ -26,6 +26,17 @@ func Map[T any, R any](input []T, transform func(T) R) []R {
 	return result
 }
 
+ // Filter returns a new slice containing only the elements that satisfy the predicate function.
+func Filter[T any](input []T, predicate func(T) bool) []T {
+	result := make([]T, 0)
+	for _, elem := range input {
+		if predicate(elem) {
+			result = append(result, elem)
+		}
+	}
+	return result
+}
+
 // HasNext checks if next subslice available or not.
 func (it *BytesScanner) HasNext() bool {
 	return it.index < len(it.source) || it.emitEmptySlice

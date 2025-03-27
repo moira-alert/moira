@@ -2,6 +2,7 @@ package selfstate
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 	"time"
 
@@ -41,29 +42,26 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNotificationEvent {
 	var events []heartbeatNotificationEvent
 
-	for _, heartbeat := range selfCheck.heartbeats {
-		currentValue, hasErrors, err := heartbeat.Check(nowTS)
-		if err != nil {
-			selfCheck.Logger.Error().
-				Error(err).
-				Msg("Heartbeat failed")
-		}
+	checksGraph := ConstructHeartbeatsGraph(selfCheck.heartbeats)
+	checksResult, err := ExecuteGraph(checksGraph, nowTS)
 
-		if hasErrors {
-			events = append(events, heartbeatNotificationEvent{
-				NotificationEvent: generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue, nowTS),
-				CheckTags:         heartbeat.GetCheckTags(),
-			})
-			if heartbeat.NeedTurnOffNotifier() {
-				selfCheck.setNotifierState(moira.SelfStateERROR)
-			}
-
-			if !heartbeat.NeedToCheckOthers() {
-				break
-			}
-		}
+	if err != nil {
+		selfCheck.Logger.Error().
+			Error(err).
+			Msg("Heartbeats failed")
 	}
 
+	if checksResult.hasErrors {
+		errorMessage := strings.Join(checksResult.errorMessages, "\n")
+		events = append(events, heartbeatNotificationEvent{
+			NotificationEvent: generateNotificationEvent(errorMessage, checksResult.currentValue, nowTS),
+			CheckTags: checksResult.checksTags,
+		})
+
+		if checksResult.needTurnOffNotifier {
+			selfCheck.setNotifierState(moira.SelfStateERROR)
+		}
+	}
 	return events
 }
 

@@ -8,11 +8,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-type testCase struct{input []heartbeat.Heartbeater; expected [][]heartbeat.Heartbeater}
-
 func TestConstructHeartbeatsGraph(t *testing.T) {
 	Convey("ConstructHeartbeatsGraph should", t, func() {
-		cases := []testCase {
+		cases := []struct{input []heartbeat.Heartbeater; expected [][]heartbeat.Heartbeater} {
 			{
 				input: []heartbeat.Heartbeater{},
 				expected: [][]heartbeat.Heartbeater(nil),
