@@ -4,6 +4,7 @@ import "github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 
 type HeartbeatsGraph [][]heartbeat.Heartbeater
 
+// ConstructHeartbeatsGraph constructs a graph of heartbeats based on their order and blocking.
 func ConstructHeartbeatsGraph(heartbeats []heartbeat.Heartbeater) [][]heartbeat.Heartbeater {
 	var graph [][]heartbeat.Heartbeater
 	var currentLayer []heartbeat.Heartbeater

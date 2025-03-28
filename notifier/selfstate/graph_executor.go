@@ -25,6 +25,7 @@ type heartbeaterCheckResult struct {
 	checkTags           []string
 }
 
+// ExecuteGraph executes a series of heartbeater checks in a layered graph structure.
 func ExecuteGraph(graph [][]heartbeat.Heartbeater, nowTS int64) (graphExecutionResult, error) {
 	var wg sync.WaitGroup
 	for _, layer := range graph {
