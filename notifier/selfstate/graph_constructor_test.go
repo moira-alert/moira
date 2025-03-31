@@ -12,17 +12,17 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 	Convey("ConstructHeartbeatsGraph should", t, func() {
 		cases := []struct {
 			input    []heartbeat.Heartbeater
-			expected [][]heartbeat.Heartbeater
+			expected heartbeatsGraph
 		}{
 			{
 				input:    []heartbeat.Heartbeater{},
-				expected: [][]heartbeat.Heartbeater(nil),
+				expected: heartbeatsGraph(nil),
 			},
 			{
 				input: []heartbeat.Heartbeater{
 					createHeartbeat("first", false),
 				},
-				expected: [][]heartbeat.Heartbeater{
+				expected: heartbeatsGraph{
 					{createHeartbeat("first", false)},
 				},
 			},
@@ -32,7 +32,7 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 					createHeartbeat("second", false),
 					createHeartbeat("third", false),
 				},
-				expected: [][]heartbeat.Heartbeater{
+				expected: heartbeatsGraph{
 					{createHeartbeat("first", false)},
 					{createHeartbeat("second", false)},
 					{createHeartbeat("third", false)},
@@ -44,7 +44,7 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 					createHeartbeat("second", true),
 					createHeartbeat("third", true),
 				},
-				expected: [][]heartbeat.Heartbeater{
+				expected: heartbeatsGraph{
 					{createHeartbeat("first", true), createHeartbeat("second", true), createHeartbeat("third", true)},
 				},
 			},
@@ -54,7 +54,7 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 					createHeartbeat("second", true),
 					createHeartbeat("third", true),
 				},
-				expected: [][]heartbeat.Heartbeater{
+				expected: heartbeatsGraph{
 					{createHeartbeat("first", false)},
 					{createHeartbeat("second", true), createHeartbeat("third", true)},
 				},
@@ -66,7 +66,7 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 					createHeartbeat("third", true),
 					createHeartbeat("fourth", false),
 				},
-				expected: [][]heartbeat.Heartbeater{
+				expected: heartbeatsGraph{
 					{createHeartbeat("first", false)},
 					{createHeartbeat("fourth", false)},
 					{createHeartbeat("second", true), createHeartbeat("third", true)},
@@ -79,7 +79,7 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 					createHeartbeat("third", true),
 					createHeartbeat("fourth", false),
 				},
-				expected: [][]heartbeat.Heartbeater{
+				expected: heartbeatsGraph{
 					{createHeartbeat("second", false)},
 					{createHeartbeat("fourth", false)},
 					{createHeartbeat("first", true), createHeartbeat("third", true)},
@@ -89,7 +89,7 @@ func TestConstructHeartbeatsGraph(t *testing.T) {
 
 		for _, testCase := range cases {
 			Convey(fmt.Sprintf("%v -> %v", testCase.input, testCase.expected), func() {
-				graph := ConstructHeartbeatsGraph(testCase.input)
+				graph := constructHeartbeatsGraph(testCase.input)
 				So(graph, ShouldResemble, testCase.expected)
 			})
 		}
