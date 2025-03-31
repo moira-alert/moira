@@ -60,7 +60,7 @@ func (connector *DbConnector) GetNotifierState() (string, error) {
 	ts, err := c.Get(connector.context, selfStateNotifierHealth).Result()
 	if errors.Is(err, redis.Nil) {
 		ts = moira.SelfStateOK
-		err = connector.SetNotifierState(ts)
+		err = connector.SetNotifierState(moira.SelfStateActorManual, ts)
 	} else if err != nil {
 		ts = moira.SelfStateERROR
 	}
@@ -68,9 +68,9 @@ func (connector *DbConnector) GetNotifierState() (string, error) {
 }
 
 // SetNotifierState update current notifier state: <OK|ERROR>.
-func (connector *DbConnector) SetNotifierState(health string) error {
+func (connector *DbConnector) SetNotifierState(actor, state string) error {
 	c := *connector.client
-	return c.Set(connector.context, selfStateNotifierHealth, health, redis.KeepTTL).Err()
+	return c.Set(connector.context, selfStateNotifierHealth, state, redis.KeepTTL).Err()
 }
 
 var (

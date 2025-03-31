@@ -184,7 +184,7 @@ func generateNotificationEvent(message string, currentValue, timestamp int64) mo
 }
 
 func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
-	err := selfCheck.Database.SetNotifierState(state)
+	err := selfCheck.Database.SetNotifierState(moira.SelfStateActorAutomatic, state)
 	if err != nil {
 		selfCheck.Logger.Error().
 			Error(err).
