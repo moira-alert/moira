@@ -192,7 +192,7 @@ func TestBuildRequestBody(t *testing.T) {
 	Convey("Test building default request body", t, func() {
 		Convey("Trigger state change", func() {
 			events, contact, trigger, plot, throttled := testEvents, testContact, testTrigger, testPlot, testThrottled
-			requestBody, err := sender.buildRequestBody(events, contact, trigger, plot, throttled)
+			requestBody, err := sender.buildSendAlertRequestBody(events, contact, trigger, plot, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedStateChangePayload)
 			So(actual, ShouldEqual, expected)
 			So(err, ShouldBeNil)
@@ -200,7 +200,7 @@ func TestBuildRequestBody(t *testing.T) {
 
 		Convey("Empty notification", func() {
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
-			requestBody, err := sender.buildRequestBody(events, contact, trigger, plots, throttled)
+			requestBody, err := sender.buildSendAlertRequestBody(events, contact, trigger, plots, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedEmptyPayload)
 			So(actual, ShouldEqual, expected)
 			So(actual, ShouldNotContainSubstring, "null")
@@ -216,7 +216,7 @@ func TestBuildRequestBody(t *testing.T) {
 		Convey("With empty contact", func() {
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
 
-			requestBody, err := sender.buildRequestBody(events, contact, trigger, plots, throttled)
+			requestBody, err := sender.buildSendAlertRequestBody(events, contact, trigger, plots, throttled)
 			So(err, ShouldBeNil)
 			So(string(requestBody), ShouldResemble, "Contact.Type: \nContact.Value:")
 		})
@@ -224,7 +224,7 @@ func TestBuildRequestBody(t *testing.T) {
 		Convey("With only contact type", func() {
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{Type: testContactType}, moira.TriggerData{}, make([][]byte, 0), false
 
-			requestBody, err := sender.buildRequestBody(events, contact, trigger, plots, throttled)
+			requestBody, err := sender.buildSendAlertRequestBody(events, contact, trigger, plots, throttled)
 			So(err, ShouldBeNil)
 			So(string(requestBody), ShouldResemble, fmt.Sprintf("Contact.Type: %s\nContact.Value:", testContactType))
 		})
@@ -232,7 +232,7 @@ func TestBuildRequestBody(t *testing.T) {
 		Convey("With only contact value", func() {
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{Value: testContactValue}, moira.TriggerData{}, make([][]byte, 0), false
 
-			requestBody, err := sender.buildRequestBody(events, contact, trigger, plots, throttled)
+			requestBody, err := sender.buildSendAlertRequestBody(events, contact, trigger, plots, throttled)
 			So(err, ShouldBeNil)
 			So(string(requestBody), ShouldResemble, fmt.Sprintf("Contact.Type: \nContact.Value: %s", testContactValue))
 		})
@@ -240,7 +240,7 @@ func TestBuildRequestBody(t *testing.T) {
 		Convey("With full provided data", func() {
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{Value: testContactValue, Type: testContactType}, moira.TriggerData{}, make([][]byte, 0), false
 
-			requestBody, err := sender.buildRequestBody(events, contact, trigger, plots, throttled)
+			requestBody, err := sender.buildSendAlertRequestBody(events, contact, trigger, plots, throttled)
 			So(err, ShouldBeNil)
 			So(string(requestBody), ShouldResemble, fmt.Sprintf("Contact.Type: %s\nContact.Value: %s", testContactType, testContactValue))
 		})
@@ -251,7 +251,7 @@ func TestBuildRequestURL(t *testing.T) {
 	Convey("URL should contain variables values", t, func() {
 		for _, testCase := range requestURLTestCases {
 			for k, expected := range testCase.results {
-				actual := buildRequestURL(k, testCase.trigger, testCase.contact)
+				actual := buildSendAlertRequestURL(k, testCase.trigger, testCase.contact)
 				So(actual, ShouldEqual, expected)
 			}
 		}
@@ -268,7 +268,7 @@ var testContactWithURL = moira.ContactData{
 
 func TestBuildRequestURL_FromContactValueWithURL(t *testing.T) {
 	Convey("URL should contain variables values", t, func() {
-		actual := buildRequestURL("${contact_value}", testTrigger, testContactWithURL)
+		actual := buildSendAlertRequestURL("${contact_value}", testTrigger, testContactWithURL)
 		So(actual, ShouldEqual, "https://test.org/moirahook")
 	})
 }
