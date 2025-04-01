@@ -9,11 +9,11 @@ import (
 )
 
 type graphExecutionResult struct {
-	currentValue        int64
-	hasErrors           bool
-	needTurnOffNotifier bool
-	errorMessages       []string
-	checksTags          []string
+	lastSuccessCheckElapsedTime int64
+	hasErrors                   bool
+	needTurnOffNotifier         bool
+	errorMessages               []string
+	checksTags                  []string
 }
 
 type heartbeaterCheckResult struct {
@@ -36,11 +36,11 @@ func (graph heartbeatsGraph) executeGraph(nowTS int64) (graphExecutionResult, er
 	}
 
 	return graphExecutionResult{
-		currentValue:        0,
-		hasErrors:           false,
-		needTurnOffNotifier: false,
-		errorMessages:       nil,
-		checksTags:          nil,
+		lastSuccessCheckElapsedTime: 0,
+		hasErrors:                   false,
+		needTurnOffNotifier:         false,
+		errorMessages:               nil,
+		checksTags:                  nil,
 	}, nil
 }
 
@@ -93,7 +93,7 @@ func mergeLayerResults(layersResults ...heartbeaterCheckResult) (graphExecutionR
 	for _, layerResult := range layersResults {
 		if layerResult.hasErrors {
 			graphResult.hasErrors = graphResult.hasErrors || layerResult.hasErrors
-			graphResult.currentValue = moira.MaxInt64(graphResult.currentValue, layerResult.lastSuccessCheckElapsedTime)
+			graphResult.lastSuccessCheckElapsedTime = moira.MaxInt64(graphResult.lastSuccessCheckElapsedTime, layerResult.lastSuccessCheckElapsedTime)
 			graphResult.errorMessages = append(graphResult.errorMessages, layerResult.errorMessage)
 			graphResult.needTurnOffNotifier = graphResult.needTurnOffNotifier || layerResult.needTurnOffNotifier
 		}

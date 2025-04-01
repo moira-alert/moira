@@ -53,7 +53,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 	if checksResult.hasErrors {
 		errorMessage := strings.Join(checksResult.errorMessages, "\n")
 		events = append(events, heartbeatNotificationEvent{
-			NotificationEvent: generateNotificationEvent(errorMessage, checksResult.currentValue, nowTS),
+			NotificationEvent: generateNotificationEvent(errorMessage, checksResult.lastSuccessCheckElapsedTime, nowTS),
 			CheckTags:         checksResult.checksTags,
 		})
 
@@ -61,6 +61,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 			selfCheck.setNotifierState(moira.SelfStateERROR)
 		}
 	}
+
 	return events
 }
 
@@ -173,8 +174,8 @@ func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.Notifi
 	}
 }
 
-func generateNotificationEvent(message string, currentValue, timestamp int64) moira.NotificationEvent {
-	val := float64(currentValue)
+func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, timestamp int64) moira.NotificationEvent {
+	val := float64(lastSuccessCheckElapsedTime)
 	return moira.NotificationEvent{
 		Timestamp: timestamp,
 		OldState:  moira.StateNODATA,
