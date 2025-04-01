@@ -35,7 +35,11 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
-		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState {
+			OldState: moira.SelfStateOK,
+			NewState: moira.SelfStateOK,
+			Actor: moira.SelfStateActorManual,
+		}, nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 
@@ -55,7 +59,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 	mock.mockCtrl.Finish()
 }
 
-func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
+func TestSelfCheckWorker_sendMessages(t *testing.T) {
 	Convey("Should call notifier send", t, func() {
 		mock := configureWorker(t, true)
 		err := mock.selfCheckWorker.Start()
@@ -64,7 +68,7 @@ func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
 		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
 		var events []heartbeatNotificationEvent
-		mock.selfCheckWorker.sendErrorMessages(events)
+		mock.selfCheckWorker.sendMessages(events)
 
 		err = mock.selfCheckWorker.Stop()
 		So(err, ShouldBeNil)
@@ -176,6 +180,12 @@ func TestSelfCheckWorker(t *testing.T) {
 			check := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{check}
 
+			mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState {
+				OldState: moira.SelfStateOK,
+				NewState: moira.SelfStateOK,
+				Actor: moira.SelfStateActorManual,
+			}, nil)
+
 			check.EXPECT().NeedToCheckOthers().Return(false)
 			check.EXPECT().Check(now).Return(int64(0), false, err)
 
@@ -195,7 +205,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetCheckTags().Return([]string{})
 			second.EXPECT().NeedToCheckOthers().Return(false)
-			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR, nil)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
 			So(len(events), ShouldEqual, 1)
@@ -215,7 +225,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().NeedToCheckOthers().Return(false)
 			first.EXPECT().GetCheckTags().Return([]string{})
 			second.EXPECT().NeedToCheckOthers().Return(false)
-			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(err)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR, nil).Return(err)
 			mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
 			nextSendErrorMessage = mock.selfCheckWorker.check(now, nextSendErrorMessage)

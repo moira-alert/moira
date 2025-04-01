@@ -967,6 +967,10 @@ type DeliveryTypesCounter struct {
 type NotifierState struct {
 	// Actor represents the entity performing the notifier state mutation.
 	Actor string `json:"actor"`
-	// State represents the current state of the notifier.
-	State string	`json:"state"`
+	// OldState represents the old state of the notifier.
+	OldState string	`json:"old_state"`
+	// NewState represents the current state of the notifier.
+	NewState string `json:"new_state"`
+	// ToNotifyTags represents a list of tags, use it to recover subscriptions.
+	ToNotifyTags []string `json:"tags"`
 }

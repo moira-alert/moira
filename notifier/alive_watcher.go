@@ -57,7 +57,7 @@ func (watcher *AliveWatcher) stateChecker(ctx context.Context) {
 
 func (watcher *AliveWatcher) checkNotifierState() {
 	state, _ := watcher.database.GetNotifierState()
-	if state != moira.SelfStateOK {
+	if state.NewState != moira.SelfStateOK {
 		watcher.notifierMetrics.MarkNotifierIsAlive(false)
 		return
 	}
