@@ -63,7 +63,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 
 	} else {
 
-		checkTags, notifierStateChanged, err := selfCheck.enableNotifierIfNeed()
+		toNotifyCheckTags, notifierStateChanged, err := selfCheck.enableNotifierIfNeed()
 		if err != nil {
 			selfCheck.Logger.Error().
 				Error(err).
@@ -71,7 +71,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 		} else if notifierStateChanged {
 			events = append(events, heartbeatNotificationEvent{
 				NotificationEvent: generateNotificationEvent("Moira notifications enabled", 0, nowTS, moira.StateERROR, moira.StateOK),
-				CheckTags: checkTags,
+				CheckTags: toNotifyCheckTags,
 			})
 		}
 	}
@@ -205,6 +205,7 @@ func (selfCheck *SelfCheckWorker) enableNotifierIfNeed() ([]string, bool, error)
 		selfCheck.Logger.Error().
 			Error(err).
 			Msg("Can't get actual notifier state")
+		return notifierState.ToNotifyTags, false, err
 	}
 
 	if notifierState.NewState == moira.SelfStateOK {
@@ -219,7 +220,7 @@ func (selfCheck *SelfCheckWorker) enableNotifierIfNeed() ([]string, bool, error)
 		return notifierState.ToNotifyTags, false, nil
 	}
 
-	if err = selfCheck.setNotifierState(moira.SelfStateOK, []string{}); err != nil {
+	if err = selfCheck.setNotifierState(moira.SelfStateOK, notifierState.ToNotifyTags); err == nil {
 		return notifierState.ToNotifyTags, true, err
 	}
 
