@@ -79,7 +79,7 @@ func TestExecuteGraph(t *testing.T) {
 	Convey("ExecuteGraph should return expected", t, func() {
 		testCases := []struct {
 			desc     string
-			input    [][]heartbeat.Heartbeater
+			input    heartbeatsGraph
 			expected graphExecutionResult
 		}{
 			{
@@ -139,7 +139,7 @@ func TestExecuteGraph(t *testing.T) {
 
 		for _, testCase := range testCases {
 			Convey(fmt.Sprintf("%v", testCase.desc), func() {
-				actual, err := ExecuteGraph(testCase.input, 0)
+				actual, err := testCase.input.executeGraph(0)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, testCase.expected)
 			})
@@ -152,7 +152,7 @@ type simpleHeartbeater struct {
 }
 
 func (h simpleHeartbeater) Check(int64) (int64, bool, error) {
-	return h.checkResult.currentValue, h.checkResult.hasErrors, h.checkResult.error
+	return h.checkResult.lastSuccessCheckElapsedTime, h.checkResult.hasErrors, h.checkResult.error
 }
 
 func (h simpleHeartbeater) NeedTurnOffNotifier() bool {
