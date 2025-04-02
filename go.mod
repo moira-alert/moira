@@ -5,8 +5,8 @@ go 1.22
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/PagerDuty/go-pagerduty v1.5.1
-	github.com/antonmedv/expr v1.12.7
 	github.com/ansel1/merry v1.8.0
+	github.com/antonmedv/expr v1.12.7
 	github.com/aws/aws-sdk-go v1.44.293
 	github.com/blevesearch/bleve/v2 v2.3.8
 	github.com/bwmarrin/discordgo v0.25.0
@@ -25,8 +25,6 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
 	github.com/gregdel/pushover v1.1.0
-	github.com/karriereat/blackfriday-slack v0.1.0
-	github.com/mattermost/mattermost-server/v6 v6.0.0-20230405170428-2a75f997ee6c // it is last commit of 7.9.2 (https://github.com/mattermost/mattermost-server/commits/v7.9.2). Can't use v7, issue https://github.com/mattermost/mattermost-server/issues/20817
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moira-alert/go-chart v0.0.0-20240813052818-d1336bdacc19
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.13
@@ -54,7 +52,6 @@ require (
 	github.com/go-playground/validator/v10 v10.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/mattermost/mattermost/server/public v0.1.9
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moira-alert/blackfriday-slack v0.1.2
 	github.com/swaggo/http-swagger v1.3.4
 	go.uber.org/mock v0.4.0
