@@ -177,7 +177,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 		So(notifierEnabled, ShouldBeTrue)
 	})
 
-	Convey("Should not enable if notifier is disabled manualy", t, func() {
+	Convey("Should not enable if notifier is disabled manually", t, func() {
 		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			OldState: moira.SelfStateOK,
 			NewState: moira.SelfStateERROR,
@@ -211,6 +211,23 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 		checkTags, notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfNeed()
 		So(err, ShouldResemble, expected_err)
 		So(checkTags, ShouldResemble, []string(nil))
+		So(notifierEnabled, ShouldBeFalse)
+	})
+
+	Convey("Should not enable notifier if notifier enabling returns error", t, func() {
+		expected_err := fmt.Errorf("error")
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			OldState:     moira.SelfStateOK,
+			NewState:     moira.SelfStateERROR,
+			Actor:        moira.SelfStateActorAutomatic,
+			ToNotifyTags: []string{"tag1", "tag2"},
+		}, nil)
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK, []string{"tag1", "tag2"}).Return(expected_err)
+
+		checkTags, notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfNeed()
+		So(err, ShouldEqual, expected_err)
+		So(checkTags, ShouldResemble, []string{"tag1", "tag2"})
 		So(notifierEnabled, ShouldBeFalse)
 	})
 }

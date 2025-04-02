@@ -12,7 +12,7 @@ const (
 	SelfStateERROR = "ERROR" // ERROR means notifier is stopped, admin intervention is required
 )
 
-// Moira notifier managment actors.
+// Moira notifier management actors.
 const (
 	SelfStateActorAutomatic = "AUTO"
 	SelfStateActorManual    = "MANUAL"

@@ -58,11 +58,9 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 		})
 
 		if checksResult.needTurnOffNotifier {
-			selfCheck.setNotifierState(moira.SelfStateERROR, checksResult.checksTags)
+			_ = selfCheck.setNotifierState(moira.SelfStateERROR, checksResult.checksTags)
 		}
-
 	} else {
-
 		toNotifyCheckTags, notifierStateChanged, err := selfCheck.enableNotifierIfNeed()
 		if err != nil {
 			selfCheck.Logger.Error().
@@ -220,11 +218,12 @@ func (selfCheck *SelfCheckWorker) enableNotifierIfNeed() ([]string, bool, error)
 		return notifierState.ToNotifyTags, false, nil
 	}
 
-	if err = selfCheck.setNotifierState(moira.SelfStateOK, notifierState.ToNotifyTags); err == nil {
-		return notifierState.ToNotifyTags, true, err
+	err = selfCheck.setNotifierState(moira.SelfStateOK, notifierState.ToNotifyTags)
+	if err != nil {
+		return notifierState.ToNotifyTags, false, err
 	}
 
-	return notifierState.ToNotifyTags, false, nil
+	return notifierState.ToNotifyTags, true, nil
 }
 
 func (selfCheck *SelfCheckWorker) setNotifierState(state string, checksTags heartbeat.CheckTags) error {
