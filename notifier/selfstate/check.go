@@ -207,14 +207,10 @@ func (selfCheck *SelfCheckWorker) enableNotifierIfNeed() ([]string, bool, error)
 	}
 
 	if notifierState.NewState == moira.SelfStateOK {
-		selfCheck.Logger.Info().
-			Msg("Can't enable notifier: notifier is already enabled")
 		return notifierState.ToNotifyTags, false, nil
 	}
 
 	if notifierState.NewState == moira.SelfStateERROR && notifierState.Actor == moira.SelfStateActorManual {
-		selfCheck.Logger.Warning().
-			Msg("Can't enable notifier: notifier is disabled manually")
 		return notifierState.ToNotifyTags, false, nil
 	}
 

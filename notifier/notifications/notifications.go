@@ -76,7 +76,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 
 	if state.NewState != moira.SelfStateOK {
-		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
+		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state.NewState))
 	}
 
 	fetchNotificationsStartTime := time.Now()
