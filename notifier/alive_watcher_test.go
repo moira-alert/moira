@@ -39,10 +39,10 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 
 	Convey("checkNotifierState", t, func() {
 		Convey("when OK", func() {
-			dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState {
+			dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 				OldState: moira.SelfStateOK,
 				NewState: moira.SelfStateOK,
-				Actor: moira.SelfStateActorManual,
+				Actor:    moira.SelfStateActorManual,
 			}, nil)
 			mockAliveMeter.EXPECT().Mark(int64(1))
 
@@ -53,10 +53,10 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 			notOKStates := []string{moira.SelfStateERROR, "err", "bad", "", "1"}
 
 			for _, badState := range notOKStates {
-				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState {
+				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 					OldState: moira.SelfStateOK,
 					NewState: badState,
-					Actor: moira.SelfStateActorManual,
+					Actor:    moira.SelfStateActorManual,
 				}, nil)
 				mockAliveMeter.EXPECT().Mark(int64(0))
 
@@ -72,7 +72,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 			}
 
 			for _, err := range givenErrors {
-				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState {
+				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 					NewState: notOKState,
 				}, err)
 				mockAliveMeter.EXPECT().Mark(int64(0))
@@ -109,10 +109,10 @@ func TestAliveWatcher_Start(t *testing.T) {
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher started")
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher stopped")
 
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState {
+		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			OldState: moira.SelfStateOK,
 			NewState: moira.SelfStateOK,
-			Actor: moira.SelfStateActorManual,
+			Actor:    moira.SelfStateActorManual,
 		}, nil).AnyTimes()
 		mockAliveMeter.EXPECT().Mark(int64(1)).AnyTimes()
 

@@ -15,7 +15,7 @@ const (
 // Moira notifier managment actors.
 const (
 	SelfStateActorAutomatic = "AUTO"
-	SelfStateActorManual = "MANUAL"
+	SelfStateActorManual    = "MANUAL"
 )
 
 // Moira trigger and metric states.

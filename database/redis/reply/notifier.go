@@ -11,7 +11,7 @@ import (
 )
 
 func NotifierState(rep *redis.StringCmd) (moira.NotifierState, error) {
-	state := moira.NotifierState {}
+	state := moira.NotifierState{}
 	bytes, err := rep.Bytes()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
@@ -25,4 +25,3 @@ func NotifierState(rep *redis.StringCmd) (moira.NotifierState, error) {
 	}
 	return state, nil
 }
-

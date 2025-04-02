@@ -123,19 +123,19 @@ func TestNotifierState(t *testing.T) {
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
 		Convey("On empty database should return ERROR", func() {
 			notifierState, err := emptyDataBase.GetNotifierState()
-			So(notifierState, ShouldResemble, moira.NotifierState {
+			So(notifierState, ShouldResemble, moira.NotifierState{
 				OldState: moira.SelfStateERROR,
 				NewState: moira.SelfStateERROR,
-				Actor: moira.SelfStateActorManual,
+				Actor:    moira.SelfStateActorManual,
 			})
 			So(err, ShouldNotBeNil)
 		})
 		Convey("On real database should return OK", func() {
 			notifierState, err := dataBase.GetNotifierState()
-			So(notifierState, ShouldResemble, moira.NotifierState {
+			So(notifierState, ShouldResemble, moira.NotifierState{
 				OldState: moira.SelfStateOK,
 				NewState: moira.SelfStateOK,
-				Actor: moira.SelfStateActorManual,
+				Actor:    moira.SelfStateActorManual,
 			})
 			So(err, ShouldBeNil)
 		})

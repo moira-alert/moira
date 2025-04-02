@@ -59,21 +59,20 @@ func (connector *DbConnector) GetPrometheusChecksUpdatesCount() (int64, error) {
 // GetNotifierState return current notifier state: <OK|ERROR>.
 func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 	c := *connector.client
-	defaultState := moira.NotifierState {
+	defaultState := moira.NotifierState{
 		OldState: moira.SelfStateERROR,
 		NewState: moira.SelfStateERROR,
-		Actor: moira.SelfStateActorManual,
+		Actor:    moira.SelfStateActorManual,
 	}
 
 	getResult := c.Get(connector.context, selfStateNotifierHealth)
 	if errors.Is(getResult.Err(), redis.Nil) {
-		state := moira.NotifierState {
+		state := moira.NotifierState{
 			OldState: moira.SelfStateOK,
 			NewState: moira.SelfStateOK,
-			Actor: moira.SelfStateActorManual,
+			Actor:    moira.SelfStateActorManual,
 		}
 		err := connector.setNotifierState(state)
-
 		if err != nil {
 			return defaultState, err
 		}
@@ -102,9 +101,9 @@ func (connector *DbConnector) SetNotifierState(actor, state string, checksTags [
 	}
 
 	err = connector.setNotifierState(moira.NotifierState{
-		OldState: current_state.NewState,
-		NewState: state,
-		Actor: actor,
+		OldState:     current_state.NewState,
+		NewState:     state,
+		Actor:        actor,
 		ToNotifyTags: toNotifyTags,
 	})
 

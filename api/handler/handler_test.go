@@ -36,7 +36,7 @@ func TestReadonlyMode(t *testing.T) {
 		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
 
 		Convey("Get notifier health", func() {
-			mockDb.EXPECT().GetNotifierState().Return(moira.NotifierState{ NewState: "OK" }, nil).Times(1)
+			mockDb.EXPECT().GetNotifierState().Return(moira.NotifierState{NewState: "OK"}, nil).Times(1)
 
 			expected := &dto.NotifierState{
 				State: "OK",

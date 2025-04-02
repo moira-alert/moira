@@ -97,10 +97,10 @@ func TestProcessScheduledEvent(t *testing.T) {
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState {
+		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			OldState: moira.SelfStateOK,
 			NewState: moira.SelfStateOK,
-			Actor: moira.SelfStateActorManual,
+			Actor:    moira.SelfStateActorManual,
 		}, nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
@@ -127,10 +127,10 @@ func TestProcessScheduledEvent(t *testing.T) {
 		dataBase.EXPECT().PushContactNotificationToHistory(&notification2).Return(nil).AnyTimes()
 		dataBase.EXPECT().PushContactNotificationToHistory(&notification3).Return(nil).AnyTimes()
 		notifier.EXPECT().Send(&pkg, gomock.Any())
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState {
+		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			OldState: moira.SelfStateOK,
 			NewState: moira.SelfStateOK,
-			Actor: moira.SelfStateActorManual,
+			Actor:    moira.SelfStateActorManual,
 		}, nil)
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 		err := worker.processScheduledNotifications()
@@ -180,10 +180,10 @@ func TestGoRoutine(t *testing.T) {
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(arg0, arg1 interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
 	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
-	dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState {
+	dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 		OldState: moira.SelfStateOK,
 		NewState: moira.SelfStateOK,
-		Actor: moira.SelfStateActorManual,
+		Actor:    moira.SelfStateActorManual,
 	}, nil)
 
 	worker.Start()
