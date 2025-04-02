@@ -47,7 +47,7 @@ require github.com/prometheus/common v0.37.0
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/go-playground/validator/v10 v10.4.1
+	github.com/go-playground/validator/v10 v10.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/mattermost/mattermost/server/public v0.1.9
 	github.com/mitchellh/mapstructure v1.5.0
