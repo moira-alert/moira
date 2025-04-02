@@ -97,7 +97,7 @@ func (connector *DbConnector) SetNotifierState(actor, state string, checksTags [
 
 	toNotifyTags := checksTags
 	if current_state.NewState == moira.SelfStateERROR && state == moira.SelfStateOK {
-		toNotifyTags = append(toNotifyTags, current_state.ToNotifyTags...)
+		toNotifyTags = moira.GetUniqueValues(append(toNotifyTags, current_state.ToNotifyTags...)...)
 	}
 
 	err = connector.setNotifierState(moira.NotifierState{
