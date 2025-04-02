@@ -97,9 +97,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		case webhookSender:
 			workerLock := connector.NewLock(workerDeliveryCheckLockKey(senderContactType), deliveryCheckLockTTL)
 			controller := delivery.NewChecksController(connector, workerLock, senderContactType)
-			_ = controller
 
-			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
+			err = notifier.RegisterSender(senderSettings, &webhook.Sender{Controller: controller})
 		case opsgenieSender:
 			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
 		case victoropsSender:

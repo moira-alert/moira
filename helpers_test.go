@@ -1,8 +1,10 @@
 package moira
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"net/url"
 	"slices"
 	"testing"
 	"time"
@@ -438,5 +440,49 @@ func TestValidateStruct(t *testing.T) {
 			err := ValidateStruct(testStruct)
 			So(err, ShouldBeNil)
 		})
+	})
+}
+
+func TestValidateURL(t *testing.T) {
+	Convey("Test ValidateURL", t, func() {
+		type testcase struct {
+			desc        string
+			givenURL    string
+			expectedErr error
+		}
+
+		cases := []testcase{
+			{
+				desc:     "no scheme",
+				givenURL: "hello.example.com/path",
+				expectedErr: &url.Error{
+					Op:  "parse",
+					URL: "hello.example.com/path",
+					Err: errors.New("invalid URI for request"),
+				},
+			},
+			{
+				desc:        "valid url",
+				givenURL:    "http://example.com/path?query=1&oksome=2",
+				expectedErr: nil,
+			},
+			{
+				desc:        "bad scheme",
+				givenURL:    "smtp://example.com/path/to?query=1&oksome=2",
+				expectedErr: fmt.Errorf("bad url scheme: %s", "smtp"),
+			},
+			{
+				desc:        "no host",
+				givenURL:    "https:///path/to?query=1&some=2",
+				expectedErr: fmt.Errorf("host is empty"),
+			},
+		}
+
+		for i, singleCase := range cases {
+			Convey(fmt.Sprintf("Case %v: %s", i+1, singleCase.desc), func() {
+				err := ValidateURL(singleCase.givenURL)
+				So(err, ShouldResemble, singleCase.expectedErr)
+			})
+		}
 	})
 }
