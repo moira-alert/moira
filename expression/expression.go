@@ -81,7 +81,7 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 	}
 }
 
-// Validate returns error if triggers of type moira.ExpressionTrigger are badly formatted otherwise nil
+// Validate returns error if triggers of type moira.ExpressionTrigger are badly formatted otherwise nil.
 func (triggerExpression *TriggerExpression) Validate() error {
 	if triggerExpression.TriggerType != moira.ExpressionTrigger {
 		return nil
