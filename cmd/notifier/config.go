@@ -17,10 +17,10 @@ type config struct {
 	Logger              cmd.LoggerConfig              `yaml:"log"`
 	Notifier            notifierConfig                `yaml:"notifier"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
-	Remote              cmd.RemoteConfig              `yaml:"remote"`
-	Prometheus          cmd.PrometheusConfig          `yaml:"prometheus"`
+	Remotes             cmd.RemotesConfig             `yaml:",inline"`
 	ImageStores         cmd.ImageStoreConfig          `yaml:"image_store"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
+	Notification        cmd.NotificationConfig        `yaml:"notification"`
 }
 
 type entityLogConfig struct {
@@ -38,6 +38,8 @@ type notifierConfig struct {
 	SenderTimeout string `yaml:"sender_timeout"`
 	// Hard timeout to stop retrying to send notification after multiple failed attempts
 	ResendingTimeout string `yaml:"resending_timeout"`
+	// Delay before performing one more send attempt
+	ReschedulingDelay string `yaml:"rescheduling_delay"`
 	// Senders configuration section. See https://moira.readthedocs.io/en/latest/installation/configuration.html for more explanation
 	Senders []map[string]interface{} `yaml:"senders"`
 	// Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
@@ -54,6 +56,8 @@ type notifierConfig struct {
 	MaxFailAttemptToSendAvailable int `yaml:"max_fail_attempt_to_send_available"`
 	// Specify log level by entities
 	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
+	// CheckNotifierStateTimeout is the timeout between marking *.alive.count metric based on notifier state.
+	CheckNotifierStateTimeout string `yaml:"check_notifier_state_timeout"`
 }
 
 type selfStateConfig struct {
@@ -75,27 +79,52 @@ type selfStateConfig struct {
 	NoticeInterval string `yaml:"notice_interval"`
 	// Self state monitor check interval
 	CheckInterval string `yaml:"check_interval"`
+	// Checks contains the configuration for selfstate checks
+	Checks cmd.ChecksConfig `yaml:"selfstate_checks"`
+}
+
+func toCheckConfig(checksConfig cmd.ChecksConfig) selfstate.ChecksConfig {
+	return selfstate.ChecksConfig{
+		Database: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Database.SystemTags,
+		},
+		Filter: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Filter.SystemTags,
+		},
+		LocalChecker: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.LocalChecker.SystemTags,
+		},
+		RemoteChecker: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.RemoteChecker.SystemTags,
+		},
+		Notifier: selfstate.HeartbeatConfig{
+			SystemTags: checksConfig.Notifier.SystemTags,
+		},
+	}
 }
 
 func getDefault() config {
 	return config{
-		Redis: cmd.RedisConfig{
-			Addrs:       "localhost:6379",
-			MetricsTTL:  "1h",
-			DialTimeout: "500ms",
-		},
+		Redis: cmd.DefaultRedisConfig(),
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",
 			LogLevel:        "info",
 			LogPrettyFormat: false,
 		},
 		NotificationHistory: cmd.NotificationHistoryConfig{
-			NotificationHistoryTTL:        "48h",
-			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
+			NotificationHistoryTTL: "48h",
+		},
+		Notification: cmd.NotificationConfig{
+			DelayedTime:               "50s",
+			TransactionTimeout:        "100ms",
+			TransactionMaxRetries:     10,
+			TransactionHeuristicLimit: 10000,
+			ResaveTime:                "30s",
 		},
 		Notifier: notifierConfig{
-			SenderTimeout:    "10s",
-			ResendingTimeout: "1:00",
+			SenderTimeout:     "10s",
+			ResendingTimeout:  "1:00",
+			ReschedulingDelay: "60s",
 			SelfState: selfStateConfig{
 				Enabled:                 false,
 				RedisDisconnectDelay:    "30s",
@@ -107,6 +136,7 @@ func getDefault() config {
 			Timezone:                      "UTC",
 			ReadBatchSize:                 int(notifier.NotificationsLimitUnlimited),
 			MaxFailAttemptToSendAvailable: 3,
+			CheckNotifierStateTimeout:     "10s",
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8093",
@@ -119,16 +149,7 @@ func getDefault() config {
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
-		Remote: cmd.RemoteConfig{
-			Timeout:    "60s",
-			MetricsTTL: "24h",
-		},
-		Prometheus: cmd.PrometheusConfig{
-			Timeout:      "60s",
-			MetricsTTL:   "7d",
-			Retries:      1,
-			RetryTimeout: "10s",
-		},
+		Remotes:     cmd.RemotesConfig{},
 		ImageStores: cmd.ImageStoreConfig{},
 	}
 }
@@ -193,6 +214,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		SelfStateContacts:             config.SelfState.Contacts,
 		SendingTimeout:                to.Duration(config.SenderTimeout),
 		ResendingTimeout:              to.Duration(config.ResendingTimeout),
+		ReschedulingDelay:             to.Duration(config.ReschedulingDelay),
 		Senders:                       config.Senders,
 		FrontURL:                      config.FrontURI,
 		Location:                      location,
@@ -201,6 +223,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		MaxFailAttemptToSendAvailable: config.MaxFailAttemptToSendAvailable,
 		LogContactsToLevel:            contacts,
 		LogSubscriptionsToLevel:       subscriptions,
+		CheckNotifierStateTimeout:     to.Duration(config.CheckNotifierStateTimeout),
 	}
 }
 
@@ -229,5 +252,6 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		CheckInterval:                  checkInterval,
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
+		Checks:                         toCheckConfig(config.Checks),
 	}
 }

@@ -4,42 +4,128 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/retries"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestIsConfigured(t *testing.T) {
-	Convey("Remote is not configured", t, func() {
-		remote := Create(&Config{URL: "", Enabled: true})
-		isConfigured, err := remote.IsConfigured()
-		So(isConfigured, ShouldBeFalse)
-		So(err, ShouldResemble, ErrRemoteStorageDisabled)
-	})
-
-	Convey("Remote is configured", t, func() {
-		remote := Create(&Config{URL: "http://host", Enabled: true})
-		isConfigured, err := remote.IsConfigured()
-		So(isConfigured, ShouldBeTrue)
-		So(err, ShouldBeEmpty)
-	})
+var testConfigs = []*Config{
+	{
+		Timeout: time.Second,
+		Retries: retries.Config{
+			InitialInterval:     time.Millisecond,
+			RandomizationFactor: 0.5,
+			Multiplier:          2,
+			MaxInterval:         time.Millisecond * 20,
+			MaxRetriesCount:     2,
+		},
+	},
+	{
+		Timeout: time.Millisecond * 200,
+		Retries: retries.Config{
+			InitialInterval:     time.Millisecond,
+			RandomizationFactor: 0.5,
+			Multiplier:          2,
+			MaxInterval:         time.Second,
+			MaxElapsedTime:      time.Second * 2,
+		},
+	},
 }
 
-func TestIsRemoteAvailable(t *testing.T) {
-	Convey("Is available", t, func() {
-		server := createServer([]byte("Some string"), http.StatusOK)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
-		isAvailable, err := remote.IsAvailable()
-		So(isAvailable, ShouldBeTrue)
-		So(err, ShouldBeEmpty)
+func TestIsAvailable(t *testing.T) {
+	body := []byte("Some string")
+
+	isAvailableTestConfigs := make([]*Config, 0, len(testConfigs))
+	for _, conf := range testConfigs {
+		isAvailableTestConfigs = append(isAvailableTestConfigs, &Config{
+			HealthcheckTimeout: conf.Timeout,
+			HealthcheckRetries: conf.Retries,
+		})
+	}
+
+	retrier := retries.NewStandardRetrier[[]byte]()
+
+	Convey("Given server returns OK response the remote is available", t, func() {
+		server := createServer(body, http.StatusOK)
+		defer server.Close()
+
+		for _, config := range isAvailableTestConfigs {
+			config.URL = server.URL
+
+			remote := Remote{
+				client:                    server.Client(),
+				config:                    config,
+				retrier:                   retrier,
+				healthcheckBackoffFactory: retries.NewExponentialBackoffFactory(config.HealthcheckRetries),
+			}
+
+			isAvailable, err := remote.IsAvailable()
+			So(isAvailable, ShouldBeTrue)
+			So(err, ShouldBeEmpty)
+		}
 	})
 
-	Convey("Not available", t, func() {
-		server := createServer([]byte("Some string"), http.StatusInternalServerError)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
-		isAvailable, err := remote.IsAvailable()
-		So(isAvailable, ShouldBeFalse)
-		So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
+	Convey("Given server returns Remote Unavailable responses permanently", t, func() {
+		for statusCode := range remoteUnavailableStatusCodes {
+			server := createTestServer(TestResponse{body, statusCode})
+
+			Convey(fmt.Sprintf(
+				"request failed with %d response status code and remote is unavailable", statusCode,
+			), func() {
+				for _, config := range isAvailableTestConfigs {
+					config.URL = server.URL
+
+					remote := Remote{
+						client:                    server.Client(),
+						config:                    config,
+						retrier:                   retrier,
+						healthcheckBackoffFactory: retries.NewExponentialBackoffFactory(config.HealthcheckRetries),
+					}
+
+					isAvailable, err := remote.IsAvailable()
+					So(err, ShouldResemble, ErrRemoteUnavailable{
+						InternalError: fmt.Errorf(
+							"the remote server is not available. Response status %d: %s", statusCode, string(body),
+						),
+					})
+					So(isAvailable, ShouldBeFalse)
+				}
+			})
+
+			server.Close()
+		}
+	})
+
+	Convey("Given server returns Remote Unavailable response temporary", t, func() {
+		for statusCode := range remoteUnavailableStatusCodes {
+			Convey(fmt.Sprintf(
+				"the remote is available with retry after %d response", statusCode,
+			), func() {
+				for _, config := range isAvailableTestConfigs {
+					server := createTestServer(
+						TestResponse{body, statusCode},
+						TestResponse{body, http.StatusOK},
+					)
+					config.URL = server.URL
+
+					remote := Remote{
+						client:                    server.Client(),
+						config:                    config,
+						retrier:                   retrier,
+						healthcheckBackoffFactory: retries.NewExponentialBackoffFactory(config.HealthcheckRetries),
+					}
+
+					isAvailable, err := remote.IsAvailable()
+					So(err, ShouldBeNil)
+					So(isAvailable, ShouldBeTrue)
+
+					server.Close()
+				}
+			})
+		}
 	})
 }
 
@@ -48,9 +134,22 @@ func TestFetch(t *testing.T) {
 	var until int64 = 500
 	target := "foo.bar" //nolint
 
+	retrier := retries.NewStandardRetrier[[]byte]()
+	validBody := []byte("[{\"Target\": \"t1\",\"DataPoints\":[[1,2],[3,4]]}]")
+
 	Convey("Request success but body is invalid", t, func() {
 		server := createServer([]byte("[]"), http.StatusOK)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
+
+		conf := testConfigs[0]
+		conf.URL = server.URL
+
+		remote := Remote{
+			client:                server.Client(),
+			config:                conf,
+			retrier:               retrier,
+			requestBackoffFactory: retries.NewExponentialBackoffFactory(conf.Retries),
+		}
+
 		result, err := remote.Fetch(target, from, until, false)
 		So(result, ShouldResemble, &FetchResult{MetricsData: []metricSource.MetricData{}})
 		So(err, ShouldBeEmpty)
@@ -58,25 +157,129 @@ func TestFetch(t *testing.T) {
 
 	Convey("Request success but body is invalid", t, func() {
 		server := createServer([]byte("Some string"), http.StatusOK)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
+		defer server.Close()
+
+		conf := testConfigs[0]
+		conf.URL = server.URL
+
+		remote := Remote{
+			client:                server.Client(),
+			config:                conf,
+			retrier:               retrier,
+			requestBackoffFactory: retries.NewExponentialBackoffFactory(conf.Retries),
+		}
+
 		result, err := remote.Fetch(target, from, until, false)
 		So(result, ShouldBeEmpty)
 		So(err.Error(), ShouldResemble, "invalid character 'S' looking for beginning of value")
+		So(err, ShouldHaveSameTypeAs, ErrRemoteTriggerResponse{})
 	})
 
 	Convey("Fail request with InternalServerError", t, func() {
 		server := createServer([]byte("Some string"), http.StatusInternalServerError)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
-		result, err := remote.Fetch(target, from, until, false)
-		So(result, ShouldBeEmpty)
-		So(err.Error(), ShouldResemble, fmt.Sprintf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
+		defer server.Close()
+
+		for _, config := range testConfigs {
+			config.URL = server.URL
+
+			remote := Remote{
+				client:                server.Client(),
+				config:                config,
+				retrier:               retrier,
+				requestBackoffFactory: retries.NewExponentialBackoffFactory(config.Retries),
+			}
+
+			result, err := remote.Fetch(target, from, until, false)
+
+			So(result, ShouldBeEmpty)
+			So(err.Error(), ShouldResemble, fmt.Sprintf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
+			So(err, ShouldHaveSameTypeAs, ErrRemoteTriggerResponse{})
+		}
 	})
 
-	Convey("Fail make request", t, func() {
+	Convey("Client calls bad url", t, func() {
+		server := createTestServer(TestResponse{[]byte("Some string"), http.StatusOK})
+		defer server.Close()
+
 		url := "💩%$&TR"
-		remote := Remote{config: &Config{URL: url}}
-		result, err := remote.Fetch(target, from, until, false)
-		So(result, ShouldBeEmpty)
-		So(err.Error(), ShouldResemble, "parse \"💩%$&TR\": invalid URL escape \"%$&\"")
+
+		for _, config := range testConfigs {
+			config.URL = url
+
+			remote := Remote{
+				client:                server.Client(),
+				config:                config,
+				retrier:               retrier,
+				requestBackoffFactory: retries.NewExponentialBackoffFactory(config.Retries),
+			}
+
+			result, err := remote.Fetch(target, from, until, false)
+			So(result, ShouldBeEmpty)
+			So(err.Error(), ShouldResemble, "parse \"💩%$&TR\": invalid URL escape \"%$&\"")
+			So(err, ShouldHaveSameTypeAs, ErrRemoteTriggerResponse{})
+		}
+	})
+
+	Convey("Given server returns Remote Unavailable responses permanently", t, func() {
+		for statusCode := range remoteUnavailableStatusCodes {
+			server := createTestServer(TestResponse{validBody, statusCode})
+
+			Convey(fmt.Sprintf(
+				"request failed with %d response status code and remote is unavailable", statusCode,
+			), func() {
+				for _, config := range testConfigs {
+					config.URL = server.URL
+					remote := Remote{
+						client:                server.Client(),
+						config:                config,
+						retrier:               retrier,
+						requestBackoffFactory: retries.NewExponentialBackoffFactory(config.Retries),
+					}
+
+					result, err := remote.Fetch(target, from, until, false)
+					So(err, ShouldResemble, ErrRemoteUnavailable{
+						InternalError: fmt.Errorf(
+							"the remote server is not available. Response status %d: %s", statusCode, string(validBody),
+						), Target: target,
+					})
+					So(result, ShouldBeNil)
+				}
+			})
+
+			server.Close()
+		}
+	})
+
+	Convey("Given server returns Remote Unavailable response temporary", t, func() {
+		for statusCode := range remoteUnavailableStatusCodes {
+			Convey(fmt.Sprintf(
+				"the remote is available with retry after %d response", statusCode,
+			), func() {
+				for _, config := range testConfigs {
+					server := createTestServer(
+						TestResponse{validBody, statusCode},
+						TestResponse{validBody, http.StatusOK},
+					)
+					config.URL = server.URL
+
+					remote := Remote{
+						client:                server.Client(),
+						config:                config,
+						retrier:               retrier,
+						requestBackoffFactory: retries.NewExponentialBackoffFactory(config.Retries),
+					}
+
+					result, err := remote.Fetch(target, from, until, false)
+					So(err, ShouldBeNil)
+					So(result, ShouldNotBeNil)
+
+					metricsData := result.GetMetricsData()
+					So(len(metricsData), ShouldEqual, 1)
+					So(metricsData[0].Name, ShouldEqual, "t1")
+
+					server.Close()
+				}
+			})
+		}
 	})
 }

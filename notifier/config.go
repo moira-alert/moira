@@ -4,15 +4,17 @@ import (
 	"time"
 )
 
+// There is a duplicate of this constant in database package to prevent cyclic dependencies.
 const NotificationsLimitUnlimited = int64(-1)
 
-// Config is sending settings including log settings
+// Config is sending settings including log settings.
 type Config struct {
 	Enabled                       bool
 	SelfStateEnabled              bool
 	SelfStateContacts             []map[string]string
 	SendingTimeout                time.Duration
 	ResendingTimeout              time.Duration
+	ReschedulingDelay             time.Duration
 	Senders                       []map[string]interface{}
 	LogFile                       string
 	LogLevel                      string
@@ -23,4 +25,5 @@ type Config struct {
 	MaxFailAttemptToSendAvailable int
 	LogContactsToLevel            map[string]string
 	LogSubscriptionsToLevel       map[string]string
+	CheckNotifierStateTimeout     time.Duration
 }

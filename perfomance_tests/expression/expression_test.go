@@ -47,7 +47,8 @@ func BenchmarkCustomExpr(b *testing.B) {
 		Expression:              &expressionStr,
 		TriggerType:             moira.ExpressionTrigger,
 		MainTargetValue:         11.0,
-		AdditionalTargetsValues: map[string]float64{"t2": 4.0}}
+		AdditionalTargetsValues: map[string]float64{"t2": 4.0},
+	}
 	for i := 0; i < b.N; i++ {
 		_, err := expr.Evaluate()
 		if err != nil {

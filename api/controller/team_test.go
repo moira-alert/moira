@@ -3,16 +3,17 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestCreateTeam(t *testing.T) {
@@ -81,6 +82,14 @@ func TestCreateTeam(t *testing.T) {
 			response, err := CreateTeam(dataBase, team, user)
 			So(response, ShouldResemble, dto.SaveTeamResponse{})
 			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", returnErr)))
+		})
+
+		Convey("team with name already exists error, while saving", func() {
+			dataBase.EXPECT().GetTeam(gomock.Any()).Return(moira.Team{}, database.ErrNil)
+			dataBase.EXPECT().SaveTeam(gomock.Any(), team.ToMoiraTeam()).Return(database.ErrTeamWithNameAlreadyExists)
+			response, err := CreateTeam(dataBase, team, user)
+			So(response, ShouldResemble, dto.SaveTeamResponse{})
+			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("cannot save team: %w", database.ErrTeamWithNameAlreadyExists)))
 		})
 	})
 }
@@ -189,6 +198,270 @@ func TestGetTeam(t *testing.T) {
 			response, err := GetTeam(dataBase, teamID)
 			So(response, ShouldResemble, dto.TeamModel{})
 			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get team from database: %w", returnErr)))
+		})
+	})
+}
+
+func TestSearchTeams(t *testing.T) {
+	Convey("SearchTeams", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+		teams := []moira.Team{
+			{
+				ID:   "first-team-id",
+				Name: "First team",
+			},
+			{
+				ID:   "second-team-id",
+				Name: "Second team",
+			},
+			{
+				ID:   "third-team-id",
+				Name: "Third team",
+			},
+			{
+				ID:   "fourth-team-id",
+				Name: "Fourth team",
+			},
+			{
+				ID:   "fifth-team-id",
+				Name: "Fifth team",
+			},
+			{
+				ID:   "sixth-team-id",
+				Name: "Sixth team",
+			},
+			{
+				ID:   "seventh-team-id",
+				Name: "Seventh team",
+			},
+		}
+
+		teamModels := dto.NewTeamsList(teams).List
+
+		anyText := regexp.MustCompile(".*")
+
+		var (
+			firstPage    int64 = 0
+			allTeamsSize int64 = -1
+		)
+
+		Convey("with page < 0 returns empty list", func() {
+			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+			var (
+				page  int64 = -1
+				total       = int64(len(teamModels))
+			)
+
+			response, err := SearchTeams(dataBase, page, allTeamsSize, anyText, api.NoSortOrder)
+
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TeamsList{
+				List:  []dto.TeamModel{},
+				Page:  page,
+				Size:  allTeamsSize,
+				Total: total,
+			})
+		})
+
+		Convey("with page > 0 and size < 0, returns empty list", func() {
+			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+			var (
+				page  int64 = 1
+				total       = int64(len(teamModels))
+			)
+
+			response, err := SearchTeams(dataBase, page, allTeamsSize, anyText, api.NoSortOrder)
+
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TeamsList{
+				List:  []dto.TeamModel{},
+				Page:  page,
+				Size:  allTeamsSize,
+				Total: total,
+			})
+		})
+
+		Convey("when database returns error", func() {
+			dbErr := errors.New("test db err")
+
+			dataBase.EXPECT().GetAllTeams().Return(nil, dbErr)
+
+			response, err := SearchTeams(dataBase, firstPage, allTeamsSize, anyText, api.NoSortOrder)
+
+			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get teams from database: %w", dbErr)))
+			So(response, ShouldResemble, dto.TeamsList{})
+		})
+
+		Convey("get all teams default options", func() {
+			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+			total := int64(len(teamModels))
+
+			response, err := SearchTeams(dataBase, firstPage, allTeamsSize, anyText, api.NoSortOrder)
+
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TeamsList{
+				List:  teamModels,
+				Page:  firstPage,
+				Size:  allTeamsSize,
+				Total: total,
+			})
+		})
+
+		Convey("with paginating", func() {
+			Convey("page and size in range of teams", func() {
+				var (
+					page0 int64 = 0
+					page1 int64 = 1
+					size  int64 = 3
+					total       = int64(len(teamModels))
+				)
+
+				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
+				response, err := SearchTeams(dataBase, page0, size, anyText, api.NoSortOrder)
+				So(err, ShouldBeNil)
+				So(response, ShouldResemble, dto.TeamsList{
+					List:  teamModels[:size],
+					Page:  page0,
+					Size:  size,
+					Total: total,
+				})
+
+				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
+				response, err = SearchTeams(dataBase, page1, size, anyText, api.NoSortOrder)
+				So(err, ShouldBeNil)
+				So(response, ShouldResemble, dto.TeamsList{
+					List:  teamModels[page1*size : page1*size+size],
+					Page:  page1,
+					Size:  size,
+					Total: total,
+				})
+			})
+
+			Convey("page ok, but size out of range", func() {
+				var (
+					page  int64 = 1
+					size  int64 = 5
+					total       = int64(len(teamModels))
+				)
+
+				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
+				response, err := SearchTeams(dataBase, page, size, anyText, api.NoSortOrder)
+				So(err, ShouldBeNil)
+				So(response, ShouldResemble, dto.TeamsList{
+					List:  teamModels[page*size:],
+					Page:  page,
+					Size:  size,
+					Total: total,
+				})
+			})
+
+			Convey("page and size out of range", func() {
+				var (
+					page  int64 = 2
+					size  int64 = 5
+					total       = int64(len(teamModels))
+				)
+
+				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
+				response, err := SearchTeams(dataBase, page, size, anyText, api.NoSortOrder)
+				So(err, ShouldBeNil)
+				So(response, ShouldResemble, dto.TeamsList{
+					List:  []dto.TeamModel{},
+					Page:  page,
+					Size:  size,
+					Total: total,
+				})
+			})
+		})
+
+		Convey("with text regexp", func() {
+			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+			textRegexp := regexp.MustCompile(".*th-team-id")
+			total := int64(len(teamModels)) - 3
+
+			response, err := SearchTeams(dataBase, firstPage, allTeamsSize, textRegexp, api.NoSortOrder)
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TeamsList{
+				List:  teamModels[3:],
+				Page:  firstPage,
+				Size:  allTeamsSize,
+				Total: total,
+			})
+		})
+
+		Convey("with sorting", func() {
+			Convey("when asc", func() {
+				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+				total := int64(len(teamModels))
+
+				response, err := SearchTeams(dataBase, firstPage, allTeamsSize, anyText, api.AscSortOrder)
+				So(err, ShouldBeNil)
+				So(response, ShouldResemble, dto.TeamsList{
+					List: []dto.TeamModel{
+						teamModels[4],
+						teamModels[0],
+						teamModels[3],
+						teamModels[1],
+						teamModels[6],
+						teamModels[5],
+						teamModels[2],
+					},
+					Page:  firstPage,
+					Size:  allTeamsSize,
+					Total: total,
+				})
+			})
+
+			Convey("when desc", func() {
+				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+				total := int64(len(teamModels))
+
+				response, err := SearchTeams(dataBase, firstPage, allTeamsSize, anyText, api.DescSortOrder)
+				So(err, ShouldBeNil)
+				So(response, ShouldResemble, dto.TeamsList{
+					List: []dto.TeamModel{
+						teamModels[2],
+						teamModels[5],
+						teamModels[6],
+						teamModels[1],
+						teamModels[3],
+						teamModels[0],
+						teamModels[4],
+					},
+					Page:  firstPage,
+					Size:  allTeamsSize,
+					Total: total,
+				})
+			})
+		})
+
+		Convey("with all options", func() {
+			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+			textRegexp := regexp.MustCompile(".*th-team-id")
+			var (
+				total       = int64(len(teamModels)) - 3
+				page  int64 = 1
+				size  int64 = 2
+			)
+
+			response, err := SearchTeams(dataBase, page, size, textRegexp, api.DescSortOrder)
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TeamsList{
+				List: []dto.TeamModel{
+					teamModels[3],
+					teamModels[4],
+				},
+				Page:  page,
+				Size:  size,
+				Total: total,
+			})
 		})
 	})
 }
@@ -591,6 +864,7 @@ func TestSetTeamUsers(t *testing.T) {
 func TestCheckUserPermissionsForTeam(t *testing.T) {
 	const teamID = "testTeam"
 	const userID = "userID"
+	auth := &api.Authorization{}
 
 	Convey("CheckUserPermissionsForTeam", t, func() {
 		mockCtrl := gomock.NewController(t)
@@ -600,31 +874,31 @@ func TestCheckUserPermissionsForTeam(t *testing.T) {
 		Convey("user in team", func() {
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userID).Return(true, nil)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldBeNil)
 		})
 		Convey("user is not in team", func() {
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userID).Return(false, nil)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldResemble, api.ErrorForbidden("you are not permitted to manipulate with this team"))
 		})
 		Convey("error while checking user", func() {
 			returnErr := errors.New("returning error")
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userID).Return(false, returnErr)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(returnErr))
 		})
 		Convey("error while getting team", func() {
 			returnErr := errors.New("returning error")
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, returnErr)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldResemble, api.ErrorInternalServer(returnErr))
 		})
 		Convey("team is not exist", func() {
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, database.ErrNil)
-			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
+			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
 			So(err, ShouldResemble, api.ErrorNotFound("team with ID 'testTeam' does not exists"))
 		})
 	})
@@ -638,18 +912,44 @@ func TestGetTeamSettings(t *testing.T) {
 
 	Convey("Success get team settings", t, func() {
 		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
-		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+
+		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+		contactsDto := []dto.TeamContact{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+
 		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
 		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
+
 		settings, err := GetTeamSettings(database, teamID)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, dto.TeamSettings{
 			TeamID:        teamID,
-			Contacts:      []moira.ContactData{*contacts[0], *contacts[1]},
+			Contacts:      contactsDto,
+			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
+		})
+	})
+
+	Convey("Success get team settings with team_id", t, func() {
+		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+
+		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
+		contacts := []*moira.ContactData{{ID: contactIDs[0], Team: teamID}, {ID: contactIDs[1], Team: teamID}}
+		contactsDto := []dto.TeamContact{{ID: contactIDs[0], Team: teamID, TeamID: teamID}, {ID: contactIDs[1], Team: teamID, TeamID: teamID}}
+
+		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
+		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
+		database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
+		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
+
+		settings, err := GetTeamSettings(database, teamID)
+		So(err, ShouldBeNil)
+		So(settings, ShouldResemble, dto.TeamSettings{
+			TeamID:        teamID,
+			Contacts:      contactsDto,
 			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
 		})
 	})
@@ -663,7 +963,7 @@ func TestGetTeamSettings(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, dto.TeamSettings{
 			TeamID:        teamID,
-			Contacts:      make([]moira.ContactData, 0),
+			Contacts:      make([]dto.TeamContact, 0),
 			Subscriptions: make([]moira.SubscriptionData, 0),
 		})
 	})

@@ -11,13 +11,12 @@ import (
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
 )
 
-// Structure that represents the OpsGenie configuration in the YAML file
+// Structure that represents the OpsGenie configuration in the YAML file.
 type config struct {
-	APIKey   string `mapstructure:"api_key"`
-	FrontURI string `mapstructure:"front_uri"`
+	APIKey string `mapstructure:"api_key" validate:"required"`
 }
 
-// Sender implements the Sender interface for opsgenie
+// Sender implements the Sender interface for opsgenie.
 type Sender struct {
 	apiKey               string
 	client               *alert.Client
@@ -27,10 +26,9 @@ type Sender struct {
 	imageStoreID         string
 	imageStore           moira.ImageStore
 	imageStoreConfigured bool
-	frontURI             string
 }
 
-// Init initializes the opsgenie sender
+// Init initializes the opsgenie sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 
@@ -39,22 +37,20 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to opsgenie config: %w", err)
 	}
 
-	sender.apiKey = cfg.APIKey
-	if sender.apiKey == "" {
-		return fmt.Errorf("cannot read the api_key from the sender settings")
+	if err = moira.ValidateStruct(cfg); err != nil {
+		return fmt.Errorf("opsgenie config validation error: %w", err)
 	}
 
-	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
-		senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
+	sender.apiKey = cfg.APIKey
+	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured = senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
 
 	sender.client, err = alert.NewClient(&client.Config{
 		ApiKey: sender.apiKey,
 	})
 	if err != nil {
-		return fmt.Errorf("error while creating opsgenie client: %s", err)
+		return fmt.Errorf("error while creating opsgenie client: %w", err)
 	}
 
-	sender.frontURI = cfg.FrontURI
 	sender.logger = logger
 	sender.location = location
 	return nil

@@ -10,12 +10,17 @@ type Heartbeater interface {
 	NeedTurnOffNotifier() bool
 	NeedToCheckOthers() bool
 	GetErrorMessage() string
+	GetCheckTags() CheckTags
 }
 
-// heartbeat basic structure for Heartbeater
+// CheckTags represents a tag collection.
+type CheckTags []string
+
+// heartbeat basic structure for Heartbeater.
 type heartbeat struct {
 	logger   moira.Logger
 	database moira.Database
 
+	checkTags                  []string
 	delay, lastSuccessfulCheck int64
 }

@@ -4,15 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestCreateTrigger(t *testing.T) {
@@ -22,7 +23,7 @@ func TestCreateTrigger(t *testing.T) {
 
 	Convey("Success with trigger.ID empty", t, func() {
 		triggerModel := dto.TriggerModel{}
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -36,7 +37,7 @@ func TestCreateTrigger(t *testing.T) {
 		triggerID := uuid.Must(uuid.NewV4()).String()
 		triggerModel := dto.TriggerModel{ID: triggerID}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -51,7 +52,7 @@ func TestCreateTrigger(t *testing.T) {
 		triggerID := "Valid.Custom_Trigger~Name-42"
 		triggerModel := dto.TriggerModel{ID: triggerID}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -73,11 +74,12 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Trigger already exists", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
+		triggerId := uuid.Must(uuid.NewV4()).String()
+		triggerModel := dto.TriggerModel{ID: triggerId}
 		trigger := triggerModel.ToMoiraTrigger()
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID already exists")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID (%s) already exists", triggerId)))
 		So(resp, ShouldBeNil)
 	})
 
@@ -94,7 +96,7 @@ func TestCreateTrigger(t *testing.T) {
 		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -145,6 +147,76 @@ func TestGetAllTriggers(t *testing.T) {
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
 	})
+
+	Convey("Has triggers with metrics which DeletedButKept is true", t, func() {
+		triggerIDs := []string{"1", "2", "3"}
+		triggers := []*moira.TriggerCheck{
+			{
+				Throttling: 1,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test1": {
+							DeletedButKept: true,
+						},
+					},
+				},
+			},
+			{
+				Throttling: 2,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test2": {
+							DeletedButKept: false,
+						},
+					},
+				},
+			},
+			{
+				Throttling: 3,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test3": {
+							DeletedButKept: true,
+						},
+					},
+				},
+			},
+		}
+
+		expected := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{
+					Throttling: 1,
+					LastCheck: moira.CheckData{
+						Metrics: make(map[string]moira.MetricState),
+					},
+				},
+				{
+					Throttling: 2,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test2": {
+								DeletedButKept: false,
+							},
+						},
+					},
+				},
+				{
+					Throttling: 3,
+					LastCheck: moira.CheckData{
+						Metrics: make(map[string]moira.MetricState),
+					},
+				},
+			},
+		}
+
+		mockDatabase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
+		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
+
+		actual, err := GetAllTriggers(mockDatabase)
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+	})
 }
 
 func TestSearchTriggers(t *testing.T) {
@@ -161,6 +233,7 @@ func TestSearchTriggers(t *testing.T) {
 			Value: value,
 		})
 	}
+
 	triggerSearchResults := make([]*moira.SearchResult, 0)
 	for _, triggerCheck := range triggerChecks {
 		triggerSearchResults = append(triggerSearchResults, &moira.SearchResult{
@@ -168,6 +241,7 @@ func TestSearchTriggers(t *testing.T) {
 			Highlights: testHighlights,
 		})
 	}
+
 	triggerIDs := make([]string, len(triggerChecks))
 	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
 	for i, trigger := range triggerChecks {
@@ -190,6 +264,84 @@ func TestSearchTriggers(t *testing.T) {
 	}
 
 	Convey("No tags, no text, onlyErrors = false, ", t, func() {
+		Convey("With triggers which have metrics on Maintenance", func() {
+			triggers := []*moira.TriggerCheck{
+				{
+					Throttling: 1,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test1": {
+								DeletedButKept: true,
+							},
+						},
+					},
+				},
+				{
+					Throttling: 2,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test2": {},
+						},
+					},
+				},
+				{
+					Throttling: 3,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test3": {
+								DeletedButKept: true,
+							},
+						},
+					},
+				},
+			}
+
+			mockIndex.EXPECT().SearchTriggers(searchOptions).Return([]*moira.SearchResult{
+				{
+					ObjectID: "1",
+				},
+				{
+					ObjectID: "2",
+				},
+				{
+					ObjectID: "3",
+				},
+			}, exp, nil)
+			mockDatabase.EXPECT().GetTriggerChecks([]string{"1", "2", "3"}).Return(triggers, nil)
+			list, err := SearchTriggers(mockDatabase, mockIndex, searchOptions)
+			So(err, ShouldBeNil)
+			So(list, ShouldResemble, &dto.TriggersList{
+				List: []moira.TriggerCheck{
+					{
+						Throttling: 1,
+						LastCheck: moira.CheckData{
+							Metrics: map[string]moira.MetricState{},
+						},
+						Highlights: map[string]string{},
+					},
+					{
+						Throttling: 2,
+						LastCheck: moira.CheckData{
+							Metrics: map[string]moira.MetricState{
+								"test2": {},
+							},
+						},
+						Highlights: map[string]string{},
+					},
+					{
+						Throttling: 3,
+						LastCheck: moira.CheckData{
+							Metrics: map[string]moira.MetricState{},
+						},
+						Highlights: map[string]string{},
+					},
+				},
+				Total: &exp,
+				Page:  &searchOptions.Page,
+				Size:  &searchOptions.Size,
+			})
+		})
+
 		Convey("Page is bigger than triggers number", func() {
 			mockIndex.EXPECT().SearchTriggers(searchOptions).Return(triggerSearchResults, exp, nil)
 			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
@@ -453,10 +605,11 @@ func TestSearchTriggers(t *testing.T) {
 			searchOptions.Page = 0
 			searchOptions.Size = -1
 			searchOptions.CreatePager = true
+			searchOptions.PagerTTL = time.Hour * 2
 			exp = 31
 			gomock.InOrder(
 				mockIndex.EXPECT().SearchTriggers(searchOptions).Return(triggerSearchResults, exp, nil),
-				mockDatabase.EXPECT().SaveTriggersSearchResults(gomock.Any(), triggerSearchResults).Return(nil).Do(func(pID string, _ interface{}) {
+				mockDatabase.EXPECT().SaveTriggersSearchResults(gomock.Any(), triggerSearchResults, gomock.Any()).Return(nil).Do(func(pID string, _ interface{}, _ interface{}) {
 					searchOptions.PagerID = pID
 				}),
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil),
@@ -471,6 +624,7 @@ func TestSearchTriggers(t *testing.T) {
 				Pager: &searchOptions.PagerID,
 			})
 		})
+
 		Convey("Use pager", func() {
 			searchOptions.PagerID = "TestPagerID"
 			searchOptions.Page = 0
@@ -491,6 +645,7 @@ func TestSearchTriggers(t *testing.T) {
 				Pager: &searchOptions.PagerID,
 			})
 		})
+
 		Convey("Use pager and page size higher than amount of search results", func() {
 			searchOptions.PagerID = "TestPagerID"
 			var exp int64 = 2
@@ -967,5 +1122,339 @@ func TestGetUnusedTriggerIDs(t *testing.T) {
 		list, err := GetUnusedTriggerIDs(mockDatabase)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
+	})
+
+	Convey("Has triggers with metrics which DeletedButKept is true", t, func() {
+		triggerIDs := []string{"1", "2", "3"}
+		triggers := []*moira.TriggerCheck{
+			{
+				Throttling: 1,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test1": {
+							DeletedButKept: true,
+						},
+					},
+				},
+			},
+			{
+				Throttling: 2,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test2": {
+							DeletedButKept: false,
+						},
+					},
+				},
+			},
+			{
+				Throttling: 3,
+				LastCheck: moira.CheckData{
+					Metrics: map[string]moira.MetricState{
+						"test3": {
+							DeletedButKept: true,
+						},
+					},
+				},
+			},
+		}
+
+		expected := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{
+					Throttling: 1,
+					LastCheck: moira.CheckData{
+						Metrics: make(map[string]moira.MetricState),
+					},
+				},
+				{
+					Throttling: 2,
+					LastCheck: moira.CheckData{
+						Metrics: map[string]moira.MetricState{
+							"test2": {
+								DeletedButKept: false,
+							},
+						},
+					},
+				},
+				{
+					Throttling: 3,
+					LastCheck: moira.CheckData{
+						Metrics: make(map[string]moira.MetricState),
+					},
+				},
+			},
+		}
+
+		mockDatabase.EXPECT().GetUnusedTriggerIDs().Return(triggerIDs, nil)
+		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
+
+		actual, err := GetUnusedTriggerIDs(mockDatabase)
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+	})
+}
+
+func TestGetTriggerNoisiness(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	const (
+		defaultFrom   = "-inf"
+		defaultTo     = "+inf"
+		zeroPage      = int64(0)
+		allEventsSize = int64(-1)
+	)
+
+	Convey("TestGetTriggerNoisiness", t, func() {
+		Convey("with error from db", func() {
+			errFromDB := errors.New("some err")
+			dataBase.EXPECT().GetAllTriggerIDs().Return([]string{}, errFromDB)
+
+			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
+			So(err, ShouldResemble, api.ErrorInternalServer(errFromDB))
+			So(triggerNoisinessList, ShouldBeNil)
+		})
+
+		Convey("with no triggers", func() {
+			dataBase.EXPECT().GetAllTriggerIDs().Return([]string{}, nil)
+
+			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
+			So(err, ShouldBeNil)
+			So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+				List:  []*dto.TriggerNoisiness{},
+				Page:  zeroPage,
+				Size:  allEventsSize,
+				Total: 0,
+			})
+		})
+
+		const (
+			triggerID1 = "first-trigger"
+			triggerID2 = "second-trigger"
+		)
+
+		triggerCheck1 := moira.TriggerCheck{
+			Trigger: moira.Trigger{
+				ID: triggerID1,
+			},
+		}
+
+		triggerCheck2 := moira.TriggerCheck{
+			Trigger: moira.Trigger{
+				ID: triggerID2,
+			},
+		}
+
+		Convey("with triggers no events", func() {
+			dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+			dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(0))
+			dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(0))
+			dataBase.EXPECT().GetTriggerChecks([]string{triggerID1, triggerID2}).
+				Return([]*moira.TriggerCheck{&triggerCheck1, &triggerCheck2}, nil)
+
+			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
+			So(err, ShouldBeNil)
+			So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+				List: []*dto.TriggerNoisiness{
+					{
+						Trigger: dto.Trigger{
+							TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
+						},
+						EventsCount: 0,
+					},
+					{
+						Trigger: dto.Trigger{
+							TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
+						},
+						EventsCount: 0,
+					},
+				},
+				Page:  zeroPage,
+				Size:  allEventsSize,
+				Total: 2,
+			})
+		})
+
+		Convey("with triggers and some events", func() {
+			Convey("with asc sort order", func() {
+				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+				dataBase.EXPECT().GetTriggerChecks([]string{triggerID1, triggerID2}).
+					Return([]*moira.TriggerCheck{&triggerCheck1, &triggerCheck2}, nil)
+
+				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.AscSortOrder)
+				So(err, ShouldBeNil)
+				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+					List: []*dto.TriggerNoisiness{
+						{
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
+							},
+							EventsCount: 1,
+						},
+						{
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
+							},
+							EventsCount: 2,
+						},
+					},
+					Page:  zeroPage,
+					Size:  allEventsSize,
+					Total: 2,
+				})
+			})
+
+			Convey("with desc sort order", func() {
+				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+				dataBase.EXPECT().GetTriggerChecks([]string{triggerID2, triggerID1}).
+					Return([]*moira.TriggerCheck{&triggerCheck2, &triggerCheck1}, nil)
+
+				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
+				So(err, ShouldBeNil)
+				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+					List: []*dto.TriggerNoisiness{
+						{
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
+							},
+							EventsCount: 2,
+						},
+						{
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
+							},
+							EventsCount: 1,
+						},
+					},
+					Page:  zeroPage,
+					Size:  allEventsSize,
+					Total: 2,
+				})
+			})
+		})
+
+		Convey("with paginating", func() {
+			Convey("with page >= 0, size >= 0", func() {
+				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+
+				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, 0, defaultFrom, defaultTo, api.DescSortOrder)
+				So(err, ShouldBeNil)
+				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+					List:  []*dto.TriggerNoisiness{},
+					Page:  zeroPage,
+					Size:  0,
+					Total: 2,
+				})
+
+				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+				dataBase.EXPECT().GetTriggerChecks([]string{triggerID2}).
+					Return([]*moira.TriggerCheck{&triggerCheck2}, nil)
+
+				triggerNoisinessList, err = GetTriggerNoisiness(dataBase, zeroPage, 1, defaultFrom, defaultTo, api.DescSortOrder)
+				So(err, ShouldBeNil)
+				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+					List: []*dto.TriggerNoisiness{
+						{
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck2.Trigger),
+							},
+							EventsCount: 2,
+						},
+					},
+					Page:  zeroPage,
+					Size:  1,
+					Total: 2,
+				})
+
+				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+				dataBase.EXPECT().GetTriggerChecks([]string{triggerID1}).
+					Return([]*moira.TriggerCheck{&triggerCheck1}, nil)
+
+				triggerNoisinessList, err = GetTriggerNoisiness(dataBase, 1, 1, defaultFrom, defaultTo, api.DescSortOrder)
+				So(err, ShouldBeNil)
+				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+					List: []*dto.TriggerNoisiness{
+						{
+							Trigger: dto.Trigger{
+								TriggerModel: dto.CreateTriggerModel(&triggerCheck1.Trigger),
+							},
+							EventsCount: 1,
+						},
+					},
+					Page:  1,
+					Size:  1,
+					Total: 2,
+				})
+			})
+
+			Convey("with page > 0, size < 0", func() {
+				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+
+				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, 1, -1, defaultFrom, defaultTo, api.DescSortOrder)
+				So(err, ShouldBeNil)
+				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+					List:  []*dto.TriggerNoisiness{},
+					Page:  1,
+					Size:  -1,
+					Total: 2,
+				})
+			})
+
+			Convey("with page < 0, size < 0", func() {
+				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+
+				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, -1, -1, defaultFrom, defaultTo, api.DescSortOrder)
+				So(err, ShouldBeNil)
+				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+					List:  []*dto.TriggerNoisiness{},
+					Page:  -1,
+					Size:  -1,
+					Total: 2,
+				})
+			})
+
+			Convey("with page < 0, size > 0", func() {
+				dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+				dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+				dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+
+				triggerNoisinessList, err := GetTriggerNoisiness(dataBase, -1, 1, defaultFrom, defaultTo, api.DescSortOrder)
+				So(err, ShouldBeNil)
+				So(triggerNoisinessList, ShouldResemble, &dto.TriggerNoisinessList{
+					List:  []*dto.TriggerNoisiness{},
+					Page:  -1,
+					Size:  1,
+					Total: 2,
+				})
+			})
+		})
+
+		Convey("error when len of fetched trigger checks != len of fetched ids", func() {
+			dataBase.EXPECT().GetAllTriggerIDs().Return([]string{triggerID1, triggerID2}, nil)
+			dataBase.EXPECT().GetNotificationEventCount(triggerID1, defaultFrom, defaultTo).Return(int64(1))
+			dataBase.EXPECT().GetNotificationEventCount(triggerID2, defaultFrom, defaultTo).Return(int64(2))
+			dataBase.EXPECT().GetTriggerChecks([]string{triggerID2, triggerID1}).
+				Return([]*moira.TriggerCheck{&triggerCheck2}, nil)
+
+			triggerNoisinessList, err := GetTriggerNoisiness(dataBase, zeroPage, allEventsSize, defaultFrom, defaultTo, api.DescSortOrder)
+			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("failed to fetch triggers for such range")))
+			So(triggerNoisinessList, ShouldBeNil)
+		})
 	})
 }

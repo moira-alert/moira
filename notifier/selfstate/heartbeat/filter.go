@@ -1,10 +1,6 @@
 package heartbeat
 
-import (
-	"time"
-
-	"github.com/moira-alert/moira"
-)
+import "github.com/moira-alert/moira"
 
 type filter struct {
 	heartbeat
@@ -12,14 +8,16 @@ type filter struct {
 	firstCheckWasSuccessful bool
 }
 
-func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartbeater {
+func GetFilter(delay, lastSuccessfulCheck int64, checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
 	if delay > 0 {
-		return &filter{heartbeat: heartbeat{
-			logger:              logger,
-			database:            database,
-			delay:               delay,
-			lastSuccessfulCheck: time.Now().Unix(),
-		},
+		return &filter{
+			heartbeat: heartbeat{
+				logger:              logger,
+				database:            database,
+				delay:               delay,
+				lastSuccessfulCheck: lastSuccessfulCheck,
+				checkTags:           checkTags,
+			},
 			firstCheckWasSuccessful: false,
 		}
 	}
@@ -27,7 +25,8 @@ func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartb
 }
 
 func (check *filter) Check(nowTS int64) (int64, bool, error) {
-	triggersCount, err := check.database.GetLocalTriggersToCheckCount()
+	defaultLocalCluster := moira.DefaultLocalCluster
+	triggersCount, err := check.database.GetTriggersToCheckCount(defaultLocalCluster)
 	if err != nil {
 		return 0, false, err
 	}
@@ -54,7 +53,7 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 	return 0, false, nil
 }
 
-// NeedTurnOffNotifier: turn off notifications if at least once the filter check was successful
+// NeedTurnOffNotifier: turn off notifications if at least once the filter check was successful.
 func (check filter) NeedTurnOffNotifier() bool {
 	return check.firstCheckWasSuccessful
 }
@@ -65,4 +64,8 @@ func (check filter) NeedToCheckOthers() bool {
 
 func (filter) GetErrorMessage() string {
 	return "Moira-Filter does not receive metrics"
+}
+
+func (check filter) GetCheckTags() CheckTags {
+	return check.checkTags
 }

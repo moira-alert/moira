@@ -1,9 +1,11 @@
 package script
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -49,16 +51,12 @@ func TestInit(t *testing.T) {
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		settings := map[string]interface{}{}
-		Convey("Empty map", func() {
-			err := sender.Init(settings, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))
-			So(sender, ShouldResemble, Sender{})
-		})
 
-		settings["name"] = "script_name"
+		validatorErr := validator.ValidationErrors{}
+
 		Convey("Empty exec", func() {
 			err := sender.Init(settings, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("file  not found"))
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{})
 		})
 

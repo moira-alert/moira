@@ -15,7 +15,7 @@ type PrefixTree struct {
 	Logger moira.Logger
 }
 
-// PatternNode contains pattern node
+// PatternNode contains pattern node.
 type PatternNode struct {
 	Children   []*PatternNode
 	Part       string
@@ -26,12 +26,12 @@ type PatternNode struct {
 	Payload    map[string]MatchingHandler
 }
 
-// Add inserts pattern in tree
+// Add inserts pattern in tree.
 func (source *PrefixTree) Add(pattern string) {
 	source.AddWithPayload(pattern, "", nil)
 }
 
-// AddWithPayload inserts pattern and payload in tree
+// AddWithPayload inserts pattern and payload in tree.
 func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payloadValue MatchingHandler) {
 	currentNode := source.Root
 	parts := strings.Split(pattern, ".")
@@ -41,6 +41,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 			Msg("Pattern is ignored because it contains an empty part")
 		return
 	}
+
 	for i, part := range parts {
 		found := false
 		for _, child := range currentNode.Children {
@@ -50,6 +51,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 				break
 			}
 		}
+
 		if !found {
 			newNode := &PatternNode{Part: part}
 
@@ -76,9 +78,11 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 					newNode.InnerParts = []string{part}
 				}
 			}
+
 			currentNode.Children = append(currentNode.Children, newNode)
 			currentNode = newNode
 		}
+
 		if i == len(parts)-1 {
 			currentNode.Terminal = true
 			if payloadValue != nil {
@@ -91,7 +95,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 	}
 }
 
-// Match finds metric in tree and returns prefixes for all matched nodes
+// Match finds metric in tree and returns prefixes for all matched nodes.
 func (source *PrefixTree) Match(metric string) []string {
 	nodes, found := source.findNodes(metric)
 	if found == 0 {
@@ -108,26 +112,24 @@ func (source *PrefixTree) Match(metric string) []string {
 	return matched
 }
 
-// MatchWithValue finds metric in tree and returns payloads for all matched nodes
-func (source *PrefixTree) MatchWithValue(metric string) map[string]MatchingHandler {
+// MatchWithValue finds metric in tree and returns payloads for all matched nodes.
+func (source *PrefixTree) MatchWithValue(metric string, callback func(string, MatchingHandler)) {
 	nodes, _ := source.findNodes(metric)
 	if nodes == nil {
-		return map[string]MatchingHandler{}
+		return
 	}
 
-	matched := make(map[string]MatchingHandler)
 	for _, node := range nodes {
 		if node.Terminal {
 			if node.Payload == nil {
-				matched[node.Prefix] = nil
+				callback(node.Prefix, nil)
 			}
+
 			for pattern, matchingHandler := range node.Payload {
-				matched[pattern] = matchingHandler
+				callback(pattern, matchingHandler)
 			}
 		}
 	}
-
-	return matched
 }
 
 func (source *PrefixTree) findNodes(metric string) ([]*PatternNode, int) {
@@ -158,6 +160,7 @@ func (source *PrefixTree) findNodes(metric string) ([]*PatternNode, int) {
 	if found == 0 {
 		return nil, 0
 	}
+
 	return currentLevel, found
 }
 
@@ -186,6 +189,7 @@ func findPart(part string, currentLevel []*PatternNode) ([]*PatternNode, int) {
 			}
 		}
 	}
+
 	return nextLevel, len(nextLevel)
 }
 
@@ -194,6 +198,7 @@ func split2(s, sep string) (string, string) {
 	if len(splitResult) < 2 { //nolint
 		return splitResult[0], ""
 	}
+
 	return splitResult[0], splitResult[1]
 }
 
@@ -203,5 +208,6 @@ func hasEmptyParts(parts []string) bool {
 			return true
 		}
 	}
+
 	return false
 }

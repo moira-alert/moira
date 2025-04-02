@@ -8,7 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
-// Database implements DB functionality
+// Database implements DB functionality.
 type Database interface {
 	// SelfState
 	UpdateMetricsHeartbeat() error
@@ -21,24 +21,23 @@ type Database interface {
 
 	// Tag storing
 	GetTagNames() ([]string, error)
+	CreateTags(tags []string) error
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
 	CleanUpAbandonedTags() (int, error)
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
-	SetTriggerLastCheck(triggerID string, checkData *CheckData, triggerSource TriggerSource) error
+	SetTriggerLastCheck(triggerID string, checkData *CheckData, clusterKey ClusterKey) error
 	RemoveTriggerLastCheck(triggerID string) error
 	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error
 	CleanUpAbandonedTriggerLastCheck() error
 
 	// Trigger storing
 	GetAllTriggerIDs() ([]string, error)
-	GetLocalTriggerIDs() ([]string, error)
-	GetRemoteTriggerIDs() ([]string, error)
-	GetPrometheusTriggerIDs() ([]string, error)
+	GetTriggerIDs(clusterKey ClusterKey) ([]string, error)
 
-	GetTriggerCount() (map[TriggerSource]int64, error)
+	GetTriggerCount(clusterKeys []ClusterKey) (map[ClusterKey]int64, error)
 
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
@@ -51,7 +50,7 @@ type Database interface {
 
 	// SearchResult AKA pager storing
 	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)
-	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult) error
+	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult, recordTTL time.Duration) error
 	IsTriggersSearchResultsExist(pagerID string) (bool, error)
 	DeleteTriggersSearchResults(pagerID string) error
 
@@ -61,9 +60,9 @@ type Database interface {
 	DeleteTriggerThrottling(triggerID string) error
 
 	// NotificationEvent storing
-	GetNotificationEvents(triggerID string, start, size int64) ([]*NotificationEvent, error)
+	GetNotificationEvents(triggerID string, page, size int64, from, to string) ([]*NotificationEvent, error)
 	PushNotificationEvent(event *NotificationEvent, ui bool) error
-	GetNotificationEventCount(triggerID string, from int64) int64
+	GetNotificationEventCount(triggerID string, from, to string) int64
 	FetchNotificationEvent() (NotificationEvent, error)
 	RemoveAllNotificationEvents() error
 
@@ -88,13 +87,15 @@ type Database interface {
 
 	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
-	GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*NotificationEventHistoryItem, error)
+	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, error)
 	RemoveNotification(notificationKey string) (int64, error)
 	RemoveAllNotifications() error
 	FetchNotifications(to int64, limit int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 	PushContactNotificationToHistory(notification *ScheduledNotification) error
+	CleanUpOutdatedNotificationHistory(ttl int64) error
+	CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*ContactIDWithNotificationCount, error)
 
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
@@ -109,21 +110,13 @@ type Database interface {
 	GetMetricRetention(metric string) (int64, error)
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	RemoveMetricRetention(metric string) error
-	RemoveMetricValues(metric string, toTime int64) (int64, error)
+	RemoveMetricValues(metric string, from, to string) (int64, error)
 	RemoveMetricsValues(metrics []string, toTime int64) error
 	GetMetricsTTLSeconds() int64
 
-	AddLocalTriggersToCheck(triggerIDs []string) error
-	GetLocalTriggersToCheck(count int) ([]string, error)
-	GetLocalTriggersToCheckCount() (int64, error)
-
-	AddRemoteTriggersToCheck(triggerIDs []string) error
-	GetRemoteTriggersToCheck(count int) ([]string, error)
-	GetRemoteTriggersToCheckCount() (int64, error)
-
-	AddPrometheusTriggersToCheck(triggerIDs []string) error
-	GetPrometheusTriggersToCheck(count int) ([]string, error)
-	GetPrometheusTriggersToCheckCount() (int64, error)
+	AddTriggersToCheck(clusterKey ClusterKey, triggerIDs []string) error
+	GetTriggersToCheck(clusterKey ClusterKey, count int) ([]string, error)
+	GetTriggersToCheckCount(clusterKey ClusterKey) (int64, error)
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error
@@ -132,8 +125,8 @@ type Database interface {
 	ReleaseTriggerCheckLock(triggerID string)
 
 	// Bot data storing
-	GetIDByUsername(messenger, username string) (string, error)
-	SetUsernameID(messenger, username, id string) error
+	GetChatByUsername(messenger, username string) (string, error)
+	SetUsernameChat(messenger, username, chatRaw string) error
 	RemoveUser(messenger, username string) error
 
 	// Triggers without subscription manipulation
@@ -151,6 +144,8 @@ type Database interface {
 	// Teams management
 	SaveTeam(teamID string, team Team) error
 	GetTeam(teamID string) (Team, error)
+	GetTeamByName(name string) (Team, error)
+	GetAllTeams() ([]Team, error)
 	SaveTeamsAndUsers(teamID string, users []string, usersTeams map[string][]string) error
 	GetUserTeams(userID string) ([]string, error)
 	GetTeamUsers(teamID string) ([]string, error)
@@ -159,25 +154,40 @@ type Database interface {
 
 	// Metrics management
 	CleanUpOutdatedMetrics(duration time.Duration) error
+	CleanUpFutureMetrics(duration time.Duration) error
+	CleanupOutdatedPatternMetrics() (int64, error)
 	CleanUpAbandonedRetentions() error
 	RemoveMetricsByPrefix(pattern string) error
 	RemoveAllMetrics() error
+
+	// Delivery checks
+	DeliveryCheckerDatabase
 }
 
-// Lock implements lock abstraction
+// DeliveryCheckerDatabase is used by senders that can track if the notification was delivered.
+type DeliveryCheckerDatabase interface {
+	// AddDeliveryChecksData must be used to store data need for performing delivery checks.
+	AddDeliveryChecksData(contactType string, timestamp int64, data string) error
+	// GetDeliveryChecksData must be used to get data need for performing delivery checks.
+	GetDeliveryChecksData(contactType string, from string, to string) ([]string, error)
+	// RemoveDeliveryChecksData must remove already used data for performing delivery checks.
+	RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error)
+}
+
+// Lock implements lock abstraction.
 type Lock interface {
 	Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error)
 	Release()
 }
 
-// Mutex implements mutex abstraction
+// Mutex implements mutex abstraction.
 type Mutex interface {
 	Lock() error
 	Unlock() (bool, error)
 	Extend() (bool, error)
 }
 
-// Logger implements logger abstraction
+// Logger implements logger abstraction.
 type Logger interface {
 	Debug() logging.EventBuilder
 	Info() logging.EventBuilder
@@ -197,20 +207,20 @@ type Logger interface {
 	Clone() Logger
 }
 
-// Sender interface for implementing specified contact type sender
+// Sender interface for implementing specified contact type sender.
 type Sender interface {
 	// TODO refactor: https://github.com/moira-alert/moira/issues/794
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot [][]byte, throttled bool) error
 	Init(senderSettings interface{}, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
-// ImageStore is the interface for image storage providers
+// ImageStore is the interface for image storage providers.
 type ImageStore interface {
 	StoreImage(image []byte) (string, error)
 	IsEnabled() bool
 }
 
-// Searcher interface implements full-text search index functionality
+// Searcher interface implements full-text search index functionality.
 type Searcher interface {
 	Start() error
 	Stop() error
@@ -218,7 +228,7 @@ type Searcher interface {
 	SearchTriggers(options SearchOptions) (searchResults []*SearchResult, total int64, err error)
 }
 
-// PlotTheme is an interface to access plot theme styles
+// PlotTheme is an interface to access plot theme styles.
 type PlotTheme interface {
 	GetTitleStyle() chart.Style
 	GetGridStyle() chart.Style
@@ -234,5 +244,6 @@ type PlotTheme interface {
 
 // Clock is an interface to work with Time.
 type Clock interface {
-	Now() time.Time
+	NowUTC() time.Time
+	NowUnix() int64
 }

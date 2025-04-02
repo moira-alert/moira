@@ -7,9 +7,9 @@ import (
 
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
-	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestDatabaseHeartbeat(t *testing.T) {
@@ -20,10 +20,10 @@ func TestDatabaseHeartbeat(t *testing.T) {
 		database := check.database.(*mock_moira_alert.MockDatabase)
 
 		Convey("Checking the created heartbeat database", func() {
-			expected := &databaseHeartbeat{heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now}}
+			expected := &databaseHeartbeat{heartbeat{database: check.database, logger: check.logger, delay: 1, lastSuccessfulCheck: now, checkTags: check.checkTags}}
 
-			So(GetDatabase(0, check.logger, check.database), ShouldBeNil)
-			So(GetDatabase(1, check.logger, check.database), ShouldResemble, expected)
+			So(GetDatabase(0, now, check.checkTags, check.logger, check.database), ShouldBeNil)
+			So(GetDatabase(1, now, check.checkTags, check.logger, check.database), ShouldResemble, expected)
 		})
 
 		Convey("Test update lastSuccessfulCheck", func() {
@@ -68,6 +68,7 @@ func TestDatabaseHeartbeat(t *testing.T) {
 func createRedisDelayTest(t *testing.T) *databaseHeartbeat {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("CheckDelay")
+	checkTags := []string{}
 
-	return GetDatabase(10, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*databaseHeartbeat)
+	return GetDatabase(10, time.Now().Unix(), checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*databaseHeartbeat)
 }

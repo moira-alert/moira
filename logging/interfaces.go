@@ -1,6 +1,6 @@
 package logging
 
-// EventBuilder allows to build log events with custom tags
+// EventBuilder allows to build log events with custom tags.
 type EventBuilder interface {
 	String(key, value string) EventBuilder
 	Error(err error) EventBuilder

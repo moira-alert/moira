@@ -7,19 +7,19 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface via selfstate
+// Sender implements moira sender interface via selfstate.
 type Sender struct {
 	Database moira.Database
 	logger   moira.Logger
 }
 
-// Init read yaml config
+// Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.logger = logger
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	selfState, err := sender.Database.GetNotifierState()
 	if err != nil {

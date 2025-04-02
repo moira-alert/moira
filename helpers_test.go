@@ -1,7 +1,11 @@
 package moira
 
 import (
+	"errors"
+	"fmt"
 	"math"
+	"net/url"
+	"slices"
 	"testing"
 	"time"
 
@@ -84,31 +88,84 @@ func TestGetStringListsDiff(t *testing.T) {
 	})
 }
 
-func TestGetStringListsUnion(t *testing.T) {
-	Convey("Test Get Union between string lists", t, func() {
-		{
-			union := GetStringListsUnion()
-			So(union, ShouldResemble, []string{})
+func TestGetUniqueValues(t *testing.T) {
+	Convey("Test Get Unique Values of list", t, func() {
+		cases := []struct {
+			input    []string
+			expected []string
+		}{
+			{
+				input:    []string{},
+				expected: []string{},
+			},
+			{
+				input:    []string{"a"},
+				expected: []string{"a"},
+			},
+			{
+				input:    []string{"a", "b"},
+				expected: []string{"a", "b"},
+			},
+			{
+				input:    []string{"a", "a"},
+				expected: []string{"a"},
+			},
+			{
+				input:    []string{"a", "a", "b", "b", "c", "c"},
+				expected: []string{"a", "b", "c"},
+			},
 		}
-		{
-			union := GetStringListsUnion(nil)
-			So(union, ShouldResemble, []string{})
+		for _, variant := range cases {
+			Convey(fmt.Sprintf("with %v -> %v", variant.input, variant.expected), func() {
+				actual := GetUniqueValues(variant.input...)
+				slices.Sort(actual)
+				So(actual, ShouldResemble, variant.expected)
+			})
 		}
-		{
-			union := GetStringListsUnion(nil, nil)
-			So(union, ShouldResemble, []string{})
+	})
+}
+
+func TestIntersect(t *testing.T) {
+	Convey("Test Intersect lists", t, func() {
+		cases := []struct {
+			input    [][]string
+			expected []string
+		}{
+			{
+				input:    [][]string{{}},
+				expected: []string{},
+			},
+			{
+				input:    [][]string{{}, {}},
+				expected: []string{},
+			},
+			{
+				input:    [][]string{{"a"}},
+				expected: []string{"a"},
+			},
+			{
+				input:    [][]string{{"a", "b"}, {"a", "c"}},
+				expected: []string{"a"},
+			},
+			{
+				input:    [][]string{{"a", "b", "c", "d"}, {"e", "f", "g"}},
+				expected: []string{},
+			},
+			{
+				input:    [][]string{{"a", "b", "e", "d"}, {"12", "f", "e"}},
+				expected: []string{"e"},
+			},
+			{
+				input:    [][]string{{"a"}, {}},
+				expected: []string{},
+			},
 		}
-		{
-			first := []string{"1", "2", "3"}
-			second := []string{"1", "2", "3"}
-			union := GetStringListsUnion(first, second)
-			So(union, ShouldResemble, []string{"1", "2", "3"})
-		}
-		{
-			first := []string{"1", "2", "3"}
-			second := []string{"4", "5", "6"}
-			union := GetStringListsUnion(first, second)
-			So(union, ShouldResemble, []string{"1", "2", "3", "4", "5", "6"})
+		for _, variant := range cases {
+			Convey(fmt.Sprintf("intersect(%v) -> %v", variant.input, variant.expected), func() {
+				actual := Intersect(variant.input...)
+				slices.Sort(actual)
+				So(actual, ShouldResemble, variant.expected)
+			})
 		}
 	})
 }
@@ -242,7 +299,7 @@ func testRounding(baseTimestamp, retention int64) {
 }
 
 func TestReplaceSubstring(t *testing.T) {
-	Convey("test replace substring", t, func() {
+	Convey("Test replace substring", t, func() {
 		Convey("replacement string in the middle", func() {
 			So(ReplaceSubstring("telebot: Post https://api.telegram.org/botXXX/getMe", "/bot", "/", "[DELETED]"), ShouldResemble, "telebot: Post https://api.telegram.org/bot[DELETED]/getMe")
 		})
@@ -262,5 +319,170 @@ func TestReplaceSubstring(t *testing.T) {
 		Convey("there is the beginning of replacement string, but no end", func() {
 			So(ReplaceSubstring("https://api.telegram.org/botXXX error", "/bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/botXXX error")
 		})
+	})
+}
+
+type myInt int
+
+func (m myInt) Less(other Comparable) (bool, error) {
+	otherInt := other.(myInt)
+	return m < otherInt, nil
+}
+
+type myTest struct {
+	value int
+}
+
+func (test myTest) Less(other Comparable) (bool, error) {
+	otherTest := other.(myTest)
+	return test.value < otherTest.value, nil
+}
+
+func TestMergeToSorted(t *testing.T) {
+	Convey("Test MergeToSorted function", t, func() {
+		Convey("Test with two nil arrays", func() {
+			merged, err := MergeToSorted[myInt](nil, nil)
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{})
+		})
+
+		Convey("Test with one nil array", func() {
+			merged, err := MergeToSorted(nil, []myInt{1, 2, 3})
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{1, 2, 3})
+		})
+
+		Convey("Test with two arrays", func() {
+			merged, err := MergeToSorted([]myInt{4, 5}, []myInt{1, 2, 3})
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{1, 2, 3, 4, 5})
+		})
+
+		Convey("Test with empty array", func() {
+			merged, err := MergeToSorted([]myInt{-4, 5}, []myInt{})
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{-4, 5})
+		})
+
+		Convey("Test with sorted values but mixed up", func() {
+			merged, err := MergeToSorted([]myInt{1, 9, 10}, []myInt{4, 8, 12})
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, []myInt{1, 4, 8, 9, 10, 12})
+		})
+
+		Convey("Test with structure type", func() {
+			arr1 := []myTest{
+				{
+					value: 1,
+				},
+				{
+					value: 2,
+				},
+			}
+
+			arr2 := []myTest{
+				{
+					value: -2,
+				},
+				{
+					value: -1,
+				},
+			}
+
+			expected := append(arr2, arr1...)
+			merged, err := MergeToSorted(arr1, arr2)
+			So(err, ShouldBeNil)
+			So(merged, ShouldResemble, expected)
+		})
+	})
+}
+
+func TestValidateStruct(t *testing.T) {
+	type ValidationStruct struct {
+		TestInt  int    `validate:"required,gt=0"`
+		TestURL  string `validate:"required,url"`
+		TestBool bool
+	}
+
+	const (
+		validURL = "https://github.com/moira-alert/moira"
+		validInt = 1
+	)
+
+	Convey("Test ValidateStruct", t, func() {
+		Convey("With TestInt less than zero", func() {
+			testStruct := ValidationStruct{
+				TestInt: -1,
+				TestURL: validURL,
+			}
+
+			err := ValidateStruct(testStruct)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("With invalid TestURL format", func() {
+			testStruct := ValidationStruct{
+				TestInt:  validInt,
+				TestURL:  "test",
+				TestBool: true,
+			}
+
+			err := ValidateStruct(testStruct)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("With valid structure", func() {
+			testStruct := ValidationStruct{
+				TestInt: validInt,
+				TestURL: validURL,
+			}
+
+			err := ValidateStruct(testStruct)
+			So(err, ShouldBeNil)
+		})
+	})
+}
+
+func TestValidateURL(t *testing.T) {
+	Convey("Test ValidateURL", t, func() {
+		type testcase struct {
+			desc        string
+			givenURL    string
+			expectedErr error
+		}
+
+		cases := []testcase{
+			{
+				desc:     "no scheme",
+				givenURL: "hello.example.com/path",
+				expectedErr: &url.Error{
+					Op:  "parse",
+					URL: "hello.example.com/path",
+					Err: errors.New("invalid URI for request"),
+				},
+			},
+			{
+				desc:        "valid url",
+				givenURL:    "http://example.com/path?query=1&oksome=2",
+				expectedErr: nil,
+			},
+			{
+				desc:        "bad scheme",
+				givenURL:    "smtp://example.com/path/to?query=1&oksome=2",
+				expectedErr: fmt.Errorf("bad url scheme: %s", "smtp"),
+			},
+			{
+				desc:        "no host",
+				givenURL:    "https:///path/to?query=1&some=2",
+				expectedErr: fmt.Errorf("host is empty"),
+			},
+		}
+
+		for i, singleCase := range cases {
+			Convey(fmt.Sprintf("Case %v: %s", i+1, singleCase.desc), func() {
+				err := ValidateURL(singleCase.givenURL)
+				So(err, ShouldResemble, singleCase.expectedErr)
+			})
+		}
 	})
 }

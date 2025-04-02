@@ -10,12 +10,13 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/moira-alert/moira"
+
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func init() {
@@ -88,14 +89,17 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	})
 
 	Convey("Panic while evaluate target", t, func() {
-		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil)
-		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil)
+		// moving* functions with an integer second parameter require two metric fetches
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil).Times(2)
+		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil).Times(2)
 		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsValues([]string{metric1}, int64(30), retentionUntil-1).Return(dataList, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
 		result, err := localSource.Fetch("movingAverage(super.puper.pattern, -1)", from, until, true)
 		expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingAverage(super.puper.pattern, -1)"}.Error(), ":")[0]
 
+		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldStartWith, expectedErrSubstring)
 		So(result, ShouldBeNil)
 	})
@@ -108,7 +112,6 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	pattern := pattern1
-	pattern2 := pattern2
 
 	var metricsTTL int64 = 3600
 
@@ -116,12 +119,12 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
-		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", 17, 17, false)
+		result, err := localSource.Fetch("super.puper.pattern", 17, 17, false)
 
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
 			MetricsData: []metricSource.MetricData{{
-				Name:      "pattern",
+				Name:      "super.puper.pattern",
 				StartTime: 60,
 				StopTime:  60,
 				StepTime:  60,
@@ -155,7 +158,6 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 
 	Convey("Single pattern, from 7 until 57", t, func() {
 		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
-		database.EXPECT().GetPatternMetrics(pattern2).Return([]string{}, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", 7, 57, true)
@@ -176,6 +178,7 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 
 	Convey("Two patterns, from 17 until 67", t, func() {
 		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		database.EXPECT().GetPatternMetrics(pattern2).Return([]string{}, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
 		result, err := localSource.Fetch("alias(sum(super.puper.pattern, super.duper.pattern), 'pattern')", 17, 67, true)
@@ -247,16 +250,91 @@ func TestLocalSourceFetchMultipleMetrics(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "alive replicas",
-				StartTime: retentionFrom,
-				StopTime:  retentionUntil,
-				StepTime:  retention,
-				Values:    []float64{2, 2, 2, 2, 2},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "alive replicas",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention,
+					Values:    []float64{2, 2, 2, 2, 2},
+					Wildcard:  false,
+				},
 			},
 			Metrics:  metrics,
 			Patterns: []string{"apps.*.process.cpu.usage"},
+		})
+	})
+}
+
+func TestLocalSourceApplyByNode(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
+	defer mockCtrl.Finish()
+
+	var from int64 = 17
+	var until int64 = 67
+	var retentionFrom int64 = 20
+	var retentionUntil int64 = 70
+	var retention int64 = 10
+	var metricsTTL int64 = 3600
+
+	Convey("Test success evaluate multiple metrics with pow function", t, func() {
+		metrics := []string{
+			"my.pattern.foo",
+		}
+
+		metricList := make(map[string][]*moira.MetricValue)
+		metricList["my.pattern.foo"] = []*moira.MetricValue{
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0.5},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 0.4},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 0.5},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 0.5},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 0.5},
+		}
+
+		metrics2 := []string{
+			"your.my.pattern.foo",
+		}
+
+		metricList2 := make(map[string][]*moira.MetricValue)
+		metricList2["your.my.pattern.foo"] = []*moira.MetricValue{
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 1},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 2},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 3},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 4},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 5},
+		}
+
+		database.EXPECT().GetPatternMetrics("my.pattern.*").Return(metrics, nil)
+		database.EXPECT().GetMetricRetention(metrics[0]).Return(retention, nil)
+		database.EXPECT().GetMetricsValues(metrics, retentionFrom, retentionUntil-1).Return(metricList, nil)
+
+		database.EXPECT().GetPatternMetrics("your.my.pattern.foo").Return(metrics2, nil).AnyTimes()
+		database.EXPECT().GetMetricRetention(metrics2[0]).Return(retention, nil).AnyTimes()
+		database.EXPECT().GetMetricsValues(metrics2, retentionFrom, retentionUntil-1).Return(metricList2, nil)
+
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch(`alias(applyByNode(my.pattern.*, 2, "your.%"), 'min')`, from, until, true)
+
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "min",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention,
+					Values:    []float64{1, 2, 3, 4, 5},
+					Wildcard:  false,
+				},
+			},
+			Metrics: []string{
+				"my.pattern.foo",
+				"your.my.pattern.foo",
+			},
+			Patterns: []string{"my.pattern.*"},
 		})
 	})
 }
@@ -295,12 +373,13 @@ func TestLocalSourceFetch(t *testing.T) {
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: retentionFrom,
-				StopTime:  retentionUntil,
-				StepTime:  retention, Values: []float64{0, 1, 2, 3, 4},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "metric",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention, Values: []float64{0, 1, 2, 3, 4},
+				},
 			},
 			Metrics:  []string{metric},
 			Patterns: []string{pattern},
@@ -310,9 +389,9 @@ func TestLocalSourceFetch(t *testing.T) {
 	Convey("Test enormous fetch interval", t, func() {
 		var fromPast int64 = 0
 		var toFuture int64 = 1e15
-		var ttl = 2*retention - 1
+		ttl := 2*retention - 1
 
-		var distantFutureDataList = map[string][]*moira.MetricValue{
+		distantFutureDataList := map[string][]*moira.MetricValue{
 			metric: {
 				{RetentionTimestamp: toFuture, Timestamp: toFuture, Value: 0},
 				{RetentionTimestamp: toFuture - retention, Timestamp: toFuture - retention, Value: 0},
@@ -328,13 +407,14 @@ func TestLocalSourceFetch(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: toFuture - retention,
-				StopTime:  toFuture + retention,
-				StepTime:  retention,
-				Values:    []float64{0, 0},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "metric",
+					StartTime: toFuture - retention,
+					StopTime:  toFuture + retention,
+					StepTime:  retention,
+					Values:    []float64{0, 0},
+				},
 			},
 			Metrics:  []string{metric},
 			Patterns: []string{pattern1},
@@ -398,12 +478,13 @@ func TestLocalSourceFetchNoRealTimeAlerting(t *testing.T) {
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, false)
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: retentionFrom,
-				StopTime:  retentionUntil,
-				StepTime:  retention, Values: []float64{0, 1, 2, 3},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "metric",
+					StartTime: retentionFrom,
+					StopTime:  retentionUntil,
+					StepTime:  retention, Values: []float64{0, 1, 2, 3},
+				},
 			},
 			Metrics:  []string{metric},
 			Patterns: []string{pattern},
@@ -461,13 +542,14 @@ func TestLocalSourceFetchWithMultiplePatterns(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(result, shouldEqualIfNaNsEqual, &FetchResult{
-			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: 20,
-				StopTime:  80,
-				StepTime:  20,
-				Values:    []float64{2.1, 5.1, 8.1},
-			},
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "metric",
+					StartTime: 20,
+					StopTime:  80,
+					StepTime:  20,
+					Values:    []float64{2.1, 5.1, 8.1},
+				},
 			},
 			Metrics:  []string{metric1, metric2},
 			Patterns: []string{pattern1, pattern2},
@@ -489,61 +571,48 @@ func TestLocalMetricsTTL(t *testing.T) {
 	})
 }
 
-func TestLocal_IsConfigured(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := Create(dataBase)
-
-	Convey("Always true", t, func() {
-		actual, err := localSource.IsConfigured()
-		So(err, ShouldBeNil)
-		So(actual, ShouldBeTrue)
-	})
-}
-
 func TestLocal_evalExpr(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
 	Convey("When everything is correct, we don't return any error", t, func() {
-		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
 		target := `seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
 
-		expression, err := ctx.parse(target)
+		_, err := evalWithNoMetricsHelper(mockCtrl, target, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix())
 		So(err, ShouldBeNil)
-		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
-		So(err, ShouldBeNil)
-		So(res, ShouldBeNil)
 	})
 
 	Convey("When get panic, it should return error", t, func() {
-		ctx := evalCtx{from: 0, until: 0}
-
-		expression, _ := ctx.parse(`;fg`)
-		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
-		So(err.Error(), ShouldContainSubstring, "panic while evaluate target target: message: 'runtime error: invalid memory address or nil pointer dereference")
-		So(res, ShouldBeNil)
+		res, err := evalWithNoMetricsHelper(mockCtrl, `;fg`, 0, 0)
+		So(err.Error(), ShouldContainSubstring, "failed to parse target")
+		So(res.Metrics, ShouldBeEmpty)
 	})
 
 	Convey("When no metrics, should not return error", t, func() {
-		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
 		target := `alias( divideSeries( alias( sumSeries( exclude( groupByNode( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s, 9, "sum" ), "Ok" ) ), "bad" ), alias( sumSeries( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s ), "total" ) ), "Result" )`
 
-		expression, err := ctx.parse(target)
+		res, err := evalWithNoMetricsHelper(mockCtrl, target, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix())
 		So(err, ShouldBeNil)
-		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: make(map[parser.MetricRequest][]*types.MetricData)})
-		So(err, ShouldBeNil)
-		So(res, ShouldBeEmpty)
+		So(res.Metrics, ShouldBeEmpty)
 	})
 
 	Convey("When got unknown func, should return error", t, func() {
-		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
 		target := `vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
 
-		expression, _ := ctx.parse(target)
-		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
-		So(err, ShouldBeError)
+		res, err := evalWithNoMetricsHelper(mockCtrl, target, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix())
 		So(err.Error(), ShouldResemble, `Unknown graphite function: "vf"`)
-		So(res, ShouldBeNil)
+		So(res.Metrics, ShouldBeEmpty)
 	})
+}
+
+func evalWithNoMetricsHelper(mockCtrl *gomock.Controller, target string, from, until int64) (*FetchResult, error) {
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	database.EXPECT().GetPatternMetrics(gomock.Any()).Return([]string{}, nil).AnyTimes()
+	eval := evaluator{database, make([]string, 0)}
+
+	result := CreateEmptyFetchResult()
+	err := eval.fetchAndEval(target, from, until, result)
+
+	return result, err
 }
 
 func shouldEqualIfNaNsEqual(actual interface{}, expected ...interface{}) string {

@@ -9,18 +9,18 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Structure that represents the Twilio configuration in the YAML file
+// Structure that represents the Twilio configuration in the YAML file.
 type config struct {
-	Type          string `mapstructure:"type"`
-	APIAsid       string `mapstructure:"api_asid"`
-	APIAuthToken  string `mapstructure:"api_authtoken"`
-	APIFromPhone  string `mapstructure:"api_fromphone"`
+	Type          string `mapstructure:"sender_type" validate:"required"`
+	APIAsid       string `mapstructure:"api_asid" validate:"required"`
+	APIAuthToken  string `mapstructure:"api_authtoken" validate:"required"`
+	APIFromPhone  string `mapstructure:"api_fromphone" validate:"required"`
 	VoiceURL      string `mapstructure:"voiceurl"`
 	TwimletsEcho  bool   `mapstructure:"twimlets_echo"`
 	AppendMessage bool   `mapstructure:"append_message"`
 }
 
-// Sender implements moira sender interface via twilio
+// Sender implements moira sender interface via twilio.
 type Sender struct {
 	sender sendEventsTwilio
 }
@@ -36,26 +36,19 @@ type twilioSender struct {
 	location     *time.Location
 }
 
-// Init read yaml config
+// Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
+
+	if err = moira.ValidateStruct(cfg); err != nil {
+		return fmt.Errorf("twilio config validation error: %w", err)
+	}
+
 	apiType := cfg.Type
-
-	if cfg.APIAsid == "" {
-		return fmt.Errorf("can not read [%s] api_sid param from config", apiType)
-	}
-
-	if cfg.APIAuthToken == "" {
-		return fmt.Errorf("can not read [%s] api_authtoken param from config", apiType)
-	}
-
-	if cfg.APIFromPhone == "" {
-		return fmt.Errorf("can not read [%s] api_fromphone param from config", apiType)
-	}
 
 	twilioClient := twilio_client.NewClient(cfg.APIAsid, cfg.APIAuthToken)
 
@@ -65,6 +58,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		logger:       logger,
 		location:     location,
 	}
+
 	switch apiType {
 	case "twilio sms":
 		sender.sender = &twilioSenderSms{tSender}
@@ -90,7 +84,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	return sender.sender.SendEvents(events, contact, trigger, plots, throttled)
 }

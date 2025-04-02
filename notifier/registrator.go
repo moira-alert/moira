@@ -1,10 +1,14 @@
 package notifier
 
 import (
+	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
+	"github.com/moira-alert/moira/senders/delivery"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
 	"github.com/moira-alert/moira/senders/mattermost"
@@ -40,12 +44,38 @@ const (
 	mattermostSender  = "mattermost"
 )
 
-// RegisterSenders watch on senders config and register all configured senders
+var (
+	ErrSenderRegistered   = errors.New("sender is already registered")
+	ErrMissingSenderType  = errors.New("failed to retrieve sender type from sender settings")
+	ErrMissingContactType = errors.New("failed to retrieve sender contact type from sender settings")
+)
+
+const (
+	deliveryCheckWorkerLockPrefix = "moira-delivery-check-lock:"
+	deliveryCheckLockTTL          = 30 * time.Second
+)
+
+func workerDeliveryCheckLockKey(contactType string) string {
+	return deliveryCheckWorkerLockPrefix + contactType
+}
+
+// RegisterSenders watch on senders config and register all configured senders.
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
-		switch senderSettings["type"] {
+
+		senderType, ok := senderSettings["sender_type"].(string)
+		if !ok {
+			return ErrMissingSenderType
+		}
+
+		senderContactType, ok := senderSettings["contact_type"].(string)
+		if !ok {
+			return ErrMissingContactType
+		}
+
+		switch senderType {
 		case mailSender:
 			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
 		case pushoverSender:
@@ -65,7 +95,10 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		case twilioSmsSender, twilioVoiceSender:
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
 		case webhookSender:
-			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
+			workerLock := connector.NewLock(workerDeliveryCheckLockKey(senderContactType), deliveryCheckLockTTL)
+			controller := delivery.NewChecksController(connector, workerLock, senderContactType)
+
+			err = notifier.RegisterSender(senderSettings, &webhook.Sender{Controller: controller})
 		case opsgenieSender:
 			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
 		case victoropsSender:
@@ -77,55 +110,82 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		// case "phone":
 		// 	err = notifier.RegisterSender(senderSettings, &kontur.SmsSender{})
 		default:
-			return fmt.Errorf("unknown sender type [%s]", senderSettings["type"])
+			return fmt.Errorf("unknown sender type [%s]", senderType)
 		}
+
 		if err != nil {
 			return err
 		}
 	}
 	if notifier.config.SelfStateEnabled {
-		selfStateSettings := map[string]interface{}{"type": selfStateSender}
+		selfStateSettings := map[string]interface{}{
+			"sender_type":  selfStateSender,
+			"contact_type": selfStateSender,
+		}
 		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
 			notifier.logger.Warning().
 				Error(err).
 				Msg("Failed to register selfstate sender")
 		}
 	}
+
 	return nil
 }
 
-// RegisterSender adds sender for notification type and registers metrics
+func (notifier *StandardNotifier) registerMetrics(senderContactType string) {
+	notifier.metrics.ContactsSendingNotificationsOK.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok")
+	notifier.metrics.ContactsSendingNotificationsFailed.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed")
+	notifier.metrics.ContactsDroppedNotifications.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped")
+}
+
+const (
+	senderMetricsEnabledKey = "enable_metrics"
+	senderMetricsKey        = "sender_metrics"
+)
+
+// RegisterSender adds sender for notification type and registers metrics.
 func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error {
-	var senderIdent string
-	senderType, ok := senderSettings["type"].(string)
+	senderType, ok := senderSettings["sender_type"].(string)
 	if !ok {
-		return fmt.Errorf("failed to retrieve sender type from sender settings")
+		return ErrMissingSenderType
 	}
 
-	switch senderType {
-	case scriptSender, webhookSender:
-		name, ok := senderSettings["name"].(string)
-		if !ok {
-			return fmt.Errorf("failed to retrieve sender name from sender settings")
-		}
-		senderIdent = name
-	default:
-		senderIdent = senderType
+	senderContactType, ok := senderSettings["contact_type"].(string)
+	if !ok {
+		return ErrMissingContactType
+	}
+
+	if _, ok := notifier.senders[senderContactType]; ok {
+		return fmt.Errorf("failed to initialize sender [%s], err [%w]", senderContactType, ErrSenderRegistered)
+	}
+
+	if senderMetricsEnabled, ok := senderSettings[senderMetricsEnabledKey].(bool); ok && senderMetricsEnabled {
+		senderSettings[senderMetricsKey] = metrics.ConfigureSenderMetrics(
+			notifier.metrics,
+			getGraphiteSenderIdent(senderContactType),
+			senderContactType)
+		notifier.logger.Info().
+			String("sender_contact_type", senderContactType).
+			String("sender_type", senderType).
+			Msg("Enable sender metrics")
 	}
 
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 	if err != nil {
-		return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderIdent, err.Error())
+		return fmt.Errorf("failed to initialize sender [%s], err [%w]", senderContactType, err)
 	}
+
 	eventsChannel := make(chan NotificationPackage)
-	notifier.senders[senderIdent] = eventsChannel
-	notifier.metrics.SendersOkMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_ok")
-	notifier.metrics.SendersFailedMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_failed")
-	notifier.metrics.SendersDroppedNotifications.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "notifications_dropped")
+	notifier.senders[senderContactType] = eventsChannel
+
+	notifier.registerMetrics(senderContactType)
 	notifier.runSenders(sender, eventsChannel)
+
 	notifier.logger.Info().
-		String("sender_id", senderIdent).
+		String("sender_contact_type", senderContactType).
+		String("sender_type", senderType).
 		Msg("Sender registered")
+
 	return nil
 }
 
@@ -138,7 +198,7 @@ func (notifier *StandardNotifier) runSenders(sender moira.Sender, eventsChannel 
 	}
 }
 
-// StopSenders close all sending channels
+// StopSenders close all sending channels.
 func (notifier *StandardNotifier) StopSenders() {
 	for _, ch := range notifier.senders {
 		close(ch)
@@ -150,5 +210,5 @@ func (notifier *StandardNotifier) StopSenders() {
 }
 
 func getGraphiteSenderIdent(ident string) string {
-	return strings.Replace(ident, " ", "_", -1)
+	return strings.ReplaceAll(ident, " ", "_")
 }

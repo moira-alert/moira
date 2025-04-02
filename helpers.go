@@ -2,12 +2,16 @@ package moira
 
 import (
 	"bytes"
+	"fmt"
 	"math"
+	"net/url"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
-// BytesScanner allows to scan for subslices separated by separator
+// BytesScanner allows to scan for subslices separated by separator.
 type BytesScanner struct {
 	source         []byte
 	index          int
@@ -15,12 +19,21 @@ type BytesScanner struct {
 	emitEmptySlice bool
 }
 
-// HasNext checks if next subslice available or not
+// Map applies a transformation function to each element in the input slice and returns a new slice with the transformed elements.
+func Map[T any, R any](input []T, transform func(T) R) []R {
+	result := make([]R, len(input))
+	for i, v := range input {
+		result[i] = transform(v)
+	}
+	return result
+}
+
+// HasNext checks if next subslice available or not.
 func (it *BytesScanner) HasNext() bool {
 	return it.index < len(it.source) || it.emitEmptySlice
 }
 
-// Next returns available subslice and advances the scanner to next slice
+// Next returns available subslice and advances the scanner to next slice.
 func (it *BytesScanner) Next() (result []byte) {
 	if it.emitEmptySlice {
 		it.emitEmptySlice = false
@@ -45,7 +58,7 @@ func (it *BytesScanner) Next() (result []byte) {
 }
 
 // NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner
-// which allows scanning for these subslices
+// which allows scanning for these subslices.
 func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
 	return &BytesScanner{
 		source:         bytes,
@@ -55,12 +68,12 @@ func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
 	}
 }
 
-// Int64ToTime returns time.Time from int64
+// Int64ToTime returns time.Time from int64.
 func Int64ToTime(timeStamp int64) time.Time {
 	return time.Unix(timeStamp, 0).UTC()
 }
 
-// UseString gets pointer value of string or default string if pointer is nil
+// UseString gets pointer value of string or default string if pointer is nil.
 func UseString(str *string) string {
 	if str == nil {
 		return ""
@@ -68,7 +81,7 @@ func UseString(str *string) string {
 	return *str
 }
 
-// UseFloat64 gets pointer value of float64 or default float64 if pointer is nil
+// UseFloat64 gets pointer value of float64 or default float64 if pointer is nil.
 func UseFloat64(f *float64) float64 {
 	if f == nil {
 		return 0
@@ -76,12 +89,12 @@ func UseFloat64(f *float64) float64 {
 	return *f
 }
 
-// IsFiniteNumber checks float64 for Inf and NaN. If it is then float64 is not valid
+// IsFiniteNumber checks float64 for Inf and NaN. If it is then float64 is not valid.
 func IsFiniteNumber(val float64) bool {
 	return !(math.IsNaN(val) || math.IsInf(val, 0))
 }
 
-// Subset return whether first is a subset of second
+// Subset return whether first is a subset of second.
 func Subset(first, second []string) bool {
 	set := make(map[string]bool)
 	for _, value := range second {
@@ -95,6 +108,35 @@ func Subset(first, second []string) bool {
 	}
 
 	return true
+}
+
+// Intersect returns the intersection of multiple arrays.
+func Intersect[T comparable](lists ...[]T) []T {
+	if len(lists) == 0 {
+		return []T{}
+	}
+
+	intersection := make(map[T]bool)
+	for _, value := range lists[0] {
+		intersection[value] = true
+	}
+
+	for _, stringList := range lists[1:] {
+		currentSet := make(map[T]bool)
+		for _, value := range stringList {
+			if intersection[value] {
+				currentSet[value] = true
+			}
+		}
+		intersection = currentSet
+	}
+
+	result := make([]T, 0, len(intersection))
+	for value := range intersection {
+		result = append(result, value)
+	}
+
+	return result
 }
 
 // GetStringListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
@@ -118,27 +160,6 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 		}
 	}
 	return result
-}
-
-// GetStringListsUnion returns the union set of stringLists
-func GetStringListsUnion(stringLists ...[]string) []string {
-	if len(stringLists) == 0 {
-		return []string{}
-	}
-
-	values := make([]string, 0)
-
-	uniqueValues := make(map[string]bool)
-	for _, stringList := range stringLists {
-		for _, value := range stringList {
-			if _, ok := uniqueValues[value]; !ok {
-				values = append(values, value)
-				uniqueValues[value] = true
-			}
-		}
-	}
-
-	return values
 }
 
 // GetTriggerListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
@@ -171,7 +192,7 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	return result
 }
 
-// ChunkSlice gets slice of strings and chunks it to a given size. It returns a batch of chunked lists
+// ChunkSlice gets slice of strings and chunks it to a given size. It returns a batch of chunked lists.
 func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 	if chunkSize < 1 {
 		return
@@ -199,7 +220,7 @@ func MaxInt64(a, b int64) int64 {
 	return b
 }
 
-// ReplaceSubstring removes one substring between the beginning and end substrings and replaces it with a replaced
+// ReplaceSubstring removes one substring between the beginning and end substrings and replaces it with a replaced.
 func ReplaceSubstring(str, begin, end, replaced string) string {
 	result := str
 	startIndex := strings.Index(str, begin)
@@ -212,4 +233,90 @@ func ReplaceSubstring(str, begin, end, replaced string) string {
 		}
 	}
 	return result
+}
+
+type Comparable interface {
+	Less(other Comparable) (bool, error)
+}
+
+// Merge is a generic function that performs a merge of two sorted arrays into one sorted array.
+func MergeToSorted[T Comparable](arr1, arr2 []T) ([]T, error) {
+	merged := make([]T, 0, len(arr1)+len(arr2))
+	i, j := 0, 0
+
+	for i < len(arr1) && j < len(arr2) {
+		less, err := arr1[i].Less(arr2[j])
+		if err != nil {
+			return nil, err
+		}
+
+		if less {
+			merged = append(merged, arr1[i])
+			i++
+		} else {
+			merged = append(merged, arr2[j])
+			j++
+		}
+	}
+
+	for i < len(arr1) {
+		merged = append(merged, arr1[i])
+		i++
+	}
+
+	for j < len(arr2) {
+		merged = append(merged, arr2[j])
+		j++
+	}
+
+	return merged, nil
+}
+
+// ValidateStruct is a default generic function that uses a validator to validate structure fields.
+func ValidateStruct(s any) error {
+	validator := validator.New()
+	return validator.Struct(s)
+}
+
+// GetUniqueValues gets a collection and return unique items of collection in random order.
+func GetUniqueValues[T comparable](objs ...T) []T {
+	set := make(map[T]struct{})
+	for _, obj := range objs {
+		set[obj] = struct{}{}
+	}
+
+	res := make([]T, 0, len(set))
+	for key := range set {
+		res = append(res, key)
+	}
+
+	return res
+}
+
+// EqualTwoPointerValues checks that both pointers is not nil and if they both are not nil compares values
+// that they are pointed to.
+func EqualTwoPointerValues[T comparable](first, second *T) bool {
+	if first != nil && second != nil {
+		return *first == *second
+	}
+
+	return first == nil && second == nil
+}
+
+// ValidateURL returns error on invalid url.
+func ValidateURL(requestUrl string) error {
+	urlStruct, err := url.ParseRequestURI(requestUrl)
+	if err != nil {
+		return err
+	}
+
+	if !(urlStruct.Scheme == "http" || urlStruct.Scheme == "https") {
+		return fmt.Errorf("bad url scheme: %s", urlStruct.Scheme)
+	}
+
+	if urlStruct.Host == "" {
+		return fmt.Errorf("host is empty")
+	}
+
+	return nil
 }

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	//thresholdTestValueIncrement               = float64(10)
+	// thresholdTestValueIncrement               = float64(10).
 	thresholdNegativeTestRisingWarnValue      = float64(-100)
 	thresholdNegativeTestRisingErrorValue     = float64(0)
 	thresholdNegativeTestFallingWarnValue     = thresholdNegativeTestRisingErrorValue
@@ -41,7 +41,7 @@ var (
 	}
 )
 
-// thresholdTestCase is a single threshold test case
+// thresholdTestCase is a single threshold test case.
 type thresholdTestCase struct {
 	name        string
 	triggerType string
@@ -78,7 +78,7 @@ func (testCase *thresholdTestCase) getCaseMessage() string {
 	return caseMessage.String()
 }
 
-// thresholdNegativeTestCases is a collection of negative threshold test cases
+// thresholdNegativeTestCases is a collection of negative threshold test cases.
 var thresholdNegativeTestCases = []thresholdTestCase{
 	{
 		name:        "Negative | RISING | {limits.lowest ..limits.highest}, warn",
@@ -242,7 +242,7 @@ var thresholdNegativeTestCases = []thresholdTestCase{
 	//},
 }
 
-// thresholdNonNegativeTestCases is a collection of non-negative threshold test cases
+// thresholdNonNegativeTestCases is a collection of non-negative threshold test cases.
 var thresholdNonNegativeTestCases = []thresholdTestCase{
 	{
 		name:        "Non-negative | RISING | {limits.lowest ..limits.highest}, warn",
@@ -406,7 +406,7 @@ var thresholdNonNegativeTestCases = []thresholdTestCase{
 	//},
 }
 
-// TestGenerateThresholds tests thresholds will be generated correctly
+// TestGenerateThresholds tests thresholds will be generated correctly.
 func TestGenerateThresholds(t *testing.T) {
 	thresholdTestCases := append(thresholdNegativeTestCases,
 		thresholdNonNegativeTestCases...)

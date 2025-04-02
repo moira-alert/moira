@@ -3,39 +3,32 @@ package heartbeat
 import (
 	"fmt"
 
-	"github.com/moira-alert/moira/metrics"
-
 	"github.com/moira-alert/moira"
 )
 
 type notifier struct {
-	db      moira.Database
-	log     moira.Logger
-	metrics *metrics.HeartBeatMetrics
+	heartbeat
 }
 
-func GetNotifier(logger moira.Logger, database moira.Database, metrics *metrics.HeartBeatMetrics) Heartbeater {
-	return &notifier{
-		db:      database,
-		log:     logger,
-		metrics: metrics,
-	}
+func GetNotifier(checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
+	return &notifier{heartbeat{
+		database:  database,
+		logger:    logger,
+		checkTags: checkTags,
+	}}
 }
 
 func (check notifier) Check(int64) (int64, bool, error) {
-	state, _ := check.db.GetNotifierState()
+	state, _ := check.database.GetNotifierState()
 	if state != moira.SelfStateOK {
-		check.metrics.MarkNotifierIsAlive(false)
-
-		check.log.Error().
+		check.logger.Error().
 			String("error", check.GetErrorMessage()).
 			Msg("Notifier is not healthy")
 
 		return 0, true, nil
 	}
-	check.metrics.MarkNotifierIsAlive(true)
 
-	check.log.Debug().
+	check.logger.Debug().
 		String("state", state).
 		Msg("Notifier is healthy")
 
@@ -51,6 +44,10 @@ func (notifier) NeedToCheckOthers() bool {
 }
 
 func (check notifier) GetErrorMessage() string {
-	state, _ := check.db.GetNotifierState()
+	state, _ := check.database.GetNotifierState()
 	return fmt.Sprintf("Moira-Notifier does not send messages. State: %v", state)
+}
+
+func (check *notifier) GetCheckTags() CheckTags {
+	return check.checkTags
 }

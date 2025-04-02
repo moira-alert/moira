@@ -37,9 +37,19 @@ func createNewTeamContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint:errcheck
 		return
 	}
-	teamID := middleware.GetTeamID(request)
 
-	if err := controller.CreateContact(database, contact, "", teamID); err != nil {
+	teamID := middleware.GetTeamID(request)
+	auth := middleware.GetAuth(request)
+	contactsTemplate := middleware.GetContactsTemplate(request)
+
+	if err := controller.CreateContact(
+		database,
+		auth,
+		contactsTemplate,
+		contact,
+		"",
+		teamID,
+	); err != nil {
 		render.Render(writer, request, err) //nolint:errcheck
 		return
 	}

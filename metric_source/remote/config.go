@@ -1,19 +1,20 @@
 package remote
 
-import "time"
+import (
+	"time"
 
-// Config represents config from remote storage
+	"github.com/moira-alert/moira/metric_source/retries"
+)
+
+// Config represents config from remote storage.
 type Config struct {
-	URL           string
-	CheckInterval time.Duration
-	MetricsTTL    time.Duration
-	Timeout       time.Duration
-	User          string
-	Password      string
-	Enabled       bool
-}
-
-// isEnabled checks that remote config is enabled (url is defined and enabled flag is set)
-func (c *Config) isEnabled() bool {
-	return c.Enabled && c.URL != ""
+	URL                string `validate:"required,url"`
+	CheckInterval      time.Duration
+	MetricsTTL         time.Duration
+	Timeout            time.Duration `validate:"required,gt=0s"`
+	User               string
+	Password           string
+	HealthcheckTimeout time.Duration `validate:"required,gt=0s"`
+	Retries            retries.Config
+	HealthcheckRetries retries.Config
 }

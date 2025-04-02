@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -9,7 +10,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
@@ -17,14 +17,18 @@ import (
 	db "github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 const (
-	ContactIDKey   = "contactID"
-	ContactKey     = "contact"
-	LoginKey       = "login"
-	defaultContact = "testContact"
-	defaultLogin   = "testLogin"
+	testContactIDKey        = "contactID"
+	testContactKey          = "contact"
+	testAuthKey             = "auth"
+	testLoginKey            = "login"
+	testContactsTemplateKey = "contactsTemplate"
+	defaultContact          = "testContact"
+	defaultLogin            = "testLogin"
+	defaultTeamID           = "testTeamID"
 )
 
 func TestGetAllContacts(t *testing.T) {
@@ -43,19 +47,19 @@ func TestGetAllContacts(t *testing.T) {
 					ID:    defaultContact,
 					Type:  "mail",
 					Value: "moira@skbkontur.ru",
-					User:  "moira",
+					User:  defaultLogin,
 					Team:  "",
 				},
 			}, nil).Times(1)
 			database = mockDb
 
 			expected := &dto.ContactList{
-				List: []*moira.ContactData{
+				List: []dto.TeamContact{
 					{
 						ID:    defaultContact,
 						Type:  "mail",
 						Value: "moira@skbkontur.ru",
-						User:  "moira",
+						User:  defaultLogin,
 						Team:  "",
 					},
 				},
@@ -120,7 +124,7 @@ func TestGetContactById(t *testing.T) {
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
+				User:  defaultLogin,
 				Team:  "",
 			}, nil).Times(1)
 			database = mockDb
@@ -129,13 +133,13 @@ func TestGetContactById(t *testing.T) {
 				ID:     contactID,
 				Type:   "mail",
 				Value:  "moira@skbkontur.ru",
-				User:   "test",
+				User:   defaultLogin,
 				TeamID: "",
 			}
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, contactID))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{ID: contactID}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, contactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{ID: contactID}))
 
 			getContactById(responseWriter, testRequest)
 
@@ -163,8 +167,8 @@ func TestGetContactById(t *testing.T) {
 			}
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, contactID))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{ID: contactID}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, contactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{ID: contactID}))
 
 			getContactById(responseWriter, testRequest)
 
@@ -194,8 +198,23 @@ func TestCreateNewContact(t *testing.T) {
 		login := defaultLogin
 		testErr := errors.New("test error")
 
+		auth := &api.Authorization{
+			Enabled: false,
+			AllowedContactTypes: map[string]struct{}{
+				"mail": {},
+			},
+		}
+
+		contactsTemplate := []api.WebContact{
+			{
+				ContactType:     "mail",
+				ValidationRegex: "@skbkontur.ru",
+			},
+		}
+
 		newContactDto := &dto.Contact{
 			ID:     defaultContact,
+			Name:   "Mail Alerts",
 			Type:   "mail",
 			Value:  "moira@skbkontur.ru",
 			User:   login,
@@ -209,6 +228,7 @@ func TestCreateNewContact(t *testing.T) {
 			mockDb.EXPECT().GetContact(defaultContact).Return(moira.ContactData{}, db.ErrNil).Times(1)
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    newContactDto.ID,
+				Name:  newContactDto.Name,
 				Type:  newContactDto.Type,
 				Value: newContactDto.Value,
 				User:  newContactDto.User,
@@ -217,7 +237,9 @@ func TestCreateNewContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -248,7 +270,9 @@ func TestCreateNewContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -266,6 +290,7 @@ func TestCreateNewContact(t *testing.T) {
 			So(actual.Type, ShouldEqual, newContactDto.Type)
 			So(actual.User, ShouldEqual, newContactDto.User)
 			So(actual.Value, ShouldEqual, newContactDto.Value)
+			So(actual.Name, ShouldEqual, newContactDto.Name)
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
@@ -287,7 +312,9 @@ func TestCreateNewContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -317,7 +344,9 @@ func TestCreateNewContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -335,21 +364,28 @@ func TestCreateNewContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("Trying to create a contact when both userLogin and teamID specified", func() {
-			newContactDto.TeamID = "test"
-			defer func() {
-				newContactDto.TeamID = ""
-			}()
-
+		Convey("Invalid request when trying to create a new contact with invalid value", func() {
 			expected := &api.ErrorResponse{
-				StatusText: "Internal Server Error",
-				ErrorText:  "CreateContact: cannot create contact when both userLogin and teamID specified",
+				StatusText: "Invalid request",
+				ErrorText:  "contact value doesn't match regex: '@yandex.ru'",
 			}
 			jsonContact, err := json.Marshal(newContactDto)
 			So(err, ShouldBeNil)
 
+			contactsTemplate = []api.WebContact{
+				{
+					ContactType:     "mail",
+					ValidationRegex: "@yandex.ru",
+				},
+			}
+
+			mockDb.EXPECT().GetContact(newContactDto.ID).Return(moira.ContactData{}, db.ErrNil).Times(1)
+			database = mockDb
+
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), LoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
 			testRequest.Header.Add("content-type", "application/json")
 
 			createNewContact(responseWriter, testRequest)
@@ -364,7 +400,48 @@ func TestCreateNewContact(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			So(actual, ShouldResemble, expected)
-			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		contactsTemplate = []api.WebContact{
+			{
+				ContactType:     "mail",
+				ValidationRegex: "@skbkontur.ru",
+			},
+		}
+
+		Convey("Trying to create a contact when both userLogin and teamID specified", func() {
+			newContactDto.TeamID = defaultTeamID
+			defer func() {
+				newContactDto.TeamID = ""
+			}()
+
+			expected := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "contact cannot have both the user field and the team_id field filled in",
+			}
+			jsonContact, err := json.Marshal(newContactDto)
+			So(err, ShouldBeNil)
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testLoginKey, login))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, auth))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
+			testRequest.Header.Add("content-type", "application/json")
+
+			createNewContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expected)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 	})
 }
@@ -381,10 +458,18 @@ func TestUpdateContact(t *testing.T) {
 		contactID := defaultContact
 		updatedContactDto := &dto.Contact{
 			ID:     contactID,
+			Name:   "Mail Alerts",
 			Type:   "mail",
 			Value:  "moira@skbkontur.ru",
-			User:   "test",
+			User:   defaultLogin,
 			TeamID: "",
+		}
+
+		contactsTemplate := []api.WebContact{
+			{
+				ContactType:     "mail",
+				ValidationRegex: "@skbkontur.ru",
+			},
 		}
 
 		Convey("Successful contact updated", func() {
@@ -393,6 +478,7 @@ func TestUpdateContact(t *testing.T) {
 
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    updatedContactDto.ID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
@@ -400,12 +486,20 @@ func TestUpdateContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
 			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateContact(responseWriter, testRequest)
@@ -423,6 +517,105 @@ func TestUpdateContact(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
+		Convey("Failed to update a contact with the specified user and team field", func() {
+			updatedContactDto.TeamID = defaultTeamID
+			defer func() {
+				updatedContactDto.TeamID = ""
+			}()
+
+			jsonContact, err := json.Marshal(updatedContactDto)
+			So(err, ShouldBeNil)
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
+				ID:    contactID,
+				Name:  updatedContactDto.Name,
+				Type:  updatedContactDto.Type,
+				Value: updatedContactDto.Value,
+				User:  updatedContactDto.User,
+			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
+			testRequest.Header.Add("content-type", "application/json")
+
+			updateContact(responseWriter, testRequest)
+
+			expected := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "contact cannot have both the user field and the team_id field filled in",
+			}
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expected)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Invalid request when trying to update contact with invalid value", func() {
+			expected := &api.ErrorResponse{
+				StatusText: "Invalid request",
+				ErrorText:  "contact value doesn't match regex: '@yandex.ru'",
+			}
+			jsonContact, err := json.Marshal(updatedContactDto)
+			So(err, ShouldBeNil)
+
+			contactsTemplate = []api.WebContact{
+				{
+					ContactType:     "mail",
+					ValidationRegex: "@yandex.ru",
+				},
+			}
+
+			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
+				ID:    contactID,
+				Name:  updatedContactDto.Name,
+				Type:  updatedContactDto.Type,
+				Value: updatedContactDto.Value,
+				User:  updatedContactDto.User,
+			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
+			testRequest.Header.Add("content-type", "application/json")
+
+			updateContact(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			contents := string(contentBytes)
+			actual := &api.ErrorResponse{}
+			err = json.Unmarshal([]byte(contents), actual)
+			So(err, ShouldBeNil)
+
+			So(actual, ShouldResemble, expected)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		contactsTemplate = []api.WebContact{
+			{
+				ContactType:     "mail",
+				ValidationRegex: "@skbkontur.ru",
+			},
+		}
+
 		Convey("Internal error when trying to update contact", func() {
 			expected := &api.ErrorResponse{
 				StatusText: "Internal Server Error",
@@ -433,6 +626,7 @@ func TestUpdateContact(t *testing.T) {
 
 			mockDb.EXPECT().SaveContact(&moira.ContactData{
 				ID:    updatedContactDto.ID,
+				Name:  updatedContactDto.Name,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
@@ -440,12 +634,19 @@ func TestUpdateContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactsTemplateKey, contactsTemplate))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  updatedContactDto.Type,
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
 			}))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testAuthKey, &api.Authorization{
+				AllowedContactTypes: map[string]struct{}{
+					updatedContactDto.Type: {},
+				},
+			}))
+
 			testRequest.Header.Add("content-type", "application/json")
 
 			updateContact(responseWriter, testRequest)
@@ -482,7 +683,7 @@ func TestRemoveContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
@@ -502,17 +703,17 @@ func TestRemoveContact(t *testing.T) {
 		})
 
 		Convey("Successful deletion of a contact without team id and subscriptions", func() {
-			mockDb.EXPECT().GetUserSubscriptionIDs("test").Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
+				User:  defaultLogin,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -529,17 +730,17 @@ func TestRemoveContact(t *testing.T) {
 		})
 
 		Convey("Successful deletion of a contact without user id and subscriptions", func() {
-			mockDb.EXPECT().GetTeamSubscriptionIDs("test").Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				Team:  "test",
+				Team:  defaultTeamID,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -556,19 +757,19 @@ func TestRemoveContact(t *testing.T) {
 		})
 
 		Convey("Successful deletion of a contact without subscriptions", func() {
-			mockDb.EXPECT().GetUserSubscriptionIDs("test").Return([]string{}, nil).Times(1)
-			mockDb.EXPECT().GetTeamSubscriptionIDs("test").Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{}, nil).Times(1)
+			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveContact(contactID).Return(nil).Times(1)
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
-				Team:  "test",
+				User:  defaultLogin,
+				Team:  defaultTeamID,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -590,7 +791,7 @@ func TestRemoveContact(t *testing.T) {
 				ErrorText:  "this contact is being used in following subscriptions:  (tags: test)",
 			}
 
-			mockDb.EXPECT().GetUserSubscriptionIDs("test").Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test"}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -600,11 +801,11 @@ func TestRemoveContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				User:  "test",
+				User:  defaultLogin,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -629,7 +830,7 @@ func TestRemoveContact(t *testing.T) {
 				ErrorText:  "this contact is being used in following subscriptions:  (tags: test)",
 			}
 
-			mockDb.EXPECT().GetTeamSubscriptionIDs("test").Return([]string{"test"}, nil).Times(1)
+			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{"test"}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -639,11 +840,11 @@ func TestRemoveContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				Team:  "test",
+				Team:  defaultTeamID,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -668,8 +869,8 @@ func TestRemoveContact(t *testing.T) {
 				ErrorText:  "this contact is being used in following subscriptions:  (tags: test1),  (tags: test2)",
 			}
 
-			mockDb.EXPECT().GetUserSubscriptionIDs("test1").Return([]string{"test1"}, nil).Times(1)
-			mockDb.EXPECT().GetTeamSubscriptionIDs("test2").Return([]string{"test2"}, nil).Times(1)
+			mockDb.EXPECT().GetUserSubscriptionIDs(defaultLogin).Return([]string{"test1"}, nil).Times(1)
+			mockDb.EXPECT().GetTeamSubscriptionIDs(defaultTeamID).Return([]string{"test2"}, nil).Times(1)
 			mockDb.EXPECT().GetSubscriptions([]string{"test1", "test2"}).Return([]*moira.SubscriptionData{
 				{
 					Contacts: []string{"testContact"},
@@ -683,12 +884,12 @@ func TestRemoveContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
-				Team:  "test2",
-				User:  "test1",
+				Team:  defaultTeamID,
+				User:  defaultLogin,
 			}))
 			testRequest.Header.Add("content-type", "application/json")
 
@@ -718,7 +919,7 @@ func TestRemoveContact(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactKey, moira.ContactData{
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactKey, moira.ContactData{
 				ID:    contactID,
 				Type:  "mail",
 				Value: "moira@skbkontur.ru",
@@ -758,7 +959,7 @@ func TestSendTestContactNotification(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/contact/"+contactID+"/test", nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, contactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, contactID))
 
 			sendTestContactNotification(responseWriter, testRequest)
 
@@ -782,7 +983,7 @@ func TestSendTestContactNotification(t *testing.T) {
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/contact/"+contactID+"/test", nil)
-			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), ContactIDKey, contactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, contactID))
 
 			sendTestContactNotification(responseWriter, testRequest)
 
@@ -797,6 +998,161 @@ func TestSendTestContactNotification(t *testing.T) {
 
 			So(actual, ShouldResemble, expected)
 			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
+}
+
+func Test_getContactNoisiness(t *testing.T) {
+	Convey("Test get contact noisiness", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
+		database = mockDb
+
+		contacts := []*moira.ContactData{
+			{
+				ID: "contact-id-1",
+			},
+			{
+				ID: "contact-id-2",
+			},
+			{
+				ID: "contact-id-3",
+			},
+			{
+				ID: "contact-id-4",
+			},
+		}
+
+		setContextValues := func(ctx context.Context, from, to string, page, size int64, sortOrder api.SortOrder) context.Context {
+			ctx = middleware.SetContextValueForTest(ctx, "from", from)
+			ctx = middleware.SetContextValueForTest(ctx, "to", to)
+			ctx = middleware.SetContextValueForTest(ctx, "page", page)
+			ctx = middleware.SetContextValueForTest(ctx, "size", size)
+			ctx = middleware.SetContextValueForTest(ctx, "sort", sortOrder)
+
+			return ctx
+		}
+
+		givenFrom := "-1hour"
+		givenTo := "-1m"
+		givenPage := int64(1)
+		givenSize := int64(3)
+		givenSortOrder := api.AscSortOrder
+
+		validator := DateRangeValidator{AllowInf: true}
+		parsedFrom, parsedTo, errValidating := validator.ValidateDateRangeStrings(givenFrom, givenTo)
+		So(errValidating, ShouldBeNil)
+
+		Convey("get noisiness ok", func() {
+			expectedDTO := dto.ContactNoisinessList{
+				Page:  givenPage,
+				Size:  givenSize,
+				Total: 4,
+				List: []*dto.ContactNoisiness{
+					{
+						Contact:     dto.NewContact(*contacts[3]),
+						EventsCount: 7,
+					},
+				},
+			}
+			expectedBytes, err := json.Marshal(expectedDTO)
+			So(err, ShouldBeNil)
+			expectedBytes = append(expectedBytes, '\n')
+
+			mockDb.EXPECT().GetAllContacts().Return(contacts, nil).Times(1)
+			mockDb.EXPECT().CountEventsInNotificationHistory(
+				[]string{"contact-id-1", "contact-id-2", "contact-id-3", "contact-id-4"},
+				parsedFrom,
+				parsedTo).
+				Return([]*moira.ContactIDWithNotificationCount{
+					{ID: "contact-id-1", Count: 0},
+					{ID: "contact-id-2", Count: 5},
+					{ID: "contact-id-3", Count: 2},
+					{ID: "contact-id-4", Count: 7},
+				}, nil).Times(1)
+
+			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)
+			testRequest = testRequest.WithContext(setContextValues(
+				testRequest.Context(),
+				givenFrom, givenTo,
+				givenPage, givenSize,
+				givenSortOrder))
+
+			responseWriter := httptest.NewRecorder()
+
+			getContactNoisiness(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			So(contentBytes, ShouldResemble, expectedBytes)
+		})
+
+		Convey("error from db leads to 500", func() {
+			someErrFromDb := errors.New("error from db")
+			expectedDTO := api.ErrorInternalServer(someErrFromDb)
+			expectedBytes, err := json.Marshal(expectedDTO)
+			So(err, ShouldBeNil)
+			expectedBytes = append(expectedBytes, '\n')
+
+			mockDb.EXPECT().GetAllContacts().Return(nil, someErrFromDb).Times(1)
+
+			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)
+			testRequest = testRequest.WithContext(setContextValues(
+				testRequest.Context(),
+				givenFrom, givenTo,
+				givenPage, givenSize,
+				givenSortOrder))
+
+			responseWriter := httptest.NewRecorder()
+
+			getContactNoisiness(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			So(contentBytes, ShouldResemble, expectedBytes)
+		})
+
+		Convey("bad date range param leads to 400", func() {
+			givenFrom = "abra"
+			givenTo = "cadabra"
+
+			validator = DateRangeValidator{AllowInf: true}
+			_, _, err := validator.ValidateDateRangeStrings(givenFrom, givenTo)
+			So(err, ShouldNotBeNil)
+
+			expectedDTO := api.ErrorInvalidRequest(err)
+			expectedBytes, err := json.Marshal(expectedDTO)
+			So(err, ShouldBeNil)
+			expectedBytes = append(expectedBytes, '\n')
+
+			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)
+			testRequest = testRequest.WithContext(setContextValues(
+				testRequest.Context(),
+				givenFrom, givenTo,
+				givenPage, givenSize,
+				givenSortOrder))
+
+			responseWriter := httptest.NewRecorder()
+
+			getContactNoisiness(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+
+			contentBytes, err := io.ReadAll(response.Body)
+			So(err, ShouldBeNil)
+			So(contentBytes, ShouldResemble, expectedBytes)
 		})
 	})
 }

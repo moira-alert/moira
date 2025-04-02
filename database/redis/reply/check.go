@@ -2,18 +2,19 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 )
 
-// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0.
 const firstTarget = "t1"
 
-//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
-
+// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0.
 type checkDataStorageElement struct {
 	Metrics                      map[string]moira.MetricState `json:"metrics"`
 	MetricsToTargetRelation      map[string]string            `json:"metrics_to_target_relation"`
@@ -30,7 +31,7 @@ type checkDataStorageElement struct {
 }
 
 func toCheckDataStorageElement(check moira.CheckData) checkDataStorageElement {
-	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	for metricName, metricState := range check.Metrics {
 		if metricState.Value == nil {
 			if value, ok := metricState.Values[firstTarget]; ok {
@@ -39,7 +40,7 @@ func toCheckDataStorageElement(check moira.CheckData) checkDataStorageElement {
 			}
 		}
 	}
-	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	return checkDataStorageElement{
 		Metrics:                      check.Metrics,
 		MetricsToTargetRelation:      check.MetricsToTargetRelation,
@@ -57,7 +58,7 @@ func toCheckDataStorageElement(check moira.CheckData) checkDataStorageElement {
 }
 
 func (d checkDataStorageElement) toCheckData() moira.CheckData {
-	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	for metricName, metricState := range d.Metrics {
 		if metricState.Values == nil {
 			metricState.Values = make(map[string]float64)
@@ -71,7 +72,7 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 	if d.MetricsToTargetRelation == nil {
 		d.MetricsToTargetRelation = make(map[string]string)
 	}
-	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	return moira.CheckData{
 		Metrics:                      d.Metrics,
 		MetricsToTargetRelation:      d.MetricsToTargetRelation,
@@ -85,15 +86,15 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 		Suppressed:                   d.Suppressed,
 		SuppressedState:              d.SuppressedState,
 		Message:                      d.Message,
+		Clock:                        clock.NewSystemClock(),
 	}
 }
 
-// Check converts redis DB reply to moira.CheckData
+// Check converts redis DB reply to moira.CheckData.
 func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 	bytes, err := rep.Bytes()
-
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.CheckData{}, database.ErrNil
 		}
 
@@ -102,12 +103,32 @@ func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 
 	checkSE := checkDataStorageElement{}
 	err = json.Unmarshal(bytes, &checkSE)
-
 	if err != nil {
 		return moira.CheckData{}, fmt.Errorf("failed to parse lastCheck json %s: %s", string(bytes), err.Error())
 	}
 
 	return checkSE.toCheckData(), nil
+}
+
+// Checks converts an array of redis DB reply to moira.CheckData objects, if reply is nil, then checkdata is nil.
+func Checks(replies []*redis.StringCmd) ([]*moira.CheckData, error) {
+	checks := make([]*moira.CheckData, len(replies))
+
+	for i, value := range replies {
+		if value != nil {
+			check, err := Check(value)
+			if err != nil {
+				if !errors.Is(err, database.ErrNil) {
+					return nil, err
+				}
+				continue
+			}
+
+			checks[i] = &check
+		}
+	}
+
+	return checks, nil
 }
 
 // GetCheckBytes is a function that takes moira.CheckData and turns it to bytes that will be saved in redis.

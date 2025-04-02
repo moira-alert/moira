@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	prometheus "github.com/prometheus/client_golang/api/prometheus/v1"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
@@ -27,14 +29,22 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 	return func(router chi.Router) {
 		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
-		router.Get("/", getAllTriggers)
-		router.Get("/unused", getUnusedTriggers)
+
+		router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllTriggers)
+		router.With(middleware.AdminOnlyMiddleware()).Get("/unused", getUnusedTriggers)
+		router.With(
+			middleware.AdminOnlyMiddleware(),
+			middleware.Paginate(getTriggerNoisinessDefaultPage, getTriggerNoisinessDefaultSize),
+			middleware.DateRange(getTriggerNoisinessDefaultFrom, getTriggerNoisinessDefaultTo),
+			middleware.SortOrderContext(api.DescSortOrder),
+		).Get("/noisiness", getTriggerNoisiness)
+
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
 		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
-		// ToDo: DEPRECATED method. Remove in Moira 2.6
+		// TODO: DEPRECATED method. Remove in Moira 2.6
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", searchTriggers)
 	}
 }
@@ -96,7 +106,7 @@ func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@param		validate	query		bool									false	"For validating targets"
 //	@param		trigger		body		dto.Trigger								true	"Trigger data"
 //	@success	200			{object}	dto.SaveTriggerResponse					"Trigger created successfully"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	400			{object}	interface{}								"Bad request from client. Could be api.ErrorInvalidRequestExample or dto.SaveTriggerResponse"
 //	@failure	422			{object}	api.ErrorRenderExample					"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
 //	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
@@ -123,7 +133,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if trigger.Desc != nil {
-		err := trigger.PopulatedDescription(moira.NotificationEvents{{}})
+		_, err := trigger.PopulatedDescription(moira.NotificationEvents{{}})
 		if err != nil {
 			render.Render(writer, request, api.ErrorRender(err)) //nolint
 			return
@@ -148,50 +158,84 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func is4xxCode(statusCode int64) bool {
+	return statusCode >= 400 && statusCode < 500
+}
+
+func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorResponse {
+	type victoriaMetricsError = prometheus.ErrorType
+
+	// In github.com/prometheus/client_golang/api/prometheus/v1 Error has field `Type`
+	// which can be used to understand "the reason" of error. There are some constants in the lib.
+	switch promErr.Type {
+	case prometheus.ErrBadData:
+		return api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", promErr))
+
+	// If any error has occurred in prometheus, we should return RemoteServiceUnavailable status.
+	case prometheus.ErrServer, victoriaMetricsError(strconv.Itoa(http.StatusServiceUnavailable)):
+		return api.ErrorRemoteServerUnavailable(fmt.Errorf("remote server error: %w", promErr))
+
+	// VictoriaMetrics also supports prometheus api, BUT puts status code into Error.Type.
+	// So we can't just use constants from prometheus api client lib.
+	case victoriaMetricsError(strconv.Itoa(http.StatusUnauthorized)), victoriaMetricsError(strconv.Itoa(http.StatusForbidden)):
+		return api.ErrorInternalServer(promErr)
+	}
+
+	// In other cases we are trying to classify error as client error or server.
+	statusCode, err := strconv.ParseInt(string(promErr.Type), 10, 64)
+	if err != nil {
+		return api.ErrorInternalServer(promErr)
+	}
+
+	if is4xxCode(statusCode) {
+		return api.ErrorInvalidRequest(promErr)
+	}
+
+	return api.ErrorInternalServer(promErr)
+}
+
 func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorResponse) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
+		switch typedErr := err.(type) { // nolint:errorlint
 		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))
 		case expression.ErrInvalidExpression:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error()))
 		case api.ErrInvalidRequestContent:
 			return nil, api.ErrorInvalidRequest(err)
-		case remote.ErrRemoteTriggerResponse:
+		case remote.ErrRemoteUnavailable:
 			response := api.ErrorRemoteServerUnavailable(err)
 			middleware.GetLoggerEntry(request).Error().
 				String("status", response.StatusText).
 				Error(err).
 				Msg("Remote server unavailable")
 			return nil, response
+		case remote.ErrRemoteTriggerResponse:
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("error from graphite remote: %w", err))
 		case *json.UnmarshalTypeError:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
+		case *prometheus.Error:
+			return nil, errorResponseOnPrometheusError(typedErr)
 		default:
 			return nil, api.ErrorInternalServer(err)
 		}
 	}
-	trigger.UpdatedBy = middleware.GetLogin(request)
 
 	return trigger, nil
 }
 
 // getMetricTTLByTrigger gets metric ttl duration time from request context for local or remote trigger.
-func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Duration {
-	var ttl time.Duration
+func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) (time.Duration, error) {
+	metricTTLs := middleware.GetMetricTTL(request)
+	key := trigger.ClusterKey()
 
-	switch trigger.TriggerSource {
-	case moira.GraphiteLocal:
-		ttl = middleware.GetLocalMetricTTL(request)
-
-	case moira.GraphiteRemote:
-		ttl = middleware.GetRemoteMetricTTL(request)
-
-	case moira.PrometheusRemote:
-		ttl = middleware.GetPrometheusMetricTTL(request)
+	ttl, ok := metricTTLs[key]
+	if !ok {
+		return 0, fmt.Errorf("can't get ttl: unknown cluster %s", key.String())
 	}
 
-	return ttl
+	return ttl, nil
 }
 
 // nolint: gofmt,goimports
@@ -201,32 +245,52 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Dur
 //	@tags		trigger
 //	@accept		json
 //	@produce	json
-//	@param		trigger	body		dto.Trigger						true	"Trigger data"
-//	@success	200		{object}	dto.TriggerCheckResponse		"Validation is done, see response body for validation result"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		trigger	body		dto.Trigger								true	"Trigger data"
+//	@success	200		{object}	dto.TriggerCheckResponse				"Validation is done, see response body for validation result"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@failure	503		{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
 //	@router		/trigger/check [put]
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	response := dto.TriggerCheckResponse{}
 
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
+		switch typedErr := err.(type) { // nolint:errorlint
 		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
-			// TODO write comment, why errors are ignored, it is not obvious.
-			// In getTriggerFromRequest these types of errors lead to 400.
+			// TODO: move ErrInvalidExpression to separate case
+
+			// Errors above are skipped because if there is an error from local source then it will be caught in
+			// dto.TargetVerification and will be explained in detail.
+		case remote.ErrRemoteUnavailable:
+			errRsp := api.ErrorRemoteServerUnavailable(err)
+			middleware.GetLoggerEntry(request).Error().
+				String("status", errRsp.StatusText).
+				Error(err).
+				Msg("Remote server unavailable")
+			render.Render(writer, request, errRsp) //nolint
+			return
+		case remote.ErrRemoteTriggerResponse:
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("error from graphite remote: %w", err))) //nolint
+			return
+		case *prometheus.Error:
+			render.Render(writer, request, errorResponseOnPrometheusError(typedErr)) //nolint
+			return
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
 		}
 	}
 
-	ttl := getMetricTTLByTrigger(request, trigger)
+	ttl, err := getMetricTTLByTrigger(request, trigger)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
 
 	if len(trigger.Targets) > 0 {
 		var err error
 		response.Targets, err = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
-
 		if err != nil {
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
@@ -271,6 +335,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
+		PagerTTL:              middleware.GetLimits(request).Pager.TTL,
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
@@ -335,9 +400,9 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 	return false
 }
 
-// Checks if the createdBy field has been set:
-// if the field has been set, searches for triggers with a specific author createdBy
-// if the field has not been set, searches for triggers with any author
+// Checks if the createdBy field has been set.
+// If the field has been set, searches for triggers with a specific author createdBy.
+// If the field has not been set, searches for triggers with any author.
 func getTriggerCreatedBy(request *http.Request) (string, bool) {
 	if createdBy, ok := request.Form["createdBy"]; ok {
 		return createdBy[0], true
@@ -350,4 +415,46 @@ func getSearchRequestString(request *http.Request) string {
 	searchText = strings.ToLower(searchText)
 	searchText, _ = url.PathUnescape(searchText)
 	return searchText
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get triggers noisiness
+//	@id			get-triggers-noisiness
+//	@tags		trigger
+//	@produce	json
+//	@param		size	query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
+//	@param		p		query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
+//	@param		from	query		string							false	"Start time of the time range"																			default(-3hours)
+//	@param		to		query		string							false	"End time of the time range"																			default(now)
+//	@param		sort	query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
+//	@success	200		{object}	dto.TriggerNoisinessList		"Get noisiness for triggers in range"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/trigger/noisiness [get]
+func getTriggerNoisiness(writer http.ResponseWriter, request *http.Request) {
+	size := middleware.GetSize(request)
+	page := middleware.GetPage(request)
+	fromStr := middleware.GetFromStr(request)
+	toStr := middleware.GetToStr(request)
+	sort := middleware.GetSortOrder(request)
+
+	validator := DateRangeValidator{AllowInf: true}
+	fromStr, toStr, err := validator.ValidateDateRangeStrings(fromStr, toStr)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	triggersNoisinessList, errorResponse := controller.GetTriggerNoisiness(database, page, size, fromStr, toStr, sort)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, triggersNoisinessList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
 }

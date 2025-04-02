@@ -1,49 +1,96 @@
 package remote
 
 import (
+	"errors"
+	"fmt"
 	"testing"
+	"time"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/moira-alert/moira"
+
+	"github.com/moira-alert/moira/metric_source/retries"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestConfig(t *testing.T) {
-	Convey("Given config without url and enabled", t, func() {
-		cfg := &Config{
-			URL:     "",
-			Enabled: true,
+func TestConfigWithValidateStruct(t *testing.T) {
+	Convey("Test validating retries config", t, func() {
+		type testcase struct {
+			caseDesc string
+			conf     Config
+			errIsNil bool
 		}
-		Convey("remote triggers should be disabled", func() {
-			So(cfg.isEnabled(), ShouldBeFalse)
-		})
-	})
 
-	Convey("Given config with url and enabled", t, func() {
-		cfg := &Config{
-			URL:     "http://host",
-			Enabled: true,
-		}
-		Convey("remote triggers should be enabled", func() {
-			So(cfg.isEnabled(), ShouldBeTrue)
-		})
-	})
+		var (
+			testInitialInterval        = time.Second * 5
+			testMaxInterval            = time.Second * 10
+			testRetriesCount    uint64 = 10
+			validatorErr               = validator.ValidationErrors{}
+		)
 
-	Convey("Given config with url and disabled", t, func() {
-		cfg := &Config{
-			URL:     "http://host",
-			Enabled: false,
+		testRetriesConf := retries.Config{
+			InitialInterval: testInitialInterval,
+			MaxInterval:     testMaxInterval,
+			MaxRetriesCount: testRetriesCount,
 		}
-		Convey("remote triggers should be disabled", func() {
-			So(cfg.isEnabled(), ShouldBeFalse)
-		})
-	})
 
-	Convey("Given config without url and disabled", t, func() {
-		cfg := &Config{
-			URL:     "",
-			Enabled: false,
+		cases := []testcase{
+			{
+				caseDesc: "with empty config",
+				conf:     Config{},
+				errIsNil: false,
+			},
+			{
+				caseDesc: "with retries config set",
+				conf: Config{
+					Retries:            testRetriesConf,
+					HealthcheckRetries: testRetriesConf,
+				},
+				errIsNil: false,
+			},
+			{
+				caseDesc: "with retries config set and some url",
+				conf: Config{
+					URL:                "http://test-graphite",
+					Retries:            testRetriesConf,
+					HealthcheckRetries: testRetriesConf,
+				},
+				errIsNil: false,
+			},
+			{
+				caseDesc: "with retries config set, some url, timeout",
+				conf: Config{
+					Timeout:            time.Second,
+					URL:                "http://test-graphite",
+					Retries:            testRetriesConf,
+					HealthcheckRetries: testRetriesConf,
+				},
+				errIsNil: false,
+			},
+			{
+				caseDesc: "with valid config",
+				conf: Config{
+					Timeout:            time.Second,
+					HealthcheckTimeout: time.Millisecond,
+					URL:                "http://test-graphite",
+					Retries:            testRetriesConf,
+					HealthcheckRetries: testRetriesConf,
+				},
+				errIsNil: true, // nil,
+			},
 		}
-		Convey("remote triggers should be disabled", func() {
-			So(cfg.isEnabled(), ShouldBeFalse)
-		})
+
+		for i := range cases {
+			Convey(fmt.Sprintf("Case %d: %s", i+1, cases[i].caseDesc), func() {
+				err := moira.ValidateStruct(cases[i].conf)
+
+				if cases[i].errIsNil {
+					So(err, ShouldBeNil)
+				} else {
+					So(errors.As(err, &validatorErr), ShouldBeTrue)
+				}
+			})
+		}
 	})
 }

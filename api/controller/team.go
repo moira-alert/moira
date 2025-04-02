@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
+	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/go-redis/redis/v8"
@@ -15,7 +18,7 @@ import (
 
 const teamIDCreateRetries = 3
 
-// CreateTeam is a controller function that creates a new team in Moira
+// CreateTeam is a controller function that creates a new team in Moira.
 func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto.SaveTeamResponse, *api.ErrorResponse) {
 	var teamID string
 	if team.ID != "" { // if teamID is specified in request data then check that team with this id is not exist
@@ -24,7 +27,7 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 		if err == nil {
 			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("team with ID you specified already exists %s", teamID))
 		}
-		if err != nil && err != database.ErrNil {
+		if err != nil && !errors.Is(err, database.ErrNil) {
 			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot check id for team: %w", err))
 		}
 	} else { // on the other hand try to create an UUID for teamID
@@ -36,7 +39,7 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 			}
 			teamID = generatedUUID.String()
 			_, err = dataBase.GetTeam(teamID)
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				createdSuccessfully = true
 				break
 			}
@@ -48,8 +51,13 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 			return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot generate unique id for team"))
 		}
 	}
+
 	err := dataBase.SaveTeam(teamID, team.ToMoiraTeam())
 	if err != nil {
+		if errors.Is(err, database.ErrTeamWithNameAlreadyExists) {
+			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot save team: %w", err))
+		}
+
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", err))
 	}
 
@@ -66,12 +74,11 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
-// GetTeam is a controller function that returns a team by it's ID
+// GetTeam is a controller function that returns a team by it's ID.
 func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorResponse) {
 	team, err := dataBase.GetTeam(teamID)
-
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamModel{}, api.ErrorNotFound(fmt.Sprintf("cannot find team: %s", teamID))
 		}
 		return dto.TeamModel{}, api.ErrorInternalServer(fmt.Errorf("cannot get team from database: %w", err))
@@ -81,12 +88,71 @@ func GetTeam(dataBase moira.Database, teamID string) (dto.TeamModel, *api.ErrorR
 	return teamModel, nil
 }
 
-// GetUserTeams is a controller function that returns a teams in which user is a member bu user ID
+// SearchTeams is a controller function that returns all teams.
+func SearchTeams(dataBase moira.Database, page, size int64, textRegexp *regexp.Regexp, sortOrder api.SortOrder) (dto.TeamsList, *api.ErrorResponse) {
+	teams, err := dataBase.GetAllTeams()
+	if err != nil {
+		return dto.TeamsList{}, api.ErrorInternalServer(fmt.Errorf("cannot get teams from database: %w", err))
+	}
+
+	filteredTeams := make([]moira.Team, 0)
+	for _, team := range teams {
+		if textRegexp.MatchString(team.Name) || textRegexp.MatchString(team.ID) {
+			filteredTeams = append(filteredTeams, team)
+		}
+	}
+
+	teams = filteredTeams
+
+	if sortOrder == api.AscSortOrder || sortOrder == api.DescSortOrder {
+		slices.SortFunc(teams, func(first, second moira.Team) int {
+			cmpRes := strings.Compare(strings.ToLower(first.Name), strings.ToLower(second.Name))
+			if sortOrder == api.DescSortOrder {
+				return cmpRes * -1
+			} else {
+				return cmpRes
+			}
+		})
+	}
+
+	total := int64(len(teams))
+
+	if page < 0 || (page > 0 && size < 0) {
+		return dto.TeamsList{
+			List:  []dto.TeamModel{},
+			Page:  page,
+			Size:  size,
+			Total: total,
+		}, nil
+	}
+
+	if page >= 0 && size >= 0 {
+		shift := page * size
+		if shift < int64(len(teams)) {
+			teams = teams[shift:]
+		} else {
+			teams = []moira.Team{}
+		}
+
+		if size <= int64(len(teams)) {
+			teams = teams[:size]
+		}
+	}
+
+	model := dto.NewTeamsList(teams)
+	model.Page = page
+	model.Size = size
+	model.Total = total
+
+	return model, nil
+}
+
+// GetUserTeams is a controller function that returns a teams in which user is a member bu user ID.
 func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.ErrorResponse) {
 	teams, err := dataBase.GetUserTeams(userID)
 
 	result := []dto.TeamModel{}
-	if err != nil && err != database.ErrNil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return dto.UserTeams{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 	}
 
@@ -102,12 +168,11 @@ func GetUserTeams(dataBase moira.Database, userID string) (dto.UserTeams, *api.E
 	return dto.UserTeams{Teams: result}, nil
 }
 
-// GetTeamUsers is a controller function that returns a users of team by team ID
+// GetTeamUsers is a controller function that returns a users of team by team ID.
 func GetTeamUsers(dataBase moira.Database, teamID string) (dto.TeamMembers, *api.ErrorResponse) {
 	users, err := dataBase.GetTeamUsers(teamID)
-
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
@@ -151,8 +216,8 @@ func addTeamsForNewUsers(dataBase moira.Database, teamID string, newUsers map[st
 		if _, ok := teamsMap[userID]; ok {
 			continue
 		}
-		fetchedUserTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
-		if err != nil && err != database.ErrNil {
+		fetchedUserTeams, err := dataBase.GetUserTeams(userID)
+		if err != nil && !errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 		}
 		fetchedUserTeams = append(fetchedUserTeams, teamID)
@@ -161,11 +226,11 @@ func addTeamsForNewUsers(dataBase moira.Database, teamID string, newUsers map[st
 	return teamsMap, nil
 }
 
-// SetTeamUsers is a controller function that sets all users for team
+// SetTeamUsers is a controller function that sets all users for team.
 func SetTeamUsers(dataBase moira.Database, teamID string, allUsers []string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
@@ -237,11 +302,11 @@ func addUserTeam(teamID string, teams []string) ([]string, error) {
 	return teams, nil
 }
 
-// AddTeamUsers is a controller function that adds a users to certain team
+// AddTeamUsers is a controller function that adds a users to certain team.
 func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
@@ -253,7 +318,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 	for _, userID := range existingUsers {
 		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
 		if err != nil {
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find user teams: %s", userID))
 			}
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
@@ -268,7 +333,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 		}
 
 		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
-		if err != nil && err != redis.Nil {
+		if err != nil && !errors.Is(err, redis.Nil) {
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 		}
 
@@ -292,16 +357,20 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 	return result, nil
 }
 
-// UpdateTeam is a controller function that updates an existing team in Moira
+// UpdateTeam is a controller function that updates an existing team in Moira.
 func UpdateTeam(dataBase moira.Database, teamID string, team dto.TeamModel) (dto.SaveTeamResponse, *api.ErrorResponse) {
 	err := dataBase.SaveTeam(teamID, team.ToMoiraTeam())
 	if err != nil {
+		if errors.Is(err, database.ErrTeamWithNameAlreadyExists) {
+			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot save team: %w", err))
+		}
+
 		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", err))
 	}
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
-// DeleteTeam is a controller function that removes an existing team in Moira
+// DeleteTeam is a controller function that removes an existing team in Moira.
 func DeleteTeam(dataBase moira.Database, teamID, userLogin string) (dto.SaveTeamResponse, *api.ErrorResponse) {
 	teamUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
@@ -331,11 +400,11 @@ func DeleteTeam(dataBase moira.Database, teamID, userLogin string) (dto.SaveTeam
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
-// DeleteTeamUser is a controller function that removes a user from certain team
+// DeleteTeamUser is a controller function that removes a user from certain team.
 func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find team users: %s", teamID))
 		}
 		return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
@@ -361,7 +430,7 @@ func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string)
 	for _, userID := range existingUsers {
 		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
 		if err != nil {
-			if err == database.ErrNil {
+			if errors.Is(err, database.ErrNil) {
 				return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find user teams: %s", userID))
 			}
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
@@ -399,10 +468,18 @@ func removeUserTeam(teams []string, teamID string) ([]string, error) {
 	return []string{}, fmt.Errorf("cannot find team in user teams: %s", teamID)
 }
 
-func CheckUserPermissionsForTeam(dataBase moira.Database, teamID, userID string) *api.ErrorResponse {
+func CheckUserPermissionsForTeam(
+	dataBase moira.Database,
+	teamID, userID string,
+	auth *api.Authorization,
+) *api.ErrorResponse {
+	if auth.IsAdmin(userID) {
+		return nil
+	}
+
 	_, err := dataBase.GetTeam(teamID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return api.ErrorNotFound(fmt.Sprintf("team with ID '%s' does not exists", teamID))
 		}
 		return api.ErrorInternalServer(err)
@@ -418,11 +495,11 @@ func CheckUserPermissionsForTeam(dataBase moira.Database, teamID, userID string)
 	return nil
 }
 
-// GetTeamSettings gets team contacts and subscriptions
+// GetTeamSettings gets team contacts and subscriptions.
 func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, *api.ErrorResponse) {
 	teamSettings := dto.TeamSettings{
 		TeamID:        teamID,
-		Contacts:      make([]moira.ContactData, 0),
+		Contacts:      make([]dto.TeamContact, 0),
 		Subscriptions: make([]moira.SubscriptionData, 0),
 	}
 
@@ -449,10 +526,21 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
+
 	for _, contact := range contacts {
-		if contact != nil {
-			teamSettings.Contacts = append(teamSettings.Contacts, *contact)
+		if contact == nil {
+			continue
 		}
+
+		teamSettings.Contacts = append(teamSettings.Contacts, dto.TeamContact{
+			ID:     contact.ID,
+			Name:   contact.Name,
+			User:   contact.User,
+			TeamID: contact.Team,
+			Team:   contact.Team,
+			Type:   contact.Type,
+			Value:  contact.Value,
+		})
 	}
 	return teamSettings, nil
 }

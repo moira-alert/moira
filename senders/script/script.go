@@ -13,13 +13,12 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Structure that represents the Script configuration in the YAML file
+// Structure that represents the Script configuration in the YAML file.
 type config struct {
-	Name string `mapstructure:"name"`
-	Exec string `mapstructure:"exec"`
+	Exec string `mapstructure:"exec" validate:"required"`
 }
 
-// Sender implements moira sender interface via script execution
+// Sender implements moira sender interface via script execution.
 type Sender struct {
 	exec   string
 	logger moira.Logger
@@ -33,7 +32,7 @@ type scriptNotification struct {
 	Timestamp int64                     `json:"timestamp"`
 }
 
-// Init read yaml config
+// Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
 	err := mapstructure.Decode(senderSettings, &cfg)
@@ -41,19 +40,22 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
 	}
 
-	if cfg.Name == "" {
-		return fmt.Errorf("required name for sender type script")
+	if err = moira.ValidateStruct(cfg); err != nil {
+		return fmt.Errorf("script config validation error: %w", err)
 	}
+
 	_, _, err = parseExec(cfg.Exec)
 	if err != nil {
 		return err
 	}
+
 	sender.exec = cfg.Exec
 	sender.logger = logger
+
 	return nil
 }
 
-// SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	scriptFile, args, scriptBody, err := sender.buildCommandData(events, contact, trigger, throttled)
 	if err != nil {
@@ -125,7 +127,7 @@ func buildExecString(template string, trigger moira.TriggerData, contact moira.C
 		moira.VariableTriggerName:  trigger.Name,
 	}
 	for k, v := range templateVariables {
-		template = strings.Replace(template, k, v, -1)
+		template = strings.ReplaceAll(template, k, v)
 	}
 	return template
 }

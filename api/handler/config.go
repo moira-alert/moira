@@ -1,31 +1,26 @@
 package handler
 
-import "net/http"
+import (
+	"net/http"
 
-type ContactExample struct {
-	Type        string `json:"type" example:"webhook kontur"`
-	Label       string `json:"label" example:"Webhook Kontur"`
-	Validation  string `json:"validation" example:"^(http|https):\\/\\/.*(moira.ru)(:[0-9]{2,5})?\\/"`
-	Placeholder string `json:"placeholder" example:"https://moira.ru/webhooks/moira"`
-	Help        string `json:"help" example:"### Domains whitelist:\n - moira.ru\n"`
-}
-
-type ConfigurationResponse struct {
-	RemoteAllowed bool             `json:"remoteAllowed" example:"false"`
-	Contacts      []ContactExample `json:"contacts"`
-}
+	"github.com/go-chi/render"
+	"github.com/moira-alert/moira/api"
+)
 
 // nolint: gofmt,goimports
 //
-//	@summary	Get available configuration
+//	@summary	Get web configuration
 //	@id			get-web-config
 //	@tags		config
 //	@produce	json
-//	@success	200	{object}	ConfigurationResponse	"Configuration fetched successfully"
+//	@success	200	{object}	api.WebConfig			"Configuration fetched successfully"
+//	@failure	422	{object}	api.ErrorRenderExample	"Render error"
 //	@router		/config [get]
-func getWebConfig(configContent []byte) http.HandlerFunc {
+func getWebConfig(webConfig *api.WebConfig) http.HandlerFunc {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		writer.Header().Set("Content-Type", "application/json")
-		writer.Write(configContent) //nolint
+		if err := render.Render(writer, request, webConfig); err != nil {
+			render.Render(writer, request, api.ErrorRender(err)) //nolint
+			return
+		}
 	})
 }

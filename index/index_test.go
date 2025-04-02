@@ -7,8 +7,8 @@ import (
 	"github.com/moira-alert/moira/metrics"
 
 	bleveOriginal "github.com/blevesearch/bleve/v2"
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	"go.uber.org/mock/gomock"
 
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -47,7 +47,7 @@ func TestGetTriggerChecksWithRetries(t *testing.T) {
 		dataBase.EXPECT().GetTriggerChecks(randomBatch).Return(nil, expectedError).Times(3)
 		actualData, actualError := index.getTriggerChecksWithRetries(randomBatch)
 		So(actualData, ShouldBeEmpty)
-		So(actualError, ShouldResemble, fmt.Errorf("cannot get trigger checks from DB after 3 tries, last error: %s", expectedError))
+		So(actualError.Error(), ShouldResemble, fmt.Sprintf("cannot get trigger checks from DB after 3 tries, last error: %v", expectedError))
 	})
 }
 

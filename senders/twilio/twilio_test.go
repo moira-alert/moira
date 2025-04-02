@@ -1,11 +1,13 @@
 package twilio
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
 	twilio_client "github.com/carlosdp/twiliogo"
+	"github.com/go-playground/validator/v10"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -16,9 +18,12 @@ func TestInit(t *testing.T) {
 		logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 		location, _ := time.LoadLocation("UTC")
 		settings := map[string]interface{}{}
+
+		validatorErr := validator.ValidationErrors{}
+
 		Convey("no api asid", func() {
 			err := sender.Init(settings, logger, nil, "15:04")
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_sid param from config", ""))
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{})
 		})
 
@@ -26,7 +31,7 @@ func TestInit(t *testing.T) {
 
 		Convey("no api authtoken", func() {
 			err := sender.Init(settings, logger, nil, "15:04")
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_authtoken param from config", ""))
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{})
 		})
 
@@ -34,7 +39,7 @@ func TestInit(t *testing.T) {
 
 		Convey("no api fromphone", func() {
 			err := sender.Init(settings, logger, nil, "15:04")
-			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_fromphone param from config", ""))
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
 			So(sender, ShouldResemble, Sender{})
 		})
 
@@ -42,12 +47,20 @@ func TestInit(t *testing.T) {
 
 		Convey("no api type", func() {
 			err := sender.Init(settings, logger, nil, "15:04")
-			So(err, ShouldResemble, fmt.Errorf("wrong twilio type: %s", ""))
+			So(errors.As(err, &validatorErr), ShouldBeTrue)
+			So(sender, ShouldResemble, Sender{})
+		})
+
+		settings["sender_type"] = "test"
+
+		Convey("with unknown api type", func() {
+			err := sender.Init(settings, logger, nil, "15:04")
+			So(err, ShouldResemble, fmt.Errorf("wrong twilio type: %s", "test"))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		Convey("config sms", func() {
-			settings["type"] = "twilio sms"
+			settings["sender_type"] = "twilio sms"
 			err := sender.Init(settings, logger, location, "15:04")
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{sender: &twilioSenderSms{
@@ -61,7 +74,7 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("config voice", func() {
-			settings["type"] = "twilio voice"
+			settings["sender_type"] = "twilio voice"
 			Convey("no voice url", func() {
 				err := sender.Init(settings, logger, location, "15:04")
 				So(err, ShouldResemble, fmt.Errorf("can not read [%s] voiceurl param from config", "twilio voice"))

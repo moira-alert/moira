@@ -2,22 +2,29 @@ package notifier
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
 )
 
-// Scheduler implements event scheduling functionality
+// Scheduler implements event scheduling functionality.
 type Scheduler interface {
-	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-		contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification
+	ScheduleNotification(params moira.SchedulerParams, logger moira.Logger) *moira.ScheduledNotification
 }
 
-// StandardScheduler represents standard event scheduling
+// SchedulerConfig is a list of immutable params for Scheduler.
+type SchedulerConfig struct {
+	ReschedulingDelay time.Duration
+}
+
+// StandardScheduler represents standard event scheduling.
 type StandardScheduler struct {
 	database moira.Database
 	metrics  *metrics.NotifierMetrics
+	config   SchedulerConfig
+	clock    moira.Clock
 }
 
 type throttlingLevel struct {
@@ -26,51 +33,63 @@ type throttlingLevel struct {
 	count    int64
 }
 
-// NewScheduler is initializer for StandardScheduler
-func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics) *StandardScheduler {
+// NewScheduler is initializer for StandardScheduler.
+func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics, config SchedulerConfig, clock moira.Clock,
+) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
 		metrics:  metrics,
+		config:   config,
+		clock:    clock,
 	}
 }
 
-// ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings
-func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification {
+// ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings.
+func (scheduler *StandardScheduler) ScheduleNotification(params moira.SchedulerParams, logger moira.Logger,
+) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
 	)
-	if sendFail > 0 {
-		next = now.Add(time.Minute)
-		throttled = throttledOld
+
+	now := scheduler.clock.NowUTC()
+	if params.SendFail > 0 {
+		next = now.Add(scheduler.config.ReschedulingDelay)
+		next, throttled = scheduler.calculateNextDelivery(next, &params.Event, logger)
 	} else {
-		if event.State == moira.StateTEST {
+		if params.Event.State == moira.StateTEST {
 			next = now
 			throttled = false
 		} else {
-			next, throttled = scheduler.calculateNextDelivery(now, &event, logger)
+			next, throttled = scheduler.calculateNextDelivery(now, &params.Event, logger)
 		}
 	}
+
 	notification := &moira.ScheduledNotification{
-		Event:     event,
-		Trigger:   trigger,
-		Contact:   contact,
+		Event:     params.Event,
+		Trigger:   params.Trigger,
+		Contact:   params.Contact,
 		Throttled: throttled,
-		SendFail:  sendFail,
+		SendFail:  params.SendFail,
 		Timestamp: next.Unix(),
-		Plotting:  plotting,
+		CreatedAt: now.Unix(),
+		Plotting:  params.Plotting,
 	}
 
 	logger.Debug().
 		String("notification_timestamp", next.Format("2006/01/02 15:04:05")).
 		Int64("notification_timestamp_unix", next.Unix()).
+		Int64("notification_created_at_unix", now.Unix()).
 		Msg("Scheduled notification")
+
 	return notification
 }
 
+const allTimeTo = "+inf"
+
 func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.NotificationEvent,
-	logger moira.Logger) (time.Time, bool) {
+	logger moira.Logger,
+) (time.Time, bool) {
 	// if trigger switches more than .count times in .length seconds, delay next delivery for .delay seconds
 	// processing stops after first condition matches
 	throttlingLevels := []throttlingLevel{
@@ -108,7 +127,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				if from.Before(beginning) {
 					from = beginning
 				}
-				count := scheduler.database.GetNotificationEventCount(event.TriggerID, from.Unix())
+				count := scheduler.database.GetNotificationEventCount(event.TriggerID, strconv.FormatInt(from.Unix(), 10), allTimeTo)
 				if count >= level.count {
 					next = now.Add(level.delay)
 					logger.Debug().
@@ -149,16 +168,25 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	if len(schedule.Days) == 0 {
 		return nextTime, nil
 	}
+
 	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
 	endOffset := time.Duration(schedule.EndOffset) * time.Minute
-	if schedule.EndOffset < schedule.StartOffset {
-		endOffset = endOffset + (time.Hour * 24)
-	}
 
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute
 	localNextTime := nextTime.Add(-tzOffset).Truncate(time.Minute)
 	localNextTimeDay := localNextTime.Truncate(24 * time.Hour) //nolint
 	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7  //nolint
+	timeOfDay := localNextTime.Sub(localNextTimeDay)
+
+	if schedule.EndOffset < schedule.StartOffset {
+		// The condition can only be fulfilled if the begin offset should be on the past day and not on the current day.
+		// In other variants end offset must be on the next day
+		if timeOfDay < beginOffset && timeOfDay < endOffset {
+			beginOffset -= time.Hour * 24
+		} else {
+			endOffset += time.Hour * 24
+		}
+	}
 
 	if schedule.Days[localNextWeekday].Enabled &&
 		(localNextTime.Equal(localNextTimeDay.Add(beginOffset)) || localNextTime.After(localNextTimeDay.Add(beginOffset))) &&
@@ -173,9 +201,11 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 		if localNextTime.After(nextLocalDayBegin.Add(beginOffset)) {
 			continue
 		}
+
 		if !schedule.Days[nextLocalWeekDay].Enabled {
 			continue
 		}
+
 		return nextLocalDayBegin.Add(beginOffset + tzOffset), nil
 	}
 

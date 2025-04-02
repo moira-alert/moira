@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -12,7 +13,13 @@ import (
 )
 
 func teams(router chi.Router) {
-	router.Get("/", getAllTeams)
+	router.With(
+		middleware.AdminOnlyMiddleware(),
+		middleware.Paginate(getAllTeamsDefaultPage, getAllTeamsDefaultSize),
+		middleware.SearchTextContext(regexp.MustCompile(getAllTeamsDefaultRegexTemplate)),
+		middleware.SortOrderContext(api.AscSortOrder),
+	).Get("/all", searchTeams)
+	router.Get("/", getAllTeamsForUser)
 	router.Post("/", createTeam)
 	router.Route("/{teamId}", func(router chi.Router) {
 		router.Use(middleware.TeamContext)
@@ -32,12 +39,13 @@ func teams(router chi.Router) {
 	})
 }
 
-// usersFilterForTeams is middleware that checks that user exists in this
+// usersFilterForTeams is middleware that checks that user exists in this.
 func usersFilterForTeams(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		userID := middleware.GetLogin(request)
+		userLogin := middleware.GetLogin(request)
 		teamID := middleware.GetTeamID(request)
-		err := controller.CheckUserPermissionsForTeam(database, teamID, userID)
+		auth := middleware.GetAuth(request)
+		err := controller.CheckUserPermissionsForTeam(database, teamID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
@@ -80,15 +88,15 @@ func createTeam(writer http.ResponseWriter, request *http.Request) {
 
 // nolint: gofmt,goimports
 //
-//	@summary	Get all teams
-//	@id			get-all-teams
+//	@summary	Get all teams for user
+//	@id			get-all-teams-for-user
 //	@tags		team
 //	@produce	json
 //	@success	200	{object}	dto.UserTeams					"Teams fetched successfully"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/teams [get]
-func getAllTeams(writer http.ResponseWriter, request *http.Request) {
+func getAllTeamsForUser(writer http.ResponseWriter, request *http.Request) {
 	user := middleware.GetLogin(request)
 	response, err := controller.GetUserTeams(database, user)
 	if err != nil {
@@ -119,6 +127,40 @@ func getTeam(writer http.ResponseWriter, request *http.Request) {
 	teamID := middleware.GetTeamID(request)
 
 	response, err := controller.GetTeam(database, teamID)
+	if err != nil {
+		render.Render(writer, request, err) //nolint:errcheck
+		return
+	}
+
+	if err := render.Render(writer, request, response); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint:errcheck
+		return
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get all Moira teams
+//	@id			get-all-teams
+//	@tags		team
+//	@produce	json
+//	@param		size		query		int								false	"Number of items to be displayed on one page. if size = -1 then all teams returned"				default(-1)
+//	@param		p			query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"					default(0)
+//	@param		searchText	query		string							false	"Regular expression which will be applied to team id or team name than filtering teams"			default(.*)
+//	@param		sort		query		string							false	"String to set sort order (by name). On empty - no order, asc - ascending, desc - descending"	default(asc)
+//	@success	200			{object}	dto.TeamsList					"Teams fetched successfully"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	422			{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/teams/all [get]
+func searchTeams(writer http.ResponseWriter, request *http.Request) {
+	page := middleware.GetPage(request)
+	size := middleware.GetSize(request)
+	textRegex := middleware.GetSearchText(request)
+	sort := middleware.GetSortOrder(request)
+
+	response, err := controller.SearchTeams(database, page, size, textRegex, sort)
 	if err != nil {
 		render.Render(writer, request, err) //nolint:errcheck
 		return
@@ -251,7 +293,7 @@ func setTeamUsers(writer http.ResponseWriter, request *http.Request) {
 	teamID := middleware.GetTeamID(request)
 
 	response, apiErr := controller.SetTeamUsers(database, teamID, members.Usernames)
-	if err != nil {
+	if apiErr != nil {
 		render.Render(writer, request, apiErr) // nolint:errcheck
 		return
 	}
@@ -288,7 +330,7 @@ func addTeamUsers(writer http.ResponseWriter, request *http.Request) {
 	teamID := middleware.GetTeamID(request)
 
 	response, apiErr := controller.AddTeamUsers(database, teamID, members.Usernames)
-	if err != nil {
+	if apiErr != nil {
 		render.Render(writer, request, apiErr) // nolint:errcheck
 		return
 	}

@@ -15,8 +15,14 @@ import (
 )
 
 func contact(router chi.Router) {
-	router.Get("/", getAllContacts)
+	router.With(middleware.AdminOnlyMiddleware()).Get("/", getAllContacts)
 	router.Put("/", createNewContact)
+	router.With(
+		middleware.AdminOnlyMiddleware(),
+		middleware.Paginate(getContactNoisinessDefaultPage, getContactNoisinessDefaultSize),
+		middleware.DateRange(getContactNoisinessDefaultFrom, getContactNoisinessDefaultTo),
+		middleware.SortOrderContext(api.DescSortOrder),
+	).Get("/noisiness", getContactNoisiness)
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
@@ -98,9 +104,19 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
-	userLogin := middleware.GetLogin(request)
 
-	if err := controller.CreateContact(database, contact, userLogin, contact.TeamID); err != nil {
+	userLogin := middleware.GetLogin(request)
+	auth := middleware.GetAuth(request)
+	contactsTemplate := middleware.GetContactsTemplate(request)
+
+	if err := controller.CreateContact(
+		database,
+		auth,
+		contactsTemplate,
+		contact,
+		userLogin,
+		contact.TeamID,
+	); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
@@ -111,12 +127,13 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// contactFilter is middleware for check contact existence and user permissions
+// contactFilter is middleware for check contact existence and user permissions.
 func contactFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetContactID(request)
 		userLogin := middleware.GetLogin(request)
-		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
+		auth := middleware.GetAuth(request)
+		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
@@ -148,13 +165,24 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
+
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 
-	contactDTO, err := controller.UpdateContact(database, contactDTO, contactData)
+	auth := middleware.GetAuth(request)
+	contactsTemplate := middleware.GetContactsTemplate(request)
+
+	contactDTO, err := controller.UpdateContact(
+		database,
+		auth,
+		contactsTemplate,
+		contactDTO,
+		contactData,
+	)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, &contactDTO); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
@@ -200,5 +228,47 @@ func sendTestContactNotification(writer http.ResponseWriter, request *http.Reque
 	err := controller.SendTestContactNotification(database, contactID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get contacts noisiness
+//	@id			get-contacts-noisiness
+//	@tags		contact
+//	@produce	json
+//	@param		size	query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
+//	@param		p		query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
+//	@param		from	query		string							false	"Start time of the time range"																			default(-3hours)
+//	@param		to		query		string							false	"End time of the time range"																			default(now)
+//	@param		sort	query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
+//	@success	200		{object}	dto.ContactNoisinessList		"Get noisiness for contacts in range"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router		/contact/noisiness [get]
+func getContactNoisiness(writer http.ResponseWriter, request *http.Request) {
+	size := middleware.GetSize(request)
+	page := middleware.GetPage(request)
+	fromStr := middleware.GetFromStr(request)
+	toStr := middleware.GetToStr(request)
+	sort := middleware.GetSortOrder(request)
+
+	validator := DateRangeValidator{AllowInf: true}
+	fromStr, toStr, err := validator.ValidateDateRangeStrings(fromStr, toStr)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	contactNoisinessList, errRsp := controller.GetContactNoisiness(database, page, size, fromStr, toStr, sort)
+	if errRsp != nil {
+		render.Render(writer, request, errRsp) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, contactNoisinessList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
 	}
 }

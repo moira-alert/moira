@@ -4,14 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/metrics"
-
 	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
-	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestNotifierState(t *testing.T) {
@@ -20,7 +18,7 @@ func TestNotifierState(t *testing.T) {
 		check := createNotifierStateTest(t)
 
 		Convey("Test get notifier delay", func() {
-			check.db.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -29,7 +27,7 @@ func TestNotifierState(t *testing.T) {
 		})
 
 		Convey("Test get notification", func() {
-			check.db.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil).Times(2)
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil).Times(2)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -47,7 +45,7 @@ func TestNotifierState(t *testing.T) {
 func createNotifierStateTest(t *testing.T) *notifier {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
-	metric := metrics.ConfigureHeartBeatMetrics(metrics.NewDummyRegistry())
+	checkTags := []string{}
 
-	return GetNotifier(logger, mock_moira_alert.NewMockDatabase(mockCtrl), metric).(*notifier)
+	return GetNotifier(checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*notifier)
 }

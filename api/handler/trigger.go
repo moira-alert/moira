@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -40,7 +41,7 @@ func trigger(router chi.Router) {
 //	@param		validate	query		bool									false	"For validating targets"
 //	@param		body		body		dto.Trigger								true	"Trigger data"
 //	@success	200			{object}	dto.SaveTriggerResponse					"Updated trigger"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	400			{object}	interface{}								"Bad request from client. Could be api.ErrorInvalidRequestExample or dto.SaveTriggerResponse"
 //	@failure	404			{object}	api.ErrorNotFoundExample				"Resource not found"
 //	@failure	422			{object}	api.ErrorRenderExample					"Render error"
 //	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
@@ -58,7 +59,6 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	var problems []dto.TreeOfProblems
 	if needValidate(request) {
 		problems, err = validateTargets(request, trigger)
-
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
@@ -95,9 +95,12 @@ func needValidate(request *http.Request) bool {
 // validateTargets checks targets of trigger.
 // Returns tree of problems if there is any invalid child, else returns nil.
 func validateTargets(request *http.Request, trigger *dto.Trigger) ([]dto.TreeOfProblems, *api.ErrorResponse) {
-	ttl := getMetricTTLByTrigger(request, trigger)
-	treesOfProblems, err := dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
+	ttl, err := getMetricTTLByTrigger(request, trigger)
+	if err != nil {
+		return nil, api.ErrorInvalidRequest(err)
+	}
 
+	treesOfProblems, err := dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
 	if err != nil {
 		return nil, api.ErrorInvalidRequest(err)
 	}
@@ -161,7 +164,7 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if err := checkingTemplateFilling(request, *trigger); err != nil {
+	if err := fillTemplate(request, trigger); err != nil {
 		middleware.GetLoggerEntry(request).Warning().
 			Error(err.Err).
 			Msg("Failed to check template")
@@ -172,19 +175,32 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func checkingTemplateFilling(request *http.Request, trigger dto.Trigger) *api.ErrorResponse {
+func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorResponse {
 	if !middleware.GetPopulated(request) {
 		return nil
 	}
 
-	eventsList, err := controller.GetTriggerEvents(database, trigger.ID, 0, 3)
-	if err != nil {
-		return err
+	const (
+		page = 0
+		size = 3
+	)
+
+	var (
+		allMetricRegexp = regexp.MustCompile(allMetricsPattern)
+		allStates       map[string]struct{}
+	)
+
+	eventsList, errResponse := controller.GetTriggerEvents(database, trigger.ID, page, size, eventDefaultFrom, eventDefaultTo, allMetricRegexp, allStates)
+	if errResponse != nil {
+		return errResponse
 	}
 
-	if err := trigger.PopulatedDescription(eventsList.List); err != nil {
+	newDescription, err := trigger.PopulatedDescription(eventsList.List)
+	if err != nil {
 		return api.ErrorRender(err)
 	}
+
+	trigger.Desc = newDescription
 
 	return nil
 }

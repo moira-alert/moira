@@ -20,10 +20,10 @@ const (
 	cacheValueExpirationDuration = time.Minute
 )
 
-// DBSource is type for describing who create database instance
+// DBSource is type for describing who create database instance.
 type DBSource string
 
-// All types of database users
+// All types of database users.
 const (
 	API        DBSource = "API"
 	Checker    DBSource = "Checker"
@@ -33,7 +33,7 @@ const (
 	testSource DBSource = "test"
 )
 
-// DbConnector contains redis client
+// DbConnector contains redis client.
 type DbConnector struct {
 	client               *redis.UniversalClient
 	logger               moira.Logger
@@ -46,20 +46,36 @@ type DbConnector struct {
 	source               DBSource
 	clock                moira.Clock
 	notificationHistory  NotificationHistoryConfig
+	// Notifier configuration in redis
+	notification NotificationConfig
 }
 
-func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, source DBSource) *DbConnector {
+func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
+		Addrs: config.Addrs,
+
 		MasterName:       config.MasterName,
-		Addrs:            config.Addrs,
-		Username:         config.Username,
-		Password:         config.Password,
 		SentinelPassword: config.SentinelPassword,
 		SentinelUsername: config.SentinelUsername,
-		DialTimeout:      config.DialTimeout,
-		ReadTimeout:      config.ReadTimeout,
-		WriteTimeout:     config.WriteTimeout,
-		MaxRetries:       config.MaxRetries,
+
+		Username: config.Username,
+		Password: config.Password,
+
+		DialTimeout:  config.DialTimeout,
+		ReadTimeout:  config.ReadTimeout,
+		WriteTimeout: config.WriteTimeout,
+
+		MaxRedirects:    config.MaxRedirects,
+		MaxRetries:      config.MaxRetries,
+		MinRetryBackoff: config.MinRetryBackoff,
+		MaxRetryBackoff: config.MaxRetryBackoff,
+
+		PoolTimeout: config.PoolTimeout,
+		PoolSize:    config.PoolSize,
+
+		ReadOnly:       config.ReadOnly,
+		RouteByLatency: config.RouteByLatency,
+		RouteRandomly:  config.RouteRandomly,
 	})
 
 	ctx := context.Background()
@@ -78,33 +94,52 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		source:               source,
 		clock:                clock.NewSystemClock(),
 		notificationHistory:  nh,
+		notification:         n,
 	}
+
 	return &connector
 }
 
-// NewTestDatabase use it only for tests
+// NewTestDatabase use it only for tests.
 func NewTestDatabase(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, DatabaseConfig{
-		Addrs: []string{"0.0.0.0:6379"},
-	},
+	return NewDatabase(
+		logger, DatabaseConfig{
+			Addrs:      []string{"0.0.0.0:6379"},
+			MetricsTTL: time.Hour,
+		},
 		NotificationHistoryConfig{
-			NotificationHistoryTTL:        time.Hour * 48,
-			NotificationHistoryQueryLimit: 1000,
-		}, testSource)
+			NotificationHistoryTTL: time.Hour * 48,
+		},
+		NotificationConfig{
+			DelayedTime:               time.Minute,
+			TransactionTimeout:        100 * time.Millisecond,
+			TransactionMaxRetries:     10,
+			TransactionHeuristicLimit: 10000,
+			ResaveTime:                30 * time.Second,
+		},
+		testSource,
+	)
 }
 
-// NewTestDatabaseWithIncorrectConfig use it only for tests
+// NewTestDatabaseWithIncorrectConfig use it only for tests.
 func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger,
 		DatabaseConfig{Addrs: []string{"0.0.0.0:0000"}},
 		NotificationHistoryConfig{
-			NotificationHistoryTTL:        time.Hour * 48,
-			NotificationHistoryQueryLimit: 1000,
+			NotificationHistoryTTL: time.Hour * 48,
+		},
+		NotificationConfig{
+			DelayedTime:               time.Minute,
+			TransactionTimeout:        100 * time.Millisecond,
+			TransactionMaxRetries:     10,
+			TransactionHeuristicLimit: 10000,
+			ResaveTime:                30 * time.Second,
 		},
 		testSource)
 }
 
-// Flush deletes all the keys of the DB, use it only for tests
+// Flush deletes all the keys of the DB, use it only for tests.
+// nolint:unused
 func (connector *DbConnector) Flush() {
 	err := connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
 		return client.FlushDB(connector.context).Err()
@@ -114,12 +149,14 @@ func (connector *DbConnector) Flush() {
 	}
 }
 
-// Get key ttl, use it only for tests
+// Get key ttl, use it only for tests.
+// nolint:unused
 func (connector *DbConnector) getTTL(key string) time.Duration {
 	return (*connector.client).PTTL(connector.context, key).Val()
 }
 
-// Delete the key, use it only for tests
+// Delete the key, use it only for tests.
+// nolint:unused
 func (connector *DbConnector) delete(key string) {
 	(*connector.client).Del(connector.context, key)
 }

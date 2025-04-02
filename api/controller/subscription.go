@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -13,7 +15,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// GetUserSubscriptions get all user subscriptions
+// GetUserSubscriptions get all user subscriptions.
 func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.SubscriptionList, *api.ErrorResponse) {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
@@ -34,8 +36,8 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 	return subscriptionsList, nil
 }
 
-// CreateSubscription create or update subscription
-func CreateSubscription(dataBase moira.Database, userLogin, teamID string, subscription *dto.Subscription) *api.ErrorResponse {
+// CreateSubscription create or update subscription.
+func CreateSubscription(dataBase moira.Database, auth *api.Authorization, userLogin, teamID string, systemTags []string, subscription *dto.Subscription) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {
 		return api.ErrorInternalServer(fmt.Errorf("CreateSubscription: cannot create subscription when both userLogin and teamID specified"))
 	}
@@ -55,29 +57,69 @@ func CreateSubscription(dataBase moira.Database, userLogin, teamID string, subsc
 		}
 	}
 
-	subscription.User = userLogin
-	subscription.TeamID = teamID
-	data := moira.SubscriptionData(*subscription)
-	if err := dataBase.SaveSubscription(&data); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	return nil
-}
-
-// UpdateSubscription updates existing subscription
-func UpdateSubscription(dataBase moira.Database, subscriptionID string, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
-	subscription.ID = subscriptionID
-	if subscription.TeamID == "" {
+	// Only admins are allowed to create subscriptions for other users
+	if !auth.IsAdmin(userLogin) || subscription.User == "" {
 		subscription.User = userLogin
 	}
+	subscription.TeamID = teamID
 	data := moira.SubscriptionData(*subscription)
+
+	if len(data.Tags) > 0 {
+		areTagsOfSameKind := areAllTagsOfSameKind(data.Tags, systemTags)
+		if !areTagsOfSameKind {
+			return api.ErrorInvalidRequest(fmt.Errorf("subscription tags should be only user-defined or only system"))
+		}
+	}
+
 	if err := dataBase.SaveSubscription(&data); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }
 
-// RemoveSubscription deletes subscription
+func areAllTagsOfSameKind(tags []string, systemTags []string) bool {
+	if len(tags) < 2 || len(systemTags) == 0 {
+		return true
+	}
+
+	pivot := slices.Contains(systemTags, tags[0])
+
+	for _, tag := range tags {
+		if slices.Contains(systemTags, tag) != pivot {
+			return false
+		}
+	}
+	return true
+}
+
+// GetSubscription returns subscription by it's id.
+func GetSubscription(dataBase moira.Database, subscriptionID string) (*dto.Subscription, *api.ErrorResponse) {
+	subscription, err := dataBase.GetSubscription(subscriptionID)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+	dto := dto.Subscription(subscription)
+	return &dto, nil
+}
+
+// UpdateSubscription updates existing subscription.
+func UpdateSubscription(dataBase moira.Database, subscriptionID string, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
+	subscription.ID = subscriptionID
+	if subscription.TeamID == "" && subscription.User == "" {
+		subscription.User = userLogin
+	}
+
+	data := moira.SubscriptionData(*subscription)
+
+	if err := dataBase.SaveSubscription(&data); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+
+	return nil
+}
+
+// RemoveSubscription deletes subscription.
 func RemoveSubscription(database moira.Database, subscriptionID string) *api.ErrorResponse {
 	if err := database.RemoveSubscription(subscriptionID); err != nil {
 		return api.ErrorInternalServer(err)
@@ -85,7 +127,7 @@ func RemoveSubscription(database moira.Database, subscriptionID string) *api.Err
 	return nil
 }
 
-// SendTestNotification push test notification to verify the correct notification settings
+// SendTestNotification push test notification to verify the correct notification settings.
 func SendTestNotification(database moira.Database, subscriptionID string) *api.ErrorResponse {
 	eventData := &moira.NotificationEvent{
 		SubscriptionID: &subscriptionID,
@@ -103,33 +145,46 @@ func SendTestNotification(database moira.Database, subscriptionID string) *api.E
 	return nil
 }
 
-// CheckUserPermissionsForSubscription checks subscription for existence and permissions for given user
-func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID string, userLogin string) (moira.SubscriptionData, *api.ErrorResponse) {
+// CheckUserPermissionsForSubscription checks subscription for existence and permissions for given user.
+func CheckUserPermissionsForSubscription(
+	dataBase moira.Database,
+	subscriptionID string,
+	userLogin string,
+	auth *api.Authorization,
+) (moira.SubscriptionData, *api.ErrorResponse) {
 	subscription, err := dataBase.GetSubscription(subscriptionID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return moira.SubscriptionData{}, api.ErrorNotFound(fmt.Sprintf("subscription with ID '%s' does not exists", subscriptionID))
 		}
 		return moira.SubscriptionData{}, api.ErrorInternalServer(err)
 	}
+
+	if auth.IsAdmin(userLogin) {
+		return subscription, nil
+	}
+
 	if subscription.TeamID != "" {
 		teamContainsUser, err := dataBase.IsTeamContainUser(subscription.TeamID, userLogin)
 		if err != nil {
 			return moira.SubscriptionData{}, api.ErrorInternalServer(err)
 		}
+
 		if teamContainsUser {
 			return subscription, nil
 		}
 	}
+
 	if subscription.User == userLogin {
 		return subscription, nil
 	}
+
 	return moira.SubscriptionData{}, api.ErrorForbidden("you are not permitted")
 }
 
 func isSubscriptionExists(dataBase moira.Database, subscriptionID string) (bool, error) {
 	_, err := dataBase.GetSubscription(subscriptionID)
-	if err == database.ErrNil {
+	if errors.Is(err, database.ErrNil) {
 		return false, nil
 	}
 	if err != nil {

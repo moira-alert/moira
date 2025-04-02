@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,42 +12,46 @@ import (
 	"github.com/moira-alert/moira/support"
 )
 
-const maxTriggerLockAttempts = 10
+const maxTriggerLockAttempts = 30
 
-// UpdateTrigger update trigger data and trigger metrics in last state
+// UpdateTrigger update trigger data and trigger metrics in last state.
 func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
-	_, err := dataBase.GetTrigger(triggerID)
+	existedTrigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", triggerID))
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
-	return saveTrigger(dataBase, trigger.ToMoiraTrigger(), triggerID, timeSeriesNames)
+	return saveTrigger(dataBase, &existedTrigger, trigger.ToMoiraTrigger(), triggerID, timeSeriesNames)
 }
 
-// saveTrigger create or update trigger data and update trigger metrics in last state
-func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+// saveTrigger create or update trigger data and update trigger metrics in last state.
+func saveTrigger(dataBase moira.Database, oldTrigger, newTrigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if err := dataBase.AcquireTriggerCheckLock(triggerID, maxTriggerLockAttempts); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 	defer dataBase.DeleteTriggerCheckLock(triggerID) //nolint
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
-	if err != nil && err != database.ErrNil {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if err != database.ErrNil {
-		for metric := range lastCheck.Metrics {
-			if _, ok := timeSeriesNames[metric]; !ok {
-				lastCheck.RemoveMetricState(metric)
+	if !errors.Is(err, database.ErrNil) {
+		// sometimes we have no time series names but have important information in LastCheck.Metrics (for example maintenance)
+		// so on empty timeSeries we will modify LastCheck only if metric evaluation rules changed (targets, expression, etc.)
+		if len(timeSeriesNames) != 0 || metricEvaluationRulesChanged(oldTrigger, newTrigger) {
+			for metric := range lastCheck.Metrics {
+				if _, ok := timeSeriesNames[metric]; !ok {
+					lastCheck.RemoveMetricState(metric)
+				}
 			}
+			lastCheck.RemoveMetricsToTargetRelation()
 		}
-		lastCheck.RemoveMetricsToTargetRelation()
 	} else {
 		triggerState := moira.StateNODATA
-		if trigger.TTLState != nil {
-			triggerState = trigger.TTLState.ToTriggerState()
+		if newTrigger.TTLState != nil {
+			triggerState = newTrigger.TTLState.ToTriggerState()
 		}
 		lastCheck = moira.CheckData{
 			Metrics: make(map[string]moira.MetricState),
@@ -55,11 +60,11 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 		lastCheck.UpdateScore()
 	}
 
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, newTrigger.ClusterKey()); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if err = dataBase.SaveTrigger(triggerID, trigger); err != nil {
+	if err = dataBase.SaveTrigger(triggerID, newTrigger); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
@@ -70,11 +75,63 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 	return &resp, nil
 }
 
-// GetTrigger gets trigger with his throttling - next allowed message time
+func metricEvaluationRulesChanged(oldTrigger, newTrigger *moira.Trigger) bool {
+	if oldTrigger == nil {
+		return true
+	}
+
+	if len(oldTrigger.Targets) != len(newTrigger.Targets) {
+		return true
+	}
+
+	for i := range oldTrigger.Targets {
+		if oldTrigger.Targets[i] != newTrigger.Targets[i] {
+			return true
+		}
+	}
+
+	if oldTrigger.TriggerType != newTrigger.TriggerType {
+		return true
+	}
+
+	if !moira.EqualTwoPointerValues(oldTrigger.WarnValue, newTrigger.WarnValue) {
+		return true
+	}
+
+	if !moira.EqualTwoPointerValues(oldTrigger.ErrorValue, newTrigger.ErrorValue) {
+		return true
+	}
+
+	if !moira.EqualTwoPointerValues(oldTrigger.TTLState, newTrigger.TTLState) {
+		return true
+	}
+
+	if !moira.EqualTwoPointerValues(oldTrigger.Expression, newTrigger.Expression) {
+		return true
+	}
+
+	if oldTrigger.ClusterKey().String() != newTrigger.ClusterKey().String() {
+		return true
+	}
+
+	if len(oldTrigger.AloneMetrics) != len(newTrigger.AloneMetrics) {
+		return true
+	}
+
+	for targetID := range oldTrigger.AloneMetrics {
+		if _, ok := newTrigger.AloneMetrics[targetID]; !ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+// GetTrigger gets trigger with his throttling - next allowed message time.
 func GetTrigger(dataBase moira.Database, triggerID string) (*dto.Trigger, *api.ErrorResponse) {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		if err == database.ErrNil {
+		if errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorNotFound("trigger not found")
 		}
 		return nil, api.ErrorInternalServer(err)
@@ -94,7 +151,7 @@ func GetTrigger(dataBase moira.Database, triggerID string) (*dto.Trigger, *api.E
 	return &triggerResponse, nil
 }
 
-// RemoveTrigger deletes trigger by given triggerID
+// RemoveTrigger deletes trigger by given triggerID.
 func RemoveTrigger(database moira.Database, triggerID string) *api.ErrorResponse {
 	if err := database.RemoveTrigger(triggerID); err != nil {
 		return api.ErrorInternalServer(err)
@@ -102,7 +159,7 @@ func RemoveTrigger(database moira.Database, triggerID string) *api.ErrorResponse
 	return nil
 }
 
-// GetTriggerThrottling gets trigger throttling timestamp
+// GetTriggerThrottling gets trigger throttling timestamp.
 func GetTriggerThrottling(database moira.Database, triggerID string) (*dto.ThrottlingResponse, *api.ErrorResponse) {
 	throttling, _ := database.GetTriggerThrottling(triggerID)
 	throttlingUnix := throttling.Unix()
@@ -112,33 +169,21 @@ func GetTriggerThrottling(database moira.Database, triggerID string) (*dto.Throt
 	return &dto.ThrottlingResponse{Throttling: throttlingUnix}, nil
 }
 
-// Need to not show the user metrics that should have been deleted due to ttlState = Del,
-// but remained in the database because their Maintenance did not expire
-func getAliveMetrics(metrics map[string]moira.MetricState) map[string]moira.MetricState {
-	aliveMetrics := make(map[string]moira.MetricState, len(metrics))
-	for metricName, metricState := range metrics {
-		if !metricState.DeletedButKept {
-			aliveMetrics[metricName] = metricState
-		}
-	}
-	return aliveMetrics
-}
-
-// GetTriggerLastCheck gets trigger last check data
+// GetTriggerLastCheck gets trigger last check data.
 func GetTriggerLastCheck(dataBase moira.Database, triggerID string) (*dto.TriggerCheck, *api.ErrorResponse) {
 	lastCheck := &moira.CheckData{}
 	var err error
 
 	*lastCheck, err = dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil {
-		if err != database.ErrNil {
+		if !errors.Is(err, database.ErrNil) {
 			return nil, api.ErrorInternalServer(err)
 		}
 		lastCheck = nil
 	}
 
-	if lastCheck != nil && len(lastCheck.Metrics) != 0 {
-		lastCheck.Metrics = getAliveMetrics(lastCheck.Metrics)
+	if lastCheck != nil {
+		lastCheck.RemoveDeadMetrics()
 	}
 
 	triggerCheck := dto.TriggerCheck{
@@ -149,7 +194,7 @@ func GetTriggerLastCheck(dataBase moira.Database, triggerID string) (*dto.Trigge
 	return &triggerCheck, nil
 }
 
-// DeleteTriggerThrottling deletes trigger throttling
+// DeleteTriggerThrottling deletes trigger throttling.
 func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.ErrorResponse {
 	if err := database.DeleteTriggerThrottling(triggerID); err != nil {
 		return api.ErrorInternalServer(err)
@@ -172,7 +217,7 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 	return nil
 }
 
-// SetTriggerMaintenance sets maintenance to metrics and whole trigger
+// SetTriggerMaintenance sets maintenance to metrics and whole trigger.
 func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMaintenance dto.TriggerMaintenance, userLogin string, timeCallMaintenance int64) *api.ErrorResponse {
 	if err := database.AcquireTriggerCheckLock(triggerID, maxTriggerLockAttempts); err != nil {
 		return api.ErrorInternalServer(err)
@@ -184,7 +229,7 @@ func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMai
 	return nil
 }
 
-// GetTriggerDump returns raw trigger from database
+// GetTriggerDump returns raw trigger from database.
 func GetTriggerDump(database moira.Database, logger moira.Logger, triggerID string) (*dto.TriggerDump, *api.ErrorResponse) {
 	trigger, err := support.HandlePullTrigger(logger, database, triggerID)
 	if err != nil {

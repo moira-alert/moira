@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 )
 
-// GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs
+// GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs.
 func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*dto.TagsStatistics, *api.ErrorResponse) {
 	tagsNames, err := database.GetTagNames()
 	if err != nil {
@@ -59,30 +59,41 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 	return &tagsStatistics, nil
 }
 
-// GetAllTags gets all tag names
+// GetAllTags gets all tag names.
 func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
-	tagsNames, err := getTagNamesSorted(database)
+	tags, err := database.GetTagNames()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
+	tags = sortTagNames(tags)
 	tagsData := &dto.TagsData{
-		TagNames: tagsNames,
+		TagNames: tags,
 	}
 
 	return tagsData, nil
 }
 
-func getTagNamesSorted(database moira.Database) ([]string, error) {
-	tagsNames, err := database.GetTagNames()
-	if err != nil {
-		return nil, err
-	}
+func sortTagNames(tagsNames []string) []string {
 	sort.SliceStable(tagsNames, func(i, j int) bool { return strings.ToLower(tagsNames[i]) < strings.ToLower(tagsNames[j]) })
-	return tagsNames, nil
+
+	return tagsNames
 }
 
-// RemoveTag deletes tag by name
+// CreateTags create tags with tag names.
+func CreateTags(database moira.Database, tags *dto.TagsData, systemTags []string) *api.ErrorResponse {
+	if len(moira.Intersect(tags.TagNames, systemTags)) > 0 {
+		return api.ErrorInvalidRequest(fmt.Errorf("tags should not be contained in system tags list"))
+	}
+
+	if err := database.CreateTags(tags.TagNames); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+
+	return nil
+}
+
+// RemoveTag deletes tag by name.
 func RemoveTag(database moira.Database, tagName string) (*dto.MessageResponse, *api.ErrorResponse) {
 	triggerIDs, err := database.GetTagTriggerIDs(tagName)
 	if err != nil {

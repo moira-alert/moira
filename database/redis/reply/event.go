@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -25,13 +26,13 @@ type notificationEventStorageElement struct {
 }
 
 func toNotificationEventStorageElement(event moira.NotificationEvent) notificationEventStorageElement {
-	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	if event.Value == nil {
 		if value, ok := event.Values[firstTarget]; ok {
 			event.Value = &value
 		}
 	}
-	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	return notificationEventStorageElement{
 		IsTriggerEvent:   event.IsTriggerEvent,
 		Timestamp:        event.Timestamp,
@@ -49,7 +50,7 @@ func toNotificationEventStorageElement(event moira.NotificationEvent) notificati
 }
 
 func (e notificationEventStorageElement) toNotificationEvent() moira.NotificationEvent {
-	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	if e.Values == nil {
 		e.Values = make(map[string]float64)
 	}
@@ -57,7 +58,7 @@ func (e notificationEventStorageElement) toNotificationEvent() moira.Notificatio
 		e.Values[firstTarget] = *e.Value
 		e.Value = nil
 	}
-	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	return moira.NotificationEvent{
 		IsTriggerEvent:   e.IsTriggerEvent,
 		Timestamp:        e.Timestamp,
@@ -86,7 +87,7 @@ func GetEventBytes(event moira.NotificationEvent) ([]byte, error) {
 
 func unmarshalEvent(data string, err error) (moira.NotificationEvent, error) {
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return moira.NotificationEvent{}, database.ErrNil
 		}
 		return moira.NotificationEvent{}, fmt.Errorf("failed to read event: %s", err.Error())
@@ -101,19 +102,18 @@ func unmarshalEvent(data string, err error) (moira.NotificationEvent, error) {
 	return eventSE.toNotificationEvent(), nil
 }
 
-// BRPopToEvent converts redis DB reply to moira.NotificationEvent object
+// BRPopToEvent converts redis DB reply to moira.NotificationEvent object.
 func BRPopToEvent(response *redis.StringSliceCmd) (moira.NotificationEvent, error) {
 	data, err := response.Result()
 
 	return unmarshalEvent(data[1], err)
 }
 
-// Events converts redis DB reply to moira.NotificationEvent objects array
+// Events converts redis DB reply to moira.NotificationEvent objects array.
 func Events(response *redis.StringSliceCmd) ([]*moira.NotificationEvent, error) {
 	values, err := response.Result()
-
 	if err != nil {
-		if err == redis.Nil {
+		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
 		return nil, fmt.Errorf("failed to read events: %s", err.Error())
@@ -122,9 +122,10 @@ func Events(response *redis.StringSliceCmd) ([]*moira.NotificationEvent, error) 
 	events := make([]*moira.NotificationEvent, len(values))
 	for i, value := range values {
 		event, err2 := unmarshalEvent(value, err)
-		if err2 != nil && err2 != database.ErrNil {
+		if err2 != nil && !errors.Is(err2, database.ErrNil) {
 			return nil, err2
-		} else if err2 == database.ErrNil {
+		}
+		if errors.Is(err2, database.ErrNil) {
 			events[i] = nil
 		} else {
 			events[i] = &event

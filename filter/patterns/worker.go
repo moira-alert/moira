@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-// RefreshPatternWorker realization
+// RefreshPatternWorker realization.
 type RefreshPatternWorker struct {
 	database       moira.Database
 	logger         moira.Logger
@@ -20,7 +20,7 @@ type RefreshPatternWorker struct {
 	period         time.Duration
 }
 
-// NewRefreshPatternWorker creates new RefreshPatternWorker
+// NewRefreshPatternWorker creates new RefreshPatternWorker.
 func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger, patternStorage *filter.PatternStorage, period time.Duration) *RefreshPatternWorker {
 	return &RefreshPatternWorker{
 		database:       database,
@@ -31,7 +31,7 @@ func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMet
 	}
 }
 
-// Start process to refresh pattern tree every second
+// Start process to refresh pattern tree every second.
 func (worker *RefreshPatternWorker) Start() error {
 	err := worker.patternStorage.Refresh()
 	if err != nil {
@@ -64,7 +64,7 @@ func (worker *RefreshPatternWorker) Start() error {
 	return nil
 }
 
-// Stop stops update pattern tree
+// Stop stops update pattern tree.
 func (worker *RefreshPatternWorker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()

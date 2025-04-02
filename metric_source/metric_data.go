@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-// MetricData is moira implementation of target evaluation result
+// MetricData is moira implementation of target evaluation result.
 type MetricData struct {
 	Name      string
 	StartTime int64
@@ -15,7 +15,7 @@ type MetricData struct {
 	Wildcard  bool
 }
 
-// MakeMetricData creates new metrics data with given metric timeseries
+// MakeMetricData creates new metrics data with given metric timeseries.
 func MakeMetricData(name string, values []float64, step, start int64) *MetricData {
 	stop := start + int64(len(values))*step
 	return &MetricData{
@@ -27,7 +27,7 @@ func MakeMetricData(name string, values []float64, step, start int64) *MetricDat
 	}
 }
 
-// MakeEmptyMetricData create MetricData with given interval and retention step with all empty metric points
+// MakeEmptyMetricData create MetricData with given interval and retention step with all empty metric points.
 func MakeEmptyMetricData(name string, step, start, stop int64) *MetricData {
 	values := make([]float64, 0)
 	for i := start; i < stop; i += step {
@@ -42,7 +42,7 @@ func MakeEmptyMetricData(name string, step, start, stop int64) *MetricData {
 	}
 }
 
-// GetTimestampValue gets value of given timestamp index, if value is Nil, then return NaN
+// GetTimestampValue gets value of given timestamp index, if value is Nil, then return NaN.
 func (metricData *MetricData) GetTimestampValue(valueTimestamp int64) float64 {
 	if valueTimestamp < metricData.StartTime {
 		return math.NaN()
@@ -53,6 +53,7 @@ func (metricData *MetricData) GetTimestampValue(valueTimestamp int64) float64 {
 	if len(metricData.Values) <= valueIndex {
 		return math.NaN()
 	}
+
 	return metricData.Values[valueIndex]
 }
 

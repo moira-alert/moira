@@ -2,36 +2,51 @@ package pushover
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	pushover_client "github.com/gregdel/pushover"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestSender_Init(t *testing.T) {
+func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
+	validatorErr := validator.ValidationErrors{}
+
 	Convey("Empty map", t, func() {
 		sender := Sender{}
-		err := sender.Init(map[string]interface{}{}, logger, nil, "")
-		So(err, ShouldResemble, fmt.Errorf("can not read pushover api_token from config"))
+		senderSettings := map[string]interface{}{}
+
+		err := sender.Init(senderSettings, logger, nil, "")
+		So(errors.As(err, &validatorErr), ShouldBeTrue)
 		So(sender, ShouldResemble, Sender{})
 	})
 
 	Convey("Settings has api_token", t, func() {
 		sender := Sender{}
-		err := sender.Init(map[string]interface{}{"api_token": "123"}, logger, nil, "")
+		senderSettings := map[string]interface{}{
+			"api_token": "123",
+		}
+
+		err := sender.Init(senderSettings, logger, nil, "")
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), logger: logger})
 	})
 
 	Convey("Settings has all data", t, func() {
 		sender := Sender{}
+		senderSettings := map[string]interface{}{
+			"api_token": "123",
+			"front_uri": "321",
+		}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(map[string]interface{}{"api_token": "123", "front_uri": "321"}, logger, location, "")
+
+		err := sender.Init(senderSettings, logger, location, "")
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), frontURI: "321", logger: logger, location: location})
 	})
@@ -149,7 +164,7 @@ func TestBuildTitle(t *testing.T) {
 	Convey("Build title that exceeds the title limit", t, func() {
 		var reallyLongTag string
 		for i := 0; i < 30; i++ {
-			reallyLongTag = reallyLongTag + "randomstring"
+			reallyLongTag += "randomstring"
 		}
 
 		Convey("without throttling", func() {
@@ -174,13 +189,14 @@ func TestMakePushoverMessage(t *testing.T) {
 		logger:   logger,
 	}
 	Convey("Just build PushoverMessage", t, func() {
-		event := []moira.NotificationEvent{{
-			Values:    map[string]float64{"t1": 123},
-			Timestamp: 150000000,
-			Metric:    "Metric",
-			OldState:  moira.StateOK,
-			State:     moira.StateERROR,
-		},
+		event := []moira.NotificationEvent{
+			{
+				Values:    map[string]float64{"t1": 123},
+				Timestamp: 150000000,
+				Metric:    "Metric",
+				OldState:  moira.StateOK,
+				State:     moira.StateERROR,
+			},
 		}
 		trigger := moira.TriggerData{
 			ID:   "SomeID",

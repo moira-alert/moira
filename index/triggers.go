@@ -6,17 +6,15 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var (
-	fakeTriggerToIndex = &moira.TriggerCheck{
-		Trigger: moira.Trigger{
-			ID:   "This.Is.Fake.Trigger.ID.It.Should.Not.Exist.In.Real.Life",
-			Name: "Fake trigger to index",
-		},
-		LastCheck: moira.CheckData{
-			Score: 0,
-		},
-	}
-)
+var fakeTriggerToIndex = &moira.TriggerCheck{
+	Trigger: moira.Trigger{
+		ID:   "This.Is.Fake.Trigger.ID.It.Should.Not.Exist.In.Real.Life",
+		Name: "Fake trigger to index",
+	},
+	LastCheck: moira.CheckData{
+		Score: 0,
+	},
+}
 
 func (index *Index) fillIndex() error {
 	index.logger.Debug().Msg("Start filling index with triggers")

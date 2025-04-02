@@ -19,7 +19,7 @@ jobs:
         ports:
           - 6379:6379
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v4
         with:
@@ -27,6 +27,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run tests
-        run: make test
+        run: make ci-test
+
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)

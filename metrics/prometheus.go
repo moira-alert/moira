@@ -27,34 +27,34 @@ func NewPrometheusRegistryAdapter(registry *prometheus.Registry, service string)
 }
 
 func (source *PrometheusRegistryAdapter) NewTimer(path ...string) Timer {
-	var histogramOpts = prometheus.HistogramOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
-	var histogram = prometheus.NewHistogram(histogramOpts)
+	histogramOpts := prometheus.HistogramOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
+	histogram := prometheus.NewHistogram(histogramOpts)
 	source.registry.MustRegister(histogram)
 	return &prometheusTimer{histogram: histogram}
 }
 
 func (source *PrometheusRegistryAdapter) NewMeter(path ...string) Meter {
-	var summaryOpts = prometheus.SummaryOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
-	var summary = prometheus.NewSummary(summaryOpts)
+	summaryOpts := prometheus.SummaryOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
+	summary := prometheus.NewSummary(summaryOpts)
 	source.registry.MustRegister(summary)
 	return &prometheusMeter{summary: summary}
 }
 
 func (source *PrometheusRegistryAdapter) NewCounter(path ...string) Counter {
-	var counterOpts = prometheus.CounterOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
-	var counter = prometheus.NewCounter(counterOpts)
+	counterOpts := prometheus.CounterOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
+	counter := prometheus.NewCounter(counterOpts)
 	source.registry.MustRegister(counter)
 	return &prometheusCounter{counter: counter}
 }
 
 func (source *PrometheusRegistryAdapter) NewHistogram(path ...string) Histogram {
-	var histogramOpts = prometheus.HistogramOpts{
+	histogramOpts := prometheus.HistogramOpts{
 		Namespace: namespace,
 		Subsystem: source.service,
 		Name:      getPrometheusMetricName(path),
 		Buckets:   []float64{0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 20, 100, 200, 300, 500, 1000},
 	}
-	var histogram = prometheus.NewHistogram(histogramOpts)
+	histogram := prometheus.NewHistogram(histogramOpts)
 	source.registry.MustRegister(histogram)
 	return &prometheusHistogram{histogram: histogram}
 }
