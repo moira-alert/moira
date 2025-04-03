@@ -50,6 +50,7 @@ func runBenchmark(b *testing.B, triggersSize int, batchSize int) {
 
 	for n := 0; n < b.N; n++ {
 		newIndex, _ := CreateTriggerIndex(triggerMapping)
+
 		logger.Info().
 			Int("batch_size", batchSize).
 			Int("triggers_count", triggersSize).
@@ -87,6 +88,7 @@ func generateTriggerChecks(number int) []*moira.TriggerCheck {
 			},
 		}
 	}
+
 	return triggersPointers
 }
 
@@ -94,6 +96,7 @@ func chunkTriggerChecks(original []*moira.TriggerCheck, chunkSize int) (divided 
 	if chunkSize < 1 {
 		return
 	}
+
 	for i := 0; i < len(original); i += chunkSize {
 		end := i + chunkSize
 
@@ -103,6 +106,7 @@ func chunkTriggerChecks(original []*moira.TriggerCheck, chunkSize int) (divided 
 
 		divided = append(divided, original[i:end])
 	}
+
 	return
 }
 
@@ -111,6 +115,7 @@ func randStringBytes(n int) string {
 	for i := range b {
 		b[i] = charBytes[rand.Intn(len(charBytes))]
 	}
+
 	return string(b)
 }
 

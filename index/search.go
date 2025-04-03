@@ -16,6 +16,7 @@ func (index *Index) SearchTriggers(options moira.SearchOptions) (searchResults [
 	if !index.checkIfIndexIsReady() {
 		return make([]*moira.SearchResult, 0), 0, fmt.Errorf("index is not ready, please try later")
 	}
+
 	return index.triggerIndex.Search(options)
 }
 
@@ -23,6 +24,7 @@ func (index *Index) checkIfIndexIsReady() bool {
 	if index.IsReady() {
 		return true
 	}
+
 	timeout := time.After(indexWaitTimeout)
 	ticker := time.NewTicker(time.Second * 1)
 

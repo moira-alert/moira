@@ -29,12 +29,15 @@ func (index *Index) runIndexActualizer() error {
 					String("max_interval_without_actualization", sweeperTimeToKeep.String()).
 					Msg("Index was actualized too far ago. Restart moira-API service to solve this issue")
 			}
+
 			if err := index.actualizeIndex(); err != nil {
 				index.logger.Warning().
 					Error(err).
 					Msg("Cannot actualize triggers")
+
 				continue
 			}
+
 			index.indexActualizedTS = newTime
 		}
 	}
@@ -59,6 +62,7 @@ func (index *Index) actualizeIndex() error {
 	if err != nil {
 		return err
 	}
+
 	triggersToUpdate := make([]*moira.TriggerCheck, 0)
 	triggersToDelete := make([]string, 0)
 
@@ -66,11 +70,14 @@ func (index *Index) actualizeIndex() error {
 		trigger := triggersToReindex[i]
 
 		triggerLog := log.Clone().String(moira.LogFieldNameTriggerID, triggerID)
+
 		if trigger == nil {
 			triggersToDelete = append(triggersToDelete, triggerID)
+
 			triggerLog.Debug().Msg("Trigger is nil, remove from index")
 		} else {
 			triggersToUpdate = append(triggersToUpdate, trigger)
+
 			triggerLog.Debug().Msg("Trigger need to be reindexed...")
 		}
 	}
@@ -80,6 +87,7 @@ func (index *Index) actualizeIndex() error {
 		if err2 != nil {
 			return err2
 		}
+
 		log.Debug().
 			Int("triggers_count", len(triggersToDelete)).
 			Msg("Some triggers deleted")
@@ -90,9 +98,11 @@ func (index *Index) actualizeIndex() error {
 		if err2 != nil {
 			return err2
 		}
+
 		log.Debug().
 			Int("triggers_count", len(triggersToUpdate)).
 			Msg("Some triggers reindexed")
 	}
+
 	return nil
 }

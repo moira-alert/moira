@@ -25,14 +25,17 @@ func (it *fixtureIndexedTrigger) GetHighLights(searchString string) []moira.Sear
 	if nameHighlights, ok := it.triggerName.highlights[searchString]; ok {
 		highlights = append(highlights, nameHighlights...)
 	}
+
 	if descHighlights, ok := it.triggerDesc.highlights[searchString]; ok {
 		highlights = append(highlights, descHighlights...)
 	}
+
 	return highlights
 }
 
 func (its *fixtureIndexedTriggers) ToTriggerChecks() []*moira.TriggerCheck {
 	triggerChecks := make([]*moira.TriggerCheck, 0)
+
 	for _, indexedTrigger := range its.list {
 		triggerCheck := moira.TriggerCheck{
 			Trigger: moira.Trigger{
@@ -49,11 +52,13 @@ func (its *fixtureIndexedTriggers) ToTriggerChecks() []*moira.TriggerCheck {
 		*triggerCheck.Trigger.Desc = indexedTrigger.triggerDesc.content
 		triggerChecks = append(triggerChecks, &triggerCheck)
 	}
+
 	return triggerChecks
 }
 
 func (its *fixtureIndexedTriggers) ToSearchResults(searchString string) []*moira.SearchResult {
 	searchResults := make([]*moira.SearchResult, 0)
+
 	for _, indexedTrigger := range its.list {
 		searchResult := moira.SearchResult{
 			ObjectID:   indexedTrigger.triggerID,
@@ -61,6 +66,7 @@ func (its *fixtureIndexedTriggers) ToSearchResults(searchString string) []*moira
 		}
 		searchResults = append(searchResults, &searchResult)
 	}
+
 	return searchResults
 }
 
@@ -69,6 +75,7 @@ func (its *fixtureIndexedTriggers) ToTriggerIDs() []string {
 	for _, indexedTrigger := range its.list {
 		triggerIDs = append(triggerIDs, indexedTrigger.triggerID)
 	}
+
 	return triggerIDs
 }
 
