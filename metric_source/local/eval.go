@@ -115,6 +115,7 @@ func (eval *evaluator) evalRewritten(
 		}
 
 		var targetValues map[parser.MetricRequest][]*types.MetricData
+
 		targetValues, err = eval.Fetch(ctx, []parser.Expr{exp}, from, until, values)
 		if err != nil {
 			return nil, err
@@ -151,6 +152,7 @@ func (eval *evaluator) parse(target string) (parser.Expr, error) {
 			target:        target,
 		}
 	}
+
 	return parsedExpr, nil
 }
 
@@ -200,6 +202,7 @@ func (ctx *fetchCtx) getMetricsData(database moira.Database, metricRequests []pa
 		ctx.fetchedMetrics.metricsMap[request] = metricsData
 		ctx.fetchedMetrics.metrics = append(ctx.fetchedMetrics.metrics, metricNames.metrics...)
 	}
+
 	return nil
 }
 
@@ -207,6 +210,7 @@ func (ctx *fetchCtx) scaleToCommonStep() {
 	retention := ctx.fetchedMetrics.calculateCommonStep()
 
 	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
+
 	for metricRequest, metricData := range ctx.fetchedMetrics.metricsMap {
 		metricRequest.From += ctx.from
 		metricRequest.Until += ctx.until
@@ -236,10 +240,12 @@ type fetchedMetrics struct {
 
 func (m *fetchedMetrics) calculateCommonStep() int64 {
 	commonStep := int64(1)
+
 	for _, metricsData := range m.metricsMap {
 		for _, metricData := range metricsData {
 			commonStep = helper.LCM(commonStep, metricData.StepTime)
 		}
 	}
+
 	return commonStep
 }

@@ -110,6 +110,7 @@ func TestExponentialBackoffFactory(t *testing.T) {
 			Convey("MaxRetriesCount performed retries before MaxElapsedTime passed", func() {
 				conf.MaxElapsedTime = time.Second
 				conf.MaxRetriesCount = 6
+
 				defer func() {
 					conf.MaxElapsedTime = 0
 					conf.MaxRetriesCount = 0
@@ -139,6 +140,7 @@ func TestExponentialBackoffFactory(t *testing.T) {
 			Convey("MaxElapsedTime passed before MaxRetriesCount performed", func() {
 				conf.MaxElapsedTime = time.Second
 				conf.MaxRetriesCount = 6
+
 				defer func() {
 					conf.MaxElapsedTime = 0
 					conf.MaxRetriesCount = 0

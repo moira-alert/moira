@@ -14,13 +14,17 @@ import (
 
 func TestPrepareRequest(t *testing.T) {
 	var from int64 = 300
+
 	var until int64 = 500
+
 	target := "foo.bar"
+
 	Convey("Given valid params", t, func() {
 		remote := Remote{config: &Config{
 			URL: "http://test/",
 		}}
 		req, err := remote.prepareRequest(from, until, target)
+
 		Convey("url should be encoded correctly without error", func() {
 			So(err, ShouldBeNil)
 			So(req.URL.String(), ShouldEqual, "http://test/?format=json&from=300&target=foo.bar&until=500")
@@ -37,8 +41,10 @@ func TestPrepareRequest(t *testing.T) {
 			Password: "bar",
 		}}
 		req, err := remote.prepareRequest(from, until, target)
+
 		Convey("auth header should be set without error", func() {
 			u, p, ok := req.BasicAuth()
+
 			So(err, ShouldBeNil)
 			So(ok, ShouldBeTrue)
 			So(u, ShouldEqual, remote.config.User)
@@ -49,7 +55,9 @@ func TestPrepareRequest(t *testing.T) {
 
 func Test_requestToRemoteGraphite_DoRetryableOperation(t *testing.T) {
 	var from int64 = 300
+
 	var until int64 = 500
+
 	target := "foo.bar"
 	body := []byte("Some string")
 
@@ -142,7 +150,9 @@ func Test_requestToRemoteGraphite_DoRetryableOperation(t *testing.T) {
 
 func TestMakeRequestWithRetries(t *testing.T) {
 	var from int64 = 300
+
 	var until int64 = 500
+
 	target := "foo.bar"
 	body := []byte("Some string")
 
@@ -320,6 +330,7 @@ func createServer(body []byte, statusCode int) *httptest.Server {
 
 func createTestServer(testResponses ...TestResponse) *httptest.Server {
 	responseWriter := NewTestResponseWriter(testResponses)
+
 	return httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		response := responseWriter.GetResponse()
 		rw.WriteHeader(response.statusCode)
@@ -341,11 +352,13 @@ func NewTestResponseWriter(testResponses []TestResponse) *TestResponseWriter {
 	responseWriter := new(TestResponseWriter)
 	responseWriter.responses = testResponses
 	responseWriter.count = 0
+
 	return responseWriter
 }
 
 func (responseWriter *TestResponseWriter) GetResponse() TestResponse {
 	response := responseWriter.responses[responseWriter.count%len(responseWriter.responses)]
 	responseWriter.count++
+
 	return response
 }

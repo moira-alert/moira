@@ -42,6 +42,7 @@ func startStopFromValues(values []model.SamplePair, from, until int64) (int64, i
 		start = values[0].Timestamp.Unix()
 		stop = values[len(values)-1].Timestamp.Unix()
 	}
+
 	return start, stop
 }
 
@@ -77,9 +78,11 @@ func targetFromTags(tags model.Metric) string {
 		if tag.key == "__name__" {
 			continue
 		}
+
 		if target.Len() != 0 {
 			target.WriteRune(';')
 		}
+
 		target.WriteString(tag.key)
 		target.WriteRune('=')
 		target.WriteString(tag.value)
