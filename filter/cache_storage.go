@@ -108,6 +108,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 		}
 
 		patternString := strings.TrimSpace(after)
+
 		pattern, err := regexp.Compile(patternString)
 		if err != nil {
 			return fmt.Errorf("failed to compile regexp pattern '%s': %w", patternString, err)
@@ -128,6 +129,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 		}
 
 		retentions := strings.TrimSpace(splitted[1])
+
 		retention, err := rawRetentionToSeconds(retentions[0:strings.Index(retentions, ":")])
 		if err != nil {
 			return fmt.Errorf("failed to convert raw retentions '%s' to seconds: %w", retentions, err)
