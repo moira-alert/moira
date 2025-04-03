@@ -31,6 +31,7 @@ func NewMatcher(logger moira.Logger, metrics *metrics.FilterMetrics, patternsSto
 // Start spawns pattern matcher workers.
 func (m *Matcher) Start(matchersCount int, lineChan <-chan []byte) chan *moira.MatchedMetric {
 	matchedMetricsChan := make(chan *moira.MatchedMetric, 16384) //nolint
+
 	m.logger.Info().
 		Int("matchers_count", matchersCount).
 		Msg("Start pattern matcher workers")
@@ -40,6 +41,7 @@ func (m *Matcher) Start(matchersCount int, lineChan <-chan []byte) chan *moira.M
 			return m.worker(lineChan, matchedMetricsChan)
 		})
 	}
+
 	go func() {
 		<-m.tomb.Dying()
 		m.logger.Info().Msg("Stopping pattern matcher...")
@@ -48,6 +50,7 @@ func (m *Matcher) Start(matchersCount int, lineChan <-chan []byte) chan *moira.M
 	}()
 
 	m.tomb.Go(func() error { return m.checkNewMetricsChannelLen(matchedMetricsChan) })
+
 	return matchedMetricsChan
 }
 
@@ -57,11 +60,13 @@ func (m *Matcher) worker(metricsChan <-chan []byte, matchedMetricsChan chan<- *m
 			matchedMetricsChan <- metric
 		}
 	}
+
 	return nil
 }
 
 func (m *Matcher) checkNewMetricsChannelLen(channel <-chan *moira.MatchedMetric) error {
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
+
 	for {
 		select {
 		case <-m.tomb.Dying():
