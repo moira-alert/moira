@@ -19,16 +19,19 @@ func GetNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]b
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal notification event: %w", err)
 	}
+
 	return bytes, nil
 }
 
 // GetNotificationStruct unmarshals moira.NotificationEventHistoryItem from json represented by string.
 func GetNotificationStruct(notificationString string) (moira.NotificationEventHistoryItem, error) {
 	var object moira.NotificationEventHistoryItem
+
 	err := json.Unmarshal([]byte(notificationString), &object)
 	if err != nil {
 		return object, fmt.Errorf("failed to umarshal event: %w", err)
 	}
+
 	return object, nil
 }
 
@@ -62,6 +65,7 @@ func (connector *DbConnector) GetNotificationsHistoryByContactID(contactID strin
 		if err != nil {
 			return notifications, err
 		}
+
 		notifications = append(notifications, &notificationObj)
 	}
 
@@ -151,6 +155,7 @@ func (connector *DbConnector) CleanUpOutdatedNotificationHistory(ttl int64) erro
 					Error(err).
 					Msg("failed to remove outdated")
 			}
+
 			totalDelCount += count
 		}
 
@@ -177,6 +182,7 @@ func (connector *DbConnector) CountEventsInNotificationHistory(contactIDs []stri
 	}
 
 	eventsCount := make([]*moira.ContactIDWithNotificationCount, 0, len(cmds))
+
 	for i, cmd := range cmds {
 		count, err := cmd.(*redis.IntCmd).Uint64()
 		if err != nil && !errors.Is(err, redis.Nil) {

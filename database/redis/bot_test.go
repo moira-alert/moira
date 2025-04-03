@@ -13,6 +13,7 @@ func TestBotDataStoring(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Messengers manipulation", t, func() {
@@ -62,6 +63,7 @@ func TestBotDataStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetChatByUsername(messenger1, user1)

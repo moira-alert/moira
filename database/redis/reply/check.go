@@ -63,12 +63,15 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 		if metricState.Values == nil {
 			metricState.Values = make(map[string]float64)
 		}
+
 		if metricState.Value != nil {
 			metricState.Values[firstTarget] = *metricState.Value
 			metricState.Value = nil
 		}
+
 		d.Metrics[metricName] = metricState
 	}
+
 	if d.MetricsToTargetRelation == nil {
 		d.MetricsToTargetRelation = make(map[string]string)
 	}
@@ -102,6 +105,7 @@ func Check(rep *redis.StringCmd) (moira.CheckData, error) {
 	}
 
 	checkSE := checkDataStorageElement{}
+
 	err = json.Unmarshal(bytes, &checkSE)
 	if err != nil {
 		return moira.CheckData{}, fmt.Errorf("failed to parse lastCheck json %s: %s", string(bytes), err.Error())
@@ -121,6 +125,7 @@ func Checks(replies []*redis.StringCmd) ([]*moira.CheckData, error) {
 				if !errors.Is(err, database.ErrNil) {
 					return nil, err
 				}
+
 				continue
 			}
 
@@ -134,9 +139,11 @@ func Checks(replies []*redis.StringCmd) ([]*moira.CheckData, error) {
 // GetCheckBytes is a function that takes moira.CheckData and turns it to bytes that will be saved in redis.
 func GetCheckBytes(check moira.CheckData) ([]byte, error) {
 	checkSE := toCheckDataStorageElement(check)
+
 	bytes, err := json.Marshal(checkSE)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal check data: %s", err.Error())
 	}
+
 	return bytes, nil
 }

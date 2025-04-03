@@ -70,6 +70,7 @@ func TestCheckingContactsCount(t *testing.T) {
 	test3Meter := mock_metrics.NewMockMeter(mockCtrl)
 
 	var test1ContactCount, test2ContactCount, test3ContactCount int64
+
 	var test1ContactType, test2ContactType, test3ContactType string
 	test1ContactCount, test1ContactType = 3, "test1"
 	test2ContactCount, test2ContactType = 2, "test2"

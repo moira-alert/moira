@@ -15,6 +15,7 @@ func TestTriggersToReindex(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Test on empty DB", t, func() {
@@ -39,6 +40,7 @@ func TestTriggersToReindex(t *testing.T) {
 
 		// current time ≈ startTime + 1
 		time.Sleep(time.Second)
+
 		err = addTriggersToReindex(dataBase, triggerID1)
 		So(err, ShouldBeNil)
 
@@ -54,6 +56,7 @@ func TestTriggersToReindex(t *testing.T) {
 
 		// current time ≈ startTime + 3
 		time.Sleep(time.Second)
+
 		err = addTriggersToReindex(dataBase, triggerID2, triggerID3)
 		So(err, ShouldBeNil)
 
@@ -86,6 +89,7 @@ func TestTriggersToReindex(t *testing.T) {
 		// and again
 		// current time ≈ startTime + 4
 		time.Sleep(time.Second)
+
 		err = addTriggersToReindex(dataBase, triggerID1, triggerID1)
 		So(err, ShouldBeNil)
 
@@ -122,6 +126,7 @@ func TestTriggerToReindexConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Should throw error when no connection", t, func() {

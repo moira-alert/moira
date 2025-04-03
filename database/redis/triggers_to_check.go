@@ -14,6 +14,7 @@ func (connector *DbConnector) AddTriggersToCheck(clusterKey moira.ClusterKey, tr
 	if err != nil {
 		return err
 	}
+
 	return connector.addTriggersToCheck(key, triggerIDs)
 }
 
@@ -22,6 +23,7 @@ func (connector *DbConnector) GetTriggersToCheck(clusterKey moira.ClusterKey, co
 	if err != nil {
 		return nil, err
 	}
+
 	return connector.getTriggersToCheck(key, count)
 }
 
@@ -30,6 +32,7 @@ func (connector *DbConnector) GetTriggersToCheckCount(clusterKey moira.ClusterKe
 	if err != nil {
 		return 0, err
 	}
+
 	return connector.getTriggersToCheckCount(key)
 }
 
@@ -87,6 +90,7 @@ func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string
 	if err != nil {
 		return fmt.Errorf("failed to add triggers to check: %s", err.Error())
 	}
+
 	return nil
 }
 
@@ -99,8 +103,10 @@ func (connector *DbConnector) getTriggersToCheck(key string, count int) ([]strin
 		if errors.Is(err, redis.Nil) {
 			return make([]string, 0), database.ErrNil
 		}
+
 		return make([]string, 0), fmt.Errorf("failed to pop trigger to check: %s", err.Error())
 	}
+
 	return triggerIDs, err
 }
 
@@ -113,8 +119,10 @@ func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error)
 		if errors.Is(err, redis.Nil) {
 			return 0, nil
 		}
+
 		return 0, fmt.Errorf("failed to get trigger to check count: %s", err.Error())
 	}
+
 	return triggersToCheckCount, nil
 }
 

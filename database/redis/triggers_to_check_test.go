@@ -13,6 +13,7 @@ func TestTriggerToCheck(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Trigger to check get and add", t, func() {
 		triggerID1 := uuid.Must(uuid.NewV4()).String()
@@ -106,6 +107,7 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Trigger to check get and add", t, func() {
 		triggerID1 := uuid.Must(uuid.NewV4()).String()
@@ -198,6 +200,7 @@ func TestRemoteTriggerToCheckConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.AddRemoteTriggersToCheck([]string{"123"})
@@ -213,6 +216,7 @@ func TestTriggerToCheckConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.AddLocalTriggersToCheck([]string{"123"})
@@ -226,11 +230,13 @@ func TestTriggerToCheckConnection(t *testing.T) {
 
 func removeValue(triggerArr []string, triggerID string) []string {
 	index := 0
+
 	for i, trigger := range triggerArr {
 		if trigger == triggerID {
 			index = i
 			break
 		}
 	}
+
 	return append(triggerArr[:index], triggerArr[index+1:]...)
 }

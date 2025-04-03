@@ -126,10 +126,12 @@ func (connector *DbConnector) GetTeam(teamID string) (moira.Team, error) {
 	c := *connector.client
 
 	response := c.HGet(connector.context, teamsKey, teamID)
+
 	team, err := reply.NewTeam(response)
 	if err != nil {
 		return moira.Team{}, err
 	}
+
 	team.ID = teamID
 
 	return team, nil
@@ -156,10 +158,12 @@ func (connector *DbConnector) SaveTeamsAndUsers(teamID string, users []string, t
 	c := *connector.client
 
 	pipe := c.TxPipeline()
+
 	err := pipe.Del(connector.context, teamUsersKey(teamID)).Err()
 	if err != nil {
 		return fmt.Errorf("cannot clear users set for team: %s, %w", teamID, err)
 	}
+
 	for _, userID := range users {
 		err = pipe.SAdd(connector.context, teamUsersKey(teamID), userID).Err()
 		if err != nil {
@@ -172,6 +176,7 @@ func (connector *DbConnector) SaveTeamsAndUsers(teamID string, users []string, t
 		if err != nil {
 			return fmt.Errorf("cannot clear teams set for user: %s, %w", userID, err)
 		}
+
 		for _, teamID := range userTeams {
 			err = pipe.SAdd(connector.context, userTeamsKey(userID), teamID).Err()
 			if err != nil {
@@ -195,6 +200,7 @@ func (connector *DbConnector) GetUserTeams(userID string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve user teams: %w", err)
 	}
+
 	return teams, nil
 }
 
@@ -206,6 +212,7 @@ func (connector *DbConnector) GetTeamUsers(teamID string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve user teams: %w", err)
 	}
+
 	return teams, nil
 }
 
@@ -217,6 +224,7 @@ func (connector *DbConnector) IsTeamContainUser(teamID, userID string) (bool, er
 	if err != nil {
 		return false, fmt.Errorf("failed to check if team contains user: %w", err)
 	}
+
 	return result, nil
 }
 

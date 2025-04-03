@@ -51,6 +51,7 @@ func (stats *contactStats) checkContactsCount() {
 		stats.logger.Warning().
 			Error(err).
 			Msg("Failed to get all contacts")
+
 		return
 	}
 

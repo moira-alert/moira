@@ -31,6 +31,7 @@ func toSearchResultStorageElement(searchResult moira.SearchResult) searchResultS
 			Value: highlight.Value,
 		})
 	}
+
 	return result
 }
 
@@ -51,49 +52,61 @@ func toSearchResult(storageElement searchResultStorageElement) moira.SearchResul
 			Value: highlight.Value,
 		})
 	}
+
 	return result
 }
 
 // unmarshalSearchResult is a function that converts redis reply to unmarshalSearchResult.
 func unmarshalSearchResult(bytes []byte, err error) (moira.SearchResult, error) {
 	var searchResult moira.SearchResult
+
 	storageElement := searchResultStorageElement{}
 
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return searchResult, database.ErrNil
 		}
+
 		return searchResult, fmt.Errorf("failed to read searchResult: %w", err)
 	}
+
 	err = json.Unmarshal(bytes, &storageElement)
 	if err != nil {
 		return searchResult, fmt.Errorf("failed to parse searchResult json %s: %w", string(bytes), err)
 	}
+
 	searchResult = toSearchResult(storageElement)
+
 	return searchResult, nil
 }
 
 // SearchResults is a function that converts redis reply to slice of SearchResults.
 func SearchResults(rep *redis.StringSliceCmd, repTotal *redis.IntCmd) ([]*moira.SearchResult, int64, error) {
 	total := repTotal.Val()
+
 	values, err := rep.Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return make([]*moira.SearchResult, 0), 0, nil
 		}
+
 		return nil, 0, fmt.Errorf("failed to read SearchResults: %w", err)
 	}
+
 	searchResults := make([]*moira.SearchResult, len(values))
+
 	for i, value := range values {
 		searchResult, err2 := unmarshalSearchResult([]byte(value), err)
 		if err2 != nil && !errors.Is(err2, database.ErrNil) {
 			return nil, 0, err2
 		}
+
 		if errors.Is(err2, database.ErrNil) {
 			searchResults[i] = nil
 		} else {
 			searchResults[i] = &searchResult
 		}
 	}
+
 	return searchResults, total, nil
 }

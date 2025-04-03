@@ -69,7 +69,9 @@ var eventsShouldBeInDb = []*moira.NotificationEventHistoryItem{
 func TestGetNotificationsHistoryByContactID(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
+
 	var defaultPage int64 = 0
+
 	var defaultSize int64 = 100
 
 	Convey("Notification history items manipulation", t, func() {
@@ -321,6 +323,7 @@ func TestCleanUpOutdatedNotificationHistory(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Test clean up notification history", t, func() {
@@ -363,11 +366,13 @@ func storeNotificationHistoryItems(connector *DbConnector, notificationEvents []
 	client := connector.Client()
 
 	pipe := client.TxPipeline()
+
 	for _, notification := range notificationEvents {
 		notificationBytes, err := GetNotificationBytes(notification)
 		if err != nil {
 			return err
 		}
+
 		pipe.ZAdd(
 			connector.context,
 			contactNotificationKeyWithID(notification.ContactID),
@@ -378,6 +383,7 @@ func storeNotificationHistoryItems(connector *DbConnector, notificationEvents []
 	}
 
 	_, err := pipe.Exec(connector.context)
+
 	return err
 }
 
@@ -386,6 +392,7 @@ func toEventsMap(events []*moira.NotificationEventHistoryItem) map[string][]*moi
 	for _, event := range events {
 		m[event.ContactID] = append(m[event.ContactID], event)
 	}
+
 	return m
 }
 
@@ -394,6 +401,7 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 		logger, _ := logging.GetLogger("dataBase")
 		dataBase := NewTestDatabase(logger)
 		dataBase.Flush()
+
 		defer dataBase.Flush()
 
 		baseTimeStamp := time.Now().Unix()
@@ -412,6 +420,7 @@ func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 		}
 
 		notificationHistoryItems := make([]*moira.NotificationEventHistoryItem, 0, len(contactIDs)*len(timestampRanges))
+
 		for _, contactID := range contactIDs {
 			for _, timestamp := range timestampRanges {
 				notificationHistoryItems = append(notificationHistoryItems,

@@ -17,6 +17,7 @@ func (connector *DbConnector) GetChatByUsername(messenger, username string) (str
 	}
 
 	c := *connector.client
+
 	result, err := c.Get(connector.context, usernameKey(messenger, username)).Result()
 	if errors.Is(err, redis.Nil) {
 		return result, database.ErrNil
@@ -29,16 +30,19 @@ func (connector *DbConnector) GetChatByUsername(messenger, username string) (str
 func (connector *DbConnector) SetUsernameChat(messenger, username, chatRaw string) error {
 	c := *connector.client
 	err := c.Set(connector.context, usernameKey(messenger, username), chatRaw, redis.KeepTTL).Err()
+
 	return err
 }
 
 // RemoveUser removes username from messenger data.
 func (connector *DbConnector) RemoveUser(messenger, username string) error {
 	c := *connector.client
+
 	err := c.Del(connector.context, usernameKey(messenger, username)).Err()
 	if err != nil {
 		return fmt.Errorf("failed to delete username '%s' from messenger '%s', error: %s", username, messenger, err.Error())
 	}
+
 	return nil
 }
 
