@@ -28,12 +28,14 @@ func ReadImageStoreConfig(senderSettings interface{}, imageStores map[string]moi
 
 	imageStore, ok := imageStores[imageStoreID]
 	imageStoreConfigured := false
+
 	if ok && imageStore.IsEnabled() {
 		imageStoreConfigured = true
 	} else {
 		logger.Warning().
 			String("image_store_id", imageStoreID).
 			Msg("Image store specified has not been configured")
+
 		return "", nil, false
 	}
 

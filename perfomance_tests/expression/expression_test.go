@@ -9,6 +9,7 @@ import (
 func BenchmarkDefault1Expr(b *testing.B) {
 	warnValue := 60.0
 	errorValue := 90.0
+
 	expr := &expression.TriggerExpression{
 		MainTargetValue: 10.0,
 		WarnValue:       &warnValue,
@@ -22,6 +23,7 @@ func BenchmarkDefault1Expr(b *testing.B) {
 func BenchmarkDefault2Expr(b *testing.B) {
 	warnValue := 90.0
 	errorValue := 60.0
+
 	expr := &expression.TriggerExpression{
 		MainTargetValue: 10.0,
 		WarnValue:       &warnValue,
@@ -34,6 +36,7 @@ func BenchmarkDefault2Expr(b *testing.B) {
 
 func BenchmarkCustomExpr(b *testing.B) {
 	expressionStr := "t1 > 10 && t2 > 3 ? ERROR : OK"
+
 	expr := &expression.TriggerExpression{
 		Expression:              &expressionStr,
 		MainTargetValue:         11.0,

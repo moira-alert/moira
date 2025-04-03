@@ -82,7 +82,7 @@ linters:
         path: notifier/registrator.go
       - linters:
           - wsl
-        path-except: 'api/*/*'
+        path-except: 'api|clock|cmd|docs|expression|image_store|templating|support/*/*'
     paths:
       - third_party$
       - builtin$
