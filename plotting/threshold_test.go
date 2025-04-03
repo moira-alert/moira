@@ -53,16 +53,16 @@ type thresholdTestCase struct {
 
 func (testCase *thresholdTestCase) getCaseMessage() string {
 	caseMessage := bytes.NewBuffer([]byte("Trying to generate thresholds for "))
-	caseMessage.WriteString(fmt.Sprintf("%s trigger:\n", testCase.triggerType))
-	caseMessage.WriteString(fmt.Sprintf("lowest limit: %f, highest limit: %f\n",
-		testCase.limits.lowest, testCase.limits.highest))
+	fmt.Fprintf(caseMessage, "%s trigger:\n", testCase.triggerType)
+	fmt.Fprintf(caseMessage, "lowest limit: %f, highest limit: %f\n",
+		testCase.limits.lowest, testCase.limits.highest)
 
 	if testCase.warnValue != nil {
-		caseMessage.WriteString(fmt.Sprintf("WARN value: %f ", testCase.warnValue))
+		fmt.Fprintf(caseMessage, "WARN value: %f ", testCase.warnValue)
 	}
 
 	if testCase.errorValue != nil {
-		caseMessage.WriteString(fmt.Sprintf("ERROR value: %f", testCase.errorValue))
+		fmt.Fprintf(caseMessage, "ERROR value: %f", testCase.errorValue)
 	}
 
 	if testCase.warnValue != nil || testCase.errorValue != nil {

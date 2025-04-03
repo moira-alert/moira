@@ -227,7 +227,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 			}
 		}
 
-		return api.ErrorInvalidRequest(fmt.Errorf(errBuffer.String()))
+		return api.ErrorInvalidRequest(errors.New(errBuffer.String()))
 	}
 
 	if err := database.RemoveContact(contactID); err != nil {

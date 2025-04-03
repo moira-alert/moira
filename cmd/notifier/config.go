@@ -236,7 +236,7 @@ func checkDateTimeFormat(format string) error {
 	fallbackTime := time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
 	parsedTime, err := time.Parse(format, time.Now().Format(format))
 
-	if err != nil || parsedTime == fallbackTime {
+	if err != nil || parsedTime.Equal(fallbackTime) {
 		return fmt.Errorf("could not parse date time format '%v', result: '%v', error: '%w'", format, parsedTime, err)
 	}
 

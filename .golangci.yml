@@ -40,7 +40,7 @@ linters:
     - sloglint
     - spancheck
     - sqlclosecheck
-#    - staticcheck
+    - staticcheck
     - testifylint
     - tparallel
     - unconvert

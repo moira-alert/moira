@@ -16,8 +16,8 @@ import (
 const defaultRetention = 60
 
 var (
-	invalidRetentionsFormatErr = errors.New("Invalid retentions format, it is correct to write in the format 'retentions = timePerPoint:timeToStore, timePerPoint:timeToStore, ...'")
-	invalidPatternFormatErr    = errors.New("Invalid pattern format, it is correct to write in the format 'pattern = regex'")
+	errInvalidRetentionsFormat = errors.New("invalid retentions format, it is correct to write in the format 'retentions = timePerPoint:timeToStore, timePerPoint:timeToStore, ...'")
+	errInvalidPatternFormat    = errors.New("invalid pattern format, it is correct to write in the format 'pattern = regex'")
 )
 
 type retentionMatcher struct {
@@ -100,7 +100,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 		_, after, found := strings.Cut(patternLine, "=")
 		if !found {
 			storage.logger.Error().
-				Error(invalidPatternFormatErr).
+				Error(errInvalidPatternFormat).
 				String("pattern_line", patternLine).
 				Msg("Invalid pattern format")
 
@@ -120,7 +120,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 
 		if len(splitted) < 2 { //nolint
 			storage.logger.Error().
-				Error(invalidRetentionsFormatErr).
+				Error(errInvalidRetentionsFormat).
 				String("pattern_line", patternLine).
 				String("retentions_line", retentionsLine).
 				Msg("Invalid retentions format")

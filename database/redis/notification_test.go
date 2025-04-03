@@ -615,7 +615,7 @@ func TestFilterNotificationsByState(t *testing.T) {
 		})
 
 		Convey("With trigger on maintenance", func() {
-			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
+			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 
 			defer func() {
@@ -764,7 +764,7 @@ func TestHandleNotifications(t *testing.T) {
 		})
 
 		Convey("With both delayed and not delayed valid notifications and trigger on maintenance", func() {
-			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
+			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 
 			defer func() {
@@ -1109,7 +1109,7 @@ func TestFetchNotificationsDo(t *testing.T) {
 		})
 
 		Convey("Test delayed notifications with ts and trigger on maintenance", func() {
-			var triggerMaintenance int64 = time.Now().Add(time.Hour).Unix()
+			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 
 			defer func() {

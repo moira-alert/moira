@@ -55,7 +55,7 @@ func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string
 	}
 
 	filePrefix := bytes.NewBuffer([]byte(examplesPath))
-	filePrefix.WriteString(fmt.Sprintf("/%s.%s", testCase.plotTheme, testCase.triggerType))
+	fmt.Fprintf(filePrefix, "/%s.%s", testCase.plotTheme, testCase.triggerType)
 
 	if testCase.stateOk {
 		filePrefix.WriteString(".stateOk")

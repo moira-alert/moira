@@ -35,8 +35,8 @@ func createGoFile(fileName string, dataTTF []byte) error {
 	}
 	defer f.Close()
 
-	_, err = f.WriteString(fmt.Sprintf("package fonts\n\nvar %s = %#v\n",
-		strings.Title(fileName), dataTTF)) // nolint: staticcheck
+	_, err = fmt.Fprintf(f, "package fonts\n\nvar %s = %#v\n",
+		strings.Title(fileName), dataTTF) // nolint: staticcheck
 
 	return err
 }
