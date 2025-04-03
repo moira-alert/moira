@@ -41,6 +41,7 @@ func TestTriggerTargetMetrics_Populate(t *testing.T) {
 		from        int64
 		to          int64
 	}
+
 	tests := []struct {
 		name string
 		m    TriggerTargetMetrics
@@ -85,11 +86,13 @@ func TestTriggerTargetMetrics_Populate(t *testing.T) {
 			},
 		},
 	}
+
 	Convey("Populate", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
 				actual := tt.m.Populate(tt.args.lastMetrics, tt.args.from, tt.args.to)
 				So(actual, ShouldHaveLength, len(tt.want))
+
 				for metricName, actualMetric := range actual {
 					wantMetric, ok := tt.want[metricName]
 					So(ok, ShouldBeTrue)
@@ -119,6 +122,7 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 		from                 int64
 		to                   int64
 	}
+
 	tests := []struct {
 		name           string
 		triggerMetrics TriggerMetrics
@@ -199,6 +203,7 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 			},
 		},
 	}
+
 	Convey("Populate", t, func() {
 		for _, testCase := range tests {
 			Convey(testCase.name, func() {
@@ -210,10 +215,12 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 				)
 
 				So(actual, ShouldHaveLength, len(testCase.want))
+
 				for targetName, metrics := range actual {
 					wantMetrics, ok := testCase.want[targetName]
 					So(metrics, ShouldHaveLength, len(wantMetrics))
 					So(ok, ShouldBeTrue)
+
 					for metricName, actualMetric := range metrics {
 						wantMetric, ok := wantMetrics[metricName]
 						So(ok, ShouldBeTrue)
@@ -312,6 +319,7 @@ func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 			So(err, ShouldBeError)
 
 			var convertedErr ErrUnexpectedAloneMetric
+
 			errors.As(err, &convertedErr)
 			So(convertedErr.unexpected, ShouldContainKey, "t2")
 			So(convertedErr.unexpected["t2"], ShouldHaveLength, 2)
@@ -473,6 +481,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 			},
 		},
 	}
+
 	Convey("Diff", t, func() {
 		for _, testCase := range tests {
 			Convey(testCase.name, func() {
@@ -512,6 +521,7 @@ func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 			},
 		},
 	}
+
 	Convey("ConvertForCheck", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
@@ -519,6 +529,7 @@ func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 				if actual == nil {
 					t.Log("actual is nil")
 				}
+
 				So(actual, ShouldResemble, tt.want)
 			})
 		}

@@ -57,6 +57,7 @@ func (manager *WorkerManager) StartWorkers() error {
 		if err != nil {
 			return err
 		}
+
 		err = manager.startCheckerWorker(checker)
 		if err != nil {
 			return err
@@ -80,6 +81,7 @@ func (manager *WorkerManager) makeSourceValidator(clusterKey moira.ClusterKey) (
 		if available, err := source.IsAvailable(); !available {
 			return fmt.Errorf("source is not available: %w", err)
 		}
+
 		return nil
 	}, nil
 }
@@ -151,6 +153,7 @@ func (manager *WorkerManager) checkTriggersToCheckCount() error {
 				if err != nil {
 					continue
 				}
+
 				metrics.TriggersToCheckCount.Update(triggersToCheck)
 			}
 		}
