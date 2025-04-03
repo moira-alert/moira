@@ -71,6 +71,7 @@ some other text _italic text_`,
 				Post("/").
 				Reply(http.StatusOK).
 				BodyString("1")
+
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err, ShouldResemble, nil)
@@ -82,6 +83,7 @@ some other text _italic text_`,
 				Post("/").
 				Reply(http.StatusOK).
 				BodyString("Some error")
+
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err.Error(), ShouldResemble, "teams endpoint responded with an error: Some error")
@@ -93,6 +95,7 @@ some other text _italic text_`,
 				Post("/").
 				Reply(http.StatusInternalServerError).
 				BodyString("Some error")
+
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err.Error(), ShouldResemble, "server responded with a non 2xx code: 500")
@@ -104,6 +107,7 @@ some other text _italic text_`,
 func TestValidWebhook(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
+
 	Convey("MS Teams Webhook validity", t, func() {
 		Convey("https://outlook.office.com/webhook/foo is valid", func() {
 			err := sender.isValidWebhookURL("https://outlook.office.com/webhook/foo")

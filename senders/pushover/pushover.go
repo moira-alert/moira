@@ -36,6 +36,7 @@ type Sender struct {
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to pushover config: %w", err)
@@ -64,10 +65,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		Msg("Calling pushover with message title")
 
 	recipient := pushover_client.NewRecipient(contact.Value)
+
 	_, err := sender.client.SendMessage(pushoverMessage, recipient)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
 	}
+
 	return nil
 }
 
@@ -81,9 +84,11 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, trigg
 		Timestamp: events[len(events)-1].Timestamp,
 	}
 	url := trigger.GetTriggerURI(sender.frontURI)
+
 	if len(url) < urlLimit {
 		pushoverMessage.URL = url
 	}
+
 	if len(plots) > 0 {
 		reader := bytes.NewReader(plots[0])
 		pushoverMessage.AddAttachment(reader) //nolint
@@ -94,17 +99,21 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, trigg
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool) string {
 	var message bytes.Buffer
+
 	for i, event := range events {
 		if i > printEventsCount-1 {
 			break
 		}
+
 		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State))
+
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			message.WriteString(fmt.Sprintf(". %s\n", msg))
 		} else {
 			message.WriteString("\n")
 		}
 	}
+
 	if len(events) > printEventsCount {
 		message.WriteString(fmt.Sprintf("\n...and %d more events.", len(events)-printEventsCount))
 	}
@@ -112,6 +121,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 	if throttled {
 		message.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
 	}
+
 	return message.String()
 }
 
@@ -125,6 +135,7 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 		for i := 0; i < len(trigger.Tags)-tags; i++ {
 			tagBuffer.WriteString(fmt.Sprintf("[%s]", trigger.Tags[i]))
 		}
+
 		title = fmt.Sprintf("%s %s %s.... (%d)", state, trigger.Name, tagBuffer.String(), len(events))
 		tags++
 	}
@@ -134,13 +145,16 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 
 func (sender *Sender) getMessagePriority(events moira.NotificationEvents) int {
 	priority := pushover_client.PriorityNormal
+
 	for _, event := range events {
 		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
 			priority = pushover_client.PriorityEmergency
 		}
+
 		if priority != pushover_client.PriorityEmergency && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
 			priority = pushover_client.PriorityHigh
 		}
 	}
+
 	return priority
 }

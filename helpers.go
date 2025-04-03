@@ -25,6 +25,7 @@ func Map[T any, R any](input []T, transform func(T) R) []R {
 	for i, v := range input {
 		result[i] = transform(v)
 	}
+
 	return result
 }
 
@@ -38,22 +39,27 @@ func (it *BytesScanner) Next() (result []byte) {
 	if it.emitEmptySlice {
 		it.emitEmptySlice = false
 		result = make([]byte, 0)
+
 		return result
 	}
 
 	scannerIndex := it.index
 	separatorIndex := bytes.IndexByte(it.source[scannerIndex:], it.separator)
+
 	if separatorIndex < 0 {
 		result = it.source[scannerIndex:]
 		it.index = len(it.source)
 	} else {
 		separatorIndex += scannerIndex
 		result = it.source[scannerIndex:separatorIndex]
+
 		if separatorIndex == len(it.source)-1 {
 			it.emitEmptySlice = true
 		}
+
 		it.index = separatorIndex + 1
 	}
+
 	return result
 }
 
@@ -78,6 +84,7 @@ func UseString(str *string) string {
 	if str == nil {
 		return ""
 	}
+
 	return *str
 }
 
@@ -86,6 +93,7 @@ func UseFloat64(f *float64) float64 {
 	if f == nil {
 		return 0
 	}
+
 	return *f
 }
 
@@ -123,11 +131,13 @@ func Intersect[T comparable](lists ...[]T) []T {
 
 	for _, stringList := range lists[1:] {
 		currentSet := make(map[T]bool)
+
 		for _, value := range stringList {
 			if intersection[value] {
 				currentSet[value] = true
 			}
 		}
+
 		intersection = currentSet
 	}
 
@@ -144,21 +154,26 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 	if len(stringLists) == 0 {
 		return []string{}
 	}
+
 	leftValues := make(map[string]bool)
 	for _, value := range stringLists[0] {
 		leftValues[value] = true
 	}
+
 	for _, stringList := range stringLists[1:] {
 		for _, value := range stringList {
 			delete(leftValues, value)
 		}
 	}
+
 	result := make([]string, 0)
+
 	for _, value := range stringLists[0] {
 		if _, ok := leftValues[value]; ok {
 			result = append(result, value)
 		}
 	}
+
 	return result
 }
 
@@ -167,12 +182,15 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	if len(triggerLists) == 0 {
 		return []*Trigger{}
 	}
+
 	leftValues := make(map[string]bool)
+
 	for _, value := range triggerLists[0] {
 		if value != nil {
 			leftValues[value.ID] = true
 		}
 	}
+
 	for _, triggerList := range triggerLists[1:] {
 		for _, trigger := range triggerList {
 			if trigger != nil {
@@ -180,15 +198,19 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 			}
 		}
 	}
+
 	result := make([]*Trigger, 0)
+
 	for _, value := range triggerLists[0] {
 		if value == nil {
 			continue
 		}
+
 		if _, ok := leftValues[value.ID]; ok {
 			result = append(result, value)
 		}
 	}
+
 	return result
 }
 
@@ -197,6 +219,7 @@ func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 	if chunkSize < 1 {
 		return
 	}
+
 	for i := 0; i < len(original); i += chunkSize {
 		end := i + chunkSize
 
@@ -206,6 +229,7 @@ func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 
 		divided = append(divided, original[i:end])
 	}
+
 	return
 }
 
@@ -217,21 +241,25 @@ func MaxInt64(a, b int64) int64 {
 	if a > b {
 		return a
 	}
+
 	return b
 }
 
 // ReplaceSubstring removes one substring between the beginning and end substrings and replaces it with a replaced.
 func ReplaceSubstring(str, begin, end, replaced string) string {
 	result := str
+
 	startIndex := strings.Index(str, begin)
 	if startIndex != -1 {
 		startIndex += len(begin)
 		endIndex := strings.Index(str[startIndex:], end)
+
 		if endIndex != -1 {
 			endIndex += len(str[:startIndex])
 			result = str[:startIndex] + replaced + str[endIndex:]
 		}
 	}
+
 	return result
 }
 

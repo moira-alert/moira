@@ -35,6 +35,7 @@ type scriptNotification struct {
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
@@ -61,15 +62,20 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err != nil {
 		return err
 	}
+
 	command := exec.Command(scriptFile, args...)
+
 	var scriptOutput bytes.Buffer
+
 	command.Stdin = bytes.NewReader(scriptBody)
 	command.Stdout = &scriptOutput
+
 	sender.logger.Debug().
 		String("script", scriptFile).
 		Msg("Executing script")
 
 	err = command.Run()
+
 	sender.logger.Debug().
 		String("script", scriptFile).
 		Msg("Finished executing script")
@@ -77,6 +83,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err != nil {
 		return fmt.Errorf("failed exec [%s] Error [%s] Output: [%s]", sender.exec, err.Error(), scriptOutput.String())
 	}
+
 	return nil
 }
 
@@ -87,34 +94,42 @@ func (sender *Sender) buildCommandData(events moira.NotificationEvents, contact 
 			String("variable_name", moira.VariableTriggerName).
 			Msg("Variable is deprecated and will be removed in 2.6 release")
 	}
+
 	execString := buildExecString(sender.exec, trigger, contact)
+
 	scriptFile, args, err = parseExec(execString)
 	if err != nil {
 		return scriptFile, args[1:], []byte{}, err
 	}
+
 	scriptMessage := &scriptNotification{
 		Events:    events,
 		Trigger:   trigger,
 		Contact:   contact,
 		Throttled: throttled,
 	}
+
 	scriptJSON, err := json.MarshalIndent(scriptMessage, "", "\t")
 	if err != nil {
 		return scriptFile, args[1:], scriptJSON, fmt.Errorf("failed marshal json: %s", err.Error())
 	}
+
 	return scriptFile, args[1:], scriptJSON, nil
 }
 
 func parseExec(execString string) (scriptFile string, args []string, err error) {
 	args = strings.Split(execString, " ")
 	scriptFile = args[0]
+
 	infoFile, err := os.Stat(scriptFile)
 	if err != nil {
 		return scriptFile, args, fmt.Errorf("file %s not found", scriptFile)
 	}
+
 	if !infoFile.Mode().IsRegular() {
 		return scriptFile, args, fmt.Errorf("%s not file", scriptFile)
 	}
+
 	return scriptFile, args, nil
 }
 
@@ -129,5 +144,6 @@ func buildExecString(template string, trigger moira.TriggerData, contact moira.C
 	for k, v := range templateVariables {
 		template = strings.ReplaceAll(template, k, v)
 	}
+
 	return template
 }

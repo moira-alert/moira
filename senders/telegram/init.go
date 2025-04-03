@@ -55,12 +55,14 @@ func (sender *Sender) removeTokenFromError(err error) error {
 	if err != nil && strings.Contains(err.Error(), sender.apiToken) {
 		return errors.New(strings.Replace(err.Error(), sender.apiToken, hidden, -1))
 	}
+
 	return err
 }
 
 // Init loads yaml config, configures and starts telegram bot.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
@@ -80,6 +82,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		location)
 
 	sender.logger = logger
+
 	sender.bot, err = telebot.NewBot(telebot.Settings{
 		Token:   cfg.APIToken,
 		Poller:  &telebot.LongPoller{Timeout: pollerTimeout},
@@ -94,8 +97,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 			sender.logger.Error().
 				Error(err).
 				Msg("Error handling incoming message")
+
 			return err
 		}
+
 		return nil
 	})
 
@@ -111,6 +116,7 @@ func (sender *Sender) runTelebot(contactType string) {
 		sender.bot.Start()
 		<-stop
 		sender.bot.Stop()
+
 		return nil
 	}
 

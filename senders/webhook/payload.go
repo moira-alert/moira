@@ -48,6 +48,7 @@ func toTriggerData(trigger moira.TriggerData) triggerData {
 		Tags:        make([]string, 0),
 	}
 	result.Tags = append(result.Tags, trigger.Tags...)
+
 	return result
 }
 
@@ -64,6 +65,7 @@ func toEventsData(events moira.NotificationEvents) []eventData {
 			OldState:       event.OldState.String(),
 		})
 	}
+
 	return result
 }
 

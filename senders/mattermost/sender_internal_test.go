@@ -60,6 +60,7 @@ func TestSendEvents(t *testing.T) {
 					&model.FileUploadResponse{
 						FileInfos: []*model.FileInfo{{Id: "fileID"}},
 					}, nil, nil)
+
 			sender.client = client
 
 			plots := make([][]byte, 0)

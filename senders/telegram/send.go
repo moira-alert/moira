@@ -96,6 +96,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 func (sender *Sender) getChat(contactValue string) (*Chat, error) {
 	var chat *Chat
+
 	var err error
 
 	switch {
@@ -182,6 +183,7 @@ func (sender *Sender) setChat(message *telebot.Message) error {
 
 func (sender *Sender) getContactValueByMessage(message *telebot.Message) (string, error) {
 	var contactValue string
+
 	var err error
 
 	switch {
@@ -210,6 +212,7 @@ func (sender *Sender) talk(chat *Chat, message string, plots [][]byte, messageTy
 	}
 
 	sender.logger.Debug().Msg("talk as send message")
+
 	return sender.sendAsMessage(chat, message)
 }
 
@@ -233,6 +236,7 @@ func (sender *Sender) sendAsMessage(chat *Chat, message string) error {
 
 func checkBrokenContactError(logger moira.Logger, err error) error {
 	logger.Debug().Msg("Check broken contact")
+
 	if err == nil {
 		return nil
 	}
@@ -254,6 +258,7 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 		logger.Debug().
 			Error(err).
 			Msg("It's error from getChat()")
+
 		return moira.NewSenderBrokenContactError(err)
 	}
 
@@ -267,6 +272,7 @@ func isBrokenContactAPIError(err *telebot.Error) bool {
 
 func prepareAlbum(plots [][]byte, caption string) telebot.Album {
 	var album telebot.Album
+
 	for _, plot := range plots {
 		photo := &telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot)), Caption: caption}
 		album = append(album, photo)
@@ -319,7 +325,6 @@ func (sender *Sender) retryIfBadMessageError(
 			// There are some problems with message formatting.
 			// For example, it is too long, or have unsupported tags and so on.
 			// Events should not be lost, so retry to send it without description.
-
 			sender.logger.Warning().
 				String(moira.LogFieldNameContactID, contact.ID).
 				String(moira.LogFieldNameContactType, contact.Type).
@@ -333,6 +338,7 @@ func (sender *Sender) retryIfBadMessageError(
 			message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
 
 			err = sender.talk(chat, message, plots, msgType)
+
 			return checkBrokenContactError(sender.logger, err)
 		}
 	}

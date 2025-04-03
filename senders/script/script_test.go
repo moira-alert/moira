@@ -48,6 +48,7 @@ var execStringTestCases = []execStringTestCase{
 
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		settings := map[string]interface{}{}
@@ -78,6 +79,7 @@ func TestInit(t *testing.T) {
 
 func TestBuildCommandData(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
 	Convey("Test send events", t, func() {
 		sender := Sender{exec: "script.go first second", logger: logger}
 		scriptFile, args, scriptBody, err := sender.buildCommandData(

@@ -22,6 +22,7 @@ var mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	data := &discordgo.MessageSend{}
 	data.Content = sender.buildMessage(events, trigger, throttled)
+
 	if len(plots) > 0 {
 		data.File = sender.buildPlot(plots[0])
 		data.Embed = &discordgo.MessageEmbed{
@@ -30,6 +31,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 			},
 		}
 	}
+
 	sender.logger.Debug().
 		String("message", data.Content).
 		Msg("Calling discord with message")
@@ -38,10 +40,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err != nil {
 		return fmt.Errorf("failed to get the channel ID: %w", err)
 	}
+
 	_, err = sender.session.ChannelMessageSendComplex(channelID, data)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to discord bot : %s", trigger.ID, err.Error())
 	}
+
 	return nil
 }
 
@@ -76,6 +80,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if descLen != descNewLen {
 		desc = desc[:descNewLen] + "...\n"
 	}
+
 	if eventsNewLen != eventsStringLen {
 		eventsString = sender.buildEventsString(events, eventsNewLen, throttled, trigger)
 	}
@@ -83,6 +88,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	buffer.WriteString(title)
 	buffer.WriteString(desc)
 	buffer.WriteString(eventsString)
+
 	return buffer.String()
 }
 
@@ -93,6 +99,7 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 		desc = mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")
 		desc += "\n"
 	}
+
 	return desc
 }
 
@@ -101,27 +108,35 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool, trigger moira.TriggerData) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."
+
 	if throttled {
 		charsForThrottleMsg = len([]rune(throttleMsg))
 	}
 
 	var urlString string
+
 	url := trigger.GetTriggerURI(sender.frontURI)
 	if url != "" {
 		urlString = fmt.Sprintf("\n\n%s\n", url)
 	}
+
 	charsLeftForEvents := charsForEvents - len([]rune(urlString)) - charsForThrottleMsg
 
 	var eventsString string
+
 	var tailString string
+
 	eventsLenLimitReached := false
 	eventsPrinted := 0
+
 	for _, event := range events {
 		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
+
 		tailString = fmt.Sprintf("\n\n...and %d more events.", len(events)-eventsPrinted)
+
 		tailStringLen := len([]rune(tailString))
 		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
@@ -135,9 +150,11 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	if eventsLenLimitReached {
 		eventsString += tailString
 	}
+
 	if url != "" {
 		eventsString += urlString
 	}
+
 	if throttled {
 		eventsString += throttleMsg
 	}

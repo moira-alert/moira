@@ -17,6 +17,7 @@ import (
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
+
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 

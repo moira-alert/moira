@@ -18,6 +18,7 @@ import (
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
@@ -41,6 +42,7 @@ func TestInit(t *testing.T) {
 
 		Convey("Has settings", func() {
 			imageStore.EXPECT().IsEnabled().Return(true)
+
 			senderSettings := map[string]interface{}{
 				"routing_url": "https://testurl.com",
 				"front_uri":   "http://moira.uri",
@@ -65,6 +67,7 @@ func TestInit(t *testing.T) {
 		})
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
+
 			senderSettings := map[string]interface{}{
 				"front_uri":   "http://moira.uri",
 				"routing_url": "https://testurl.com",

@@ -117,6 +117,7 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 		if request.Method != http.MethodGet {
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 			writer.Write([]byte(fmt.Sprintf("expected request with GET method, got: %s", request.Method))) //nolint
+
 			return
 		}
 
@@ -124,20 +125,24 @@ func TestSender_performSingleDeliveryCheck(t *testing.T) {
 		if err != nil {
 			writer.WriteHeader(status)
 			writer.Write([]byte(err.Error())) //nolint
+
 			return
 		}
 
 		strIndex := request.URL.Query().Get("bodyIdx")
+
 		index, err := strconv.ParseInt(strIndex, 10, 64)
 		if err != nil {
 			writer.WriteHeader(http.StatusBadRequest)
 			writer.Write([]byte(fmt.Sprintf("failed to parse query param 'bodyIdx': %s", err))) //nolint
+
 			return
 		}
 
 		if index < 0 || index >= int64(len(availableResponses)) {
 			writer.WriteHeader(http.StatusBadRequest)
 			writer.Write([]byte(fmt.Sprintf("index out of range %v of %v", index, len(availableResponses)))) //nolint
+
 			return
 		}
 
@@ -229,16 +234,19 @@ func TestSender_CheckNotificationsDelivery(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		strIndex := request.URL.Query().Get("bodyIdx")
+
 		index, err := strconv.ParseInt(strIndex, 10, 64)
 		if err != nil {
 			writer.WriteHeader(http.StatusBadRequest)
 			writer.Write([]byte(fmt.Sprintf("failed to parse query param 'bodyIdx': %s", err))) //nolint
+
 			return
 		}
 
 		if index < 0 || index >= int64(len(availableResponses)) {
 			writer.WriteHeader(http.StatusBadRequest)
 			writer.Write([]byte(fmt.Sprintf("index out of range %v of %v", index, len(availableResponses)))) //nolint
+
 			return
 		}
 
@@ -273,9 +281,11 @@ func TestSender_CheckNotificationsDelivery(t *testing.T) {
 			}
 
 			marshaledFetchedChecks := make([]string, 0, len(expectedFetchedDeliveryChecks))
+
 			for _, checkData := range expectedFetchedDeliveryChecks {
 				marshaled, err := json.Marshal(checkData)
 				So(err, ShouldBeNil)
+
 				marshaledFetchedChecks = append(marshaledFetchedChecks, string(marshaled))
 			}
 
@@ -313,9 +323,11 @@ func TestSender_CheckNotificationsDelivery(t *testing.T) {
 			}
 
 			marshaledFetchedChecks := make([]string, 0, len(expectedFetchedDeliveryChecks))
+
 			for _, checkData := range expectedFetchedDeliveryChecks {
 				marshaled, err := json.Marshal(checkData)
 				So(err, ShouldBeNil)
+
 				marshaledFetchedChecks = append(marshaledFetchedChecks, string(marshaled))
 			}
 
@@ -353,9 +365,11 @@ func TestSender_CheckNotificationsDelivery(t *testing.T) {
 			}
 
 			marshaledFetchedChecks := make([]string, 0, len(expectedFetchedDeliveryChecks))
+
 			for _, checkData := range expectedFetchedDeliveryChecks {
 				marshaled, err := json.Marshal(checkData)
 				So(err, ShouldBeNil)
+
 				marshaledFetchedChecks = append(marshaledFetchedChecks, string(marshaled))
 			}
 

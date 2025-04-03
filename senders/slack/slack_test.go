@@ -15,6 +15,7 @@ import (
 
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		senderSettings := map[string]interface{}{}
@@ -134,7 +135,9 @@ some other text italic text
 
 		// Events list with chars less than half the message limit
 		var shortEvents moira.NotificationEvents
+
 		var shortEventsString string
+
 		for i := 0; i < (messageMaxCharacters/2-200)/oneEventLineLen; i++ {
 			shortEvents = append(shortEvents, event)
 			shortEventsString += eventLine
@@ -142,7 +145,9 @@ some other text italic text
 
 		// Events list with chars greater than half the message limit
 		var longEvents moira.NotificationEvents
+
 		var longEventsString string
+
 		for i := 0; i < (messageMaxCharacters/2+200)/oneEventLineLen; i++ {
 			longEvents = append(longEvents, event)
 			longEventsString += eventLine
@@ -158,7 +163,9 @@ some other text italic text
 
 		Convey("Print moira message desc > msgLimit/2", func() {
 			var events moira.NotificationEvents
+
 			var eventsString string
+
 			for i := 0; i < (messageMaxCharacters/2-10)/oneEventLineLen; i++ {
 				events = append(events, event)
 				eventsString += eventLine
