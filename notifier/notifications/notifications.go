@@ -36,11 +36,13 @@ func (worker *FetchNotificationsWorker) updateFetchNotificationsMetric(fetchNoti
 func (worker *FetchNotificationsWorker) Start() {
 	worker.tomb.Go(func() error {
 		checkTicker := time.NewTicker(time.Second)
+
 		for {
 			select {
 			case <-worker.tomb.Dying():
 				worker.Logger.Info().Msg("Moira Notifier Fetching scheduled notifications stopped")
 				worker.Notifier.StopSenders()
+
 				return nil
 			case <-checkTicker.C:
 				if err := worker.processScheduledNotifications(); err != nil {
@@ -80,15 +82,19 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 
 	fetchNotificationsStartTime := time.Now()
+
 	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
 	if err != nil {
 		return err
 	}
+
 	worker.updateFetchNotificationsMetric(fetchNotificationsStartTime)
 
 	notificationPackages := make(map[string]*notifier.NotificationPackage)
+
 	for _, notification := range notifications {
 		packageKey := fmt.Sprintf("%s:%s:%s", notification.Contact.Type, notification.Contact.Value, notification.Event.TriggerID)
+
 		p, found := notificationPackages[packageKey]
 		if !found {
 			p = &notifier.NotificationPackage{
@@ -100,6 +106,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 				FailCount: notification.SendFail,
 			}
 		}
+
 		p.Events = append(p.Events, notification.Event)
 
 		err = worker.Database.PushContactNotificationToHistory(notification)
@@ -109,10 +116,13 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 
 		notificationPackages[packageKey] = p
 	}
+
 	var sendingWG sync.WaitGroup
 	for _, pkg := range notificationPackages {
 		worker.Notifier.Send(pkg, &sendingWG)
 	}
+
 	sendingWG.Wait()
+
 	return nil
 }

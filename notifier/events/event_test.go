@@ -88,6 +88,7 @@ func TestEvent(t *testing.T) {
 		}
 		dataBase.EXPECT().GetContact(event.ContactID).Times(1).Return(contact, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
+
 		now := systemClock.NowUTC()
 		notification := moira.ScheduledNotification{
 			Event: moira.NotificationEvent{
@@ -336,6 +337,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		}
 
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
+
 		subscriptionToIgnoreWarningsAndRecoverings := moira.SubscriptionData{
 			ID:                "subscriptionID-00000000000003",
 			Enabled:           true,
@@ -495,6 +497,7 @@ func TestFailReadContact(t *testing.T) {
 
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
+
 		getContactError := fmt.Errorf("Can not get contact")
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(moira.ContactData{}, getContactError)
 

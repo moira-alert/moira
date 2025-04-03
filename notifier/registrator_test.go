@@ -12,6 +12,7 @@ import (
 
 func TestRegisterSender(t *testing.T) {
 	configureNotifier(t, defaultConfig)
+
 	defer afterTest()
 
 	Convey("Test RegisterSender", t, func() {
@@ -145,6 +146,7 @@ func TestRegisterSendersWithUnknownType(t *testing.T) {
 	}
 
 	configureNotifier(t, config)
+
 	defer afterTest()
 
 	Convey("Try to register sender with unknown type", t, func() {
@@ -170,6 +172,7 @@ func TestRegisterSendersWithValidType(t *testing.T) {
 	}
 
 	configureNotifier(t, config)
+
 	defer afterTest()
 
 	Convey("Register sender with valid type", t, func() {

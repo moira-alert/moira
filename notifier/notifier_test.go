@@ -59,12 +59,15 @@ func TestGetMetricNames(t *testing.T) {
 
 		Convey("Test package with no trigger events", func() {
 			pkg := NotificationPackage{}
+
 			for _, event := range notificationsPackage.Events {
 				if event.IsTriggerEvent {
 					event.IsTriggerEvent = false
 				}
+
 				pkg.Events = append(pkg.Events, event)
 			}
+
 			expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
 			actual := pkg.GetMetricNames()
 			So(actual, ShouldResemble, expected)
@@ -95,6 +98,7 @@ func TestGetWindow(t *testing.T) {
 
 func TestUnknownContactType(t *testing.T) {
 	configureNotifier(t, defaultConfig)
+
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
@@ -119,12 +123,14 @@ func TestUnknownContactType(t *testing.T) {
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
+
 	standardNotifier.Send(&pkg, &wg)
 	wg.Wait()
 }
 
 func TestFailSendEvent(t *testing.T) {
 	configureNotifier(t, defaultConfig)
+
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
@@ -150,6 +156,7 @@ func TestFailSendEvent(t *testing.T) {
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
+
 	standardNotifier.Send(&pkg, &wg)
 	wg.Wait()
 	time.Sleep(time.Second * 2)
@@ -161,6 +168,7 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 	}
 
 	configureNotifier(t, defaultConfig)
+
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
@@ -175,6 +183,7 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 		Return(moira.NewSenderBrokenContactError(fmt.Errorf("some sender reason")))
 
 	var wg sync.WaitGroup
+
 	standardNotifier.Send(&pkg, &wg)
 	wg.Wait()
 	time.Sleep(time.Second * 2)
@@ -182,7 +191,9 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 
 func TestTimeout(t *testing.T) {
 	configureNotifier(t, defaultConfig)
+
 	var wg sync.WaitGroup
+
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}

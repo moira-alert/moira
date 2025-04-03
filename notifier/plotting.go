@@ -38,17 +38,21 @@ func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSo
 	plotTemplate *plotting.Plot,
 ) ([][]byte, error) {
 	result := make([][]byte, 0)
+
 	for targetName, metrics := range metricsData {
 		renderable, err := plotTemplate.GetRenderable(targetName, trigger, metrics)
 		if err != nil {
 			return nil, err
 		}
+
 		buff := bytes.NewBuffer(make([]byte, 0))
 		if err = renderable.Render(chart.PNG, buff); err != nil {
 			return nil, err
 		}
+
 		result = append(result, buff.Bytes())
 	}
+
 	return result, nil
 }
 
@@ -57,15 +61,18 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if !pkg.Plotting.Enabled {
 		return nil, 0, nil
 	}
+
 	if pkg.Trigger.ID == "" {
 		return nil, 0, nil
 	}
 
 	startTime := time.Now()
+
 	metricsToShow := pkg.GetMetricNames()
 	if len(metricsToShow) == 0 {
 		return nil, 0, nil
 	}
+
 	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, notifier.config.Location)
 	if err != nil {
 		return nil, 0, err
@@ -73,10 +80,12 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 
 	from, to := resolveMetricsWindow(logger, pkg.Trigger, pkg)
 	evaluateTriggerStartTime := time.Now()
+
 	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	notifier.metrics.PlotsEvaluateTriggerDurationMs.Update(time.Since(evaluateTriggerStartTime).Milliseconds())
 
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
@@ -86,6 +95,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 
 	buildPlotStartTime := time.Now()
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
+
 	notifier.metrics.PlotsBuildDurationMs.Update(time.Since(buildPlotStartTime).Milliseconds())
 
 	return result, time.Since(startTime).Milliseconds(), err
@@ -104,6 +114,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 			String("default_window", defaultTimeRange.String()).
 			Error(err).
 			Msg("Failed to get trigger package window, using default window")
+
 		return defaultFrom, defaultTo
 	}
 	// round to the nearest retention to correctly fetch data from redis
@@ -120,6 +131,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 		if isWideWindow {
 			return fromTime.Unix(), toTime.Unix()
 		}
+
 		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
 	}
 	// resolve local trigger window.
@@ -128,6 +140,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	if isRealTimeWindow {
 		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
 	}
+
 	return defaultFrom, defaultTo
 }
 
@@ -141,20 +154,26 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 	if err != nil {
 		return nil, nil, err
 	}
+
 	metricsSource, err := notifier.metricSourceProvider.GetTriggerMetricSource(&trigger)
 	if err != nil {
 		return nil, &trigger, err
 	}
+
 	result := make(map[string][]metricSource.MetricData)
+
 	for i, target := range trigger.Targets {
 		i++ // Increase
 		targetName := fmt.Sprintf("t%d", i)
+
 		timeSeries, fetchErr := fetchAvailableSeries(metricsSource, target, from, to)
 		if fetchErr != nil {
 			return nil, &trigger, fetchErr
 		}
+
 		result[targetName] = timeSeries
 	}
+
 	return result, &trigger, err
 }
 
@@ -164,23 +183,28 @@ func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string
 	if realtimeErr == nil {
 		return realtimeFetchResult.GetMetricsData(), nil
 	}
+
 	var errFailedWithPanic local.ErrEvaluateTargetFailedWithPanic
 	if ok := errors.As(realtimeErr, &errFailedWithPanic); ok {
 		fetchResult, err := metricsSource.Fetch(target, from, to, false)
 		if err != nil {
 			return nil, errFetchAvailableSeriesFailed{realtimeErr: errFailedWithPanic.Error(), storedErr: err.Error()}
 		}
+
 		return fetchResult.GetMetricsData(), nil
 	}
+
 	return nil, realtimeErr
 }
 
 // getMetricDataToShow returns MetricData limited by whitelist.
 func getMetricDataToShow(metricsData map[string][]metricSource.MetricData, metricsWhitelist []string) map[string][]metricSource.MetricData {
 	result := make(map[string][]metricSource.MetricData)
+
 	if len(metricsWhitelist) == 0 {
 		return metricsData
 	}
+
 	metricsWhitelistHash := make(map[string]bool, len(metricsWhitelist))
 	for _, whiteListed := range metricsWhitelist {
 		metricsWhitelistHash[whiteListed] = true
@@ -188,16 +212,20 @@ func getMetricDataToShow(metricsData map[string][]metricSource.MetricData, metri
 
 	for targetName, metrics := range metricsData {
 		newMetricsData := make([]metricSource.MetricData, 0, len(metricsWhitelist))
+
 		if len(metrics) == 1 {
 			result[targetName] = metrics
 			continue
 		}
+
 		for _, metricData := range metrics {
 			if _, ok := metricsWhitelistHash[metricData.Name]; ok {
 				newMetricsData = append(newMetricsData, metricData)
 			}
 		}
+
 		result[targetName] = newMetricsData
 	}
+
 	return result
 }

@@ -84,17 +84,24 @@ func TestResolveMetricsWindow(t *testing.T) {
 	remoteTrigger := moira.TriggerData{ID: "remoteTrigger", IsRemote: true}
 	timeRange := time.Unix(int64(defaultTimeRange.Seconds()), 0).Unix()
 	timeShift := time.Unix(int64(defaultTimeShift.Seconds()), 0).Unix()
+
 	var pkg NotificationPackage
+
 	var pkgs []NotificationPackage
+
 	var trigger moira.TriggerData
+
 	Convey("LOCAL TRIGGER | Resolve trigger metrics window", t, func() {
 		trigger = localTrigger
+
 		Convey("Window is realtime: use shifted window to fetch actual data from redis", func() {
 			pkgs = []NotificationPackage{triggerJustCreatedEvents, realtimeTriggerEvents}
 			for _, pkg := range pkgs {
 				_, expectedTo, err := pkg.GetWindow()
 				expectedTo = roundToRetention(expectedTo)
+
 				So(err, ShouldBeNil)
+
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
 				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
 				So(to, ShouldEqual, expectedTo+timeShift)
@@ -104,6 +111,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 			pkg = oldTriggerEvents
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
+
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
 			So(from, ShouldEqual, roundToRetention(testLaunchTime.Add(-defaultTimeRange).UTC().Unix()))
 			So(to, ShouldEqual, roundToRetention(testLaunchTime.UTC().Unix()))
@@ -111,12 +119,15 @@ func TestResolveMetricsWindow(t *testing.T) {
 	})
 	Convey("REMOTE TRIGGER | Resolve remote trigger metrics window", t, func() {
 		trigger = remoteTrigger
+
 		Convey("Window is wide: use package window to fetch limited historical data from graphite", func() {
 			pkg = oldTriggerEvents
 			expectedFrom, expectedTo, err := pkg.GetWindow()
 			expectedFrom = roundToRetention(expectedFrom)
 			expectedTo = roundToRetention(expectedTo)
+
 			So(err, ShouldBeNil)
+
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
 			So(from, ShouldEqual, expectedFrom)
 			So(to, ShouldEqual, expectedTo)
@@ -126,7 +137,9 @@ func TestResolveMetricsWindow(t *testing.T) {
 			for _, pkg := range pkgs {
 				_, expectedTo, err := pkg.GetWindow()
 				expectedTo = roundToRetention(expectedTo)
+
 				So(err, ShouldBeNil)
+
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
 				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
 				So(to, ShouldEqual, expectedTo+timeShift)
@@ -157,6 +170,7 @@ func TestGetMetricDataToShow(t *testing.T) {
 			*metricSource.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
 		},
 	}
+
 	Convey("Limit series by non-empty whitelist", t, func() {
 		Convey("MetricsData has necessary series", func() {
 			metricsWhiteList := []string{"metricPrefix.metricName1", "metricPrefix.metricName2"}
@@ -182,10 +196,12 @@ func TestGetMetricDataToShow(t *testing.T) {
 	})
 	Convey("Limit series by an empty whitelist", t, func() {
 		metricsWhiteList := make([]string, 0)
+
 		metricsData := getMetricDataToShow(givenSeries, metricsWhiteList)
 		for metricDataInd := range metricsData["t1"] {
 			So(metricsData["t1"][metricDataInd].Name, ShouldEqual, givenSeries["t1"][metricDataInd].Name)
 		}
+
 		So(len(metricsData), ShouldEqual, len(givenSeries))
 	})
 }
@@ -196,6 +212,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 		from   = 17
 		to     = 67
 	)
+
 	Convey("Run fetchAvailableSeries", t, func() {
 		mockController := gomock.NewController(t)
 		defer mockController.Finish()
@@ -207,28 +224,33 @@ func TestFetchAvailableSeries(t *testing.T) {
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(result, nil).Times(1),
 				result.EXPECT().GetMetricsData().Return(nil).Times(1),
 			)
+
 			_, err := fetchAvailableSeries(source, target, from, to)
 			So(err, ShouldBeNil)
 		})
 
 		Convey("with error ErrEvaluateTargetFailedWithPanic", func() {
 			var err error = local.ErrEvaluateTargetFailedWithPanic{}
+
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), false).Return(result, nil).Times(1),
 				result.EXPECT().GetMetricsData().Return(nil).Times(1),
 			)
+
 			_, err = fetchAvailableSeries(source, target, from, to)
 			So(err, ShouldBeNil)
 		})
 
 		Convey("with error ErrEvaluateTargetFailedWithPanic and error again", func() {
 			var err error = local.ErrEvaluateTargetFailedWithPanic{}
+
 			secondErr := errors.New("test error")
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), false).Return(nil, secondErr).Times(1),
 			)
+
 			_, err = fetchAvailableSeries(source, target, from, to)
 			So(err, ShouldNotBeNil)
 		})
@@ -238,6 +260,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 			)
+
 			_, err = fetchAvailableSeries(source, target, from, to)
 			So(err, ShouldNotBeNil)
 		})
