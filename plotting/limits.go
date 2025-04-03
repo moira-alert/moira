@@ -31,28 +31,35 @@ type plotLimits struct {
 func resolveLimits(metricsData []metricSource.MetricData) plotLimits {
 	allValues := make([]float64, 0)
 	allTimes := make([]time.Time, 0)
+
 	for _, metricData := range metricsData {
 		for _, metricValue := range metricData.Values {
 			if moira.IsFiniteNumber(metricValue) {
 				allValues = append(allValues, metricValue)
 			}
 		}
+
 		allTimes = append(allTimes, moira.Int64ToTime(metricData.StartTime))
 		allTimes = append(allTimes, moira.Int64ToTime(metricData.StopTime))
 	}
+
 	from, to := util.Time.StartAndEnd(allTimes...)
+
 	lowest, highest := util.Math.MinAndMax(allValues...)
 	if highest == lowest {
 		highest += defaultRangeDelta / 2
 		lowest -= defaultRangeDelta / 2
 	}
+
 	yAxisIncrement := percentsOfRange(lowest, highest, defaultYAxisRangePercent)
 	if highest > 0 {
 		highest += yAxisIncrement
 	}
+
 	if lowest < 0 {
 		lowest -= yAxisIncrement
 	}
+
 	return plotLimits{
 		from:    from,
 		to:      to,
@@ -70,6 +77,7 @@ func (limits *plotLimits) getThresholdAxisRange(triggerType string) chart.Contin
 			Min:        0,
 		}
 	}
+
 	return chart.ContinuousRange{
 		Descending: false,
 		Max:        limits.highest,
@@ -82,5 +90,6 @@ func (limits plotLimits) formsSetContaining(dot float64) bool {
 	if (dot >= limits.lowest) && (dot <= limits.highest) {
 		return true
 	}
+
 	return false
 }
