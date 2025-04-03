@@ -19,7 +19,7 @@ type MockLock struct {
 	moira.Lock
 }
 
-func (lock *MockLock) Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error) {
+func (lock *MockLock) Acquire(stop <-chan struct{}) (lost <-chan struct{}, err error) {
 	return lost, nil
 }
 
