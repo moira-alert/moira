@@ -12,10 +12,12 @@ func GetNotifications(database moira.Database, start int64, end int64) (*dto.Not
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	notificationsList := dto.NotificationsList{
 		List:  notifications,
 		Total: total,
 	}
+
 	return &notificationsList, nil
 }
 
@@ -25,6 +27,7 @@ func DeleteNotification(database moira.Database, notificationKey string) (*dto.N
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	return &dto.NotificationDeleteResponse{Result: result}, nil
 }
 
@@ -33,5 +36,6 @@ func DeleteAllNotifications(database moira.Database) *api.ErrorResponse {
 	if err := database.RemoveAllNotifications(); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }

@@ -40,10 +40,12 @@ func NewHandler(
 ) http.Handler {
 	database = db
 	searchIndex = index
+
 	var contactsTemplate []api.WebContact
 	if webConfig != nil {
 		contactsTemplate = webConfig.Contacts
 	}
+
 	var checksConfig selfstate.ChecksConfig
 	if selfstateConfig != nil {
 		checksConfig = *selfstateConfig
@@ -142,6 +144,7 @@ func NewHandler(
 	if apiConfig.EnableCORS {
 		return cors.AllowAll().Handler(router)
 	}
+
 	return router
 }
 

@@ -28,6 +28,7 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 				Subscriptions: make([]moira.SubscriptionData, 0),
 			}
 			tagStat.TagName = tagName
+
 			subscriptions, err := database.GetTagsSubscriptions([]string{tagName})
 			if err != nil {
 				logger.Error().
@@ -35,11 +36,13 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 					Msg("Failed to get tag's subscriptions")
 				rch <- nil
 			}
+
 			for _, subscription := range subscriptions {
 				if subscription != nil {
 					tagStat.Subscriptions = append(tagStat.Subscriptions, *subscription)
 				}
 			}
+
 			tagStat.Triggers, err = database.GetTagTriggerIDs(tagName)
 			if err != nil {
 				logger.Error().
@@ -56,6 +59,7 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 			tagsStatistics.List = append(tagsStatistics.List, *r)
 		}
 	}
+
 	return &tagsStatistics, nil
 }
 
@@ -118,5 +122,6 @@ func RemoveTag(database moira.Database, tagName string) (*dto.MessageResponse, *
 	if err = database.RemoveTag(tagName); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	return &dto.MessageResponse{Message: "tag deleted"}, nil
 }

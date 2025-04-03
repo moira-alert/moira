@@ -27,6 +27,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	contactsList := dto.ContactList{
 		List: make([]dto.TeamContact, 0, len(contacts)),
 	}
@@ -42,6 +43,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 			Team:   contact.Team,
 		})
 	}
+
 	return &contactsList, nil
 }
 
@@ -96,12 +98,14 @@ func CreateContact(
 		if err != nil {
 			return api.ErrorInternalServer(err)
 		}
+
 		contactData.ID = uuid4.String()
 	} else {
 		exists, err := isContactExists(dataBase, contactData.ID)
 		if err != nil {
 			return api.ErrorInternalServer(err)
 		}
+
 		if exists {
 			return api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists"))
 		}
@@ -161,11 +165,13 @@ func UpdateContact(
 // RemoveContact deletes notification contact for current user and remove contactID from all subscriptions.
 func RemoveContact(database moira.Database, contactID string, userLogin string, teamID string) *api.ErrorResponse { //nolint:gocyclo
 	subscriptionIDs := make([]string, 0)
+
 	if userLogin != "" {
 		userSubscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 		if err != nil {
 			return api.ErrorInternalServer(err)
 		}
+
 		subscriptionIDs = append(subscriptionIDs, userSubscriptionIDs...)
 	}
 
@@ -174,6 +180,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 		if err != nil {
 			return api.ErrorInternalServer(err)
 		}
+
 		subscriptionIDs = append(subscriptionIDs, teamSubscriptionIDs...)
 	}
 
@@ -188,10 +195,12 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 		if subscription == nil {
 			continue
 		}
+
 		for i, contact := range subscription.Contacts {
 			if contact == contactID {
 				subscription.Contacts = append(subscription.Contacts[:i], subscription.Contacts[i+1:]...)
 				subscriptionsWithDeletingContact = append(subscriptionsWithDeletingContact, subscription)
+
 				break
 			}
 		}
@@ -202,17 +211,22 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 		for subInd, subscription := range subscriptionsWithDeletingContact {
 			errBuffer.WriteString(subscription.ID)
 			errBuffer.WriteString(" (tags: ")
+
 			for tagInd := range subscription.Tags {
 				errBuffer.WriteString(subscription.Tags[tagInd])
+
 				if tagInd != len(subscription.Tags)-1 {
 					errBuffer.WriteString(", ")
 				}
 			}
+
 			errBuffer.WriteString(")")
+
 			if subInd != len(subscriptionsWithDeletingContact)-1 {
 				errBuffer.WriteString(", ")
 			}
 		}
+
 		return api.ErrorInvalidRequest(fmt.Errorf(errBuffer.String()))
 	}
 
@@ -236,6 +250,7 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 	if err := dataBase.PushNotificationEvent(eventData, false); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }
 
@@ -251,6 +266,7 @@ func CheckUserPermissionsForContact(
 		if errors.Is(err, database.ErrNil) {
 			return moira.ContactData{}, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", contactID))
 		}
+
 		return moira.ContactData{}, api.ErrorInternalServer(err)
 	}
 
@@ -263,6 +279,7 @@ func CheckUserPermissionsForContact(
 		if err != nil {
 			return moira.ContactData{}, api.ErrorInternalServer(err)
 		}
+
 		if teamContainsUser {
 			return contactData, nil
 		}
@@ -280,9 +297,11 @@ func isContactExists(dataBase moira.Database, contactID string) (bool, error) {
 	if errors.Is(err, database.ErrNil) {
 		return false, nil
 	}
+
 	if err != nil {
 		return false, err
 	}
+
 	return true, nil
 }
 
@@ -296,6 +315,7 @@ func isAllowedToUseContactType(auth *api.Authorization, userLogin string, contac
 
 func validateContact(contactsTemplate []api.WebContact, contact moira.ContactData) error {
 	var validationPattern string
+
 	for _, contactTemplate := range contactsTemplate {
 		if contactTemplate.ContactType == contact.Type {
 			validationPattern = contactTemplate.ValidationRegex

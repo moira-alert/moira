@@ -152,12 +152,15 @@ func graphiteTargetVerification(targets []string, ttl time.Duration, triggerSour
 		if err != nil {
 			functionsOfTarget.SyntaxOk = false
 			functionsOfTargets = append(functionsOfTargets, functionsOfTarget)
+
 			continue
 		}
+
 		isSpaceInMetricName := nestedExpr != ""
 		if isSpaceInMetricName {
 			functionsOfTarget.SyntaxOk = false
 			functionsOfTargets = append(functionsOfTargets, functionsOfTarget)
+
 			continue
 		}
 
@@ -237,6 +240,7 @@ func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemO
 				Description: "Incorrect seriesByTag syntax.",
 			}
 		}
+
 		if !valid {
 			return &ProblemOfTarget{
 				Argument:    funcName,
@@ -244,6 +248,7 @@ func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemO
 				Description: "seriesByTag function requires at least one argument with strict equality.",
 			}
 		}
+
 		funcName = "seriesByTag"
 	}
 
@@ -321,6 +326,7 @@ func hasWildcard(target string) bool {
 
 func positiveDuration(argument parser.Expr) (string, time.Duration) {
 	var secondTimeDuration time.Duration
+
 	var value string
 
 	switch argument.Type() {

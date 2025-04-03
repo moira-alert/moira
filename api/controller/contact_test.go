@@ -48,6 +48,7 @@ func TestGetAllContacts(t *testing.T) {
 		dataBase.EXPECT().GetAllContacts().Return(contacts, nil)
 		actual, err := GetAllContacts(dataBase)
 		So(err, ShouldBeNil)
+
 		expectedContacts := []dto.TeamContact{
 			{
 				ID:    contacts[0].ID,
@@ -103,6 +104,7 @@ func TestGetContactById(t *testing.T) {
 
 	Convey("Get contact with invalid or unexisting guid id should be empty json", t, func() {
 		const invalidId = "invalidID"
+
 		dataBase.EXPECT().GetContact(invalidId).Return(moira.ContactData{}, nil)
 		actual, err := GetContactById(dataBase, invalidId)
 		So(err, ShouldBeNil)
@@ -111,6 +113,7 @@ func TestGetContactById(t *testing.T) {
 
 	Convey("Error to fetch contact from db should rise api error", t, func() {
 		const contactID = "no-matter-what-id-is-there"
+
 		emptyContact := moira.ContactData{}
 		dbError := fmt.Errorf("some db internal error here")
 
@@ -154,6 +157,7 @@ func TestCreateContact(t *testing.T) {
 				Value: contactValue,
 				Type:  contactType,
 			}
+
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, userLogin, "")
 			So(err, ShouldBeNil)
@@ -172,6 +176,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  contact.Type,
 				User:  userLogin,
 			}
+
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, &contact, userLogin, "")
@@ -287,6 +292,7 @@ func TestCreateContact(t *testing.T) {
 				Value: contactValue,
 				Type:  contactType,
 			}
+
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, "", teamID)
 			So(err, ShouldBeNil)
@@ -305,6 +311,7 @@ func TestCreateContact(t *testing.T) {
 				Type:  contact.Type,
 				Team:  teamID,
 			}
+
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, &contact, "", teamID)
@@ -327,6 +334,7 @@ func TestCreateContact(t *testing.T) {
 				Name:  contact.Name,
 				Team:  teamID,
 			}
+
 			dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
 			dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, &contact, "", teamID)
@@ -443,6 +451,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				Type:  contactType,
 				User:  userLogin,
 			}
+
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, userLogin, "")
 			So(err, ShouldBeNil)
@@ -455,6 +464,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				Type:  contactType,
 				User:  adminLogin,
 			}
+
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, adminLogin, "")
 			So(err, ShouldBeNil)
@@ -467,6 +477,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				Type:  contactType,
 				User:  adminLogin,
 			}
+
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, userLogin, "")
 			So(err, ShouldBeNil)
@@ -479,6 +490,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				Type:  contactType,
 				User:  userLogin,
 			}
+
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, adminLogin, "")
 			So(err, ShouldBeNil)
@@ -491,6 +503,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				Type:  notAllowedContactType,
 				User:  userLogin,
 			}
+
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, adminLogin, "")
 			So(err, ShouldBeNil)
@@ -782,13 +795,16 @@ func TestIsAllowedContactType(t *testing.T) {
 
 func TestRemoveContact(t *testing.T) {
 	const userLogin = "user"
+
 	const teamID = "team"
+
 	contactID := uuid.Must(uuid.NewV4()).String()
 
 	Convey("Delete user contact", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 		Convey("Without subscriptions", func() {
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
 			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
@@ -819,6 +835,7 @@ func TestRemoveContact(t *testing.T) {
 			})
 			Convey("GetSubscriptions", func() {
 				expectedError := fmt.Errorf("oooops! Can not read user subscriptions")
+
 				dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
 				dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expectedError)
 				err := RemoveContact(dataBase, contactID, userLogin, "")
@@ -832,6 +849,7 @@ func TestRemoveContact(t *testing.T) {
 				}
 				subscriptionSubstring := fmt.Sprintf("%s (tags: %s)", subscription.ID, strings.Join(subscription.Tags, ", "))
 				expectedError := fmt.Errorf("this contact is being used in following subscriptions: %s", subscriptionSubstring)
+
 				dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
 				dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
 				err := RemoveContact(dataBase, contactID, userLogin, "")
@@ -844,6 +862,7 @@ func TestRemoveContact(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 		Convey("Without subscriptions", func() {
 			dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
 			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
@@ -874,6 +893,7 @@ func TestRemoveContact(t *testing.T) {
 			})
 			Convey("GetSubscriptions", func() {
 				expectedError := fmt.Errorf("oooops! Can not read team subscriptions")
+
 				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
 				dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expectedError)
 				err := RemoveContact(dataBase, contactID, "", teamID)
@@ -887,6 +907,7 @@ func TestRemoveContact(t *testing.T) {
 				}
 				subscriptionSubstring := fmt.Sprintf("%s (tags: %s)", subscription.ID, strings.Join(subscription.Tags, ", "))
 				expectedError := fmt.Errorf("this contact is being used in following subscriptions: %s", subscriptionSubstring)
+
 				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{subscription.ID}, nil)
 				dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
 				err := RemoveContact(dataBase, contactID, "", teamID)
@@ -973,6 +994,7 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 		})
 		Convey("Error while checking user team", func() {
 			errReturned := errors.New("test error")
+
 			dataBase.EXPECT().GetContact(id).Return(moira.ContactData{ID: id, Team: teamID}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(false, errReturned)
 			actual, err := CheckUserPermissionsForContact(dataBase, id, userLogin, auth)

@@ -19,6 +19,7 @@ func TestGetLogin(t *testing.T) {
 		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://testurl.com", http.NoBody)
 		ctx := context.WithValue(req.Context(), loginKey, "")
 		req = req.WithContext(ctx)
+
 		So(err, ShouldBeNil)
 		So(anonymousUser, ShouldEqual, GetLogin(req))
 	})
@@ -27,6 +28,7 @@ func TestGetLogin(t *testing.T) {
 		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://testurl.com", http.NoBody)
 		ctx := context.WithValue(req.Context(), loginKey, "awesome_user")
 		req = req.WithContext(ctx)
+
 		So(err, ShouldBeNil)
 		So("awesome_user", ShouldEqual, GetLogin(req))
 	})

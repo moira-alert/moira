@@ -17,6 +17,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	Convey("Delete metric by name", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 

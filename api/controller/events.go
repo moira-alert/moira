@@ -61,11 +61,13 @@ func GetTriggerEvents(
 		Total: eventCount,
 		List:  make([]moira.NotificationEvent, 0, len(events)),
 	}
+
 	for _, event := range events {
 		if event != nil {
 			eventsList.List = append(eventsList.List, *event)
 		}
 	}
+
 	return eventsList, nil
 }
 
@@ -108,5 +110,6 @@ func DeleteAllEvents(database moira.Database) *api.ErrorResponse {
 	if err := database.RemoveAllNotificationEvents(); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }
