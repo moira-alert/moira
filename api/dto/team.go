@@ -92,6 +92,7 @@ func (m TeamMembers) Bind(request *http.Request) error {
 	if len(m.Usernames) == 0 {
 		return fmt.Errorf("at least one user should be specified")
 	}
+
 	return nil
 }
 

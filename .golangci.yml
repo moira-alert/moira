@@ -49,6 +49,7 @@ linters:
     - usestdlibvars
 #    - wastedassign
     - whitespace
+    - wsl
   settings:
     gocyclo:
       min-complexity: 15
@@ -79,6 +80,9 @@ linters:
       - linters:
           - godot
         path: notifier/registrator.go
+      - linters:
+          - wsl
+        path-except: 'api/*/*'
     paths:
       - third_party$
       - builtin$

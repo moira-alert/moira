@@ -35,6 +35,7 @@ func testRequestOk(
 	wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 	wrappedHandler.ServeHTTP(responseWriter, testRequest)
+
 	response := responseWriter.Result()
 	defer response.Body.Close()
 
@@ -61,6 +62,7 @@ func testRequestFails(
 	wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 	wrappedHandler.ServeHTTP(responseWriter, testRequest)
+
 	response := responseWriter.Result()
 	defer response.Body.Close()
 	contentBytes, _ := io.ReadAll(response.Body)

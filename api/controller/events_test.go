@@ -22,11 +22,15 @@ var (
 func TestGetEvents(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	defer mockCtrl.Finish()
+
 	triggerID := uuid.Must(uuid.NewV4()).String()
 
 	var page int64 = 1
+
 	var size int64 = 2
+
 	from := "-inf"
 	to := "+inf"
 
@@ -67,6 +71,7 @@ func TestGetEvents(t *testing.T) {
 
 	Convey("Test no events", t, func() {
 		var total int64
+
 		dataBase.EXPECT().GetNotificationEvents(triggerID, zeroPage, allEventsSize, from, to).Return(make([]*moira.NotificationEvent, 0), nil)
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size, from, to, allMetrics, allStates)
 		So(err, ShouldBeNil)
@@ -90,6 +95,7 @@ func TestGetEvents(t *testing.T) {
 		Convey("by metric regex", func() {
 			page = 0
 			size = 2
+
 			Convey("with same pattern", func() {
 				filtered := []*moira.NotificationEvent{
 					{Metric: "metric.test.event1"},
@@ -122,6 +128,7 @@ func TestGetEvents(t *testing.T) {
 				})
 			})
 		})
+
 		page = 0
 		size = -1
 
@@ -136,6 +143,7 @@ func TestGetEvents(t *testing.T) {
 				{State: moira.StateNODATA},
 				{State: moira.StateERROR},
 			}
+
 			Convey("with empty map all allowed", func() {
 				total := int64(len(filtered) + len(notFiltered))
 				dataBase.EXPECT().GetNotificationEvents(triggerID, zeroPage, allEventsSize, from, to).Return(append(filtered, notFiltered...), nil)
@@ -271,6 +279,7 @@ func toDTOList(eventPtrs []*moira.NotificationEvent) []moira.NotificationEvent {
 	for _, ptr := range eventPtrs {
 		events = append(events, *ptr)
 	}
+
 	return events
 }
 

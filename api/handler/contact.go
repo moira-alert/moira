@@ -133,11 +133,13 @@ func contactFilter(next http.Handler) http.Handler {
 		contactID := middleware.GetContactID(request)
 		userLogin := middleware.GetLogin(request)
 		auth := middleware.GetAuth(request)
+
 		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
 		}
+
 		ctx := context.WithValue(request.Context(), contactKey, contactData)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
@@ -204,6 +206,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 //	@router		/contact/{contactID} [delete]
 func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
+
 	err := controller.RemoveContact(database, contactData.ID, contactData.User, contactData.Team)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
@@ -225,6 +228,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 //	@tags		contact
 func sendTestContactNotification(writer http.ResponseWriter, request *http.Request) {
 	contactID := middleware.GetContactID(request)
+
 	err := controller.SendTestContactNotification(database, contactID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
@@ -255,6 +259,7 @@ func getContactNoisiness(writer http.ResponseWriter, request *http.Request) {
 	sort := middleware.GetSortOrder(request)
 
 	validator := DateRangeValidator{AllowInf: true}
+
 	fromStr, toStr, err := validator.ValidateDateRangeStrings(fromStr, toStr)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint

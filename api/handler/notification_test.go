@@ -16,6 +16,7 @@ func TestGetNotifications(t *testing.T) {
 	Convey("test get notifications url parameters", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
@@ -58,6 +59,7 @@ func TestDeleteNotifications(t *testing.T) {
 	Convey("test delete notifications url parameters", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 

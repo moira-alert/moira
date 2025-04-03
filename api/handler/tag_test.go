@@ -27,6 +27,7 @@ const (
 
 func TestCreateTags(t *testing.T) {
 	const selfstateChecksContextKey = "selfstateChecks"
+
 	Convey("Test create tags", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -276,6 +277,7 @@ func TestRemoveTag(t *testing.T) {
 					ID: "test-sub",
 				},
 			}, nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, tagRoute+defaultTag, http.NoBody)

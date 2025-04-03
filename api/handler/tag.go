@@ -110,11 +110,13 @@ func createTags(writer http.ResponseWriter, request *http.Request) {
 //	@router		/tag/stats [get]
 func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	logger := middleware.GetLoggerEntry(request)
+
 	data, err := controller.GetAllTagsAndSubscriptions(database, logger)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, data); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
@@ -135,11 +137,13 @@ func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Reques
 //	@router		/tag/{tag} [delete]
 func removeTag(writer http.ResponseWriter, request *http.Request) {
 	tagName := middleware.GetTag(request)
+
 	response, err := controller.RemoveTag(database, tagName)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return

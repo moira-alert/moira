@@ -18,8 +18,10 @@ func AdminOnlyMiddleware() func(next http.Handler) http.Handler {
 				render.Render(w, r, api.ErrorForbidden("Only administrators can use this")) //nolint:errcheck
 				return
 			}
+
 			next.ServeHTTP(w, r)
 		}
+
 		return http.HandlerFunc(fn)
 	}
 }

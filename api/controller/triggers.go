@@ -27,23 +27,28 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
+
 		trigger.ID = uuid4.String()
 	} else {
 		if !idValidationPattern.MatchString(trigger.ID) {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger ID contains invalid characters (allowed: 0-9, a-z, A-Z, -, ~, _, .)"))
 		}
+
 		exists, err := triggerExists(dataBase, trigger.ID)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
+
 		if exists {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID (%s) already exists", trigger.ID))
 		}
 	}
+
 	resp, err := saveTrigger(dataBase, nil, trigger.ToMoiraTrigger(), trigger.ID, timeSeriesNames)
 	if resp != nil {
 		resp.Message = "trigger created"
 	}
+
 	return resp, err
 }
 
@@ -58,6 +63,7 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	triggersList := &dto.TriggersList{
 		List: triggerChecks,
 	}
@@ -68,26 +74,33 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 // SearchTriggers gets trigger page and filter trigger by tags and search request terms.
 func SearchTriggers(database moira.Database, searcher moira.Searcher, options moira.SearchOptions) (*dto.TriggersList, *api.ErrorResponse) { //nolint
 	var searchResults []*moira.SearchResult
+
 	var total int64
+
 	pagerShouldExist := options.PagerID != ""
 
 	if pagerShouldExist && (options.SearchString != "" || len(options.Tags) > 0) {
 		return nil, api.ErrorInvalidRequest(fmt.Errorf("cannot handle request with search string or tags and pager ID set"))
 	}
+
 	if pagerShouldExist {
 		var err error
+
 		searchResults, total, err = database.GetTriggersSearchResults(options.PagerID, options.Page, options.Size)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
+
 		if searchResults == nil {
 			return nil, api.ErrorNotFound("Pager not found")
 		}
 	} else {
 		var err error
+
 		if options.CreatePager {
 			options.Size = pageSizeUnlimited
 		}
+
 		searchResults, total, err = searcher.SearchTriggers(options)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
@@ -99,7 +112,9 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
+
 		options.PagerID = uuid4.String()
+
 		err = database.SaveTriggersSearchResults(options.PagerID, searchResults, options.PagerTTL)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
@@ -112,6 +127,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, options mo
 			from = int64(math.Min(float64(options.Page*options.Size), float64(len(searchResults))))
 			to = int64(math.Min(float64(from+options.Size), float64(len(searchResults))))
 		}
+
 		searchResults = searchResults[from:to]
 	}
 
@@ -161,13 +177,16 @@ func DeleteTriggersPager(database moira.Database, pagerID string) (dto.TriggersS
 	if err != nil {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorInternalServer(err)
 	}
+
 	if !exists {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorNotFound(fmt.Sprintf("pager with id %s not found", pagerID))
 	}
+
 	err = database.DeleteTriggersSearchResults(pagerID)
 	if err != nil {
 		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorInternalServer(err)
 	}
+
 	return dto.TriggersSearchResultDeleteResponse{PagerID: pagerID}, nil
 }
 
@@ -182,6 +201,7 @@ func GetUnusedTriggerIDs(database moira.Database) (*dto.TriggersList, *api.Error
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	triggersList := &dto.TriggersList{
 		List: triggerChecks,
 	}
@@ -194,7 +214,9 @@ func getTriggerChecks(database moira.Database, triggerIDs []string) ([]moira.Tri
 	if err != nil {
 		return nil, err
 	}
+
 	list := make([]moira.TriggerCheck, 0, len(triggerChecks))
+
 	for _, triggerCheck := range triggerChecks {
 		if triggerCheck != nil {
 			triggerCheck.LastCheck.RemoveDeadMetrics()
@@ -210,9 +232,11 @@ func triggerExists(database moira.Database, triggerID string) (bool, error) {
 	if errors.Is(err, db.ErrNil) {
 		return false, nil
 	}
+
 	if err != nil {
 		return false, err
 	}
+
 	return true, nil
 }
 

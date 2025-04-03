@@ -32,11 +32,13 @@ func TestGetTrigger(t *testing.T) {
 	Convey("Get trigger by id", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		Convey("When success and have empty created_at & updated_at should return null in response", func() {
 			throttlingTime := time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC)
+
 			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{
 				ID:            "triggerID-0000000000001",
 				TriggerSource: moira.GraphiteLocal,
@@ -123,6 +125,7 @@ func TestUpdateTrigger(t *testing.T) {
 	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 	fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -134,6 +137,7 @@ func TestUpdateTrigger(t *testing.T) {
 	database = mockDb
 
 	const triggerIDKey = "triggerID"
+
 	const triggerID = "testID"
 
 	Convey("When updateTrigger was called with normal input", t, func() {
@@ -292,6 +296,7 @@ func TestUpdateTrigger(t *testing.T) {
 				_ = json.Unmarshal(contentBytes, &actual)
 
 				So(actual.ID, ShouldEqual, triggerID)
+
 				expectedTargets := []dto.TreeOfProblems{
 					{
 						SyntaxOk: true,
@@ -308,7 +313,9 @@ func TestUpdateTrigger(t *testing.T) {
 					},
 				}
 				So(actual.CheckResult.Targets, ShouldResemble, expectedTargets)
+
 				const expected = "trigger updated"
+
 				So(actual.Message, ShouldEqual, expected)
 			})
 		})
@@ -404,6 +411,7 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 
 	db := mock_moira_alert.NewMockDatabase(mockCtrl)
 	database = db
+
 	defer func() { database = nil }()
 
 	const triggerId = "TestTriggerId"
@@ -546,6 +554,7 @@ func isTriggerUpdated(response *http.Response) bool {
 	contentBytes, _ := io.ReadAll(response.Body)
 	actual := dto.SaveTriggerResponse{}
 	_ = json.Unmarshal(contentBytes, &actual)
+
 	const expected = "trigger updated"
 
 	return actual.Message == expected

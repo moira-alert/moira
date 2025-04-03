@@ -12,6 +12,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	pattersList := dto.PatternList{
 		List: make([]dto.PatternData, 0, len(patterns)),
 	}
@@ -27,6 +28,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 					Msg("Failed to get pattern trigger IDs")
 				rch <- nil
 			}
+
 			triggers, err := database.GetTriggers(triggerIDs)
 			if err != nil {
 				logger.Error().
@@ -34,6 +36,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 					Msg("Failed to get trigger")
 				rch <- nil
 			}
+
 			metrics, err := database.GetPatternMetrics(pattern)
 			if err != nil {
 				logger.Error().
@@ -41,11 +44,13 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 					Msg("Failed to get pattern metrics")
 				rch <- nil
 			}
+
 			patternData := dto.PatternData{
 				Pattern:  pattern,
 				Triggers: make([]dto.TriggerModel, 0),
 				Metrics:  metrics,
 			}
+
 			for _, trigger := range triggers {
 				if trigger != nil {
 					patternData.Triggers = append(patternData.Triggers, dto.CreateTriggerModel(trigger))
@@ -69,5 +74,6 @@ func DeletePattern(database moira.Database, pattern string) *api.ErrorResponse {
 	if err := database.RemovePattern(pattern); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
 	return nil
 }
