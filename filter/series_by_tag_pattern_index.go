@@ -45,6 +45,7 @@ func NewSeriesByTagPatternIndex(
 					Error(err).
 					String("pattern", pattern).
 					Msg("Failed to create MatchingHandler for pattern")
+
 				continue
 			}
 

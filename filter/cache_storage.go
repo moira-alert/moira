@@ -59,9 +59,11 @@ func NewCacheStorage(logger moira.Logger, metrics *metrics.FilterMetrics, reader
 func (storage *Storage) EnrichMatchedMetric(batch map[string]*moira.MatchedMetric, m *moira.MatchedMetric) {
 	m.Retention = storage.getRetention(m)
 	m.RetentionTimestamp = moira.RoundToNearestRetention(m.Timestamp, int64(m.Retention))
+
 	if ex, ok := storage.metricsCache[m.Metric]; ok && ex.RetentionTimestamp == m.RetentionTimestamp && ex.Value == m.Value {
 		return
 	}
+
 	storage.metricsCache[m.Metric] = m
 	batch[m.Metric] = m
 }
@@ -78,6 +80,7 @@ func (storage *Storage) getRetention(m *moira.MatchedMetric) int {
 				value:     matcher.retention,
 				timestamp: m.Timestamp,
 			}
+
 			return matcher.retention
 		}
 	}
@@ -100,6 +103,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 				Error(invalidPatternFormatErr).
 				String("pattern_line", patternLine).
 				Msg("Invalid pattern format")
+
 			continue
 		}
 
@@ -119,6 +123,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 				String("pattern_line", patternLine).
 				String("retentions_line", retentionsLine).
 				Msg("Invalid retentions format")
+
 			continue
 		}
 
@@ -144,6 +149,7 @@ func rawRetentionToSeconds(rawRetention string) (int, error) {
 	}
 
 	multiplier := 1
+
 	switch {
 	case strings.HasSuffix(rawRetention, "m"):
 		multiplier = 60

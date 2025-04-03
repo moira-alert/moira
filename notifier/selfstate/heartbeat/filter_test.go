@@ -17,8 +17,10 @@ func TestFilter(t *testing.T) {
 	Convey("Test filter heartbeat", t, func() {
 		err := errors.New("test filter error")
 		now := time.Now().Unix()
+
 		check, mockCtrl := createFilterTest(t)
 		defer mockCtrl.Finish()
+
 		database := check.database.(*mock_moira_alert.MockDatabase)
 		defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
 
@@ -48,6 +50,7 @@ func TestFilter(t *testing.T) {
 
 		Convey("Test update lastSuccessfulCheck", func() {
 			now += 1000
+
 			database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 

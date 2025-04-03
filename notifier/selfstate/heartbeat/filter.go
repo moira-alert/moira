@@ -21,11 +21,13 @@ func GetFilter(delay, lastSuccessfulCheck int64, checkTags []string, logger moir
 			firstCheckWasSuccessful: false,
 		}
 	}
+
 	return nil
 }
 
 func (check *filter) Check(nowTS int64) (int64, bool, error) {
 	defaultLocalCluster := moira.DefaultLocalCluster
+
 	triggersCount, err := check.database.GetTriggersToCheckCount(defaultLocalCluster)
 	if err != nil {
 		return 0, false, err
@@ -35,9 +37,11 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 	if err != nil {
 		return 0, false, err
 	}
+
 	if check.count != metricsCount || triggersCount == 0 {
 		check.count = metricsCount
 		check.lastSuccessfulCheck = nowTS
+
 		return 0, false, nil
 	}
 
@@ -48,8 +52,10 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 			Msg("Send message")
 
 		check.firstCheckWasSuccessful = true
+
 		return nowTS - check.heartbeat.lastSuccessfulCheck, true, nil
 	}
+
 	return 0, false, nil
 }
 
