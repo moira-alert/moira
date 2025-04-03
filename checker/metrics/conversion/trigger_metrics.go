@@ -213,15 +213,17 @@ func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set
 // ConvertForCheck is a function that converts TriggerMetrics with structure
 // map[TargetName]map[MetricName]MetricData to ConvertedTriggerMetrics
 // with structure map[MetricName]map[TargetName]MetricData.
-func (m TriggerMetrics) ConvertForCheck() map[string]map[string]metricSource.MetricData {
+func (triggerMetrics TriggerMetrics) ConvertForCheck() map[string]map[string]metricSource.MetricData {
 	result := make(map[string]map[string]metricSource.MetricData)
-	for targetName, targetMetrics := range m {
-		for metricName := range targetMetrics {
+
+	for targetName, targetMetrics := range triggerMetrics {
+		for metricName, metricData := range targetMetrics {
 			if _, ok := result[metricName]; !ok {
-				result[metricName] = make(map[string]metricSource.MetricData, len(m))
+				result[metricName] = make(map[string]metricSource.MetricData, len(triggerMetrics))
 			}
-			result[metricName][targetName] = m[targetName][metricName]
+			result[metricName][targetName] = metricData
 		}
 	}
+
 	return result
 }
