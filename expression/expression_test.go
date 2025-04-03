@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/moira-alert/moira"
 )
 
 type getExpressionValuesTest struct {
@@ -86,16 +87,41 @@ func TestExpression(t *testing.T) {
 		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger, PreviousState: moira.StateNODATA}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateNODATA)
+	})
+}
 
-		expression = "t1 > 10 && t2 > 3 ? OK : ddd"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
-		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("invalid variable value: %w", fmt.Errorf("no value with name ddd"))})
-		So(result, ShouldBeEmpty)
+func TestValidate(t *testing.T) {
+	Convey("Test valid expressions", t, func() {
+		expression := "t1 > 10 && t2 > 3 ? OK : ERROR"
+		err := (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldBeNil)
+
+		expression = "t1 <= 0 ? PREV_STATE : (t1 >= 20 ? ERROR : (t1 >= 10 ? WARN : OK))"
+		err = (&TriggerExpression{PreviousState: moira.StateNODATA, Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldBeNil)
+
+		warnValue, errorValue := 60.0, 90.0
+		err = (&TriggerExpression{PreviousState: moira.StateNODATA, Expression: nil, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger, MainTargetValue: 5}).Validate()
+		SoMsg("validating simple expression", err, ShouldBeNil)
+	})
+	Convey("Test bad expressions", t, func() {
+		err := (&TriggerExpression{Expression: nil, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("trigger_type set to expression, but no expression provided")})
+	})
+	Convey("Test invalid expressions", t, func() {
+		expression := "t1 > 10 && t2 > 3 ? OK : ddd"
+		err := (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldNotBeNil)
+		So(err.Error(), ShouldResemble, `unknown name ddd (1:26)
+ | t1 > 10 && t2 > 3 ? ok : ddd
+ | .........................^`)
 
 		expression = "t1 > 10 ? OK : (t2 < 5 ? WARN : ERROR)"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Evaluate()
-		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("invalid variable value: %w", fmt.Errorf("no value with name t2"))})
-		So(result, ShouldBeEmpty)
+		err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldNotBeNil)
+		So(err.Error(), ShouldResemble, `unknown name t2 (1:17)
+ | t1 > 10 ? ok : (t2 < 5 ? warn : error)
+ | ................^`)
 	})
 }
 
