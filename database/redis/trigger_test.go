@@ -21,6 +21,7 @@ func TestTriggerStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Trigger manipulation", t, func() {
@@ -481,6 +482,7 @@ func TestTriggerStoring(t *testing.T) {
 
 		Convey("Test trigger manipulations update 'triggers to reindex' list", func() {
 			dataBase.Flush()
+
 			trigger := &testTriggers[0]
 
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
@@ -536,6 +538,7 @@ func TestTriggerStoring(t *testing.T) {
 func TestRemoteTrigger(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	systemClock := mock_clock.NewMockClock(mockCtrl)
@@ -551,7 +554,9 @@ func TestRemoteTrigger(t *testing.T) {
 		TriggerType:   moira.RisingTrigger,
 		AloneMetrics:  map[string]bool{},
 	}
+
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	client := *dataBase.client
 
@@ -571,6 +576,7 @@ func TestRemoteTrigger(t *testing.T) {
 			ids, err := dataBase.GetAllTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
+
 			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-triggers-list}:moira-triggers-list").Val()
 			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
 		})
@@ -583,6 +589,7 @@ func TestRemoteTrigger(t *testing.T) {
 			ids, err := dataBase.GetTriggerIDs(moira.DefaultGraphiteRemoteCluster)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
+
 			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-triggers-list}:moira-remote-triggers-list").Val()
 			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
 		})
@@ -602,6 +609,7 @@ func TestRemoteTrigger(t *testing.T) {
 	Convey("Update remote trigger as local", t, func() {
 		trigger.TriggerSource = moira.GraphiteLocal
 		trigger.Patterns = []string{pattern}
+
 		Convey("Trigger should be saved correctly", func() {
 			systemClock.EXPECT().NowUnix().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 
@@ -644,6 +652,7 @@ func TestRemoteTrigger(t *testing.T) {
 		})
 
 		trigger.TriggerSource = moira.GraphiteRemote
+
 		Convey("Update this trigger as remote", func() {
 			systemClock.EXPECT().NowUnix().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 
@@ -687,6 +696,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Should not throw error when no connection", t, func() {
@@ -807,6 +817,7 @@ func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	db := NewTestDatabase(logger)
 	db.Flush()
+
 	defer db.Flush()
 
 	Convey("Given 3 triggers in DB", t, func() {
@@ -842,9 +853,11 @@ func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
 
 			Convey("Returned triggers should resemble triggers with prefix", func() {
 				So(err, ShouldBeNil)
+
 				expected := []string{triggerWithPrefix1.ID, triggerWithPrefix2.ID}
 
 				So(matchedTriggers, ShouldHaveLength, len(expected))
+
 				for _, trigger := range expected {
 					So(matchedTriggers, ShouldContain, trigger)
 				}

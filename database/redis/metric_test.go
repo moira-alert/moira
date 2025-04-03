@@ -29,6 +29,7 @@ func TestMetricsStoring(t *testing.T) {
 	metric1 := "my.test.super.metric" //nolint
 	metric2 := "my.test.super.metric2"
 	pattern := "my.test.*.metric*" //nolint
+
 	Convey("GetPatterns works only if you add new trigger with this pattern", t, func() {
 		trigger := moira.Trigger{
 			ID:       "id",
@@ -197,6 +198,7 @@ func TestRemoveMetricRetention(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Given metric", t, func() {
@@ -244,6 +246,7 @@ func TestRemoveMetricValues(t *testing.T) {
 	dataBase := NewTestDatabase(logger)
 	dataBase.metricsCache = cache.New(time.Second*2, time.Minute*60)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Test that old metrics will be deleted", t, func() {
@@ -624,9 +627,11 @@ func TestMetricSubscription(t *testing.T) {
 
 	dataBase.Flush()
 	defer dataBase.Flush()
+
 	metric1 := "my.test.super.metric"
 	metric2 := "my.test.super.metric2"
 	pattern := "my.test.*.metric*"
+
 	Convey("Subscription manipulation", t, func() {
 		var tomb1 tomb.Tomb
 		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
@@ -658,18 +663,24 @@ func TestMetricSubscription(t *testing.T) {
 				metricEvent, ok := <-ch
 				if !ok {
 					numberOfChecks++
+
 					logger.Info().Msg("Channel closed, end test")
+
 					return nil
 				}
+
 				if metricEvent.Metric == metric1 {
 					Convey("Test", t, func() {
 						numberOfChecks++
+
 						So(metricEvent, ShouldResemble, &moira.MetricEvent{Pattern: pattern, Metric: metric1})
 					})
 				}
+
 				if metricEvent.Metric == metric2 {
 					Convey("Test", t, func() {
 						numberOfChecks++
+
 						So(metricEvent, ShouldResemble, &moira.MetricEvent{Pattern: pattern, Metric: metric2})
 					})
 				}
@@ -693,6 +704,7 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual, err := dataBase.GetPatterns()
@@ -727,6 +739,7 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		from := fromInf
+
 		var toTs int64 = 1
 		to := strconv.FormatInt(toTs, 10)
 		deletedCount, err := dataBase.RemoveMetricValues("123", from, to)
@@ -745,6 +758,7 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Given 2 metrics with 2 values older then 1 minute and 2 values younger then 1 minute", t, func() {
@@ -895,6 +909,7 @@ func TestCleanupFutureMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	mockCtrl := gomock.NewController(t)
@@ -1071,6 +1086,7 @@ func TestCleanupOutdatedPatternMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	const (
@@ -1210,6 +1226,7 @@ func TestGetNonExistentPatternMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	const (
@@ -1341,6 +1358,7 @@ func TestCleanupAbandonedRetention(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Given 2 metrics", t, func() {
@@ -1422,8 +1440,10 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	client := *dataBase.client
+
 	const pattern = "my.test.*.metric*"
 
 	Convey("Given metrics with pattern my.test.*", t, func() {
@@ -1478,6 +1498,7 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 				So(len(result), ShouldResemble, 10)
 				result = client.Keys(dataBase.context, "moira-metric-retention:my.test.mega.*").Val()
 				So(len(result), ShouldResemble, 10)
+
 				patternMetricsCount := client.SCard(dataBase.context, "moira-pattern-metrics:my.test.*.metric*").Val()
 				So(patternMetricsCount, ShouldResemble, int64(10))
 			})
@@ -1489,8 +1510,10 @@ func TestRemoveAllMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	client := *dataBase.client
+
 	const pattern = "my.test.*.metric*"
 
 	Convey("Given metrics with pattern my.test.*", t, func() {

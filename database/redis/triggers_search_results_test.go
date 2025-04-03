@@ -91,9 +91,11 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
 	}
+
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Search Results Manipulation", t, func() {
@@ -152,6 +154,7 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 	defer dataBase.Flush()
 
 	b.ReportAllocs()
+
 	limits := []int{10, 100, 1000, 10000, 100000}
 	for _, limit := range limits {
 		data := make([]*moira.SearchResult, limit)
@@ -174,6 +177,7 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 				},
 			}
 		}
+
 		dataBase.Flush()
 		b.Run(fmt.Sprintf("Benchmark%d", limit), func(b *testing.B) {
 			for n := 0; n < b.N; n++ {

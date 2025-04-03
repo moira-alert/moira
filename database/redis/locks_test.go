@@ -21,12 +21,14 @@ func Test(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	db := NewTestDatabase(logger)
 	db.Flush()
+
 	defer db.Flush()
 
 	Convey("Acquire/Release", t, func() {
 		lockName := "test:" + strconv.Itoa(rand.Int())
 		lock := db.NewLock(lockName, time.Second)
 		_, err := lock.Acquire(nil)
+
 		defer lock.Release()
 
 		So(err, ShouldBeNil)
@@ -36,6 +38,7 @@ func Test(t *testing.T) {
 		lockName := "test:" + strconv.Itoa(rand.Int())
 		lock := db.NewLock(lockName, time.Second)
 		_, err := lock.Acquire(nil)
+
 		defer lock.Release()
 		So(err, ShouldBeNil)
 
@@ -47,6 +50,7 @@ func Test(t *testing.T) {
 		lockName := "test:" + strconv.Itoa(rand.Int())
 		lock := db.NewLock(lockName, time.Second)
 		lost, err := lock.Acquire(nil)
+
 		defer lock.Release()
 		So(err, ShouldBeNil)
 
@@ -67,6 +71,7 @@ func Test(t *testing.T) {
 		lockName := "test:" + strconv.Itoa(rand.Int())
 		lock := db.NewLock(lockName, time.Second)
 		_, err := lock.Acquire(nil)
+
 		defer lock.Release()
 		So(err, ShouldBeNil)
 

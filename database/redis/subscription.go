@@ -21,10 +21,13 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 	if err != nil {
 		return subscription, err
 	}
+
 	if subscription.Tags == nil {
 		subscription.Tags = []string{}
 	}
+
 	subscription.ID = id
+
 	return subscription, nil
 }
 
@@ -40,26 +43,31 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 		result := pipe.Get(connector.context, subscriptionKey(id))
 		results = append(results, result)
 	}
+
 	_, err := pipe.Exec(connector.context)
 
 	if err != nil && !errors.Is(err, redis.Nil) {
 		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	for i, result := range results {
 		if result.Val() != "" {
 			subscription, err := reply.Subscription(result)
 			if err != nil {
 				return nil, err
 			}
+
 			subscription.ID = subscriptionIDs[i]
 			if subscription.Tags == nil {
 				subscription.Tags = []string{}
 			}
+
 			subscriptions = append(subscriptions, &subscription)
 		} else {
 			subscriptions = append(subscriptions, nil)
 		}
 	}
+
 	return subscriptions, nil
 }
 
@@ -72,17 +80,21 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 	} else if !errors.Is(err, database.ErrNil) {
 		return err
 	}
+
 	oldTriggers, err := connector.getSubscriptionTriggers(oldSubscription)
 	if err != nil {
 		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
 	}
+
 	if err = connector.updateSubscription(subscription, oldSubscription); err != nil {
 		return fmt.Errorf("failed to update subscription: %s", err.Error())
 	}
+
 	newTriggers, err := connector.getSubscriptionTriggers(subscription)
 	if err != nil {
 		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
 	}
+
 	return connector.refreshUnusedTriggers(newTriggers, oldTriggers)
 }
 
@@ -91,10 +103,12 @@ func (connector *DbConnector) updateSubscription(newSubscription *moira.Subscrip
 
 	pipe := c.TxPipeline()                                                                 //nolint
 	addSendSubscriptionRequest(connector.context, pipe, *newSubscription, oldSubscription) //nolint
+
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 
@@ -104,24 +118,30 @@ func (connector *DbConnector) SaveSubscriptions(newSubscriptions []*moira.Subscr
 	for i, subscription := range newSubscriptions {
 		ids[i] = subscription.ID
 	}
+
 	oldSubscriptions, err := connector.GetSubscriptions(ids)
 	if err != nil {
 		return err
 	}
+
 	oldTriggers, err := connector.getSubscriptionsTriggers(oldSubscriptions)
 	if err != nil {
 		return err
 	}
+
 	if err = connector.updateSubscriptions(oldSubscriptions, newSubscriptions); err != nil {
 		return err
 	}
+
 	newTriggers, err := connector.getSubscriptionsTriggers(newSubscriptions)
 	if err != nil {
 		return err
 	}
+
 	if err := connector.refreshUnusedTriggers(newTriggers, oldTriggers); err != nil {
 		return fmt.Errorf("failed to update triggers by subscription: %s", err.Error())
 	}
+
 	return nil
 }
 
@@ -132,10 +152,12 @@ func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.Subs
 	for i, newSubscription := range newSubscriptions {
 		addSendSubscriptionRequest(connector.context, pipe, *newSubscription, oldSubscriptions[i]) //nolint
 	}
+
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 
@@ -146,18 +168,23 @@ func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 		if errors.Is(err, database.ErrNil) {
 			return nil
 		}
+
 		return err
 	}
+
 	triggers, err := connector.getSubscriptionTriggers(&subscription)
 	if err != nil {
 		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
 	}
+
 	if err := connector.removeSubscription(&subscription); err != nil {
 		return fmt.Errorf("failed to remove subscription: %s", err.Error())
 	}
+
 	if err := connector.refreshUnusedTriggers([]*moira.Trigger{}, triggers); err != nil {
 		return fmt.Errorf("failed to update triggers by subscription: %s", err.Error())
 	}
+
 	return nil
 }
 
@@ -167,14 +194,17 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 	pipe := c.TxPipeline()
 	pipe.SRem(connector.context, userSubscriptionsKey(subscription.User), subscription.ID)   //nolint
 	pipe.SRem(connector.context, teamSubscriptionsKey(subscription.TeamID), subscription.ID) //nolint
+
 	for _, tag := range subscription.Tags {
 		c.SRem(connector.context, tagSubscriptionKey(tag), subscription.ID) //nolint
 	}
 	pipe.SRem(connector.context, anyTagsSubscriptionsKey, subscription.ID) //nolint
 	pipe.Del(connector.context, subscriptionKey(subscription.ID))          //nolint
+
 	if _, err := pipe.Exec(connector.context); err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 
@@ -186,6 +216,7 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for user login %s: %s", login, err.Error())
 	}
+
 	return subscriptions, nil
 }
 
@@ -197,6 +228,7 @@ func (connector *DbConnector) GetTeamSubscriptionIDs(teamID string) ([]string, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for team id %s: %w", teamID, err)
 	}
+
 	return subscriptions, nil
 }
 
@@ -223,11 +255,14 @@ func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string
 	for _, tag := range tags {
 		tagKeys = append(tagKeys, tagSubscriptionKey(tag))
 	}
+
 	tagKeys = append(tagKeys, anyTagsSubscriptionsKey)
+
 	values, err := c.SUnion(connector.context, tagKeys...).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
 	}
+
 	return values, nil
 }
 
@@ -235,17 +270,21 @@ func addSendSubscriptionRequest(context context.Context, pipe redis.Pipeliner, s
 	if subscription.AnyTags {
 		subscription.Tags = nil
 	}
+
 	bytes, err := json.Marshal(subscription)
 	if err != nil {
 		return err
 	}
+
 	if oldSubscription != nil {
 		for _, tag := range oldSubscription.Tags {
 			pipe.SRem(context, tagSubscriptionKey(tag), subscription.ID) //nolint
 		}
+
 		if oldSubscription.User != subscription.User {
 			pipe.SRem(context, userSubscriptionsKey(oldSubscription.User), subscription.ID) //nolint
 		}
+
 		if oldSubscription.TeamID != subscription.TeamID {
 			pipe.SRem(context, teamSubscriptionsKey(oldSubscription.TeamID), subscription.ID) //nolint
 		}
@@ -262,10 +301,12 @@ func addSendSubscriptionRequest(context context.Context, pipe redis.Pipeliner, s
 	if subscription.User != "" {
 		pipe.SAdd(context, userSubscriptionsKey(subscription.User), subscription.ID) //nolint
 	}
+
 	if subscription.TeamID != "" {
 		pipe.SAdd(context, teamSubscriptionsKey(subscription.TeamID), subscription.ID) //nolint
 	}
 	pipe.Set(context, subscriptionKey(subscription.ID), bytes, redis.KeepTTL) //nolint
+
 	return nil
 }
 
@@ -293,13 +334,16 @@ func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.Subscr
 	if subscription == nil {
 		return make([]*moira.Trigger, 0), nil
 	}
+
 	triggersIDs, err := connector.getTriggersIdsByTags(subscription.Tags)
 	if err != nil {
 		return nil, err
 	}
+
 	if len(triggersIDs) == 0 {
 		return make([]*moira.Trigger, 0), nil
 	}
+
 	return connector.GetTriggers(triggersIDs)
 }
 
@@ -312,16 +356,20 @@ func (connector *DbConnector) getSubscriptionsTriggers(subscriptions []*moira.Su
 		if err != nil {
 			return triggers, err
 		}
+
 		for _, trigger := range subscriptionTriggers {
 			if trigger == nil {
 				continue
 			}
+
 			triggersMap[trigger.ID] = trigger
 		}
 	}
+
 	for _, trigger := range triggersMap {
 		triggers = append(triggers, trigger)
 	}
+
 	return triggers, nil
 }
 

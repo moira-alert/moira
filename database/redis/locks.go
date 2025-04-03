@@ -88,13 +88,16 @@ func (lock *Lock) tryAcquire() (<-chan struct{}, error) {
 
 	lost := make(chan struct{})
 	lock.extend = make(chan struct{})
+
 	go extendMutex(lock.mutex, lock.ttl, lost, lock.extend)
 	lock.isHeld = true
+
 	return lost, nil
 }
 
 func extendMutex(mutex moira.Mutex, ttl time.Duration, done chan struct{}, stop <-chan struct{}) {
 	defer close(done)
+
 	extendTicker := time.NewTicker(ttl / 3) //nolint
 	defer extendTicker.Stop()
 

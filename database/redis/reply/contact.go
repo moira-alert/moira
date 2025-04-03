@@ -13,10 +13,12 @@ import (
 
 func unmarshalContact(bytes []byte, err error) (moira.ContactData, error) {
 	contact := moira.ContactData{}
+
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return contact, database.ErrNil
 		}
+
 		return contact, fmt.Errorf("failed to read contact: %s", err.Error())
 	}
 
@@ -36,16 +38,19 @@ func Contact(rep *redis.StringCmd) (moira.ContactData, error) {
 // Contacts converts redis DB reply to moira.ContactData objects array.
 func Contacts(rep []*redis.StringCmd) ([]*moira.ContactData, error) {
 	contacts := make([]*moira.ContactData, len(rep))
+
 	for i, value := range rep {
 		contact, err := unmarshalContact(value.Bytes())
 		if err != nil && !errors.Is(err, database.ErrNil) {
 			return nil, err
 		}
+
 		if errors.Is(err, database.ErrNil) {
 			contacts[i] = nil
 		} else {
 			contacts[i] = &contact
 		}
 	}
+
 	return contacts, nil
 }

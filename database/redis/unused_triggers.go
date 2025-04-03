@@ -20,10 +20,12 @@ func (connector *DbConnector) MarkTriggersAsUnused(triggerIDs ...string) error {
 	for _, triggerID := range triggerIDs {
 		pipe.SAdd(connector.context, unusedTriggersKey, triggerID) //nolint
 	}
+
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to mark triggers as unused: %s", err.Error())
 	}
+
 	return nil
 }
 
@@ -37,8 +39,10 @@ func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
 		if errors.Is(err, redis.Nil) {
 			return make([]string, 0), nil
 		}
+
 		return nil, fmt.Errorf("failed to get all unused triggers: %s", err.Error())
 	}
+
 	return triggerIds, nil
 }
 
@@ -49,10 +53,12 @@ func (connector *DbConnector) MarkTriggersAsUsed(triggerIDs ...string) error {
 	}
 
 	c := *connector.client
+
 	pipe := c.TxPipeline()
 	for _, triggerID := range triggerIDs {
 		pipe.SRem(connector.context, unusedTriggersKey, triggerID) //nolint
 	}
+
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to mark triggers as used: %s", err.Error())
@@ -75,6 +81,7 @@ func (connector *DbConnector) refreshUnusedTriggers(newTriggers, oldTriggers []*
 		if err != nil {
 			return err
 		}
+
 		if !ok {
 			unusedTriggerIDs = append(unusedTriggerIDs, trigger.ID)
 		}

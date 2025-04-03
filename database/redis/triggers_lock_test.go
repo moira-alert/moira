@@ -14,6 +14,7 @@ func TestLock(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Test lock manipulation", t, func() {
 		triggerID1 := "id"
@@ -48,6 +49,7 @@ func TestLockErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.AcquireTriggerCheckLock("tr1", 4)
