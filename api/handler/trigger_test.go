@@ -409,7 +409,7 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 	const triggerId = "TestTriggerId"
 
 	Convey("Given database returns trigger with TriggerSource = GraphiteLocal", t, func() {
-		request := httptest.NewRequest("GET", "/trigger/"+triggerId, nil)
+		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerId, nil)
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
 
@@ -452,7 +452,7 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given database returns trigger with TriggerSource = GraphiteRemote", t, func() {
-		request := httptest.NewRequest("GET", "/trigger/"+triggerId, nil)
+		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerId, nil)
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
 
@@ -495,7 +495,7 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given database returns trigger with TriggerSource = PrometheusTrigger", t, func() {
-		request := httptest.NewRequest("GET", "/trigger/"+triggerId, nil)
+		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerId, nil)
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
 

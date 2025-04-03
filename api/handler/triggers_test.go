@@ -903,7 +903,7 @@ func newTriggerCreateRequest(
 	triggerId string,
 	jsonTrigger []byte,
 ) *http.Request {
-	request := httptest.NewRequest("PUT", "/trigger", bytes.NewBuffer(jsonTrigger))
+	request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewBuffer(jsonTrigger))
 	request.Header.Add("content-type", "application/json")
 	request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 	request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "clustersMetricTTL", MakeTestTTLs()))
@@ -930,7 +930,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 	database = mockDB
 
 	getRequestTriggerNoisiness := func(from, to string) *http.Request {
-		request := httptest.NewRequest("GET", "/trigger/noisiness", nil)
+		request := httptest.NewRequest(http.MethodGet, "/trigger/noisiness", nil)
 		request.Header.Add("content-type", "application/json")
 
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "page", int64(0)))

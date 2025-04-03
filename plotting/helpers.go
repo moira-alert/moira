@@ -22,8 +22,8 @@ func sanitizeLabelName(label string, maxLabelLength int) string {
 }
 
 // percentsOfRange results expected percents of range by given min and max values.
-func percentsOfRange(min, max, percent float64) float64 {
-	delta := math.Abs(max - min)
+func percentsOfRange(minValue, maxValue, percent float64) float64 {
+	delta := math.Abs(maxValue - minValue)
 	return percent * (delta / 100)
 }
 
@@ -73,7 +73,7 @@ func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int
 	return formatter, highestLen
 }
 
-// floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot.
+// floatToHumanizedValueFormatter converts floats into humanized strings on y-axis of plot.
 func floatToHumanizedValueFormatter(v interface{}) string {
 	if typed, isTyped := v.(float64); isTyped {
 		if math.Abs(typed) < 1000 { //nolint

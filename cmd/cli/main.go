@@ -539,7 +539,7 @@ func openFile(filePath string, mode int) (*os.File, error) {
 	if filePath == "" {
 		return nil, fmt.Errorf("file is not specified")
 	}
-	file, err := os.OpenFile(filePath, mode, 0o666) //nolint:gofumpt,gomnd
+	file, err := os.OpenFile(filePath, mode, 0o666) //nolint:gofumpt,mnd
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}
