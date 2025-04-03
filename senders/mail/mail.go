@@ -49,16 +49,20 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	if err != nil {
 		return err
 	}
+
 	sender.TemplateName, sender.Template, err = parseTemplate(sender.TemplateFile)
 	if err != nil {
 		return err
 	}
+
 	err = sender.tryDial()
+
 	return err
 }
 
 func (sender *Sender) fillSettings(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
@@ -92,14 +96,17 @@ func parseTemplate(templateFilePath string) (name string, parsedTemplate *templa
 	if templateFilePath == "" {
 		templateName := "mail" //nolint
 		parsedTemplate, err = template.New(templateName).Parse(defaultTemplate)
+
 		return templateName, parsedTemplate, err
 	}
+
 	templateName := filepath.Base(templateFilePath)
 	parsedTemplate, err = template.New(templateName).Funcs(template.FuncMap{
 		"htmlSafe": func(html string) template.HTML {
 			return template.HTML(html)
 		},
 	}).ParseFiles(templateFilePath)
+
 	return templateName, parsedTemplate, err
 }
 
@@ -124,6 +131,7 @@ func (sender *Sender) tryDial() error {
 		if err := t.StartTLS(tlsConfig); err != nil {
 			return err
 		}
+
 		if err := t.Auth(smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPHost)); err != nil {
 			return err
 		}

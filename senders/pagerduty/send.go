@@ -18,10 +18,12 @@ const summaryMaxChars = 1024
 // SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	event := sender.buildEvent(events, contact, trigger, plots, throttled)
+
 	_, err := pagerduty.ManageEventWithContext(context.Background(), event)
 	if err != nil {
 		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %w. ", contact.Value, err)
 	}
+
 	return nil
 }
 
@@ -31,6 +33,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 
 	details["Trigger Name"] = trigger.Name
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
+
 	if triggerURI != "" {
 		details["Trigger URI"] = triggerURI
 	}
@@ -46,6 +49,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
+
 		eventList += line
 	}
 
@@ -90,19 +94,23 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) getSeverity(events moira.NotificationEvents) string {
 	severity := "info"
+
 	for _, event := range events {
 		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
 			severity = "error"
 		}
+
 		if severity != "error" && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
 			severity = "warning"
 		}
 	}
+
 	return severity
 }
 
 func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var summary bytes.Buffer
+
 	state := events.GetCurrentState(throttled)
 
 	summary.WriteString(string(state))
@@ -114,10 +122,13 @@ func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moir
 		summary.WriteString(" ")
 		summary.WriteString(tags)
 	}
+
 	if len(summary.String()) > summaryMaxChars {
 		summaryStr := summary.String()[:1000]
 		summaryStr += "..."
+
 		return summaryStr
 	}
+
 	return summary.String()
 }

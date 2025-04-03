@@ -54,6 +54,7 @@ func TestInit(t *testing.T) {
 
 func TestGetPushoverPriority(t *testing.T) {
 	sender := Sender{}
+
 	Convey("All events has OK state", t, func() {
 		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateOK}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, pushover_client.PriorityNormal)
@@ -141,6 +142,7 @@ Please, fix your system or tune this trigger to generate less events.`
 
 func TestBuildTitle(t *testing.T) {
 	sender := Sender{}
+
 	Convey("Build title with three events with max ERROR state and two tags without throttling", t, func() {
 		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, false)
 		So(title, ShouldResemble, "ERROR Name [tag1][tag2] (4)")
@@ -188,6 +190,7 @@ func TestMakePushoverMessage(t *testing.T) {
 		location: location,
 		logger:   logger,
 	}
+
 	Convey("Just build PushoverMessage", t, func() {
 		event := []moira.NotificationEvent{
 			{

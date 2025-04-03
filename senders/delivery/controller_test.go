@@ -23,6 +23,7 @@ func Test_storingDeliveryChecks(t *testing.T) {
 	mockDB := mock_moira_alert.NewMockDeliveryCheckerDatabase(mockCtrl)
 
 	const testContactType = "test_contact_type"
+
 	errFromDB := errors.New("some db error")
 
 	controller := NewChecksController(mockDB, nil, testContactType)
@@ -194,6 +195,7 @@ func TestChecksController_RunDeliveryChecksWorker(t *testing.T) {
 
 		Convey("with not closed channel", func() {
 			stopChannel := make(chan struct{})
+
 			lost := make(chan struct{})
 			defer close(lost)
 

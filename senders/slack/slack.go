@@ -49,6 +49,7 @@ type Sender struct {
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to slack config: %w", err)
@@ -129,6 +130,7 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 		desc = string(slackdown.Run([]byte(desc)))
 		desc += "\n"
 	}
+
 	return desc
 }
 
@@ -154,6 +156,7 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		Markdown:  true,
 		LinkNames: 1,
 	}
+
 	sender.logger.Debug().
 		String("message", message).
 		Msg("Calling slack")
@@ -165,14 +168,17 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 			errorText == ErrorTextChannelNotFound {
 			return channelID, threadTimestamp, moira.NewSenderBrokenContactError(err)
 		}
+
 		return channelID, threadTimestamp, fmt.Errorf("failed to send %s event message to slack [%s]: %s",
 			triggerID, contact, errorText)
 	}
+
 	return channelID, threadTimestamp, nil
 }
 
 func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, triggerID string) error {
 	filename := fmt.Sprintf("%s.png", triggerID)
+
 	for _, plot := range plots {
 		reader := bytes.NewReader(plot)
 		uploadParameters := slack_client.UploadFileV2Parameters{

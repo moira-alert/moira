@@ -79,10 +79,7 @@ linters:
         path: _test\.go
       - linters:
           - godot
-        path: notifier/registrator.go
-      - linters:
-          - wsl
-        path-except: 'api|clock|cmd|docs|expression|image_store|templating|support|checker|database|filter|index|metric_source|metrics|notifier|plotting|logging|worker/*/*'
+        path: notifier/registrator.go'
     paths:
       - third_party$
       - builtin$

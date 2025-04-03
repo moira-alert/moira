@@ -26,6 +26,7 @@ func (sender *Sender) handleMessage(message *telebot.Message) error {
 
 func (sender *Sender) getResponseMessage(message *telebot.Message) (string, error) {
 	chatID := strconv.FormatInt(message.Chat.ID, 10)
+
 	switch {
 	case message.Chat.Type == telebot.ChatPrivate && message.Text == "/start":
 		if message.Chat.Username == "" {

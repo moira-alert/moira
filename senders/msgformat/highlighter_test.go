@@ -24,6 +24,7 @@ func TestFormat(t *testing.T) {
 
 		provider, err := emoji_provider.NewEmojiProvider("", nil)
 		So(err, ShouldBeNil)
+
 		formatter := NewHighlightSyntaxFormatter(
 			provider,
 			false,
@@ -277,6 +278,7 @@ func genEventsByLimit(event moira.NotificationEvent, oneEventLineLen int, limit 
 	for i := 0; i < limit/oneEventLineLen; i++ {
 		events = append(events, event)
 	}
+
 	return events
 }
 
@@ -289,6 +291,7 @@ func testDescriptionFormatter(trigger moira.TriggerData) string {
 	if trigger.Desc != "" {
 		desc += "\n"
 	}
+
 	return desc
 }
 

@@ -99,6 +99,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 func formatDescription(desc string) template.HTML {
 	htmlDesc := blackfriday.Run([]byte(desc))
 	htmlDescWithbr := strings.ReplaceAll(string(htmlDesc), "\n", "<br/>")
+
 	return template.HTML(htmlDescWithbr)
 }
 
@@ -115,8 +116,10 @@ func (sender *Sender) dialAndSend(message *gomail.Message) error {
 	if sender.Password != "" {
 		d.Auth = smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPHost)
 	}
+
 	if err := d.DialAndSend(message); err != nil {
 		return err
 	}
+
 	return nil
 }

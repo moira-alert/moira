@@ -20,10 +20,12 @@ const (
 // SendEvents sends the events as an alert to opsgenie.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	createAlertRequest := sender.makeCreateAlertRequest(events, contact, trigger, plots, throttled)
+
 	_, err := sender.client.Create(context.Background(), createAlertRequest)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to opsgenie: %s", trigger.ID, err.Error())
 	}
+
 	return nil
 }
 
@@ -73,12 +75,14 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 		desc = desc[:descNewLen-charsForHTMLTags] + "...\n"
 		htmlDesc = string(blackfriday.Run([]byte(desc)))
 	}
+
 	if eventsNewLen != eventsStringLen {
 		eventsString = sender.buildEventsString(events, eventsNewLen, throttled)
 	}
 
 	message.WriteString(htmlDesc)
 	message.WriteString(eventsString)
+
 	return message.String()
 }
 
@@ -87,14 +91,18 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."
+
 	if throttled {
 		charsForThrottleMsg = len([]rune(throttleMsg))
 	}
+
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
+
 	eventsLenLimitReached := false
 	eventsPrinted := 0
+
 	for _, event := range events {
 		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
@@ -134,6 +142,7 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 		for i := 0; i < len(trigger.Tags)-tags; i++ {
 			tagBuffer.WriteString(fmt.Sprintf("[%s]", trigger.Tags[i]))
 		}
+
 		title = fmt.Sprintf("%s %s %s.... (%d)", state, trigger.Name, tagBuffer.String(), len(events))
 		tags++
 	}
@@ -143,13 +152,16 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 
 func (sender *Sender) getMessagePriority(events moira.NotificationEvents) alert.Priority {
 	priority := alert.P5
+
 	for _, event := range events {
 		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
 			priority = alert.P1
 		}
+
 		if priority != alert.P1 && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
 			priority = alert.P3
 		}
 	}
+
 	return priority
 }

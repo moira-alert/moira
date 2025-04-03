@@ -37,6 +37,7 @@ type Sender struct {
 // Init reads the yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to discord config: %w", err)
@@ -84,13 +85,16 @@ func (sender *Sender) runBot(contactType string) {
 		sender.logger.Error().
 			Error(err).
 			Msg("error creating a connection to discord")
+
 		return
 	}
+
 	sender.botUserID = sender.session.State.User.ID
 
 	workerAction := func(stop <-chan struct{}) error {
 		defer sender.session.Close()
 		<-stop
+
 		return nil
 	}
 

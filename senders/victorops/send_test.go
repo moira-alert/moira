@@ -34,6 +34,7 @@ func TestBuildMessage(t *testing.T) {
 		}
 
 		strippedDesc := "test\n test test test\n"
+
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := strippedDesc + "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
@@ -76,6 +77,7 @@ func TestBuildMessage(t *testing.T) {
 
 func TestBuildCreateAlertRequest(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
@@ -99,6 +101,7 @@ func TestBuildCreateAlertRequest(t *testing.T) {
 
 		Convey("Build CreateAlertRequest with one moira event and plot", func() {
 			imageStore.EXPECT().StoreImage([]byte("test")).Return("test", nil)
+
 			actual := sender.buildCreateAlertRequest(moira.NotificationEvents{event}, trigger, false, [][]byte{[]byte("test")}, 150000000)
 			expected := api.CreateAlertRequest{
 				MessageType:       api.Warning,

@@ -15,6 +15,7 @@ import (
 func TestBuildEvent(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
@@ -149,6 +150,7 @@ func TestBuildEvent(t *testing.T) {
 			for i := 0; i < 10; i++ {
 				events = append(events, event)
 			}
+
 			actual := sender.buildEvent(events, contact, trigger, [][]byte{}, true)
 			expected := baseExpected
 			details := map[string]interface{}{

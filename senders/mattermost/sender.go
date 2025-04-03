@@ -48,6 +48,7 @@ var (
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
 	var cfg config
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
@@ -101,6 +102,7 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 	if trigger.Desc != "" {
 		desc += "\n"
 	}
+
 	return desc
 }
 
@@ -122,10 +124,12 @@ func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) str
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
 	ctx := context.Background()
+
 	post, err := sender.sendMessage(ctx, message, contact.Value, trigger.ID)
 	if err != nil {
 		return err
 	}
+
 	if len(plots) > 0 {
 		err = sender.sendPlots(ctx, plots, contact.Value, post.Id, trigger.ID)
 		if err != nil {
@@ -172,6 +176,7 @@ func (sender *Sender) sendPlots(ctx context.Context, plots [][]byte, channelID, 
 		if err != nil {
 			return err
 		}
+
 		for _, info := range file.FileInfos {
 			filesID = append(filesID, info.Id)
 		}

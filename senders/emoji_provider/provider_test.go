@@ -22,6 +22,7 @@ func TestNewEmojiProvider(t *testing.T) {
 			},
 		)
 		So(err, ShouldBeNil)
+
 		expected := &emojiProvider{
 			defaultValue: "default",
 			stateEmojiMap: map[moira.State]string{

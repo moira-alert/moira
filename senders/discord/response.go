@@ -20,14 +20,18 @@ func (sender *Sender) getResponse(m *discordgo.MessageCreate, channel *discordgo
 			if err != nil {
 				return "", fmt.Errorf("error while setting the channel ID for user: %w", err)
 			}
+
 			msg := fmt.Sprintf("Okay, %s, your id is %s", m.Author.Username, channel.ID)
+
 			return msg, nil
 		case discordgo.ChannelTypeGuildText:
 			err := sender.DataBase.SetUsernameChat(messenger, channel.Name, channel.ID)
 			if err != nil {
 				return "", fmt.Errorf("error while setting the channel ID for text channel: %w", err)
 			}
+
 			msg := fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", channel.Name)
+
 			return msg, nil
 		default:
 			return "Unsupported channel type", nil
