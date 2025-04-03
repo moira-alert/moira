@@ -155,6 +155,7 @@ func TestThrottling(t *testing.T) {
 		expected2.SendFail = 3
 		expected2.Timestamp = now.Add(10 * time.Minute).Unix()
 		expected2.Throttled = true
+
 		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 		dataBase.EXPECT().GetTriggerThrottling(params2.Event.TriggerID).Return(next, now)
 		dataBase.EXPECT().GetSubscription(*params2.Event.SubscriptionID).Return(subscription, nil)
@@ -178,6 +179,7 @@ func TestThrottling(t *testing.T) {
 
 		expected3 := expected
 		expected3.Event = testEvent
+
 		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
@@ -189,6 +191,7 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(moira.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
 
 		params2 := params
+
 		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
@@ -225,8 +228,10 @@ func TestSubscriptionSchedule(t *testing.T) {
 	Convey("Throttling disabled", t, func() {
 		now := time.Unix(1441187115, 0)
 		subscription.ThrottlingEnabled = false
+
 		Convey("When current time is allowed, should send notification now", func() {
 			subscription.Schedule = schedule1
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -237,6 +242,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 		Convey("When allowed time is today, should send notification at the beginning of allowed interval", func() {
 			subscription.Schedule = schedule2
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -248,6 +254,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		Convey("When allowed time is in a future day, should send notification at the beginning of allowed interval", func() {
 			now = time.Unix(1441101600, 0)
 			subscription.Schedule = schedule1
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -258,6 +265,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 		Convey("Trigger already alarm fatigue, but now throttling disabled, should send notification now", func() {
 			subscription.Schedule = schedule1
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(1441187215, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -322,6 +330,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441191600, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule3
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -336,6 +345,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441144800, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule3
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -350,6 +360,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441148400, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule3
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -364,6 +375,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441141200, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule3
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -378,6 +390,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441141140, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule3
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -392,6 +405,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441148340, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule3
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -409,6 +423,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441140300, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule4
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -423,6 +438,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441143300, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule4
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -437,6 +453,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441213200, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule4
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -451,6 +468,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441225800, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule4
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -465,6 +483,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441206000, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule4
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -479,6 +498,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441205940, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule4
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
@@ -493,6 +513,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now := time.Unix(1441225740, 0)
 			subscription.ThrottlingEnabled = false
 			subscription.Schedule = schedule4
+
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 

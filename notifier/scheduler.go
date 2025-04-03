@@ -113,6 +113,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 		logger.Debug().
 			Error(err).
 			Msg("Failed get subscription")
+
 		return next, alarmFatigue
 	}
 
@@ -127,6 +128,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				if from.Before(beginning) {
 					from = beginning
 				}
+
 				count := scheduler.database.GetNotificationEventCount(event.TriggerID, strconv.FormatInt(from.Unix(), 10), allTimeTo)
 				if count >= level.count {
 					next = now.Add(level.delay)
@@ -141,7 +143,9 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 							Error(err).
 							Msg("Failed to set trigger throttling timestamp")
 					}
+
 					alarmFatigue = true
+
 					break
 				} else if count == level.count-1 {
 					alarmFatigue = true
@@ -151,12 +155,14 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	} else {
 		next = now
 	}
+
 	next, err = calculateNextDelivery(&subscription.Schedule, next)
 	if err != nil {
 		logger.Error().
 			Error(err).
 			Msg("Failed to apply schedule")
 	}
+
 	return next, alarmFatigue
 }
 
@@ -198,6 +204,7 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	for i := 0; i < 8; i++ {
 		nextLocalDayBegin := localNextTimeDay.Add(time.Duration(i*24) * time.Hour) //nolint
 		nextLocalWeekDay := int(nextLocalDayBegin.Weekday()+6) % 7                 //nolint
+
 		if localNextTime.After(nextLocalDayBegin.Add(beginOffset)) {
 			continue
 		}

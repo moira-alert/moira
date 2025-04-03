@@ -54,6 +54,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 				NotificationEvent: generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue, nowTS),
 				CheckTags:         heartbeat.GetCheckTags(),
 			})
+
 			if heartbeat.NeedTurnOffNotifier() {
 				selfCheck.setNotifierState(moira.SelfStateERROR)
 			}
@@ -74,6 +75,7 @@ func (selfCheck *SelfCheckWorker) sendNotification(events []heartbeatNotificatio
 		String("events_json", string(eventsJSON)).
 		Msg("Health check. Send package notification events")
 	selfCheck.sendErrorMessages(events)
+
 	return nowTS + selfCheck.Config.NoticeIntervalSeconds
 }
 
@@ -88,6 +90,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64)
 
 func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNotificationEvent) ([]*notifier.NotificationPackage, error) {
 	contactToEvents := make(map[*moira.ContactData][]moira.NotificationEvent)
+
 	for _, event := range events {
 		if len(event.CheckTags) == 0 {
 			continue
@@ -97,11 +100,13 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 		if err != nil {
 			return nil, err
 		}
+
 		for _, subscription := range subscriptions {
 			contacts, err := selfCheck.Database.GetContacts(subscription.Contacts)
 			if err != nil {
 				return nil, err
 			}
+
 			for _, contact := range contacts {
 				contactToEvents[contact] = append(contactToEvents[contact], event.NotificationEvent)
 			}
@@ -177,6 +182,7 @@ func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.Notifi
 
 func generateNotificationEvent(message string, currentValue, timestamp int64) moira.NotificationEvent {
 	val := float64(currentValue)
+
 	return moira.NotificationEvent{
 		Timestamp: timestamp,
 		OldState:  moira.StateNODATA,
