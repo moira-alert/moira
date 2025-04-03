@@ -46,6 +46,7 @@ var testTeams = []teamWithID{
 func Test_fillTeamNamesHash(t *testing.T) {
 	Convey("Test filling \"moira-teams-by-names\" redis hash", t, func() {
 		conf := getDefault()
+
 		logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
 		if err != nil {
 			t.Fatal(err)
@@ -207,6 +208,7 @@ func Test_fillTeamNamesHash(t *testing.T) {
 func Test_removeTeamNamesHash(t *testing.T) {
 	Convey("Test removing \"moira-teams-by-names\" hash", t, func() {
 		conf := getDefault()
+
 		logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
 		if err != nil {
 			t.Fatal(err)

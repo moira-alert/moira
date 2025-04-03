@@ -25,14 +25,17 @@ func (imageStore *ImageStore) Init(config Config) error {
 	if config.AccessKeyID == "" {
 		return fmt.Errorf("access key id not found while configuring s3 image store")
 	}
+
 	if config.AccessKey == "" {
 		return fmt.Errorf("access key not found while configuring s3 image store")
 	}
+
 	awsconfig.Credentials = credentials.NewStaticCredentials(config.AccessKeyID, config.AccessKey, "")
 
 	if config.Region == "" {
 		return fmt.Errorf("region not found while configuring s3 image store")
 	}
+
 	awsconfig.Region = aws.String(config.Region)
 
 	imageStore.bucket = config.Bucket
@@ -41,13 +44,16 @@ func (imageStore *ImageStore) Init(config Config) error {
 	}
 
 	var err error
+
 	imageStore.sess, err = session.NewSession(awsconfig)
 	if err != nil {
 		return fmt.Errorf("could not configure s3 session: %w", err)
 	}
+
 	imageStore.uploader = s3manager.NewUploader(imageStore.sess)
 
 	imageStore.enabled = true
+
 	return nil
 }
 

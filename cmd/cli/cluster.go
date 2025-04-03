@@ -24,12 +24,14 @@ func renameKey(database moira.Database, oldValue, newValue string) error {
 	switch d := database.(type) {
 	case *redis.DbConnector:
 		pipe := d.Client().TxPipeline()
+
 		iter := d.Client().Scan(d.Context(), 0, oldValue, 0).Iterator()
 		for iter.Next(d.Context()) {
 			oldKey := iter.Val()
 			newKey := strings.Replace(iter.Val(), oldValue, newValue, 1)
 			pipe.Rename(d.Context(), oldKey, newKey)
 		}
+
 		_, err := pipe.Exec(d.Context())
 		if err != nil {
 			return err
@@ -45,12 +47,14 @@ func changeKeysPrefix(database moira.Database, oldPrefix string, newPrefix strin
 	switch d := database.(type) {
 	case *redis.DbConnector:
 		pipe := d.Client().TxPipeline()
+
 		iter := d.Client().Scan(d.Context(), 0, oldPrefix+"*", 0).Iterator()
 		for iter.Next(d.Context()) {
 			oldKey := iter.Val()
 			newKey := strings.Replace(iter.Val(), oldPrefix, newPrefix, 1)
 			pipe.Rename(d.Context(), oldKey, newKey)
 		}
+
 		_, err := pipe.Exec(d.Context())
 		if err != nil {
 			return err

@@ -99,12 +99,15 @@ var additionalTestNotificationHistoryEvents = []*moira.NotificationEventHistoryI
 
 func TestSplitNotificationHistory(t *testing.T) {
 	conf := getDefault()
+
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	db := redis.NewTestDatabase(logger)
 	db.Flush()
+
 	defer db.Flush()
 
 	ctx := context.Background()
@@ -197,12 +200,15 @@ func testSplitNotificationHistory(
 
 func TestMergeNotificationHistory(t *testing.T) {
 	conf := getDefault()
+
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	db := redis.NewTestDatabase(logger)
 	db.Flush()
+
 	defer db.Flush()
 
 	ctx := context.Background()
@@ -293,13 +299,16 @@ func testMergeNotificationHistory(
 
 func prepareNotSplitItemsToInsert(notificationEvents []*moira.NotificationEventHistoryItem) ([]*goredis.Z, error) {
 	resList := make([]*goredis.Z, 0, len(notificationEvents))
+
 	for _, notificationEvent := range notificationEvents {
 		toInsert, err := toInsertableItem(notificationEvent)
 		if err != nil {
 			return nil, err
 		}
+
 		resList = append(resList, toInsert)
 	}
+
 	return resList, nil
 }
 
@@ -308,6 +317,7 @@ func toInsertableItem(notificationEvent *moira.NotificationEventHistoryItem) (*g
 	if err != nil {
 		return nil, err
 	}
+
 	return &goredis.Z{Score: float64(notificationEvent.TimeStamp), Member: notificationBytes}, nil
 }
 
@@ -332,20 +342,24 @@ func eventsByKey(notificationEvents []*moira.NotificationEventHistoryItem) map[s
 	for _, event := range notificationEvents {
 		statistics[event.ContactID] = append(statistics[event.ContactID], event)
 	}
+
 	return statistics
 }
 
 func prepareSplitItemsToInsert(eventsMap map[string][]*moira.NotificationEventHistoryItem) (map[string][]*goredis.Z, error) {
 	resMap := make(map[string][]*goredis.Z, len(eventsMap))
+
 	for contactID, notificationEvents := range eventsMap {
 		for _, notificationEvent := range notificationEvents {
 			toInsert, err := toInsertableItem(notificationEvent)
 			if err != nil {
 				return nil, err
 			}
+
 			resMap[contactID] = append(resMap[contactID], toInsert)
 		}
 	}
+
 	return resMap, nil
 }
 

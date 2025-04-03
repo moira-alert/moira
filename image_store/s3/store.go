@@ -16,6 +16,7 @@ func (imageStore *ImageStore) StoreImage(image []byte) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error while creating upload input: %w", err)
 	}
+
 	result, err := imageStore.uploader.Upload(uploadInput)
 	if err != nil {
 		return "", fmt.Errorf("error while uploading to s3: %w", err)
@@ -29,7 +30,9 @@ func (imageStore *ImageStore) buildUploadInput(image []byte) (*s3manager.UploadI
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate uuid: %w", err)
 	}
+
 	key := "moira-plots/" + uuid.String()
+
 	return &s3manager.UploadInput{
 		Bucket:             aws.String(imageStore.bucket),
 		Key:                aws.String(key),

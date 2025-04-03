@@ -15,6 +15,7 @@ import (
 
 func Test_deleteTriggers(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	db := mocks.NewMockDatabase(mockCtrl)
@@ -42,6 +43,7 @@ func Test_deleteTriggers(t *testing.T) {
 
 func Test_handleRemoveTriggersStartWith(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	db := mocks.NewMockDatabase(mockCtrl)
@@ -69,6 +71,7 @@ func Test_handleRemoveTriggersStartWith(t *testing.T) {
 
 func Test_handleRemoveUnusedTriggersStartWith(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	db := mocks.NewMockDatabase(mockCtrl)
@@ -105,6 +108,7 @@ func Test_handleRemoveUnusedTriggersStartWith(t *testing.T) {
 
 func Test_handleRemoveUnusedTriggersWithTTL(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	db := mocks.NewMockDatabase(mockCtrl)

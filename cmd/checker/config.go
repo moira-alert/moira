@@ -64,6 +64,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 	for _, v := range config.Checker.SetLogLevel.TriggersToLevel {
 		logTriggersToLevel[v.ID] = v.Level
 	}
+
 	logger.Info().
 		Int("number_of_triggers", len(logTriggersToLevel)).
 		Msg("Found dynamic log rules in config for some triggers")
@@ -81,6 +82,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 			String("cluster_id", "default").
 			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 	}
+
 	sourceCheckConfigs[moira.DefaultLocalCluster] = localCheckConfig
 
 	for _, remote := range config.Remotes.Graphite {
@@ -95,6 +97,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 				String("cluster_id", remote.ClusterId.String()).
 				Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 		}
+
 		sourceCheckConfigs[moira.MakeClusterKey(moira.GraphiteRemote, remote.ClusterId)] = checkConfig
 	}
 
@@ -110,6 +113,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 				String("cluster_id", remote.ClusterId.String()).
 				Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 		}
+
 		sourceCheckConfigs[moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterId)] = checkConfig
 	}
 

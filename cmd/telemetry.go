@@ -28,12 +28,15 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 	if err != nil {
 		return nil, err
 	}
+
 	prometheusRegistry := metrics.NewPrometheusRegistry()
 	prometheusRegistryAdapter := metrics.NewPrometheusRegistryAdapter(prometheusRegistry, service)
+
 	stopServer, err := startTelemetryServer(logger, config.Listen, config.Pprof, prometheusRegistry)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Telemetry{Metrics: metrics.NewCompositeRegistry(graphiteRegistry, prometheusRegistryAdapter), stopFunc: stopServer}, nil
 }
 
@@ -42,6 +45,7 @@ func startTelemetryServer(logger moira.Logger, listen string, pprofConfig Profil
 	if err != nil {
 		return nil, err
 	}
+
 	serverMux := http.NewServeMux()
 	if pprofConfig.Enabled {
 		serverMux.HandleFunc("/pprof/", pprof.Index)
@@ -52,19 +56,24 @@ func startTelemetryServer(logger moira.Logger, listen string, pprofConfig Profil
 		serverMux.HandleFunc("/pprof/heap", pprof.Handler("heap").ServeHTTP)
 		serverMux.HandleFunc("/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	}
+
 	serverMux.Handle("/metrics", promhttp.InstrumentMetricHandler(prometheusRegistry, promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})))
 	server := &http.Server{Handler: serverMux}
+
 	go func() {
 		server.Serve(listener) //nolint
 	}()
+
 	stopServer := func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //nolint
 		defer cancel()
+
 		if err := server.Shutdown(ctx); err != nil {
 			logger.Error().
 				Error(err).
 				Msg("Can't stop telemetry server correctly")
 		}
 	}
+
 	return stopServer, nil
 }

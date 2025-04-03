@@ -161,6 +161,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 			String("timezone", config.Timezone).
 			Error(err).
 			Msg("Timezone load failed. Use UTC.")
+
 		location, _ = time.LoadLocation("UTC")
 	} else {
 		logger.Info().
@@ -186,12 +187,14 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 	if config.ReadBatchSize > 0 {
 		readBatchSize = int64(config.ReadBatchSize)
 	}
+
 	if config.ReadBatchSize <= 0 && int64(config.ReadBatchSize) != notifier.NotificationsLimitUnlimited {
 		logger.Warning().
 			Int("read_batch_size", config.ReadBatchSize).
 			Int64("notification_limit_unlimited", notifier.NotificationsLimitUnlimited).
 			Msg("Current config's read_batch_size is invalid, value ignored")
 	}
+
 	logger.Info().
 		Int64("read_batch_size", readBatchSize).
 		Msg("Current read_batch_size")
@@ -200,10 +203,12 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 	for _, v := range config.SetLogLevel.Contacts {
 		contacts[v.ID] = v.Level
 	}
+
 	subscriptions := map[string]string{}
 	for _, v := range config.SetLogLevel.Subscriptions {
 		subscriptions[v.ID] = v.Level
 	}
+
 	logger.Info().
 		Int("contacts_count", len(contacts)).
 		Int("subscriptions_count", len(subscriptions)).
@@ -230,9 +235,11 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 func checkDateTimeFormat(format string) error {
 	fallbackTime := time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
 	parsedTime, err := time.Parse(format, time.Now().Format(format))
+
 	if err != nil || parsedTime == fallbackTime {
 		return fmt.Errorf("could not parse date time format '%v', result: '%v', error: '%w'", format, parsedTime, err)
 	}
+
 	return nil
 }
 
