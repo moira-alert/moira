@@ -2,6 +2,7 @@ package selfstate
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 	"time"
 
@@ -41,26 +42,23 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNotificationEvent {
 	var events []heartbeatNotificationEvent
 
-	for _, heartbeat := range selfCheck.heartbeats {
-		currentValue, hasErrors, err := heartbeat.Check(nowTS)
-		if err != nil {
-			selfCheck.Logger.Error().
-				Error(err).
-				Msg("Heartbeat failed")
-		}
+	checksGraph := constructHeartbeatsGraph(selfCheck.heartbeats)
+	checksResult, err := checksGraph.executeGraph(nowTS)
+	if err != nil {
+		selfCheck.Logger.Error().
+			Error(err).
+			Msg("Heartbeats failed")
+	}
 
-		if hasErrors {
-			events = append(events, heartbeatNotificationEvent{
-				NotificationEvent: generateNotificationEvent(heartbeat.GetErrorMessage(), currentValue, nowTS),
-				CheckTags:         heartbeat.GetCheckTags(),
-			})
-			if heartbeat.NeedTurnOffNotifier() {
-				selfCheck.setNotifierState(moira.SelfStateERROR)
-			}
+	if checksResult.hasErrors {
+		errorMessage := strings.Join(checksResult.errorMessages, "\n")
+		events = append(events, heartbeatNotificationEvent{
+			NotificationEvent: generateNotificationEvent(errorMessage, checksResult.lastSuccessCheckElapsedTime, nowTS),
+			CheckTags:         checksResult.checksTags,
+		})
 
-			if !heartbeat.NeedToCheckOthers() {
-				break
-			}
+		if checksResult.needTurnOffNotifier {
+			selfCheck.setNotifierState(moira.SelfStateERROR)
 		}
 	}
 
@@ -97,6 +95,7 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 		if err != nil {
 			return nil, err
 		}
+
 		for _, subscription := range subscriptions {
 			contacts, err := selfCheck.Database.GetContacts(subscription.Contacts)
 			if err != nil {
@@ -175,8 +174,8 @@ func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.Notifi
 	}
 }
 
-func generateNotificationEvent(message string, currentValue, timestamp int64) moira.NotificationEvent {
-	val := float64(currentValue)
+func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, timestamp int64) moira.NotificationEvent {
+	val := float64(lastSuccessCheckElapsedTime)
 	return moira.NotificationEvent{
 		Timestamp: timestamp,
 		OldState:  moira.StateNODATA,

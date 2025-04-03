@@ -176,6 +176,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			check := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{check}
 
+			check.EXPECT().NeedToCheckOthers().Return(false)
 			check.EXPECT().Check(now).Return(int64(0), false, err)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
@@ -193,6 +194,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetCheckTags().Return([]string{})
+			second.EXPECT().NeedToCheckOthers().Return(false)
 			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
@@ -212,6 +214,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().NeedTurnOffNotifier().Return(true)
 			first.EXPECT().NeedToCheckOthers().Return(false)
 			first.EXPECT().GetCheckTags().Return([]string{})
+			second.EXPECT().NeedToCheckOthers().Return(false)
 			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(err)
 			mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
