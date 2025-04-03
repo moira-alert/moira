@@ -30,6 +30,7 @@ func TestInitTriggerChecker(t *testing.T) {
 		metrics.NewDummyRegistry(),
 		[]moira.ClusterKey{moira.DefaultLocalCluster},
 	)
+
 	defer mockCtrl.Finish()
 
 	Convey("Test errors", t, func() {
@@ -39,6 +40,7 @@ func TestInitTriggerChecker(t *testing.T) {
 				TriggerSource: moira.GraphiteLocal,
 				ClusterId:     moira.DefaultCluster,
 			}, getTriggerError)
+
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, getTriggerError)
@@ -49,6 +51,7 @@ func TestInitTriggerChecker(t *testing.T) {
 				TriggerSource: moira.GraphiteLocal,
 				ClusterId:     moira.DefaultCluster,
 			}, database.ErrNil)
+
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, ErrTriggerNotExists)
@@ -56,6 +59,7 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		Convey("Get lastCheck error", func() {
 			readLastCheckError := fmt.Errorf("Oppps! Can't read last check")
+
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
 				TriggerType:   moira.RisingTrigger,
 				TriggerSource: moira.GraphiteLocal,
@@ -69,9 +73,13 @@ func TestInitTriggerChecker(t *testing.T) {
 	})
 
 	var warnValue float64 = 10000
+
 	var errorValue float64 = 100000
+
 	var ttl int64 = 900
+
 	var value float64
+
 	trigger := moira.Trigger{
 		ID:            "d39b8510-b2f4-448c-b881-824658c58128",
 		Name:          "Time",

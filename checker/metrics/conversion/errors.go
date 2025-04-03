@@ -29,10 +29,12 @@ func (b *errUnexpectedAloneMetricBuilder) addUnexpected(targetName string, unexp
 	if b.result.unexpected == nil {
 		b.result.unexpected = make(map[string][]string)
 	}
+
 	metricNames := []string{}
 	for metricName := range unexpected {
 		metricNames = append(metricNames, metricName)
 	}
+
 	b.result.unexpected[targetName] = metricNames
 }
 
@@ -40,6 +42,7 @@ func (b *errUnexpectedAloneMetricBuilder) build() error {
 	if b.returnError {
 		return b.result
 	}
+
 	return nil
 }
 
@@ -56,26 +59,34 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 
 	builder.WriteString("Unexpected to have some targets with more than only one metric.\n")
 	builder.WriteString("Expected targets with only one metric:")
+
 	expectedArray := make([]string, 0, len(err.declared))
 	for targetName := range err.declared {
 		expectedArray = append(expectedArray, targetName)
 	}
+
 	sort.Strings(expectedArray)
+
 	for i, targetName := range expectedArray {
 		if i > 0 {
 			builder.WriteRune(',')
 		}
+
 		builder.WriteRune(' ')
 		builder.WriteString(targetName)
 	}
+
 	builder.WriteRune('\n')
 
 	builder.WriteString("Targets with multiple metrics but that declared as targets with alone metrics:")
+
 	actualArray := make([]string, 0, len(err.unexpected))
 	for targetName := range err.unexpected {
 		actualArray = append(actualArray, targetName)
 	}
+
 	sort.Strings(actualArray)
+
 	for _, targetName := range actualArray {
 		builder.WriteRune('\n')
 		builder.WriteRune('\t')
@@ -83,6 +94,7 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 		builder.WriteString(" — ")
 		builder.WriteString(strings.Join(err.unexpected[targetName], ", "))
 	}
+
 	return builder.String()
 }
 

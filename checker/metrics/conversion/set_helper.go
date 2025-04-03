@@ -32,6 +32,7 @@ func newSetFromTriggerTargetMetrics(metrics TriggerTargetMetrics) set[string] {
 	for metricName := range metrics {
 		result.insert(metricName)
 	}
+
 	return result
 }
 
@@ -56,6 +57,7 @@ func (self set[string]) union(other set[string]) set[string] {
 	for metricName := range self {
 		result.insert(metricName)
 	}
+
 	for metricName := range other {
 		result.insert(metricName)
 	}

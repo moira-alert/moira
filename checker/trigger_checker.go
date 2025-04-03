@@ -44,11 +44,13 @@ func MakeTriggerChecker(
 	metrics *metrics.CheckerMetrics,
 ) (*TriggerChecker, error) {
 	until := time.Now().Unix()
+
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {
 			return nil, ErrTriggerNotExists
 		}
+
 		return nil, err
 	}
 

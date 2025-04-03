@@ -13,6 +13,7 @@ func isOneMetricMap(metrics map[string]metricSource.MetricData) (bool, string) {
 			return true, metricName
 		}
 	}
+
 	return false, ""
 }
 
@@ -22,6 +23,7 @@ func MetricName(metrics map[string]metricSource.MetricData) string {
 	if metric, ok := metrics[firstTarget]; ok {
 		return metric.Name
 	}
+
 	return ""
 }
 
@@ -32,6 +34,7 @@ func GetRelations(metrics map[string]metricSource.MetricData, declaredAloneMetri
 	for targetName := range declaredAloneMetrics {
 		result[targetName] = metrics[targetName].Name
 	}
+
 	return result
 }
 
@@ -42,9 +45,11 @@ func Merge(metrics map[string]metricSource.MetricData, other map[string]metricSo
 	for k, v := range metrics {
 		result[k] = v
 	}
+
 	for k, v := range other {
 		result[k] = v
 	}
+
 	return result
 }
 
@@ -57,16 +62,19 @@ func HasOnlyWildcards(metrics map[string][]metricSource.MetricData) bool {
 			}
 		}
 	}
+
 	return true
 }
 
 // HasEmptyTargets is a function that checks if there is exist targets withhout metrics.
 func HasEmptyTargets(metrics map[string][]metricSource.MetricData) (bool, []string) {
 	result := []string{}
+
 	for targetName, targetMetrics := range metrics {
 		if len(targetMetrics) == 0 {
 			result = append(result, targetName)
 		}
 	}
+
 	return len(result) > 0, result
 }

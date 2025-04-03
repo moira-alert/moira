@@ -50,6 +50,7 @@ func (m AloneMetrics) Populate(lastCheckMetricsToTargetRelation map[string]strin
 
 		metricName, existInLastCheck := lastCheckMetricsToTargetRelation[targetName]
 		metric, existInCurrentAloneMetrics := m[targetName]
+
 		if !existInCurrentAloneMetrics && !existInLastCheck {
 			return AloneMetrics{}, NewErrEmptyAloneMetricsTarget(targetName)
 		}
@@ -59,6 +60,7 @@ func (m AloneMetrics) Populate(lastCheckMetricsToTargetRelation map[string]strin
 			if len(m) > 0 && firstMetric.StepTime != 0 {
 				step = firstMetric.StepTime
 			}
+
 			metric = *metricSource.MakeEmptyMetricData(metricName, step, from, to)
 		}
 

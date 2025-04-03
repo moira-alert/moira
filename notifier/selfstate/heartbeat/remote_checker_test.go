@@ -19,8 +19,10 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 	Convey("Test remote checker heartbeat", t, func() {
 		err := errors.New("test error remoteChecker")
 		now := time.Now().Unix()
+
 		check, mockCtrl := createGraphiteRemoteCheckerTest(t)
 		defer mockCtrl.Finish()
+
 		database := check.database.(*mock_moira_alert.MockDatabase)
 
 		Convey("Checking the created graphite remote checker", func() {
@@ -40,6 +42,7 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 
 		Convey("Test update lastSuccessfulCheck", func() {
 			now += 1000
+
 			database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
 			database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 

@@ -33,6 +33,7 @@ func (manager *WorkerManager) startLocalMetricEvents() error {
 	}
 
 	defaultLocalKey := moira.DefaultLocalCluster
+
 	localConfig, ok := manager.Config.SourceCheckConfigs[defaultLocalKey]
 	if !ok {
 		return fmt.Errorf("can not initialize localMetricEvents: default local source is not configured")
@@ -64,6 +65,7 @@ func (manager *WorkerManager) newMetricsHandler(metricEventsChannel <-chan *moir
 		if !ok {
 			return nil
 		}
+
 		pattern := metricEvent.Pattern
 		if manager.needHandlePattern(pattern) {
 			if err := manager.handleMetricEvent(pattern); err != nil {
@@ -100,6 +102,7 @@ func (manager *WorkerManager) handleMetricEvent(pattern string) error {
 	}
 
 	manager.scheduleLocalTriggerIDsIfNeeded(triggerIds)
+
 	return nil
 }
 
@@ -112,6 +115,7 @@ func (manager *WorkerManager) scheduleLocalTriggerIDsIfNeeded(triggerIDs []strin
 
 func (manager *WorkerManager) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
+
 	for {
 		select {
 		case <-manager.tomb.Dying():
