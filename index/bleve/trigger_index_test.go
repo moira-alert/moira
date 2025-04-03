@@ -9,6 +9,7 @@ import (
 
 func TestTriggerIndex_CreateAndGetCount(t *testing.T) {
 	var newIndex *TriggerIndex
+
 	var err error
 
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})

@@ -33,7 +33,9 @@ func TestIndex_actualize(t *testing.T) {
 
 		err := index.fillIndex()
 		index.indexed = true
+
 		So(err, ShouldBeNil)
+
 		docCount, _ := index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(20))
 	})
@@ -41,12 +43,14 @@ func TestIndex_actualize(t *testing.T) {
 	Convey("Test actualizer", t, func() {
 		fakeTS := int64(12345)
 		index.indexActualizedTS = fakeTS
+
 		Convey("Test deletion", func() {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[18:20], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[18:20]).Return([]*moira.TriggerCheck{nil, nil}, nil)
 
 			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
+
 			docCount, _ := index.triggerIndex.GetCount()
 			So(docCount, ShouldEqual, int64(18))
 		})
@@ -72,6 +76,7 @@ func TestIndex_actualize(t *testing.T) {
 
 			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
+
 			docCount, _ := index.triggerIndex.GetCount()
 			So(docCount, ShouldEqual, int64(20))
 		})
@@ -82,12 +87,14 @@ func TestIndex_actualize(t *testing.T) {
 
 			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
+
 			docCount, _ := index.triggerIndex.GetCount()
 			So(docCount, ShouldEqual, int64(20))
 		})
 
 		Convey("Test verification of error handling when receiving: GetTriggerChecks", func() {
 			expected := errors.New("test error GetTriggerChecks")
+
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[10:12], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[10:12]).Return(nil, expected)
 

@@ -8,5 +8,6 @@ func (index *TriggerIndex) Delete(triggerIDs []string) error {
 	for _, triggerID := range triggerIDs {
 		batch.Delete(triggerID)
 	}
+
 	return index.index.Batch(batch)
 }
