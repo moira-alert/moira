@@ -64,6 +64,7 @@ func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
 	if maxMarkLen > 4 { //nolint
 		horizontalShift = horizontalShift / 2 //nolint
 	}
+
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
 		Padding: chart.Box{
@@ -78,12 +79,14 @@ func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
 // GetThresholdStyle returns threshold style.
 func (theme *PlotTheme) GetThresholdStyle(thresholdType string) chart.Style {
 	var thresholdColor string
+
 	switch thresholdType {
 	case "ERROR":
 		thresholdColor = `8b0000`
 	case "WARN":
 		thresholdColor = `cccc00`
 	}
+
 	return chart.Style{
 		Show:        true,
 		StrokeWidth: 1,
@@ -95,7 +98,9 @@ func (theme *PlotTheme) GetThresholdStyle(thresholdType string) chart.Style {
 // GetAnnotationStyle returns annotation style.
 func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 	var rightBoxDimension int
+
 	var annotationColor string
+
 	switch thresholdType {
 	case "ERROR":
 		annotationColor = `8b0000`
@@ -103,6 +108,7 @@ func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 		annotationColor = `cccc00`
 		rightBoxDimension = 9
 	}
+
 	return chart.Style{
 		Show:        true,
 		Padding:     chart.Box{Right: rightBoxDimension},
@@ -122,6 +128,7 @@ func (theme *PlotTheme) GetSerieStyles(curveInd int) (chart.Style, chart.Style) 
 	} else {
 		curveColor = drawing.ColorFromHex(theme.curveColors[curveInd])
 	}
+
 	curveWidth := float64(1)
 	curveStyle := chart.Style{
 		Show:        true,
@@ -135,6 +142,7 @@ func (theme *PlotTheme) GetSerieStyles(curveInd int) (chart.Style, chart.Style) 
 		DotWidth:    curveWidth / 2,           //nolint
 		DotColor:    curveColor.WithAlpha(90), //nolint
 	}
+
 	return curveStyle, pointStyle
 }
 

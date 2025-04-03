@@ -31,6 +31,7 @@ func newThreshold(triggerType, thresholdType string, thresholdValue, higherLimit
 	} else {
 		yCoordinate = thresholdValue
 	}
+
 	return &threshold{
 		thresholdType: thresholdType,
 		yCoordinate:   yCoordinate,
@@ -43,12 +44,14 @@ func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limit
 	if trigger.TriggerType == moira.ExpressionTrigger {
 		return thresholdSeriesList
 	}
+
 	plotThresholds := generateThresholds(trigger, limits)
 	for _, plotThreshold := range plotThresholds {
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(theme, limits))
 		// TODO: uncomment to use annotations if necessary, remove otherwise
 		// thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme, limits))
 	}
+
 	return thresholdSeriesList
 }
 
@@ -108,6 +111,7 @@ func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limit
 	for j := 0; j < len(thresholdSeries.XValues); j++ {
 		thresholdSeries.YValues = append(thresholdSeries.YValues, threshold.yCoordinate)
 	}
+
 	return thresholdSeries
 }
 

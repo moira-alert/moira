@@ -69,11 +69,13 @@ func (checksWorker *checksWorker) deliveryCheckerAction(stop <-chan struct{}) er
 	checkTicker := time.NewTicker(checksWorker.checkTimeout)
 
 	checksWorker.logger.Info().Msg(checksWorker.workerName + " started")
+
 	for {
 		select {
 		case <-stop:
 			checksWorker.logger.Info().Msg(checksWorker.workerName + " stopped")
 			checkTicker.Stop()
+
 			return nil
 
 		case <-checkTicker.C:
