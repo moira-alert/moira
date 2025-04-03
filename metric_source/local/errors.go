@@ -18,6 +18,7 @@ type ErrUnknownFunction struct {
 func ErrorUnknownFunction(err error) ErrUnknownFunction {
 	errorStr := err.Error()
 	funcName := strings.ReplaceAll(errorStr[strings.Index(errorStr, "\""):], "\"", "")
+
 	return ErrUnknownFunction{
 		internalError: err,
 		FuncName:      funcName,
@@ -29,6 +30,7 @@ func (err ErrUnknownFunction) Error() string {
 	if err.FuncName == "" {
 		return err.internalError.Error()
 	}
+
 	return fmt.Sprintf("Unknown graphite function: \"%s\"", err.FuncName)
 }
 
@@ -38,6 +40,7 @@ func isErrUnknownFunction(err error) bool {
 	case helper.ErrUnknownFunction:
 		return true
 	}
+
 	return false
 }
 

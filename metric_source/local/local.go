@@ -61,6 +61,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 		if len(metricData.Values) == 0 {
 			continue
 		}
+
 		metricData.Values = metricData.Values[:len(metricData.Values)-1]
 	}
 

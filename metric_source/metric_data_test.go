@@ -65,6 +65,7 @@ func TestGetTimestampValue(t *testing.T) {
 			StepTime:  10,
 			Values:    []float64{0, 1, 2, 3, 4},
 		}
+
 		Convey("Has value", func() {
 			actual := metricData.GetTimestampValue(18)
 			So(actual, ShouldEqual, 0)
@@ -117,6 +118,7 @@ func TestGetTimestampValue(t *testing.T) {
 func TestMetricData_String(t *testing.T) {
 	metricData1 := MakeMetricData("123", []float64{1, 2, 3}, 60, 0)
 	metricData2 := MakeEmptyMetricData("123", 10, 50, 100)
+
 	Convey("MetricData with points", t, func() {
 		So(metricData1.String(), ShouldResemble, "Metric: 123, StartTime: 0, StopTime: 180, StepTime: 60, Points: [1 2 3]")
 	})

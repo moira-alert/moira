@@ -16,6 +16,7 @@ func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealT
 	from = moira.MaxInt64(from, until-int64(prometheus.config.MetricsTTL.Seconds()))
 
 	var err error
+
 	for i := 1; ; i++ {
 		var res metricSource.FetchResult
 		res, err = prometheus.fetch(target, from, until, allowRealTimeAlerting)
