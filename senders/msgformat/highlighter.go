@@ -167,7 +167,7 @@ func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.Notifi
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
 
 		tailStringLen := utf8.RuneCountInString(formatter.codeBlockEnd) + len("\n") + utf8.RuneCountInString(tailString)
-		if !(charsForEvents < 0) && (utf8.RuneCountInString(eventsString)+utf8.RuneCountInString(line) > charsLeftForEvents-tailStringLen) {
+		if (charsForEvents >= 0) && (utf8.RuneCountInString(eventsString)+utf8.RuneCountInString(line) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
 		}
