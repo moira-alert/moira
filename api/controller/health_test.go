@@ -17,7 +17,7 @@ func TestGetNotifierState(t *testing.T) {
 
 	Convey("On startup should return OK", t, func() {
 		expectedState := dto.NotifierState{State: moira.SelfStateOK}
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{NewState: moira.SelfStateOK}, nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{State: moira.SelfStateOK}, nil)
 		actualState, err := GetNotifierState(dataBase)
 
 		So(*actualState, ShouldResemble, expectedState)
@@ -32,8 +32,8 @@ func TestUpdateNotifierState(t *testing.T) {
 
 	Convey("Setting OK notifier state", t, func() {
 		expectedState := dto.NotifierState{State: moira.SelfStateOK}
-		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateOK, []string{}).Return(nil)
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{NewState: moira.SelfStateOK}, nil)
+		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateOK).Return(nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{State: moira.SelfStateOK}, nil)
 
 		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateOK})
 		So(err, ShouldBeNil)
@@ -46,8 +46,8 @@ func TestUpdateNotifierState(t *testing.T) {
 
 	Convey("Setting ERROR notifier state", t, func() {
 		expectedState := dto.NotifierState{State: moira.SelfStateERROR, Message: dto.ErrorMessage}
-		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR, []string{}).Return(nil)
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{NewState: moira.SelfStateERROR}, nil)
+		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR).Return(nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{State: moira.SelfStateERROR}, nil)
 
 		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateERROR})
 		So(err, ShouldBeNil)

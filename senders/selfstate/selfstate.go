@@ -31,7 +31,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	switch state {
 	case moira.StateTEST:
 		sender.logger.Info().
-			String("notifier_state", selfState.NewState).
+			String("notifier_state", selfState.State).
 			Msg("Current notifier state")
 
 		return nil
@@ -43,8 +43,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 		return nil
 	default:
-		if selfState.NewState != state.ToSelfState() {
-			if err := sender.Database.SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR, []string{}); err != nil {
+		if selfState.State != state.ToSelfState() {
+			if err := sender.Database.SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR); err != nil {
 				return fmt.Errorf("failed to disable notifications: %s", err.Error())
 			}
 		}

@@ -18,14 +18,14 @@ func TestMergeLayerResults(t *testing.T) {
 			{
 				desc:     "if empty layer results",
 				input:    []heartbeaterCheckResult{},
-				expected: graphExecutionResult{0, false, false, nil, nil},
+				expected: graphExecutionResult{0, 0, false, false, nil, nil},
 			},
 			{
 				desc: "if single layer result",
 				input: []heartbeaterCheckResult{
 					{0, false, nil, false, "", []string{}},
 				},
-				expected: graphExecutionResult{0, false, false, nil, nil},
+				expected: graphExecutionResult{0, 0, false, false, nil, nil},
 			},
 			{
 				desc: "if all success",
@@ -34,7 +34,7 @@ func TestMergeLayerResults(t *testing.T) {
 					{0, false, nil, false, "", []string{}},
 					{0, false, nil, false, "", []string{}},
 				},
-				expected: graphExecutionResult{0, false, false, nil, nil},
+				expected: graphExecutionResult{0, 0, false, false, nil, nil},
 			},
 			{
 				desc: "if single error",
@@ -43,7 +43,7 @@ func TestMergeLayerResults(t *testing.T) {
 					{10, true, nil, false, "some error", []string{}},
 					{0, false, nil, false, "", []string{}},
 				},
-				expected: graphExecutionResult{10, true, false, []string{"some error"}, nil},
+				expected: graphExecutionResult{10, 0, true, false, []string{"some error"}, nil},
 			},
 			{
 				desc: "if multiple errors",
@@ -52,7 +52,7 @@ func TestMergeLayerResults(t *testing.T) {
 					{15, true, nil, false, "second error", []string{}},
 					{0, false, nil, false, "", []string{}},
 				},
-				expected: graphExecutionResult{15, true, false, []string{"first error", "second error"}, nil},
+				expected: graphExecutionResult{15, 0, true, false, []string{"first error", "second error"}, nil},
 			},
 			{
 				desc: "if all are errors",
@@ -61,7 +61,7 @@ func TestMergeLayerResults(t *testing.T) {
 					{11, true, nil, true, "second error", []string{}},
 					{12, true, nil, false, "third error", []string{}},
 				},
-				expected: graphExecutionResult{12, true, true, []string{"first error", "second error", "third error"}, nil},
+				expected: graphExecutionResult{12, 0, true, true, []string{"first error", "second error", "third error"}, nil},
 			},
 		}
 
@@ -85,19 +85,19 @@ func TestExecuteGraph(t *testing.T) {
 			{
 				desc:     "if graph is empty",
 				input:    [][]heartbeat.Heartbeater{},
-				expected: graphExecutionResult{0, false, false, nil, nil},
+				expected: graphExecutionResult{0, 0, false, false, nil, nil},
 			},
 			{
 				desc:     "if graph contains one empty layer",
 				input:    [][]heartbeat.Heartbeater{{}},
-				expected: graphExecutionResult{0, false, false, nil, nil},
+				expected: graphExecutionResult{0, 0, false, false, nil, nil},
 			},
 			{
 				desc: "if graph contains one check",
 				input: [][]heartbeat.Heartbeater{
 					{simpleHeartbeater{heartbeaterCheckResult{0, false, nil, false, "", []string{}}}},
 				},
-				expected: graphExecutionResult{0, false, false, nil, nil},
+				expected: graphExecutionResult{0, 0, false, false, nil, nil},
 			},
 			{
 				desc: "if graph contains multiple checks on same layer",
@@ -108,14 +108,14 @@ func TestExecuteGraph(t *testing.T) {
 						simpleHeartbeater{heartbeaterCheckResult{0, false, nil, false, "", []string{}}},
 					},
 				},
-				expected: graphExecutionResult{0, false, false, nil, nil},
+				expected: graphExecutionResult{0, 0, false, false, nil, nil},
 			},
 			{
 				desc: "if graph contains one failed check",
 				input: [][]heartbeat.Heartbeater{
 					{simpleHeartbeater{heartbeaterCheckResult{10, true, nil, false, "some error", []string{"tag"}}}},
 				},
-				expected: graphExecutionResult{10, true, false, []string{"some error"}, []string{"tag"}},
+				expected: graphExecutionResult{10, 0, true, false, []string{"some error"}, []string{"tag"}},
 			},
 			{
 				desc: "if graph contains multiple failed checks on same layer",
@@ -125,7 +125,7 @@ func TestExecuteGraph(t *testing.T) {
 						simpleHeartbeater{heartbeaterCheckResult{15, true, nil, false, "some error", []string{"tag"}}},
 					},
 				},
-				expected: graphExecutionResult{15, true, false, []string{"some error", "some error"}, []string{"tag", "tag"}},
+				expected: graphExecutionResult{15, 0, true, false, []string{"some error", "some error"}, []string{"tag", "tag"}},
 			},
 			{
 				desc: "if graph contains multiple failed checks on different layers",
@@ -133,7 +133,7 @@ func TestExecuteGraph(t *testing.T) {
 					{simpleHeartbeater{heartbeaterCheckResult{10, true, nil, false, "first error", []string{"tag"}}}},
 					{simpleHeartbeater{heartbeaterCheckResult{15, true, nil, false, "didn't executed check", []string{}}}},
 				},
-				expected: graphExecutionResult{10, true, false, []string{"first error"}, []string{"tag"}},
+				expected: graphExecutionResult{10, 0, true, false, []string{"first error"}, []string{"tag"}},
 			},
 		}
 

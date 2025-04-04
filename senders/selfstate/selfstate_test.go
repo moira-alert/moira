@@ -51,8 +51,7 @@ func TestSender_SendEvents(t *testing.T) {
 				for _, subjectState := range ignorableSubjectStates {
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
 					dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
-						OldState: selfStateInitial,
-						NewState: selfStateInitial,
+						State: selfStateInitial,
 					}, nil)
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 					So(err, ShouldBeNil)
@@ -62,10 +61,9 @@ func TestSender_SendEvents(t *testing.T) {
 			Convey("Should disable notifications", func() {
 				for _, subjectState := range disablingSubjectStates {
 					dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
-						OldState: selfStateInitial,
-						NewState: selfStateInitial,
+						State: selfStateInitial,
 					}, nil)
-					dataBase.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, selfStateFinal, []string{}).Return(nil)
+					dataBase.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, selfStateFinal).Return(nil)
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 					So(err, ShouldBeNil)
@@ -79,8 +77,7 @@ func TestSender_SendEvents(t *testing.T) {
 			for _, subjectState := range disablingSubjectStates {
 				testEvents := []moira.NotificationEvent{{State: subjectState}}
 				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
-					OldState: selfStateInitial,
-					NewState: selfStateInitial,
+					State: selfStateInitial,
 				}, nil)
 				err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 				So(err, ShouldBeNil)

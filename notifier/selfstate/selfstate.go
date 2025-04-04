@@ -25,6 +25,8 @@ type SelfCheckWorker struct {
 	Config     Config
 	tomb       tomb.Tomb
 	heartbeats []heartbeat.Heartbeater
+	lastSuccessChecksResult graphExecutionResult
+	lastChecksResult graphExecutionResult
 }
 
 // NewSelfCheckWorker creates SelfCheckWorker.

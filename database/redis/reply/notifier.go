@@ -19,6 +19,7 @@ func NotifierState(rep *redis.StringCmd) (moira.NotifierState, error) {
 		}
 		return state, fmt.Errorf("failed to read state: %s", err.Error())
 	}
+
 	err = json.Unmarshal(bytes, &state)
 	if err != nil {
 		return state, fmt.Errorf("failed to parse state json %s %s", string(bytes), err.Error())

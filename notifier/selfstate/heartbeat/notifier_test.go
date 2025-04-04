@@ -19,8 +19,7 @@ func TestNotifierState(t *testing.T) {
 
 		Convey("Test get notifier delay", func() {
 			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
-				OldState: moira.SelfStateOK,
-				NewState: moira.SelfStateOK,
+				State: moira.SelfStateOK,
 				Actor:    moira.SelfStateActorManual,
 			}, nil)
 
@@ -32,8 +31,7 @@ func TestNotifierState(t *testing.T) {
 
 		Convey("Test get notification", func() {
 			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
-				OldState: moira.SelfStateERROR,
-				NewState: moira.SelfStateERROR,
+				State: moira.SelfStateERROR,
 				Actor:    moira.SelfStateActorManual,
 			}, nil).Times(2)
 

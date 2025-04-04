@@ -3,6 +3,7 @@ package selfstate
 import (
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
@@ -10,6 +11,7 @@ import (
 
 type graphExecutionResult struct {
 	lastSuccessCheckElapsedTime int64
+	nowTimestamp time.Duration
 	hasErrors                   bool
 	needTurnOffNotifier         bool
 	errorMessages               []string
@@ -37,6 +39,7 @@ func (graph heartbeatsGraph) executeGraph(nowTS int64) (graphExecutionResult, er
 
 	return graphExecutionResult{
 		lastSuccessCheckElapsedTime: 0,
+		nowTimestamp: time.Duration(nowTS),
 		hasErrors:                   false,
 		needTurnOffNotifier:         false,
 		errorMessages:               nil,
@@ -59,6 +62,7 @@ func runHeartbeatersLayer(graphLayer []heartbeat.Heartbeater, nowTS int64, wg *s
 		arr = append(arr, r)
 	}
 	merged, err := mergeLayerResults(arr...)
+	merged.nowTimestamp = time.Duration(nowTS)
 
 	return merged, err
 }

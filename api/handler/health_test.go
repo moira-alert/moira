@@ -39,7 +39,7 @@ func TestSetHealthWithAuth(t *testing.T) {
 		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
 
 		Convey("Admin tries to set notifier state", func() {
-			mockDb.EXPECT().SetNotifierState(moira.SelfStateActorManual, "OK", []string{}).Return(nil).Times(1)
+			mockDb.EXPECT().SetNotifierState(moira.SelfStateActorManual, "OK").Return(nil).Times(1)
 
 			state := &dto.NotifierState{
 				State: "OK",
