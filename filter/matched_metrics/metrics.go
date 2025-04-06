@@ -46,11 +46,13 @@ func NewMetricsMatcher(
 // Start process matched metrics from channel and save it in cache storage.
 func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetric) {
 	matcher.waitGroup.Add(1)
+
 	go func() {
 		defer matcher.waitGroup.Done()
 
 		for batch := range matcher.receiveBatch(matchedMetricsChan) {
 			timer := time.Now()
+
 			matcher.save(batch)
 			matcher.metrics.SavingTimer.UpdateSince(timer)
 		}
@@ -66,8 +68,10 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 
 	go func() {
 		defer close(batchedMetrics)
+
 		batchTimer := time.NewTimer(matcher.batchForcedSaveTimeout)
 		defer batchTimer.Stop()
+
 		for {
 			batch := make(map[string]*moira.MatchedMetric, matcher.cacheCapacity)
 		retry:
@@ -91,6 +95,7 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 			batchTimer.Reset(matcher.batchForcedSaveTimeout)
 		}
 	}()
+
 	return batchedMetrics
 }
 

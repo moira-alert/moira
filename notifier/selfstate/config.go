@@ -38,13 +38,16 @@ func (config *Config) checkConfig(senders map[string]bool) error {
 	if !config.Enabled {
 		return nil
 	}
+
 	if len(config.Contacts) < 1 {
 		return fmt.Errorf("contacts must be specified")
 	}
+
 	for _, adminContact := range config.Contacts {
 		if _, ok := senders[adminContact["type"]]; !ok {
 			return fmt.Errorf("unknown contact type [%s]", adminContact["type"])
 		}
+
 		if adminContact["value"] == "" {
 			return fmt.Errorf("value for [%s] must be present", adminContact["type"])
 		}
@@ -60,5 +63,6 @@ func (checksConfig *ChecksConfig) GetUniqueSystemTags() []string {
 	systemTags = append(systemTags, checksConfig.LocalChecker.SystemTags...)
 	systemTags = append(systemTags, checksConfig.RemoteChecker.SystemTags...)
 	systemTags = append(systemTags, checksConfig.Notifier.SystemTags...)
+
 	return moira.GetUniqueValues(systemTags...)
 }

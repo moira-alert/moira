@@ -96,6 +96,7 @@ func TestSaveTrigger(t *testing.T) {
 			})
 			Convey("Has last check", func() {
 				actualLastCheck := lastCheck
+
 				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
@@ -145,6 +146,7 @@ func TestSaveTrigger(t *testing.T) {
 					},
 					MetricsToTargetRelation: make(map[string]string),
 				}
+
 				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
@@ -168,6 +170,7 @@ func TestSaveTrigger(t *testing.T) {
 
 		Convey("GetTriggerLastCheck error", func() {
 			expected := fmt.Errorf("getTriggerLastCheck error")
+
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
@@ -178,6 +181,7 @@ func TestSaveTrigger(t *testing.T) {
 
 		Convey("SetTriggerLastCheck error", func() {
 			expected := fmt.Errorf("setTriggerLastCheck error")
+
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
@@ -189,6 +193,7 @@ func TestSaveTrigger(t *testing.T) {
 
 		Convey("saveTrigger error", func() {
 			expected := fmt.Errorf("saveTrigger error")
+
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
@@ -475,8 +480,11 @@ func TestDeleteTriggerThrottling(t *testing.T) {
 
 	Convey("Success", t, func() {
 		dataBase.EXPECT().DeleteTriggerThrottling(triggerID).Return(nil)
+
 		var total int64
+
 		var to int64 = -1
+
 		dataBase.EXPECT().GetNotifications(total, to).Return(make([]*moira.ScheduledNotification, 0), total, nil)
 		dataBase.EXPECT().AddNotifications(make([]*moira.ScheduledNotification, 0), gomock.Any()).Return(nil)
 		err := DeleteTriggerThrottling(dataBase, triggerID)
@@ -501,6 +509,7 @@ func TestSetTriggerMaintenance(t *testing.T) {
 		"Metric2": 12346,
 	}
 	triggerMaintenance := dto.TriggerMaintenance{Metrics: map[string]int64(metricsMaintenance)}
+
 	var maintenanceTS int64 = 12347
 
 	Convey("Success setting metrics maintenance only", t, func() {
@@ -514,6 +523,7 @@ func TestSetTriggerMaintenance(t *testing.T) {
 	Convey("Success setting trigger maintenance only", t, func() {
 		triggerMaintenance.Trigger = &maintenanceTS
 		triggerMaintenance.Metrics = dto.MetricsMaintenance{}
+
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 		dataBase.EXPECT().ReleaseTriggerCheckLock(triggerID)
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, "", int64(0)).Return(nil)
@@ -524,6 +534,7 @@ func TestSetTriggerMaintenance(t *testing.T) {
 	Convey("Success setting metrics and trigger maintenance at once", t, func() {
 		triggerMaintenance.Trigger = &maintenanceTS
 		triggerMaintenance.Metrics = metricsMaintenance
+
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 		dataBase.EXPECT().ReleaseTriggerCheckLock(triggerID)
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, "", int64(0)).Return(nil)
@@ -533,6 +544,7 @@ func TestSetTriggerMaintenance(t *testing.T) {
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("oooops! Error set")
+
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30)
 		dataBase.EXPECT().ReleaseTriggerCheckLock(triggerID)
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, "", int64(0)).Return(expected)

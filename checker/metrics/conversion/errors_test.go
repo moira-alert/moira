@@ -66,7 +66,9 @@ func TestErrUnexpectedAloneMetricBuilder(t *testing.T) {
 				builder.setDeclared(map[string]bool{"t1": true})
 				builder.addUnexpected("t1", map[string]metricsource.MetricData{"metric.test.1": {Name: "metric.test.1"}, "metric.test.unexpected": {Name: "metric.test.unexpected"}})
 				err := builder.build()
+
 				var convertedErr ErrUnexpectedAloneMetric
+
 				errors.As(err, &convertedErr)
 				So(convertedErr.declared, ShouldResemble, map[string]bool{"t1": true})
 				So(convertedErr.unexpected, ShouldContainKey, "t1")

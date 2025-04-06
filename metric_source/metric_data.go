@@ -18,6 +18,7 @@ type MetricData struct {
 // MakeMetricData creates new metrics data with given metric timeseries.
 func MakeMetricData(name string, values []float64, step, start int64) *MetricData {
 	stop := start + int64(len(values))*step
+
 	return &MetricData{
 		Name:      name,
 		Values:    values,
@@ -33,6 +34,7 @@ func MakeEmptyMetricData(name string, step, start, stop int64) *MetricData {
 	for i := start; i < stop; i += step {
 		values = append(values, math.NaN())
 	}
+
 	return &MetricData{
 		Name:      name,
 		Values:    values,

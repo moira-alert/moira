@@ -27,21 +27,26 @@ type GraphiteRegistry struct {
 
 func NewGraphiteRegistry(config GraphiteRegistryConfig, serviceName string) (*GraphiteRegistry, error) {
 	registry := goMetrics.NewRegistry()
+
 	if config.Enabled {
 		address, err := net.ResolveTCPAddr("tcp", config.URI)
 		if err != nil {
 			return nil, fmt.Errorf("can't resolve graphiteURI %s: %w", config.URI, err)
 		}
+
 		prefix, err := initPrefix(config.Prefix)
 		if err != nil {
 			return nil, fmt.Errorf("can't get OS hostname %s: %w", config.Prefix, err)
 		}
+
 		if config.RuntimeStats {
 			goMetrics.RegisterRuntimeMemStats(registry)
 			go goMetrics.CaptureRuntimeMemStats(registry, config.Interval)
 		}
+
 		go goMetricsGraphite.Graphite(registry, config.Interval, getGraphiteMetricName([]string{prefix, serviceName}), address)
 	}
+
 	return &GraphiteRegistry{registry}, nil
 }
 
@@ -65,11 +70,14 @@ func initPrefix(prefix string) (string, error) {
 	if !strings.Contains(prefix, hostnameTmpl) {
 		return prefix, nil
 	}
+
 	hostname, err := os.Hostname()
 	if err != nil {
 		return prefix, err
 	}
+
 	short := strings.Split(hostname, ".")[0]
+
 	return strings.ReplaceAll(prefix, hostnameTmpl, short), nil
 }
 

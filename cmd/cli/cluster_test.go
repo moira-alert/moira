@@ -18,6 +18,7 @@ func TestCluster(t *testing.T) {
 	}
 
 	conf := getDefault()
+
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
 	if err != nil {
 		t.Fatal(err)
@@ -25,6 +26,7 @@ func TestCluster(t *testing.T) {
 
 	database := redis.NewTestDatabase(logger)
 	database.Flush()
+
 	defer database.Flush()
 	client := database.Client()
 	ctx := database.Context()
@@ -305,6 +307,7 @@ func Test_renameKey(t *testing.T) {
 	Convey("Something was renamed", t, func() {
 		database := redis.NewTestDatabase(logger)
 		database.Flush()
+
 		defer database.Flush()
 		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
 		So(err, ShouldBeNil)
@@ -315,6 +318,7 @@ func Test_renameKey(t *testing.T) {
 		res, err := database.Client().Get(database.Context(), newKey).Result()
 		So(err, ShouldBeNil)
 		So(res, ShouldResemble, "123")
+
 		err = database.Client().Get(database.Context(), oldKey).Err()
 		So(err, ShouldEqual, rds.Nil)
 	})
@@ -322,6 +326,7 @@ func Test_renameKey(t *testing.T) {
 	Convey("Nothing was renamed", t, func() {
 		database := redis.NewTestDatabase(logger)
 		database.Flush()
+
 		defer database.Flush()
 		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
 		So(err, ShouldBeNil)
@@ -346,6 +351,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 	Convey("Something was renamed", t, func() {
 		database := redis.NewTestDatabase(logger)
 		database.Flush()
+
 		defer database.Flush()
 		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
 		So(err, ShouldBeNil)
@@ -366,6 +372,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 		res, err = database.Client().Get(database.Context(), newKey+"3").Result()
 		So(err, ShouldBeNil)
 		So(res, ShouldResemble, "3")
+
 		err = database.Client().Get(database.Context(), oldKey+"1").Err()
 		So(err, ShouldEqual, rds.Nil)
 		err = database.Client().Get(database.Context(), oldKey+"2").Err()
@@ -377,6 +384,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 	Convey("Nothing was renamed", t, func() {
 		database := redis.NewTestDatabase(logger)
 		database.Flush()
+
 		defer database.Flush()
 		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
 		So(err, ShouldBeNil)

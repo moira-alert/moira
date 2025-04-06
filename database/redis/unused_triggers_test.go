@@ -13,6 +13,7 @@ func TestUnusedTriggers(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Check marking unused", t, func() {
@@ -298,6 +299,7 @@ func TestUnusedTriggersConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.MarkTriggersAsUnused("123")

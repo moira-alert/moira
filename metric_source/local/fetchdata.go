@@ -74,6 +74,7 @@ func createMetricData(metric string, timer timer, values []float64) *types.Metri
 		StepTime:  timer.stepTime,
 		Values:    values,
 	}
+
 	return &types.MetricData{FetchResponse: fetchResponse, Tags: tags.ExtractTags(metric)}
 }
 
@@ -82,6 +83,7 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, timer time
 	for metric, metricData := range metricsData {
 		valuesMap[metric] = unpackMetricValues(metricData, timer)
 	}
+
 	return valuesMap
 }
 
@@ -108,5 +110,6 @@ func getMathFloat64(val *moira.MetricValue, ok bool) float64 {
 	if ok {
 		return val.Value
 	}
+
 	return math.NaN()
 }

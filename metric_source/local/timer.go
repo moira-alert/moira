@@ -15,6 +15,7 @@ func roundTimestamps(startTime, stopTime, retention int64) (roundedStart, rounde
 
 func newTimerRoundingTimestamps(startTime int64, stopTime int64, retention int64) timer {
 	startTime, stopTime = roundTimestamps(startTime, stopTime, retention)
+
 	return timer{
 		startTime: startTime,
 		stopTime:  stopTime,
@@ -35,6 +36,7 @@ func ceilToMultiplier(ts, retention int64) int64 {
 	if (ts % retention) == 0 {
 		return ts
 	}
+
 	return (ts + retention) / retention * retention
 }
 
@@ -42,5 +44,6 @@ func floorToMultiplier(ts, retention int64) int64 {
 	if ts < 0 {
 		ts -= retention - 1
 	}
+
 	return ts - ts%retention
 }

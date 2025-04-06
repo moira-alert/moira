@@ -12,6 +12,7 @@ func TestDecodeBody(t *testing.T) {
 	Convey("Given empty json response", t, func() {
 		body := []byte("[]")
 		resp, err := decodeBody(body)
+
 		Convey("response should be empty and without error", func() {
 			So(err, ShouldBeNil)
 			So(len(resp), ShouldEqual, 0)
@@ -28,6 +29,7 @@ func TestDecodeBody(t *testing.T) {
 		body, _ := json.Marshal(r)
 
 		resp, err := decodeBody(body)
+
 		Convey("length should be one", func() {
 			So(resp, ShouldHaveLength, 1)
 		})
@@ -50,8 +52,10 @@ func TestDecodeBody(t *testing.T) {
 		body, _ := json.Marshal(r)
 
 		resp, err := decodeBody(body)
+
 		Convey("second response value should be set", func() {
 			So(err, ShouldBeNil)
+
 			fr := resp[0]
 			So(fr.Values[1], ShouldEqual, p1)
 		})
@@ -61,14 +65,17 @@ func TestDecodeBody(t *testing.T) {
 func TestConvertResponse(t *testing.T) {
 	d := *metricSource.MakeMetricData("test", []float64{1, 2, 3}, 20, 0)
 	data := []metricSource.MetricData{d}
+
 	Convey("Given data and allowRealTimeAlerting is set", t, func() {
 		fetchResult := convertResponse(data, true)
+
 		Convey("response should contain last value", func() {
 			So(fetchResult.MetricsData[0].Values, ShouldResemble, []float64{1, 2, 3})
 		})
 	})
 	Convey("Given data and allowRealTimeAlerting is not set", t, func() {
 		fetchResult := convertResponse(data, false)
+
 		Convey("response should not contain last value", func() {
 			So(fetchResult.MetricsData[0].Values, ShouldResemble, []float64{1, 2})
 		})

@@ -42,6 +42,7 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
+
 	metricsData, trigger, err := evaluateTargetMetrics(sourceProvider, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
 		if trigger == nil {
@@ -49,6 +50,7 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		} else {
 			render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
 		}
+
 		return
 	}
 
@@ -62,7 +64,9 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
 		return
 	}
+
 	writer.Header().Set("Content-Type", "image/png")
+
 	err = renderable.Render(chart.PNG, writer)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can not render plot %s", err.Error()))) //nolint
@@ -76,6 +80,7 @@ func getEvaluationParameters(request *http.Request) (sourceProvider *metricSourc
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
 	from = date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
+
 	urlValues, err := url.ParseQuery(request.URL.RawQuery)
 	if err != nil {
 		return sourceProvider, "", 0, 0, "", false, fmt.Errorf("failed to parse query string: %w", err)
@@ -120,12 +125,14 @@ func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData 
 	}
 
 	timezone := urlValues.Get("timezone")
+
 	location, err := time.LoadLocation(timezone)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load %s timezone: %s", timezone, err.Error())
 	}
 
 	plotTheme := urlValues.Get("theme")
+
 	plotTemplate, err := plotting.GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return nil, fmt.Errorf("can not initialize plot theme %s", err.Error())

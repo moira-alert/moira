@@ -39,6 +39,7 @@ func TestBuildVoiceURL(t *testing.T) {
 		voiceURL:      "url here",
 		appendMessage: false,
 	}
+
 	Convey("append message is false", t, func() {
 		So(sender.buildVoiceURL(moira.TriggerData{Name: "Name"}), ShouldResemble, "url here")
 	})

@@ -11,52 +11,62 @@ import (
 func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 	c := *connector.client
 	err := c.Incr(connector.context, selfStateMetricsHeartbeatKey).Err()
+
 	return err
 }
 
 // GetMetricsUpdatesCount return metrics count received by Moira-Filter.
 func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 	c := *connector.client
+
 	ts, err := c.Get(connector.context, selfStateMetricsHeartbeatKey).Int64()
 	if errors.Is(err, redis.Nil) {
 		return 0, nil
 	}
+
 	return ts, err
 }
 
 // GetChecksUpdatesCount return checks count by Moira-Checker.
 func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 	c := *connector.client
+
 	ts, err := c.Get(connector.context, selfStateChecksCounterKey).Int64()
 	if errors.Is(err, redis.Nil) {
 		return 0, nil
 	}
+
 	return ts, err
 }
 
 // GetRemoteChecksUpdatesCount return remote checks count by Moira-Checker.
 func (connector *DbConnector) GetRemoteChecksUpdatesCount() (int64, error) {
 	c := *connector.client
+
 	ts, err := c.Get(connector.context, selfStateRemoteChecksCounterKey).Int64()
 	if errors.Is(err, redis.Nil) {
 		return 0, nil
 	}
+
 	return ts, err
 }
 
 // GetPrometheusChecksUpdatesCount return remote checks count by Moira-Checker.
 func (connector *DbConnector) GetPrometheusChecksUpdatesCount() (int64, error) {
 	c := *connector.client
+
 	ts, err := c.Get(connector.context, selfStatePrometheusChecksCounterKey).Int64()
 	if errors.Is(err, redis.Nil) {
 		return 0, nil
 	}
+
 	return ts, err
 }
 
 // GetNotifierState return current notifier state: <OK|ERROR>.
 func (connector *DbConnector) GetNotifierState() (string, error) {
 	c := *connector.client
+
 	ts, err := c.Get(connector.context, selfStateNotifierHealth).Result()
 	if errors.Is(err, redis.Nil) {
 		ts = moira.SelfStateOK
@@ -64,6 +74,7 @@ func (connector *DbConnector) GetNotifierState() (string, error) {
 	} else if err != nil {
 		ts = moira.SelfStateERROR
 	}
+
 	return ts, err
 }
 

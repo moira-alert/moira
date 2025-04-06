@@ -37,9 +37,11 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if location == nil {
 		return nil, fmt.Errorf("location not specified")
 	}
+
 	return &Plot{
 		theme:    plotTheme,
 		location: location,

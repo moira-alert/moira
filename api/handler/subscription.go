@@ -39,6 +39,7 @@ func subscription(router chi.Router) {
 //	@router		/subscription [get]
 func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
+
 	subscriptions, err := controller.GetUserSubscriptions(database, userLogin)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
@@ -70,6 +71,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
+
 	userLogin := middleware.GetLogin(request)
 	auth := middleware.GetAuth(request)
 	selfStateChecksConfig := middleware.GetSelfStateChecksConfig(request)
@@ -79,12 +81,15 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusBadRequest)
 		render.Render(writer, request, api.ErrorInvalidRequest( //nolint
 			errors.New("if any_tags is true, then the tags must be empty")))
+
 		return
 	}
+
 	if err := controller.CreateSubscription(database, auth, userLogin, "", systemTags, subscription); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, subscription); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
@@ -97,11 +102,13 @@ func subscriptionFilter(next http.Handler) http.Handler {
 		subscriptionID := middleware.GetSubscriptionID(request)
 		userLogin := middleware.GetLogin(request)
 		auth := middleware.GetAuth(request)
+
 		subscriptionData, err := controller.CheckUserPermissionsForSubscription(database, subscriptionID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
 		}
+
 		ctx := context.WithValue(request.Context(), subscriptionKey, subscriptionData)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
@@ -122,11 +129,13 @@ func subscriptionFilter(next http.Handler) http.Handler {
 //	@router		/subscription/{subscriptionID} [get]
 func getSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
+
 	subscription, err := controller.GetSubscription(database, subscriptionID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, subscription); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
@@ -158,6 +167,7 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		}
+
 		return
 	}
 
@@ -165,6 +175,7 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusBadRequest)
 		render.Render(writer, request, api.ErrorInvalidRequest( //nolint
 			errors.New("if any_tags is true, then the tags must be empty")))
+
 		return
 	}
 
@@ -174,6 +185,7 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, subscription); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return

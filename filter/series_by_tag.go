@@ -58,6 +58,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 		wildcardExpression := result[matchedWildcardIndexes[0]:matchedWildcardIndexes[1]]
 		regularExpression := strings.ReplaceAll(wildcardExpression, "{", "(")
 		regularExpression = strings.ReplaceAll(regularExpression, "}", ")")
+
 		slc := strings.Split(regularExpression, ",")
 		for i := range slc {
 			slc[i] = strings.TrimSpace(slc[i])
@@ -92,6 +93,7 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 			if len(matchedTagSpecDelimiterIndexes) != 2 { //nolint
 				return nil, ErrNotSeriesByTag
 			}
+
 			input = input[matchedTagSpecDelimiterIndexes[1]:]
 		}
 
@@ -137,6 +139,7 @@ func CreateMatchingHandlerForPattern(
 	compatibility *Compatibility,
 ) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
+
 	var nameTagValue string
 
 	for _, tagSpec := range tagSpecs {
@@ -170,7 +173,9 @@ func createMatchingHandlerForOneTag(
 	compatibility *Compatibility,
 ) (MatchingHandler, error) {
 	var matchingHandlerCondition func(string) bool
+
 	var err error
+
 	allowMatchEmpty := false
 
 	switch spec.Operator {
@@ -197,6 +202,7 @@ func createMatchingHandlerForOneTag(
 	}
 
 	matchEmpty := matchingHandlerCondition("")
+
 	return func(metric string, labels map[string]string) bool {
 		if spec.Name == "name" {
 			return matchingHandlerCondition(metric)

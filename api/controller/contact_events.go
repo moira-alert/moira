@@ -19,6 +19,7 @@ func GetContactEventsHistoryByID(database moira.Database, contactID string, from
 	eventsList := dto.ContactEventItemList{
 		List: make([]dto.ContactEventItem, 0, len(events)),
 	}
+
 	for _, i := range events {
 		contactEventItem := &dto.ContactEventItem{
 			TimeStamp: i.TimeStamp,

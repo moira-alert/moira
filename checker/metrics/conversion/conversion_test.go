@@ -11,6 +11,7 @@ func Test_isOneMetricMap(t *testing.T) {
 	type args struct {
 		metrics map[string]metricSource.MetricData
 	}
+
 	tests := []struct {
 		name  string
 		args  args
@@ -39,6 +40,7 @@ func Test_isOneMetricMap(t *testing.T) {
 			want1: "",
 		},
 	}
+
 	Convey("metrics map", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
@@ -54,6 +56,7 @@ func TestMetricName(t *testing.T) {
 	type args struct {
 		metrics map[string]metricSource.MetricData
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -97,6 +100,7 @@ func TestMetricName(t *testing.T) {
 			want: "",
 		},
 	}
+
 	Convey("MetricName", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
@@ -112,6 +116,7 @@ func TestGetRelations(t *testing.T) {
 		metrics              map[string]metricSource.MetricData
 		declaredAloneMetrics map[string]bool
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -158,6 +163,7 @@ func TestGetRelations(t *testing.T) {
 			},
 		},
 	}
+
 	Convey("GetRelations", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
@@ -173,6 +179,7 @@ func TestMerge(t *testing.T) {
 		metrics map[string]metricSource.MetricData
 		other   map[string]metricSource.MetricData
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -226,6 +233,7 @@ func TestHasOnlyWildcards(t *testing.T) {
 	type args struct {
 		metrics map[string][]metricSource.MetricData
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -276,6 +284,7 @@ func TestHasOnlyWildcards(t *testing.T) {
 			want: true,
 		},
 	}
+
 	Convey("HasOnlyWildcards", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
@@ -290,6 +299,7 @@ func TestHasEmptyTargets(t *testing.T) {
 	type args struct {
 		metrics map[string][]metricSource.MetricData
 	}
+
 	tests := []struct {
 		name  string
 		args  args
@@ -328,6 +338,7 @@ func TestHasEmptyTargets(t *testing.T) {
 			want1: []string{"t2"},
 		},
 	}
+
 	Convey("HasEmptyTargets", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {

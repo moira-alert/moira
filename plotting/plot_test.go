@@ -53,24 +53,30 @@ func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string
 	if err != nil {
 		return "", err
 	}
+
 	filePrefix := bytes.NewBuffer([]byte(examplesPath))
 	filePrefix.WriteString(fmt.Sprintf("/%s.%s", testCase.plotTheme, testCase.triggerType))
+
 	if testCase.stateOk {
 		filePrefix.WriteString(".stateOk")
 	} else {
 		if testCase.warnValue != nil {
 			filePrefix.WriteString(".warn")
 		}
+
 		if testCase.errorValue != nil {
 			filePrefix.WriteString(".error")
 		}
 	}
+
 	if !testCase.useHumanizedValues {
 		filePrefix.WriteString(".humanized")
 	}
+
 	if toOriginal {
 		return fmt.Sprintf("%s.%s.png", filePrefix.String(), plottingExamplesPathPostfix), nil
 	}
+
 	return fmt.Sprintf("%s.png", filePrefix.String()), nil
 }
 
@@ -81,6 +87,7 @@ func (testCase *plotsHashDistancesTestCase) getTriggerName() string {
 	triggerName.WriteString(", ")
 	triggerName.WriteString(strings.ToUpper(string(testCase.triggerType[0])))
 	triggerName.WriteString(") {")
+
 	if testCase.stateOk {
 		triggerName.WriteString("OK")
 	} else {
@@ -89,17 +96,22 @@ func (testCase *plotsHashDistancesTestCase) getTriggerName() string {
 		} else {
 			triggerName.WriteString("W-")
 		}
+
 		triggerName.WriteString(", ")
+
 		if testCase.errorValue != nil {
 			triggerName.WriteString("E+")
 		} else {
 			triggerName.WriteString("E-")
 		}
 	}
+
 	triggerName.WriteString("}")
+
 	if !testCase.useHumanizedValues {
 		triggerName.WriteString(" [H]")
 	}
+
 	return triggerName.String()
 }
 
@@ -510,6 +522,7 @@ func generateTestMetricsData(useHumanizedValues bool) []metricSource.MetricData 
 			}
 		}
 	}
+
 	return metricsData
 }
 
@@ -521,38 +534,48 @@ func renderTestMetricsDataToPNG(
 	filePath string,
 ) error {
 	location, _ := time.LoadLocation("UTC")
+
 	plotTemplate, err := GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return err
 	}
+
 	renderable, err := plotTemplate.GetRenderable("t1", &trigger, metricsData)
 	if err != nil {
 		return err
 	}
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
+
 	w := bufio.NewWriter(f)
 	if err := renderable.Render(chart.PNG, w); err != nil {
 		return err
 	}
+
 	w.Flush()
+
 	return nil
 }
 
 // calculateHashDistance returns calculated hash distance of two given pictures.
 func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) {
 	hash := ipare.NewHash()
+
 	original, err := util.Open(pathToOriginal)
 	if err != nil {
 		return nil, err
 	}
+
 	rendered, err := util.Open(pathToRendered)
 	if err != nil {
 		return nil, err
 	}
+
 	distance := hash.Compare(original, rendered)
+
 	return &distance, nil
 }
 
@@ -562,6 +585,7 @@ func generateRandomTestMetricsData(numTotal int, numEmpty int) []metricSource.Me
 	stepTime := int64(10)
 	stopTime := int64(numTotal) * stepTime
 	metricDataValues := make([]float64, 0, numTotal)
+
 	for valInd := 0; valInd < numTotal; valInd++ {
 		if valInd < numEmpty {
 			metricDataValues = append(metricDataValues, math.NaN())
@@ -569,6 +593,7 @@ func generateRandomTestMetricsData(numTotal int, numEmpty int) []metricSource.Me
 			metricDataValues = append(metricDataValues, rand.Float64())
 		}
 	}
+
 	return []metricSource.MetricData{
 		{
 			Name:      "RandomTestMetric",
@@ -589,37 +614,47 @@ func TestGetRenderable(t *testing.T) {
 					Name:        testCase.getTriggerName(),
 					TriggerType: testCase.triggerType,
 				}
+
 				if testCase.errorValue != nil {
 					errorValue := testCase.errorValue.(float64)
 					if !testCase.useHumanizedValues {
 						errorValue *= plotTestOuterPointMultiplier
 					}
+
 					trigger.ErrorValue = &errorValue
 				}
+
 				if testCase.warnValue != nil {
 					warnValue := testCase.warnValue.(float64)
 					if !testCase.useHumanizedValues {
 						warnValue *= plotTestOuterPointMultiplier
 					}
+
 					trigger.WarnValue = &warnValue
 				}
+
 				metricsData := generateTestMetricsData(testCase.useHumanizedValues)
+
 				pathToOriginal, err := testCase.getFilePath(true)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				pathToRendered, err := testCase.getFilePath(false)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				err = renderTestMetricsDataToPNG(trigger, testCase.plotTheme, metricsData, pathToRendered)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				hashDistance, err := calculateHashDistance(pathToOriginal, pathToRendered)
 				if err != nil {
 					t.Fatal(err)
 				}
+
 				os.Remove(pathToRendered)
 				So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
 			})
@@ -630,10 +665,12 @@ func TestGetRenderable(t *testing.T) {
 // TestErrNoPointsToRender_Error asserts conditions which leads to ErrNoPointsToRender.
 func TestErrNoPointsToRender_Error(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
+
 	plotTemplate, err := GetPlotTemplate("", location)
 	if err != nil {
 		t.Fatalf("Test initialization failed: %s", err.Error())
 	}
+
 	triggerID := "triggerHasNoSeries"
 	testTriggers := []moira.Trigger{
 		{
@@ -673,13 +710,17 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 			ErrorValue:  &plotTestFallingErrorThreshold,
 		},
 	}
+
 	Convey("Trigger has no timeseries", t, func() {
 		testMetricsData := generateRandomTestMetricsData(10, 10)
 		testMetricsPoints := make([]float64, 0)
+
 		for _, testMetricData := range testMetricsData {
 			testMetricsPoints = append(testMetricsPoints, testMetricData.Values...)
 		}
+
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
+
 		for _, trigger := range testTriggers {
 			_, err = plotTemplate.GetRenderable("t1", &trigger, testMetricsData)
 			So(err.Error(), ShouldEqual, ErrNoPointsToRender{triggerID: trigger.ID}.Error())
@@ -688,10 +729,13 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 	Convey("Trigger has at least one timeserie", t, func() {
 		testMetricsData := generateRandomTestMetricsData(10, 9)
 		testMetricsPoints := make([]float64, 0)
+
 		for _, testMetricData := range testMetricsData {
 			testMetricsPoints = append(testMetricsPoints, testMetricData.Values...)
 		}
+
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
+
 		for _, trigger := range testTriggers {
 			_, err = plotTemplate.GetRenderable("t1", &trigger, testMetricsData)
 			So(err, ShouldBeNil)

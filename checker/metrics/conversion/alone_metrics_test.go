@@ -26,7 +26,9 @@ func TestAloneMetrics_Populate(t *testing.T) {
 				"t1": true,
 				"t2": true,
 			}
+
 			const from = 0
+
 			const to = 3600
 			populated, err := m.Populate(lastCheckMetricsToTargetRelation, declaredAloneMetrics, from, to)
 			So(err, ShouldBeNil)
@@ -53,7 +55,9 @@ func TestAloneMetrics_Populate(t *testing.T) {
 			declaredAloneMetrics := map[string]bool{
 				"t1": true,
 			}
+
 			const from = 0
+
 			const to = 3600
 
 			populated, err := m.Populate(lastCheckMetricsToTargetRelation, declaredAloneMetrics, from, to)
@@ -77,7 +81,9 @@ func TestAloneMetrics_Populate(t *testing.T) {
 			declaredAloneMetrics := map[string]bool{
 				"t1": true,
 			}
+
 			const from = 0
+
 			const to = 3600
 
 			populated, err := m.Populate(lastCheckMetricsToTargetRelation, declaredAloneMetrics, from, to)
@@ -95,7 +101,9 @@ func TestAloneMetrics_Populate(t *testing.T) {
 				"t2": true,
 				"t3": false,
 			}
+
 			const from = 0
+
 			const to = 3600
 
 			populated, err := m.Populate(lastCheckMetricsToTargetRelation, declaredAloneMetrics, from, to)

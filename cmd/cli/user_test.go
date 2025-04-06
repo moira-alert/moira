@@ -22,6 +22,7 @@ func TestUpdateUsers(t *testing.T) {
 	}
 
 	conf := getDefault()
+
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "cli", conf.LogPrettyFormat)
 	if err != nil {
 		t.Fatal(err)
@@ -45,6 +46,7 @@ func TestUpdateUsers(t *testing.T) {
 
 		Convey("Test off notifications", func() {
 			So(usersCleanup(logger, database, users, conf.Cleanup), ShouldBeNil)
+
 			for _, contact := range contacts {
 				subscription, err := database.GetSubscription(subscriptionPrefix + contact.ID)
 
@@ -61,6 +63,7 @@ func TestUpdateUsers(t *testing.T) {
 		Convey("Verify deletion of contacts and subscriptions", func() {
 			conf.Cleanup.Delete = true
 			So(usersCleanup(logger, database, users, conf.Cleanup), ShouldBeNil)
+
 			for _, contact := range contacts {
 				if !strings.Contains(contact.User, "Another") {
 					continue
@@ -79,6 +82,7 @@ func TestUpdateUsers(t *testing.T) {
 			for i := 0; i < 100000; i++ {
 				manyUsers = append(manyUsers, fmt.Sprintf("User%v", i))
 			}
+
 			So(usersCleanup(logger, database, manyUsers, conf.Cleanup), ShouldResemble, errors.New("users count is too large"))
 		})
 	})

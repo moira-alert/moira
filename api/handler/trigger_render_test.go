@@ -55,6 +55,7 @@ func TestRenderTrigger(t *testing.T) {
 				TriggerSource: moira.GraphiteLocal,
 				ClusterId:     moira.DefaultCluster,
 			}, nil).Times(1)
+
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).Times(1)
@@ -88,6 +89,7 @@ func TestRenderTrigger(t *testing.T) {
 				TriggerSource: moira.GraphiteLocal,
 				ClusterId:     moira.DefaultCluster,
 			}, nil).Times(1)
+
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).Times(1)

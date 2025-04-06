@@ -11,6 +11,7 @@ func TestTagStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	client := *dataBase.client
 
@@ -21,6 +22,7 @@ func TestTagStoring(t *testing.T) {
 			triggerIDs, err := dataBase.GetTagTriggerIDs(trigger.Tags[0])
 			So(err, ShouldBeNil)
 			So(triggerIDs, ShouldHaveLength, 0)
+
 			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-triggers}:test-tag-1").Val()
 			So(valueStoredAtKey, ShouldBeEmpty)
 		})
@@ -36,6 +38,7 @@ func TestTagStoring(t *testing.T) {
 			triggerIDs, err := dataBase.GetTagTriggerIDs(trigger.Tags[0])
 			So(err, ShouldBeNil)
 			So(triggerIDs, ShouldHaveLength, 1)
+
 			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-triggers}:test-tag-1").Val()
 			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
 		})
@@ -59,6 +62,7 @@ func TestCreateTags(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Test CreateTags", t, func() {
@@ -89,6 +93,7 @@ func TestTagErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual, err := dataBase.GetTagNames()
@@ -108,6 +113,7 @@ func TestCleanUpAbandonedTags(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	client := *dataBase.client

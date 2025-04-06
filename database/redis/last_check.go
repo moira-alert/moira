@@ -31,6 +31,7 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.Check
 // SetTriggerLastCheck sets trigger last check data.
 func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, clusterKey moira.ClusterKey) error {
 	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(clusterKey)
+
 	bytes, err := reply.GetCheckBytes(*checkData)
 	if err != nil {
 		return err
@@ -107,6 +108,7 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
 	pipe = appendRemoveTriggerLastCheckToRedisPipeline(ctx, pipe, triggerID)
+
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -118,16 +120,20 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
 	lastCheckIterator := client.Scan(connector.context, 0, metricLastCheckKey("*"), 0).Iterator()
 	count := 0
+
 	for lastCheckIterator.Next(connector.context) {
 		lastCheckKey := lastCheckIterator.Val()
 		triggerID := strings.TrimPrefix(lastCheckKey, metricLastCheckKey(""))
 		_, err := connector.GetTrigger(triggerID)
+
 		if errors.Is(err, database.ErrNil) {
 			err = connector.RemoveTriggerLastCheck(triggerID)
 			if err != nil {
 				return err
 			}
+
 			count++
+
 			connector.logger.Debug().
 				String("trigger_id", triggerID).
 				Msg("Cleaned up last check for trigger")
@@ -156,6 +162,7 @@ func (connector *DbConnector) CleanUpAbandonedTriggerLastCheck() error {
 func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error {
 	ctx := connector.context
 	c := *connector.client
+
 	var readingErr error
 
 	lastCheckString, readingErr := c.Get(ctx, metricLastCheckKey(triggerID)).Result()
@@ -163,14 +170,17 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		if !errors.Is(readingErr, redis.Nil) {
 			return readingErr
 		}
+
 		return nil
 	}
 
 	lastCheck := moira.CheckData{}
+
 	err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
 	if err != nil {
 		return fmt.Errorf("failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
 	}
+
 	metricsCheck := lastCheck.Metrics
 	if len(metricsCheck) > 0 {
 		for metric, value := range metrics {
@@ -178,13 +188,16 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 			if !ok {
 				continue
 			}
+
 			moira.SetMaintenanceUserAndTime(&data, value, userLogin, timeCallMaintenance)
 			metricsCheck[metric] = data
 		}
 	}
+
 	if triggerMaintenance != nil {
 		moira.SetMaintenanceUserAndTime(&lastCheck, *triggerMaintenance, userLogin, timeCallMaintenance)
 	}
+
 	newLastCheck, err := json.Marshal(lastCheck)
 	if err != nil {
 		return err
@@ -212,11 +225,13 @@ func (connector *DbConnector) getTriggersLastCheck(triggerIDs []string) ([]*moir
 	pipe := (*connector.client).TxPipeline()
 
 	results := make([]*redis.StringCmd, len(triggerIDs))
+
 	for i, id := range triggerIDs {
 		var result *redis.StringCmd
 		if id != "" {
 			result = pipe.Get(ctx, metricLastCheckKey(id))
 		}
+
 		results[i] = result
 	}
 

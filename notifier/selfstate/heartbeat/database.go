@@ -14,6 +14,7 @@ func GetDatabase(delay, lastSuccessfulCheck int64, checkTags []string, logger mo
 			checkTags:           checkTags,
 		}}
 	}
+
 	return nil
 }
 

@@ -15,9 +15,11 @@ func TestTeamStoring(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping database test in short mode")
 	}
+
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	teamID := "testTeam"
@@ -30,6 +32,7 @@ func TestTeamStoring(t *testing.T) {
 		Name:        "Test team",
 		Description: "Test team description",
 	}
+
 	Convey("Teams Manipulation", t, func() {
 		err := dataBase.SaveTeam(teamID, team)
 		So(err, ShouldBeNil)
@@ -131,7 +134,9 @@ func TestTeamStoring(t *testing.T) {
 
 		// Add user to new team and delete this team
 		const teamToDeleteID = "teamToDeleteID"
+
 		const userOfTeamToDeleteID = "userOfTeamToDeleteID"
+
 		teamToDelete := moira.Team{
 			Name:        "TeamName",
 			Description: "Team Description",
@@ -169,6 +174,7 @@ func TestGetAllTeams(t *testing.T) {
 		logger, _ := logging.GetLogger("dataBase")
 		dataBase := NewTestDatabase(logger)
 		dataBase.Flush()
+
 		defer dataBase.Flush()
 
 		Convey("with empty db returns no err and empty teams slice", func() {
@@ -246,6 +252,7 @@ func TestSaveAndGetTeam(t *testing.T) {
 		logger, _ := logging.GetLogger("dataBase")
 		dataBase := NewTestDatabase(logger)
 		dataBase.Flush()
+
 		defer dataBase.Flush()
 
 		team := moira.Team{

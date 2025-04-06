@@ -34,20 +34,24 @@ func (source *PrefixTree) Add(pattern string) {
 // AddWithPayload inserts pattern and payload in tree.
 func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payloadValue MatchingHandler) {
 	currentNode := source.Root
+
 	parts := strings.Split(pattern, ".")
 	if hasEmptyParts(parts) {
 		source.Logger.Warning().
 			String("pattern", pattern).
 			Msg("Pattern is ignored because it contains an empty part")
+
 		return
 	}
 
 	for i, part := range parts {
 		found := false
+
 		for _, child := range currentNode.Children {
 			if part == child.Part {
 				currentNode = child
 				found = true
+
 				break
 			}
 		}
@@ -70,6 +74,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 					innerParts := strings.Split(inner, ",")
 
 					newNode.InnerParts = make([]string, 0, len(innerParts))
+
 					for _, innerPart := range innerParts {
 						whole := prefix + innerPart + suffix
 						newNode.InnerParts = append(newNode.InnerParts, whole)
@@ -89,6 +94,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 				if currentNode.Payload == nil {
 					currentNode.Payload = make(map[string]MatchingHandler)
 				}
+
 				currentNode.Payload[payloadKey] = payloadValue
 			}
 		}
@@ -103,6 +109,7 @@ func (source *PrefixTree) Match(metric string) []string {
 	}
 
 	matched := make([]string, 0, found)
+
 	for _, node := range nodes {
 		if node.Terminal {
 			matched = append(matched, node.Prefix)
@@ -134,7 +141,9 @@ func (source *PrefixTree) MatchWithValue(metric string, callback func(string, Ma
 
 func (source *PrefixTree) findNodes(metric string) ([]*PatternNode, int) {
 	currentLevel := []*PatternNode{source.Root}
+
 	var found, index int
+
 	for i, c := range metric {
 		if c == '.' {
 			part := metric[index:i]
@@ -143,6 +152,7 @@ func (source *PrefixTree) findNodes(metric string) ([]*PatternNode, int) {
 				source.Logger.Warning().
 					String("metric", metric).
 					Msg("Metric is ignored, because it contains empty parts")
+
 				return nil, 0
 			}
 
@@ -156,6 +166,7 @@ func (source *PrefixTree) findNodes(metric string) ([]*PatternNode, int) {
 	}
 
 	part := metric[index:]
+
 	currentLevel, found = findPart(part, currentLevel)
 	if found == 0 {
 		return nil, 0
@@ -168,6 +179,7 @@ func findPart(part string, currentLevel []*PatternNode) ([]*PatternNode, int) {
 	nextLevel := make([]*PatternNode, 0, 5)
 
 	hash := xxhash.Sum64String(part)
+
 	for _, node := range currentLevel {
 		for _, child := range node.Children {
 			match := false

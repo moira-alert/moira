@@ -99,10 +99,12 @@ func TestReadonlyMode(t *testing.T) {
 			defer response.Body.Close()
 			actual, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			actualStr := strings.TrimSpace(string(actual))
 
 			expected, err := json.Marshal(webConfig)
 			So(err, ShouldBeNil)
+
 			expectedStr := strings.TrimSpace(string(expected))
 
 			So(response.StatusCode, ShouldEqual, http.StatusOK)

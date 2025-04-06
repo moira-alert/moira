@@ -71,6 +71,7 @@ func TestCreateNewTeamContact(t *testing.T) {
 				User:  "",
 				Team:  newContactDto.TeamID,
 			}).Return(nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPost, targetRoute, bytes.NewBuffer(jsonContact))
@@ -149,6 +150,7 @@ func TestCreateNewTeamContact(t *testing.T) {
 				User:  newContactDto.User,
 				Team:  newContactDto.TeamID,
 			}, nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPost, targetRoute, bytes.NewBuffer(jsonContact))

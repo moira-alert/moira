@@ -25,9 +25,11 @@ func CreateTestMetricSourceProvider(local, graphiteRemote, prometheusRemote Metr
 	if local != nil {
 		provider.RegisterSource(moira.DefaultLocalCluster, local)
 	}
+
 	if graphiteRemote != nil {
 		provider.RegisterSource(moira.DefaultGraphiteRemoteCluster, graphiteRemote)
 	}
+
 	if prometheusRemote != nil {
 		provider.RegisterSource(moira.DefaultPrometheusRemoteCluster, prometheusRemote)
 	}

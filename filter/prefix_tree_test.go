@@ -20,9 +20,11 @@ func TestPrefixTree(t *testing.T) {
 
 		Convey("MatchWithValue should return empty map", func() {
 			matchedPatterns := map[string]MatchingHandler{}
+
 			prefixTree.MatchWithValue("any_string", func(s string, mh MatchingHandler) {
 				_, ok := matchedPatterns[s]
 				So(ok, ShouldBeFalse)
+
 				matchedPatterns[s] = mh
 			})
 			So(matchedPatterns, ShouldResemble, map[string]MatchingHandler{})
@@ -103,9 +105,11 @@ func TestPrefixTree(t *testing.T) {
 				}
 
 				matchedPatterns := map[string]MatchingHandler{}
+
 				prefixTree.MatchWithValue(metric, func(s string, mh MatchingHandler) {
 					_, ok := matchedPatterns[s]
 					So(ok, ShouldBeFalse)
+
 					matchedPatterns[s] = mh
 				})
 
@@ -117,9 +121,11 @@ func TestPrefixTree(t *testing.T) {
 				matchedValue := map[string]MatchingHandler{}
 
 				matchedPatterns := map[string]MatchingHandler{}
+
 				prefixTree.MatchWithValue(metric, func(s string, mh MatchingHandler) {
 					_, ok := matchedPatterns[s]
 					So(ok, ShouldBeFalse)
+
 					matchedPatterns[s] = mh
 				})
 
@@ -163,15 +169,19 @@ func TestPrefixTree(t *testing.T) {
 			}
 			for _, testCase := range testCases {
 				matchedPatterns := map[string]MatchingHandler{}
+
 				prefixTree.MatchWithValue(testCase.Metric, func(s string, mh MatchingHandler) {
 					_, ok := matchedPatterns[s]
 					So(ok, ShouldBeFalse)
+
 					matchedPatterns[s] = mh
 				})
 
 				So(len(matchedPatterns), ShouldEqual, len(testCase.MatchedPatterns))
+
 				for pKey, pValue := range testCase.MatchedPatterns {
 					So(matchedPatterns, ShouldContainKey, pKey)
+
 					if pValue == nil {
 						So(matchedPatterns[pKey], ShouldBeNil)
 					} else {
@@ -188,9 +198,11 @@ func TestPrefixTree(t *testing.T) {
 			}
 			for _, testCase := range testCases {
 				matchedPatterns := map[string]MatchingHandler{}
+
 				prefixTree.MatchWithValue(testCase, func(s string, mh MatchingHandler) {
 					_, ok := matchedPatterns[s]
 					So(ok, ShouldBeFalse)
+
 					matchedPatterns[s] = mh
 				})
 

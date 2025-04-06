@@ -1,8 +1,10 @@
 package moira
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"net/url"
 	"slices"
 	"testing"
 	"time"
@@ -15,6 +17,7 @@ func TestBytesScanner(t *testing.T) {
 		input  string
 		output []string
 	}
+
 	Convey("", t, func() {
 		cases := []BytesScannerTestCase{
 			{input: "", output: []string{}},
@@ -28,9 +31,11 @@ func TestBytesScanner(t *testing.T) {
 		for _, c := range cases {
 			actualOutput := make([]string, 0)
 			scanner := NewBytesScanner([]byte(c.input), ' ')
+
 			for scanner.HasNext() {
 				actualOutput = append(actualOutput, string(scanner.Next()))
 			}
+
 			So(actualOutput, ShouldResemble, c.output)
 		}
 	})
@@ -39,6 +44,7 @@ func TestBytesScanner(t *testing.T) {
 func TestInt64ToTime(t *testing.T) {
 	int64timeStamp := int64(1527330278)
 	humanReadableTimestamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
+
 	Convey("Convert int64 timestamp into datetime", t, func() {
 		converted := Int64ToTime(int64timeStamp)
 		So(converted, ShouldResemble, humanReadableTimestamp)
@@ -438,5 +444,49 @@ func TestValidateStruct(t *testing.T) {
 			err := ValidateStruct(testStruct)
 			So(err, ShouldBeNil)
 		})
+	})
+}
+
+func TestValidateURL(t *testing.T) {
+	Convey("Test ValidateURL", t, func() {
+		type testcase struct {
+			desc        string
+			givenURL    string
+			expectedErr error
+		}
+
+		cases := []testcase{
+			{
+				desc:     "no scheme",
+				givenURL: "hello.example.com/path",
+				expectedErr: &url.Error{
+					Op:  "parse",
+					URL: "hello.example.com/path",
+					Err: errors.New("invalid URI for request"),
+				},
+			},
+			{
+				desc:        "valid url",
+				givenURL:    "http://example.com/path?query=1&oksome=2",
+				expectedErr: nil,
+			},
+			{
+				desc:        "bad scheme",
+				givenURL:    "smtp://example.com/path/to?query=1&oksome=2",
+				expectedErr: fmt.Errorf("bad url scheme: %s", "smtp"),
+			},
+			{
+				desc:        "no host",
+				givenURL:    "https:///path/to?query=1&some=2",
+				expectedErr: fmt.Errorf("host is empty"),
+			},
+		}
+
+		for i, singleCase := range cases {
+			Convey(fmt.Sprintf("Case %v: %s", i+1, singleCase.desc), func() {
+				err := ValidateURL(singleCase.givenURL)
+				So(err, ShouldResemble, singleCase.expectedErr)
+			})
+		}
 	})
 }

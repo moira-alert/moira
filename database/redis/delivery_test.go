@@ -14,10 +14,13 @@ func TestDeliveryChecksDataManipulation(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	const testContactType = "test_contact_type"
+
 	var testTimestamp int64 = 12345678
+
 	storedData := make([]string, 0)
 
 	Convey("Test delivery checks manipulation", t, func() {

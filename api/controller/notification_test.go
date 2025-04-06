@@ -16,12 +16,16 @@ func TestGetNotifications(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	var start int64 = 100
+
 	var end int64 = 33
 
 	Convey("Has notifications", t, func() {
 		notifications := []*moira.ScheduledNotification{{Timestamp: 123, SendFail: 6}, {Timestamp: 321, SendFail: 1}}
+
 		var total int64 = 666
+
 		dataBase.EXPECT().GetNotifications(start, end).Return(notifications, total, nil)
 		list, err := GetNotifications(dataBase, start, end)
 		So(err, ShouldBeNil)
@@ -30,7 +34,9 @@ func TestGetNotifications(t *testing.T) {
 
 	Convey("Test error", t, func() {
 		expected := fmt.Errorf("oooops! Can not get notifications")
+
 		var total int64 = 666
+
 		dataBase.EXPECT().GetNotifications(start, end).Return(nil, total, expected)
 		list, err := GetNotifications(dataBase, start, end)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -45,7 +51,9 @@ func TestDeleteNotification(t *testing.T) {
 
 	Convey("Success", t, func() {
 		key := "123"
+
 		var result int64 = 1
+
 		dataBase.EXPECT().RemoveNotification(key).Return(result, nil)
 		actual, err := DeleteNotification(dataBase, key)
 		So(err, ShouldBeNil)
@@ -54,7 +62,9 @@ func TestDeleteNotification(t *testing.T) {
 
 	Convey("Error delete", t, func() {
 		key := "123"
+
 		var result int64
+
 		expected := fmt.Errorf("oooops! Can not get notifications")
 		dataBase.EXPECT().RemoveNotification(key).Return(result, expected)
 		actual, err := DeleteNotification(dataBase, key)

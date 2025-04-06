@@ -30,6 +30,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	if lastStateSuppressed && lastStateSuppressedValue == "" {
 		lastStateSuppressedValue = lastStateValue
 	}
+
 	currentCheck.SuppressedState = lastStateSuppressedValue
 
 	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(lastCheck, nil)
@@ -42,11 +43,13 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 		lastStateSuppressedValue,
 		maintenanceInfo,
 	)
+
 	if !needSend {
 		if maintenanceTimestamp < currentCheckTimestamp {
 			currentCheck.Suppressed = false
 			currentCheck.SuppressedState = ""
 		}
+
 		return currentCheck, nil
 	}
 
@@ -57,6 +60,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 		if !lastStateSuppressed {
 			currentCheck.SuppressedState = lastStateValue
 		}
+
 		return currentCheck, nil
 	}
 
@@ -72,6 +76,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 		Metric:           triggerChecker.trigger.Name,
 		MessageEventInfo: eventInfo,
 	}, true)
+
 	return currentCheck, err
 }
 
@@ -88,6 +93,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	if lastState.Suppressed && lastState.SuppressedState == "" {
 		lastState.SuppressedState = lastState.State
 	}
+
 	currentState.SuppressedState = lastState.SuppressedState
 
 	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(triggerChecker.lastCheck, &currentState)
@@ -100,11 +106,13 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 		lastState.SuppressedState,
 		maintenanceInfo,
 	)
+
 	if !needSend {
 		if maintenanceTimestamp < currentState.Timestamp {
 			currentState.Suppressed = false
 			currentState.SuppressedState = ""
 		}
+
 		return currentState, nil
 	}
 
@@ -116,6 +124,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 		if !lastState.Suppressed {
 			currentState.SuppressedState = lastState.State
 		}
+
 		return currentState, nil
 	}
 
@@ -131,6 +140,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 		MessageEventInfo: eventInfo,
 		Values:           currentState.Values,
 	}, true)
+
 	return currentState, err
 }
 
@@ -138,6 +148,7 @@ func getEventOldState(lastCheckState moira.State, lastCheckSuppressedState moira
 	if isSuppressed {
 		return lastCheckSuppressedState
 	}
+
 	return lastCheckState
 }
 
@@ -159,6 +170,7 @@ func isStateChanged(currentStateValue moira.State, lastStateValue moira.State, c
 		interval := remindInterval / 3600 //nolint
 		return &moira.EventInfo{Interval: &interval}, true
 	}
+
 	return nil, false
 }
 
@@ -171,15 +183,18 @@ func getMaintenanceInfo(triggerState moira.MaintenanceCheck, metricState moira.M
 	if metricState == nil {
 		return triggerState.GetMaintenance()
 	}
+
 	if triggerState == nil {
 		return metricState.GetMaintenance()
 	}
+
 	triggerTS := getCompareTimestamp(triggerState)
 	metricTS := getCompareTimestamp(metricState)
 
 	if metricTS >= triggerTS {
 		return metricState.GetMaintenance()
 	}
+
 	return triggerState.GetMaintenance()
 }
 
@@ -188,9 +203,11 @@ func getCompareTimestamp(mainCheck moira.MaintenanceCheck) int64 {
 	if mainInfo.StopTime == nil {
 		return mainTS
 	}
+
 	removeTime := *mainInfo.StopTime
 	if removeTime > mainTS {
 		return removeTime
 	}
+
 	return mainTS
 }

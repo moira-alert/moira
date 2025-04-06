@@ -37,6 +37,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 		worker.logger.Info().
 			String("worker_name", worker.name).
 			Msg("Worker tries to acquire the lock...")
+
 		lost, err := worker.lock.Acquire(stop)
 		if err != nil {
 			// nolint:errorlint
@@ -63,6 +64,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 
 		actionStop := make(chan struct{})
 		actionDone := make(chan struct{})
+
 		go func(action Action, logger moira.Logger, done chan struct{}, stop <-chan struct{}) {
 			defer close(done)
 
@@ -109,6 +111,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			worker.logger.Info().
 				String("worker_name", worker.name).
 				Msg("Worker released the lock")
+
 			return
 		}
 	}

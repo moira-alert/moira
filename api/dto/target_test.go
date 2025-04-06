@@ -177,6 +177,7 @@ func TestConvertGraphiteTimeToTimeDuration(t *testing.T) {
 			if len(expr.Args()) < 2 {
 				continue
 			}
+
 			_, expected := positiveDuration(expr.Args()[1])
 			So(expected, ShouldEqual, data.actual)
 		}
@@ -189,6 +190,7 @@ func TestParseParametersToTimeDuration(t *testing.T) {
 
 	Convey("Strings", t, func() {
 		var expr parser.Expr
+
 		var err error
 
 		for tmplTime, actual := range getTimes() {

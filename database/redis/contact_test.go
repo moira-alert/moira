@@ -56,6 +56,7 @@ func TestContacts(t *testing.T) {
 				actual1, err := dataBase.GetContacts([]string{user1Contacts[0].ID, user2Contacts[1].ID})
 				So(err, ShouldBeNil)
 				So(actual1, ShouldHaveLength, 2)
+
 				for _, contact := range actual1 {
 					So(contact, ShouldBeNil)
 				}
@@ -63,6 +64,7 @@ func TestContacts(t *testing.T) {
 				actual2, err := dataBase.GetContacts([]string{team1Contacts[0].ID, team2Contacts[1].ID})
 				So(err, ShouldBeNil)
 				So(actual2, ShouldHaveLength, 2)
+
 				for _, contact := range actual1 {
 					So(contact, ShouldBeNil)
 				}
@@ -72,6 +74,7 @@ func TestContacts(t *testing.T) {
 				actual1, err := dataBase.GetContact(user1Contacts[0].ID)
 				So(err, ShouldResemble, database.ErrNil)
 				So(actual1, ShouldResemble, moira.ContactData{})
+
 				actual2, err := dataBase.GetContact(team1Contacts[0].ID)
 				So(err, ShouldResemble, database.ErrNil)
 				So(actual2, ShouldResemble, moira.ContactData{})
@@ -147,6 +150,7 @@ func TestContacts(t *testing.T) {
 			}
 
 			contact1 := user2Contacts[0]
+
 			Convey("Save-write contact", func() {
 				err := dataBase.SaveContact(contact1)
 				So(err, ShouldBeNil)
@@ -158,6 +162,7 @@ func TestContacts(t *testing.T) {
 				actual1, err := dataBase.GetUserContactIDs(user2)
 				So(err, ShouldBeNil)
 				So(actual1, ShouldResemble, []string{contact1.ID})
+
 				actual2, err := dataBase.GetContacts(ids)
 				So(err, ShouldBeNil)
 				So(actual2, ShouldHaveLength, len(ids))
@@ -167,6 +172,7 @@ func TestContacts(t *testing.T) {
 			})
 
 			contact2 := user2Contacts[1]
+
 			Convey("Save-remove contact", func() {
 				err := dataBase.SaveContact(contact2)
 				So(err, ShouldBeNil)
@@ -197,6 +203,7 @@ func TestContacts(t *testing.T) {
 				actual2, err := dataBase.GetContacts(ids)
 				expected := make([]*moira.ContactData, len(ids))
 				expected[0] = contact1
+
 				So(err, ShouldBeNil)
 				So(actual2, ShouldResemble, expected)
 
@@ -215,12 +222,14 @@ func TestContacts(t *testing.T) {
 				expected = make([]*moira.ContactData, len(ids))
 				expected[0] = contact1
 				expected[1] = contact2
+
 				So(err, ShouldBeNil)
 				So(actual2, ShouldResemble, expected)
 			})
 
 			contact3 := *user2Contacts[2]
 			contact3.User = user1
+
 			Convey("Update contact with another user", func() {
 				err := dataBase.SaveContact(&contact3)
 				So(err, ShouldBeNil)
@@ -256,6 +265,7 @@ func TestContacts(t *testing.T) {
 			})
 
 			contact4 := user2Contacts[3]
+
 			Convey("Save-update contact", func() {
 				err := dataBase.SaveContact(contact4)
 				So(err, ShouldBeNil)
@@ -291,6 +301,7 @@ func TestContacts(t *testing.T) {
 			}
 
 			contact1 := team2Contacts[0]
+
 			Convey("Save-write contact", func() {
 				err := dataBase.SaveContact(contact1)
 				So(err, ShouldBeNil)
@@ -302,6 +313,7 @@ func TestContacts(t *testing.T) {
 				actual1, err := dataBase.GetTeamContactIDs(team2)
 				So(err, ShouldBeNil)
 				So(actual1, ShouldResemble, []string{contact1.ID})
+
 				actual2, err := dataBase.GetContacts(ids)
 				So(err, ShouldBeNil)
 				So(actual2, ShouldHaveLength, len(ids))
@@ -311,6 +323,7 @@ func TestContacts(t *testing.T) {
 			})
 
 			contact2 := team2Contacts[1]
+
 			Convey("Save-remove contact", func() {
 				err := dataBase.SaveContact(contact2)
 				So(err, ShouldBeNil)
@@ -341,6 +354,7 @@ func TestContacts(t *testing.T) {
 				actual2, err := dataBase.GetContacts(ids)
 				expected := make([]*moira.ContactData, len(ids))
 				expected[0] = contact1
+
 				So(err, ShouldBeNil)
 				So(actual2, ShouldResemble, expected)
 
@@ -359,12 +373,14 @@ func TestContacts(t *testing.T) {
 				expected = make([]*moira.ContactData, len(ids))
 				expected[0] = contact1
 				expected[1] = contact2
+
 				So(err, ShouldBeNil)
 				So(actual2, ShouldResemble, expected)
 			})
 
 			contact3 := *team2Contacts[2]
 			contact3.Team = team1
+
 			Convey("Update contact with another team", func() {
 				err := dataBase.SaveContact(&contact3)
 				So(err, ShouldBeNil)
@@ -400,6 +416,7 @@ func TestContacts(t *testing.T) {
 			})
 
 			contact4 := team2Contacts[3]
+
 			Convey("Save-update contact", func() {
 				err := dataBase.SaveContact(contact4)
 				So(err, ShouldBeNil)
@@ -434,6 +451,7 @@ func TestErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("Should throw error when no connection", t, func() {

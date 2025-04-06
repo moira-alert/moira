@@ -16,11 +16,14 @@ func usage() {
 // reade file to byte array.
 func fileBytes(filePath string) ([]byte, error) {
 	var err error
+
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
+
 	defer f.Close()
+
 	return io.ReadAll(f)
 }
 
@@ -47,6 +50,7 @@ func main() {
 	file := os.Args[1]
 
 	fmt.Println(file[len(file)-5:])
+
 	if strings.ToLower(file[len(file)-5:]) != ".ttf" {
 		fmt.Printf("File name %s is not font\n", file)
 		os.Exit(1)
@@ -66,6 +70,7 @@ func main() {
 	}
 
 	fmt.Printf("Create file: %s.go\n", file[:len(file)-4])
+
 	err = createGoFile(file[:len(file)-4], dataTTF)
 	if err != nil {
 		fmt.Println("Go file not created")

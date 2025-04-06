@@ -10,6 +10,7 @@ func Test_newSetHelperFromTriggerTargetMetrics(t *testing.T) {
 	type args struct {
 		metrics TriggerTargetMetrics
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -47,6 +48,7 @@ func Test_setHelper_union(t *testing.T) {
 	type args struct {
 		other set[string]
 	}
+
 	tests := []struct {
 		name string
 		h    set[string]
@@ -94,6 +96,7 @@ func Test_setHelper_union(t *testing.T) {
 			want: set[string]{"metric.test.1": void, "metric.test.2": void, "metric.test.3": void},
 		},
 	}
+
 	Convey("union", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
@@ -108,6 +111,7 @@ func Test_setHelper_diff(t *testing.T) {
 	type args struct {
 		other set[string]
 	}
+
 	tests := []struct {
 		name string
 		h    set[string]
@@ -139,6 +143,7 @@ func Test_setHelper_diff(t *testing.T) {
 			want: set[string]{},
 		},
 	}
+
 	Convey("diff", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {

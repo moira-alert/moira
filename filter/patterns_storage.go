@@ -74,6 +74,7 @@ func (storage *PatternStorage) Refresh() error {
 
 	seriesByTagPatterns := make(map[string][]TagSpec)
 	patterns := make([]string, 0)
+
 	for _, newPattern := range newPatterns {
 		tagSpecs, err := ParseSeriesByTag(newPattern)
 		if errors.Is(err, ErrNotSeriesByTag) {
@@ -127,12 +128,14 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 
 	matchingStart := time.Now()
 	matchedPatterns := storage.matchPatterns(parsedMetric)
+
 	if count%10 == 0 {
 		storage.metrics.MatchingTimer.UpdateSince(matchingStart)
 	}
 
 	if len(matchedPatterns) > 0 {
 		storage.metrics.MatchingMetricsReceived.Inc()
+
 		return &moira.MatchedMetric{
 			Metric:             parsedMetric.Metric,
 			Patterns:           matchedPatterns,
@@ -157,5 +160,6 @@ func (storage *PatternStorage) matchPatterns(metric *ParsedMetric) []string {
 	}
 
 	patternIndex := storage.PatternIndex.Load().(*PatternIndex)
+
 	return patternIndex.MatchPatterns(metric.Name)
 }

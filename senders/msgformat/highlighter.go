@@ -84,6 +84,7 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 	titleLen := utf8.RuneCountInString(title) + len("\n")
 
 	var tags string
+
 	var tagsLen int
 
 	triggerTags := params.Trigger.GetTags()
@@ -104,9 +105,11 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 	if tagsNewLen != tagsLen {
 		tags = DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
 	}
+
 	if descLen != descNewLen {
 		desc = formatter.descriptionCutter(desc, descNewLen)
 	}
+
 	if eventsNewLen != eventsStringLen {
 		events = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
@@ -117,6 +120,7 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 // buildTitle builds title string for alert (emoji, trigger state, trigger name with link).
 func (formatter *highlightSyntaxFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
 	state := events.GetCurrentState(throttled)
+
 	title := ""
 	if formatter.useEmoji {
 		title += emoji + " "
@@ -124,6 +128,7 @@ func (formatter *highlightSyntaxFormatter) buildTitle(events moira.NotificationE
 
 	title += formatter.boldFormatter(string(state))
 	triggerURI := trigger.GetTriggerURI(formatter.frontURI)
+
 	if triggerURI != "" {
 		title += fmt.Sprintf(" %s", formatter.uriFormatter(triggerURI, trigger.Name))
 	} else if trigger.Name != "" {
@@ -138,17 +143,21 @@ func (formatter *highlightSyntaxFormatter) buildTitle(events moira.NotificationE
 func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	throttleMsg := fmt.Sprintf("\nPlease, %s to generate less events.", formatter.boldFormatter(ChangeTriggerRecommendation))
+
 	if throttled {
 		charsForThrottleMsg = utf8.RuneCountInString(throttleMsg)
 	}
+
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
 	eventsString += formatter.codeBlockStart
+
 	var tailString string
 
 	eventsLenLimitReached := false
 	eventsPrinted := 0
+
 	for _, event := range events {
 		line := fmt.Sprintf("\n%s", formatter.eventsStringFormatter(event, formatter.location))
 		if msg := event.CreateMessage(formatter.location); len(msg) > 0 {
@@ -156,6 +165,7 @@ func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.Notifi
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
+
 		tailStringLen := utf8.RuneCountInString(formatter.codeBlockEnd) + len("\n") + utf8.RuneCountInString(tailString)
 		if !(charsForEvents < 0) && (utf8.RuneCountInString(eventsString)+utf8.RuneCountInString(line) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
@@ -165,6 +175,7 @@ func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.Notifi
 		eventsString += line
 		eventsPrinted++
 	}
+
 	eventsString += "\n"
 	eventsString += formatter.codeBlockEnd
 

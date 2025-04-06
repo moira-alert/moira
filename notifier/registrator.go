@@ -23,7 +23,7 @@ import (
 	"github.com/moira-alert/moira/senders/twilio"
 	"github.com/moira-alert/moira/senders/victorops"
 	"github.com/moira-alert/moira/senders/webhook"
-	// "github.com/moira-alert/moira/senders/kontur"
+	// "github.com/moira-alert/moira/senders/kontur".
 )
 
 const (
@@ -62,6 +62,7 @@ func workerDeliveryCheckLockKey(contactType string) string {
 // RegisterSenders watch on senders config and register all configured senders.
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
+
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
 
@@ -97,9 +98,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		case webhookSender:
 			workerLock := connector.NewLock(workerDeliveryCheckLockKey(senderContactType), deliveryCheckLockTTL)
 			controller := delivery.NewChecksController(connector, workerLock, senderContactType)
-			_ = controller
 
-			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
+			err = notifier.RegisterSender(senderSettings, &webhook.Sender{Controller: controller})
 		case opsgenieSender:
 			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
 		case victoropsSender:
@@ -118,6 +118,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			return err
 		}
 	}
+
 	if notifier.config.SelfStateEnabled {
 		selfStateSettings := map[string]interface{}{
 			"sender_type":  selfStateSender,
@@ -165,6 +166,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 			notifier.metrics,
 			getGraphiteSenderIdent(senderContactType),
 			senderContactType)
+
 		notifier.logger.Info().
 			String("sender_contact_type", senderContactType).
 			String("sender_type", senderType).
@@ -204,6 +206,7 @@ func (notifier *StandardNotifier) StopSenders() {
 	for _, ch := range notifier.senders {
 		close(ch)
 	}
+
 	notifier.senders = make(map[string]chan NotificationPackage)
 	notifier.logger.Info().Msg("Waiting senders finish...")
 	notifier.waitGroup.Wait()

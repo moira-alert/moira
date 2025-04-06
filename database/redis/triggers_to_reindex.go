@@ -15,10 +15,12 @@ func (connector *DbConnector) FetchTriggersToReindex(from int64) ([]string, erro
 	c := *connector.client
 
 	rng := &redis.ZRangeBy{Min: strconv.FormatInt(from, 10), Max: "+inf"}
+
 	response, err := c.ZRangeByScore(ctx, triggersToReindexKey, rng).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch triggers to reindex: %s", err.Error())
 	}
+
 	if len(response) == 0 {
 		return make([]string, 0), nil
 	}

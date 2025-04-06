@@ -64,11 +64,13 @@ func (ch *scheduler) triggerScheduler(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(ch.sourceCheckConfig.CheckInterval)
 
 	ch.manager.Logger.Info().Msg(ch.name + " started")
+
 	for {
 		select {
 		case <-stop:
 			ch.manager.Logger.Info().Msg(ch.name + " stopped")
 			checkTicker.Stop()
+
 			return nil
 
 		case <-checkTicker.C:
@@ -88,6 +90,7 @@ func (ch *scheduler) scheduleTriggersToCheck() error {
 			Error(err).
 			String("cluster_key", ch.clusterKey.String()).
 			Msg("Source is invalid. Stop scheduling trigger checks")
+
 		return nil
 	}
 
@@ -113,5 +116,6 @@ func (ch *scheduler) scheduleTriggerIDsIfNeeded(clusterKey moira.ClusterKey, tri
 	if len(needToCheckTriggerIDs) > 0 {
 		return ch.manager.Database.AddTriggersToCheck(clusterKey, needToCheckTriggerIDs)
 	}
+
 	return nil
 }

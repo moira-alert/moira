@@ -27,22 +27,26 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 	}
 
 	var metricBytes, valueBytes, timestampBytes []byte
+
 	inputScanner := moira.NewBytesScanner(input, ' ')
 	if !inputScanner.HasNext() {
 		return nil, fmt.Errorf("too few space-separated items: '%s'", input)
 	}
 
 	metricBytes = inputScanner.Next()
+
 	if !inputScanner.HasNext() {
 		return nil, fmt.Errorf("too few space-separated items: '%s'", input)
 	}
 
 	valueBytes = inputScanner.Next()
+
 	if !inputScanner.HasNext() {
 		return nil, fmt.Errorf("too few space-separated items: '%s'", input)
 	}
 
 	timestampBytes = inputScanner.Next()
+
 	if inputScanner.HasNext() {
 		return nil, fmt.Errorf("too many space-separated items: '%s'", input)
 	}
@@ -79,6 +83,7 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 
 func restoreMetricStringByNameAndLabels(name string, labels map[string]string, metricBytesSize int) string {
 	var builder strings.Builder
+
 	builder.Grow(metricBytesSize)
 
 	keys := make([]string, 0, len(labels))
@@ -120,16 +125,19 @@ func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 
 	name := moira.UnsafeBytesToString(nameBytes)
 	labels := make(map[string]string)
+
 	for metricBytesScanner.HasNext() {
 		labelBytes := metricBytesScanner.Next()
 		labelBytesScanner := moira.NewBytesScanner(labelBytes, '=')
 
 		var labelNameBytes, labelValueBytes []byte
+
 		if !labelBytesScanner.HasNext() {
 			return "", nil, fmt.Errorf("too few equal-separated items: '%s'", labelBytes)
 		}
 
 		labelNameBytes = labelBytesScanner.Next()
+
 		if !labelBytesScanner.HasNext() {
 			return "", nil, fmt.Errorf("too few equal-separated items: '%s'", labelBytes)
 		}

@@ -20,6 +20,7 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 	switch d := database.(type) {
 	case *redis.DbConnector:
 		client := d.Client()
+
 		var splitCount int64
 
 		pipe := client.TxPipeline()
@@ -51,6 +52,7 @@ func splitNotificationHistoryByContactID(ctx context.Context, logger moira.Logge
 					Score:  float64(notification.TimeStamp),
 					Member: notificationBytes,
 				})
+
 			splitCount += 1
 		}
 
@@ -227,11 +229,13 @@ func handleCleanupNotificationHistoryWithTTL(db moira.Database, ttl int64) error
 	if err != nil {
 		return fmt.Errorf("database error: %w", err)
 	}
+
 	return nil
 }
 
 func deserializeEvents(eventStrings []string) ([]moira.NotificationEventHistoryItem, error) {
 	notificationEvents := make([]moira.NotificationEventHistoryItem, 0, len(eventStrings))
+
 	for _, str := range eventStrings {
 		notification, err := redis.GetNotificationStruct(str)
 		if err != nil {
@@ -240,5 +244,6 @@ func deserializeEvents(eventStrings []string) ([]moira.NotificationEventHistoryI
 
 		notificationEvents = append(notificationEvents, notification)
 	}
+
 	return notificationEvents, nil
 }

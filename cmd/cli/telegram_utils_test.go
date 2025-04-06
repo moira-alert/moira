@@ -17,6 +17,7 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 	}
 
 	conf := getDefault()
+
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
 	if err != nil {
 		t.Fatal(err)
@@ -65,6 +66,7 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 	}
 
 	conf := getDefault()
+
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
 	if err != nil {
 		t.Fatal(err)
@@ -72,6 +74,7 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 
 	database := redis.NewTestDatabase(logger)
 	database.Flush()
+
 	defer database.Flush()
 	client := database.Client()
 	ctx := database.Context()

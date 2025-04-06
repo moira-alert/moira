@@ -15,7 +15,9 @@ import (
 
 func BenchmarkUnpackMetricsValues(b *testing.B) {
 	var from int64 = 17
+
 	var until int64 = 1317
+
 	var retention int64 = 10
 
 	timer := newTimerRoundingTimestamps(from, until, retention)
@@ -31,12 +33,14 @@ func BenchmarkUnpackMetricsValues(b *testing.B) {
 			Value:              float64(i),
 		})
 	}
+
 	metricData := map[string][]*moira.MetricValue{"metric1": metricsValues}
 	for i := 0; i < metricsCount; i++ {
 		metricData[fmt.Sprintf("metric%v", i)] = metricsValues
 	}
 
 	b.ReportAllocs()
+
 	for i := 0; i < b.N; i++ {
 		unpackMetricsValues(metricData, timer)
 	}
@@ -44,7 +48,9 @@ func BenchmarkUnpackMetricsValues(b *testing.B) {
 
 func BenchmarkUnpackMetricValues(b *testing.B) {
 	var from int64 = 17
+
 	var until int64 = 317
+
 	var retention int64 = 10
 
 	timer := newTimerRoundingTimestamps(from, until, retention)
@@ -60,6 +66,7 @@ func BenchmarkUnpackMetricValues(b *testing.B) {
 	}
 
 	b.ReportAllocs()
+
 	for i := 0; i < b.N; i++ {
 		unpackMetricValues(metricsValues, timer)
 	}
@@ -143,7 +150,9 @@ func TestFetchData(t *testing.T) {
 	}
 
 	var from int64 = 17
+
 	var until int64 = 67
+
 	var retention int64 = 10
 	timer := newTimerRoundingTimestamps(from, until, retention)
 
@@ -324,6 +333,7 @@ func TestUnpackMetricValues(t *testing.T) {
 
 func TestMultipleSeriesNoData(t *testing.T) {
 	var retention int64 = 10
+
 	metricData := map[string][]*moira.MetricValue{
 		"metric1": {},
 		"metric2": {},
@@ -461,6 +471,7 @@ func TestMultipleSeries(t *testing.T) {
 
 func TestShiftedSeries(t *testing.T) {
 	var retention int64 = 10
+
 	metricData := map[string][]*moira.MetricValue{"metric": {
 		{Timestamp: 4, RetentionTimestamp: 0, Value: 100.00},
 		{Timestamp: 15, RetentionTimestamp: 10, Value: 200.00},
