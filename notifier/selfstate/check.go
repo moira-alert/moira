@@ -43,6 +43,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 	var events []heartbeatNotificationEvent
 
 	checksGraph := constructHeartbeatsGraph(selfCheck.heartbeats)
+
 	checksResult, err := checksGraph.executeGraph(nowTS)
 	if err != nil {
 		selfCheck.Logger.Error().
@@ -179,6 +180,7 @@ func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.Notifi
 
 func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, timestamp int64) moira.NotificationEvent {
 	val := float64(lastSuccessCheckElapsedTime)
+
 	return moira.NotificationEvent{
 		Timestamp: timestamp,
 		OldState:  moira.StateNODATA,

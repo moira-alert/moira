@@ -46,8 +46,10 @@ func (graph heartbeatsGraph) executeGraph(nowTS int64) (graphExecutionResult, er
 
 func runHeartbeatersLayer(graphLayer []heartbeat.Heartbeater, nowTS int64, wg *sync.WaitGroup) (graphExecutionResult, error) {
 	results := make(chan heartbeaterCheckResult, len(graphLayer))
+
 	for _, heartbeat := range graphLayer {
 		wg.Add(1)
+
 		go runHeartbeaterCheck(heartbeat, nowTS, wg, results)
 	}
 
@@ -58,6 +60,7 @@ func runHeartbeatersLayer(graphLayer []heartbeat.Heartbeater, nowTS int64, wg *s
 	for r := range results {
 		arr = append(arr, r)
 	}
+
 	merged, err := mergeLayerResults(arr...)
 
 	return merged, err
@@ -66,9 +69,11 @@ func runHeartbeatersLayer(graphLayer []heartbeat.Heartbeater, nowTS int64, wg *s
 func runHeartbeaterCheck(heartbeater heartbeat.Heartbeater, nowTS int64, wg *sync.WaitGroup, resultChan chan<- heartbeaterCheckResult) {
 	lastSuccessCheckElapsedTime, hasErrors, err := heartbeater.Check(nowTS)
 
-	var needTurnOffNotifier bool
-	var errorMessage string
-	var checkTags []string
+	var (
+		needTurnOffNotifier bool
+		errorMessage        string
+		checkTags           []string
+	)
 
 	if hasErrors {
 		needTurnOffNotifier = heartbeater.NeedTurnOffNotifier()
@@ -90,6 +95,7 @@ func runHeartbeaterCheck(heartbeater heartbeat.Heartbeater, nowTS int64, wg *syn
 
 func mergeLayerResults(layersResults ...heartbeaterCheckResult) (graphExecutionResult, error) {
 	var graphResult graphExecutionResult
+
 	for _, layerResult := range layersResults {
 		if layerResult.hasErrors {
 			graphResult.hasErrors = graphResult.hasErrors || layerResult.hasErrors

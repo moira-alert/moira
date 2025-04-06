@@ -6,8 +6,10 @@ type heartbeatsGraph [][]heartbeat.Heartbeater
 
 // constructHeartbeatsGraph constructs a graph of heartbeats based on their order and blocking.
 func constructHeartbeatsGraph(heartbeats []heartbeat.Heartbeater) heartbeatsGraph {
-	var graph heartbeatsGraph
-	var currentLayer []heartbeat.Heartbeater
+	var (
+		graph        heartbeatsGraph
+		currentLayer []heartbeat.Heartbeater
+	)
 
 	for _, hb := range heartbeats {
 		if !hb.NeedToCheckOthers() {
