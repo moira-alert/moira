@@ -20,7 +20,7 @@ func GetNotifier(checkTags []string, logger moira.Logger, database moira.Databas
 
 func (check notifier) Check(int64) (int64, bool, error) {
 	state, _ := check.database.GetNotifierState()
-	if state.State != moira.SelfStateOK && state.Actor == moira.SelfStateActorManual {
+	if state.State != moira.SelfStateOK {
 		check.logger.Error().
 			String("error", check.GetErrorMessage()).
 			Msg("Notifier is not healthy")
