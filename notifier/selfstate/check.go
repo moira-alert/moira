@@ -82,7 +82,7 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 		} else if notifierEnabled {
 			events = append(events, heartbeatNotificationEvent{
 				NotificationEvent: generateNotificationEvent("Moira notifications enabled", 0, nowTS, moira.StateERROR, moira.StateOK),
-				CheckTags: selfCheck.lastChecksResult.checksTags,
+				CheckTags: graphResult.checksTags,
 			})
 		}
 	}
@@ -222,7 +222,8 @@ func (selfCheck *SelfCheckWorker) enableNotifierIfCan() (bool, error) {
 		return false, err
 	}
 
-	if currentNotifierState.Actor == moira.SelfStateActorAutomatic && currentNotifierState.State == moira.SelfStateERROR {
+	if currentNotifierState.Actor == moira.SelfStateActorAutomatic && currentNotifierState.State == moira.SelfStateERROR ||
+	currentNotifierState.Actor == moira.SelfStateActorManual && currentNotifierState.State == moira.SelfStateOK {
 		if err = selfCheck.setNotifierState(moira.SelfStateOK); err != nil {
 			return false, err
 		}

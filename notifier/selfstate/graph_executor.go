@@ -39,7 +39,7 @@ func (graph heartbeatsGraph) executeGraph(nowTS int64) (graphExecutionResult, er
 
 	return graphExecutionResult{
 		lastSuccessCheckElapsedTime: 0,
-		nowTimestamp: time.Duration(nowTS),
+		nowTimestamp: time.Duration(nowTS * 1e9),
 		hasErrors:                   false,
 		needTurnOffNotifier:         false,
 		errorMessages:               nil,
@@ -62,7 +62,7 @@ func runHeartbeatersLayer(graphLayer []heartbeat.Heartbeater, nowTS int64, wg *s
 		arr = append(arr, r)
 	}
 	merged, err := mergeLayerResults(arr...)
-	merged.nowTimestamp = time.Duration(nowTS)
+	merged.nowTimestamp = time.Duration(nowTS * 1e9)
 
 	return merged, err
 }

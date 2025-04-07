@@ -37,8 +37,8 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			Actor:    moira.SelfStateActorAutomatic,
 			State: moira.SelfStateOK,
-			Actor:    moira.SelfStateActorManual,
 		}, nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
@@ -243,8 +243,8 @@ func TestSelfCheckWorker(t *testing.T) {
 			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{check}
 
 			mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+				Actor:    moira.SelfStateActorAutomatic,
 				State: moira.SelfStateOK,
-				Actor:    moira.SelfStateActorManual,
 			}, nil)
 
 			check.EXPECT().NeedToCheckOthers().Return(false)
