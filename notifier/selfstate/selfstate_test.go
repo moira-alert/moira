@@ -76,6 +76,56 @@ func TestSelfCheckWorker_sendMessages(t *testing.T) {
 		So(err, ShouldBeNil)
 		mock.mockCtrl.Finish()
 	})
+
+	Convey("Should send user notifications if silent budget expired", t, func() {
+		mock := configureWorker(t, true)
+		err := mock.selfCheckWorker.Start()
+		So(err, ShouldBeNil)
+
+		mock.database.EXPECT().GetTagsSubscriptions([]string{"tag"}).Return(nil, nil)
+
+		mock.selfCheckWorker.lastSuccessChecksResult.nowTimestamp = 0
+		mock.selfCheckWorker.lastChecksResult.nowTimestamp = 3 * time.Second
+
+		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
+
+		events := []heartbeatNotificationEvent{
+			{
+				NotificationEvent: moira.NotificationEvent{},
+				CheckTags:         []string{"tag"},
+			},
+		}
+
+		mock.selfCheckWorker.sendMessages(events)
+
+		err = mock.selfCheckWorker.Stop()
+		So(err, ShouldBeNil)
+		mock.mockCtrl.Finish()
+	})
+
+	Convey("Should not send user notifications if silent budget not expired", t, func() {
+		mock := configureWorker(t, true)
+		err := mock.selfCheckWorker.Start()
+		So(err, ShouldBeNil)
+
+		mock.selfCheckWorker.lastSuccessChecksResult.nowTimestamp = 0
+		mock.selfCheckWorker.lastChecksResult.nowTimestamp = 1 * time.Second
+
+		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
+
+		events := []heartbeatNotificationEvent{
+			{
+				NotificationEvent: moira.NotificationEvent{},
+				CheckTags:         []string{"tag"},
+			},
+		}
+
+		mock.selfCheckWorker.sendMessages(events)
+
+		err = mock.selfCheckWorker.Stop()
+		So(err, ShouldBeNil)
+		mock.mockCtrl.Finish()
+	})
 }
 
 func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
@@ -335,6 +385,7 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 		LastMetricReceivedDelaySeconds: 60,
 		LastCheckDelaySeconds:          120,
 		NoticeIntervalSeconds:          60,
+		UserNotificationsInterval:      2 * time.Second,
 		LastRemoteCheckDelaySeconds:    120,
 		CheckInterval:                  1 * time.Second,
 	}

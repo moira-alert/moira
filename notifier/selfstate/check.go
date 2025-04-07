@@ -164,7 +164,7 @@ func (selfCheck *SelfCheckWorker) sendMessages(events []heartbeatNotificationEve
 	)
 	sendingWG.Wait()
 
-	if selfCheck.lastChecksResult.nowTimestamp-selfCheck.lastSuccessChecksResult.nowTimestamp > 15*time.Second {
+	if selfCheck.lastChecksResult.nowTimestamp-selfCheck.lastSuccessChecksResult.nowTimestamp > selfCheck.Config.UserNotificationsInterval {
 		selfCheck.sendNotificationToUsers(events, &sendingWG)
 		sendingWG.Wait()
 	}

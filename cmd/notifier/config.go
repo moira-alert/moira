@@ -77,6 +77,8 @@ type selfStateConfig struct {
 	Contacts []map[string]string `yaml:"contacts"`
 	// Self state monitor alerting interval
 	NoticeInterval string `yaml:"notice_interval"`
+	// Time threshold between last success selfstate check and current check to send user notifications.
+	UserNotificationsInterval string `yaml:"user_notifications_interval"`
 	// Self state monitor check interval
 	CheckInterval string `yaml:"check_interval"`
 	// Checks contains the configuration for selfstate checks
@@ -259,6 +261,7 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		CheckInterval:                  checkInterval,
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
+		UserNotificationsInterval:      to.Duration(config.UserNotificationsInterval),
 		Checks:                         toCheckConfig(config.Checks),
 	}
 }

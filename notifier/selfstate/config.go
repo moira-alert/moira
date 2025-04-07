@@ -30,6 +30,7 @@ type Config struct {
 	LastRemoteCheckDelaySeconds    int64
 	NoticeIntervalSeconds          int64
 	CheckInterval                  time.Duration
+	UserNotificationsInterval      time.Duration
 	Contacts                       []map[string]string
 	Checks                         ChecksConfig
 }
