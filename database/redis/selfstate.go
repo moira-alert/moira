@@ -70,15 +70,16 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 	c := *connector.client
 	defaultState := moira.NotifierState{
 		State: moira.SelfStateERROR,
-		Actor:    moira.SelfStateActorManual,
+		Actor: moira.SelfStateActorManual,
 	}
 
 	getResult := c.Get(connector.context, selfStateNotifierHealth)
 	if errors.Is(getResult.Err(), redis.Nil) {
 		state := moira.NotifierState{
 			State: moira.SelfStateOK,
-			Actor:    moira.SelfStateActorManual,
+			Actor: moira.SelfStateActorManual,
 		}
+
 		err := connector.setNotifierState(state)
 		if err != nil {
 			return defaultState, err
@@ -98,8 +99,8 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 // SetNotifierState update current notifier state: <OK|ERROR>.
 func (connector *DbConnector) SetNotifierState(actor, state string) error {
 	err := connector.setNotifierState(moira.NotifierState{
-		State:     state,
-		Actor:        actor,
+		State: state,
+		Actor: actor,
 	})
 
 	return err
@@ -107,6 +108,7 @@ func (connector *DbConnector) SetNotifierState(actor, state string) error {
 
 func (connector *DbConnector) setNotifierState(dto moira.NotifierState) error {
 	c := *connector.client
+
 	state, err := json.Marshal(dto)
 	if err != nil {
 		return err

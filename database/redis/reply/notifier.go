@@ -12,11 +12,13 @@ import (
 
 func NotifierState(rep *redis.StringCmd) (moira.NotifierState, error) {
 	state := moira.NotifierState{}
+
 	bytes, err := rep.Bytes()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return state, database.ErrNil
 		}
+
 		return state, fmt.Errorf("failed to read state: %s", err.Error())
 	}
 
@@ -24,5 +26,6 @@ func NotifierState(rep *redis.StringCmd) (moira.NotifierState, error) {
 	if err != nil {
 		return state, fmt.Errorf("failed to parse state json %s %s", string(bytes), err.Error())
 	}
+
 	return state, nil
 }

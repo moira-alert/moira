@@ -11,7 +11,7 @@ import (
 
 type graphExecutionResult struct {
 	lastSuccessCheckElapsedTime int64
-	nowTimestamp time.Duration
+	nowTimestamp                time.Duration
 	hasErrors                   bool
 	needTurnOffNotifier         bool
 	errorMessages               []string
@@ -39,7 +39,7 @@ func (graph heartbeatsGraph) executeGraph(nowTS int64) (graphExecutionResult, er
 
 	return graphExecutionResult{
 		lastSuccessCheckElapsedTime: 0,
-		nowTimestamp: time.Duration(nowTS * 1e9),
+		nowTimestamp:                time.Duration(nowTS * 1e9),
 		hasErrors:                   false,
 		needTurnOffNotifier:         false,
 		errorMessages:               nil,

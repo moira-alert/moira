@@ -53,6 +53,7 @@ func TestSender_SendEvents(t *testing.T) {
 					dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 						State: selfStateInitial,
 					}, nil)
+
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 					So(err, ShouldBeNil)
 				}
@@ -64,6 +65,7 @@ func TestSender_SendEvents(t *testing.T) {
 						State: selfStateInitial,
 					}, nil)
 					dataBase.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, selfStateFinal).Return(nil)
+
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 					So(err, ShouldBeNil)
@@ -79,6 +81,7 @@ func TestSender_SendEvents(t *testing.T) {
 				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 					State: selfStateInitial,
 				}, nil)
+
 				err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 				So(err, ShouldBeNil)
 			}
@@ -90,7 +93,9 @@ func TestSender_SendEvents(t *testing.T) {
 
 		for _, subjectState := range disablingSubjectStates {
 			testEvents := []moira.NotificationEvent{{State: subjectState}}
+
 			dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{}, fmt.Errorf("redis is down"))
+
 			err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 			So(err, ShouldNotBeNil)
 			So(err.Error(), ShouldEqual, "failed to get notifier state: redis is down")

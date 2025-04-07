@@ -100,8 +100,9 @@ func TestProcessScheduledEvent(t *testing.T) {
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			State: moira.SelfStateOK,
-			Actor:    moira.SelfStateActorManual,
+			Actor: moira.SelfStateActorManual,
 		}, nil)
+
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
 	})
@@ -129,7 +130,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		notifier.EXPECT().Send(&pkg, gomock.Any())
 		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			State: moira.SelfStateOK,
-			Actor:    moira.SelfStateActorManual,
+			Actor: moira.SelfStateActorManual,
 		}, nil)
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 
@@ -183,7 +184,7 @@ func TestGoRoutine(t *testing.T) {
 	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 	dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 		State: moira.SelfStateOK,
-		Actor:    moira.SelfStateActorManual,
+		Actor: moira.SelfStateActorManual,
 	}, nil)
 
 	worker.Start()
