@@ -51,6 +51,8 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 
 	events := selfCheck.handleGraphExecutionResult(nowTS, checksResult)
 
+	selfCheck.lastChecksResult = checksResult
+
 	return events
 }
 
@@ -72,6 +74,7 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 			CheckTags:         graphResult.checksTags,
 		})
 	} else {
+		selfCheck.lastSuccessChecksResult = graphResult
 		notifierEnabled, err := selfCheck.enableNotifierIfCan()
 
 		if err != nil {
@@ -79,8 +82,10 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 				Error(err).
 				Msg("Enabling notifier failed")
 		} else if notifierEnabled {
-			selfCheck.Logger.Info().
-				Msg("Notifier enabled automatically")
+			events = append(events, heartbeatNotificationEvent{
+				NotificationEvent: generateNotificationEvent("Moira notifications enabled", 0, nowTS, moira.StateERROR, moira.StateOK),
+				CheckTags:         graphResult.checksTags,
+			})
 		}
 	}
 

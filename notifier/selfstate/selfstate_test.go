@@ -356,7 +356,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
-			So(len(events), ShouldEqual, 0)
+			So(len(events), ShouldEqual, 1)
 		})
 
 		Convey("Test of sending notifications from a check", func() {
