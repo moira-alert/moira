@@ -18,12 +18,13 @@ func sanitizeLabelName(label string, maxLabelLength int) string {
 		label = string([]rune(label)[:maxLabelLength-3])
 		label += "..."
 	}
+
 	return label
 }
 
 // percentsOfRange results expected percents of range by given min and max values.
-func percentsOfRange(min, max, percent float64) float64 {
-	delta := math.Abs(max - min)
+func percentsOfRange(minValue, maxValue, percent float64) float64 {
+	delta := math.Abs(maxValue - minValue)
 	return percent * (delta / 100)
 }
 
@@ -46,12 +47,15 @@ func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat 
 	if typed, isTyped := v.(time.Time); isTyped {
 		return typed.In(storage.location).Format(dateFormat)
 	}
+
 	if typed, isTyped := v.(int64); isTyped {
 		return time.Unix(0, typed).In(storage.location).Format(dateFormat)
 	}
+
 	if typed, isTyped := v.(float64); isTyped {
 		return time.Unix(0, int64(typed)).In(storage.location).Format(dateFormat)
 	}
+
 	return ""
 }
 
@@ -59,28 +63,35 @@ func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat 
 // for values on yaxis and resolved maximal formatted value length.
 func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int) {
 	var formatter func(v interface{}) string
+
 	deltaLimits := int64(limits.highest) - int64(limits.lowest)
 	if deltaLimits > 10 { //nolint
 		formatter = floatToHumanizedValueFormatter
 	} else {
 		formatter = chart.FloatValueFormatter
 	}
+
 	lowestLen := len(formatter(limits.lowest))
 	highestLen := len(formatter(limits.highest))
+
 	if lowestLen > highestLen {
 		return formatter, lowestLen
 	}
+
 	return formatter, highestLen
 }
 
-// floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot.
+// floatToHumanizedValueFormatter converts floats into humanized strings on y-axis of plot.
 func floatToHumanizedValueFormatter(v interface{}) string {
 	if typed, isTyped := v.(float64); isTyped {
 		if math.Abs(typed) < 1000 { //nolint
 			return fmt.Sprintf("%.f", typed)
 		}
+
 		humanized, postfix := humanize.ComputeSI(typed)
+
 		return fmt.Sprintf("%.2f %s", humanized, strings.ToUpper(postfix))
 	}
+
 	return ""
 }

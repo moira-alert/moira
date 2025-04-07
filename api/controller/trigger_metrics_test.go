@@ -35,6 +35,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 	Convey("Success delete from last check", t, func() {
 		expectedLastCheck := lastCheck
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -48,6 +49,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 	Convey("Success delete nothing to delete", t, func() {
 		expectedLastCheck := emptyLastCheck
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -83,6 +85,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 	Convey("AcquireTriggerCheckLock error", t, func() {
 		expected := fmt.Errorf("acquire error")
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
@@ -91,6 +94,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 	Convey("GetTriggerLastCheck error", t, func() {
 		expected := fmt.Errorf("last check error")
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -101,6 +105,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 	Convey("RemovePatternsMetrics error", t, func() {
 		expected := fmt.Errorf("removePatternsMetrics err")
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -112,6 +117,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 	Convey("SetTriggerLastCheck error", t, func() {
 		expected := fmt.Errorf("removePatternsMetrics err")
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -170,6 +176,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	Convey("Success delete from last check, one NODATA", t, func() {
 		expectedLastCheck := lastCheckSingleNodata
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -183,6 +190,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	Convey("Success delete from last check, many NODATA", t, func() {
 		expectedLastCheck := lastCheckWithNodataOnly
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -196,6 +204,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	Convey("Success delete from last check, many NODATA + other statuses", t, func() {
 		expectedLastCheck := lastCheckWithManyStates
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -209,6 +218,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	Convey("Success delete nothing to delete", t, func() {
 		expectedLastCheck := emptyLastCheck
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -244,6 +254,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	Convey("AcquireTriggerCheckLock error", t, func() {
 		expected := fmt.Errorf("acquire error")
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
@@ -252,6 +263,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	Convey("GetTriggerLastCheck error", t, func() {
 		expected := fmt.Errorf("last check error")
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -274,7 +286,9 @@ func TestGetTriggerMetrics(t *testing.T) {
 	metric := "super.puper.metric"
 
 	var from int64 = 17
+
 	var until int64 = 67
+
 	var retention int64 = 10
 
 	Convey("Trigger is prometheus remote but prometheus remote is not in a registered source", t, func() {
@@ -324,6 +338,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 			InternalError: fmt.Errorf("some error"),
 			Target:        pattern,
 		}
+
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
 			ID:            triggerID,
 			Targets:       []string{pattern},

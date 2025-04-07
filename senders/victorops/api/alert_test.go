@@ -36,14 +36,16 @@ func TestCreateAlert(t *testing.T) {
 				if req.URL.String() != "/key" {
 					t.Errorf(`Expected: "/key"\nActual: %v`, req.URL.String())
 				}
+
 				res.WriteHeader(http.StatusInternalServerError)
 				res.Header().Set("Content-Type", "application/json")
+
 				json, _ := json.Marshal(map[string]string{
 					"error": "test error",
 				})
-				res.Write(json) //nolint
-				// Send response to be tested
+				res.Write(json) //nolint  // Send response to be tested
 			}))
+
 			defer server.Close()
 			// TODO(e.sharifullin): Investigate why new client is created
 			newClient := NewClient(server.URL, server.Client())

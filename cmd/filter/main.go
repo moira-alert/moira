@@ -40,6 +40,7 @@ var (
 
 func main() {
 	flag.Parse()
+
 	if *printVersion {
 		fmt.Println("Moira Filter")
 		fmt.Println("Version:", MoiraVersion)
@@ -106,6 +107,7 @@ func main() {
 	}
 
 	filterPatternStorageCfg := config.Filter.PatternStorageCfg.toFilterPatternStorageConfig()
+
 	patternStorage, err := filter.NewPatternStorage(filterPatternStorageCfg, database, filterMetrics, logger, compatibility)
 	if err != nil {
 		logger.Fatal().
@@ -137,6 +139,7 @@ func main() {
 			Error(err).
 			Msg("Failed to start listening")
 	}
+
 	lineChan := listener.Listen()
 
 	patternMatcher := patterns.NewMatcher(logger, filterMetrics, patternStorage, to.Duration(config.Filter.DropMetricsTTL))
@@ -147,6 +150,7 @@ func main() {
 	batchForcedSaveTimeout := to.Duration(config.Filter.BatchForcedSaveTimeout)
 	metricsMatcher := matchedmetrics.NewMetricsMatcher(filterMetrics, logger, database, cacheStorage, cacheCapacity, batchForcedSaveTimeout)
 	metricsMatcher.Start(metricsChan)
+
 	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events
 

@@ -65,6 +65,7 @@ func TriggerContext(next http.Handler) http.Handler {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("triggerID must be set"))) //nolint
 			return
 		}
+
 		ctx := context.WithValue(request.Context(), triggerIDKey, triggerID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
@@ -78,6 +79,7 @@ func ContactContext(next http.Handler) http.Handler {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("contactID must be set"))) //nolint
 			return
 		}
+
 		ctx := context.WithValue(request.Context(), contactIDKey, contactID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
@@ -91,6 +93,7 @@ func TagContext(next http.Handler) http.Handler {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("tag must be set"))) //nolint
 			return
 		}
+
 		ctx := context.WithValue(request.Context(), tagKey, tag)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
@@ -104,6 +107,7 @@ func SubscriptionContext(next http.Handler) http.Handler {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("subscriptionId must be set"))) //nolint
 			return
 		}
+
 		ctx := context.WithValue(request.Context(), subscriptionIDKey, subscriptionID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
@@ -263,6 +267,7 @@ func TeamContext(next http.Handler) http.Handler {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("teamId must be set"))) //nolint:errcheck
 			return
 		}
+
 		ctx := context.WithValue(request.Context(), teamIDKey, teamID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
@@ -276,6 +281,7 @@ func TeamUserIDContext(next http.Handler) http.Handler {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("userId must be set"))) //nolint:errcheck
 			return
 		}
+
 		ctx := context.WithValue(request.Context(), teamUserIDKey, userID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
@@ -334,6 +340,7 @@ func StatesContext() func(next http.Handler) http.Handler {
 						_ = render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("bad state in query parameter: %s", state)))
 						return
 					}
+
 					states[state] = struct{}{}
 				}
 			}

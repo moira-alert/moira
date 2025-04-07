@@ -84,6 +84,7 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 	}
 
 	fetchResult := convertResponse(resp, allowRealTimeAlerting)
+
 	return &fetchResult, nil
 }
 

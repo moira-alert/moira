@@ -70,6 +70,7 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 // Returns count of deleted tags.
 func (connector *DbConnector) CleanUpAbandonedTags() (int, error) {
 	var count int
+
 	client := *connector.client
 
 	iter := client.SScan(connector.context, tagsKey, 0, "*", 0).Iterator()

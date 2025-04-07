@@ -104,27 +104,34 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 
 	if event.MessageEventInfo.Maintenance.StartUser != nil || event.MessageEventInfo.Maintenance.StartTime != nil {
 		messageBuffer.WriteString(" Maintenance was set")
+
 		if event.MessageEventInfo.Maintenance.StartUser != nil {
 			messageBuffer.WriteString(" by ")
 			messageBuffer.WriteString(*event.MessageEventInfo.Maintenance.StartUser)
 		}
+
 		if event.MessageEventInfo.Maintenance.StartTime != nil {
 			messageBuffer.WriteString(" at ")
 			messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StartTime, 0).In(location).Format(DefaultDateTimeFormat))
 		}
+
 		if event.MessageEventInfo.Maintenance.StopUser != nil || event.MessageEventInfo.Maintenance.StopTime != nil {
 			messageBuffer.WriteString(" and removed")
+
 			if event.MessageEventInfo.Maintenance.StopUser != nil && *event.MessageEventInfo.Maintenance.StopUser != *event.MessageEventInfo.Maintenance.StartUser {
 				messageBuffer.WriteString(" by ")
 				messageBuffer.WriteString(*event.MessageEventInfo.Maintenance.StopUser)
 			}
+
 			if event.MessageEventInfo.Maintenance.StopTime != nil {
 				messageBuffer.WriteString(" at ")
 				messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StopTime, 0).In(location).Format(DefaultDateTimeFormat))
 			}
 		}
+
 		messageBuffer.WriteString(".")
 	}
+
 	return messageBuffer.String()
 }
 
@@ -134,6 +141,7 @@ type NotificationEvents []NotificationEvent
 // PopulatedDescription populates a description template using provided trigger and events data.
 func (trigger *TriggerData) PopulatedDescription(events NotificationEvents) error {
 	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(trigger.Name, events.ToTemplateEvents())
+
 	description, err := triggerDescriptionPopulater.Populate(trigger.Desc)
 	if err != nil {
 		description = "Your description is using the wrong template. Since we were unable to populate your template with " +
@@ -185,6 +193,7 @@ func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 	if trigger.ID != "" {
 		return fmt.Sprintf("%s/trigger/%s", frontURI, trigger.ID)
 	}
+
 	return ""
 }
 
@@ -194,6 +203,7 @@ func (trigger *TriggerData) GetTags() string {
 	for _, tag := range trigger.Tags {
 		buffer.WriteString(fmt.Sprintf("[%s]", tag))
 	}
+
 	return buffer.String()
 }
 
@@ -460,6 +470,7 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	}
 
 	*s = source
+
 	return nil
 }
 
@@ -472,6 +483,7 @@ func (triggerSource TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
 			return GraphiteLocal
 		}
 	}
+
 	return triggerSource
 }
 
@@ -492,6 +504,7 @@ func (clusterId ClusterId) FillInIfNotSet() ClusterId {
 	if clusterId == ClusterNotSet {
 		return DefaultCluster
 	}
+
 	return clusterId
 }
 
@@ -683,15 +696,18 @@ type SearchResult struct {
 // GetSubjectState returns the most critical state of events.
 func (events NotificationEvents) getSubjectState() State {
 	result := StateOK
+
 	states := make(map[State]bool)
 	for _, event := range events {
 		states[event.State] = true
 	}
+
 	for _, state := range eventStatesPriority {
 		if states[state] {
 			result = state
 		}
 	}
+
 	return result
 }
 
@@ -700,6 +716,7 @@ func (events NotificationEvents) getLastState() State {
 	if len(events) != 0 {
 		return events[len(events)-1].State
 	}
+
 	return StateNODATA
 }
 
@@ -708,6 +725,7 @@ func (events NotificationEvents) GetCurrentState(throttled bool) State {
 	if throttled {
 		return events.getLastState()
 	}
+
 	return events.getSubjectState()
 }
 
@@ -732,6 +750,7 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	if schedule == nil {
 		return true
 	}
+
 	endOffset, startOffset := schedule.EndOffset, schedule.StartOffset
 	if schedule.EndOffset < schedule.StartOffset {
 		endOffset = schedule.EndOffset + 24*60 //nolint
@@ -741,9 +760,11 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	if !schedule.Days[int(date.Weekday()+6)%7].Enabled { //nolint
 		return false
 	}
+
 	dayStart := time.Unix(timestamp-timestamp%(24*3600), 0).UTC()
 	startDayTime := dayStart.Add(time.Duration(startOffset) * time.Minute)
 	endDayTime := dayStart.Add(time.Duration(endOffset) * time.Minute)
+
 	if endOffset < 24*60 {
 		if (date.After(startDayTime) || date.Equal(startDayTime)) && (date.Before(endDayTime) || date.Equal(endDayTime)) {
 			return true
@@ -754,6 +775,7 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -778,17 +800,23 @@ func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettin
 			if event.Values[targetNames[0]] >= limit {
 				return humanize.SIWithDigits(event.Values[targetNames[0]], 3, "")
 			}
+
 			return humanize.FtoaWithDigits(event.Values[targetNames[0]], 3)
 		}
+
 		return strconv.FormatFloat(event.Values[targetNames[0]], 'f', -1, 64)
 	}
 
 	var builder strings.Builder
+
 	sort.Strings(targetNames)
+
 	for i, targetName := range targetNames {
 		builder.WriteString(targetName)
 		builder.WriteString(": ")
+
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
+
 		switch settings {
 		case SIFormatNumbers:
 			if event.Values[targetName] >= limit {
@@ -797,7 +825,9 @@ func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettin
 				value = humanize.FtoaWithDigits(event.Values[targetName], 3)
 			}
 		}
+
 		builder.WriteString(value)
+
 		if i < len(targetNames)-1 {
 			builder.WriteString(", ")
 		}
@@ -861,6 +891,7 @@ func (metricState MetricState) GetEventTimestamp() int64 {
 	if metricState.EventTimestamp == 0 {
 		return metricState.Timestamp
 	}
+
 	return metricState.EventTimestamp
 }
 
@@ -869,6 +900,7 @@ func (checkData CheckData) GetEventTimestamp() int64 {
 	if checkData.EventTimestamp == 0 {
 		return checkData.Timestamp
 	}
+
 	return checkData.EventTimestamp
 }
 
@@ -879,11 +911,13 @@ func (trigger *Trigger) IsSimple() bool {
 	if len(trigger.Targets) > 1 || len(trigger.Patterns) > 1 {
 		return false
 	}
+
 	for _, pattern := range trigger.Patterns {
 		if strings.ContainsAny(pattern, "*{?[") || strings.Contains(pattern, "seriesByTag") {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -893,6 +927,7 @@ func (checkData *CheckData) UpdateScore() int64 {
 	for _, metricData := range checkData.Metrics {
 		checkData.Score += stateScores[metricData.State]
 	}
+
 	return checkData.Score
 }
 
@@ -905,13 +940,16 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 				if delta == -1 && (subscription.IgnoreRecoverings || subscription.IgnoreWarnings) {
 					return true
 				}
+
 				return subscription.IgnoreRecoverings
 			}
+
 			if delta == 1 {
 				return subscription.IgnoreWarnings
 			}
 		}
 	}
+
 	return false
 }
 
@@ -928,6 +966,7 @@ func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance in
 			maintenanceInfo.StopUser = &user
 			maintenanceInfo.StopTime = &callMaintenance
 		}
+
 		if isAnonymous(user) {
 			maintenanceInfo.StopUser = nil
 			maintenanceInfo.StopTime = nil
@@ -939,6 +978,7 @@ func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance in
 			maintenanceInfo.Set(nil, nil, nil, nil)
 		}
 	}
+
 	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
 }
 

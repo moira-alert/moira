@@ -55,6 +55,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 	}
 
 	checkData.UpdateScore()
+
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
@@ -78,6 +79,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 	case ErrTriggerHasSameMetricNames:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
+
 		return CanContinueCheck, checkData, nil
 
 	case conversion.ErrUnexpectedAloneMetric:
@@ -87,6 +89,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 
 	case conversion.ErrEmptyAloneMetricsTarget:
 		checkData.State = moira.StateNODATA
+
 		triggerChecker.logger.Warning().
 			Error(err).
 			Msg("Trigger check failed")
@@ -122,10 +125,12 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 		triggerState := triggerChecker.ttlState.ToTriggerState()
 		checkData.State = triggerState
 		checkData.Message = err.Error()
+
 		if triggerChecker.ttl == 0 {
 			// Do not alert when user don't wanna receive
 			// NODATA state alerts, but change trigger status
 			checkData.UpdateScore()
+
 			return triggerChecker.database.SetTriggerLastCheck(
 				triggerChecker.triggerID,
 				&checkData,
@@ -156,6 +161,7 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 	}
 
 	checkData.UpdateScore()
+
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
@@ -166,6 +172,7 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 // handleUndefinedError is a function that check error with undefined type.
 func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.CheckData, err error) error {
 	triggerChecker.metrics.CheckError.Mark(1)
+
 	checkData.State = moira.StateEXCEPTION
 	checkData.Message = err.Error()
 
@@ -182,6 +189,7 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	}
 
 	checkData.UpdateScore()
+
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
@@ -237,6 +245,7 @@ func newMetricState(oldMetricState moira.MetricState, newState moira.State, newT
 	// TODO: make sure that this logic can be moved here
 	newMetricState.EventTimestamp = 0
 	newMetricState.SuppressedState = ""
+
 	return &newMetricState
 }
 
@@ -256,6 +265,7 @@ func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][
 	for targetName, patternMetrics := range fetchedMetrics {
 		prepared, patternDuplicates := triggerChecker.preparePatternMetrics(patternMetrics)
 		preparedPatternMetrics[targetName] = prepared
+
 		if len(patternDuplicates) > 0 {
 			duplicates[targetName] = patternDuplicates
 		}
@@ -365,12 +375,14 @@ func (triggerChecker *TriggerChecker) checkRegularMetrics(
 			log.Debug().Msg("Remove metric")
 
 			checkData.RemoveMetricState(metricName)
+
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
 			// Starting to show user the updated metric, which has been hidden as its Maintenance time is not over
 			if metricState.DeletedButKept && isMetricChanged(checkData.Metrics, metricName, metricState) {
 				metricState.DeletedButKept = false
 			}
+
 			checkData.Metrics[metricName] = metricState
 		}
 
@@ -442,6 +454,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(
 			metricLastState.DeletedButKept = true
 			return false, &metricLastState
 		}
+
 		return true, nil
 	}
 
@@ -463,6 +476,7 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	err error,
 ) {
 	var startTime int64
+
 	var stepTime int64
 
 	for _, metric := range metrics { // Taking values from any metric
@@ -474,6 +488,7 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 
 		startTime = metric.StartTime
 		stepTime = metric.StepTime
+
 		break
 	}
 
@@ -487,9 +502,11 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(
 	previousMetricState := lastMetricState
 	difference := moira.MaxInt64(checkPoint-startTime, 0)
 	stepsDifference := difference / stepTime
+
 	if (difference % stepTime) > 0 {
 		stepsDifference++
 	}
+
 	valueTimestamp := startTime + stepTime*stepsDifference
 	endTimestamp := triggerChecker.until + stepTime
 
@@ -570,6 +587,7 @@ func getExpressionValues(
 	for i := 0; i < len(metrics); i++ {
 		targetName := fmt.Sprintf("t%d", i+1)
 		metric, ok := metrics[targetName]
+
 		if !ok {
 			logger.Error().
 				String("target", targetName).

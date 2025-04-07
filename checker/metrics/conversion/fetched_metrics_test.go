@@ -44,6 +44,7 @@ func TestFetchedTargetMetrics_CleanWildcards(t *testing.T) {
 			},
 		},
 	}
+
 	Convey("FetchedTargetMetrics", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
@@ -101,6 +102,7 @@ func TestFetchedTargetMetrics_Deduplicate(t *testing.T) {
 			wantDuplicates: []string{"metric.test.1", "metric.test.1"},
 		},
 	}
+
 	Convey("FetchedTargetMetrics", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {

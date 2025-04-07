@@ -30,6 +30,7 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 				if _, isAnnotationSeries := s.(chart.AnnotationSeries); !isAnnotationSeries {
 					legendLabel := s.GetName()
 					_, isFound := foundLabels[legendLabel]
+
 					if !isFound && legendLabel != thresholdSerie {
 						foundLabels[legendLabel] = true
 
@@ -95,5 +96,6 @@ func inheritFrom(initial chart.Style) chart.Style {
 		initial.StrokeColor = initial.DotColor
 		initial.StrokeWidth = 1
 	}
+
 	return initial
 }

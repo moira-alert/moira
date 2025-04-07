@@ -64,6 +64,7 @@ func (state State) ToSelfState() string {
 	if state != StateOK {
 		return SelfStateERROR
 	}
+
 	return SelfStateOK
 }
 
@@ -74,6 +75,7 @@ func (state State) IsValid() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -82,6 +84,7 @@ func (state TTLState) ToMetricState() State {
 	if state == TTLStateDEL {
 		return StateNODATA
 	}
+
 	return State(state)
 }
 
@@ -90,5 +93,6 @@ func (state TTLState) ToTriggerState() State {
 	if state == TTLStateDEL {
 		return StateOK
 	}
+
 	return State(state)
 }

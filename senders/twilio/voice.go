@@ -19,10 +19,12 @@ type twilioSenderVoice struct {
 
 func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	voiceURL := sender.buildVoiceURL(trigger)
+
 	twilioCall, err := twilio_client.NewCall(sender.client, sender.APIFromPhone, contact.Value, twilio_client.Callback(voiceURL))
 	if err != nil {
 		return fmt.Errorf("failed to make call to contact %s: %s", contact.Value, err.Error())
 	}
+
 	sender.logger.Debug().
 		String("status", twilioCall.Status).
 		String("callback_url", voiceURL).
@@ -34,12 +36,15 @@ func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, con
 func (sender *twilioSenderVoice) buildVoiceURL(trigger moira.TriggerData) string {
 	message := fmt.Sprintf("Hi! This is a notification for Moira trigger %s. Please, visit Moira web interface for details.", trigger.Name)
 	voiceURL := sender.voiceURL
+
 	if sender.appendMessage {
 		voiceURL += url.QueryEscape(message)
 	}
+
 	if sender.twimletsEcho {
 		voiceURL = twimletsEchoURL
 		voiceURL += url.QueryEscape(fmt.Sprintf("<Response><Say>%s</Say></Response>", message))
 	}
+
 	return voiceURL
 }

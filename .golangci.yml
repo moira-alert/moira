@@ -1,77 +1,97 @@
-linters-settings:
-  govet:
-    check-shadowing: true
-    settings:
-      printf:
-        funcs:
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
-  gocyclo:
-    min-complexity: 15
-  maligned:
-    suggest-new: true
-  unparam:
-    check-exported: false
-  gomnd:
-    settings:
-      mnd:
-        checks: argument,case,condition,return
-        ignored-numbers: 1,2,3,5,10,60,64,100,600,0755,0644,0666
-
+version: "2"
 linters:
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
+  default: none
   enable:
     - asasalint
     - asciicheck
     - bidichk
     - bodyclose
+    - contextcheck
     - decorder
     - dogsled
+    - durationcheck
     - errcheck
     - errorlint
-    - exportloopref
-    - goconst
+    - fatcontext
+    - ginkgolinter
     - gocheckcompilerdirectives
-    - gocyclo
+    - gochecksumtype
     - goconst
+    - gocyclo
     - godot
-    - gofmt
-    - gofumpt
     - goheader
-    - goimports
-    - gomnd
-    - gosimple
     - govet
     - grouper
     - ineffassign
     - loggercheck
     - makezero
     - misspell
+#    - mnd
     - nilerr
     - noctx
+    - nosprintfhostport
     - prealloc
+    - predeclared
     - promlinter
-    - staticcheck
-    - typecheck
+    - protogetter
+    - reassign
+#    - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+#    - staticcheck
+    - testifylint
+    - tparallel
     - unconvert
     - unparam
     - unused
+    - usestdlibvars
+#    - wastedassign
     - whitespace
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
-        - errcheck
-        - goconst
-
-run:
-  timeout: 5m
-  skip-files:
-    - notifier/registrator.go
-  skip-dirs:
-    - vendor
+    - wsl
+  settings:
+    gocyclo:
+      min-complexity: 15
+    govet:
+      settings:
+        printf:
+          funcs:
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+    unparam:
+      check-exported: false
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - contextcheck
+          - goconst
+          - mnd
+        path: _test\.go
+      - linters:
+          - godot
+        path: notifier/registrator.go'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

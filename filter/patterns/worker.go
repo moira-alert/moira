@@ -38,11 +38,13 @@ func (worker *RefreshPatternWorker) Start() error {
 		worker.logger.Error().
 			Error(err).
 			Msg("pattern refresh failed")
+
 		return err
 	}
 
 	worker.tomb.Go(func() error {
 		checkTicker := time.NewTicker(worker.period)
+
 		for {
 			select {
 			case <-worker.tomb.Dying():
@@ -50,17 +52,20 @@ func (worker *RefreshPatternWorker) Start() error {
 				return nil
 			case <-checkTicker.C:
 				timer := time.Now()
+
 				err := worker.patternStorage.Refresh()
 				if err != nil {
 					worker.logger.Error().
 						Error(err).
 						Msg("Pattern refresh failed")
 				}
+
 				worker.metrics.BuildTreeTimer.UpdateSince(timer)
 			}
 		}
 	})
 	worker.logger.Info().Msg("Moira Filter Pattern Updater started")
+
 	return nil
 }
 

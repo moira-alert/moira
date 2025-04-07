@@ -15,26 +15,33 @@ func (connector *DbConnector) SaveTriggersSearchResults(searchResultsID string, 
 	pipe := (*connector.client).TxPipeline()
 
 	resultsID := triggersSearchResultsKey(searchResultsID)
+
 	for _, searchResult := range searchResults {
 		var marshalled []byte
+
 		marshalled, err := reply.GetSearchResultBytes(*searchResult)
 		if err != nil {
 			return fmt.Errorf("marshall error: %w", err)
 		}
+
 		if err = pipe.RPush(ctx, resultsID, marshalled).Err(); err != nil {
 			return fmt.Errorf("failed to PUSH: %w", err)
 		}
 	}
+
 	if err := pipe.Expire(ctx, resultsID, recordTTL).Err(); err != nil {
 		return fmt.Errorf("failed to set expire time: %w", err)
 	}
+
 	response, err := pipe.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %w", err)
 	}
+
 	connector.logger.Debug().
 		Interface("response", response).
 		Msg("EXEC response")
+
 	return nil
 }
 
@@ -53,6 +60,7 @@ func (connector *DbConnector) GetTriggersSearchResults(searchResultsID string, p
 
 	pipe.LRange(ctx, resultsID, from, to)
 	pipe.LLen(ctx, resultsID)
+
 	response, err := pipe.Exec(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to EXEC: %w", err)
@@ -60,9 +68,11 @@ func (connector *DbConnector) GetTriggersSearchResults(searchResultsID string, p
 
 	rangeResult := response[0].(*redis.StringSliceCmd)
 	lenResult := response[1].(*redis.IntCmd)
+
 	if len(rangeResult.Val()) == 0 {
 		return make([]*moira.SearchResult, 0), lenResult.Val(), nil
 	}
+
 	return reply.SearchResults(rangeResult, lenResult)
 }
 
@@ -72,6 +82,7 @@ func (connector *DbConnector) IsTriggersSearchResultsExist(pagerID string) (bool
 	c := *connector.client
 
 	pagerIDKey := triggersSearchResultsKey(pagerID)
+
 	response, err := c.Exists(ctx, pagerIDKey).Result()
 	if err != nil {
 		return false, fmt.Errorf("failed to check if pager exists: %w", err)
@@ -86,10 +97,12 @@ func (connector *DbConnector) DeleteTriggersSearchResults(pagerID string) error 
 	c := *connector.client
 
 	pagerIDKey := triggersSearchResultsKey(pagerID)
+
 	err := c.Del(ctx, pagerIDKey).Err()
 	if err != nil {
 		return fmt.Errorf("failed to check if pager exists: %w", err)
 	}
+
 	return nil
 }
 

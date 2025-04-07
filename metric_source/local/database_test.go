@@ -42,6 +42,7 @@ func saveMetrics(database moira.Database, metrics map[string]metricMock, now, re
 		time := timeStart + int64(i)*retention
 
 		metricsMap := make(map[string]*moira.MatchedMetric, len(metrics))
+
 		for name, metric := range metrics {
 			if len(metric.values) <= i {
 				continue
@@ -62,6 +63,7 @@ func saveMetrics(database moira.Database, metrics map[string]metricMock, now, re
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -142,6 +144,7 @@ func TestLocalSourceWithDatabaseWildcards(t *testing.T) {
 				for _, data := range resultData {
 					wildcardResultMap[data.Name] = data.Wildcard
 				}
+
 				So(wildcardResultMap, shouldEqualIfNaNsEqual, testCase.expectedWildcards)
 			})
 		}
@@ -420,6 +423,7 @@ func TestLocalSourceWithDatabase(t *testing.T) {
 
 				resultData := result.GetMetricsData()
 				resultMap := map[string][]float64{}
+
 				for _, data := range resultData {
 					resultMap[data.Name] = data.Values
 				}

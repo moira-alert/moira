@@ -47,6 +47,7 @@ func NewListener(port string, logger moira.Logger, metrics *metrics.FilterMetric
 // All handled data sets to lineChan.
 func (listener *MetricsListener) Listen() chan []byte {
 	lineChan := make(chan []byte, 16384) //nolint
+
 	listener.tomb.Go(func() error {
 		for {
 			select {
@@ -57,21 +58,25 @@ func (listener *MetricsListener) Listen() chan []byte {
 					listener.handler.StopHandlingConnections()
 					close(lineChan)
 					listener.logger.Info().Msg("Moira Filter Listener stopped")
+
 					return nil
 				}
 			default:
 			}
 
 			listener.listener.SetDeadline(time.Now().Add(1e9)) //nolint
+
 			conn, err := listener.listener.Accept()
 			if nil != err {
 				var opErr *net.OpError
 				if ok := errors.As(err, &opErr); ok && opErr.Timeout() {
 					continue
 				}
+
 				listener.logger.Error().
 					Error(err).
 					Msg("Failed to accept connection")
+
 				continue
 			}
 
@@ -91,6 +96,7 @@ func (listener *MetricsListener) Listen() chan []byte {
 
 func (listener *MetricsListener) checkNewLinesChannelLen(channel <-chan []byte) error {
 	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
+
 	for {
 		select {
 		case <-listener.tomb.Dying():

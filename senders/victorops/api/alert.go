@@ -45,6 +45,7 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 	if err != nil {
 		return fmt.Errorf("error while encoding json: %w", err)
 	}
+
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, fmt.Sprintf("%s/%s", client.routingURL, routingKey), bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -57,7 +58,9 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 	if err != nil {
 		return fmt.Errorf("error while making the request to victorops: %w", err)
 	}
+
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("victorops API request resulted in error with status %v: %v", resp.StatusCode, string(body))

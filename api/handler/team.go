@@ -45,11 +45,13 @@ func usersFilterForTeams(next http.Handler) http.Handler {
 		userLogin := middleware.GetLogin(request)
 		teamID := middleware.GetTeamID(request)
 		auth := middleware.GetAuth(request)
+
 		err := controller.CheckUserPermissionsForTeam(database, teamID, userLogin, auth)
 		if err != nil {
 			render.Render(writer, request, err) //nolint
 			return
 		}
+
 		next.ServeHTTP(writer, request)
 	})
 }
@@ -70,16 +72,19 @@ func usersFilterForTeams(next http.Handler) http.Handler {
 func createTeam(writer http.ResponseWriter, request *http.Request) {
 	user := middleware.GetLogin(request)
 	team := dto.TeamModel{}
+
 	err := render.Bind(request, &team)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint:errcheck
 		return
 	}
+
 	response, apiErr := controller.CreateTeam(database, team, user)
 	if apiErr != nil {
 		render.Render(writer, request, apiErr) //nolint:errcheck
 		return
 	}
+
 	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint:errcheck
 		return
@@ -98,6 +103,7 @@ func createTeam(writer http.ResponseWriter, request *http.Request) {
 //	@router		/teams [get]
 func getAllTeamsForUser(writer http.ResponseWriter, request *http.Request) {
 	user := middleware.GetLogin(request)
+
 	response, err := controller.GetUserTeams(database, user)
 	if err != nil {
 		render.Render(writer, request, err) //nolint:errcheck
@@ -190,6 +196,7 @@ func searchTeams(writer http.ResponseWriter, request *http.Request) {
 //	@router		/teams/{teamID} [patch]
 func updateTeam(writer http.ResponseWriter, request *http.Request) {
 	team := dto.TeamModel{}
+
 	err := render.Bind(request, &team)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint:errcheck
@@ -203,6 +210,7 @@ func updateTeam(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, apiErr) //nolint:errcheck
 		return
 	}
+
 	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint:errcheck
 		return
@@ -232,6 +240,7 @@ func deleteTeam(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, apiErr) //nolint:errcheck
 		return
 	}
+
 	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint:errcheck
 		return
@@ -284,6 +293,7 @@ func getTeamUsers(writer http.ResponseWriter, request *http.Request) {
 //	@router		/teams/{teamID}/users [put]
 func setTeamUsers(writer http.ResponseWriter, request *http.Request) {
 	members := dto.TeamMembers{}
+
 	err := render.Bind(request, &members)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) // nolint:errcheck
@@ -322,11 +332,13 @@ func setTeamUsers(writer http.ResponseWriter, request *http.Request) {
 //	@router		/teams/{teamID}/users [post]
 func addTeamUsers(writer http.ResponseWriter, request *http.Request) {
 	members := dto.TeamMembers{}
+
 	err := render.Bind(request, &members)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) // nolint:errcheck
 		return
 	}
+
 	teamID := middleware.GetTeamID(request)
 
 	response, apiErr := controller.AddTeamUsers(database, teamID, members.Usernames)
@@ -387,6 +399,7 @@ func deleteTeamUser(writer http.ResponseWriter, request *http.Request) {
 //	@router		/teams/{teamID}/settings [get]
 func getTeamSettings(writer http.ResponseWriter, request *http.Request) {
 	teamID := middleware.GetTeamID(request)
+
 	teamSettings, err := controller.GetTeamSettings(database, teamID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint:errcheck

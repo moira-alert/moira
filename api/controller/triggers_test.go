@@ -23,6 +23,7 @@ func TestCreateTrigger(t *testing.T) {
 
 	Convey("Success with trigger.ID empty", t, func() {
 		triggerModel := dto.TriggerModel{}
+
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
@@ -95,6 +96,7 @@ func TestCreateTrigger(t *testing.T) {
 	Convey("Error", t, func() {
 		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		expected := fmt.Errorf("soo bad trigger")
+
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 30)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
@@ -141,6 +143,7 @@ func TestGetAllTriggers(t *testing.T) {
 
 	Convey("GetTriggerChecks error", t, func() {
 		expected := fmt.Errorf("getTriggerChecks error")
+
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), nil)
 		mockDatabase.EXPECT().GetTriggerChecks(make([]string, 0)).Return(nil, expected)
 		list, err := GetAllTriggers(mockDatabase)
@@ -226,6 +229,7 @@ func TestSearchTriggers(t *testing.T) {
 	mockIndex := mock_moira_alert.NewMockSearcher(mockCtrl)
 
 	var exp int64 = 31
+
 	testHighlights := make([]moira.SearchHighlight, 0)
 	for field, value := range testHighlightsMap {
 		testHighlights = append(testHighlights, moira.SearchHighlight{
@@ -244,6 +248,7 @@ func TestSearchTriggers(t *testing.T) {
 
 	triggerIDs := make([]string, len(triggerChecks))
 	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
+
 	for i, trigger := range triggerChecks {
 		newTrigger := new(moira.TriggerCheck)
 		*newTrigger = trigger
@@ -401,6 +406,7 @@ func TestSearchTriggers(t *testing.T) {
 	Convey("Complex search query", t, func() {
 		searchOptions.Size = 10
 		searchOptions.Page = 0
+
 		Convey("Only errors", func() {
 			exp = 30
 			// superTrigger31 is the only trigger without errors
@@ -465,12 +471,14 @@ func TestSearchTriggers(t *testing.T) {
 				}
 
 				deadlyTrapsTriggerIDs := make([]string, 0)
+
 				deadlyTrapsSearchResults := make([]*moira.SearchResult, 0)
 				for _, deadlyTrap := range deadlyTraps {
 					deadlyTrapsSearchResults = append(deadlyTrapsSearchResults, &moira.SearchResult{
 						ObjectID:   deadlyTrap.ID,
 						Highlights: testHighlights,
 					})
+
 					deadlyTrapsTriggerIDs = append(deadlyTrapsTriggerIDs, deadlyTrap.ID)
 				}
 
@@ -579,6 +587,7 @@ func TestSearchTriggers(t *testing.T) {
 		Convey("Error from database", func() {
 			searchOptions.Size = 50
 			searcherError := fmt.Errorf("very bad request")
+
 			mockIndex.EXPECT().SearchTriggers(searchOptions).Return(triggerSearchResults, exp, nil)
 			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(nil, searcherError)
 			list, err := SearchTriggers(mockDatabase, mockIndex, searchOptions)
@@ -601,6 +610,7 @@ func TestSearchTriggers(t *testing.T) {
 	Convey("Search with pager", t, func() {
 		searchOptions.SearchString = ""
 		searchOptions.Tags = []string{}
+
 		Convey("Create pager", func() {
 			searchOptions.Page = 0
 			searchOptions.Size = -1
@@ -614,6 +624,7 @@ func TestSearchTriggers(t *testing.T) {
 				}),
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil),
 			)
+
 			list, err := SearchTriggers(mockDatabase, mockIndex, searchOptions)
 			So(err, ShouldBeNil)
 			So(list, ShouldResemble, &dto.TriggersList{
@@ -630,11 +641,14 @@ func TestSearchTriggers(t *testing.T) {
 			searchOptions.Page = 0
 			searchOptions.Size = -1
 			searchOptions.CreatePager = false
+
 			var exp int64 = 31
+
 			gomock.InOrder(
 				mockDatabase.EXPECT().GetTriggersSearchResults(searchOptions.PagerID, searchOptions.Page, searchOptions.Size).Return(triggerSearchResults, exp, nil),
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil),
 			)
+
 			list, err := SearchTriggers(mockDatabase, mockIndex, searchOptions)
 			So(err, ShouldBeNil)
 			So(list, ShouldResemble, &dto.TriggersList{
@@ -648,13 +662,16 @@ func TestSearchTriggers(t *testing.T) {
 
 		Convey("Use pager and page size higher than amount of search results", func() {
 			searchOptions.PagerID = "TestPagerID"
+
 			var exp int64 = 2
+
 			searchOptions.Size = 10
 			searchOptions.CreatePager = false
 			gomock.InOrder(
 				mockDatabase.EXPECT().GetTriggersSearchResults(searchOptions.PagerID, searchOptions.Page, searchOptions.Size).Return(triggerSearchResults[:2], exp, nil),
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[:2]).Return(triggersPointers[:2], nil),
 			)
+
 			list, err := SearchTriggers(mockDatabase, mockIndex, searchOptions)
 			So(err, ShouldBeNil)
 			So(list, ShouldResemble, &dto.TriggersList{
@@ -1047,6 +1064,7 @@ func TestDeleteTriggersPager(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 		const pagerID = "pagerID"
 
 		Convey("Pager exists", func() {
@@ -1074,6 +1092,7 @@ func TestDeleteTriggersPager(t *testing.T) {
 
 		Convey("Error while deleting pager", func() {
 			errReturning := errors.New("example error")
+
 			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(true, nil)
 			dataBase.EXPECT().DeleteTriggersSearchResults(pagerID).Return(errReturning)
 			response, err := DeleteTriggersPager(dataBase, pagerID)
@@ -1117,6 +1136,7 @@ func TestGetUnusedTriggerIDs(t *testing.T) {
 
 	Convey("GetTriggerChecks error", t, func() {
 		expected := fmt.Errorf("getTriggerChecks error")
+
 		mockDatabase.EXPECT().GetUnusedTriggerIDs().Return(make([]string, 0), nil)
 		mockDatabase.EXPECT().GetTriggerChecks(make([]string, 0)).Return(nil, expected)
 		list, err := GetUnusedTriggerIDs(mockDatabase)

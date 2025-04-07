@@ -17,11 +17,13 @@ func GetLocalChecker(delay, lastSuccessfulCheck int64, checkTags []string, logge
 			checkTags:           checkTags,
 		}}
 	}
+
 	return nil
 }
 
 func (check *localChecker) Check(nowTS int64) (int64, bool, error) {
 	defaultLocalCluster := moira.DefaultLocalCluster
+
 	triggersCount, err := check.database.GetTriggersToCheckCount(defaultLocalCluster)
 	if err != nil {
 		return 0, false, err
@@ -31,6 +33,7 @@ func (check *localChecker) Check(nowTS int64) (int64, bool, error) {
 	if check.count != checksCount || triggersCount == 0 {
 		check.count = checksCount
 		check.lastSuccessfulCheck = nowTS
+
 		return 0, false, nil
 	}
 

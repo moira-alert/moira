@@ -13,6 +13,7 @@ import (
 
 func TestCleanUpOutdatedMetrics(t *testing.T) {
 	conf := getDefault()
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	db := mocks.NewMockDatabase(mockCtrl)
@@ -26,6 +27,7 @@ func TestCleanUpOutdatedMetrics(t *testing.T) {
 
 		Convey("With invalid duration", func() {
 			conf.Cleanup.CleanupMetricsDuration = "168h"
+
 			db.EXPECT().CleanUpOutdatedMetrics(168 * time.Hour).Return(redis.ErrCleanUpDurationGreaterThanZero)
 			err := handleCleanUpOutdatedMetrics(conf.Cleanup, db)
 			So(err, ShouldEqual, redis.ErrCleanUpDurationGreaterThanZero)
@@ -35,6 +37,7 @@ func TestCleanUpOutdatedMetrics(t *testing.T) {
 
 func TestCleanUpFutureMetrics(t *testing.T) {
 	conf := getDefault()
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	db := mocks.NewMockDatabase(mockCtrl)
@@ -48,6 +51,7 @@ func TestCleanUpFutureMetrics(t *testing.T) {
 
 		Convey("With invalid duration", func() {
 			conf.Cleanup.CleanupFutureMetricsDuration = "-60m"
+
 			db.EXPECT().CleanUpFutureMetrics(-60 * time.Minute).Return(redis.ErrCleanUpDurationLessThanZero)
 			err := handleCleanUpFutureMetrics(conf.Cleanup, db)
 			So(err, ShouldEqual, redis.ErrCleanUpDurationLessThanZero)

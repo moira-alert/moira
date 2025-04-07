@@ -23,10 +23,12 @@ func TestCreateTeam(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const user = "userID"
+
 		team := dto.TeamModel{Name: "testTeam", Description: "test team description"}
 
 		Convey("create successfully", func() {
 			ID := ""
+
 			dataBase.EXPECT().GetTeam(gomock.Any()).Return(moira.Team{}, database.ErrNil)
 			dataBase.EXPECT().SaveTeam(gomock.Any(), team.ToMoiraTeam()).DoAndReturn(func(teamID string, moiraTeam moira.Team) error {
 				ID = teamID
@@ -53,6 +55,7 @@ func TestCreateTeam(t *testing.T) {
 
 		Convey("team with this UUID exists", func() {
 			ID := ""
+
 			dataBase.EXPECT().GetTeam(gomock.Any()).Return(moira.Team{}, nil)
 			dataBase.EXPECT().GetTeam(gomock.Any()).Return(moira.Team{}, database.ErrNil)
 			dataBase.EXPECT().SaveTeam(gomock.Any(), team.ToMoiraTeam()).DoAndReturn(func(teamID string, moiraTeam moira.Team) error {
@@ -77,6 +80,7 @@ func TestCreateTeam(t *testing.T) {
 
 		Convey("save error", func() {
 			returnErr := fmt.Errorf("unexpected error")
+
 			dataBase.EXPECT().GetTeam(gomock.Any()).Return(moira.Team{}, database.ErrNil)
 			dataBase.EXPECT().SaveTeam(gomock.Any(), team.ToMoiraTeam()).Return(returnErr)
 			response, err := CreateTeam(dataBase, team, user)
@@ -101,7 +105,9 @@ func TestDeleteTeam(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "temaID"
+
 		const userID = "userID"
+
 		errReturned := fmt.Errorf("test error")
 
 		Convey("delete successfully", func() {
@@ -111,6 +117,7 @@ func TestDeleteTeam(t *testing.T) {
 				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{}, nil),
 				dataBase.EXPECT().DeleteTeam(teamID, userID).Return(nil),
 			)
+
 			response, err := DeleteTeam(dataBase, teamID, userID)
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, dto.SaveTeamResponse{ID: teamID})
@@ -122,6 +129,7 @@ func TestDeleteTeam(t *testing.T) {
 				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, nil),
 				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{"subscriptionID"}, nil),
 			)
+
 			response, err := DeleteTeam(dataBase, teamID, userID)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have subscriptions: subscriptionID")))
 			So(response, ShouldResemble, dto.SaveTeamResponse{})
@@ -132,6 +140,7 @@ func TestDeleteTeam(t *testing.T) {
 				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, nil),
 				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{}, errReturned),
 			)
+
 			response, err := DeleteTeam(dataBase, teamID, userID)
 			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get team subscriptions: %w", errReturned)))
 			So(response, ShouldResemble, dto.SaveTeamResponse{})
@@ -141,6 +150,7 @@ func TestDeleteTeam(t *testing.T) {
 				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID}, nil),
 				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{"contactID"}, nil),
 			)
+
 			response, err := DeleteTeam(dataBase, teamID, userID)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have contacts: contactID")))
 			So(response, ShouldResemble, dto.SaveTeamResponse{})
@@ -150,6 +160,7 @@ func TestDeleteTeam(t *testing.T) {
 				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID}, nil),
 				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, errReturned),
 			)
+
 			response, err := DeleteTeam(dataBase, teamID, userID)
 			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get team contacts: %w", errReturned)))
 			So(response, ShouldResemble, dto.SaveTeamResponse{})
@@ -176,6 +187,7 @@ func TestGetTeam(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
+
 		team := moira.Team{Name: "testTeam", Description: "test team description"}
 
 		Convey("get successfully", func() {
@@ -250,6 +262,7 @@ func TestSearchTeams(t *testing.T) {
 
 		Convey("with page < 0 returns empty list", func() {
 			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
 			var (
 				page  int64 = -1
 				total       = int64(len(teamModels))
@@ -268,6 +281,7 @@ func TestSearchTeams(t *testing.T) {
 
 		Convey("with page > 0 and size < 0, returns empty list", func() {
 			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
 			var (
 				page  int64 = 1
 				total       = int64(len(teamModels))
@@ -297,6 +311,7 @@ func TestSearchTeams(t *testing.T) {
 
 		Convey("get all teams default options", func() {
 			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
 			total := int64(len(teamModels))
 
 			response, err := SearchTeams(dataBase, firstPage, allTeamsSize, anyText, api.NoSortOrder)
@@ -383,6 +398,7 @@ func TestSearchTeams(t *testing.T) {
 
 		Convey("with text regexp", func() {
 			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
 			textRegexp := regexp.MustCompile(".*th-team-id")
 			total := int64(len(teamModels)) - 3
 
@@ -399,6 +415,7 @@ func TestSearchTeams(t *testing.T) {
 		Convey("with sorting", func() {
 			Convey("when asc", func() {
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
 				total := int64(len(teamModels))
 
 				response, err := SearchTeams(dataBase, firstPage, allTeamsSize, anyText, api.AscSortOrder)
@@ -421,6 +438,7 @@ func TestSearchTeams(t *testing.T) {
 
 			Convey("when desc", func() {
 				dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
 				total := int64(len(teamModels))
 
 				response, err := SearchTeams(dataBase, firstPage, allTeamsSize, anyText, api.DescSortOrder)
@@ -444,7 +462,9 @@ func TestSearchTeams(t *testing.T) {
 
 		Convey("with all options", func() {
 			dataBase.EXPECT().GetAllTeams().Return(teams, nil)
+
 			textRegexp := regexp.MustCompile(".*th-team-id")
+
 			var (
 				total       = int64(len(teamModels)) - 3
 				page  int64 = 1
@@ -473,7 +493,9 @@ func TestGetUserTeams(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const userID = "userID"
+
 		const teamID = "team1"
+
 		const teamID2 = "team2"
 		teamsIDs := []string{teamID, teamID2}
 		teams := []dto.TeamModel{
@@ -522,6 +544,7 @@ func TestGetTeamUsers(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
+
 		users := []string{"userID1", "userID2"}
 
 		Convey("get successfully", func() {
@@ -555,8 +578,11 @@ func TestAddTeamUsers(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
+
 		const userID = "userID"
+
 		const userID2 = "userID2"
+
 		const userID3 = "userID3"
 
 		Convey("add successfully", func() {
@@ -574,6 +600,7 @@ func TestAddTeamUsers(t *testing.T) {
 					},
 				).Return(nil),
 			)
+
 			response, err := AddTeamUsers(dataBase, teamID, []string{userID3})
 			So(response, ShouldResemble, dto.TeamMembers{Usernames: []string{userID, userID2, userID3}})
 			So(err, ShouldBeNil)
@@ -591,6 +618,7 @@ func TestAddTeamUsers(t *testing.T) {
 				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID, userID2}, nil),
 				dataBase.EXPECT().GetUserTeams(userID).Return([]string{}, database.ErrNil),
 			)
+
 			response, err := AddTeamUsers(dataBase, teamID, []string{userID3})
 			So(response, ShouldResemble, dto.TeamMembers{})
 			So(err, ShouldResemble, api.ErrorNotFound("cannot find user teams: userID"))
@@ -603,6 +631,7 @@ func TestAddTeamUsers(t *testing.T) {
 				dataBase.EXPECT().GetUserTeams(userID2).Return([]string{teamID}, nil),
 				dataBase.EXPECT().GetUserTeams(userID3).Return([]string{teamID}, nil),
 			)
+
 			response, err := AddTeamUsers(dataBase, teamID, []string{userID3})
 			So(response, ShouldResemble, dto.TeamMembers{})
 			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("one ore many users you specified are already exist in this team: userID3")))
@@ -633,6 +662,7 @@ func TestUpdateTeam(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
+
 		team := dto.TeamModel{Name: "testTeam", Description: "test team description"}
 
 		Convey("update successfully", func() {
@@ -651,8 +681,11 @@ func TestDeleteTeamUser(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
+
 		const userID = "userID"
+
 		const userID2 = "userID2"
+
 		const userID3 = "userID3"
 
 		Convey("user exists", func() {
@@ -667,6 +700,7 @@ func TestDeleteTeamUser(t *testing.T) {
 					userID3: {teamID},
 				}).Return(nil),
 			)
+
 			reply, err := DeleteTeamUser(dataBase, teamID, userID)
 			So(reply, ShouldResemble, dto.TeamMembers{Usernames: []string{userID2, userID3}})
 			So(err, ShouldBeNil)
@@ -694,6 +728,7 @@ func TestDeleteTeamUser(t *testing.T) {
 				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID, userID2, userID3}, nil),
 				dataBase.EXPECT().GetUserTeams(userID).Return([]string{}, database.ErrNil),
 			)
+
 			reply, err := DeleteTeamUser(dataBase, teamID, userID)
 			So(reply, ShouldResemble, dto.TeamMembers{})
 			So(err, ShouldResemble, api.ErrorNotFound("cannot find user teams: userID"))
@@ -724,7 +759,9 @@ func Test_fillCurrentUsersTeamsMap(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
+
 		const userID1 = "userID1"
+
 		const userID2 = "userID2"
 
 		Convey("without error", func() {
@@ -751,9 +788,13 @@ func Test_fillCurrentUsersTeamsMap(t *testing.T) {
 func Test_removeDeletedUsers(t *testing.T) {
 	Convey("removeDeletedUsers", t, func() {
 		const teamID = "testTeam"
+
 		const userID1 = "userID1"
+
 		const userID2 = "userID2"
+
 		const userID3 = "userID3"
+
 		Convey("remove successful", func() {
 			actual, err := removeDeletedUsers(
 				teamID,
@@ -791,7 +832,9 @@ func Test_addTeamsForNewUsers(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
+
 		const userID1 = "userID1"
+
 		const userID2 = "userID2"
 
 		Convey("without error", func() {
@@ -837,7 +880,9 @@ func TestSetTeamUsers(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	const teamID = "testTeam"
+
 	const userID1 = "userID1"
+
 	const userID2 = "userID2"
 
 	Convey("SetTeamUsers", t, func() {
@@ -863,7 +908,9 @@ func TestSetTeamUsers(t *testing.T) {
 
 func TestCheckUserPermissionsForTeam(t *testing.T) {
 	const teamID = "testTeam"
+
 	const userID = "userID"
+
 	auth := &api.Authorization{}
 
 	Convey("CheckUserPermissionsForTeam", t, func() {
@@ -885,6 +932,7 @@ func TestCheckUserPermissionsForTeam(t *testing.T) {
 		})
 		Convey("error while checking user", func() {
 			returnErr := errors.New("returning error")
+
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userID).Return(false, returnErr)
 			err := CheckUserPermissionsForTeam(dataBase, teamID, userID, auth)
@@ -978,6 +1026,7 @@ func TestGetTeamSettings(t *testing.T) {
 		})
 		Convey("GetSubscriptions", func() {
 			expected := fmt.Errorf("can not read subscriptions")
+
 			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expected)
 			settings, err := GetTeamSettings(database, teamID)
@@ -986,6 +1035,7 @@ func TestGetTeamSettings(t *testing.T) {
 		})
 		Convey("GetTeamContactIDs", func() {
 			expected := fmt.Errorf("can not read contact ids")
+
 			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetTeamContactIDs(teamID).Return(nil, expected)
@@ -998,6 +1048,7 @@ func TestGetTeamSettings(t *testing.T) {
 			subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 			subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 			contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+
 			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 			database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)

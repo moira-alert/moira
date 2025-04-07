@@ -28,6 +28,7 @@ type Sender struct {
 // Init loads yaml config, configures the pagerduty client.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+
 	err := mapstructure.Decode(senderSettings, &cfg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to pagerduty config: %w", err)

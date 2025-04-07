@@ -14,6 +14,7 @@ import (
 func newMocks(t *testing.T) (dataBase *mock_moira_alert.MockDatabase, mockCtrl *gomock.Controller) {
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	return
 }
 
@@ -48,6 +49,7 @@ func TestCompareMetricStates(t *testing.T) {
 
 				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.EventTimestamp = lastState.EventTimestamp
 				currentState.Suppressed = false
 				So(actual, ShouldResemble, currentState)
@@ -61,6 +63,7 @@ func TestCompareMetricStates(t *testing.T) {
 
 				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.EventTimestamp = lastState.EventTimestamp
 				currentState.Suppressed = false
 				So(actual, ShouldResemble, currentState)
@@ -74,6 +77,7 @@ func TestCompareMetricStates(t *testing.T) {
 
 				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.EventTimestamp = lastState.EventTimestamp
 				currentState.Suppressed = false
 				So(actual, ShouldResemble, currentState)
@@ -91,7 +95,9 @@ func TestCompareMetricStates(t *testing.T) {
 				currentState.Timestamp = 1502809200
 
 				currentState.Values = map[string]float64{"t1": 0}
+
 				var interval int64 = 24
+
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 					TriggerID:        triggerChecker.triggerID,
 					Timestamp:        currentState.Timestamp,
@@ -102,8 +108,10 @@ func TestCompareMetricStates(t *testing.T) {
 					Message:          nil,
 					MessageEventInfo: &moira.EventInfo{Interval: &interval},
 				}, true).Return(nil)
+
 				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.EventTimestamp = currentState.Timestamp
 				currentState.Suppressed = false
 				So(actual, ShouldResemble, currentState)
@@ -122,6 +130,7 @@ func TestCompareMetricStates(t *testing.T) {
 				currentState.Values = map[string]float64{"t1": 0}
 
 				var interval int64 = 24
+
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 					TriggerID:        triggerChecker.triggerID,
 					Timestamp:        currentState.Timestamp,
@@ -132,8 +141,10 @@ func TestCompareMetricStates(t *testing.T) {
 					Message:          nil,
 					MessageEventInfo: &moira.EventInfo{Interval: &interval},
 				}, true).Return(nil)
+
 				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.EventTimestamp = currentState.Timestamp
 				currentState.Suppressed = false
 				So(actual, ShouldResemble, currentState)
@@ -147,6 +158,7 @@ func TestCompareMetricStates(t *testing.T) {
 
 				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.EventTimestamp = lastState.EventTimestamp
 				currentState.Suppressed = false
 				So(actual, ShouldResemble, currentState)
@@ -164,6 +176,7 @@ func TestCompareMetricStates(t *testing.T) {
 
 				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.EventTimestamp = currentState.Timestamp
 				currentState.Suppressed = true
 				So(actual, ShouldResemble, currentState)
@@ -179,6 +192,7 @@ func TestCompareMetricStates(t *testing.T) {
 
 				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.EventTimestamp = currentState.Timestamp
 				currentState.Suppressed = true
 				So(actual, ShouldResemble, currentState)
@@ -190,6 +204,7 @@ func TestCompareMetricStates(t *testing.T) {
 func TestCompareTriggerStates(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	logger, _ := logging.GetLogger("Test")
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
@@ -220,6 +235,7 @@ func TestCompareTriggerStates(t *testing.T) {
 			actual, err := triggerChecker.compareTriggerStates(currentCheck)
 
 			So(err, ShouldBeNil)
+
 			currentCheck.EventTimestamp = lastCheck.EventTimestamp
 			So(actual, ShouldResemble, currentCheck)
 		})
@@ -272,6 +288,7 @@ func TestCompareTriggerStates(t *testing.T) {
 			actual, err := triggerChecker.compareTriggerStates(currentCheck)
 
 			So(err, ShouldBeNil)
+
 			currentCheck.EventTimestamp = currentCheck.Timestamp
 			currentCheck.Suppressed = true
 			So(actual, ShouldResemble, currentCheck)
@@ -301,6 +318,7 @@ func TestCheckMetricStateWithLastStateSuppressed(t *testing.T) {
 		Convey(fmt.Sprintf("Test Same Status %s after maintenance. No need to send message.", state), t, func() {
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", *currentState, lastState)
 			So(err, ShouldBeNil)
+
 			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
 			So(actual, ShouldResemble, *currentState)
@@ -335,6 +353,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 			currentState.SuppressedState = lastState.State
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 			So(err, ShouldBeNil)
+
 			currentState.Suppressed = true
 			currentState.EventTimestamp = currentState.Timestamp
 			So(actual, ShouldResemble, currentState)
@@ -358,6 +377,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 			}
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 			So(err, ShouldBeNil)
+
 			currentState.SuppressedState = lastState.SuppressedState
 			currentState.EventTimestamp = lastState.Timestamp
 			So(actual, ShouldResemble, currentState)
@@ -382,6 +402,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 			So(err, ShouldBeNil)
+
 			currentState.SuppressedState = lastState.SuppressedState
 			currentState.EventTimestamp = currentState.Timestamp
 			So(actual, ShouldResemble, currentState)
@@ -405,6 +426,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", secondState, firstState)
 			So(err, ShouldBeNil)
+
 			secondState.EventTimestamp = firstState.EventTimestamp
 			So(actual, ShouldResemble, secondState)
 
@@ -424,8 +446,10 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					Metric:    "super.awesome.metric",
 					Values:    map[string]float64{"t1": 0},
 				}, true).Return(nil)
+
 				actual, err = triggerChecker.compareMetricStates("super.awesome.metric", thirdState, secondState)
 				So(err, ShouldBeNil)
+
 				thirdState.EventTimestamp = thirdState.Timestamp
 				thirdState.Suppressed = false
 				So(actual, ShouldResemble, thirdState)
@@ -465,8 +489,10 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					Values:           map[string]float64{"t1": 0},
 					MessageEventInfo: &moira.EventInfo{Maintenance: &moira.MaintenanceInfo{}},
 				}, true).Return(nil)
+
 				actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.Suppressed = false
 				currentState.SuppressedState = ""
 				currentState.EventTimestamp = currentState.Timestamp
@@ -491,8 +517,10 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					Values:           map[string]float64{"t1": 0},
 					MessageEventInfo: &moira.EventInfo{Maintenance: &lastState.MaintenanceInfo},
 				}, true).Return(nil)
+
 				actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.Suppressed = false
 				currentState.SuppressedState = ""
 				currentState.EventTimestamp = currentState.Timestamp
@@ -522,8 +550,10 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					Values:           map[string]float64{"t1": 0},
 					MessageEventInfo: &moira.EventInfo{Maintenance: &triggerChecker.lastCheck.MaintenanceInfo},
 				}, true).Return(nil)
+
 				actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 				So(err, ShouldBeNil)
+
 				currentState.Suppressed = false
 				currentState.SuppressedState = ""
 				currentState.EventTimestamp = currentState.Timestamp
@@ -536,6 +566,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 func TestTriggerMaintenance(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	logger, _ := logging.GetLogger("Test")
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
@@ -585,6 +616,7 @@ func TestTriggerMaintenance(t *testing.T) {
 				currentMetricState.EventTimestamp = 1000
 				currentMetricState.Suppressed = true
 				currentMetricState.SuppressedState = moira.StateOK
+
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, currentMetricState)
 			})
@@ -604,6 +636,7 @@ func TestTriggerMaintenance(t *testing.T) {
 				currentMetricState.EventTimestamp = 1600
 				currentMetricState.Suppressed = false
 				currentMetricState.SuppressedState = ""
+
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, currentMetricState)
 			})
@@ -618,6 +651,7 @@ func TestTriggerMaintenance(t *testing.T) {
 				currentTriggerState.EventTimestamp = 1000
 				currentTriggerState.Suppressed = true
 				currentTriggerState.SuppressedState = moira.StateOK
+
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, currentTriggerState)
 			})
@@ -637,6 +671,7 @@ func TestTriggerMaintenance(t *testing.T) {
 				currentTriggerState.EventTimestamp = 1600
 				currentTriggerState.Suppressed = false
 				currentTriggerState.SuppressedState = ""
+
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, currentTriggerState)
 			})
@@ -678,6 +713,7 @@ func TestIsStateChanged(t *testing.T) {
 
 			Convey("Create EventInfo with interval", func() {
 				var interval int64 = 24
+
 				eventInfo, needSend := isStateChanged(moira.StateNODATA, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp()-100000, lastCheckTest.Suppressed, moira.StateNODATA, moira.MaintenanceInfo{})
 				So(eventInfo, ShouldNotBeNil)
 				So(eventInfo, ShouldResemble, &moira.EventInfo{Interval: &interval})

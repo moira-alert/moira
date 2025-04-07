@@ -36,6 +36,7 @@ func NewEmojiProvider(defaultValue string, stateEmojiMap map[string]string) (Sta
 		if _, ok := emojiMap[converted]; !ok {
 			return nil, fmt.Errorf("undefined Moira's state: %s", state)
 		}
+
 		emojiMap[converted] = emoji
 	}
 

@@ -71,6 +71,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
+
 	response, err := controller.UpdateTrigger(database, &trigger.TriggerModel, triggerID, timeSeriesNames)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
@@ -116,6 +117,7 @@ func validateTargets(request *http.Request, trigger *dto.Trigger) ([]dto.TreeOfP
 
 func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, treesOfProblems []dto.TreeOfProblems) {
 	render.Status(request, http.StatusBadRequest)
+
 	response := dto.SaveTriggerResponse{
 		CheckResult: dto.TriggerCheckResponse{
 			Targets: treesOfProblems,
@@ -136,6 +138,7 @@ func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, t
 //	@router		/trigger/{triggerID} [delete]
 func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
+
 	err := controller.RemoveTrigger(database, triggerID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
@@ -219,11 +222,13 @@ func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorRespons
 //	@router		/trigger/{triggerID}/state [get]
 func getTriggerState(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
+
 	triggerState, err := controller.GetTriggerLastCheck(database, triggerID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, triggerState); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
@@ -242,11 +247,13 @@ func getTriggerState(writer http.ResponseWriter, request *http.Request) {
 //	@router		/trigger/{triggerID}/throttling [get]
 func getTriggerThrottling(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
+
 	triggerState, err := controller.GetTriggerThrottling(database, triggerID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, triggerState); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
@@ -264,6 +271,7 @@ func getTriggerThrottling(writer http.ResponseWriter, request *http.Request) {
 //	@router		/trigger/{triggerID}/throttling [delete]
 func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
+
 	err := controller.DeleteTriggerThrottling(database, triggerID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
@@ -285,11 +293,13 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 //	@router		/trigger/{triggerID}/setMaintenance [put]
 func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
+
 	triggerMaintenance := dto.TriggerMaintenance{}
 	if err := render.Bind(request, &triggerMaintenance); err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
+
 	userLogin := middleware.GetLogin(request)
 	timeCallMaintenance := time.Now().Unix()
 
@@ -324,5 +334,6 @@ func prepareTriggerContext(request *http.Request) (triggerID string, log moira.L
 	logger := middleware.GetLoggerEntry(request)
 	triggerID = middleware.GetTriggerID(request)
 	log = logger.Clone().String(moira.LogFieldNameTriggerID, triggerID)
+
 	return triggerID, log
 }

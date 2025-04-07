@@ -19,6 +19,7 @@ func TestResolveLimits(t *testing.T) {
 	stepTime := 60
 	elementsToUse := 10
 	startTime := time.Now().UTC().Unix()
+
 	var metricsData []metricSource.MetricData
 	// Fill MetricsData with random float64 values that higher than minValue and lower than maxValue
 	for i := 0; i < elementsToUse; i++ {
@@ -26,6 +27,7 @@ func TestResolveLimits(t *testing.T) {
 		for valInd := range values {
 			values[valInd] = float64(rand.Intn(maxValue-1)) * rand.Float64()
 		}
+
 		metricData := *metricSource.MakeMetricData("test", values, int64(stepTime), startTime)
 		metricsData = append(metricsData, metricData)
 	}
@@ -84,6 +86,7 @@ func TestResolveLimits(t *testing.T) {
 // TestGetThresholdAxisRange tests getThresholdAxisRange returns correct axis range.
 func TestGetThresholdAxisRange(t *testing.T) {
 	testLimits := plotLimits{highest: 100, lowest: -100}
+
 	Convey("Revert area between threshold line and x axis if necessary", t, func() {
 		axisRange := testLimits.getThresholdAxisRange(moira.RisingTrigger)
 		So(axisRange, ShouldResemble, chart.ContinuousRange{
@@ -91,6 +94,7 @@ func TestGetThresholdAxisRange(t *testing.T) {
 			Max:        200,
 			Min:        0,
 		})
+
 		nonRisingTriggers := []string{moira.FallingTrigger, moira.ExpressionTrigger}
 		for _, triggerType := range nonRisingTriggers {
 			axisRange = testLimits.getThresholdAxisRange(triggerType)
@@ -110,10 +114,12 @@ func TestFormsSetContaining(t *testing.T) {
 		points := []float64{0, 10, 50, 100, 101}
 		expectedResults := []bool{true, true, true, true, false}
 		actualResults := make([]bool, 0)
+
 		for _, point := range points {
 			actualResult := testLimits.formsSetContaining(point)
 			actualResults = append(actualResults, actualResult)
 		}
+
 		So(len(actualResults), ShouldResemble, len(expectedResults))
 		So(actualResults, ShouldResemble, expectedResults)
 	})

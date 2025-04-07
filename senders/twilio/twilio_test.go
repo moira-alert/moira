@@ -75,6 +75,7 @@ func TestInit(t *testing.T) {
 
 		Convey("config voice", func() {
 			settings["sender_type"] = "twilio voice"
+
 			Convey("no voice url", func() {
 				err := sender.Init(settings, logger, location, "15:04")
 				So(err, ShouldResemble, fmt.Errorf("can not read [%s] voiceurl param from config", "twilio voice"))
@@ -83,6 +84,7 @@ func TestInit(t *testing.T) {
 
 			Convey("has voice url", func() {
 				settings["voiceurl"] = "url here"
+
 				Convey("append_message == true", func() {
 					settings["append_message"] = true
 					err := sender.Init(settings, logger, location, "15:04")

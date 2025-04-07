@@ -14,6 +14,7 @@ const namespace = "moira"
 func NewPrometheusRegistry() *prometheus.Registry {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(collectors.NewGoCollector(), collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+
 	return registry
 }
 
@@ -30,6 +31,7 @@ func (source *PrometheusRegistryAdapter) NewTimer(path ...string) Timer {
 	histogramOpts := prometheus.HistogramOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
 	histogram := prometheus.NewHistogram(histogramOpts)
 	source.registry.MustRegister(histogram)
+
 	return &prometheusTimer{histogram: histogram}
 }
 
@@ -37,6 +39,7 @@ func (source *PrometheusRegistryAdapter) NewMeter(path ...string) Meter {
 	summaryOpts := prometheus.SummaryOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
 	summary := prometheus.NewSummary(summaryOpts)
 	source.registry.MustRegister(summary)
+
 	return &prometheusMeter{summary: summary}
 }
 
@@ -44,6 +47,7 @@ func (source *PrometheusRegistryAdapter) NewCounter(path ...string) Counter {
 	counterOpts := prometheus.CounterOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
 	counter := prometheus.NewCounter(counterOpts)
 	source.registry.MustRegister(counter)
+
 	return &prometheusCounter{counter: counter}
 }
 
@@ -56,6 +60,7 @@ func (source *PrometheusRegistryAdapter) NewHistogram(path ...string) Histogram 
 	}
 	histogram := prometheus.NewHistogram(histogramOpts)
 	source.registry.MustRegister(histogram)
+
 	return &prometheusHistogram{histogram: histogram}
 }
 

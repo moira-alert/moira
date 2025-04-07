@@ -56,16 +56,21 @@ func (testCase *thresholdTestCase) getCaseMessage() string {
 	caseMessage.WriteString(fmt.Sprintf("%s trigger:\n", testCase.triggerType))
 	caseMessage.WriteString(fmt.Sprintf("lowest limit: %f, highest limit: %f\n",
 		testCase.limits.lowest, testCase.limits.highest))
+
 	if testCase.warnValue != nil {
 		caseMessage.WriteString(fmt.Sprintf("WARN value: %f ", testCase.warnValue))
 	}
+
 	if testCase.errorValue != nil {
 		caseMessage.WriteString(fmt.Sprintf("ERROR value: %f", testCase.errorValue))
 	}
+
 	if testCase.warnValue != nil || testCase.errorValue != nil {
 		caseMessage.WriteString("\n")
 	}
+
 	expectedThresholds := ""
+
 	if len(testCase.expected) > 0 {
 		for _, expectedItem := range testCase.expected {
 			expectedThresholds += fmt.Sprintf("%s threshold (y): %f ",
@@ -74,7 +79,9 @@ func (testCase *thresholdTestCase) getCaseMessage() string {
 	} else {
 		expectedThresholds = "no thresholds required"
 	}
+
 	caseMessage.WriteString(expectedThresholds)
+
 	return caseMessage.String()
 }
 
@@ -415,14 +422,17 @@ func TestGenerateThresholds(t *testing.T) {
 			trigger := moira.Trigger{
 				TriggerType: testCase.triggerType,
 			}
+
 			if testCase.errorValue != nil {
 				errorValue := testCase.errorValue.(float64)
 				trigger.ErrorValue = &errorValue
 			}
+
 			if testCase.warnValue != nil {
 				warnValue := testCase.warnValue.(float64)
 				trigger.WarnValue = &warnValue
 			}
+
 			limits := testCase.limits
 			actual := generateThresholds(&trigger, limits)
 			caseMessage := testCase.getCaseMessage()

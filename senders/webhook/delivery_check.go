@@ -67,6 +67,7 @@ func (sender *Sender) CheckNotificationsDelivery(fetchedData []string) ([]string
 	}
 
 	marshaledChecks := make([]string, 0, len(checkAgainChecksData))
+
 	for _, data := range checkAgainChecksData {
 		marshaledData, err := json.Marshal(data)
 		if err != nil {
@@ -74,6 +75,7 @@ func (sender *Sender) CheckNotificationsDelivery(fetchedData []string) ([]string
 				String(logFieldNameDeliveryCheckUrl, data.URL).
 				String(moira.LogFieldNameTriggerID, data.TriggerID).
 				Msg("Failed to marshal delivery check to check again")
+
 			continue
 		}
 
@@ -88,12 +90,14 @@ func (sender *Sender) unmarshalChecksData(marshaledData []string) []deliveryChec
 
 	for _, encoded := range marshaledData {
 		var data deliveryCheckData
+
 		err := json.Unmarshal([]byte(encoded), &data)
 		if err != nil {
 			sender.log.Warning().
 				String("encoded_data", encoded).
 				Error(err).
 				Msg("Failed to unmarshal encoded data")
+
 			continue
 		}
 
@@ -112,6 +116,7 @@ func removeDuplicatedChecksData(checksData []deliveryCheckData) []deliveryCheckD
 		contactValue string
 		triggerID    string
 	}
+
 	uniqueMap := make(map[key]int, len(checksData))
 
 	for _, checkData := range checksData {
@@ -136,10 +141,12 @@ func removeDuplicatedChecksData(checksData []deliveryCheckData) []deliveryCheckD
 
 func (sender *Sender) performSingleDeliveryCheck(extendedLogger *moira.Logger, checkData deliveryCheckData) (deliveryCheckData, string) {
 	var deliveryState string
+
 	checkData.AttemptsCount += 1
 
 	rspCode, rspBody, err := sender.doDeliveryCheckRequest(checkData)
 	*extendedLogger = addDeliveryCheckFieldsToLog(*extendedLogger, rspCode, string(rspBody))
+
 	if err != nil {
 		(*extendedLogger).Error().
 			Error(err).
@@ -156,6 +163,7 @@ func (sender *Sender) performSingleDeliveryCheck(extendedLogger *moira.Logger, c
 	}
 
 	var unmarshalledBody map[string]interface{}
+
 	err = json.Unmarshal(rspBody, &unmarshalledBody)
 	if err != nil {
 		(*extendedLogger).Error().
@@ -202,6 +210,7 @@ func handleStateTransition(checkData deliveryCheckData, newState string, maxAtte
 		}
 
 		counter.DeliveryChecksStopped += 1
+
 		return deliveryCheckData{}, false
 	case moira.DeliveryStateFailed:
 		counter.DeliveryFailed += 1

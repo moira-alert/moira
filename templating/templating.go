@@ -22,11 +22,13 @@ func formatDate(unixTime int64, format string) string {
 
 func filterKeys(source template.FuncMap, keys []string) template.FuncMap {
 	result := template.FuncMap{}
+
 	for _, key := range keys {
 		if value, ok := source[key]; ok {
 			result[key] = value
 		}
 	}
+
 	return result
 }
 

@@ -146,6 +146,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 	sender.deliveryCheckConfig = cfg.DeliveryCheck
 	sender.clock = clock.NewSystemClock()
+
 	if sender.deliveryCheckConfig.Enabled {
 		if sender.metrics == nil {
 			return errNilMetricsOnDeliveryCheck

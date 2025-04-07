@@ -11,6 +11,7 @@ import (
 func (index *Index) writeByBatches(triggerIDs []string, batchSize int) error {
 	triggerIDsBatches := moira.ChunkSlice(triggerIDs, batchSize)
 	triggerChecksChan, errorsChan := index.getTriggerChecksBatches(triggerIDsBatches)
+
 	return index.handleTriggerBatches(triggerChecksChan, errorsChan, len(triggerIDs))
 }
 
@@ -18,8 +19,10 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 	wg := sync.WaitGroup{}
 	triggerChecksChan = make(chan []*moira.TriggerCheck)
 	errors = make(chan error)
+
 	for _, triggerIDsBatch := range triggerIDsBatches {
 		wg.Add(1)
+
 		go func(batch []string) {
 			defer wg.Done()
 
@@ -36,35 +39,43 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 			triggerChecksChan <- newBatch
 		}(triggerIDsBatch)
 	}
+
 	go func() {
 		wg.Wait()
 		close(triggerChecksChan)
 		close(errors)
 	}()
+
 	return
 }
 
 func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.TriggerCheck, error) {
 	var err error
+
 	triesCount := 3
 	for i := 1; i <= triesCount; i++ {
 		var newBatch []*moira.TriggerCheck
+
 		newBatch, err = index.database.GetTriggerChecks(batch)
 		if err == nil {
 			return newBatch, nil
 		}
+
 		index.logger.Warning().
 			String("try_count", fmt.Sprintf("%d/%d", i, triesCount)).
 			Error(err).
 			Msg("Cannot get trigger checks from DB")
 	}
+
 	return nil, fmt.Errorf("cannot get trigger checks from DB after %d tries, last error: %s", triesCount, err.Error())
 }
 
 func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, triggersTotal int) error {
 	indexErrors := make(chan error)
+
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
+
 	var count int64
 
 	for {
@@ -73,15 +84,20 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 			if !ok {
 				return nil
 			}
+
 			wg.Add(1)
+
 			go func(b []*moira.TriggerCheck) {
 				defer wg.Done()
+
 				err2 := index.triggerIndex.Write(b)
 				atomic.AddInt64(&count, int64(len(b)))
+
 				if err2 != nil {
 					indexErrors <- err2
 					return
 				}
+
 				index.logger.Debug().
 					Int("batch_size", len(batch)).
 					Int64("count", atomic.LoadInt64(&count)).
@@ -94,6 +110,7 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 					Error(err).
 					Msg("Cannot get trigger checks from DB")
 			}
+
 			return err
 		case err, ok := <-indexErrors:
 			if ok {
@@ -101,6 +118,7 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 					Error(err).
 					Msg("Cannot index trigger checks")
 			}
+
 			return err
 		}
 	}

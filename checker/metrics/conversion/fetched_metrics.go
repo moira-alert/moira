@@ -15,6 +15,7 @@ func NewFetchedTargetMetrics(source []metricSource.MetricData) FetchedTargetMetr
 	for _, metric := range source {
 		result = append(result, metric)
 	}
+
 	return result
 }
 
@@ -26,11 +27,13 @@ func NewFetchedTargetMetricsWithCapacity(capacity int) FetchedTargetMetrics {
 // CleanWildcards is a function that removes all wildcarded metrics.
 func (m FetchedTargetMetrics) CleanWildcards() FetchedTargetMetrics {
 	result := NewFetchedTargetMetricsWithCapacity(len(m))
+
 	for _, metric := range m {
 		if !metric.Wildcard {
 			result = append(result, metric)
 		}
 	}
+
 	return result
 }
 
@@ -39,15 +42,19 @@ func (m FetchedTargetMetrics) CleanWildcards() FetchedTargetMetrics {
 func (m FetchedTargetMetrics) Deduplicate() (FetchedTargetMetrics, []string) {
 	deduplicated := NewFetchedTargetMetricsWithCapacity(len(m))
 	collectedNames := make(set[string], len(m))
+
 	var duplicates []string
+
 	for _, metric := range m {
 		if collectedNames.contains(metric.Name) {
 			duplicates = append(duplicates, metric.Name)
 		} else {
 			deduplicated = append(deduplicated, metric)
 		}
+
 		collectedNames[metric.Name] = void
 	}
+
 	return deduplicated, duplicates
 }
 
@@ -61,6 +68,7 @@ func NewFetchedMetrics(source map[string][]metricSource.MetricData) FetchedMetri
 	for targetName, metrics := range source {
 		result[targetName] = NewFetchedTargetMetrics(metrics)
 	}
+
 	return result
 }
 

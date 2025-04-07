@@ -17,11 +17,13 @@ type plotCurve struct {
 // getCurveSeriesList returns curve series list.
 func getCurveSeriesList(metricsData []metricSource.MetricData, theme moira.PlotTheme) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
+
 	for metricDataInd := range metricsData {
 		curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
 		curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
 		curveSeriesList = append(curveSeriesList, curveSeries...)
 	}
+
 	return curveSeriesList
 }
 
@@ -29,8 +31,10 @@ func getCurveSeriesList(metricsData []metricSource.MetricData, theme moira.PlotT
 func generatePlotCurves(metricData metricSource.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
 	curves := describePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
+
 	for _, curve := range curves {
 		var serieStyle chart.Style
+
 		switch len(curve.values) {
 		case 0:
 			continue
@@ -39,6 +43,7 @@ func generatePlotCurves(metricData metricSource.MetricData, curveStyle chart.Sty
 		default:
 			serieStyle = curveStyle
 		}
+
 		curveSerie := chart.TimeSeries{
 			Name:    metricData.Name,
 			YAxis:   chart.YAxisSecondary,
@@ -48,6 +53,7 @@ func generatePlotCurves(metricData metricSource.MetricData, curveStyle chart.Sty
 		}
 		curveSeries = append(curveSeries, curveSerie)
 	}
+
 	return curveSeries
 }
 
@@ -68,8 +74,10 @@ func describePlotCurves(metricData metricSource.MetricData) []plotCurve {
 			curves = append(curves, plotCurve{})
 			curvesInd++
 		}
+
 		timeStamp += metricData.StepTime
 	}
+
 	return curves
 }
 
@@ -77,6 +85,7 @@ func describePlotCurves(metricData metricSource.MetricData) []plotCurve {
 func resolveFirstPoint(metricData metricSource.MetricData) (int, int64) {
 	start := 0
 	startTime := metricData.StartTime
+
 	for _, metricVal := range metricData.Values {
 		if !moira.IsFiniteNumber(metricVal) {
 			start++
@@ -85,5 +94,6 @@ func resolveFirstPoint(metricData metricSource.MetricData) (int, int64) {
 			break
 		}
 	}
+
 	return start, startTime
 }

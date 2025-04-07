@@ -54,6 +54,7 @@ func (stats *triggerStats) checkTriggerCount() {
 		stats.logger.Warning().
 			Error(err).
 			Msg("Failed to fetch triggers count")
+
 		return
 	}
 

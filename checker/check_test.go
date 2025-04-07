@@ -27,8 +27,11 @@ var defaultLocalClusterKey = moira.MakeClusterKey(moira.GraphiteLocal, "default"
 
 func TestGetMetricDataState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
+
 	var warnValue float64 = 10
+
 	var errValue float64 = 20
+
 	checkerMetrics, _ := metrics.
 		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
 		GetCheckMetricsBySource(defaultLocalClusterKey)
@@ -68,6 +71,7 @@ func TestGetMetricDataState(t *testing.T) {
 
 	Convey("Checkpoint more than valueTimestamp", t, func() {
 		var valueTimestamp int64 = 37
+
 		var checkPoint int64 = 47
 		metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 		So(err, ShouldBeNil)
@@ -77,6 +81,7 @@ func TestGetMetricDataState(t *testing.T) {
 	Convey("Checkpoint lover than valueTimestamp", t, func() {
 		Convey("Has all value by eventTimestamp step", func() {
 			var valueTimestamp int64 = 42
+
 			var checkPoint int64 = 27
 			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
@@ -92,6 +97,7 @@ func TestGetMetricDataState(t *testing.T) {
 
 		Convey("No value in main metric data by eventTimestamp step", func() {
 			var valueTimestamp int64 = 66
+
 			var checkPoint int64 = 11
 			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
@@ -100,6 +106,7 @@ func TestGetMetricDataState(t *testing.T) {
 
 		Convey("IsAbsent in main metric data by eventTimestamp step", func() {
 			var valueTimestamp int64 = 29
+
 			var checkPoint int64 = 11
 			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
@@ -108,6 +115,7 @@ func TestGetMetricDataState(t *testing.T) {
 
 		Convey("No value in additional metric data by eventTimestamp step", func() {
 			var valueTimestamp int64 = 26
+
 			var checkPoint int64 = 11
 			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
@@ -118,7 +126,9 @@ func TestGetMetricDataState(t *testing.T) {
 	Convey("No warn and error value with default expression", t, func() {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
+
 		var valueTimestamp int64 = 42
+
 		var checkPoint int64 = 27
 		metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
@@ -128,6 +138,7 @@ func TestGetMetricDataState(t *testing.T) {
 
 func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
+
 	Convey("Prepare metrics for check:", t, func() {
 		triggerChecker := TriggerChecker{
 			triggerID: "ID",
@@ -224,6 +235,7 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 					"third":  {Values: map[string]float64{"t1": 0}},
 				},
 			}
+
 			Convey("last check has aloneMetrics", func() {
 				triggerChecker.trigger.AloneMetrics = map[string]bool{"t2": true}
 				triggerChecker.lastCheck = &moira.CheckData{
@@ -234,16 +246,19 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 						"third":  {Values: map[string]float64{"t1": 0, "t2": 0}},
 					},
 				}
+
 				Convey("fetched metrics is empty", func() {
 					triggerChecker.trigger.AloneMetrics = map[string]bool{"t2": true}
 					prepared, alone, err := triggerChecker.prepareMetrics(map[string][]metricSource.MetricData{})
 					So(prepared, ShouldHaveLength, 3)
+
 					for _, actualMetricData := range prepared["t1"] {
 						So(actualMetricData.Values, ShouldHaveLength, 1)
 						So(actualMetricData.StepTime, ShouldResemble, int64(60))
 						So(actualMetricData.StartTime, ShouldResemble, int64(0))
 						So(actualMetricData.StopTime, ShouldResemble, int64(60))
 					}
+
 					So(alone, ShouldHaveLength, 1)
 					aloneMetric := alone["t2"]
 					So(aloneMetric.Name, ShouldEqual, "alone")
@@ -259,12 +274,14 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 			Convey("fetched metrics is empty", func() {
 				prepared, alone, err := triggerChecker.prepareMetrics(map[string][]metricSource.MetricData{})
 				So(prepared, ShouldHaveLength, 3)
+
 				for _, actualMetricData := range prepared["t1"] {
 					So(actualMetricData.Values, ShouldHaveLength, 1)
 					So(actualMetricData.StepTime, ShouldResemble, int64(60))
 					So(actualMetricData.StartTime, ShouldResemble, int64(0))
 					So(actualMetricData.StopTime, ShouldResemble, int64(60))
 				}
+
 				So(alone, ShouldBeEmpty)
 				So(err, ShouldBeNil)
 			})
@@ -280,12 +297,14 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 						},
 					})
 				So(prepared, ShouldHaveLength, 3)
+
 				for _, actualMetricData := range prepared["t1"] {
 					So(actualMetricData.Values, ShouldHaveLength, 1)
 					So(actualMetricData.StepTime, ShouldResemble, int64(60))
 					So(actualMetricData.StartTime, ShouldResemble, int64(0))
 					So(actualMetricData.StopTime, ShouldResemble, int64(60))
 				}
+
 				So(alone, ShouldBeEmpty)
 				So(err, ShouldBeNil)
 			})
@@ -302,12 +321,14 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 						},
 					})
 				So(prepared, ShouldHaveLength, 3)
+
 				for _, actualMetricData := range prepared["t1"] {
 					So(actualMetricData.Values, ShouldHaveLength, 6)
 					So(actualMetricData.StepTime, ShouldResemble, int64(10))
 					So(actualMetricData.StartTime, ShouldResemble, int64(0))
 					So(actualMetricData.StopTime, ShouldResemble, int64(60))
 				}
+
 				So(alone, ShouldBeEmpty)
 				So(err, ShouldBeNil)
 			})
@@ -320,12 +341,14 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 						},
 					})
 				So(prepared, ShouldHaveLength, 3)
+
 				for _, actualMetricData := range prepared["t1"] {
 					So(actualMetricData.Values, ShouldHaveLength, 6)
 					So(actualMetricData.StepTime, ShouldResemble, int64(10))
 					So(actualMetricData.StartTime, ShouldResemble, int64(0))
 					So(actualMetricData.StopTime, ShouldResemble, int64(60))
 				}
+
 				So(alone, ShouldBeEmpty)
 				So(err, ShouldBeNil)
 			})
@@ -339,12 +362,14 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 						},
 					})
 				So(prepared, ShouldHaveLength, 4)
+
 				for _, actualMetricData := range prepared["t1"] {
 					So(actualMetricData.Values, ShouldHaveLength, 6)
 					So(actualMetricData.StepTime, ShouldResemble, int64(10))
 					So(actualMetricData.StartTime, ShouldResemble, int64(0))
 					So(actualMetricData.StopTime, ShouldResemble, int64(60))
 				}
+
 				So(alone, ShouldBeEmpty)
 				So(err, ShouldBeNil)
 			})
@@ -355,7 +380,9 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 func TestGetMetricStepsStates(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	logger.Level("info") // nolint: errcheck
+
 	var warnValue float64 = 10
+
 	var errValue float64 = 20
 
 	triggerChecker := TriggerChecker{
@@ -537,6 +564,7 @@ func TestGetMetricStepsStates(t *testing.T) {
 func TestCheckForNODATA(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	logger.Level("info") // nolint: errcheck
+
 	metricLastState := moira.MetricState{
 		EventTimestamp: 11,
 		Maintenance:    11111,
@@ -661,11 +689,15 @@ func TestCheck(t *testing.T) {
 		source := mock_metric_source.NewMockMetricSource(mockCtrl)
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
+
 		defer mockCtrl.Finish()
 
 		var retention int64 = 10
+
 		var metricsTTL int64 = 3600
+
 		var warnValue float64 = 10
+
 		var errValue float64 = 20
 		pattern := "super.puper.pattern" //nolint
 		metric := "super.puper.metric"   //nolint
@@ -740,6 +772,7 @@ func TestCheck(t *testing.T) {
 					triggerChecker.trigger.ClusterKey(),
 				).Return(nil),
 			)
+
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
 		})
@@ -775,6 +808,7 @@ func TestCheck(t *testing.T) {
 						triggerChecker.trigger.ClusterKey(),
 					).Return(nil),
 				)
+
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
 			})
@@ -825,6 +859,7 @@ func TestCheck(t *testing.T) {
 						triggerChecker.trigger.ClusterKey(),
 					).Return(nil),
 				)
+
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
 			})
@@ -873,6 +908,7 @@ func TestCheck(t *testing.T) {
 					triggerChecker.trigger.ClusterKey(),
 				).Return(nil),
 			)
+
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
 		})
@@ -919,6 +955,7 @@ func TestCheck(t *testing.T) {
 				&lastCheck,
 				triggerChecker.trigger.ClusterKey(),
 			).Return(nil)
+
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
 		})
@@ -997,6 +1034,7 @@ func TestCheck(t *testing.T) {
 					triggerChecker.trigger.ClusterKey(),
 				).Return(nil),
 			)
+
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
 		})
@@ -1055,6 +1093,7 @@ func TestIgnoreNodataToOk(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("Test")
 	logger.Level("info") // nolint: errcheck
+
 	defer mockCtrl.Finish()
 
 	mockTime := mock_clock.NewMockClock(mockCtrl)
@@ -1062,11 +1101,16 @@ func TestIgnoreNodataToOk(t *testing.T) {
 	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
 
 	var retention int64 = 10
+
 	var warnValue float64 = 10
+
 	var errValue float64 = 20
+
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
+
 	var ttl int64 = 600
+
 	lastCheck := moira.CheckData{
 		Metrics:   make(map[string]moira.MetricState),
 		State:     moira.StateNODATA,
@@ -1127,15 +1171,22 @@ func TestHandleTrigger(t *testing.T) {
 	mockTime := mock_clock.NewMockClock(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	logger.Level("info") // nolint: errcheck
+
 	defer mockCtrl.Finish()
 
 	var metricsTTL int64 = 3600
+
 	var retention int64 = 10
+
 	var warnValue float64 = 10
+
 	var errValue float64 = 20
+
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
+
 	var ttl int64 = 600
+
 	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
 
 	lastCheck := moira.CheckData{
@@ -1257,6 +1308,7 @@ func TestHandleTrigger(t *testing.T) {
 				Values:    map[string]float64{},
 				Message:   nil,
 			}, true).Return(nil)
+
 			aloneMetrics := map[string]metricSource.MetricData{"t1": *metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)}
 			lastCheck.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
 			checkData := newCheckData(&lastCheck, triggerChecker.until)
@@ -1552,12 +1604,17 @@ func TestTriggerChecker_Check(t *testing.T) {
 	source := mock_metric_source.NewMockMetricSource(mockCtrl)
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
+
 	defer mockCtrl.Finish()
 
 	var retention int64 = 10
+
 	var metricsTTL int64 = 3600
+
 	var warnValue float64 = 10
+
 	var errValue float64 = 20
+
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
 
@@ -1628,6 +1685,7 @@ func TestTriggerChecker_Check(t *testing.T) {
 		&lastCheck,
 		triggerChecker.trigger.ClusterKey(),
 	).Return(nil)
+
 	_ = triggerChecker.Check()
 }
 
@@ -1638,12 +1696,17 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	source := mock_metric_source.NewMockMetricSource(mockCtrl)
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
+
 	defer mockCtrl.Finish()
 
 	var retention int64 = 10
+
 	var metricsTTL int64 = 3600
+
 	var warnValue float64 = 10
+
 	var errValue float64 = 20
+
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
 
@@ -1891,6 +1954,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				Timestamp:      int64(15),
 				EventTimestamp: int64(15),
 			}
+
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 				IsTriggerEvent:   true,
 				TriggerID:        triggerChecker.triggerID,
@@ -1901,6 +1965,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				MessageEventInfo: nil,
 			}, true)
 			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, trigger.ClusterKey())
+
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
 			So(pass, ShouldEqual, MustStopCheck)
@@ -1919,6 +1984,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				EventTimestamp: 10,
 			}
 			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, trigger.ClusterKey())
+
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
 			So(pass, ShouldEqual, MustStopCheck)

@@ -18,6 +18,7 @@ func convertResponse(metricsData []metricSource.MetricData, allowRealTimeAlertin
 	}
 
 	result := make([]metricSource.MetricData, 0, len(metricsData))
+
 	for _, metricData := range metricsData {
 		// remove last value
 		metricData.Values = metricData.Values[:len(metricData.Values)-1]
@@ -29,12 +30,14 @@ func convertResponse(metricsData []metricSource.MetricData, allowRealTimeAlertin
 
 func decodeBody(body []byte) ([]metricSource.MetricData, error) {
 	var tmp []graphiteMetric
+
 	err := json.Unmarshal(body, &tmp)
 	if err != nil {
 		return nil, err
 	}
 
 	res := make([]metricSource.MetricData, 0, len(tmp))
+
 	for _, m := range tmp {
 		var stepTime int64 = 60
 		if len(m.DataPoints) > 1 {

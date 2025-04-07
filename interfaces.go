@@ -176,7 +176,7 @@ type DeliveryCheckerDatabase interface {
 
 // Lock implements lock abstraction.
 type Lock interface {
-	Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error)
+	Acquire(stop <-chan struct{}) (lost <-chan struct{}, err error)
 	Release()
 }
 

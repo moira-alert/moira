@@ -29,7 +29,7 @@ func TestTriggerValidation(t *testing.T) {
 
 		limit := api.GetTestLimitsConfig()
 
-		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
+		request, _ := http.NewRequest(http.MethodPut, "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limit))
 
@@ -77,7 +77,7 @@ func TestTriggerValidation(t *testing.T) {
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
-		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
+		request, _ := http.NewRequest(http.MethodPut, "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")
 		ctx := request.Context()
 		ctx = context.WithValue(ctx, middleware.ContextKey("metricSourceProvider"), sourceProvider)
@@ -115,6 +115,7 @@ func TestTriggerValidation(t *testing.T) {
 				trigger.Targets = []string{
 					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				}
+
 				Convey("and expression", func() {
 					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK" //nolint
 					tr := Trigger{trigger, throttling}
@@ -157,6 +158,7 @@ func TestTriggerValidation(t *testing.T) {
 				trigger.Targets = []string{
 					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				}
+
 				Convey("and expression", func() {
 					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 					tr := Trigger{trigger, throttling}
@@ -201,6 +203,7 @@ func TestTriggerValidation(t *testing.T) {
 				"aliasByNode(DevOps.system.bst-graphite01.disk.root.gigabyte_percentfree, 2, 4)",
 				"aliasByNode(DevOps.system.dtl-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 			}
+
 			Convey("and warn_value", func() {
 				trigger.WarnValue = &warnValue
 				tr := Trigger{trigger, throttling}
@@ -230,6 +233,7 @@ func TestTriggerValidation(t *testing.T) {
 
 			trigger.Targets = []string{"test target", "test target 2"}
 			trigger.Expression = "OK"
+
 			Convey("are empty", func() {
 				trigger.AloneMetrics = map[string]bool{}
 				tr := Trigger{trigger, throttling}
@@ -276,6 +280,7 @@ func TestTriggerValidation(t *testing.T) {
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
 
 			trigger.Expression = "OK"
+
 			Convey("do not have asterisk", func() {
 				trigger.Targets = []string{"sumSeries(some.test.series.*)"}
 				tr := Trigger{trigger, throttling}

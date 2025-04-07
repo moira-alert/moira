@@ -92,6 +92,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 				notification2.Event,
 			},
 		}
+
 		dataBase.EXPECT().PushContactNotificationToHistory(&notification1).Return(nil).AnyTimes()
 		dataBase.EXPECT().PushContactNotificationToHistory(&notification2).Return(nil).AnyTimes()
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
@@ -131,6 +132,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 			Actor:    moira.SelfStateActorManual,
 		}, nil)
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
+
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
 	})
@@ -173,6 +175,7 @@ func TestGoRoutine(t *testing.T) {
 	}
 
 	shutdown := make(chan struct{})
+
 	dataBase.EXPECT().FetchNotifications(gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	dataBase.EXPECT().PushContactNotificationToHistory(&notification1).Return(nil).AnyTimes()
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(arg0, arg1 interface{}) { close(shutdown) })

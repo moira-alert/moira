@@ -25,6 +25,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			worker.database.EXPECT().GetTagsSubscriptions(gomock.Any()).Return(nil, redisError)
 
 			var sendingWG sync.WaitGroup
+
 			var timeDelta int64 = 100
 			nowTS := time.Now().Unix() + timeDelta
 			val := float64(timeDelta)
@@ -43,6 +44,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			worker.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), fmt.Errorf("Redis connection timeout")) // NOTE: needs to fail database check and do not check other heartbeats.
 
 			val := float64(timeDelta)
+
 			var sendingWG sync.WaitGroup
 
 			registerAdminNotification(worker, nowTS, "Redis disconnected", val, &sendingWG)
@@ -142,6 +144,7 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("SelfState")
 	notif := mock_notifier.NewMockNotifier(mockCtrl)
+
 	return &selfCheckWorkerMock{
 		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
 		database:        database,

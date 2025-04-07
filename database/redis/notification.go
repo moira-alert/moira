@@ -28,6 +28,7 @@ func limitNotifications(notifications []*moira.ScheduledNotification) []*moira.S
 	if len(notifications) == 0 {
 		return notifications
 	}
+
 	i := len(notifications) - 1
 	lastTs := notifications[i].Timestamp
 
@@ -50,6 +51,7 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 	pipe := (*connector.client).TxPipeline()
 	pipe.ZRange(ctx, notifierNotificationsKey, start, end)
 	pipe.ZCard(ctx, notifierNotificationsKey)
+
 	response, err := pipe.Exec(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -92,10 +94,12 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	}
 
 	foundNotifications := make([]*moira.ScheduledNotification, 0)
+
 	for _, notification := range notifications {
 		timestamp := strconv.FormatInt(notification.Timestamp, 10)
 		contactID := notification.Contact.ID
 		subID := moira.UseString(notification.Event.SubscriptionID)
+
 		idstr := strings.Join([]string{timestamp, contactID, subID}, "")
 		if idstr == notificationKey {
 			foundNotifications = append(foundNotifications, notification)
@@ -115,14 +119,17 @@ func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redi
 		if err != nil {
 			return 0, err
 		}
+
 		pipe.ZRem(ctx, notifierNotificationsKey, notificationString)
 	}
+
 	response, err := pipe.Exec(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("failed to remove notifications: %w", err)
 	}
 
 	var total int64
+
 	for _, val := range response {
 		intVal, _ := val.(*redis.IntCmd).Result()
 		total += intVal
@@ -160,6 +167,7 @@ func filterNotificationsByDelay(notifications []*moira.ScheduledNotification, de
 // getNotificationsTriggerChecks returns notifications trigger checks, optimized for the case when there are many notifications at one trigger.
 func (connector *DbConnector) getNotificationsTriggerChecks(notifications []*moira.ScheduledNotification) ([]*moira.CheckData, error) {
 	checkDataMap := make(map[string]*moira.CheckData, len(notifications))
+
 	for _, notification := range notifications {
 		if notification != nil {
 			checkDataMap[notification.Trigger.ID] = nil
@@ -195,6 +203,7 @@ func logToRemoveNotifications(logger moira.Logger, toRemoveNotifications []*moir
 	}
 
 	triggerIDsSet := make(map[string]struct{}, len(toRemoveNotifications))
+
 	for _, removedNotification := range toRemoveNotifications {
 		if removedNotification == nil {
 			continue
@@ -330,7 +339,6 @@ func (connector *DbConnector) notificationsCount(to int64) (int64, error) {
 func (connector *DbConnector) fetchNotifications(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// fetchNotificationsDo uses WATCH, so transaction may fail and will retry it
 	// see https://redis.io/topics/transactions
-
 	for i := 0; i < connector.notification.TransactionMaxRetries; i++ {
 		res, err := connector.fetchNotificationsDo(to, limit)
 
@@ -404,6 +412,7 @@ func getLimitedNotifications(
 			// this means that all notifications have same timestamp,
 			// we hope that all notifications with same timestamp should fit our memory
 			var err error
+
 			limitedNotifications, err = getNotificationsInTxWithLimit(ctx, tx, lastTs, notificationsLimitUnlimited)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get notification without limit in transaction: %w", err)
@@ -417,7 +426,6 @@ func getLimitedNotifications(
 // fetchNotificationsDo performs fetching of notifications within a single transaction.
 func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// See https://redis.io/topics/transactions
-
 	ctx := connector.context
 	c := *connector.client
 
@@ -454,6 +462,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*mo
 			// someone has changed notifierNotificationsKey while we do our job
 			// and transaction fail (no notifications were deleted) :(
 			var deleted int64
+
 			deleted, err = connector.removeNotifications(ctx, pipe, types.ToRemove)
 			if err != nil {
 				return fmt.Errorf("failed to remove notifications in transaction: %w", err)
@@ -464,6 +473,7 @@ func (connector *DbConnector) fetchNotificationsDo(to int64, limit int64) ([]*mo
 			}
 
 			var affected int
+
 			affected, err = connector.resaveNotifications(ctx, pipe, types.ToResaveOld, types.ToResaveNew)
 			if err != nil {
 				return fmt.Errorf("failed to resave notifications in transaction: %w", err)
@@ -496,6 +506,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	c := *connector.client
 
 	z := &redis.Z{Score: float64(notification.Timestamp), Member: bytes}
+
 	_, err = c.ZAdd(ctx, notifierNotificationsKey, z).Result()
 	if err != nil {
 		return fmt.Errorf("failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
@@ -508,6 +519,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledNotification, timestamp int64) error {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
+
 	for _, notification := range notifications {
 		bytes, err := reply.GetNotificationBytes(*notification)
 		if err != nil {
@@ -517,6 +529,7 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 		z := &redis.Z{Score: float64(timestamp), Member: bytes}
 		pipe.ZAdd(ctx, notifierNotificationsKey, z)
 	}
+
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -560,6 +573,7 @@ func (connector *DbConnector) resaveNotifications(
 	}
 
 	var total int
+
 	for _, val := range response {
 		intVal, err := val.(*redis.IntCmd).Result()
 		if err != nil {

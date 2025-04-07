@@ -51,10 +51,12 @@ func (n scheduledNotificationStorageElement) toScheduledNotification() moira.Sch
 // GetNotificationBytes is a function that takes moira.ScheduledNotification and turns it to bytes that will be saved in redis.
 func GetNotificationBytes(notification moira.ScheduledNotification) ([]byte, error) {
 	notificationSE := toScheduledNotificationStorageElement(notification)
+
 	bytes, err := json.Marshal(notificationSE)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal notification: %w", err)
 	}
+
 	return bytes, nil
 }
 
@@ -64,10 +66,12 @@ func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification
 		if errors.Is(err, redis.Nil) {
 			return moira.ScheduledNotification{}, database.ErrNil
 		}
+
 		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %w", err)
 	}
 
 	notificationSE := scheduledNotificationStorageElement{}
+
 	err = json.Unmarshal(bytes, &notificationSE)
 	if err != nil {
 		return moira.ScheduledNotification{}, fmt.Errorf("failed to parse notification json %s: %w", string(bytes), err)
@@ -88,11 +92,13 @@ func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotificat
 	}
 
 	notifications := make([]*moira.ScheduledNotification, len(data))
+
 	for i, value := range data {
 		notification, err2 := unmarshalNotification([]byte(value), err)
 		if err2 != nil && !errors.Is(err2, database.ErrNil) {
 			return nil, err2
 		}
+
 		if errors.Is(err2, database.ErrNil) {
 			notifications[i] = nil
 		} else {

@@ -54,6 +54,7 @@ func (e notificationEventStorageElement) toNotificationEvent() moira.Notificatio
 	if e.Values == nil {
 		e.Values = make(map[string]float64)
 	}
+
 	if e.Value != nil {
 		e.Values[firstTarget] = *e.Value
 		e.Value = nil
@@ -78,10 +79,12 @@ func (e notificationEventStorageElement) toNotificationEvent() moira.Notificatio
 // GetEventBytes is a function that takes moira.NotificationEvent and turns it to bytes that will be saved in redis.
 func GetEventBytes(event moira.NotificationEvent) ([]byte, error) {
 	eventSE := toNotificationEventStorageElement(event)
+
 	bytes, err := json.Marshal(eventSE)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal notification event: %s", err.Error())
 	}
+
 	return bytes, nil
 }
 
@@ -90,10 +93,12 @@ func unmarshalEvent(data string, err error) (moira.NotificationEvent, error) {
 		if errors.Is(err, redis.Nil) {
 			return moira.NotificationEvent{}, database.ErrNil
 		}
+
 		return moira.NotificationEvent{}, fmt.Errorf("failed to read event: %s", err.Error())
 	}
 
 	eventSE := notificationEventStorageElement{}
+
 	err = json.Unmarshal([]byte(data), &eventSE)
 	if err != nil {
 		return moira.NotificationEvent{}, fmt.Errorf("failed to parse event json %s: %s", data, err.Error())
@@ -116,20 +121,24 @@ func Events(response *redis.StringSliceCmd) ([]*moira.NotificationEvent, error) 
 		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
+
 		return nil, fmt.Errorf("failed to read events: %s", err.Error())
 	}
 
 	events := make([]*moira.NotificationEvent, len(values))
+
 	for i, value := range values {
 		event, err2 := unmarshalEvent(value, err)
 		if err2 != nil && !errors.Is(err2, database.ErrNil) {
 			return nil, err2
 		}
+
 		if errors.Is(err2, database.ErrNil) {
 			events[i] = nil
 		} else {
 			events[i] = &event
 		}
 	}
+
 	return events, nil
 }

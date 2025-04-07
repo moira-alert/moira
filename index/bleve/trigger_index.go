@@ -17,9 +17,11 @@ func CreateTriggerIndex(mapping mapping.IndexMapping) (*TriggerIndex, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	newIndex := &TriggerIndex{
 		index: bleveIdx,
 	}
+
 	return newIndex, nil
 }
 
@@ -29,5 +31,6 @@ func (index *TriggerIndex) GetCount() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	return int64(documents), nil
 }

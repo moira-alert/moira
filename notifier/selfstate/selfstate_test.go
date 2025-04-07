@@ -50,6 +50,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		So(len(mock.selfCheckWorker.heartbeats), ShouldEqual, 5)
 
 		const oneTickDelay = time.Millisecond * 1500
+
 		time.Sleep(oneTickDelay) // wait for one tick of worker
 
 		err = mock.selfCheckWorker.Stop()
@@ -340,6 +341,7 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("SelfState")
 	notif := mock_notifier.NewMockNotifier(mockCtrl)
+
 	if isStart {
 		senders := map[string]bool{
 			"admin-mail": true,

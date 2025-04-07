@@ -63,6 +63,7 @@ some other text _italics text_`,
 
 func generateTestEvents(n int, subscriptionID string) []moira.NotificationEvent {
 	events := make([]moira.NotificationEvent, 0, n)
+
 	for i := 0; i < n; i++ {
 		event := moira.NotificationEvent{
 			Metric:         fmt.Sprintf("Metric number #%d", i),
@@ -71,6 +72,7 @@ func generateTestEvents(n int, subscriptionID string) []moira.NotificationEvent 
 		}
 		events = append(events, event)
 	}
+
 	return events
 }
 
@@ -109,6 +111,7 @@ func TestEmptyTriggerID(t *testing.T) {
 		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, [][]byte{{1, 0, 1}}, true)
 		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
 		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
+
 		messageStr := new(bytes.Buffer)
 		_, err := message.WriteTo(messageStr)
 		So(err, ShouldBeNil)

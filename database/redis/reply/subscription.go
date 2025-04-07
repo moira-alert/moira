@@ -16,16 +16,20 @@ func Subscription(rep *redis.StringCmd) (moira.SubscriptionData, error) {
 		// TODO not sure if this is still necessary, maybe we should just convert database and forget about it
 		ThrottlingEnabled: true,
 	}
+
 	bytes, err := rep.Bytes()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return subscription, database.ErrNil
 		}
+
 		return subscription, fmt.Errorf("failed to read subscription: %s", err.Error())
 	}
+
 	err = json.Unmarshal(bytes, &subscription)
 	if err != nil {
 		return subscription, fmt.Errorf("failed to parse subscription json %s: %s", string(bytes), err.Error())
 	}
+
 	return subscription, nil
 }
