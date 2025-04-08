@@ -89,12 +89,15 @@ func (triggerExpression *TriggerExpression) Validate() error {
 	if triggerExpression.TriggerType != moira.ExpressionTrigger {
 		return nil
 	}
+
 	if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
 		return ErrInvalidExpression{
 			internalError: fmt.Errorf("trigger_type set to expression, but no expression provided"),
 		}
 	}
+
 	expression := *triggerExpression.Expression
+
 	env := map[string]interface{}{
 		"ok":         moira.StateOK,
 		"error":      moira.StateERROR,
@@ -107,12 +110,15 @@ func (triggerExpression *TriggerExpression) Validate() error {
 	if triggerExpression.WarnValue != nil {
 		env["warn_value"] = *triggerExpression.WarnValue
 	}
+
 	if triggerExpression.ErrorValue != nil {
 		env["error_value"] = *triggerExpression.ErrorValue
 	}
+
 	for k, v := range triggerExpression.AdditionalTargetsValues {
 		env[k] = v
 	}
+
 	if _, err := expr.Compile(
 		strings.ToLower(expression),
 		expr.Optimize(true),
@@ -120,6 +126,7 @@ func (triggerExpression *TriggerExpression) Validate() error {
 	); err != nil {
 		return ErrInvalidExpression{err}
 	}
+
 	return nil
 }
 
