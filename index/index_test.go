@@ -72,8 +72,10 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
+
 		err := index.fillIndex()
 		So(err, ShouldBeNil)
+
 		docCount, _ := index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(32))
 	})
@@ -83,18 +85,21 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err := index.writeByBatches(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
+
 		docCount, _ := index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(32))
 	})
 
 	Convey("Test add Triggers to index, batch size is less than number of triggers", t, func() {
 		const batchSize = 20
+
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:batchSize]).Return(triggerChecksPointers[:batchSize], nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[batchSize:]).Return(triggerChecksPointers[batchSize:], nil)
 
 		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 		err := index.writeByBatches(triggerIDs, batchSize)
 		So(err, ShouldBeNil)
+
 		docCount, _ := index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(32))
 	})
@@ -116,6 +121,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err := index.writeByBatches(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
+
 		docCount, _ := index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(32))
 
@@ -123,6 +129,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err = index.writeByBatches(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
+
 		docCount, _ = index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(32))
 	})
@@ -175,6 +182,7 @@ func TestIndex_Errors(t *testing.T) {
 
 	Convey("Test Start index error", t, func() {
 		dataBase.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), fmt.Errorf("very bad error"))
+
 		err := index.fillIndex()
 		So(err, ShouldNotBeNil)
 	})

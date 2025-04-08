@@ -18,6 +18,7 @@ func TestSubscriptions(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	client := *dataBase.client
 
@@ -64,8 +65,10 @@ func TestSubscriptions(t *testing.T) {
 			Convey("Default subscription", func() {
 				err := dataBase.SaveSubscription(sub)
 				So(err, ShouldBeNil)
+
 				countOfKeys := getCountOfTagSubscriptionsKeys(dataBase.context, client)
 				So(countOfKeys, ShouldResemble, 3)
+
 				valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
 				So(valueStoredAtKey, ShouldBeEmpty)
 				valueStoredAtKey = client.SMembers(dataBase.context, "{moira-tag-subscriptions}:tag1").Val()
@@ -79,8 +82,10 @@ func TestSubscriptions(t *testing.T) {
 				Convey("When tags don't exist", func() {
 					err := dataBase.SaveSubscription(subAnyTag)
 					So(err, ShouldBeNil)
+
 					countOfKeys := getCountOfTagSubscriptionsKeys(dataBase.context, client)
 					So(countOfKeys, ShouldResemble, 4)
+
 					valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
 					So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000008"})
 				})
@@ -132,6 +137,7 @@ func TestSubscriptions(t *testing.T) {
 				actual, err := dataBase.GetTagsSubscriptions([]string{tag1})
 				So(err, ShouldBeNil)
 				So(len(actual), ShouldEqual, 4)
+
 				subscriptions := map[string]*moira.SubscriptionData{
 					sub.ID:                        sub,
 					subAnyTag.ID:                  subAnyTag,
@@ -147,6 +153,7 @@ func TestSubscriptions(t *testing.T) {
 				actual, err := dataBase.GetTagsSubscriptions(nil)
 				So(err, ShouldBeNil)
 				So(len(actual), ShouldEqual, 2)
+
 				subscriptions := map[string]*moira.SubscriptionData{subAnyTag.ID: subAnyTag, subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags}
 				for _, subscription := range actual {
 					So(subscription, ShouldResemble, subscriptions[subscription.ID])
@@ -192,6 +199,7 @@ func TestSubscriptionData(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 
 	Convey("SubscriptionData manipulation", t, func() {
@@ -258,6 +266,7 @@ func TestSubscriptionData(t *testing.T) {
 		Convey("Save batches and remove and check", func() {
 			subscriptions := subscriptions
 			ids := make([]string, len(subscriptions))
+
 			for i, sub := range subscriptions {
 				ids[i] = sub.ID
 			}
@@ -287,6 +296,7 @@ func TestSubscriptionData(t *testing.T) {
 
 		Convey("Test rewrite subscription", func() {
 			dataBase.Flush()
+
 			sub := *subscriptions[0]
 
 			err := dataBase.SaveSubscription(&sub)
@@ -357,6 +367,7 @@ func TestSubscriptionErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetSubscription("123")
@@ -512,6 +523,7 @@ var subscriptions = []*moira.SubscriptionData{
 
 func getCountOfTagSubscriptionsKeys(ctx context.Context, client redis.UniversalClient) int {
 	var keys []string
+
 	switch c := client.(type) {
 	case *redis.ClusterClient:
 		_ = c.ForEachMaster(ctx, func(ctx context.Context, shard *redis.Client) error {
@@ -519,6 +531,7 @@ func getCountOfTagSubscriptionsKeys(ctx context.Context, client redis.UniversalC
 			for iter.Next(ctx) {
 				keys = append(keys, iter.Val())
 			}
+
 			return iter.Err()
 		})
 	default:
@@ -527,5 +540,6 @@ func getCountOfTagSubscriptionsKeys(ctx context.Context, client redis.UniversalC
 			keys = append(keys, iter.Val())
 		}
 	}
+
 	return len(keys)
 }

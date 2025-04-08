@@ -25,6 +25,7 @@ func TestGetUserSettings(t *testing.T) {
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetUserContactIDs(login).Return(contactIDs, nil)
@@ -95,6 +96,7 @@ func TestGetUserSettings(t *testing.T) {
 		})
 		Convey("GetSubscriptions", func() {
 			expected := fmt.Errorf("can not read subscriptions")
+
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expected)
 			settings, err := GetUserSettings(database, login, auth)
@@ -103,6 +105,7 @@ func TestGetUserSettings(t *testing.T) {
 		})
 		Convey("GetUserContactIDs", func() {
 			expected := fmt.Errorf("can not read contact ids")
+
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetUserContactIDs(login).Return(nil, expected)
@@ -115,6 +118,7 @@ func TestGetUserSettings(t *testing.T) {
 			subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 			subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 			contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 			database.EXPECT().GetUserContactIDs(login).Return(contactIDs, nil)

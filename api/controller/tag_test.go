@@ -75,6 +75,7 @@ func TestCreateTags(t *testing.T) {
 			TagNames: []string{"tag1", "tag2"},
 		}
 		systemTags := []string{"sys-tag"}
+
 		database.EXPECT().CreateTags(tags.TagNames).Return(nil).Times(1)
 
 		err := CreateTags(database, tags, systemTags)
@@ -125,6 +126,7 @@ func TestDeleteTag(t *testing.T) {
 
 	Convey("verification of error handling when receiving subscriptions", t, func() {
 		expected := fmt.Errorf("can not read subscriptions")
+
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
 		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(nil, expected)
 		resp, err := RemoveTag(database, tag)
@@ -134,6 +136,7 @@ func TestDeleteTag(t *testing.T) {
 
 	Convey("check create error if subscription exists", t, func() {
 		data := []*moira.SubscriptionData{{ID: "TestSubscription"}}
+
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
 		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(data, nil)
 		resp, err := RemoveTag(database, tag)
@@ -143,6 +146,7 @@ func TestDeleteTag(t *testing.T) {
 
 	Convey("verification of error handling during tag removal", t, func() {
 		expected := fmt.Errorf("can not delete tag")
+
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
 		database.EXPECT().RemoveTag(tag).Return(expected)
 		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(nil, nil)
@@ -170,13 +174,16 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 		stat, err := GetAllTagsAndSubscriptions(database, logger)
 		So(err, ShouldBeNil)
 		So(stat.List, ShouldHaveLength, 3)
+
 		for _, stat := range stat.List {
 			if stat.TagName == "tag21" {
 				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag21", Triggers: []string{"trigger21"}, Subscriptions: []moira.SubscriptionData{{Tags: []string{"tag21"}}}})
 			}
+
 			if stat.TagName == "tag22" {
 				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag22", Triggers: []string{"trigger22"}, Subscriptions: make([]moira.SubscriptionData, 0)})
 			}
+
 			if stat.TagName == "tag1" {
 				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag1", Triggers: make([]string, 0), Subscriptions: []moira.SubscriptionData{{Tags: []string{"tag1", "tag2"}}}})
 			}

@@ -69,6 +69,7 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 		builder := strings.Builder{}
 		for i, rename := range renamingInfo {
 			builder.WriteString(rename.String())
+
 			if i != len(renamingInfo)-1 {
 				builder.WriteString(", ")
 			}
@@ -105,6 +106,7 @@ func fillTeamNamesHash(logger moira.Logger, database moira.Database) error {
 	default:
 		return makeUnknownDBError(database)
 	}
+
 	return nil
 }
 
@@ -144,6 +146,7 @@ func transformTeamsByNameMap(teamsByNameMap map[string][]teamWithID) (map[string
 			iStr := strconv.FormatInt(int64(i), 10)
 
 			oldTeamName := team.Name
+
 			if i > 0 {
 				team.Name += iStr
 			}
@@ -163,6 +166,7 @@ func transformTeamsByNameMap(teamsByNameMap map[string][]teamWithID) (map[string
 					team.Name += "_" + iStr
 				} else {
 					teamByUniqueName[lowercasedTeamName] = team
+
 					if team.Name != oldTeamName {
 						renamingTeams = append(renamingTeams, renameInfo{
 							teamID:      team.ID,
@@ -170,6 +174,7 @@ func transformTeamsByNameMap(teamsByNameMap map[string][]teamWithID) (map[string
 							newTeamName: team.Name,
 						})
 					}
+
 					break
 				}
 			}
@@ -243,6 +248,7 @@ type teamWithID struct {
 
 func unmarshalTeam(teamID string, teamBytes []byte) (teamWithID, error) {
 	var storedTeam teamStorageElement
+
 	err := json.Unmarshal(teamBytes, &storedTeam)
 	if err != nil {
 		return teamWithID{}, fmt.Errorf("failed to deserialize team: %w", err)

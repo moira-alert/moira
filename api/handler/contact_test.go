@@ -51,6 +51,7 @@ func TestGetAllContacts(t *testing.T) {
 					Team:  "",
 				},
 			}, nil).Times(1)
+
 			database = mockDb
 
 			expected := &dto.ContactList{
@@ -127,6 +128,7 @@ func TestGetContactById(t *testing.T) {
 				User:  defaultLogin,
 				Team:  "",
 			}, nil).Times(1)
+
 			database = mockDb
 
 			expected := &dto.Contact{
@@ -147,6 +149,7 @@ func TestGetContactById(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &dto.Contact{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -176,6 +179,7 @@ func TestGetContactById(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -234,6 +238,7 @@ func TestCreateNewContact(t *testing.T) {
 				User:  newContactDto.User,
 				Team:  newContactDto.TeamID,
 			}).Return(nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
@@ -248,6 +253,7 @@ func TestCreateNewContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &dto.Contact{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -281,6 +287,7 @@ func TestCreateNewContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &dto.Contact{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -309,6 +316,7 @@ func TestCreateNewContact(t *testing.T) {
 				User:  newContactDto.User,
 				Team:  newContactDto.TeamID,
 			}, nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact", bytes.NewBuffer(jsonContact))
@@ -323,6 +331,7 @@ func TestCreateNewContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -355,6 +364,7 @@ func TestCreateNewContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -394,6 +404,7 @@ func TestCreateNewContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -435,6 +446,7 @@ func TestCreateNewContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -483,6 +495,7 @@ func TestUpdateContact(t *testing.T) {
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
 			}).Return(nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
@@ -508,6 +521,7 @@ func TestUpdateContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &dto.Contact{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -549,10 +563,12 @@ func TestUpdateContact(t *testing.T) {
 				StatusText: "Invalid request",
 				ErrorText:  "contact cannot have both the user field and the team_id field filled in",
 			}
+
 			response := responseWriter.Result()
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -600,6 +616,7 @@ func TestUpdateContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -631,6 +648,7 @@ func TestUpdateContact(t *testing.T) {
 				Value: updatedContactDto.Value,
 				User:  updatedContactDto.User,
 			}).Return(testErr).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPut, "/contact/"+contactID, bytes.NewBuffer(jsonContact))
@@ -655,6 +673,7 @@ func TestUpdateContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -696,6 +715,7 @@ func TestRemoveContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			actual := contentBytes
 
 			So(actual, ShouldResemble, []byte{})
@@ -723,6 +743,7 @@ func TestRemoveContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			actual := contentBytes
 
 			So(actual, ShouldResemble, []byte{})
@@ -750,6 +771,7 @@ func TestRemoveContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			actual := contentBytes
 
 			So(actual, ShouldResemble, []byte{})
@@ -779,6 +801,7 @@ func TestRemoveContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			actual := contentBytes
 
 			So(actual, ShouldResemble, []byte{})
@@ -798,6 +821,7 @@ func TestRemoveContact(t *testing.T) {
 					Tags:     []string{"test"},
 				},
 			}, nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
@@ -815,6 +839,7 @@ func TestRemoveContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -837,6 +862,7 @@ func TestRemoveContact(t *testing.T) {
 					Tags:     []string{"test"},
 				},
 			}, nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
@@ -854,6 +880,7 @@ func TestRemoveContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -881,6 +908,7 @@ func TestRemoveContact(t *testing.T) {
 					Tags:     []string{"test2"},
 				},
 			}, nil).Times(1)
+
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/contact/"+contactID, nil)
@@ -899,6 +927,7 @@ func TestRemoveContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -932,6 +961,7 @@ func TestRemoveContact(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -967,6 +997,7 @@ func TestSendTestContactNotification(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			actual := contentBytes
 
 			So(actual, ShouldResemble, []byte{})
@@ -991,6 +1022,7 @@ func TestSendTestContactNotification(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
+
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
 			err = json.Unmarshal([]byte(contents), actual)
@@ -1059,6 +1091,7 @@ func Test_getContactNoisiness(t *testing.T) {
 			}
 			expectedBytes, err := json.Marshal(expectedDTO)
 			So(err, ShouldBeNil)
+
 			expectedBytes = append(expectedBytes, '\n')
 
 			mockDb.EXPECT().GetAllContacts().Return(contacts, nil).Times(1)
@@ -1098,6 +1131,7 @@ func Test_getContactNoisiness(t *testing.T) {
 			expectedDTO := api.ErrorInternalServer(someErrFromDb)
 			expectedBytes, err := json.Marshal(expectedDTO)
 			So(err, ShouldBeNil)
+
 			expectedBytes = append(expectedBytes, '\n')
 
 			mockDb.EXPECT().GetAllContacts().Return(nil, someErrFromDb).Times(1)
@@ -1133,6 +1167,7 @@ func Test_getContactNoisiness(t *testing.T) {
 			expectedDTO := api.ErrorInvalidRequest(err)
 			expectedBytes, err := json.Marshal(expectedDTO)
 			So(err, ShouldBeNil)
+
 			expectedBytes = append(expectedBytes, '\n')
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/contact/noisiness", nil)

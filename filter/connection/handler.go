@@ -27,6 +27,7 @@ func NewConnectionsHandler(logger moira.Logger) *Handler {
 // HandleConnection convert every line from connection to metric and send it to lineChan channel.
 func (handler *Handler) HandleConnection(connection net.Conn, lineChan chan<- []byte) {
 	handler.wg.Add(1)
+
 	go func() {
 		defer handler.wg.Done()
 		handler.handle(connection, lineChan)
@@ -36,6 +37,7 @@ func (handler *Handler) HandleConnection(connection net.Conn, lineChan chan<- []
 func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 	buffer := bufio.NewReader(connection)
 	closeConnection := make(chan struct{})
+
 	go func(conn net.Conn) {
 		select {
 		case <-handler.terminate:
@@ -48,14 +50,18 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 		bytes, err := buffer.ReadBytes('\n')
 		if err != nil {
 			connection.Close()
+
 			if err != io.EOF {
 				handler.logger.Error().
 					Error(err).
 					Msg("Fail to read from metric connection")
 			}
+
 			close(closeConnection)
+
 			return
 		}
+
 		bytesWithoutCRLF := dropCRLF(bytes)
 		if len(bytesWithoutCRLF) > 0 {
 			lineChan <- bytesWithoutCRLF
@@ -74,8 +80,10 @@ func dropCRLF(bytes []byte) []byte {
 	if bytesLength > 0 && bytes[bytesLength-1] == '\n' {
 		bytesLength--
 	}
+
 	if bytesLength > 0 && bytes[bytesLength-1] == '\r' {
 		bytesLength--
 	}
+
 	return bytes[:bytesLength]
 }

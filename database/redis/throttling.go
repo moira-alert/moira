@@ -21,6 +21,7 @@ func (connector *DbConnector) GetTriggerThrottling(triggerID string) (time.Time,
 func (connector *DbConnector) SetTriggerThrottling(triggerID string, next time.Time) error {
 	c := *connector.client
 	err := c.Set(connector.context, notifierNextKey(triggerID), next.Unix(), redis.KeepTTL).Err()
+
 	return err
 }
 
@@ -31,10 +32,12 @@ func (connector *DbConnector) DeleteTriggerThrottling(triggerID string) error {
 	pipe := c.TxPipeline()
 	pipe.Set(connector.context, notifierThrottlingBeginningKey(triggerID), time.Now().Unix(), redis.KeepTTL)
 	pipe.Del(connector.context, notifierNextKey(triggerID))
+
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 

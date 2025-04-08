@@ -22,6 +22,7 @@ func NewTriggerTargetMetrics(source FetchedTargetMetrics) TriggerTargetMetrics {
 	for _, m := range source {
 		result[m.Name] = m
 	}
+
 	return result
 }
 
@@ -44,10 +45,13 @@ func (m TriggerTargetMetrics) Populate(lastMetrics set[string], from, to int64) 
 			if len(m) > 0 && firstMetric.StepTime != 0 {
 				step = firstMetric.StepTime
 			}
+
 			metric = *metricSource.MakeEmptyMetricData(metricName, step, from, to)
 		}
+
 		result[metricName] = metric
 	}
+
 	return result
 }
 
@@ -97,6 +101,7 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 	}
 
 	result := NewTriggerMetricsWithCapacity(len(allMetrics))
+
 	for targetName, metrics := range allMetrics {
 		// // We do not populate metrics
 		// if declaredAloneMetrics[targetName] {
@@ -106,6 +111,7 @@ func (triggerMetrics TriggerMetrics) Populate(lastMetrics map[string]moira.Metri
 		if !ok {
 			targetMetrics = newTriggerTargetMetricsWithCapacity(len(metrics))
 		}
+
 		targetMetrics = targetMetrics.Populate(metrics, from, to)
 		result[targetName] = targetMetrics
 	}
@@ -164,7 +170,9 @@ func (triggerMetrics TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map
 			if len(targetMetrics) == 0 {
 				continue
 			}
+
 			errorBuilder.addUnexpected(targetName, targetMetrics)
+
 			continue
 		}
 
@@ -193,20 +201,24 @@ func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set
 		if declaredAloneMetrics.contains(targetName) {
 			continue
 		}
+
 		currentMetrics := newSetFromTriggerTargetMetrics(targetMetrics)
 		fullMetrics = fullMetrics.union(currentMetrics)
 	}
 
 	for targetName, targetMetrics := range triggerMetrics {
 		metricsSet := newSetFromTriggerTargetMetrics(targetMetrics)
+
 		if declaredAloneMetrics.contains(targetName) {
 			continue
 		}
+
 		diff := metricsSet.diff(fullMetrics)
 		if len(diff) > 0 {
 			result[targetName] = diff
 		}
 	}
+
 	return result
 }
 
@@ -215,13 +227,16 @@ func (triggerMetrics TriggerMetrics) FindMissingMetrics(declaredAloneMetrics set
 // with structure map[MetricName]map[TargetName]MetricData.
 func (m TriggerMetrics) ConvertForCheck() map[string]map[string]metricSource.MetricData {
 	result := make(map[string]map[string]metricSource.MetricData)
+
 	for targetName, targetMetrics := range m {
 		for metricName := range targetMetrics {
 			if _, ok := result[metricName]; !ok {
 				result[metricName] = make(map[string]metricSource.MetricData, len(m))
 			}
+
 			result[metricName][targetName] = m[targetName][metricName]
 		}
 	}
+
 	return result
 }

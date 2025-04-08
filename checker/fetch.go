@@ -12,6 +12,7 @@ func (triggerChecker *TriggerChecker) fetchTriggerMetrics() (map[string][]metric
 	if err != nil {
 		return triggerMetricsData, err
 	}
+
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.until)
 
 	if len(triggerChecker.lastCheck.Metrics) == 0 {
@@ -32,12 +33,15 @@ func (triggerChecker *TriggerChecker) fetch() (map[string][]metricSource.MetricD
 	metricsArr := make([]string, 0)
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
+
 	for targetIndex, target := range triggerChecker.trigger.Targets {
 		targetIndex++ // increasing target index to have target names started from 1 instead of 0
+
 		fetchResult, err := triggerChecker.source.Fetch(target, triggerChecker.from, triggerChecker.until, isSimpleTrigger)
 		if err != nil {
 			return nil, nil, err
 		}
+
 		metricsData := fetchResult.GetMetricsData()
 
 		metricsFetchResult, metricsErr := fetchResult.GetPatternMetrics()
@@ -49,6 +53,7 @@ func (triggerChecker *TriggerChecker) fetch() (map[string][]metricSource.MetricD
 		targetName := fmt.Sprintf("t%d", targetIndex)
 		triggerMetricsData[targetName] = metricsData
 	}
+
 	return triggerMetricsData, metricsArr, nil
 }
 

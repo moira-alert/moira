@@ -15,11 +15,14 @@ import (
 
 func TestCheckDelay_Check(t *testing.T) {
 	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
+
 	Convey("Test local checker heartbeat", t, func() {
 		err := errors.New("test error localChecker")
 		now := time.Now().Unix()
+
 		check, mockCtrl := createGraphiteLocalCheckerTest(t)
 		defer mockCtrl.Finish()
+
 		database := check.database.(*mock_moira_alert.MockDatabase)
 
 		Convey("Test creation localChecker", func() {
@@ -39,6 +42,7 @@ func TestCheckDelay_Check(t *testing.T) {
 
 		Convey("Test update lastSuccessfulCheck", func() {
 			now += 1000
+
 			database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
 			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 
@@ -51,6 +55,7 @@ func TestCheckDelay_Check(t *testing.T) {
 
 		Convey("Test get notification", func() {
 			check.lastSuccessfulCheck = now - check.delay - 1
+
 			database.EXPECT().GetChecksUpdatesCount().Return(int64(0), nil)
 			database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil)
 

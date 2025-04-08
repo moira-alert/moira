@@ -10,7 +10,9 @@ import (
 
 func TestTriggerIndex_Delete(t *testing.T) {
 	var newIndex *TriggerIndex
+
 	var err error
+
 	var count int64
 
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})

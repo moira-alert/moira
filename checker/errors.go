@@ -31,13 +31,16 @@ func NewErrTriggerHasSameMetricNames(duplicates map[string][]string) ErrTriggerH
 // ErrTriggerHasSameMetricNames implementation with constant error message.
 func (err ErrTriggerHasSameMetricNames) Error() string {
 	var builder strings.Builder
+
 	builder.WriteString("Targets have metrics with identical name: ")
+
 	for target, duplicates := range err.duplicates {
 		builder.WriteString(target)
 		builder.WriteRune(':')
 		builder.WriteString(strings.Join(duplicates, ", "))
 		builder.WriteString("; ")
 	}
+
 	return builder.String()
 }
 

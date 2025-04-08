@@ -66,6 +66,7 @@ func PerformRequestWithReadonlyModeMiddleware(config *api.Config, method string)
 	wrappedHandler := middlewareFunc(http.HandlerFunc(handler))
 
 	wrappedHandler.ServeHTTP(responseWriter, testRequest)
+
 	response := responseWriter.Result()
 	defer response.Body.Close()
 

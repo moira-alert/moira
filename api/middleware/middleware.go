@@ -160,6 +160,7 @@ func GetTeamID(request *http.Request) string {
 	if teamID == nil {
 		return ""
 	}
+
 	return teamID.(string)
 }
 

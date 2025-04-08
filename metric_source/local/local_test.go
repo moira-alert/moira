@@ -34,6 +34,7 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(database)
+
 	defer mockCtrl.Finish()
 
 	dataList := map[string][]*moira.MetricValue{
@@ -47,11 +48,17 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	}
 
 	var from int64 = 17
+
 	var until int64 = 67
+
 	var retentionFrom int64 = 20
+
 	var retentionUntil int64 = 70
+
 	var retention int64 = 10
+
 	var metricsTTL int64 = 3600
+
 	metricErr := fmt.Errorf("Ooops, metric error")
 
 	Convey("Error while ParseExpr", t, func() {
@@ -109,6 +116,7 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(database)
+
 	defer mockCtrl.Finish()
 
 	pattern := pattern1
@@ -202,13 +210,19 @@ func TestLocalSourceFetchMultipleMetrics(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(database)
+
 	defer mockCtrl.Finish()
 
 	var from int64 = 17
+
 	var until int64 = 67
+
 	var retentionFrom int64 = 20
+
 	var retentionUntil int64 = 70
+
 	var retention int64 = 10
+
 	var metricsTTL int64 = 3600
 
 	Convey("Test success evaluate multiple metrics with pow function", t, func() {
@@ -270,13 +284,19 @@ func TestLocalSourceApplyByNode(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(database)
+
 	defer mockCtrl.Finish()
 
 	var from int64 = 17
+
 	var until int64 = 67
+
 	var retentionFrom int64 = 20
+
 	var retentionUntil int64 = 70
+
 	var retention int64 = 10
+
 	var metricsTTL int64 = 3600
 
 	Convey("Test success evaluate multiple metrics with pow function", t, func() {
@@ -343,6 +363,7 @@ func TestLocalSourceFetch(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(database)
+
 	defer mockCtrl.Finish()
 
 	pattern := pattern1
@@ -358,10 +379,15 @@ func TestLocalSourceFetch(t *testing.T) {
 	}
 
 	var from int64 = 17
+
 	var until int64 = 67
+
 	var retentionFrom int64 = 20
+
 	var retentionUntil int64 = 70
+
 	var retention int64 = 10
+
 	var metricsTTL int64 = 3600
 
 	Convey("Test success evaluate", t, func() {
@@ -388,7 +414,9 @@ func TestLocalSourceFetch(t *testing.T) {
 
 	Convey("Test enormous fetch interval", t, func() {
 		var fromPast int64 = 0
+
 		var toFuture int64 = 1e15
+
 		ttl := 2*retention - 1
 
 		distantFutureDataList := map[string][]*moira.MetricValue{
@@ -448,6 +476,7 @@ func TestLocalSourceFetchNoRealTimeAlerting(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(database)
+
 	defer mockCtrl.Finish()
 
 	pattern := pattern1
@@ -463,10 +492,15 @@ func TestLocalSourceFetchNoRealTimeAlerting(t *testing.T) {
 	}
 
 	var from int64 = 17
+
 	var until int64 = 67
+
 	var retentionFrom int64 = 20
+
 	var retentionUntil int64 = 70
+
 	var retention int64 = 10
+
 	var metricsTTL int64 = 3600
 
 	Convey("Test success evaluate without realtime alerting", t, func() {
@@ -496,6 +530,7 @@ func TestLocalSourceFetchWithMultiplePatterns(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(database)
+
 	defer mockCtrl.Finish()
 
 	metricsTTL := int64(3600)

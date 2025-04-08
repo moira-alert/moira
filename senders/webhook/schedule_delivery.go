@@ -14,11 +14,13 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 		String(logFieldNameSendNotificationResponseBody, string(responseBody))
 
 	var responseData map[string]interface{}
+
 	err := json.Unmarshal(responseBody, &responseData)
 	if err != nil {
 		extendedLogger.Error().
 			Error(err).
 			Msg("Failed to schedule delivery check because of not unmarshalling")
+
 		return
 	}
 
@@ -27,15 +29,18 @@ func (sender *Sender) scheduleDeliveryCheck(contact moira.ContactData, triggerID
 		extendedLogger.Error().
 			Error(err).
 			Msg("Failed to prepare delivery check")
+
 		return
 	}
 
 	extendedLogger = extendedLogger.String(logFieldNameDeliveryCheckUrl, checkData.URL)
+
 	err = sender.addDeliveryChecks(checkData, sender.clock.NowUnix())
 	if err != nil {
 		extendedLogger.Error().
 			Error(err).
 			Msg("Failed to schedule delivery check")
+
 		return
 	}
 }

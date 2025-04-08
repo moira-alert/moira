@@ -176,6 +176,7 @@ func TestCacheStorage(t *testing.T) {
 	Convey("Test good retentions", t, func() {
 		So(err, ShouldBeEmpty)
 		So(storage, ShouldNotBeNil)
+
 		for i, retention := range storage.retentions {
 			So(retention.retention, ShouldEqual, expectedRetentionIntervals[i])
 		}
@@ -186,6 +187,7 @@ func TestCacheStorage(t *testing.T) {
 		for _, matchedMetric := range matchedMetrics {
 			storage.EnrichMatchedMetric(buffer, &matchedMetric)
 		}
+
 		So(len(buffer), ShouldEqual, len(matchedMetrics))
 	})
 

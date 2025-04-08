@@ -60,6 +60,7 @@ func (source *DefaultMetersCollection) RegisterMeter(name string, path ...string
 	defer source.mutex.Unlock()
 
 	source.meters[name] = source.registry.NewMeter(path...)
+
 	return source.meters[name]
 }
 
@@ -68,5 +69,6 @@ func (source *DefaultMetersCollection) GetRegisteredMeter(name string) (Meter, b
 	defer source.mutex.Unlock()
 
 	value, found := source.meters[name]
+
 	return value, found
 }

@@ -37,13 +37,16 @@ func TestGetAllPatterns(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
+
 	defer mockCtrl.Finish()
+
 	pattern1 := "my.first.pattern"
 	pattern2 := "my.second.pattern"
 
 	Convey("One pattern more triggers", t, func() {
 		triggers := []*dto.TriggerModel{{ID: uuid.Must(uuid.NewV4()).String()}, {ID: uuid.Must(uuid.NewV4()).String()}}
 		metrics := []string{"my.first.metric"}
+
 		dataBase.EXPECT().GetPatterns().Return([]string{pattern1}, nil)
 		expectGettingPatternList(dataBase, pattern1, triggers, metrics)
 		list, err := GetAllPatterns(dataBase, logger)
@@ -58,16 +61,19 @@ func TestGetAllPatterns(t *testing.T) {
 		triggers2 := []*dto.TriggerModel{{ID: "22222"}}
 		metrics1 := []string{"my.first.metric"}
 		metrics2 := []string{"my.second.metric"}
+
 		dataBase.EXPECT().GetPatterns().Return([]string{pattern1, pattern2}, nil)
 		expectGettingPatternList(dataBase, pattern1, triggers1, metrics1)
 		expectGettingPatternList(dataBase, pattern2, triggers2, metrics2)
 		list, err := GetAllPatterns(dataBase, logger)
 		So(err, ShouldBeNil)
 		So(list.List, ShouldHaveLength, 2)
+
 		for _, patternStat := range list.List {
 			if patternStat.Pattern == pattern1 {
 				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics1, Pattern: pattern1, Triggers: []dto.TriggerModel{*triggers1[0], *triggers1[1]}})
 			}
+
 			if patternStat.Pattern == pattern2 {
 				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics2, Pattern: pattern2, Triggers: []dto.TriggerModel{*triggers2[0]}})
 			}

@@ -271,6 +271,7 @@ func genDescByLimit(limit int) string {
 	if limit%2 != 0 {
 		str += "i"
 	}
+
 	return str
 }
 
@@ -279,6 +280,7 @@ func genEventsByLimit(event moira.NotificationEvent, oneEventLineLen int, limit 
 	for i := 0; i < limit/oneEventLineLen; i++ {
 		events = append(events, event)
 	}
+
 	return events
 }
 

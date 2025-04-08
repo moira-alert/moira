@@ -93,18 +93,23 @@ Please, fix your system or tune this trigger to generate less events.`
 		oneEventLineLen := len([]rune(eventLine))
 		// Events list with chars less than half the message limit
 		var shortEvents moira.NotificationEvents
+
 		var shortEventsString string
+
 		for i := 0; i < (messageMaxCharacters/2-200)/oneEventLineLen; i++ {
 			shortEvents = append(shortEvents, event)
 			shortEventsString += eventLine
 		}
 		// Events list with chars greater than half the message limit
 		var longEvents moira.NotificationEvents
+
 		var longEventsString string
+
 		for i := 0; i < (messageMaxCharacters/2+200)/oneEventLineLen; i++ {
 			longEvents = append(longEvents, event)
 			longEventsString += eventLine
 		}
+
 		longDesc := strings.Repeat("a", messageMaxCharacters/2+79)
 
 		Convey("Print moira message with desc + events < msgLimit", func() {
@@ -115,11 +120,14 @@ Please, fix your system or tune this trigger to generate less events.`
 
 		Convey("Print moira message desc > msgLimit/2", func() {
 			var events moira.NotificationEvents
+
 			var eventsString string
+
 			for i := 0; i < (messageMaxCharacters/2-10)/oneEventLineLen; i++ {
 				events = append(events, event)
 				eventsString += eventLine
 			}
+
 			actual := sender.buildMessage(events, moira.TriggerData{Desc: longDesc}, false)
 			expected := `NODATA   (15)
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
@@ -201,6 +209,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 func TestBuildDescription(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
+
 	Convey("Build desc tests", t, func() {
 		trigger := moira.TriggerData{
 			Desc: `# header1

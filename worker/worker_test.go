@@ -43,6 +43,7 @@ func Test(t *testing.T) {
 		)
 
 		start := time.Now()
+
 		worker.Run(stop)
 		So(time.Since(start), ShouldBeGreaterThanOrEqualTo, testLockRetryDelay)
 	})
@@ -164,5 +165,6 @@ func createTestWorkerWithAction(lock moira.Lock, action Action) *Worker {
 		action,
 	)
 	worker.SetLockRetryDelay(testLockRetryDelay)
+
 	return worker
 }

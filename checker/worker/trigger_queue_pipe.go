@@ -13,14 +13,17 @@ const (
 
 func (manager *WorkerManager) pipeTriggerToCheckQueue(fetch func(int) ([]string, error), batchSize int) <-chan string {
 	triggerIDsToCheck := make(chan string, batchSize*2) //nolint
+
 	manager.tomb.Go(func() error {
 		return manager.pipeTriggerToCheckQueueToChan(fetch, batchSize, triggerIDsToCheck)
 	})
+
 	return triggerIDsToCheck
 }
 
 func (manager *WorkerManager) pipeTriggerToCheckQueueToChan(fetch func(int) ([]string, error), batchSize int, triggerIDsToCheck chan<- string) error {
 	var fetchDelay time.Duration
+
 	for {
 		startFetch := time.After(fetchDelay)
 

@@ -33,7 +33,9 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 		err := index.fillIndex()
 		index.indexed = true
+
 		So(err, ShouldBeNil)
+
 		docCount, _ := index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(32))
 	})
@@ -397,7 +399,9 @@ func TestIndex_SearchErrors(t *testing.T) {
 
 		err := index.fillIndex()
 		index.indexed = true
+
 		So(err, ShouldBeNil)
+
 		docCount, _ := index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(32))
 	})

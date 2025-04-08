@@ -127,6 +127,7 @@ func TestValidate(t *testing.T) {
 
 func TestGetExpressionValue(t *testing.T) {
 	floatVal := 10.0
+
 	Convey("Test basic strings", t, func() {
 		getExpressionValuesTests := []getExpressionValuesTest{
 			{

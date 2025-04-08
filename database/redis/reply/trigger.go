@@ -43,6 +43,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 	if storageElement.AloneMetrics == nil {
 		aloneMetricsLen := len(storageElement.Targets)
 		storageElement.AloneMetrics = make(map[string]bool, aloneMetricsLen)
+
 		for i := 2; i <= aloneMetricsLen; i++ {
 			targetName := fmt.Sprintf("t%d", i)
 			storageElement.AloneMetrics[targetName] = true
@@ -52,6 +53,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 
 	triggerSource := storageElement.TriggerSource.FillInIfNotSet(storageElement.IsRemote)
 	clusterId := storageElement.ClusterId.FillInIfNotSet()
+
 	return moira.Trigger{
 		ID:               storageElement.ID,
 		Name:             storageElement.Name,
@@ -110,7 +112,9 @@ func getTriggerTTL(ttlString string) int64 {
 	if ttlString == "" {
 		return 0
 	}
+
 	ttl, _ := strconv.ParseInt(ttlString, 10, 64)
+
 	return ttl
 }
 
@@ -125,24 +129,30 @@ func Trigger(rep *redis.StringCmd) (moira.Trigger, error) {
 		if errors.Is(err, redis.Nil) {
 			return moira.Trigger{}, database.ErrNil
 		}
+
 		return moira.Trigger{}, fmt.Errorf("failed to read trigger: %s", err.Error())
 	}
+
 	triggerSE := &triggerStorageElement{}
+
 	err = json.Unmarshal(bytes, triggerSE)
 	if err != nil {
 		return moira.Trigger{}, fmt.Errorf("failed to parse trigger json %s: %s", string(bytes), err.Error())
 	}
 
 	trigger := triggerSE.toTrigger()
+
 	return trigger, nil
 }
 
 // GetTriggerBytes marshal moira.Trigger to bytes array.
 func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
+
 	bytes, err := json.Marshal(triggerSE)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal trigger: %s", err.Error())
 	}
+
 	return bytes, nil
 }

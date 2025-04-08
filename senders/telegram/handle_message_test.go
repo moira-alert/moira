@@ -19,6 +19,7 @@ func TestGetResponseMessage(t *testing.T) {
 
 	Convey("Test get response message", t, func() {
 		sender := Sender{DataBase: dataBase, bot: bot}
+
 		Convey("Private chat and bad message", func() {
 			message := &telebot.Message{
 				Chat: &telebot.Chat{
@@ -55,6 +56,7 @@ func TestGetResponseMessage(t *testing.T) {
 					LastName:  "LastName",
 				},
 			}
+
 			Convey("no username", func() {
 				response, err := sender.getResponseMessage(message)
 				So(err, ShouldBeNil)
@@ -63,8 +65,10 @@ func TestGetResponseMessage(t *testing.T) {
 
 			Convey("has username", func() {
 				message.Chat.Username = "User"
+
 				Convey("error while save username", func() {
 					dataBase.EXPECT().SetUsernameChat(messenger, "@User", `{"chat_id":123}`).Return(fmt.Errorf("error =("))
+
 					response, err := sender.getResponseMessage(message)
 					So(err.Error(), ShouldResemble, "failed to set username chat: error =(")
 					So(response, ShouldBeEmpty)
@@ -72,6 +76,7 @@ func TestGetResponseMessage(t *testing.T) {
 
 				Convey("success send", func() {
 					dataBase.EXPECT().SetUsernameChat(messenger, "@User", `{"chat_id":123}`).Return(nil)
+
 					response, err := sender.getResponseMessage(message)
 					So(err, ShouldBeNil)
 					So(response, ShouldResemble, "Okay, FirstName LastName, your id is 123")
@@ -133,6 +138,7 @@ func TestGetResponseMessage(t *testing.T) {
 					},
 					Text: "please don't answer me",
 				}
+
 				wrongMessages := []*telebot.Message{wrongGroupMessage, wrongSuperGroupMessage}
 				for _, message := range wrongMessages {
 					dataBase.EXPECT().SetUsernameChat(messenger, message.Chat.Title, fmt.Sprintf(`{"chat_id":%d}`, message.Chat.ID)).Return(nil)

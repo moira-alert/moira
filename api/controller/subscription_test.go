@@ -19,6 +19,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	const login = "user"
 
 	Convey("Two subscriptions", t, func() {
@@ -66,7 +67,9 @@ func TestUpdateSubscription(t *testing.T) {
 	Convey("UpdateSubscription", t, func() {
 		mockCtrl := gomock.NewController(t)
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 		defer mockCtrl.Finish()
+
 		userLogin := "user"
 		teamID := "team"
 
@@ -174,13 +177,17 @@ func TestCreateSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	const login = "user"
+
 	const teamID = "testTeam"
+
 	auth := &api.Authorization{Enabled: false}
 
 	Convey("Create for user", t, func() {
 		Convey("Success create", func() {
 			subscription := dto.Subscription{ID: ""}
+
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
 			err := CreateSubscription(dataBase, auth, login, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
@@ -261,6 +268,7 @@ func TestCreateSubscription(t *testing.T) {
 	Convey("Create for team", t, func() {
 		Convey("Success create", func() {
 			subscription := dto.Subscription{ID: ""}
+
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
 			err := CreateSubscription(dataBase, auth, "", teamID, []string{}, &subscription)
 			So(err, ShouldBeNil)
@@ -316,7 +324,9 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	const userLogin = "user"
+
 	const adminLogin = "admin"
 	auth := &api.Authorization{
 		Enabled:   true,
@@ -328,6 +338,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 			subscription := dto.Subscription{
 				User: userLogin,
 			}
+
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
 			err := CreateSubscription(dataBase, auth, userLogin, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
@@ -338,6 +349,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 			subscription := dto.Subscription{
 				User: adminLogin,
 			}
+
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
 			err := CreateSubscription(dataBase, auth, adminLogin, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
@@ -348,6 +360,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 			subscription := dto.Subscription{
 				User: adminLogin,
 			}
+
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
 			err := CreateSubscription(dataBase, auth, userLogin, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
@@ -358,6 +371,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 			subscription := dto.Subscription{
 				User: userLogin,
 			}
+
 			dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
 			err := CreateSubscription(dataBase, auth, adminLogin, "", []string{}, &subscription)
 			So(err, ShouldBeNil)
@@ -424,6 +438,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 		})
 		Convey("Error while checking user team", func() {
 			errReturned := errors.New("test error")
+
 			dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{ID: id, TeamID: teamID}, nil)
 			dataBase.EXPECT().IsTeamContainUser(teamID, userLogin).Return(false, errReturned)
 			actual, err := CheckUserPermissionsForSubscription(dataBase, id, userLogin, auth)

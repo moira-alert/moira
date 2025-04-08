@@ -50,6 +50,7 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	toStr := middleware.GetToStr(request)
 
 	validator := DateRangeValidator{AllowInf: true}
+
 	fromStr, toStr, err := validator.ValidateDateRangeStrings(fromStr, toStr)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
@@ -58,6 +59,7 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 
 	metricStr := middleware.GetMetric(request)
 	metricRegexp, errCompile := regexp.Compile(metricStr)
+
 	if errCompile != nil {
 		_ = render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse metric \"%s\": %w", metricStr, errCompile)))
 		return
@@ -70,6 +72,7 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, errRsp) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, eventsList); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}

@@ -30,6 +30,7 @@ func TestGetChat(t *testing.T) {
 		Convey("Compatibility with Moira < 2.12.0", func() {
 			Convey("For private chat should fetch from DB", func() {
 				idStr := "7824728482"
+
 				dataBase.EXPECT().GetChatByUsername(messenger, "@durov").Return("7824728482", nil)
 
 				id, err := strconv.ParseInt(idStr, 10, 64)
@@ -189,6 +190,7 @@ func TestPrepareAlbum(t *testing.T) {
 
 func TestCheckBrokenContactError(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+
 	Convey("Check broken contact error", t, func() {
 		Convey("Nil error is nil", func() {
 			err := checkBrokenContactError(logger, nil)
@@ -198,7 +200,9 @@ func TestCheckBrokenContactError(t *testing.T) {
 			for brokenContactError := range brokenContactAPIErrors {
 				err := checkBrokenContactError(logger, brokenContactError)
 				So(err, ShouldHaveSameTypeAs, moira.SenderBrokenContactError{})
+
 				var convertedErr moira.SenderBrokenContactError
+
 				errors.As(err, &convertedErr)
 				So(convertedErr.SenderError, ShouldEqual, brokenContactError)
 			}
@@ -221,7 +225,9 @@ func TestCheckBrokenContactError(t *testing.T) {
 			userNotFoundError := fmt.Errorf("failed to get username uuid: nil returned")
 			err := checkBrokenContactError(logger, userNotFoundError)
 			So(err, ShouldHaveSameTypeAs, moira.SenderBrokenContactError{})
+
 			var convertedErr moira.SenderBrokenContactError
+
 			errors.As(err, &convertedErr)
 			So(convertedErr.SenderError, ShouldEqual, userNotFoundError)
 		})

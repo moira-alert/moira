@@ -49,5 +49,6 @@ func (prometheus *Prometheus) IsConfigured() (bool, error) {
 func (prometheus *Prometheus) IsAvailable() (bool, error) {
 	now := time.Now().Unix()
 	_, err := prometheus.Fetch("1", now, now, true)
+
 	return err == nil, err
 }

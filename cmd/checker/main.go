@@ -40,6 +40,7 @@ var (
 
 func main() {
 	flag.Parse()
+
 	if *printVersion {
 		fmt.Println("Moira Checker")
 		fmt.Println("Version:", MoiraVersion)
@@ -107,12 +108,14 @@ func main() {
 		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),  //nolint
 		PatternCache:      cache.New(cacheExpiration, time.Minute*60), //nolint
 	}
+
 	err = checkerWorkerManager.StartWorkers()
 	if err != nil {
 		logger.Fatal().
 			Error(err).
 			Msg("Failed to start worker check")
 	}
+
 	defer stopChecker(checkerWorkerManager)
 
 	logger.Info().
@@ -131,18 +134,21 @@ func main() {
 func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
 	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
 	logger.String(moira.LogFieldNameTriggerID, *triggerID)
+
 	if err != nil {
 		logger.Error().
 			Error(err).
 			Msg("Failed initialize trigger checker")
 		os.Exit(1)
 	}
+
 	if err = triggerChecker.Check(); err != nil {
 		logger.Error().
 			Error(err).
 			Msg("Failed check trigger")
 		os.Exit(1)
 	}
+
 	os.Exit(0)
 }
 
@@ -159,5 +165,6 @@ func clusterKeyList(provider *metricSource.SourceProvider) []moira.ClusterKey {
 	for ck := range provider.GetAllSources() {
 		keys = append(keys, ck)
 	}
+
 	return keys
 }

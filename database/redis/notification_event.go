@@ -30,8 +30,10 @@ func (connector *DbConnector) GetNotificationEvents(triggerID string, page, size
 		if errors.Is(err, redis.Nil) {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
+
 		return nil, fmt.Errorf("failed to get range of trigger events, triggerID: %s, error: %w", triggerID, err)
 	}
+
 	return eventsData, nil
 }
 
@@ -46,6 +48,7 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
 	pipe.LPush(ctx, notificationEventsList, eventBytes)
+
 	if event.TriggerID != "" {
 		z := &redis.Z{Score: float64(event.Timestamp), Member: eventBytes}
 		to := int(time.Now().Unix() - eventsTTL)
@@ -73,12 +76,14 @@ func (connector *DbConnector) GetNotificationEventCount(triggerID string, from, 
 	c := *connector.client
 
 	count, _ := c.ZCount(ctx, triggerEventsKey(triggerID), from, to).Result()
+
 	return count
 }
 
 // FetchNotificationEvent waiting for event in events list.
 func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	var event moira.NotificationEvent
+
 	ctx := connector.context
 	c := *connector.client
 

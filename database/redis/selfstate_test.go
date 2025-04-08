@@ -14,7 +14,9 @@ func TestSelfCheckWithWritesInChecker(t *testing.T) {
 	dataBase := NewTestDatabase(logger)
 	dataBase.source = Checker
 	dataBase.Flush()
+
 	defer dataBase.Flush()
+
 	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
 	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 
@@ -72,7 +74,9 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	dataBase := NewTestDatabase(logger)
 	dataBase.source = dbSource
 	dataBase.Flush()
+
 	defer dataBase.Flush()
+
 	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
 	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 
@@ -99,6 +103,7 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		count, err := dataBase.GetMetricsUpdatesCount()
@@ -118,7 +123,9 @@ func TestNotifierState(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	emptyDataBase := NewTestDatabaseWithIncorrectConfig(logger)
+
 	dataBase.Flush()
+
 	defer dataBase.Flush()
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
 		Convey("On empty database should return ERROR", func() {

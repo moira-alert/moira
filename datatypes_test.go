@@ -58,6 +58,7 @@ func TestIsScheduleAllows(t *testing.T) {
 
 	Convey("No schedule", t, func() {
 		var noSchedule *ScheduleData
+
 		So(noSchedule.IsScheduleAllows(367980), ShouldBeTrue)
 	})
 
@@ -147,6 +148,7 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 			stopUser        = "StopUser"
 			stopTime  int64 = 200
 		)
+
 		Convey("Test: existence message", func() {
 			message := "Test message"
 			event := NotificationEvent{Message: &message}
@@ -154,6 +156,7 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 		})
 		Convey("Test: creating remind message", func() {
 			message := "This metric has been in bad state for more than 24 hours - please, fix."
+
 			var interval int64 = 24
 			event := NotificationEvent{MessageEventInfo: &EventInfo{Interval: &interval}}
 			So(event.CreateMessage(nil), ShouldEqual, message)
@@ -227,6 +230,7 @@ func TestNotificationEvent_FormatTimestamp(t *testing.T) {
 		location, _ := time.LoadLocation("UTC")
 		locationMoscow, _ := time.LoadLocation("Europe/Moscow")
 		locationYekaterinburg, _ := time.LoadLocation("Asia/Yekaterinburg")
+
 		So(event.FormatTimestamp(location, DefaultTimeFormat), ShouldResemble, "02:40 (GMT+00:00)")
 		So(event.FormatTimestamp(locationMoscow, DefaultTimeFormat), ShouldResemble, "05:40 (GMT+03:00)")
 		So(event.FormatTimestamp(locationYekaterinburg, DefaultTimeFormat), ShouldResemble, "07:40 (GMT+05:00)")
@@ -431,6 +435,7 @@ func TestCheckData_RemoveDeadMetrics(t *testing.T) {
 			checkData.RemoveDeadMetrics()
 
 			var expected map[string]MetricState
+
 			So(checkData.Metrics, ShouldResemble, expected)
 		})
 
@@ -748,6 +753,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 		OldState State
 		Ignored  bool
 	}
+
 	assertIgnored := func(subscription SubscriptionData, eventCase testCase) {
 		Convey(fmt.Sprintf("%s -> %s", eventCase.OldState, eventCase.State), func() {
 			event := NotificationEvent{State: eventCase.State, OldState: eventCase.OldState}
@@ -755,6 +761,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 			So(actual, ShouldEqual, eventCase.Ignored)
 		})
 	}
+
 	Convey("Has one type of transitions marked to be ignored", testing, func() {
 		Convey("[TRUE] Send notifications when triggers degraded only", func() {
 			subscription := SubscriptionData{
@@ -776,6 +783,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 				{StateWARN, StateNODATA, true},
 				{StateERROR, StateNODATA, true},
 			}
+
 			for _, testCase := range testCases {
 				assertIgnored(subscription, testCase)
 			}
@@ -800,6 +808,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 				{StateOK, StateWARN, true},
 				{StateWARN, StateOK, true},
 			}
+
 			for _, testCase := range testCases {
 				assertIgnored(subscription, testCase)
 			}
@@ -825,6 +834,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 			{StateWARN, StateNODATA, true},
 			{StateERROR, StateNODATA, true},
 		}
+
 		for _, testCase := range testCases {
 			assertIgnored(subscription, testCase)
 		}
@@ -848,6 +858,7 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 			{StateWARN, StateNODATA, false},
 			{StateERROR, StateNODATA, false},
 		}
+
 		for _, testCase := range testCases {
 			assertIgnored(subscription, testCase)
 		}

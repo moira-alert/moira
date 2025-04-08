@@ -28,6 +28,7 @@ func TestDatabaseHeartbeat(t *testing.T) {
 
 		Convey("Test update lastSuccessfulCheck", func() {
 			now += 1000
+
 			database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)

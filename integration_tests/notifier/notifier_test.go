@@ -96,6 +96,7 @@ func TestNotifier(t *testing.T) {
 	if err != nil {
 		t.Fail()
 		fmt.Printf("Error occurred: %s\n", err.Error())
+
 		return
 	}
 
@@ -103,6 +104,7 @@ func TestNotifier(t *testing.T) {
 	if err != nil {
 		t.Fail()
 		fmt.Printf("Error occurred: %s\n", err.Error())
+
 		return
 	}
 
@@ -110,6 +112,7 @@ func TestNotifier(t *testing.T) {
 	if err != nil {
 		t.Fail()
 		fmt.Printf("Error occurred: %s\n", err.Error())
+
 		return
 	}
 
@@ -117,6 +120,7 @@ func TestNotifier(t *testing.T) {
 	if err != nil {
 		t.Fail()
 		fmt.Printf("Error occurred: %s\n", err.Error())
+
 		return
 	}
 
@@ -185,6 +189,7 @@ func waitTestEnd() {
 	case <-time.After(time.Second * 30):
 		fmt.Print("Test timeout")
 		close(shutdown)
+
 		break
 	}
 }

@@ -19,6 +19,7 @@ func (index *TriggerIndex) Write(checks []*moira.TriggerCheck) error {
 			}
 		}
 	}
+
 	return index.index.Batch(batch)
 }
 

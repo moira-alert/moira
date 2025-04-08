@@ -33,16 +33,19 @@ type Index struct {
 // NewSearchIndex return new Index object.
 func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistry metrics.Registry) *Index {
 	var err error
+
 	newIndex := Index{
 		logger:   logger,
 		database: database,
 	}
 	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry)
 	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
+
 	newIndex.triggerIndex, err = bleve.CreateTriggerIndex(indexMapping)
 	if err != nil {
 		return nil
 	}
+
 	return &newIndex
 }
 
@@ -77,5 +80,6 @@ func (index *Index) IsReady() bool {
 func (index *Index) Stop() error {
 	index.logger.Info().Msg("Stop search index")
 	index.tomb.Kill(nil)
+
 	return index.tomb.Wait()
 }

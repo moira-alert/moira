@@ -47,12 +47,15 @@ func generateTaggedMetrics(taggedPatterns *[]string, count int) *[]string {
 
 func generateMatchedMetric(tagSpecs []filter.TagSpec, timestamp time.Time) string {
 	pathParts := make([]string, 0)
+
 	for _, tagSpec := range tagSpecs {
 		tagValues := strings.Split(tagSpec.Value, "|")
 		tagValue := tagValues[rand.Intn(len(tagValues))]
 		pathParts = addTag(pathParts, tagSpec, tagValue)
 	}
+
 	metricPath := strings.Join(pathParts, ";")
+
 	return generateMetricLineByPath(metricPath, timestamp)
 }
 
@@ -62,28 +65,36 @@ func generatePartiallyMatchedMetric(tagSpecs []filter.TagSpec, timestamp time.Ti
 	randomTagValueLength := 5
 
 	pathParts := make([]string, 0)
+
 	for _, tagSpec := range tagSpecs {
 		var tagValue string
+
 		if tagSpec.Name == matchedTag.Name {
 			tagValues := strings.Split(tagSpec.Value, "|")
 			tagValue = tagValues[rand.Intn(len(tagValues))]
 		} else {
 			tagValue = RandStringBytes(randomTagValueLength)
 		}
+
 		pathParts = addTag(pathParts, tagSpec, tagValue)
 	}
+
 	metricPath := strings.Join(pathParts, ";")
+
 	return generateMetricLineByPath(metricPath, timestamp)
 }
 
 func generateNotMatchedMetric(tagSpecs []filter.TagSpec, timestamp time.Time) string {
 	randomTagValueLength := 5
 	pathParts := make([]string, 0)
+
 	for _, tagSpec := range tagSpecs {
 		tagValue := RandStringBytes(randomTagValueLength)
 		pathParts = addTag(pathParts, tagSpec, tagValue)
 	}
+
 	metricPath := strings.Join(pathParts, ";")
+
 	return generateMetricLineByPath(metricPath, timestamp)
 }
 
@@ -92,5 +103,6 @@ func addTag(pathParts []string, tagSpec filter.TagSpec, tagValue string) []strin
 		// name tag should be prepended
 		return append([]string{tagValue}, pathParts...)
 	}
+
 	return append(pathParts, fmt.Sprintf("%s=%s", tagSpec.Name, tagValue))
 }

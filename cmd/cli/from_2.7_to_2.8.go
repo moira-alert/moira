@@ -10,6 +10,7 @@ func updateFrom27(logger moira.Logger, dataBase moira.Database) error {
 	logger.Info().Msg("Update 2.7 -> 2.8 was started")
 
 	logger.Info().Msg("Rename keys was started")
+
 	if err := updateSubscriptionKeyForAnonymous(logger, dataBase); err != nil {
 		return fmt.Errorf("failed updateSubscriptionKeyForAnonymous, has error %w", err)
 	}
@@ -19,6 +20,7 @@ func updateFrom27(logger moira.Logger, dataBase moira.Database) error {
 	}
 
 	logger.Info().Msg("Update 2.7 -> 2.8 was finished")
+
 	return nil
 }
 
@@ -26,6 +28,7 @@ func downgradeTo27(logger moira.Logger, dataBase moira.Database) error {
 	logger.Info().Msg("Downgrade 2.8 -> 2.7 started")
 
 	logger.Info().Msg("Rename keys was started")
+
 	if err := downgradeSubscriptionKeyForAnonymous(logger, dataBase); err != nil {
 		return err
 	}
@@ -35,6 +38,7 @@ func downgradeTo27(logger moira.Logger, dataBase moira.Database) error {
 	}
 
 	logger.Info().Msg("Downgrade 2.8 -> 2.7 was finished")
+
 	return nil
 }
 

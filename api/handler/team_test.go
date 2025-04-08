@@ -35,6 +35,7 @@ func Test_searchTeams(t *testing.T) {
 	Convey("Test searching teams", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 		database = mockDb
@@ -48,6 +49,7 @@ func Test_searchTeams(t *testing.T) {
 
 		testTeamsCount := 7
 		testTeams := make([]moira.Team, 0, testTeamsCount)
+
 		for i := 0; i < testTeamsCount; i++ {
 			iStr := strconv.FormatInt(int64(i), 10)
 

@@ -18,11 +18,14 @@ const (
 func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 	// TODO: rewrite light theme
 	var err error
+
 	var theme moira.PlotTheme
+
 	themeFont, err := getDefaultFont()
 	if err != nil {
 		return nil, err
 	}
+
 	switch plotTheme {
 	case darkPlotTheme:
 		theme, err = dark.NewTheme(themeFont)
@@ -37,6 +40,7 @@ func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 			return nil, err
 		}
 	}
+
 	return theme, nil
 }
 
@@ -46,5 +50,6 @@ func getDefaultFont() (*truetype.Font, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return ttf, nil
 }

@@ -14,10 +14,12 @@ import (
 // SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	createAlertRequest := sender.buildCreateAlertRequest(events, trigger, throttled, plots, time.Now().Unix())
+
 	err := sender.client.CreateAlert(contact.Value, createAlertRequest)
 	if err != nil {
 		return fmt.Errorf("error while sending alert to victorops: %w", err)
 	}
+
 	return nil
 }
 
@@ -51,23 +53,29 @@ func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, t
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message strings.Builder
+
 	desc := stripmd.Strip(trigger.Desc)
 	eventsString := sender.buildEventsString(events, -1, throttled)
+
 	message.WriteString(desc)
 	message.WriteString(eventsString)
+
 	return message.String()
 }
 
 func (sender *Sender) getMessageType(events moira.NotificationEvents) api.MessageType {
 	msgType := api.Recovery
+
 	for _, event := range events {
 		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
 			msgType = api.Critical
 		}
+
 		if msgType != api.Critical && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
 			msgType = api.Warning
 		}
 	}
+
 	return msgType
 }
 
@@ -82,6 +90,7 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 	}
 
 	title += "\n"
+
 	return title
 }
 
@@ -90,16 +99,20 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."
+
 	if throttled {
 		charsForThrottleMsg = len([]rune(throttleMsg))
 	}
+
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
+
 	var tailString string
 
 	eventsLenLimitReached := false
 	eventsPrinted := 0
+
 	for _, event := range events {
 		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
@@ -107,6 +120,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 		}
 
 		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
+
 		tailStringLen := len([]rune("```")) + len([]rune(tailString))
 		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true

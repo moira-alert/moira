@@ -19,6 +19,7 @@ func (sender *Sender) buildSendAlertRequest(events moira.NotificationEvents, con
 	}
 
 	requestURL := buildSendAlertRequestURL(sender.url, trigger, contact)
+
 	requestBody, err := sender.buildSendAlertRequestBody(events, contact, trigger, plots, throttled)
 	if err != nil {
 		return nil, err
@@ -39,6 +40,7 @@ func (sender *Sender) buildSendAlertRequestBody(
 	}
 
 	webhookBodyPopulater := templating.NewWebhookBodyPopulater(contact.ToTemplateContact())
+
 	populatedBody, err := webhookBodyPopulater.Populate(sender.body)
 	if err != nil {
 		return nil, err
@@ -56,9 +58,11 @@ func buildDefaultSendAlertRequestBody(
 ) ([]byte, error) {
 	encodedFirstPlot := ""
 	encodedPlots := make([]string, 0, len(plots))
+
 	for i, plot := range plots {
 		encodedPlot := bytesToBase64(plot)
 		encodedPlots = append(encodedPlots, encodedPlot)
+
 		if i == 0 {
 			encodedFirstPlot = encodedPlot
 		}
@@ -96,6 +100,7 @@ func buildSendAlertRequestURL(template string, trigger moira.TriggerData, contac
 			(strings.HasPrefix(v, "http://") || strings.HasPrefix(v, "https://")) {
 			value = v
 		}
+
 		template = strings.ReplaceAll(template, k, value)
 	}
 

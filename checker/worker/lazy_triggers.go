@@ -23,8 +23,10 @@ func (manager *WorkerManager) lazyTriggersWorker() error {
 			Interface("lazy_triggers_check_interval", manager.Config.LazyTriggersCheckInterval).
 			Interface("check_interval", localConfig.CheckInterval).
 			Msg("Lazy triggers worker won't start because lazy triggers interval is less or equal to check interval")
+
 		return nil
 	}
+
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
 	manager.Logger.Info().
 		Interface("lazy_triggers_check_interval", manager.Config.LazyTriggersCheckInterval).
@@ -36,6 +38,7 @@ func (manager *WorkerManager) lazyTriggersWorker() error {
 		case <-manager.tomb.Dying():
 			checkTicker.Stop()
 			manager.Logger.Info().Msg("Lazy triggers worker stopped")
+
 			return nil
 		case <-checkTicker.C:
 			err := manager.fillLazyTriggerIDs()
@@ -53,12 +56,15 @@ func (manager *WorkerManager) fillLazyTriggerIDs() error {
 	if err != nil {
 		return err
 	}
+
 	newLazyTriggerIDs := make(map[string]bool)
 	for _, triggerID := range triggerIDs {
 		newLazyTriggerIDs[triggerID] = true
 	}
+
 	manager.lazyTriggerIDs.Store(newLazyTriggerIDs)
 	manager.Metrics.UnusedTriggersCount.Update(int64(len(newLazyTriggerIDs)))
+
 	return nil
 }
 
@@ -66,5 +72,6 @@ func (manager *WorkerManager) getRandomLazyCacheDuration() time.Duration {
 	maxLazyCacheSeconds := manager.Config.LazyTriggersCheckInterval.Seconds()
 	min := maxLazyCacheSeconds / 2 //nolint
 	i := rand.Float64()*min + min
+
 	return time.Duration(i) * time.Second
 }

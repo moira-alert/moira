@@ -431,6 +431,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 	fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
@@ -502,6 +503,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 
 		Convey("should return success message, url=", func() {
 			sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
+
 			for _, url := range urls {
 				triggerWarnValue := float64(10)
 				triggerErrorValue := float64(15)
@@ -643,7 +645,9 @@ func TestCreateTriggerHandler(t *testing.T) {
 					},
 				}
 				So(actual.CheckResult.Targets, ShouldResemble, expectedTargets)
+
 				const expected = "trigger created"
+
 				So(actual.Message, ShouldEqual, expected)
 			})
 		})
@@ -740,6 +744,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 
 	db := mock_moira_alert.NewMockDatabase(mockCtrl)
 	database = db
+
 	defer func() { database = nil }()
 
 	triggerId := "test"
@@ -844,6 +849,7 @@ func TestTriggersCreatedWithNonDefaultClusterId(t *testing.T) {
 
 	db := mock_moira_alert.NewMockDatabase(mockCtrl)
 	database = db
+
 	defer func() { database = nil }()
 
 	triggerId := "test"
@@ -878,6 +884,7 @@ func makeTestTriggerJson(target, triggerId, triggerSource string) []byte {
 		%s,
 		"ttl": 600
 	}`, targetJson, triggerId, triggerSource)
+
 	return []byte(jsonTrigger)
 }
 
@@ -903,7 +910,7 @@ func newTriggerCreateRequest(
 	triggerId string,
 	jsonTrigger []byte,
 ) *http.Request {
-	request := httptest.NewRequest("PUT", "/trigger", bytes.NewBuffer(jsonTrigger))
+	request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewBuffer(jsonTrigger))
 	request.Header.Add("content-type", "application/json")
 	request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
 	request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "clustersMetricTTL", MakeTestTTLs()))
@@ -917,6 +924,7 @@ func isTriggerCreated(response *http.Response) bool {
 	contentBytes, _ := io.ReadAll(response.Body)
 	actual := dto.SaveTriggerResponse{}
 	_ = json.Unmarshal(contentBytes, &actual)
+
 	const expected = "trigger created"
 
 	return actual.Message == expected
@@ -930,7 +938,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 	database = mockDB
 
 	getRequestTriggerNoisiness := func(from, to string) *http.Request {
-		request := httptest.NewRequest("GET", "/trigger/noisiness", nil)
+		request := httptest.NewRequest(http.MethodGet, "/trigger/noisiness", nil)
 		request.Header.Add("content-type", "application/json")
 
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "page", int64(0)))

@@ -55,6 +55,7 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	titleLen := calcRunesCountWithoutHTML(title) + len("\n")
 
 	var tags string
+
 	var tagsLen int
 
 	triggerTags := params.Trigger.GetTags()
@@ -73,9 +74,11 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	if tagsLen != tagsNewLen {
 		tags = msgformat.DefaultTagsLimiter(params.Trigger.Tags, tagsNewLen)
 	}
+
 	if descLen != descNewLen {
 		desc = descriptionCutter(desc, descNewLen)
 	}
+
 	if eventsStringLen != eventsNewLen {
 		events = formatter.buildEventsString(params.Events, eventsNewLen, params.Throttled)
 	}
@@ -120,6 +123,7 @@ func calcRunesCountWithoutHTML(htmlText string) int {
 
 func (formatter *messageFormatter) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, emoji string, throttled bool) string {
 	state := events.GetCurrentState(throttled)
+
 	title := ""
 	if formatter.useEmoji {
 		title += emoji + " "
@@ -127,6 +131,7 @@ func (formatter *messageFormatter) buildTitle(events moira.NotificationEvents, t
 
 	title += boldFormatter(string(state))
 	triggerURI := trigger.GetTriggerURI(formatter.frontURI)
+
 	if triggerURI != "" {
 		title += fmt.Sprintf(" %s", uriFormatter(triggerURI, trigger.Name))
 	} else if trigger.Name != "" {
@@ -145,15 +150,18 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 	if throttled {
 		charsForThrottleMsg = calcRunesCountWithoutHTML(throttleMsg)
 	}
+
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
 	eventsString += eventsBlockStart
+
 	var tailString string
 
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	eventsStringLen := 0
+
 	for _, event := range events {
 		line := fmt.Sprintf("\n%s", eventStringFormatter(event, formatter.location))
 		if msg := event.CreateMessage(formatter.location); len(msg) > 0 {
@@ -173,6 +181,7 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 		eventsStringLen += lineLen
 		eventsPrinted++
 	}
+
 	eventsString += "\n"
 	eventsString += eventsBlockEnd
 

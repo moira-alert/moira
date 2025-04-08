@@ -18,11 +18,15 @@ func TestFetchTriggerMetrics(t *testing.T) {
 		source := mockmetricsource.NewMockMetricSource(mockCtrl)
 		fetchResult := mockmetricsource.NewMockFetchResult(mockCtrl)
 		database := mockmoiraalert.NewMockDatabase(mockCtrl)
+
 		defer mockCtrl.Finish()
 
 		var from int64 = 17
+
 		var until int64 = 67
+
 		pattern := "super.puper.pattern"
+
 		var metricsTTL int64 = 3600
 
 		triggerChecker := &TriggerChecker{
@@ -49,6 +53,7 @@ func TestFetchTriggerMetrics(t *testing.T) {
 					database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 					database.EXPECT().RemoveMetricsValues([]string{pattern}, until-metricsTTL).Return(nil),
 				)
+
 				actual, err := triggerChecker.fetchTriggerMetrics()
 				So(err, ShouldResemble, ErrTriggerHasOnlyWildcards{})
 				So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": {{Name: pattern, Wildcard: true}}})
@@ -67,6 +72,7 @@ func TestFetchTriggerMetrics(t *testing.T) {
 
 		Convey("has metrics in last check", func() {
 			triggerChecker.lastCheck.Metrics["metric"] = moira.MetricState{}
+
 			Convey("fetch returns wildcard", func() {
 				gomock.InOrder(
 					source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil),
@@ -99,6 +105,7 @@ func TestFetch(t *testing.T) {
 	dataBase := mockmoiraalert.NewMockDatabase(mockCtrl)
 	source := mockmetricsource.NewMockMetricSource(mockCtrl)
 	fetchResult := mockmetricsource.NewMockFetchResult(mockCtrl)
+
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"
@@ -109,7 +116,9 @@ func TestFetch(t *testing.T) {
 	addMetric2 := "additional.metric2"
 
 	var from int64 = 17
+
 	var until int64 = 67
+
 	var retention int64 = 10
 
 	triggerChecker := &TriggerChecker{
@@ -126,6 +135,7 @@ func TestFetch(t *testing.T) {
 	Convey("Error test", t, func() {
 		metricErr := fmt.Errorf("ooops, metric error")
 		source.EXPECT().Fetch(pattern, from, until, true).Return(nil, metricErr)
+
 		actual, metrics, err := triggerChecker.fetch()
 		So(actual, ShouldBeNil)
 		So(metrics, ShouldBeNil)
@@ -146,6 +156,7 @@ func TestFetch(t *testing.T) {
 		source.EXPECT().Fetch(pattern, from, until, true).Return(fetchResult, nil)
 		fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{metricData})
 		fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
+
 		actual, metrics, err := triggerChecker.fetch()
 		So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": {metricData}})
 		So(metrics, ShouldBeEmpty)
@@ -157,6 +168,7 @@ func TestFetch(t *testing.T) {
 			source.EXPECT().Fetch(pattern, from, until, true).Return(fetchResult, nil)
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
 			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
+
 			actual, metrics, err := triggerChecker.fetch()
 			metricData := metricSource.MetricData{
 				Name:      metric,
@@ -166,6 +178,7 @@ func TestFetch(t *testing.T) {
 				Values:    []float64{0, 1, 2, 3, 4},
 			}
 			expected := map[string][]metricSource.MetricData{"t1": {metricData}}
+
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
 			So(metrics, ShouldResemble, []string{metric})
