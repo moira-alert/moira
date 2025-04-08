@@ -158,7 +158,13 @@ func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableEx
 		if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
 			return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
-		return getUserExpression(*triggerExpression.Expression)
+
+		userExpression, err := getUserExpression(*triggerExpression.Expression)
+		if err != nil {
+			return nil, err
+		}
+
+		return validateUserExpression(triggerExpression, userExpression)
 	}
 
 	return getSimpleExpression(triggerExpression)
