@@ -128,8 +128,6 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64)
 		nextSendErrorMessage = selfCheck.sendNotification(events, nowTS)
 	}
 
-	// selfCheck.clearState()
-
 	return nextSendErrorMessage
 }
 
