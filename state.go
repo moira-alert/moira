@@ -17,8 +17,8 @@ const (
 
 // Moira selfstate worker states.
 const (
-	SelfStateWorkerOK SelfStateWorkerState = "OK" // OK means selfstate does not register any errors
-	SelfStateWorkerWARN SelfStateWorkerState = "WARN" // WARN means selfstate caught an error but notified only moira's admins
+	SelfStateWorkerOK    SelfStateWorkerState = "OK"    // OK means selfstate does not register any errors
+	SelfStateWorkerWARN  SelfStateWorkerState = "WARN"  // WARN means selfstate caught an error but notified only moira's admins
 	SelfStateWorkerERROR SelfStateWorkerState = "ERROR" // ERROR means selfstate caught an error and notifications sended to admins and users
 )
 
