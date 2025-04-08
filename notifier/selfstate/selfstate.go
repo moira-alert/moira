@@ -23,6 +23,8 @@ type SelfCheckWorker struct {
 	Database                moira.Database
 	Notifier                notifier.Notifier
 	Config                  Config
+	oldState moira.SelfStateWorkerState
+	state moira.SelfStateWorkerState
 	tomb                    tomb.Tomb
 	heartbeats              []heartbeat.Heartbeater
 	lastSuccessChecksResult graphExecutionResult
