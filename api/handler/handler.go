@@ -138,11 +138,11 @@ func NewHandler(
 					contact(router)
 					contactEvents(router)
 				})
-			router.Get("/swagger/*", httpSwagger.Handler(
-				httpSwagger.URL("/api/swagger/doc.json"),
-			))
 			router.Get("/swagger/openapi-v2/*", httpSwagger.Handler(
 				httpSwagger.URL("/api/swagger/openapi-v2/doc.json"),
+			))
+			router.Get("/swagger/*", httpSwagger.Handler(
+				httpSwagger.URL("/api/swagger/doc.json"),
 			))
 		})
 	})
