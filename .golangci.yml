@@ -79,7 +79,7 @@ linters:
         path: _test\.go
       - linters:
           - godot
-        path: notifier/registrator.go'
+        path: notifier/registrator.go
     paths:
       - third_party$
       - builtin$
