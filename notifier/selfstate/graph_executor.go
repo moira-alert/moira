@@ -8,6 +8,8 @@ import (
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
 
+type heartbeatsGraph [][]heartbeat.Heartbeater
+
 type graphExecutionResult struct {
 	lastSuccessCheckElapsedTime int64
 	hasErrors                   bool

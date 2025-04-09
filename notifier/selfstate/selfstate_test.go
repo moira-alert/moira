@@ -43,7 +43,8 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		err := mock.selfCheckWorker.Start()
 		So(err, ShouldBeNil)
 
-		So(len(mock.selfCheckWorker.heartbeats), ShouldEqual, 5)
+		So(len(mock.selfCheckWorker.heartbeatsGraph[0]), ShouldEqual, 1)
+		So(len(mock.selfCheckWorker.heartbeatsGraph[1]), ShouldEqual, 4)
 
 		const oneTickDelay = time.Millisecond * 1500
 
@@ -176,9 +177,9 @@ func TestSelfCheckWorker(t *testing.T) {
 
 		Convey("Test handle error and no needed send events", func() {
 			check := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
-			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{check}
+			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph{{check}}
 
-			check.EXPECT().NeedToCheckOthers().Return(false)
+			// check.EXPECT().NeedToCheckOthers().Return(false)
 			check.EXPECT().Check(now).Return(int64(0), false, err)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
@@ -189,14 +190,15 @@ func TestSelfCheckWorker(t *testing.T) {
 			first := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			second := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 
-			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{first, second}
+			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph{
+				{first},
+				{second},
+			}
 
 			first.EXPECT().NeedTurnOffNotifier().Return(true)
-			first.EXPECT().NeedToCheckOthers().Return(false)
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetCheckTags().Return([]string{})
-			second.EXPECT().NeedToCheckOthers().Return(false)
 			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
@@ -208,15 +210,16 @@ func TestSelfCheckWorker(t *testing.T) {
 			first := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			second := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 
-			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{first, second}
+			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph{
+				{first},
+				{second},
+			}
 			nextSendErrorMessage := time.Now().Unix() - time.Hour.Milliseconds()
 
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().NeedTurnOffNotifier().Return(true)
-			first.EXPECT().NeedToCheckOthers().Return(false)
 			first.EXPECT().GetCheckTags().Return([]string{})
-			second.EXPECT().NeedToCheckOthers().Return(false)
 			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(err)
 			mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
