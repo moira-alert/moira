@@ -32,9 +32,9 @@ import (
 //	@param		theme		query	string	false	"Plot theme"						default(light)
 //	@param		realtime	query	bool	false	"Fetch real-time data"				default(false)
 //	@success	200			"Rendered plot image successfully"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	400			{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID}/render [get]
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	sourceProvider, targetName, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(request)

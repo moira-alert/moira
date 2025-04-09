@@ -33,8 +33,8 @@ func systemTag(router chi.Router) {
 //	@tags		tag
 //	@produce	json
 //	@success	200	{object}	dto.TagsData					"Tags fetched successfully"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	422	{object}	api.ErrorResponse			"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/system-tag [get]
 func getAllSystemTags(writer http.ResponseWriter, request *http.Request) {
 	checksConfig := middleware.GetSelfStateChecksConfig(request)
@@ -55,9 +55,9 @@ func getAllSystemTags(writer http.ResponseWriter, request *http.Request) {
 //	@id			get-all-tags
 //	@tags		tag
 //	@produce	json
-//	@success	200	{object}	dto.TagsData					"Tags fetched successfully"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.TagsData		"Tags fetched successfully"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/tag [get]
 func getAllTags(writer http.ResponseWriter, request *http.Request) {
 	tagData, err := controller.GetAllTags(database)
@@ -79,11 +79,11 @@ func getAllTags(writer http.ResponseWriter, request *http.Request) {
 //	@tags		tag
 //	@accept		json
 //	@produce	json
-//	@param		tags	body	dto.TagsData	true	"Tags data"
-//	@success	200		"Create tags successfully"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		tags	body		dto.TagsData		true	"Tags data"
+//	@success	200		{string}	string				"Create tags successfully"
+//	@failure	400		{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	422		{object}	api.ErrorResponse	"Render error"
+//	@failure	500		{object}	api.ErrorResponse	"Internal server error"
 //	@router		/tag [post]
 func createTags(writer http.ResponseWriter, request *http.Request) {
 	tags := dto.TagsData{}
@@ -104,9 +104,9 @@ func createTags(writer http.ResponseWriter, request *http.Request) {
 //	@id			get-all-tags-and-subscriptions
 //	@tags		tag
 //	@produce	json
-//	@success	200	{object}	dto.TagsStatistics				"Successful"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.TagsStatistics	"Successful"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/tag/stats [get]
 func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	logger := middleware.GetLoggerEntry(request)
@@ -129,11 +129,11 @@ func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Reques
 //	@id			remove-tag
 //	@tags		tag
 //	@produce	json
-//	@param		tag	path		string							true	"Name of the tag to remove"	default(cpu)
-//	@success	200	{object}	dto.MessageResponse				"Tag removed successfully"
-//	@failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		tag	path		string				true	"Name of the tag to remove"	example(cpu)
+//	@success	200	{object}	dto.MessageResponse	"Tag removed successfully"
+//	@failure	400	{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/tag/{tag} [delete]
 func removeTag(writer http.ResponseWriter, request *http.Request) {
 	tagName := middleware.GetTag(request)

@@ -43,15 +43,25 @@ mock:
 install-swag:
 	go install github.com/swaggo/swag/cmd/swag@v1.16.3
 
+.PHONY: install-swag-v3
+install-swag-v3:
+	go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc4
+
 .PHONY: spec
 spec:
 	echo "Generating Swagger documentation"
 	swag init -g api/handler/handler.go
 	swag fmt
 
+.PHONY: spec-v3
+spec-v3:
+	echo "Generating Swagger documentation"
+	swag init -g api/handler/handler.go --v3.1 --output ./docs/v3
+	swag fmt
+
 .PHONY: validate-spec
 validate-spec:
-	openapi-generator-cli validate -i docs/swagger.yaml
+	openapi-generator validate -i docs/swagger.yaml
 
 .PHONY: test
 test:

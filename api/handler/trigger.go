@@ -37,15 +37,15 @@ func trigger(router chi.Router) {
 //	@id			update-trigger
 //	@tags		trigger
 //	@produce	json
-//	@param		triggerID	path		string									true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		validate	query		bool									false	"For validating targets"
-//	@param		body		body		dto.Trigger								true	"Trigger data"
-//	@success	200			{object}	dto.SaveTriggerResponse					"Updated trigger"
-//	@failure	400			{object}	interface{}								"Bad request from client. Could be api.ErrorInvalidRequestExample or dto.SaveTriggerResponse"
-//	@failure	404			{object}	api.ErrorNotFoundExample				"Resource not found"
-//	@failure	422			{object}	api.ErrorRenderExample					"Render error"
-//	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
-//	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
+//	@param		triggerID	path		string					true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		validate	query		bool					false	"For validating targets"
+//	@param		body		body		dto.Trigger				true	"Trigger data"
+//	@success	200			{object}	dto.SaveTriggerResponse	"Updated trigger"
+//	@failure	400			{object}	api.ErrorResponse		"Bad request from client"
+//	@failure	404			{object}	api.ErrorResponse		"Resource not found"
+//	@failure	422			{object}	api.ErrorResponse		"Render error"
+//	@failure	500			{object}	api.ErrorResponse		"Internal server error"
+//	@failure	503			{object}	api.ErrorResponse		"Remote server unavailable"
 //	@router		/trigger/{triggerID} [put]
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -133,8 +133,8 @@ func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, t
 //	@tags		trigger
 //	@param		triggerID	path	string	true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200			"Successfully removed"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID} [delete]
 func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -151,12 +151,12 @@ func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 //	@id			get-trigger
 //	@tags		trigger
 //	@produce	json
-//	@param		triggerID	path		string							true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		populated	query		bool							false	"Populated"		default(false)
-//	@success	200			{object}	dto.Trigger						"Trigger data"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422			{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		triggerID	path		string				true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		populated	query		bool				false	"Populated"		default(false)
+//	@success	200			{object}	dto.Trigger			"Trigger data"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	422			{object}	api.ErrorResponse	"Render error"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID} [get]
 func getTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -214,11 +214,11 @@ func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorRespons
 //	@id			get-trigger-state
 //	@tags		trigger
 //	@produce	json
-//	@param		triggerID	path		string							true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200			{object}	dto.TriggerCheck				"Trigger state fetched successful"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422			{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		triggerID	path		string				true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200			{object}	dto.TriggerCheck	"Trigger state fetched successful"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	422			{object}	api.ErrorResponse	"Render error"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID}/state [get]
 func getTriggerState(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -240,10 +240,10 @@ func getTriggerState(writer http.ResponseWriter, request *http.Request) {
 //	@id			get-trigger-throttling
 //	@tags		trigger
 //	@produce	json
-//	@param		triggerID	path		string						true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200			{object}	dto.ThrottlingResponse		"Trigger throttle info retrieved"
-//	@failure	404			{object}	api.ErrorNotFoundExample	"Resource not found"
-//	@failure	422			{object}	api.ErrorRenderExample		"Render error"
+//	@param		triggerID	path		string					true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200			{object}	dto.ThrottlingResponse	"Trigger throttle info retrieved"
+//	@failure	404			{object}	api.ErrorResponse		"Resource not found"
+//	@failure	422			{object}	api.ErrorResponse		"Render error"
 //	@router		/trigger/{triggerID}/throttling [get]
 func getTriggerThrottling(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -266,8 +266,8 @@ func getTriggerThrottling(writer http.ResponseWriter, request *http.Request) {
 //	@tags		trigger
 //	@param		triggerID	path	string	true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200			"Trigger throttling has been deleted"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID}/throttling [delete]
 func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -287,9 +287,9 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 //	@param		triggerID	path	string					true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param		body		body	dto.TriggerMaintenance	true	"Maintenance data"
 //	@success	200			"Trigger or metric have been scheduled for maintenance"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	400			{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID}/setMaintenance [put]
 func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -315,10 +315,10 @@ func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 //	@id			get-trigger-dump
 //	@tags		trigger
 //	@produce	json
-//	@param		triggerID	path		string							true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200			{object}	dto.TriggerDump					"Trigger dump"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		triggerID	path		string				true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200			{object}	dto.TriggerDump		"Trigger dump"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID}/dump [get]
 func triggerDump(writer http.ResponseWriter, request *http.Request) {
 	triggerID, log := prepareTriggerContext(request)

@@ -44,7 +44,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
 		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
-		// TODO: DEPRECATED method. Remove in Moira 2.6
+		// ToDo: DEPRECATED method. Remove in Moira 2.6
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", searchTriggers)
 	}
 }
@@ -55,9 +55,9 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 //	@id			get-all-triggers
 //	@tags		trigger
 //	@produce	json
-//	@success	200	{object}	dto.TriggersList				"Fetched all triggers"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.TriggersList	"Fetched all triggers"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
@@ -78,9 +78,9 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@id			get-unused-triggers
 //	@tags		trigger
 //	@produce	json
-//	@success	200	{object}	dto.TriggersList				"Fetched unused triggers"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.TriggersList	"Fetched unused triggers"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/unused [get]
 func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetUnusedTriggerIDs(database)
@@ -103,13 +103,13 @@ func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@tags		trigger
 //	@accept		json
 //	@produce	json
-//	@param		validate	query		bool									false	"For validating targets"
-//	@param		trigger		body		dto.Trigger								true	"Trigger data"
-//	@success	200			{object}	dto.SaveTriggerResponse					"Trigger created successfully"
-//	@failure	400			{object}	interface{}								"Bad request from client. Could be api.ErrorInvalidRequestExample or dto.SaveTriggerResponse"
-//	@failure	422			{object}	api.ErrorRenderExample					"Render error"
-//	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
-//	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
+//	@param		validate	query		bool					false	"For validating targets"
+//	@param		trigger		body		dto.Trigger				true	"Trigger data"
+//	@success	200			{object}	dto.SaveTriggerResponse	"Trigger created successfully"
+//	@failure	400			{object}	api.ErrorResponse		"Bad request from client"
+//	@failure	422			{object}	api.ErrorResponse		"Render error"
+//	@failure	500			{object}	api.ErrorResponse		"Internal server error"
+//	@failure	503			{object}	api.ErrorResponse		"Remote server unavailable"
 //	@router		/trigger [put]
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
@@ -163,31 +163,25 @@ func is4xxCode(statusCode int64) bool {
 }
 
 func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorResponse {
-	type victoriaMetricsError = prometheus.ErrorType
-
 	// In github.com/prometheus/client_golang/api/prometheus/v1 Error has field `Type`
 	// which can be used to understand "the reason" of error. There are some constants in the lib.
-	switch promErr.Type {
-	case prometheus.ErrBadData:
+	if promErr.Type == prometheus.ErrBadData {
 		return api.ErrorInvalidRequest(fmt.Errorf("invalid prometheus targets: %w", promErr))
-
-	// If any error has occurred in prometheus, we should return RemoteServiceUnavailable status.
-	case prometheus.ErrServer, victoriaMetricsError(strconv.Itoa(http.StatusServiceUnavailable)):
-		return api.ErrorRemoteServerUnavailable(fmt.Errorf("remote server error: %w", promErr))
+	}
 
 	// VictoriaMetrics also supports prometheus api, BUT puts status code into Error.Type.
 	// So we can't just use constants from prometheus api client lib.
-	case victoriaMetricsError(strconv.Itoa(http.StatusUnauthorized)), victoriaMetricsError(strconv.Itoa(http.StatusForbidden)):
-		return api.ErrorInternalServer(promErr)
-	}
-
-	// In other cases we are trying to classify error as client error or server.
 	statusCode, err := strconv.ParseInt(string(promErr.Type), 10, 64)
 	if err != nil {
 		return api.ErrorInternalServer(promErr)
 	}
 
-	if is4xxCode(statusCode) {
+	codes4xxLeadTo500 := map[int64]struct{}{
+		http.StatusUnauthorized: {},
+		http.StatusForbidden:    {},
+	}
+
+	if _, leadTo500 := codes4xxLeadTo500[statusCode]; is4xxCode(statusCode) && !leadTo500 {
 		return api.ErrorInvalidRequest(promErr)
 	}
 
@@ -246,11 +240,11 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) (time.Du
 //	@tags		trigger
 //	@accept		json
 //	@produce	json
-//	@param		trigger	body		dto.Trigger								true	"Trigger data"
-//	@success	200		{object}	dto.TriggerCheckResponse				"Validation is done, see response body for validation result"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample			"Bad request from client"
-//	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error"
-//	@failure	503		{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
+//	@param		trigger	body		dto.Trigger					true	"Trigger data"
+//	@success	200		{object}	dto.TriggerCheckResponse	"Validation is done, see response body for validation result"
+//	@failure	400		{object}	api.ErrorResponse			"Bad request from client"
+//	@failure	500		{object}	api.ErrorResponse			"Internal server error"
+//	@failure	503		{object}	api.ErrorResponse			"Remote server unavailable"
 //	@router		/trigger/check [put]
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
@@ -311,18 +305,18 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@id				search-triggers
 //	@tags			trigger
 //	@produce		json
-//	@param			onlyProblems	query		boolean							false	"Only include problems"	default(false)
-//	@param			text			query		string							false	"Search text"			default(cpu)
-//	@param			p				query		integer							false	"Page number"			default(0)
-//	@param			size			query		integer							false	"Page size"				default(10)
-//	@param			createPager		query		boolean							false	"Create pager"			default(false)
-//	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param			createdBy		query		string							false	"Created By"			default(moira.team)
-//	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
-//	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure		422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure		500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param			onlyProblems	query		boolean				false	"Only include problems"	default(false)
+//	@param			text			query		string				false	"Search text"			default(cpu)
+//	@param			p				query		integer				false	"Page number"			default(0)
+//	@param			size			query		integer				false	"Page size"				default(10)
+//	@param			createPager		query		boolean				false	"Create pager"			default(false)
+//	@param			pagerID			query		string				false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param			createdBy		query		string				false	"Created By"			default(moira.team)
+//	@success		200				{object}	dto.TriggersList	"Successfully fetched matching triggers"
+//	@failure		400				{object}	api.ErrorResponse	"Bad request from client"
+//	@failure		404				{object}	api.ErrorResponse	"Resource not found"
+//	@failure		422				{object}	api.ErrorResponse	"Render error"
+//	@failure		500				{object}	api.ErrorResponse	"Internal server error"
 //	@router			/trigger/search [get]
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
@@ -338,7 +332,6 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
-		PagerTTL:              middleware.GetLimits(request).Pager.TTL,
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
@@ -361,9 +354,9 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@produce	json
 //	@param		pagerID	query		string									false	"Pager ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200		{object}	dto.TriggersSearchResultDeleteResponse	"Successfully deleted pager"
-//	@failure	404		{object}	api.ErrorNotFoundExample				"Resource not found"
-//	@failure	422		{object}	api.ErrorRenderExample					"Render error"
-//	@failure	500		{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@failure	404		{object}	api.ErrorResponse						"Resource not found"
+//	@failure	422		{object}	api.ErrorResponse						"Render error"
+//	@failure	500		{object}	api.ErrorResponse						"Internal server error"
 //	@router		/trigger/search/pager [delete]
 func deletePager(writer http.ResponseWriter, request *http.Request) {
 	pagerID := middleware.GetPagerID(request)
@@ -433,15 +426,15 @@ func getSearchRequestString(request *http.Request) string {
 //	@id			get-triggers-noisiness
 //	@tags		trigger
 //	@produce	json
-//	@param		size	query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
-//	@param		p		query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
-//	@param		from	query		string							false	"Start time of the time range"																			default(-3hours)
-//	@param		to		query		string							false	"End time of the time range"																			default(now)
-//	@param		sort	query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
-//	@success	200		{object}	dto.TriggerNoisinessList		"Get noisiness for triggers in range"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		size	query		int							false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
+//	@param		p		query		int							false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
+//	@param		from	query		string						false	"Start time of the time range"																			default(-3hours)
+//	@param		to		query		string						false	"End time of the time range"																			default(now)
+//	@param		sort	query		string						false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
+//	@success	200		{object}	dto.TriggerNoisinessList	"Get noisiness for triggers in range"
+//	@failure	400		{object}	api.ErrorResponse			"Bad request from client"
+//	@failure	422		{object}	api.ErrorResponse			"Render error"
+//	@failure	500		{object}	api.ErrorResponse			"Internal server error"
 //	@router		/trigger/noisiness [get]
 func getTriggerNoisiness(writer http.ResponseWriter, request *http.Request) {
 	size := middleware.GetSize(request)
