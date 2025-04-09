@@ -47,21 +47,25 @@ install-swag:
 install-swag-v3:
 	go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc4
 
-.PHONY: spec
-spec:
+.PHONY: spec-v2
+spec-v2:
 	echo "Generating Swagger documentation"
-	swag init -g api/handler/handler.go
+	swag init -g api/handler/handler.go ./docs/v2
 	swag fmt
 
 .PHONY: spec-v3
 spec-v3:
 	echo "Generating Swagger documentation"
-	swag init -g api/handler/handler.go --v3.1 --output ./docs/v3
+	swag init -g api/handler/handler.go --v3.1
 	swag fmt
 
-.PHONY: validate-spec
-validate-spec:
-	openapi-generator validate -i docs/swagger.yaml
+.PHONY: validate-spec-v2
+validate-spec-v2:
+	openapi-generator validate -i /docs/v2/swagger.yaml
+
+.PHONY: validate-spec-v3
+validate-spec-v3:
+	openapi-generator validate -i /docs/swagger.yaml
 
 .PHONY: test
 test:

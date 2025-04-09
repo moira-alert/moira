@@ -27,7 +27,7 @@ jobs:
           node-version: '20.17.0'
       - run: make install-swag-v3
       - run: make spec-v3
-      - run: make validate-spec
+      - run: make validate-spec-v3
 
       - name: Save build artifact
         uses: actions/upload-artifact@v4
