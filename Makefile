@@ -45,13 +45,13 @@ install-swag-v2:
 
 .PHONY: spec-v2
 spec-v2:
-	echo "Generating Swagger documentation"
+	echo "Generating Swagger documentation open-api v2"
 	swag init -g api/handler/handler.go --output ./docs/v2
 	swag fmt
 
 .PHONY: validate-spec-v2
 validate-spec-v2:
-	openapi-generator validate -i docs/v2/swagger.yaml
+	openapi-generator-cli validate -i docs/v2/swagger.yaml
 
 .PHONY: install-swag-v3
 install-swag-v3:
@@ -59,13 +59,13 @@ install-swag-v3:
 
 .PHONY: spec-v3
 spec-v3:
-	echo "Generating Swagger documentation"
+	echo "Generating Swagger documentation in open-api v3"
 	swag init -g api/handler/handler.go --v3.1
 	swag fmt
 
 .PHONY: validate-spec-v3
 validate-spec-v3:
-	openapi-generator validate -i docs/swagger.yaml
+	openapi-generator-cli validate -i docs/swagger.yaml
 
 .PHONY: test
 test:

@@ -23,6 +23,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20.17.0'
-      - run: npm install --location=global @openapitools/openapi-generator-cli
+      - run: npm install --location=global @openapitools/openapi-generator
       - run: make spec-v3
       - run: make validate-spec-v3
