@@ -32,8 +32,8 @@ func systemTag(router chi.Router) {
 //	@id			get-all-system-tags
 //	@tags		tag
 //	@produce	json
-//	@success	200	{object}	dto.TagsData					"Tags fetched successfully"
-//	@failure	422	{object}	api.ErrorResponse			"Render error"
+//	@success	200	{object}	dto.TagsData		"Tags fetched successfully"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/system-tag [get]
 func getAllSystemTags(writer http.ResponseWriter, request *http.Request) {
@@ -129,7 +129,7 @@ func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Reques
 //	@id			remove-tag
 //	@tags		tag
 //	@produce	json
-//	@param		tag	path		string				true	"Name of the tag to remove"	example(cpu)
+//	@param		tag	path		string				true	"Name of the tag to remove"
 //	@success	200	{object}	dto.MessageResponse	"Tag removed successfully"
 //	@failure	400	{object}	api.ErrorResponse	"Bad request from client"
 //	@failure	422	{object}	api.ErrorResponse	"Render error"

@@ -39,8 +39,8 @@ func contact(router chi.Router) {
 //	@id			get-all-contacts
 //	@tags		contact
 //	@produce	json
-//	@success	200	{object}	dto.ContactList					"Contacts fetched successfully"
-//	@failure	422	{object}	api.ErrorResponse			"Render error"
+//	@success	200	{object}	dto.ContactList		"Contacts fetched successfully"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/contact [get]
 func getAllContacts(writer http.ResponseWriter, request *http.Request) {
@@ -62,11 +62,11 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 //	@id			get-contact-by-id
 //	@tags		contact
 //	@produce	json
-//	@param		contactID	path		string							true	"Contact ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200			{object}	dto.Contact						"Successfully received contact"
-//	@failure	403			{object}	api.ErrorResponse		"Forbidden"
-//	@failure	404			{object}	api.ErrorResponse		"Resource not found"
-//	@failure	422			{object}	api.ErrorResponse			"Render error"
+//	@param		contactID	path		string				true	"Contact ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200			{object}	dto.Contact			"Successfully received contact"
+//	@failure	403			{object}	api.ErrorResponse	"Forbidden"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	422			{object}	api.ErrorResponse	"Render error"
 //	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/contact/{contactID} [get]
 func getContactById(writer http.ResponseWriter, request *http.Request) {
@@ -92,10 +92,10 @@ func getContactById(writer http.ResponseWriter, request *http.Request) {
 //	@tags		contact
 //	@accept		json
 //	@produce	json
-//	@param		contact	body		dto.Contact						true	"Contact data"
-//	@success	200		{object}	dto.Contact						"Contact created successfully"
+//	@param		contact	body		dto.Contact			true	"Contact data"
+//	@success	200		{object}	dto.Contact			"Contact created successfully"
 //	@failure	400		{object}	api.ErrorResponse	"Bad request from client"
-//	@failure	422		{object}	api.ErrorResponse			"Render error"
+//	@failure	422		{object}	api.ErrorResponse	"Render error"
 //	@failure	500		{object}	api.ErrorResponse	"Internal server error"
 //	@router		/contact [put]
 func createNewContact(writer http.ResponseWriter, request *http.Request) {
@@ -241,15 +241,15 @@ func sendTestContactNotification(writer http.ResponseWriter, request *http.Reque
 //	@id			get-contacts-noisiness
 //	@tags		contact
 //	@produce	json
-//	@param		size	query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
-//	@param		p		query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
-//	@param		from	query		string							false	"Start time of the time range"																			default(-3hours)
-//	@param		to		query		string							false	"End time of the time range"																			default(now)
-//	@param		sort	query		string							false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
-//	@success	200		{object}	dto.ContactNoisinessList		"Get noisiness for contacts in range"
-//	@failure	400		{object}	api.ErrorResponse	"Bad request from client"
+//	@param		size	query		int							false	"Number of items to be displayed on one page. if size = -1 then all events returned"					default(100)
+//	@param		p		query		int							false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"							default(0)
+//	@param		from	query		string						false	"Start time of the time range"																			default(-3hours)
+//	@param		to		query		string						false	"End time of the time range"																			default(now)
+//	@param		sort	query		string						false	"String to set sort order (by events_count). On empty - no order, asc - ascending, desc - descending"	default(desc)
+//	@success	200		{object}	dto.ContactNoisinessList	"Get noisiness for contacts in range"
+//	@failure	400		{object}	api.ErrorResponse			"Bad request from client"
 //	@failure	422		{object}	api.ErrorResponse			"Render error"
-//	@failure	500		{object}	api.ErrorResponse	"Internal server error"
+//	@failure	500		{object}	api.ErrorResponse			"Internal server error"
 //	@router		/contact/noisiness [get]
 func getContactNoisiness(writer http.ResponseWriter, request *http.Request) {
 	size := middleware.GetSize(request)
