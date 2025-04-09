@@ -1,13 +1,11 @@
-name: Build v3 openapi
+name: Validate OpenAPI-v2 on PR
 
 on:
-  push:
-    branches:
-      - master
+  - pull_request
 
 jobs:
-  validate-spec:
-    name: Validate spec file
+  mergespec:
+    name: Validate spec file (OpenAPI-v2)
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -25,12 +23,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20.17.0'
-      - run: make install-swag-v3
-      - run: make spec-v3
-      - run: make validate-spec-v3
-
-      - name: Save build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: specfile
-          path: docs/swagger-v3.yaml
+      - run: npm install --location=global @openapitools/openapi-generator-cli
+      - run: make spec-v2
+      - run: make validate-spec-v2

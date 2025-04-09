@@ -1,11 +1,11 @@
-name: Validate OpenAPI on PR
+name: Validate OpenAPI-v3 on PR
 
 on:
   - pull_request
 
 jobs:
   mergespec:
-    name: Validate spec file
+    name: Validate spec file (OpenAPI-v3)
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -18,11 +18,11 @@ jobs:
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - run: make install-swag
+      - run: make install-swag-v3
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20.17.0'
       - run: npm install --location=global @openapitools/openapi-generator-cli
-      - run: make spec-v2
-      - run: make validate-spec-v2
+      - run: make spec-v3
+      - run: make validate-spec-v3
