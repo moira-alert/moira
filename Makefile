@@ -51,7 +51,7 @@ spec-v2:
 
 .PHONY: validate-spec-v2
 validate-spec-v2:
-	openapi-generator validate -i /docs/v2/swagger.yaml
+	openapi-generator validate -i docs/v2/swagger.yaml
 
 .PHONY: install-swag-v3
 install-swag-v3:
@@ -65,7 +65,7 @@ spec-v3:
 
 .PHONY: validate-spec-v3
 validate-spec-v3:
-	openapi-generator validate -i /docs/swagger.yaml
+	openapi-generator validate -i docs/swagger.yaml
 
 .PHONY: test
 test:
