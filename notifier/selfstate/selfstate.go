@@ -26,7 +26,7 @@ type SelfCheckWorker struct {
 	oldState                moira.SelfStateWorkerState
 	state                   moira.SelfStateWorkerState
 	tomb                    tomb.Tomb
-	heartbeats              []heartbeat.Heartbeater
+	heartbeatsGraph         heartbeatsGraph
 	lastSuccessChecksResult graphExecutionResult
 	lastChecksResult        graphExecutionResult
 }
