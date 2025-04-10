@@ -13,7 +13,10 @@ func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorRe
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	notifierState := dto.NotifierState{State: state.State}
+	notifierState := dto.NotifierState{
+		Actor: state.Actor,
+		State: state.State,
+	}
 	if state.State == moira.SelfStateERROR {
 		notifierState.Message = dto.ErrorMessage
 	}

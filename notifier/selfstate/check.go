@@ -40,9 +40,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 }
 
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNotificationEvent {
-	checksGraph := constructHeartbeatsGraph(selfCheck.heartbeats)
-
-	checksResult, err := checksGraph.executeGraph(nowTS)
+	checksResult, err := selfCheck.heartbeatsGraph.executeGraph(nowTS)
 	if err != nil {
 		selfCheck.Logger.Error().
 			Error(err).

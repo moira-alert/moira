@@ -1008,7 +1008,7 @@ type NotifierState struct {
 	// Actor represents the entity performing the notifier state mutation.
 	Actor string `json:"actor"`
 	// State represents the current state of the notifier.
-	State string `json:"new_state"`
+	State string `json:"state"`
 }
 
 const (
