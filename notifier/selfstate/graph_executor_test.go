@@ -52,7 +52,7 @@ func TestMergeLayerResults(t *testing.T) {
 					{15, true, nil, false, "second error", []string{}},
 					{0, false, nil, false, "", []string{}},
 				},
-				expected: graphExecutionResult{15, 0, true, false, []string{"first error", "second error"}, nil},
+				expected: graphExecutionResult{15, 0, true, false, []string{"first error", "second error"}, nil}
 			},
 			{
 				desc: "if all are errors",
