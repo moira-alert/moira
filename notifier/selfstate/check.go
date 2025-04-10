@@ -55,7 +55,13 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphResult graphExecutionResult) []heartbeatNotificationEvent {
 	var events []heartbeatNotificationEvent
 
+	selfCheck.lastChecksResult = graphResult
+
 	if graphResult.hasErrors {
+		if selfCheck.state != moira.SelfStateWorkerERROR {
+			selfCheck.updateState(moira.SelfStateWorkerWARN)
+		}
+
 		if graphResult.needTurnOffNotifier {
 			if err := selfCheck.setNotifierState(moira.SelfStateERROR); err != nil {
 				selfCheck.Logger.Error().
@@ -70,6 +76,8 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 			CheckTags:         graphResult.checksTags,
 		})
 	} else {
+		selfCheck.updateState(moira.SelfStateWorkerOK)
+		selfCheck.lastSuccessChecksResult = graphResult
 		notifierEnabled, err := selfCheck.enableNotifierIfCan()
 
 		if err != nil {
@@ -77,12 +85,28 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 				Error(err).
 				Msg("Enabling notifier failed")
 		} else if notifierEnabled {
-			selfCheck.Logger.Info().
-				Msg("Notifier enabled automatically")
+			events = append(events, heartbeatNotificationEvent{
+				NotificationEvent: generateNotificationEvent("Moira notifications enabled", 0, nowTS, moira.StateERROR, moira.StateOK),
+				CheckTags:         graphResult.checksTags,
+			})
 		}
 	}
 
+	if selfCheck.lastChecksResult.nowTimestamp-selfCheck.lastSuccessChecksResult.nowTimestamp > selfCheck.Config.UserNotificationsInterval {
+		selfCheck.updateState(moira.SelfStateWorkerERROR)
+	}
+
 	return events
+}
+
+func (selfCheck *SelfCheckWorker) updateState(newState moira.SelfStateWorkerState) {
+	selfCheck.oldState = selfCheck.state
+	selfCheck.state = newState
+}
+
+func (selfCheck *SelfCheckWorker) shouldNotifyUsers() bool {
+	return selfCheck.oldState == moira.SelfStateWorkerWARN && selfCheck.state == moira.SelfStateWorkerERROR ||
+		selfCheck.oldState == moira.SelfStateWorkerERROR && selfCheck.state == moira.SelfStateWorkerOK
 }
 
 func (selfCheck *SelfCheckWorker) sendNotification(events []heartbeatNotificationEvent, nowTS int64) int64 {
@@ -155,9 +179,11 @@ func (selfCheck *SelfCheckWorker) sendMessages(events []heartbeatNotificationEve
 	),
 		&sendingWG,
 	)
-	sendingWG.Wait()
 
-	selfCheck.sendNotificationToUsers(events, &sendingWG)
+	if selfCheck.shouldNotifyUsers() {
+		selfCheck.sendNotificationToUsers(events, &sendingWG)
+	}
+
 	sendingWG.Wait()
 }
 

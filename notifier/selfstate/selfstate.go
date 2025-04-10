@@ -19,12 +19,16 @@ const (
 
 // SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work.
 type SelfCheckWorker struct {
-	Logger          moira.Logger
-	Database        moira.Database
-	Notifier        notifier.Notifier
-	Config          Config
-	tomb            tomb.Tomb
-	heartbeatsGraph heartbeatsGraph
+	Logger                  moira.Logger
+	Database                moira.Database
+	Notifier                notifier.Notifier
+	Config                  Config
+	oldState                moira.SelfStateWorkerState
+	state                   moira.SelfStateWorkerState
+	tomb                    tomb.Tomb
+	heartbeatsGraph         heartbeatsGraph
+	lastSuccessChecksResult graphExecutionResult
+	lastChecksResult        graphExecutionResult
 }
 
 // NewSelfCheckWorker creates SelfCheckWorker.

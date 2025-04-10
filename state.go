@@ -6,10 +6,20 @@ type State string
 // TTLState declares all ttl (NODATA) states, used if metric has no values for given interval (ttl).
 type TTLState string
 
+// SelfStateWorkerState declares a selfState worker states.
+type SelfStateWorkerState string
+
 // Moira notifier self-states.
 const (
 	SelfStateOK    = "OK"    // OK means notifier is healthy
 	SelfStateERROR = "ERROR" // ERROR means notifier is stopped, admin intervention is required
+)
+
+// Moira selfstate worker states.
+const (
+	SelfStateWorkerOK    SelfStateWorkerState = "OK"    // OK means selfstate does not register any errors
+	SelfStateWorkerWARN  SelfStateWorkerState = "WARN"  // WARN means selfstate caught an error but notified only moira's admins
+	SelfStateWorkerERROR SelfStateWorkerState = "ERROR" // ERROR means selfstate caught an error and notifications sended to admins and users
 )
 
 // Moira notifier management actors.
