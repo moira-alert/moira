@@ -9,3 +9,5 @@ vendor
 .idea/
 *.exe*
 coverage.*
+
+/docs

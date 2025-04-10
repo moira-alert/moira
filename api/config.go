@@ -61,7 +61,7 @@ type Config struct {
 
 // WebConfig is container for web ui configuration parameters.
 type WebConfig struct {
-	SupportEmail         string                `json:"supportEmail,omitempty" example:"opensource@skbkontur.com"`
+	SupportEmail         string                `json:"supportEmail,omitempty" example:"kontur.moira.alert@gmail.com"`
 	RemoteAllowed        bool                  `json:"remoteAllowed" example:"true"`
 	MetricSourceClusters []MetricSourceCluster `json:"metric_source_clusters"`
 	Contacts             []WebContact          `json:"contacts"`
