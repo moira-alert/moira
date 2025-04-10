@@ -293,7 +293,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			second := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 
-			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph {
+			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph{
 				{first},
 				{second},
 			}
