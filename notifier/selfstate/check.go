@@ -70,7 +70,7 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 			CheckTags:         graphResult.checksTags,
 		})
 	} else {
-		notifierEnabled, err := selfCheck.enableNotifierIfCan()
+		notifierEnabled, err := selfCheck.enableNotifierIfPossible()
 
 		if err != nil {
 			selfCheck.Logger.Error().

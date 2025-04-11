@@ -171,7 +171,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 
 		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
 
-		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfCan()
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldBeNil)
 		So(notifierEnabled, ShouldBeTrue)
 	})
@@ -184,7 +184,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 
 		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
 
-		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfCan()
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldBeNil)
 		So(notifierEnabled, ShouldBeTrue)
 	})
@@ -195,7 +195,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 			Actor: moira.SelfStateActorManual,
 		}, nil)
 
-		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfCan()
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldBeNil)
 		So(notifierEnabled, ShouldBeFalse)
 	})
@@ -206,7 +206,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 			Actor: moira.SelfStateActorAutomatic,
 		}, nil)
 
-		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfCan()
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldBeNil)
 		So(notifierEnabled, ShouldBeFalse)
 	})
@@ -215,7 +215,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 		expected_err := fmt.Errorf("error")
 		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{}, expected_err)
 
-		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfCan()
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldResemble, expected_err)
 		So(notifierEnabled, ShouldBeFalse)
 	})
@@ -230,7 +230,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 
 		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK).Return(expected_err)
 
-		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfCan()
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldEqual, expected_err)
 		So(notifierEnabled, ShouldBeFalse)
 	})
