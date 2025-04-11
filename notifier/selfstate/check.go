@@ -209,7 +209,7 @@ func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, time
 	}
 }
 
-func (selfCheck *SelfCheckWorker) enableNotifierIfCan() (bool, error) {
+func (selfCheck *SelfCheckWorker) enableNotifierIfPossible() (bool, error) {
 	currentNotifierState, err := selfCheck.Database.GetNotifierState()
 	if err != nil {
 		selfCheck.Logger.Error().
