@@ -13,6 +13,7 @@ const (
 )
 
 type NotifierState struct {
+	Actor		string `json:"actor" example:"AUTO"`
 	State   string `json:"state" example:"ERROR"`
 	Message string `json:"message,omitempty" example:"Moira has been turned off for maintenance"`
 }
