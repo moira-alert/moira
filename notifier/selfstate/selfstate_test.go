@@ -226,7 +226,7 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 		successGraphResult3.nowTimestamp = time.Duration(nowTS.UnixNano()) + 4000*time.Millisecond
 
 		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
-		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			Actor: moira.SelfStateActorAutomatic,
 			State: moira.SelfStateERROR,
 		}, nil)
@@ -240,7 +240,7 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 		successGraphResult4 := successGraphResult3
 		successGraphResult4.nowTimestamp = time.Duration(nowTS.Unix()) + 4500*time.Millisecond
 
-		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			Actor: moira.SelfStateActorAutomatic,
 			State: moira.SelfStateOK,
 		}, nil)
@@ -494,7 +494,6 @@ func TestSelfCheckWorker(t *testing.T) {
 				{first},
 				{second},
 			}
-			nextSendErrorMessage := time.Now().Unix() - time.Hour.Milliseconds()
 
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
@@ -503,8 +502,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR).Return(err)
 			mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
-			nextSendErrorMessage = mock.selfCheckWorker.check(now, nextSendErrorMessage)
-			So(nextSendErrorMessage, ShouldEqual, now+60)
+			mock.selfCheckWorker.check(now)
 		})
 
 		mock.mockCtrl.Finish()
@@ -524,7 +522,6 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 		RedisDisconnectDelaySeconds:    10,
 		LastMetricReceivedDelaySeconds: 60,
 		LastCheckDelaySeconds:          120,
-		NoticeIntervalSeconds:          60,
 		UserNotificationsInterval:      2 * time.Second,
 		LastRemoteCheckDelaySeconds:    120,
 		CheckInterval:                  1 * time.Second,

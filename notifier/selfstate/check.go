@@ -2,7 +2,6 @@ package selfstate
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -23,8 +22,6 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(selfCheck.Config.CheckInterval)
 	defer checkTicker.Stop()
 
-	nextSendErrorMessage := time.Now().Unix()
-
 	for {
 		select {
 		case <-stop:
@@ -32,10 +29,9 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 			return nil
 		case <-checkTicker.C:
 			selfCheck.Logger.Debug().
-				Int64("nextSendErrorMessage", nextSendErrorMessage).
 				Msg("call check")
 
-			nextSendErrorMessage = selfCheck.check(time.Now().Unix(), nextSendErrorMessage)
+			selfCheck.check(time.Now().Unix())
 		}
 	}
 }
@@ -116,29 +112,20 @@ func (selfCheck *SelfCheckWorker) shouldNotifyUsers() bool {
 		selfCheck.oldState == moira.SelfStateWorkerERROR && selfCheck.state == moira.SelfStateWorkerOK
 }
 
-func (selfCheck *SelfCheckWorker) sendNotification(events []heartbeatNotificationEvent, nowTS int64) int64 {
+func (selfCheck *SelfCheckWorker) sendNotification(events []heartbeatNotificationEvent) {
 	eventsJSON, _ := json.Marshal(events)
 	selfCheck.Logger.Error().
 		Int("number_of_events", len(events)).
 		String("events_json", string(eventsJSON)).
 		Msg("Health check. Send package notification events")
 	selfCheck.sendMessages(events)
-
-	return nowTS + selfCheck.Config.NoticeIntervalSeconds
 }
 
-func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64) int64 {
+func (selfCheck *SelfCheckWorker) check(nowTS int64) {
 	events := selfCheck.handleCheckServices(nowTS)
-	selfCheck.Logger.Info().
-		Msg(fmt.Sprintf("Handle check services events count: %v", len(events)))
-	selfCheck.Logger.Info().
-		Msg(fmt.Sprintf("nextSendErrorMessage < nowTS: %v", nextSendErrorMessage < nowTS))
-	// if nextSendErrorMessage < nowTS && len(events) > 0 {
 	if len(events) > 0 {
-		nextSendErrorMessage = selfCheck.sendNotification(events, nowTS)
+		selfCheck.sendNotification(events)
 	}
-
-	return nextSendErrorMessage
 }
 
 func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNotificationEvent) ([]*notifier.NotificationPackage, error) {
