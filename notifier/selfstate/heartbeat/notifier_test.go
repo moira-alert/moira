@@ -41,6 +41,18 @@ func TestNotifierState(t *testing.T) {
 			So(value, ShouldEqual, 0)
 		})
 
+		Convey("Should return OK if notifier disabled automatically", func() {
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
+				State: moira.SelfStateERROR,
+				Actor: moira.SelfStateActorAutomatic,
+			}, nil)
+
+			value, hasError, err := check.Check(now)
+			So(err, ShouldBeNil)
+			So(hasError, ShouldBeFalse)
+			So(value, ShouldEqual, 0)
+		})
+
 		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
 			So(check.NeedTurnOffNotifier(), ShouldBeFalse)
 			So(check.NeedToCheckOthers(), ShouldBeTrue)
