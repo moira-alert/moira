@@ -78,8 +78,6 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 		selfCheck.updateState(moira.SelfStateWorkerOK)
 		selfCheck.lastSuccessChecksResult = graphResult
 		notifierEnabled, err := selfCheck.enableNotifierIfPossible()
-		selfCheck.Logger.Info().
-			Msg(fmt.Sprintf("Notifier enabled: %v", notifierEnabled))
 
 		if err != nil {
 			selfCheck.Logger.Error().
@@ -125,6 +123,10 @@ func (selfCheck *SelfCheckWorker) sendNotification(events []heartbeatNotificatio
 
 func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64) int64 {
 	events := selfCheck.handleCheckServices(nowTS)
+	selfCheck.Logger.Info().
+		Msg(fmt.Sprintf("Handle check services events count: %v", len(events)))
+	selfCheck.Logger.Info().
+		Msg(fmt.Sprintf("nextSendErrorMessage < nowTS: %v", nextSendErrorMessage < nowTS))
 	if nextSendErrorMessage < nowTS && len(events) > 0 {
 		nextSendErrorMessage = selfCheck.sendNotification(events, nowTS)
 	}
