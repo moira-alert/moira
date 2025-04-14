@@ -55,8 +55,6 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphResult graphExecutionResult) []heartbeatNotificationEvent {
 	var events []heartbeatNotificationEvent
 
-	selfCheck.lastChecksResult = graphResult
-
 	if graphResult.hasErrors {
 		if selfCheck.state != moira.SelfStateWorkerERROR {
 			selfCheck.updateState(moira.SelfStateWorkerWARN)
@@ -87,14 +85,16 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 		} else if notifierEnabled {
 			events = append(events, heartbeatNotificationEvent{
 				NotificationEvent: generateNotificationEvent("Moira notifications enabled", 0, nowTS, moira.StateERROR, moira.StateOK),
-				CheckTags:         graphResult.checksTags,
+				CheckTags:         selfCheck.lastChecksResult.checksTags,
 			})
 		}
 	}
 
-	if selfCheck.lastChecksResult.nowTimestamp-selfCheck.lastSuccessChecksResult.nowTimestamp > selfCheck.Config.UserNotificationsInterval {
+	if graphResult.nowTimestamp-selfCheck.lastSuccessChecksResult.nowTimestamp > selfCheck.Config.UserNotificationsInterval {
 		selfCheck.updateState(moira.SelfStateWorkerERROR)
 	}
+
+	selfCheck.lastChecksResult = graphResult
 
 	return events
 }
