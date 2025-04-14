@@ -13,6 +13,6 @@ var emojiStates = map[moira.State]string{
 type telegramEmojiProvider struct{}
 
 // GetStateEmoji returns emoji suitable for moira.State.
-func (_ telegramEmojiProvider) GetStateEmoji(subjectState moira.State) string {
+func (telegramEmojiProvider) GetStateEmoji(subjectState moira.State) string {
 	return emojiStates[subjectState]
 }

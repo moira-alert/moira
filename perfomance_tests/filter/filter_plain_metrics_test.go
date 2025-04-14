@@ -12,7 +12,7 @@ import (
 func BenchmarkProcessIncomingPlainMetric(b *testing.B) {
 	plainPatterns, err := loadPatterns("plain_patterns.txt")
 	if err != nil {
-		b.Errorf(err.Error())
+		b.Error(err.Error())
 	}
 
 	patternsStorage, err := createPatternsStorage(plainPatterns, b)

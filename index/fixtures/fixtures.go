@@ -49,7 +49,7 @@ func (its *fixtureIndexedTriggers) ToTriggerChecks() []*moira.TriggerCheck {
 				Score: indexedTrigger.triggerScore,
 			},
 		}
-		*triggerCheck.Trigger.Desc = indexedTrigger.triggerDesc.content
+		*triggerCheck.Desc = indexedTrigger.triggerDesc.content
 		triggerChecks = append(triggerChecks, &triggerCheck)
 	}
 
