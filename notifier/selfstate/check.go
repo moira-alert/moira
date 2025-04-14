@@ -69,11 +69,13 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 			}
 		}
 
-		errorMessage := strings.Join(graphResult.errorMessages, "\n")
-		events = append(events, heartbeatNotificationEvent{
-			NotificationEvent: generateNotificationEvent(errorMessage, graphResult.lastSuccessCheckElapsedTime, nowTS, moira.StateNODATA, moira.StateERROR),
-			CheckTags:         graphResult.checksTags,
-		})
+		if selfCheck.hasStateChanged() {
+			errorMessage := strings.Join(graphResult.errorMessages, "\n")
+			events = append(events, heartbeatNotificationEvent{
+				NotificationEvent: generateNotificationEvent(errorMessage, graphResult.lastSuccessCheckElapsedTime, nowTS, moira.StateNODATA, moira.StateERROR),
+				CheckTags:         graphResult.checksTags,
+			})
+		}
 	} else {
 		selfCheck.updateState(moira.SelfStateWorkerOK)
 		selfCheck.lastSuccessChecksResult = graphResult
@@ -105,6 +107,10 @@ func (selfCheck *SelfCheckWorker) updateState(newState moira.SelfStateWorkerStat
 	selfCheck.state = newState
 }
 
+func (selfCheck *SelfCheckWorker) hasStateChanged() bool {
+	return selfCheck.state != selfCheck.oldState
+}
+
 func (selfCheck *SelfCheckWorker) shouldNotifyUsers() bool {
 	return selfCheck.oldState == moira.SelfStateWorkerWARN && selfCheck.state == moira.SelfStateWorkerERROR ||
 		selfCheck.oldState == moira.SelfStateWorkerERROR && selfCheck.state == moira.SelfStateWorkerOK
@@ -127,7 +133,8 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, nextSendErrorMessage int64)
 		Msg(fmt.Sprintf("Handle check services events count: %v", len(events)))
 	selfCheck.Logger.Info().
 		Msg(fmt.Sprintf("nextSendErrorMessage < nowTS: %v", nextSendErrorMessage < nowTS))
-	if nextSendErrorMessage < nowTS && len(events) > 0 {
+	// if nextSendErrorMessage < nowTS && len(events) > 0 {
+	if len(events) > 0 {
 		nextSendErrorMessage = selfCheck.sendNotification(events, nowTS)
 	}
 
