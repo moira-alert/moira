@@ -78,7 +78,7 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 		selfCheck.updateState(moira.SelfStateWorkerOK)
 		selfCheck.lastSuccessChecksResult = graphResult
 		notifierEnabled, err := selfCheck.enableNotifierIfPossible()
-		selfCheck.Logger.Debug().
+		selfCheck.Logger.Info().
 			Msg(fmt.Sprintf("Notifier enabled: %v", notifierEnabled))
 
 		if err != nil {
