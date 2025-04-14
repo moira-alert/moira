@@ -156,7 +156,7 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			Actor: moira.SelfStateActorAutomatic,
 			State: moira.SelfStateOK,
-		}, nil).Times(4)
+		}, nil).Times(2)
 
 		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult1)
 
@@ -166,8 +166,9 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 		successGraphResult2 := successGraphResult1
 		successGraphResult2.nowTimestamp = time.Duration(nowTS.UnixNano()) + 500*time.Millisecond
 
-		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult2)
+		events := mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult2)
 
+		So(len(events), ShouldEqual, 0)
 		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerOK)
 		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerOK)
 
@@ -175,53 +176,78 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 			lastSuccessCheckElapsedTime: nowTS.Unix(),
 			nowTimestamp:                time.Duration(nowTS.UnixNano()) + 1*time.Second,
 			hasErrors:                   true,
-			needTurnOffNotifier:         false,
+			needTurnOffNotifier:         true,
 			errorMessages:               []string{"some error"},
 			checksTags:                  []string{"tag"},
 		}
 
-		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult1)
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
 
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult1)
+
+		So(len(events), ShouldEqual, 1)
 		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerOK)
 		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerWARN)
 
 		errorGraphResult2 := errorGraphResult1
 		errorGraphResult2.nowTimestamp = time.Duration(nowTS.UnixNano()) + 1500*time.Millisecond
 
-		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult2)
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
 
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult2)
+
+		So(len(events), ShouldEqual, 0)
 		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerWARN)
 		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerWARN)
 
 		errorGraphResult3 := errorGraphResult2
 		errorGraphResult3.nowTimestamp = time.Duration(nowTS.UnixNano()) + 3000*time.Millisecond
 
-		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult3)
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
 
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult3)
+
+		So(len(events), ShouldEqual, 1)
 		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerWARN)
 		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerERROR)
 
 		errorGraphResult4 := errorGraphResult3
 		errorGraphResult4.nowTimestamp = time.Duration(nowTS.UnixNano()) + 3500*time.Millisecond
 
-		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult4)
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
 
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult4)
+
+		So(len(events), ShouldEqual, 0)
 		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerERROR)
 		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerERROR)
 
 		successGraphResult3 := successGraphResult2
 		successGraphResult3.nowTimestamp = time.Duration(nowTS.UnixNano()) + 4000*time.Millisecond
 
-		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult3)
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState {
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateERROR,
+		}, nil)
 
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult3)
+
+		So(len(events), ShouldEqual, 1)
 		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerERROR)
 		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerOK)
 
 		successGraphResult4 := successGraphResult3
 		successGraphResult4.nowTimestamp = time.Duration(nowTS.Unix()) + 4500*time.Millisecond
 
-		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult4)
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState {
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateOK,
+		}, nil)
 
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult4)
+
+		So(len(events), ShouldEqual, 0)
 		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerOK)
 		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerOK)
 	})

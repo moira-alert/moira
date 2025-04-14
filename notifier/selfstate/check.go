@@ -61,6 +61,10 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 			selfCheck.updateState(moira.SelfStateWorkerWARN)
 		}
 
+		if graphResult.nowTimestamp-selfCheck.lastSuccessChecksResult.nowTimestamp > selfCheck.Config.UserNotificationsInterval {
+			selfCheck.updateState(moira.SelfStateWorkerERROR)
+		}
+
 		if graphResult.needTurnOffNotifier {
 			if err := selfCheck.setNotifierState(moira.SelfStateERROR); err != nil {
 				selfCheck.Logger.Error().
@@ -91,10 +95,6 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 				CheckTags:         selfCheck.lastChecksResult.checksTags,
 			})
 		}
-	}
-
-	if graphResult.nowTimestamp-selfCheck.lastSuccessChecksResult.nowTimestamp > selfCheck.Config.UserNotificationsInterval {
-		selfCheck.updateState(moira.SelfStateWorkerERROR)
 	}
 
 	selfCheck.lastChecksResult = graphResult
