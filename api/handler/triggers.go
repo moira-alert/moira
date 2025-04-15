@@ -338,6 +338,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
+		PagerTTL:              middleware.GetLimits(request).Pager.TTL,
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
