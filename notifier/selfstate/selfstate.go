@@ -19,12 +19,12 @@ const (
 
 // SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work.
 type SelfCheckWorker struct {
-	Logger     moira.Logger
-	Database   moira.Database
-	Notifier   notifier.Notifier
-	Config     Config
-	tomb       tomb.Tomb
-	heartbeats []heartbeat.Heartbeater
+	Logger          moira.Logger
+	Database        moira.Database
+	Notifier        notifier.Notifier
+	Config          Config
+	tomb            tomb.Tomb
+	heartbeatsGraph heartbeatsGraph
 }
 
 // NewSelfCheckWorker creates SelfCheckWorker.
@@ -32,11 +32,11 @@ func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier n
 	heartbeats := createStandardHeartbeats(logger, database, config)
 
 	return &SelfCheckWorker{
-		Logger:     logger,
-		Database:   database,
-		Notifier:   notifier,
-		Config:     config,
-		heartbeats: heartbeats,
+		Logger:          logger,
+		Database:        database,
+		Notifier:        notifier,
+		Config:          config,
+		heartbeatsGraph: heartbeats,
 	}
 }
 
@@ -67,29 +67,33 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config) []heartbeat.Heartbeater {
-	heartbeats := make([]heartbeat.Heartbeater, 0)
+func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config) heartbeatsGraph {
 	nowTS := time.Now().Unix()
 
+	graph := heartbeatsGraph{
+		[]heartbeat.Heartbeater{},
+		[]heartbeat.Heartbeater{},
+	}
+
 	if hb := heartbeat.GetDatabase(conf.RedisDisconnectDelaySeconds, nowTS, conf.Checks.Database.SystemTags, logger, database); hb != nil {
-		heartbeats = append(heartbeats, hb)
+		graph[0] = append(graph[0], hb)
 	}
 
 	if hb := heartbeat.GetFilter(conf.LastMetricReceivedDelaySeconds, nowTS, conf.Checks.Filter.SystemTags, logger, database); hb != nil {
-		heartbeats = append(heartbeats, hb)
+		graph[1] = append(graph[1], hb)
 	}
 
 	if hb := heartbeat.GetLocalChecker(conf.LastCheckDelaySeconds, nowTS, conf.Checks.LocalChecker.SystemTags, logger, database); hb != nil && hb.NeedToCheckOthers() {
-		heartbeats = append(heartbeats, hb)
+		graph[1] = append(graph[1], hb)
 	}
 
 	if hb := heartbeat.GetRemoteChecker(conf.LastRemoteCheckDelaySeconds, nowTS, conf.Checks.RemoteChecker.SystemTags, logger, database); hb != nil && hb.NeedToCheckOthers() {
-		heartbeats = append(heartbeats, hb)
+		graph[1] = append(graph[1], hb)
 	}
 
 	if hb := heartbeat.GetNotifier(conf.Checks.Notifier.SystemTags, logger, database); hb != nil {
-		heartbeats = append(heartbeats, hb)
+		graph[1] = append(graph[1], hb)
 	}
 
-	return heartbeats
+	return graph
 }
