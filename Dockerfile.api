@@ -3,13 +3,14 @@ FROM golang:1.22 as builder
 COPY go.mod go.sum /go/src/github.com/moira-alert/moira/
 WORKDIR /go/src/github.com/moira-alert/moira
 RUN go mod download
-RUN go install github.com/swaggo/swag/cmd/swag@v1.8.12 && mv /go/bin/swag /go/bin/swag-v2
 RUN go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc4
 
 COPY . /go/src/github.com/moira-alert/moira/
 
-RUN /go/bin/swag-v2 init -g api/handler/handler.go --output api/openapi-v2
-RUN /go/bin/swag init -g api/handler/handler.go
+RUN /go/bin/swag init -g api/handler/handler.go --v3.1
+RUN sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/docs.go
+RUN sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.json
+RUN sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.yaml
 
 ARG GO_VERSION="GoVersion"
 ARG GIT_COMMIT="git_Commit"
