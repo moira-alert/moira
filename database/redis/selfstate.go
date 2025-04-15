@@ -95,6 +95,7 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 			Actor: moira.SelfStateActorManual,
 		}
 		err = connector.setNotifierState(state) // NOTE: It's used to migrate from old dto to new
+
 		return state, err
 	}
 
