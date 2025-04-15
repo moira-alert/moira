@@ -132,7 +132,7 @@ func TestNotifierState(t *testing.T) {
 			notifierState, err := emptyDataBase.GetNotifierState()
 			So(notifierState, ShouldResemble, moira.NotifierState{
 				State: moira.SelfStateERROR,
-				Actor: moira.SelfStateActorManual,
+				Actor: moira.SelfStateActorAutomatic,
 			})
 			So(err, ShouldNotBeNil)
 		})

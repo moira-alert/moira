@@ -90,7 +90,20 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 
 	state, err := reply.NotifierState(getResult)
 	if err != nil {
-		return defaultState, err
+		state := moira.NotifierState{
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorManual,
+		}
+
+		err = connector.setNotifierState(state) // NOTE: It's used to migrate from old dto to new
+		if err != nil {
+			return moira.NotifierState{
+				State: moira.SelfStateERROR,
+				Actor: moira.SelfStateActorAutomatic,
+			}, err
+		}
+
+		return state, err
 	}
 
 	return state, err
