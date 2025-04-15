@@ -57,13 +57,22 @@ validate-spec-v2:
 install-swag-v3:
 	go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc4
 
+OS := $(shell uname)
+
 .PHONY: spec-v3
 spec-v3:
-	echo "Generating Swagger documentation in open-api v3"
+	@echo "Generating Swagger documentation in open-api v3"
 	swag init -g api/handler/handler.go --v3.1
+
+ifeq ($(OS), Darwin)
 	sed -i '' 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/docs.go
 	sed -i '' 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.json
 	sed -i '' 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.yaml
+else
+	sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/docs.go
+	sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.json
+	sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.yaml
+endif
 	swag fmt
 
 .PHONY: validate-spec-v3
