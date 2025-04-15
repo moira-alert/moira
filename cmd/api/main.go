@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/moira-alert/moira/index"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
@@ -90,23 +92,23 @@ func main() {
 	notificationHistorySettings := applicationConfig.NotificationHistory.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.NotificationConfig{}, redis.API)
 
-	//// Start Index right before HTTP listener. Fail if index cannot start
-	//searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
-	//if searchIndex == nil {
-	//	logger.Fatal().Msg("Failed to create search index")
-	//}
-	//
-	//err = searchIndex.Start()
-	//if err != nil {
-	//	logger.Fatal().
-	//		Error(err).
-	//		Msg("Failed to start search index")
-	//}
-	//defer searchIndex.Stop() //nolint
-	//
-	//if !searchIndex.IsReady() {
-	//	logger.Fatal().Msg("Search index is not ready, exit")
-	//}
+	// Start Index right before HTTP listener. Fail if index cannot start
+	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
+	if searchIndex == nil {
+		logger.Fatal().Msg("Failed to create search index")
+	}
+
+	err = searchIndex.Start()
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to start search index")
+	}
+	defer searchIndex.Stop() //nolint
+
+	if !searchIndex.IsReady() {
+		logger.Fatal().Msg("Search index is not ready, exit")
+	}
 
 	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)
@@ -141,7 +143,7 @@ func main() {
 	httpHandler := handler.NewHandler(
 		database,
 		logger,
-		nil,
+		searchIndex,
 		apiConfig,
 		metricSourceProvider,
 		webConfig,
