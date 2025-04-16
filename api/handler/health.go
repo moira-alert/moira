@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -60,8 +59,7 @@ func setNotifierState(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	now := time.Now().UTC()
-	if err := controller.UpdateNotifierState(database, state, now); err != nil {
+	if err := controller.UpdateNotifierState(database, state); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}

@@ -3,7 +3,6 @@ package redis
 import (
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -69,22 +68,19 @@ func (connector *DbConnector) GetPrometheusChecksUpdatesCount() (int64, error) {
 // GetNotifierState return current notifier state: <OK|ERROR>.
 func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 	c := *connector.client
-	now := time.Now().UTC()
 	defaultState := moira.NotifierState{
-		State:     moira.SelfStateERROR,
-		Actor:     moira.SelfStateActorManual,
-		Timestamp: now,
+		State: moira.SelfStateERROR,
+		Actor: moira.SelfStateActorManual,
 	}
 
 	getResult := c.Get(connector.context, selfStateNotifierHealth)
 	if errors.Is(getResult.Err(), redis.Nil) {
 		state := moira.NotifierState{
-			State:     moira.SelfStateOK,
-			Actor:     moira.SelfStateActorManual,
-			Timestamp: now,
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorManual,
 		}
 
-		err := connector.SetNotifierState(state)
+		err := connector.setNotifierState(state)
 		if err != nil {
 			return defaultState, err
 		}
@@ -95,17 +91,15 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 	state, err := reply.NotifierState(getResult)
 	if err != nil {
 		state := moira.NotifierState{
-			State:     moira.SelfStateOK,
-			Actor:     moira.SelfStateActorManual,
-			Timestamp: now,
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorManual,
 		}
 
-		err = connector.SetNotifierState(state) // NOTE: It's used to migrate from old dto to new
+		err = connector.setNotifierState(state) // NOTE: It's used to migrate from old dto to new
 		if err != nil {
 			return moira.NotifierState{
-				State:     moira.SelfStateERROR,
-				Actor:     moira.SelfStateActorAutomatic,
-				Timestamp: now,
+				State: moira.SelfStateERROR,
+				Actor: moira.SelfStateActorAutomatic,
 			}, err
 		}
 
@@ -116,7 +110,16 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 }
 
 // SetNotifierState update current notifier state: <OK|ERROR>.
-func (connector *DbConnector) SetNotifierState(dto moira.NotifierState) error {
+func (connector *DbConnector) SetNotifierState(actor, state string) error {
+	err := connector.setNotifierState(moira.NotifierState{
+		State: state,
+		Actor: actor,
+	})
+
+	return err
+}
+
+func (connector *DbConnector) setNotifierState(dto moira.NotifierState) error {
 	c := *connector.client
 
 	state, err := json.Marshal(dto)

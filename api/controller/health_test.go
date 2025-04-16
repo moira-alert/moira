@@ -2,7 +2,6 @@ package controller
 
 import (
 	"testing"
-	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/dto"
@@ -33,15 +32,10 @@ func TestUpdateNotifierState(t *testing.T) {
 
 	Convey("Setting OK notifier state", t, func() {
 		expectedState := dto.NotifierState{State: moira.SelfStateOK}
-		now := time.Now().UTC()
-		dataBase.EXPECT().SetNotifierState(moira.NotifierState{
-			Actor:     moira.SelfStateActorManual,
-			State:     moira.SelfStateOK,
-			Timestamp: now,
-		}).Return(nil)
+		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateOK).Return(nil)
 		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{State: moira.SelfStateOK}, nil)
 
-		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateOK}, now)
+		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateOK})
 		So(err, ShouldBeNil)
 
 		actualState, err := GetNotifierState(dataBase)
@@ -52,15 +46,10 @@ func TestUpdateNotifierState(t *testing.T) {
 
 	Convey("Setting ERROR notifier state", t, func() {
 		expectedState := dto.NotifierState{State: moira.SelfStateERROR, Message: dto.ErrorMessage}
-		now := time.Now().UTC()
-		dataBase.EXPECT().SetNotifierState(moira.NotifierState{
-			Actor:     moira.SelfStateActorManual,
-			State:     moira.SelfStateERROR,
-			Timestamp: now,
-		}).Return(nil)
+		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR).Return(nil)
 		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{State: moira.SelfStateERROR}, nil)
 
-		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateERROR}, now)
+		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateERROR})
 		So(err, ShouldBeNil)
 
 		actualState, err := GetNotifierState(dataBase)

@@ -64,10 +64,7 @@ func TestSender_SendEvents(t *testing.T) {
 					dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 						State: selfStateInitial,
 					}, nil)
-					dataBase.EXPECT().SetNotifierState(moira.NotifierState{
-						Actor: moira.SelfStateActorAutomatic,
-						State: selfStateFinal,
-					}).Return(nil)
+					dataBase.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, selfStateFinal).Return(nil)
 
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)

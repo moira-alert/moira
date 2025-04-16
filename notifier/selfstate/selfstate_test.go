@@ -169,10 +169,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 			Actor: moira.SelfStateActorAutomatic,
 		}, nil)
 
-		mock.database.EXPECT().SetNotifierState(moira.NotifierState{
-			Actor: moira.SelfStateActorAutomatic,
-			State: moira.SelfStateOK,
-		})
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldBeNil)
@@ -185,10 +182,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 			Actor: moira.SelfStateActorManual,
 		}, nil)
 
-		mock.database.EXPECT().SetNotifierState(moira.NotifierState{
-			Actor: moira.SelfStateActorAutomatic,
-			State: moira.SelfStateOK,
-		})
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldBeNil)
@@ -234,10 +228,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 			Actor: moira.SelfStateActorAutomatic,
 		}, nil)
 
-		mock.database.EXPECT().SetNotifierState(moira.NotifierState{
-			Actor: moira.SelfStateActorAutomatic,
-			State: moira.SelfStateOK,
-		}).Return(expected_err)
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK).Return(expected_err)
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		So(err, ShouldEqual, expected_err)
@@ -292,10 +283,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetCheckTags().Return([]string{})
-			mock.database.EXPECT().SetNotifierState(moira.NotifierState{
-				Actor: moira.SelfStateActorAutomatic,
-				State: moira.SelfStateERROR,
-			})
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
 			So(len(events), ShouldEqual, 1)
@@ -317,10 +305,7 @@ func TestSelfCheckWorker(t *testing.T) {
 				State: moira.SelfStateERROR,
 				Actor: moira.SelfStateActorAutomatic,
 			}, nil)
-			mock.database.EXPECT().SetNotifierState(moira.NotifierState{
-				Actor: moira.SelfStateActorAutomatic,
-				State: moira.SelfStateOK,
-			})
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
 			So(len(events), ShouldEqual, 0)
@@ -341,10 +326,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().NeedTurnOffNotifier().Return(true)
 			first.EXPECT().GetCheckTags().Return([]string{})
-			mock.database.EXPECT().SetNotifierState(moira.NotifierState{
-				Actor: moira.SelfStateActorAutomatic,
-				State: moira.SelfStateERROR,
-			}).Return(err)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR).Return(err)
 			mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
 			nextSendErrorMessage = mock.selfCheckWorker.check(now, nextSendErrorMessage)
