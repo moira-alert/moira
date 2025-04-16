@@ -107,7 +107,7 @@ type ProblemOfTarget struct {
 	Type        typeOfProblem     `json:"type,omitempty" example:"warn" swaggertype:"string"` //nolint:govet
 	Description string            `json:"description,omitempty" example:"This function affects only visual graph representation. It is meaningless in Moira"`
 	Position    int               `json:"position" example:"0"`
-	Problems    []ProblemOfTarget `json:"problems,omitempty" swaggerignore:"true"`
+	Problems    []ProblemOfTarget `json:"problems,omitempty"`
 }
 
 func (p *ProblemOfTarget) hasError() bool {
