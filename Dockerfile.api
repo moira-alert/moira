@@ -8,6 +8,7 @@ RUN go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc4
 COPY . /go/src/github.com/moira-alert/moira/
 
 RUN /go/bin/swag init -g api/handler/handler.go --v3.1
+# Swagger UI does not support openapi 3.1.0, downgrade version
 RUN sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/docs.go
 RUN sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.json
 RUN sed -i 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.yaml

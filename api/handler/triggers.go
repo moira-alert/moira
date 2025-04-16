@@ -106,7 +106,7 @@ func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@param		validate	query		bool					false	"For validating targets"
 //	@param		trigger		body		dto.Trigger				true	"Trigger data"
 //	@success	200			{object}	dto.SaveTriggerResponse	"Trigger created successfully"
-//	@failure	400 {object} interface{} "Bad request from client. Could be api.ErrorInvalidRequestExample or dto.SaveTriggerResponse"
+//	@failure	400			{object}	interface{}				"Bad request from client. Could be api.ErrorInvalidRequestExample or dto.SaveTriggerResponse"
 //	@failure	422			{object}	api.ErrorResponse		"Render error"
 //	@failure	500			{object}	api.ErrorResponse		"Internal server error"
 //	@failure	503			{object}	api.ErrorResponse		"Remote server unavailable"

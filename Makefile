@@ -63,7 +63,7 @@ OS := $(shell uname)
 spec-v3:
 	@echo "Generating Swagger documentation in open-api v3"
 	swag init -g api/handler/handler.go --v3.1
-
+	@echo "Swagger UI does not support openapi 3.1.0, downgrade version"
 ifeq ($(OS), Darwin)
 	sed -i '' 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/docs.go
 	sed -i '' 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/swagger.json
