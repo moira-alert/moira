@@ -2,9 +2,10 @@ package api
 
 // Authorization contains authorization configuration.
 type Authorization struct {
-	AdminList           map[string]struct{}
-	Enabled             bool
-	AllowedContactTypes map[string]struct{}
+	AdminList             map[string]struct{}
+	Enabled               bool
+	AllowedContactTypes   map[string]struct{}
+	CanRemoveTriggersList map[string]struct{}
 }
 
 // IsEnabled returns true if auth is enabled and false otherwise.
@@ -32,7 +33,7 @@ var (
 	RoleAdmin     Role = "admin"
 )
 
-// Returns the role of the given user.
+// GetRole Returns the role of the given user.
 func (auth *Authorization) GetRole(login string) Role {
 	if !auth.IsEnabled() {
 		return RoleUndefined

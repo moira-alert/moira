@@ -75,6 +75,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
+
 	defer logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira API stopped")
