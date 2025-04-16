@@ -12,6 +12,12 @@ const (
 	SelfStateERROR = "ERROR" // ERROR means notifier is stopped, admin intervention is required
 )
 
+// Moira notifier management actors.
+const (
+	SelfStateActorAutomatic = "AUTO"
+	SelfStateActorManual    = "MANUAL"
+)
+
 // Moira trigger and metric states.
 var (
 	StateOK        State = "OK"

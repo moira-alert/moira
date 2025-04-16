@@ -2,6 +2,7 @@ package selfstate
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -35,7 +36,10 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
-		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateOK,
+		}, nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 
@@ -57,7 +61,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 	mock.mockCtrl.Finish()
 }
 
-func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
+func TestSelfCheckWorker_sendMessages(t *testing.T) {
 	Convey("Should call notifier send", t, func() {
 		mock := configureWorker(t, true)
 		err := mock.selfCheckWorker.Start()
@@ -67,7 +71,7 @@ func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
 
 		var events []heartbeatNotificationEvent
 
-		mock.selfCheckWorker.sendErrorMessages(events)
+		mock.selfCheckWorker.sendMessages(events)
 
 		err = mock.selfCheckWorker.Stop()
 		So(err, ShouldBeNil)
@@ -156,6 +160,82 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 	})
 }
 
+func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
+	mock := configureWorker(t, false)
+
+	Convey("Should enable if notifier is disabled by auto", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateERROR,
+			Actor: moira.SelfStateActorAutomatic,
+		}, nil)
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeTrue)
+	})
+
+	Convey("Should switch notifier to AUTO if enabled manually", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorManual,
+		}, nil)
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeTrue)
+	})
+
+	Convey("Should not enable if notifier is disabled manually", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateERROR,
+			Actor: moira.SelfStateActorManual,
+		}, nil)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+
+	Convey("Should not enable notifier if it is already enabled", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorAutomatic,
+		}, nil)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+
+	Convey("Should not enable notifier if getting state throw error", t, func() {
+		expected_err := fmt.Errorf("error")
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{}, expected_err)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldResemble, expected_err)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+
+	Convey("Should not enable notifier if notifier enabling returns error", t, func() {
+		expected_err := fmt.Errorf("error")
+
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateERROR,
+			Actor: moira.SelfStateActorAutomatic,
+		}, nil)
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK).Return(expected_err)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldEqual, expected_err)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+}
+
 func TestSelfCheckWorker_Start(t *testing.T) {
 	mock := configureWorker(t, false)
 	Convey("When Contact not corresponds to any Sender", t, func() {
@@ -179,7 +259,11 @@ func TestSelfCheckWorker(t *testing.T) {
 			check := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph{{check}}
 
-			// check.EXPECT().NeedToCheckOthers().Return(false)
+			mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+				Actor: moira.SelfStateActorAutomatic,
+				State: moira.SelfStateOK,
+			}, nil)
+
 			check.EXPECT().Check(now).Return(int64(0), false, err)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
@@ -199,10 +283,32 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetCheckTags().Return([]string{})
-			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
 			So(len(events), ShouldEqual, 1)
+		})
+
+		Convey("Test turn on notification", func() {
+			first := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
+			second := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
+
+			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph{
+				{first},
+				{second},
+			}
+
+			first.EXPECT().Check(now).Return(int64(15), false, nil)
+			second.EXPECT().Check(now).Return(int64(15), false, nil)
+
+			mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+				State: moira.SelfStateERROR,
+				Actor: moira.SelfStateActorAutomatic,
+			}, nil)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
+
+			events := mock.selfCheckWorker.handleCheckServices(now)
+			So(len(events), ShouldEqual, 0)
 		})
 
 		Convey("Test of sending notifications from a check", func() {
@@ -220,7 +326,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().NeedTurnOffNotifier().Return(true)
 			first.EXPECT().GetCheckTags().Return([]string{})
-			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(err)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR).Return(err)
 			mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
 			nextSendErrorMessage = mock.selfCheckWorker.check(now, nextSendErrorMessage)

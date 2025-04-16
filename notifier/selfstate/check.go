@@ -40,8 +40,6 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 }
 
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNotificationEvent {
-	var events []heartbeatNotificationEvent
-
 	checksResult, err := selfCheck.heartbeatsGraph.executeGraph(nowTS)
 	if err != nil {
 		selfCheck.Logger.Error().
@@ -49,15 +47,38 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []heartbeatNo
 			Msg("Heartbeats failed")
 	}
 
-	if checksResult.hasErrors {
-		errorMessage := strings.Join(checksResult.errorMessages, "\n")
-		events = append(events, heartbeatNotificationEvent{
-			NotificationEvent: generateNotificationEvent(errorMessage, checksResult.lastSuccessCheckElapsedTime, nowTS),
-			CheckTags:         checksResult.checksTags,
-		})
+	events := selfCheck.handleGraphExecutionResult(nowTS, checksResult)
 
-		if checksResult.needTurnOffNotifier {
-			selfCheck.setNotifierState(moira.SelfStateERROR)
+	return events
+}
+
+func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphResult graphExecutionResult) []heartbeatNotificationEvent {
+	var events []heartbeatNotificationEvent
+
+	if graphResult.hasErrors {
+		if graphResult.needTurnOffNotifier {
+			if err := selfCheck.setNotifierState(moira.SelfStateERROR); err != nil {
+				selfCheck.Logger.Error().
+					Error(err).
+					Msg("Disabling notifier failed")
+			}
+		}
+
+		errorMessage := strings.Join(graphResult.errorMessages, "\n")
+		events = append(events, heartbeatNotificationEvent{
+			NotificationEvent: generateNotificationEvent(errorMessage, graphResult.lastSuccessCheckElapsedTime, nowTS, moira.StateNODATA, moira.StateERROR),
+			CheckTags:         graphResult.checksTags,
+		})
+	} else {
+		notifierEnabled, err := selfCheck.enableNotifierIfPossible()
+
+		if err != nil {
+			selfCheck.Logger.Error().
+				Error(err).
+				Msg("Enabling notifier failed")
+		} else if notifierEnabled {
+			selfCheck.Logger.Info().
+				Msg("Notifier enabled automatically")
 		}
 	}
 
@@ -70,7 +91,7 @@ func (selfCheck *SelfCheckWorker) sendNotification(events []heartbeatNotificatio
 		Int("number_of_events", len(events)).
 		String("events_json", string(eventsJSON)).
 		Msg("Health check. Send package notification events")
-	selfCheck.sendErrorMessages(events)
+	selfCheck.sendMessages(events)
 
 	return nowTS + selfCheck.Config.NoticeIntervalSeconds
 }
@@ -125,7 +146,7 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 	return notificationPkgs, nil
 }
 
-func (selfCheck *SelfCheckWorker) sendErrorMessages(events []heartbeatNotificationEvent) {
+func (selfCheck *SelfCheckWorker) sendMessages(events []heartbeatNotificationEvent) {
 	var sendingWG sync.WaitGroup
 
 	selfCheck.sendNotificationToAdmins(moira.Map(
@@ -176,23 +197,47 @@ func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.Notifi
 	}
 }
 
-func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, timestamp int64) moira.NotificationEvent {
+func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, timestamp int64, oldState, state moira.State) moira.NotificationEvent {
 	val := float64(lastSuccessCheckElapsedTime)
 
 	return moira.NotificationEvent{
 		Timestamp: timestamp,
-		OldState:  moira.StateNODATA,
-		State:     moira.StateERROR,
+		OldState:  oldState,
+		State:     state,
 		Metric:    message,
 		Value:     &val,
 	}
 }
 
-func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
-	err := selfCheck.Database.SetNotifierState(state)
+func (selfCheck *SelfCheckWorker) enableNotifierIfPossible() (bool, error) {
+	currentNotifierState, err := selfCheck.Database.GetNotifierState()
+	if err != nil {
+		selfCheck.Logger.Error().
+			Error(err).
+			Msg("Can't get actual notifier state")
+
+		return false, err
+	}
+
+	if currentNotifierState.Actor == moira.SelfStateActorAutomatic && currentNotifierState.State == moira.SelfStateERROR ||
+		currentNotifierState.Actor == moira.SelfStateActorManual && currentNotifierState.State == moira.SelfStateOK {
+		if err = selfCheck.setNotifierState(moira.SelfStateOK); err != nil {
+			return false, err
+		}
+
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (selfCheck *SelfCheckWorker) setNotifierState(state string) error {
+	err := selfCheck.Database.SetNotifierState(moira.SelfStateActorAutomatic, state)
 	if err != nil {
 		selfCheck.Logger.Error().
 			Error(err).
 			Msg("Can't set notifier state")
 	}
+
+	return err
 }
