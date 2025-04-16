@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -39,7 +38,7 @@ func TestSetHealthWithAuth(t *testing.T) {
 		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
 
 		Convey("Admin tries to set notifier state", func() {
-			mockDb.EXPECT().SetNotifierState(moira.SelfStateActorManual, "OK").Return(nil).Times(1)
+			mockDb.EXPECT().SetNotifierState(gomock.Any()).Return(nil).Times(1)
 
 			state := &dto.NotifierState{
 				State: "OK",

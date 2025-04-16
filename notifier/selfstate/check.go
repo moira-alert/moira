@@ -232,7 +232,13 @@ func (selfCheck *SelfCheckWorker) enableNotifierIfPossible() (bool, error) {
 }
 
 func (selfCheck *SelfCheckWorker) setNotifierState(state string) error {
-	err := selfCheck.Database.SetNotifierState(moira.SelfStateActorAutomatic, state)
+	now := time.Now().UTC()
+
+	err := selfCheck.Database.SetNotifierState(moira.NotifierState{
+		Actor:     moira.SelfStateActorAutomatic,
+		State:     state,
+		Timestamp: now,
+	})
 	if err != nil {
 		selfCheck.Logger.Error().
 			Error(err).

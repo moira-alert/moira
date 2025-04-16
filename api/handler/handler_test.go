@@ -58,7 +58,7 @@ func TestReadonlyMode(t *testing.T) {
 		})
 
 		Convey("Put notifier health", func() {
-			mockDb.EXPECT().SetNotifierState(moira.SelfStateActorManual, "OK").Return(nil).Times(1)
+			mockDb.EXPECT().SetNotifierState(gomock.Any()).Return(nil).Times(1)
 
 			state := &dto.NotifierState{
 				State: "OK",

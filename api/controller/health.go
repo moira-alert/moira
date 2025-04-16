@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
@@ -25,8 +27,12 @@ func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorRe
 }
 
 // UpdateNotifierState update current notifier state.
-func UpdateNotifierState(database moira.Database, state *dto.NotifierState) *api.ErrorResponse {
-	err := database.SetNotifierState(moira.SelfStateActorManual, state.State)
+func UpdateNotifierState(database moira.Database, state *dto.NotifierState, now time.Time) *api.ErrorResponse {
+	err := database.SetNotifierState(moira.NotifierState{
+		Actor:     moira.SelfStateActorManual,
+		State:     state.State,
+		Timestamp: now,
+	})
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}

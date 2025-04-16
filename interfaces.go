@@ -17,7 +17,7 @@ type Database interface {
 	GetRemoteChecksUpdatesCount() (int64, error)
 	GetPrometheusChecksUpdatesCount() (int64, error)
 	GetNotifierState() (NotifierState, error)
-	SetNotifierState(actor, state string) error
+	SetNotifierState(NotifierState) error
 
 	// Tag storing
 	GetTagNames() ([]string, error)

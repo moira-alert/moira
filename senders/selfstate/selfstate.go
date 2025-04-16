@@ -44,7 +44,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return nil
 	default:
 		if selfState.State != state.ToSelfState() {
-			if err := sender.Database.SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR); err != nil {
+			if err := sender.Database.SetNotifierState(moira.NotifierState{
+				Actor:     moira.SelfStateActorAutomatic,
+				State:     moira.SelfStateERROR,
+				Timestamp: time.Now().UTC(),
+			}); err != nil {
 				return fmt.Errorf("failed to disable notifications: %s", err.Error())
 			}
 		}

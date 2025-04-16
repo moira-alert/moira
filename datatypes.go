@@ -1009,6 +1009,8 @@ type NotifierState struct {
 	Actor string `json:"actor"`
 	// State represents the current state of the notifier.
 	State string `json:"state"`
+	// Timestamp represents timestamp of state change in UTC.
+	Timestamp time.Time `json:"timestamp"`
 }
 
 const (

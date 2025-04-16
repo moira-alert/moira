@@ -148,7 +148,10 @@ func TestNotifierState(t *testing.T) {
 
 	Convey(fmt.Sprintf("Test setting '%v' and reading it back", selfStateNotifierHealth), t, func() {
 		Convey("Switch notifier to OK", func() {
-			err := dataBase.SetNotifierState(moira.SelfStateActorManual, moira.SelfStateOK)
+			err := dataBase.SetNotifierState(moira.NotifierState{
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			})
 			actualNotifierState, err2 := dataBase.GetNotifierState()
 
 			So(actualNotifierState.State, ShouldEqual, moira.SelfStateOK)
@@ -157,7 +160,10 @@ func TestNotifierState(t *testing.T) {
 		})
 
 		Convey("Switch notifier to ERROR", func() {
-			err := dataBase.SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR)
+			err := dataBase.SetNotifierState(moira.NotifierState{
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateERROR,
+			})
 			actualNotifierState, err2 := dataBase.GetNotifierState()
 
 			So(actualNotifierState.State, ShouldEqual, moira.SelfStateERROR)
