@@ -64,6 +64,14 @@ func (storage *Storage) EnrichMatchedMetric(batch map[string]*moira.MatchedMetri
 		return
 	}
 
+	if old, ok := batch[m.Metric]; ok {
+		storage.logger.Warning().
+			Int64("old_retention_timestamp", old.RetentionTimestamp).
+			Int64("new_retention_timestamp", m.RetentionTimestamp).
+			String("metric_name", m.Metric).
+			Msg("Metric override")
+	}
+
 	storage.metricsCache[m.Metric] = m
 	batch[m.Metric] = m
 }
