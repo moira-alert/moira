@@ -64,7 +64,7 @@ func (storage *Storage) EnrichMatchedMetric(batch map[string]*moira.MatchedMetri
 		return
 	}
 
-	if old, ok := batch[m.Metric]; ok {
+	if old, ok := batch[m.Metric]; ok && old.RetentionTimestamp != m.RetentionTimestamp {
 		storage.logger.Warning().
 			Int64("old_retention_timestamp", old.RetentionTimestamp).
 			Int64("new_retention_timestamp", m.RetentionTimestamp).
