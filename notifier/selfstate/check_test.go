@@ -32,7 +32,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 
 			registerAdminNotification(worker, nowTS, "Redis disconnected", val, &sendingWG)
 
-			worker.selfCheckWorker.check(nowTS, 10)
+			worker.selfCheckWorker.check(nowTS)
 		})
 
 		Convey("Send notifications to admins and users on single heartbeat error", func() {
@@ -73,7 +73,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 
 			worker.notif.EXPECT().Send(&toUsersPack, &sendingWG).Times(1)
 
-			worker.selfCheckWorker.check(nowTS, 10)
+			worker.selfCheckWorker.check(nowTS)
 		})
 	})
 }
@@ -118,7 +118,6 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 		RedisDisconnectDelaySeconds:    1,
 		LastMetricReceivedDelaySeconds: 60,
 		LastCheckDelaySeconds:          120,
-		NoticeIntervalSeconds:          60,
 		LastRemoteCheckDelaySeconds:    120,
 		CheckInterval:                  1 * time.Second,
 		Checks: ChecksConfig{
