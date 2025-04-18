@@ -24,10 +24,10 @@ func pattern(router chi.Router) {
 //	@id			get-all-patterns
 //	@tags		pattern
 //	@produce	json
-//	@success	200	{object}	dto.PatternList					"Patterns fetched successfully"
-//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@Failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@Failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.PatternList		"Patterns fetched successfully"
+//	@failure	403	{object}	api.ErrorResponse	"Forbidden"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/pattern [get]
 func getAllPatterns(writer http.ResponseWriter, request *http.Request) {
 	logger := middleware.GetLoggerEntry(request)
@@ -51,9 +51,9 @@ func getAllPatterns(writer http.ResponseWriter, request *http.Request) {
 //	@produce	json
 //	@param		pattern	path	string	true	"Trigger pattern to operate on"	default(DevOps.my_server.hdd.freespace_mbytes)
 //	@success	200		"Pattern deleted successfully"
-//	@failure	403		{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	403		{object}	api.ErrorResponse	"Forbidden"
+//	@failure	400		{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	500		{object}	api.ErrorResponse	"Internal server error"
 //	@router		/pattern/{pattern} [delete]
 func deletePattern(writer http.ResponseWriter, request *http.Request) {
 	pattern := chi.URLParam(request, "pattern")

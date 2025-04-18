@@ -29,18 +29,18 @@ func event(router chi.Router) {
 //	@id			get-events-list
 //	@tags		event
 //	@produce	json
-//	@param		triggerID	path		string							true	"The ID of updated trigger"																default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		size		query		int								false	"Number of items to be displayed on one page. if size = -1 then all events returned"	default(100)
-//	@param		p			query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"			default(0)
-//	@param		from		query		string							false	"Start time of the time range"															default(-3hours)
-//	@param		to			query		string							false	"End time of the time range"															default(now)
-//	@param		metric		query		string							false	"Regular expression that will be used to filter events"									default(.*)
-//	@param		states		query		[]string						false	"String of ',' separated state names. If empty then all states will be used."			collectionFormat(csv)
-//	@success	200			{object}	dto.EventsList					"Events fetched successfully"
-//	@Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@Failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@Failure	422			{object}	api.ErrorRenderExample			"Render error"
-//	@Failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		triggerID	path		string				true	"The ID of updated trigger"																default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		size		query		int					false	"Number of items to be displayed on one page. if size = -1 then all events returned"	default(100)
+//	@param		p			query		int					false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"			default(0)
+//	@param		from		query		string				false	"Start time of the time range"															default(-3hours)
+//	@param		to			query		string				false	"End time of the time range"															default(now)
+//	@param		metric		query		string				false	"Regular expression that will be used to filter events"									default(.*)
+//	@param		states		query		[]string			false	"String of ',' separated state names. If empty then all states will be used."			collectionFormat(csv)
+//	@success	200			{object}	dto.EventsList		"Events fetched successfully"
+//	@failure	400			{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	422			{object}	api.ErrorResponse	"Render error"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/event/{triggerID} [get]
 func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -85,7 +85,7 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 //	@tags		event
 //	@produce	json
 //	@success	200	"Events removed successfully"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/event/all [delete]
 func deleteAllEvents(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllEvents(database); errorResponse != nil {

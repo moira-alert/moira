@@ -27,14 +27,14 @@ func triggerMetrics(router chi.Router) {
 //	@id			get-trigger-metrics
 //	@tags		trigger
 //	@produce	json
-//	@param		triggerID	path		string							true	"Trigger ID"						default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		from		query		string							false	"Start time for metrics retrieval"	default(-10minutes)
-//	@param		to			query		string							false	"End time for metrics retrieval"	default(now)
-//	@success	200			{object}	dto.TriggerMetrics				"Trigger metrics retrieved successfully"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422			{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		triggerID	path		string				true	"Trigger ID"						default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		from		query		string				false	"Start time for metrics retrieval"	default(-10minutes)
+//	@param		to			query		string				false	"End time for metrics retrieval"	default(now)
+//	@success	200			{object}	dto.TriggerMetrics	"Trigger metrics retrieved successfully"
+//	@failure	400			{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	422			{object}	api.ErrorResponse	"Render error"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID}/metrics [get]
 func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 	metricSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
@@ -74,9 +74,9 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 //	@param		triggerID	path	string	true	"Trigger ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param		name		query	string	false	"Name of the target metric"	default(DevOps.my_server.hdd.freespace_mbytes)
 //	@success	200			"Trigger metric deleted successfully"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	400			{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID}/metrics [delete]
 func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -101,9 +101,9 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 //	@produce	json
 //	@param		triggerID	path	string	true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200			"Trigger nodata metrics deleted successfully"
-//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	400			{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	404			{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		/trigger/{triggerID}/metrics/nodata [delete]
 func deleteTriggerNodataMetrics(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
