@@ -20,6 +20,7 @@ import (
 type MockRegistry struct {
 	ctrl     *gomock.Controller
 	recorder *MockRegistryMockRecorder
+	isgomock struct{}
 }
 
 // MockRegistryMockRecorder is the mock recorder for MockRegistry.
@@ -40,10 +41,10 @@ func (m *MockRegistry) EXPECT() *MockRegistryMockRecorder {
 }
 
 // NewCounter mocks base method.
-func (m *MockRegistry) NewCounter(arg0 ...string) metrics.Counter {
+func (m *MockRegistry) NewCounter(path ...string) metrics.Counter {
 	m.ctrl.T.Helper()
 	varargs := []any{}
-	for _, a := range arg0 {
+	for _, a := range path {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "NewCounter", varargs...)
@@ -52,16 +53,16 @@ func (m *MockRegistry) NewCounter(arg0 ...string) metrics.Counter {
 }
 
 // NewCounter indicates an expected call of NewCounter.
-func (mr *MockRegistryMockRecorder) NewCounter(arg0 ...any) *gomock.Call {
+func (mr *MockRegistryMockRecorder) NewCounter(path ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewCounter", reflect.TypeOf((*MockRegistry)(nil).NewCounter), arg0...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewCounter", reflect.TypeOf((*MockRegistry)(nil).NewCounter), path...)
 }
 
 // NewHistogram mocks base method.
-func (m *MockRegistry) NewHistogram(arg0 ...string) metrics.Histogram {
+func (m *MockRegistry) NewHistogram(path ...string) metrics.Histogram {
 	m.ctrl.T.Helper()
 	varargs := []any{}
-	for _, a := range arg0 {
+	for _, a := range path {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "NewHistogram", varargs...)
@@ -70,16 +71,16 @@ func (m *MockRegistry) NewHistogram(arg0 ...string) metrics.Histogram {
 }
 
 // NewHistogram indicates an expected call of NewHistogram.
-func (mr *MockRegistryMockRecorder) NewHistogram(arg0 ...any) *gomock.Call {
+func (mr *MockRegistryMockRecorder) NewHistogram(path ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewHistogram", reflect.TypeOf((*MockRegistry)(nil).NewHistogram), arg0...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewHistogram", reflect.TypeOf((*MockRegistry)(nil).NewHistogram), path...)
 }
 
 // NewMeter mocks base method.
-func (m *MockRegistry) NewMeter(arg0 ...string) metrics.Meter {
+func (m *MockRegistry) NewMeter(path ...string) metrics.Meter {
 	m.ctrl.T.Helper()
 	varargs := []any{}
-	for _, a := range arg0 {
+	for _, a := range path {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "NewMeter", varargs...)
@@ -88,16 +89,16 @@ func (m *MockRegistry) NewMeter(arg0 ...string) metrics.Meter {
 }
 
 // NewMeter indicates an expected call of NewMeter.
-func (mr *MockRegistryMockRecorder) NewMeter(arg0 ...any) *gomock.Call {
+func (mr *MockRegistryMockRecorder) NewMeter(path ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewMeter", reflect.TypeOf((*MockRegistry)(nil).NewMeter), arg0...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewMeter", reflect.TypeOf((*MockRegistry)(nil).NewMeter), path...)
 }
 
 // NewTimer mocks base method.
-func (m *MockRegistry) NewTimer(arg0 ...string) metrics.Timer {
+func (m *MockRegistry) NewTimer(path ...string) metrics.Timer {
 	m.ctrl.T.Helper()
 	varargs := []any{}
-	for _, a := range arg0 {
+	for _, a := range path {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "NewTimer", varargs...)
@@ -106,7 +107,7 @@ func (m *MockRegistry) NewTimer(arg0 ...string) metrics.Timer {
 }
 
 // NewTimer indicates an expected call of NewTimer.
-func (mr *MockRegistryMockRecorder) NewTimer(arg0 ...any) *gomock.Call {
+func (mr *MockRegistryMockRecorder) NewTimer(path ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTimer", reflect.TypeOf((*MockRegistry)(nil).NewTimer), arg0...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTimer", reflect.TypeOf((*MockRegistry)(nil).NewTimer), path...)
 }

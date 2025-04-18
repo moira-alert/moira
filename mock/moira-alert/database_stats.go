@@ -19,6 +19,7 @@ import (
 type MockStatsReporter struct {
 	ctrl     *gomock.Controller
 	recorder *MockStatsReporterMockRecorder
+	isgomock struct{}
 }
 
 // MockStatsReporterMockRecorder is the mock recorder for MockStatsReporter.
@@ -39,13 +40,13 @@ func (m *MockStatsReporter) EXPECT() *MockStatsReporterMockRecorder {
 }
 
 // StartReport mocks base method.
-func (m *MockStatsReporter) StartReport(arg0 <-chan struct{}) {
+func (m *MockStatsReporter) StartReport(stop <-chan struct{}) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "StartReport", arg0)
+	m.ctrl.Call(m, "StartReport", stop)
 }
 
 // StartReport indicates an expected call of StartReport.
-func (mr *MockStatsReporterMockRecorder) StartReport(arg0 any) *gomock.Call {
+func (mr *MockStatsReporterMockRecorder) StartReport(stop any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartReport", reflect.TypeOf((*MockStatsReporter)(nil).StartReport), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartReport", reflect.TypeOf((*MockStatsReporter)(nil).StartReport), stop)
 }

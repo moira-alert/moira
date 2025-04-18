@@ -22,6 +22,7 @@ import (
 type MockPrometheusApi struct {
 	ctrl     *gomock.Controller
 	recorder *MockPrometheusApiMockRecorder
+	isgomock struct{}
 }
 
 // MockPrometheusApiMockRecorder is the mock recorder for MockPrometheusApi.
@@ -42,10 +43,10 @@ func (m *MockPrometheusApi) EXPECT() *MockPrometheusApiMockRecorder {
 }
 
 // QueryRange mocks base method.
-func (m *MockPrometheusApi) QueryRange(arg0 context.Context, arg1 string, arg2 v1.Range, arg3 ...v1.Option) (model.Value, v1.Warnings, error) {
+func (m *MockPrometheusApi) QueryRange(ctx context.Context, query string, r v1.Range, opts ...v1.Option) (model.Value, v1.Warnings, error) {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0, arg1, arg2}
-	for _, a := range arg3 {
+	varargs := []any{ctx, query, r}
+	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "QueryRange", varargs...)
@@ -56,8 +57,8 @@ func (m *MockPrometheusApi) QueryRange(arg0 context.Context, arg1 string, arg2 v
 }
 
 // QueryRange indicates an expected call of QueryRange.
-func (mr *MockPrometheusApiMockRecorder) QueryRange(arg0, arg1, arg2 any, arg3 ...any) *gomock.Call {
+func (mr *MockPrometheusApiMockRecorder) QueryRange(ctx, query, r any, opts ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0, arg1, arg2}, arg3...)
+	varargs := append([]any{ctx, query, r}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryRange", reflect.TypeOf((*MockPrometheusApi)(nil).QueryRange), varargs...)
 }

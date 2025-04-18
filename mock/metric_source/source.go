@@ -20,6 +20,7 @@ import (
 type MockMetricSource struct {
 	ctrl     *gomock.Controller
 	recorder *MockMetricSourceMockRecorder
+	isgomock struct{}
 }
 
 // MockMetricSourceMockRecorder is the mock recorder for MockMetricSource.
@@ -40,18 +41,18 @@ func (m *MockMetricSource) EXPECT() *MockMetricSourceMockRecorder {
 }
 
 // Fetch mocks base method.
-func (m *MockMetricSource) Fetch(arg0 string, arg1, arg2 int64, arg3 bool) (metricsource.FetchResult, error) {
+func (m *MockMetricSource) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricsource.FetchResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Fetch", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "Fetch", target, from, until, allowRealTimeAlerting)
 	ret0, _ := ret[0].(metricsource.FetchResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Fetch indicates an expected call of Fetch.
-func (mr *MockMetricSourceMockRecorder) Fetch(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockMetricSourceMockRecorder) Fetch(target, from, until, allowRealTimeAlerting any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockMetricSource)(nil).Fetch), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockMetricSource)(nil).Fetch), target, from, until, allowRealTimeAlerting)
 }
 
 // GetMetricsTTLSeconds mocks base method.
