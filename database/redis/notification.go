@@ -117,6 +117,7 @@ func (connector *DbConnector) RemoveNotificationsFiltered(start, end int64, igno
 	}
 
 	foundNotifications := make([]*moira.ScheduledNotification, 0)
+
 	ignoredTagsSet := make(map[string]struct{}, len(ignoredTags))
 	for _, tag := range ignoredTags {
 		ignoredTagsSet[tag] = struct{}{}
