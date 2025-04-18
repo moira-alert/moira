@@ -19,6 +19,7 @@ import (
 type MockImageStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockImageStoreMockRecorder
+	isgomock struct{}
 }
 
 // MockImageStoreMockRecorder is the mock recorder for MockImageStore.
@@ -53,16 +54,16 @@ func (mr *MockImageStoreMockRecorder) IsEnabled() *gomock.Call {
 }
 
 // StoreImage mocks base method.
-func (m *MockImageStore) StoreImage(arg0 []byte) (string, error) {
+func (m *MockImageStore) StoreImage(image []byte) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StoreImage", arg0)
+	ret := m.ctrl.Call(m, "StoreImage", image)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // StoreImage indicates an expected call of StoreImage.
-func (mr *MockImageStoreMockRecorder) StoreImage(arg0 any) *gomock.Call {
+func (mr *MockImageStoreMockRecorder) StoreImage(image any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreImage", reflect.TypeOf((*MockImageStore)(nil).StoreImage), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreImage", reflect.TypeOf((*MockImageStore)(nil).StoreImage), image)
 }

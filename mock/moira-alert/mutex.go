@@ -19,6 +19,7 @@ import (
 type MockMutex struct {
 	ctrl     *gomock.Controller
 	recorder *MockMutexMockRecorder
+	isgomock struct{}
 }
 
 // MockMutexMockRecorder is the mock recorder for MockMutex.

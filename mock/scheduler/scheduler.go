@@ -20,6 +20,7 @@ import (
 type MockScheduler struct {
 	ctrl     *gomock.Controller
 	recorder *MockSchedulerMockRecorder
+	isgomock struct{}
 }
 
 // MockSchedulerMockRecorder is the mock recorder for MockScheduler.
@@ -40,15 +41,15 @@ func (m *MockScheduler) EXPECT() *MockSchedulerMockRecorder {
 }
 
 // ScheduleNotification mocks base method.
-func (m *MockScheduler) ScheduleNotification(arg0 moira.SchedulerParams, arg1 moira.Logger) *moira.ScheduledNotification {
+func (m *MockScheduler) ScheduleNotification(params moira.SchedulerParams, logger moira.Logger) *moira.ScheduledNotification {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ScheduleNotification", arg0, arg1)
+	ret := m.ctrl.Call(m, "ScheduleNotification", params, logger)
 	ret0, _ := ret[0].(*moira.ScheduledNotification)
 	return ret0
 }
 
 // ScheduleNotification indicates an expected call of ScheduleNotification.
-func (mr *MockSchedulerMockRecorder) ScheduleNotification(arg0, arg1 any) *gomock.Call {
+func (mr *MockSchedulerMockRecorder) ScheduleNotification(params, logger any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScheduleNotification", reflect.TypeOf((*MockScheduler)(nil).ScheduleNotification), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScheduleNotification", reflect.TypeOf((*MockScheduler)(nil).ScheduleNotification), params, logger)
 }

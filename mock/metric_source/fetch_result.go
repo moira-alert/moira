@@ -20,6 +20,7 @@ import (
 type MockFetchResult struct {
 	ctrl     *gomock.Controller
 	recorder *MockFetchResultMockRecorder
+	isgomock struct{}
 }
 
 // MockFetchResultMockRecorder is the mock recorder for MockFetchResult.

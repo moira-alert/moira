@@ -22,6 +22,7 @@ import (
 type MockNotifier struct {
 	ctrl     *gomock.Controller
 	recorder *MockNotifierMockRecorder
+	isgomock struct{}
 }
 
 // MockNotifierMockRecorder is the mock recorder for MockNotifier.
@@ -70,29 +71,29 @@ func (mr *MockNotifierMockRecorder) GetSenders() *gomock.Call {
 }
 
 // RegisterSender mocks base method.
-func (m *MockNotifier) RegisterSender(arg0 map[string]any, arg1 moira.Sender) error {
+func (m *MockNotifier) RegisterSender(senderSettings map[string]any, sender moira.Sender) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RegisterSender", arg0, arg1)
+	ret := m.ctrl.Call(m, "RegisterSender", senderSettings, sender)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RegisterSender indicates an expected call of RegisterSender.
-func (mr *MockNotifierMockRecorder) RegisterSender(arg0, arg1 any) *gomock.Call {
+func (mr *MockNotifierMockRecorder) RegisterSender(senderSettings, sender any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSender", reflect.TypeOf((*MockNotifier)(nil).RegisterSender), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSender", reflect.TypeOf((*MockNotifier)(nil).RegisterSender), senderSettings, sender)
 }
 
 // Send mocks base method.
-func (m *MockNotifier) Send(arg0 *notifier.NotificationPackage, arg1 *sync.WaitGroup) {
+func (m *MockNotifier) Send(pkg *notifier.NotificationPackage, waitGroup *sync.WaitGroup) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Send", arg0, arg1)
+	m.ctrl.Call(m, "Send", pkg, waitGroup)
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockNotifierMockRecorder) Send(arg0, arg1 any) *gomock.Call {
+func (mr *MockNotifierMockRecorder) Send(pkg, waitGroup any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockNotifier)(nil).Send), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockNotifier)(nil).Send), pkg, waitGroup)
 }
 
 // StopSenders mocks base method.
