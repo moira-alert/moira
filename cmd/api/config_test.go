@@ -42,6 +42,7 @@ func Test_apiConfig_getSettings(t *testing.T) {
 				AllowedContactTypes: map[string]struct{}{
 					"test": {},
 				},
+				CanRemoveTriggersList: make(map[string]struct{}),
 			},
 		}
 

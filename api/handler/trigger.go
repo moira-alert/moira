@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -18,8 +19,12 @@ import (
 func trigger(router chi.Router) {
 	router.Use(middleware.TriggerContext)
 	router.Put("/", updateTrigger)
-	router.With(middleware.TriggerContext, middleware.Populate(false)).Get("/", getTrigger)
-	router.Delete("/", removeTrigger)
+	router.
+		With(middleware.TriggerContext, middleware.Populate(false)).
+		Get("/", getTrigger)
+	router.
+		With(removeTriggerMiddleware()).
+		Delete("/", removeTrigger)
 	router.Get("/state", getTriggerState)
 	router.Route("/throttling", func(router chi.Router) {
 		router.Get("/", getTriggerThrottling)
@@ -27,7 +32,10 @@ func trigger(router chi.Router) {
 	})
 	router.Route("/metrics", triggerMetrics)
 	router.Put("/setMaintenance", setTriggerMaintenance)
-	router.With(middleware.DateRange("-1hour", "now")).With(middleware.TargetName("t1")).Get("/render", renderTrigger)
+	router.
+		With(middleware.DateRange("-1hour", "now")).
+		With(middleware.TargetName("t1")).
+		Get("/render", renderTrigger)
 	router.Get("/dump", triggerDump)
 }
 
@@ -142,6 +150,35 @@ func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 	err := controller.RemoveTrigger(database, triggerID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
+	}
+}
+
+func removeTriggerMiddleware() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			db := middleware.GetDatabase(r)
+
+			trigger, err := controller.GetTrigger(db, middleware.GetTriggerID(r))
+			if err == nil {
+				userLogin := middleware.GetLogin(r)
+				auth := middleware.GetAuth(r)
+
+				_, triggerHasRestriction := auth.CanRemoveTriggersList[trigger.CreatedBy]
+				triggerHasRestriction = triggerHasRestriction && auth.IsEnabled()
+
+				isAdmin := auth.IsAdmin(userLogin)
+				isOwner := trigger.CreatedBy == userLogin
+
+				if triggerHasRestriction && !(isAdmin || isOwner) {
+					_ = render.Render(w, r, api.ErrorForbidden(fmt.Sprintf("Only administrators and %s can use this", trigger.CreatedBy)))
+					return
+				}
+			}
+
+			next.ServeHTTP(w, r)
+		}
+
+		return http.HandlerFunc(fn)
 	}
 }
 
