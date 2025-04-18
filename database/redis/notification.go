@@ -109,6 +109,35 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	return connector.removeNotifications(connector.context, (*connector.client).TxPipeline(), foundNotifications)
 }
 
+// RemoveNotification delete notifications by key = timestamp + contactID + subID.
+func (connector *DbConnector) RemoveNotifications(start, end int64, ignoredTags []string) (int64, error) {
+	notifications, _, err := connector.GetNotifications(start, end)
+	if err != nil {
+		return 0, err
+	}
+
+	foundNotifications := make([]*moira.ScheduledNotification, 0)
+	ignoredTagsSet := make(map[string]struct{}, len(ignoredTags))
+	for _, tag := range ignoredTags {
+		ignoredTagsSet[tag] = struct{}{}
+	}
+
+	for _, notification := range notifications {
+		timestamp := strconv.FormatInt(notification.Timestamp, 10)
+		contactID := notification.Contact.ID
+		subID := moira.UseString(notification.Event.SubscriptionID)
+
+		idstr := strings.Join([]string{timestamp, contactID, subID}, "")
+		if _, ok := ignoredTagsSet[idstr]; ok {
+			continue
+		}
+
+		foundNotifications = append(foundNotifications, notification)
+	}
+
+	return connector.removeNotifications(connector.context, (*connector.client).TxPipeline(), foundNotifications)
+}
+
 func (connector *DbConnector) removeNotifications(ctx context.Context, pipe redis.Pipeliner, notifications []*moira.ScheduledNotification) (int64, error) {
 	if len(notifications) == 0 {
 		return 0, nil
