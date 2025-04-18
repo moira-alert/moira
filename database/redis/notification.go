@@ -110,7 +110,7 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 }
 
 // RemoveNotification delete notifications by key = timestamp + contactID + subID.
-func (connector *DbConnector) RemoveNotifications(start, end int64, ignoredTags []string) (int64, error) {
+func (connector *DbConnector) RemoveNotificationsFiltered(start, end int64, ignoredTags []string) (int64, error) {
 	notifications, _, err := connector.GetNotifications(start, end)
 	if err != nil {
 		return 0, err
