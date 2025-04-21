@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metric_source/remote"
 
@@ -1016,6 +1017,157 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			expectedContentBytes, err := json.Marshal(api.ErrorInternalServer(errFromDB))
 			So(err, ShouldBeNil)
 			So(string(contentBytes), ShouldResemble, string(expectedContentBytes)+"\n")
+		})
+	})
+}
+
+func TestRemoveTriggerHandler(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
+	database = mockDb
+	triggerID := "my-trigger-id"
+	adminLogin := "admin"
+	userLogin := "user"
+	ownerLogin := "owner"
+
+	Convey("When auth is false", t, func() {
+		auth := api.Authorization{
+			Enabled: true,
+			AdminList: map[string]struct{}{
+				adminLogin: {},
+			},
+			CanRemoveTriggersList: map[string]struct{}{
+				ownerLogin: {},
+			},
+		}
+		logger, _ := zerolog_adapter.GetLogger("Test")
+		config := &api.Config{Authorization: auth}
+		webConfig := &api.WebConfig{
+			SupportEmail: "test",
+			Contacts:     []api.WebContact{},
+		}
+		trigger := moira.Trigger{
+			CreatedBy: ownerLogin,
+		}
+
+		Convey("And when success from DB, should return success", func() {
+			mockDb.EXPECT().RemoveTrigger(triggerID).Return(nil)
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+
+			handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodDelete, "/api/trigger/"+triggerID, strings.NewReader(""))
+			testRequest.Header.Add("x-webauth-user", adminLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("And when error while removing from DB, should return error", func() {
+			mockDb.EXPECT().RemoveTrigger(triggerID).Return(errors.New("error"))
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+
+			handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodDelete, "/api/trigger/"+triggerID, strings.NewReader(""))
+			testRequest.Header.Add("x-webauth-user", adminLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
+
+	Convey("When auth is true, trigger owner is not admin", t, func() {
+		auth := api.Authorization{
+			Enabled: true,
+			AdminList: map[string]struct{}{
+				adminLogin: {},
+			},
+			CanRemoveTriggersList: map[string]struct{}{
+				ownerLogin: {},
+			},
+		}
+		logger, _ := zerolog_adapter.GetLogger("Test")
+		config := &api.Config{Authorization: auth}
+		webConfig := &api.WebConfig{
+			SupportEmail: "test",
+			Contacts:     []api.WebContact{},
+		}
+		trigger := moira.Trigger{
+			CreatedBy: ownerLogin,
+		}
+
+		Convey("When request from moira-admin, should be ok", func() {
+			mockDb.EXPECT().RemoveTrigger(triggerID).Return(nil)
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+
+			handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodDelete, "/api/trigger/"+triggerID, strings.NewReader(""))
+			testRequest.Header.Add("x-webauth-user", adminLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("When request from trigger-owner, should be ok", func() {
+			mockDb.EXPECT().RemoveTrigger(triggerID).Return(nil)
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+
+			handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodDelete, "/api/trigger/"+triggerID, strings.NewReader(""))
+			testRequest.Header.Add("x-webauth-user", ownerLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("When request from other-user, should be forbidden", func() {
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+
+			handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodDelete, "/api/trigger/"+triggerID, strings.NewReader(""))
+			testRequest.Header.Add("x-webauth-user", userLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusForbidden)
 		})
 	})
 }
