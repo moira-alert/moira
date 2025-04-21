@@ -191,7 +191,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	limits := middleware.GetLimits(request)
 	if utf8.RuneCountInString(trigger.Name) > limits.Trigger.MaxNameSize {
 		return api.ErrInvalidRequestContent{
-			ValidationError: fmt.Errorf("trigger name too long, should not be greater than %d symbols", limits.Trigger.MaxNameSize),
+			ValidationError: fmt.Errorf("trigger name too long, should not be less than %d symbols", limits.Trigger.MaxNameSize),
 		}
 	}
 

@@ -5,7 +5,7 @@ type Authorization struct {
 	AdminList             map[string]struct{}
 	Enabled               bool
 	AllowedContactTypes   map[string]struct{}
-	CanRemoveTriggersList map[string]struct{}
+	CanChangeTriggersList map[string]struct{}
 }
 
 // IsEnabled returns true if auth is enabled and false otherwise.

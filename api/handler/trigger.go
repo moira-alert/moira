@@ -18,7 +18,9 @@ import (
 
 func trigger(router chi.Router) {
 	router.Use(middleware.TriggerContext)
-	router.Put("/", updateTrigger)
+	router.
+		With(removeTriggerMiddleware()).
+		Put("/", updateTrigger)
 	router.
 		With(middleware.TriggerContext, middleware.Populate(false)).
 		Get("/", getTrigger)
@@ -163,7 +165,7 @@ func removeTriggerMiddleware() func(next http.Handler) http.Handler {
 				userLogin := middleware.GetLogin(r)
 				auth := middleware.GetAuth(r)
 
-				_, triggerHasRestriction := auth.CanRemoveTriggersList[trigger.CreatedBy]
+				_, triggerHasRestriction := auth.CanChangeTriggersList[trigger.CreatedBy]
 				triggerHasRestriction = triggerHasRestriction && auth.IsEnabled()
 
 				isAdmin := auth.IsAdmin(userLogin)
