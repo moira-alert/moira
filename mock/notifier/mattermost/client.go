@@ -21,6 +21,7 @@ import (
 type MockClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockClientMockRecorder
+	isgomock struct{}
 }
 
 // MockClientMockRecorder is the mock recorder for MockClient.
@@ -41,9 +42,9 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // CreatePost mocks base method.
-func (m *MockClient) CreatePost(arg0 context.Context, arg1 *model.Post) (*model.Post, *model.Response, error) {
+func (m *MockClient) CreatePost(ctx context.Context, post *model.Post) (*model.Post, *model.Response, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreatePost", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreatePost", ctx, post)
 	ret0, _ := ret[0].(*model.Post)
 	ret1, _ := ret[1].(*model.Response)
 	ret2, _ := ret[2].(error)
@@ -51,27 +52,27 @@ func (m *MockClient) CreatePost(arg0 context.Context, arg1 *model.Post) (*model.
 }
 
 // CreatePost indicates an expected call of CreatePost.
-func (mr *MockClientMockRecorder) CreatePost(arg0, arg1 any) *gomock.Call {
+func (mr *MockClientMockRecorder) CreatePost(ctx, post any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePost", reflect.TypeOf((*MockClient)(nil).CreatePost), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePost", reflect.TypeOf((*MockClient)(nil).CreatePost), ctx, post)
 }
 
 // SetToken mocks base method.
-func (m *MockClient) SetToken(arg0 string) {
+func (m *MockClient) SetToken(token string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetToken", arg0)
+	m.ctrl.Call(m, "SetToken", token)
 }
 
 // SetToken indicates an expected call of SetToken.
-func (mr *MockClientMockRecorder) SetToken(arg0 any) *gomock.Call {
+func (mr *MockClientMockRecorder) SetToken(token any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetToken", reflect.TypeOf((*MockClient)(nil).SetToken), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetToken", reflect.TypeOf((*MockClient)(nil).SetToken), token)
 }
 
 // UploadFile mocks base method.
-func (m *MockClient) UploadFile(arg0 context.Context, arg1 []byte, arg2, arg3 string) (*model.FileUploadResponse, *model.Response, error) {
+func (m *MockClient) UploadFile(ctx context.Context, data []byte, channelId, filename string) (*model.FileUploadResponse, *model.Response, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UploadFile", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "UploadFile", ctx, data, channelId, filename)
 	ret0, _ := ret[0].(*model.FileUploadResponse)
 	ret1, _ := ret[1].(*model.Response)
 	ret2, _ := ret[2].(error)
@@ -79,7 +80,7 @@ func (m *MockClient) UploadFile(arg0 context.Context, arg1 []byte, arg2, arg3 st
 }
 
 // UploadFile indicates an expected call of UploadFile.
-func (mr *MockClientMockRecorder) UploadFile(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockClientMockRecorder) UploadFile(ctx, data, channelId, filename any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFile", reflect.TypeOf((*MockClient)(nil).UploadFile), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFile", reflect.TypeOf((*MockClient)(nil).UploadFile), ctx, data, channelId, filename)
 }

@@ -4,7 +4,7 @@
 
 rm -r ./mock/*
 
-go install go.uber.org/mock/mockgen@v0.4.0
+go install go.uber.org/mock/mockgen@v0.5.1
 
 mockgen -destination=mock/moira-alert/locks.go -package=mock_moira_alert github.com/moira-alert/moira Lock
 mockgen -destination=mock/moira-alert/mutex.go -package=mock_moira_alert github.com/moira-alert/moira Mutex

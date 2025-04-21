@@ -20,6 +20,7 @@ import (
 type MockMetersCollection struct {
 	ctrl     *gomock.Controller
 	recorder *MockMetersCollectionMockRecorder
+	isgomock struct{}
 }
 
 // MockMetersCollectionMockRecorder is the mock recorder for MockMetersCollection.
@@ -40,25 +41,25 @@ func (m *MockMetersCollection) EXPECT() *MockMetersCollectionMockRecorder {
 }
 
 // GetRegisteredMeter mocks base method.
-func (m *MockMetersCollection) GetRegisteredMeter(arg0 string) (metrics.Meter, bool) {
+func (m *MockMetersCollection) GetRegisteredMeter(name string) (metrics.Meter, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRegisteredMeter", arg0)
+	ret := m.ctrl.Call(m, "GetRegisteredMeter", name)
 	ret0, _ := ret[0].(metrics.Meter)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
 // GetRegisteredMeter indicates an expected call of GetRegisteredMeter.
-func (mr *MockMetersCollectionMockRecorder) GetRegisteredMeter(arg0 any) *gomock.Call {
+func (mr *MockMetersCollectionMockRecorder) GetRegisteredMeter(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRegisteredMeter", reflect.TypeOf((*MockMetersCollection)(nil).GetRegisteredMeter), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRegisteredMeter", reflect.TypeOf((*MockMetersCollection)(nil).GetRegisteredMeter), name)
 }
 
 // RegisterMeter mocks base method.
-func (m *MockMetersCollection) RegisterMeter(arg0 string, arg1 ...string) metrics.Meter {
+func (m *MockMetersCollection) RegisterMeter(name string, path ...string) metrics.Meter {
 	m.ctrl.T.Helper()
-	varargs := []any{arg0}
-	for _, a := range arg1 {
+	varargs := []any{name}
+	for _, a := range path {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "RegisterMeter", varargs...)
@@ -67,8 +68,8 @@ func (m *MockMetersCollection) RegisterMeter(arg0 string, arg1 ...string) metric
 }
 
 // RegisterMeter indicates an expected call of RegisterMeter.
-func (mr *MockMetersCollectionMockRecorder) RegisterMeter(arg0 any, arg1 ...any) *gomock.Call {
+func (mr *MockMetersCollectionMockRecorder) RegisterMeter(name any, path ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{arg0}, arg1...)
+	varargs := append([]any{name}, path...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterMeter", reflect.TypeOf((*MockMetersCollection)(nil).RegisterMeter), varargs...)
 }
