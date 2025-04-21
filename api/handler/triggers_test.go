@@ -1187,6 +1187,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
 	localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
