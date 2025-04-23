@@ -19,13 +19,13 @@ import (
 func trigger(router chi.Router) {
 	router.Use(middleware.TriggerContext)
 	router.
-		With(removeTriggerMiddleware()).
+		With(changeTriggerMiddleware()).
 		Put("/", updateTrigger)
 	router.
 		With(middleware.TriggerContext, middleware.Populate(false)).
 		Get("/", getTrigger)
 	router.
-		With(removeTriggerMiddleware()).
+		With(changeTriggerMiddleware()).
 		Delete("/", removeTrigger)
 	router.Get("/state", getTriggerState)
 	router.Route("/throttling", func(router chi.Router) {
@@ -155,7 +155,7 @@ func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func removeTriggerMiddleware() func(next http.Handler) http.Handler {
+func changeTriggerMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			db := middleware.GetDatabase(r)
