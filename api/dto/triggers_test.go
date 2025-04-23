@@ -63,7 +63,7 @@ func TestTriggerValidation(t *testing.T) {
 			err := trigger.Bind(request)
 
 			So(err, ShouldResemble, api.ErrInvalidRequestContent{
-				ValidationError: fmt.Errorf("trigger name too long, should not be greater than %d symbols", limit.Trigger.MaxNameSize),
+				ValidationError: fmt.Errorf("trigger name too long, should not be less than %d symbols", limit.Trigger.MaxNameSize),
 			})
 		})
 	})

@@ -1036,7 +1036,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			AdminList: map[string]struct{}{
 				adminLogin: {},
 			},
-			CanRemoveTriggersList: map[string]struct{}{
+			LimitedChangeTriggerOwners: map[string]struct{}{
 				ownerLogin: {},
 			},
 		}
@@ -1097,7 +1097,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			AdminList: map[string]struct{}{
 				adminLogin: {},
 			},
-			CanRemoveTriggersList: map[string]struct{}{
+			LimitedChangeTriggerOwners: map[string]struct{}{
 				ownerLogin: {},
 			},
 		}
@@ -1159,6 +1159,226 @@ func TestRemoveTriggerHandler(t *testing.T) {
 
 			responseWriter := httptest.NewRecorder()
 			testRequest := httptest.NewRequest(http.MethodDelete, "/api/trigger/"+triggerID, strings.NewReader(""))
+			testRequest.Header.Add("x-webauth-user", userLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusForbidden)
+		})
+	})
+}
+
+func TestUpdateTriggerHandler(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
+	database = mockDb
+	triggerID := "my-trigger-id"
+	adminLogin := "admin"
+	userLogin := "user"
+	ownerLogin := "owner"
+	warnValue := float64(4)
+
+	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
+
+	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+
+	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
+	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
+	localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
+	fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
+	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
+
+	Convey("When auth is false", t, func() {
+		auth := api.Authorization{
+			Enabled: true,
+			AdminList: map[string]struct{}{
+				adminLogin: {},
+			},
+			LimitedChangeTriggerOwners: map[string]struct{}{
+				ownerLogin: {},
+			},
+		}
+		logger, _ := zerolog_adapter.GetLogger("Test")
+		config := &api.Config{
+			Authorization: auth,
+			Limits: api.LimitsConfig{
+				Trigger: api.TriggerLimits{
+					MaxNameSize: 100,
+				},
+			},
+		}
+		webConfig := &api.WebConfig{
+			SupportEmail: "test",
+			Contacts:     []api.WebContact{},
+		}
+		trigger := moira.Trigger{
+			Targets: []string{
+				"foo.bar",
+			},
+			Tags: []string{
+				"tag1",
+			},
+			Name:        "Not enough disk space left",
+			ID:          triggerID,
+			CreatedBy:   ownerLogin,
+			WarnValue:   &warnValue,
+			TriggerType: "rising",
+		}
+
+		jsonTrigger, err := json.Marshal(trigger)
+		So(err, ShouldBeNil)
+
+		Convey("And when success from DB, should return success", func() {
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil).AnyTimes()
+			mockDb.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
+			mockDb.EXPECT().DeleteTriggerCheckLock(triggerID)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, dataBase.ErrNil)
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).Return(nil)
+
+			handler := NewHandler(mockDb, logger, nil, config, sourceProvider, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodPut, "/api/trigger/"+triggerID, bytes.NewBuffer(jsonTrigger))
+			testRequest.Header.Add("x-webauth-user", adminLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("And when error while save from DB, should return error", func() {
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil).AnyTimes()
+			mockDb.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
+			mockDb.EXPECT().DeleteTriggerCheckLock(triggerID)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, dataBase.ErrNil)
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).Return(errors.New("error"))
+
+			handler := NewHandler(mockDb, logger, nil, config, sourceProvider, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodPut, "/api/trigger/"+triggerID, bytes.NewBuffer(jsonTrigger))
+			testRequest.Header.Add("x-webauth-user", adminLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
+
+	Convey("When auth is true, trigger owner is not admin", t, func() {
+		auth := api.Authorization{
+			Enabled: true,
+			AdminList: map[string]struct{}{
+				adminLogin: {},
+			},
+			LimitedChangeTriggerOwners: map[string]struct{}{
+				ownerLogin: {},
+			},
+		}
+		logger, _ := zerolog_adapter.GetLogger("Test")
+		config := &api.Config{
+			Authorization: auth,
+			Limits: api.LimitsConfig{
+				Trigger: api.TriggerLimits{
+					MaxNameSize: 100,
+				},
+			},
+		}
+		webConfig := &api.WebConfig{
+			SupportEmail: "test",
+			Contacts:     []api.WebContact{},
+		}
+		trigger := moira.Trigger{
+			Targets: []string{
+				"foo.bar",
+			},
+			Tags: []string{
+				"tag1",
+			},
+			Name:        "Not enough disk space left",
+			ID:          triggerID,
+			CreatedBy:   ownerLogin,
+			WarnValue:   &warnValue,
+			TriggerType: "rising",
+		}
+
+		jsonTrigger, err := json.Marshal(trigger)
+		So(err, ShouldBeNil)
+
+		Convey("When request from moira-admin, should be ok", func() {
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil).AnyTimes()
+			mockDb.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
+			mockDb.EXPECT().DeleteTriggerCheckLock(triggerID)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, dataBase.ErrNil)
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).Return(nil)
+
+			handler := NewHandler(mockDb, logger, nil, config, sourceProvider, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodPut, "/api/trigger/"+triggerID, bytes.NewBuffer(jsonTrigger))
+			testRequest.Header.Add("x-webauth-user", adminLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("When request from trigger-owner, should be ok", func() {
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil).AnyTimes()
+			mockDb.EXPECT().AcquireTriggerCheckLock(triggerID, 30).Return(nil)
+			mockDb.EXPECT().DeleteTriggerCheckLock(triggerID)
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, dataBase.ErrNil)
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).Return(nil)
+
+			handler := NewHandler(mockDb, logger, nil, config, sourceProvider, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodPut, "/api/trigger/"+triggerID, bytes.NewBuffer(jsonTrigger))
+			testRequest.Header.Add("x-webauth-user", ownerLogin)
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("When request from other-user, should be forbidden", func() {
+			mockDb.EXPECT().GetTrigger(triggerID).Return(trigger, nil).AnyTimes()
+			mockDb.EXPECT().GetTriggerThrottling(triggerID)
+
+			handler := NewHandler(mockDb, logger, nil, config, sourceProvider, webConfig, nil)
+
+			responseWriter := httptest.NewRecorder()
+			testRequest := httptest.NewRequest(http.MethodPut, "/api/trigger/"+triggerID, bytes.NewBuffer(jsonTrigger))
 			testRequest.Header.Add("x-webauth-user", userLogin)
 			testRequest.Header.Add("content-type", "application/json")
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(context.Background(), "auth", auth))
