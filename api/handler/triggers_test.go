@@ -1036,7 +1036,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			AdminList: map[string]struct{}{
 				adminLogin: {},
 			},
-			CanChangeTriggersList: map[string]struct{}{
+			LimitedChangeTriggerOwners: map[string]struct{}{
 				ownerLogin: {},
 			},
 		}
@@ -1097,7 +1097,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			AdminList: map[string]struct{}{
 				adminLogin: {},
 			},
-			CanChangeTriggersList: map[string]struct{}{
+			LimitedChangeTriggerOwners: map[string]struct{}{
 				ownerLogin: {},
 			},
 		}
@@ -1200,7 +1200,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 			AdminList: map[string]struct{}{
 				adminLogin: {},
 			},
-			CanChangeTriggersList: map[string]struct{}{
+			LimitedChangeTriggerOwners: map[string]struct{}{
 				ownerLogin: {},
 			},
 		}
@@ -1289,7 +1289,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 			AdminList: map[string]struct{}{
 				adminLogin: {},
 			},
-			CanChangeTriggersList: map[string]struct{}{
+			LimitedChangeTriggerOwners: map[string]struct{}{
 				ownerLogin: {},
 			},
 		}

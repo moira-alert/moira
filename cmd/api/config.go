@@ -126,7 +126,7 @@ type authorization struct {
 	// List of logins of users who are considered to be admins.
 	AdminList []string `yaml:"admin_list"`
 	// List for control trigger deletion and editing, if createdBy fit in this list: only who create trigger can delete it.
-	CanChangeTriggersList []string `yaml:"can_change_triggers_list"`
+	LimitedChangeTriggerOwners []string `yaml:"limited_change_trigger_owners"`
 }
 
 type sentryConfig struct {
@@ -205,16 +205,16 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 		allowedContactTypes[contactTemplate.ContactType] = struct{}{}
 	}
 
-	canChangeTriggersList := make(map[string]struct{}, len(auth.CanChangeTriggersList))
-	for _, login := range auth.CanChangeTriggersList {
+	canChangeTriggersList := make(map[string]struct{}, len(auth.LimitedChangeTriggerOwners))
+	for _, login := range auth.LimitedChangeTriggerOwners {
 		canChangeTriggersList[login] = struct{}{}
 	}
 
 	return api.Authorization{
-		Enabled:               auth.Enabled,
-		AdminList:             adminList,
-		AllowedContactTypes:   allowedContactTypes,
-		CanChangeTriggersList: canChangeTriggersList,
+		Enabled:                    auth.Enabled,
+		AdminList:                  adminList,
+		AllowedContactTypes:        allowedContactTypes,
+		LimitedChangeTriggerOwners: canChangeTriggersList,
 	}
 }
 

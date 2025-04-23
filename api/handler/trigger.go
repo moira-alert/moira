@@ -19,13 +19,13 @@ import (
 func trigger(router chi.Router) {
 	router.Use(middleware.TriggerContext)
 	router.
-		With(changeTriggerMiddleware()).
+		With(limitedChangeTriggerOwnersMiddleware()).
 		Put("/", updateTrigger)
 	router.
 		With(middleware.TriggerContext, middleware.Populate(false)).
 		Get("/", getTrigger)
 	router.
-		With(changeTriggerMiddleware()).
+		With(limitedChangeTriggerOwnersMiddleware()).
 		Delete("/", removeTrigger)
 	router.Get("/state", getTriggerState)
 	router.Route("/throttling", func(router chi.Router) {
@@ -155,7 +155,7 @@ func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func changeTriggerMiddleware() func(next http.Handler) http.Handler {
+func limitedChangeTriggerOwnersMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			db := middleware.GetDatabase(r)
@@ -165,7 +165,7 @@ func changeTriggerMiddleware() func(next http.Handler) http.Handler {
 				userLogin := middleware.GetLogin(r)
 				auth := middleware.GetAuth(r)
 
-				_, triggerHasRestriction := auth.CanChangeTriggersList[trigger.CreatedBy]
+				_, triggerHasRestriction := auth.LimitedChangeTriggerOwners[trigger.CreatedBy]
 				triggerHasRestriction = triggerHasRestriction && auth.IsEnabled()
 
 				isAdmin := auth.IsAdmin(userLogin)

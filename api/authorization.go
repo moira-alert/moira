@@ -2,10 +2,10 @@ package api
 
 // Authorization contains authorization configuration.
 type Authorization struct {
-	AdminList             map[string]struct{}
-	Enabled               bool
-	AllowedContactTypes   map[string]struct{}
-	CanChangeTriggersList map[string]struct{}
+	AdminList                  map[string]struct{}
+	Enabled                    bool
+	AllowedContactTypes        map[string]struct{}
+	LimitedChangeTriggerOwners map[string]struct{}
 }
 
 // IsEnabled returns true if auth is enabled and false otherwise.
