@@ -12,6 +12,7 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/moira-alert/moira/notifier/selfstate"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
@@ -74,6 +75,61 @@ func TestSetHealthWithAuth(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
+			So(response.StatusCode, ShouldEqual, http.StatusForbidden)
+		})
+	})
+}
+
+func TestGetSysSubscriptionsWithAuth(t *testing.T) {
+	Convey("Authorization enabled", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		responseWriter := httptest.NewRecorder()
+		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
+		database = mockDb
+
+		logger, _ := zerolog_adapter.GetLogger("Test")
+
+		adminLogin := "admin_login"
+		config := &api.Config{
+			Authorization: api.Authorization{
+				Enabled: true,
+				AdminList: map[string]struct{}{adminLogin: {}},
+			},
+		}
+		webConfig := &api.WebConfig{
+			SupportEmail: "test",
+			Contacts: []api.WebContact{},
+		}
+		selfchecksConfig := &selfstate.ChecksConfig{
+			Database: selfstate.HeartbeatConfig{
+				SystemTags: []string{"tag"},
+			},
+		}
+		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, selfchecksConfig)
+
+		Convey("Admin tries to get system subscriptions", func() {
+			mockDb.EXPECT().GetTagsSubscriptions([]string{"tag"}).Return(nil, nil)
+
+			testRequest := httptest.NewRequest(http.MethodGet, "/api/health/system-subscriptions", bytes.NewReader([]byte{}))
+			testRequest.Header.Set("x-webauth-user", adminLogin)
+
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
+			So(response.StatusCode, ShouldEqual, http.StatusOK)
+		})
+
+		Convey("Non-admin tries to get system subscriptions", func() {
+			testRequest := httptest.NewRequest(http.MethodGet, "/api/health/system-subscriptions", bytes.NewReader([]byte{}))
+			testRequest.Header.Set("x-webauth-user", "non-admin")
+
+			handler.ServeHTTP(responseWriter, testRequest)
+
+			response := responseWriter.Result()
+			defer response.Body.Close()
 			So(response.StatusCode, ShouldEqual, http.StatusForbidden)
 		})
 	})
