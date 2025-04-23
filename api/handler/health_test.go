@@ -94,13 +94,13 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 		adminLogin := "admin_login"
 		config := &api.Config{
 			Authorization: api.Authorization{
-				Enabled: true,
+				Enabled:   true,
 				AdminList: map[string]struct{}{adminLogin: {}},
 			},
 		}
 		webConfig := &api.WebConfig{
 			SupportEmail: "test",
-			Contacts: []api.WebContact{},
+			Contacts:     []api.WebContact{},
 		}
 		selfchecksConfig := &selfstate.ChecksConfig{
 			Database: selfstate.HeartbeatConfig{
