@@ -104,22 +104,42 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 		}
 		selfchecksConfig := &selfstate.ChecksConfig{
 			Database: selfstate.HeartbeatConfig{
-				SystemTags: []string{"tag"},
+				SystemTags: []string{"database-tag"},
+			},
+			RemoteChecker: selfstate.HeartbeatConfig{
+				SystemTags: []string{"remote-checker-tag"},
+			},
+			LocalChecker: selfstate.HeartbeatConfig{
+				SystemTags: []string{"local-checker-tag"},
 			},
 		}
 		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, selfchecksConfig)
 
 		Convey("Admin tries to get system subscriptions", func() {
-			mockDb.EXPECT().GetTagsSubscriptions([]string{"tag"}).Return(nil, nil)
+			Convey("Without filter", func() {
+				mockDb.EXPECT().GetTagsSubscriptions(gomock.Any()).Return(nil, nil)
 
-			testRequest := httptest.NewRequest(http.MethodGet, "/api/health/system-subscriptions", bytes.NewReader([]byte{}))
-			testRequest.Header.Set("x-webauth-user", adminLogin)
+				testRequest := httptest.NewRequest(http.MethodGet, "/api/health/system-subscriptions", bytes.NewReader([]byte{}))
+				testRequest.Header.Set("x-webauth-user", adminLogin)
 
-			handler.ServeHTTP(responseWriter, testRequest)
+				handler.ServeHTTP(responseWriter, testRequest)
 
-			response := responseWriter.Result()
-			defer response.Body.Close()
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+				response := responseWriter.Result()
+				defer response.Body.Close()
+				So(response.StatusCode, ShouldEqual, http.StatusOK)
+			})
+			Convey("With filter", func() {
+				mockDb.EXPECT().GetTagsSubscriptions([]string{"remote-checker-tag", "local-checker-tag"}).Return(nil, nil)
+
+				testRequest := httptest.NewRequest(http.MethodGet, "/api/health/system-subscriptions?tag=remote-checker-tag&tag=local-checker-tag", bytes.NewReader([]byte{}))
+				testRequest.Header.Set("x-webauth-user", adminLogin)
+
+				handler.ServeHTTP(responseWriter, testRequest)
+
+				response := responseWriter.Result()
+				defer response.Body.Close()
+				So(response.StatusCode, ShouldEqual, http.StatusOK)
+			})
 		})
 
 		Convey("Non-admin tries to get system subscriptions", func() {
