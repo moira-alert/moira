@@ -28,7 +28,7 @@ func health(router chi.Router) {
 //	@id			get-system-subscription
 //	@tags		health
 //	@produce	json
-//	@success	200	{object}	dto.SubscriptionData				"Subscription list"
+//	@success	200	{object}	dto.SubscriptionList				"Subscriptions fetched successfully"
 //	@failure	422	{object}	api.ErrorRenderExample			"Render error"
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/health/system-subscriptions [get]
