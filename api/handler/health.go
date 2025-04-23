@@ -18,7 +18,8 @@ func health(router chi.Router) {
 	router.With(middleware.AdminOnlyMiddleware()).
 		Put("/notifier", setNotifierState)
 
-	router.Get("/system-subscriptions", getSystemSubscriptions)
+	router.With(middleware.AdminOnlyMiddleware()).
+		Get("/system-subscriptions", getSystemSubscriptions)
 }
 
 // nolint: gofmt,goimports
