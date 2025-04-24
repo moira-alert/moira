@@ -11,12 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/moira-alert/moira/index"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/database/stats"
-	"github.com/moira-alert/moira/index"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	_ "go.uber.org/automaxprocs"
 )
