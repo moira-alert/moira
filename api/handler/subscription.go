@@ -33,9 +33,9 @@ func subscription(router chi.Router) {
 //	@id			get-user-subscriptions
 //	@tags		subscription
 //	@produce	json
-//	@success	200	{object}	dto.SubscriptionList			"Subscriptions fetched successfully"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.SubscriptionList	"Subscriptions fetched successfully"
+//	@failure	422	{object}	api.ErrorResponse		"Render error"
+//	@failure	500	{object}	api.ErrorResponse		"Internal server error"
 //	@router		/subscription [get]
 func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
@@ -59,11 +59,11 @@ func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 //	@tags		subscription
 //	@accept		json
 //	@produce	json
-//	@param		subscription	body		dto.Subscription				true	"Subscription data"
-//	@success	200				{object}	dto.Subscription				"Subscription created successfully"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		subscription	body		dto.Subscription	true	"Subscription data"
+//	@success	200				{object}	dto.Subscription	"Subscription created successfully"
+//	@failure	400				{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	422				{object}	api.ErrorResponse	"Render error"
+//	@failure	500				{object}	api.ErrorResponse	"Internal server error"
 //	@router		/subscription [put]
 func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
@@ -120,12 +120,12 @@ func subscriptionFilter(next http.Handler) http.Handler {
 //	@id			get-subscription
 //	@tags		subscription
 //	@produce	json
-//	@param		subscriptionID	path		string							true	"ID of the subscription to get"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200				{object}	dto.Subscription				"Subscription fetched successfully"
-//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		subscriptionID	path		string				true	"ID of the subscription to get"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200				{object}	dto.Subscription	"Subscription fetched successfully"
+//	@failure	403				{object}	api.ErrorResponse	"Forbidden"
+//	@failure	404				{object}	api.ErrorResponse	"Resource not found"
+//	@failure	422				{object}	api.ErrorResponse	"Render error"
+//	@failure	500				{object}	api.ErrorResponse	"Internal server error"
 //	@router		/subscription/{subscriptionID} [get]
 func getSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
@@ -149,14 +149,14 @@ func getSubscription(writer http.ResponseWriter, request *http.Request) {
 //	@tags		subscription
 //	@accept		json
 //	@produce	json
-//	@param		subscriptionID	path		string							true	"ID of the subscription to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		subscription	body		dto.Subscription				true	"Updated subscription data"
-//	@success	200				{object}	dto.Subscription				"Subscription updated successfully"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		subscriptionID	path		string				true	"ID of the subscription to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		subscription	body		dto.Subscription	true	"Updated subscription data"
+//	@success	200				{object}	dto.Subscription	"Subscription updated successfully"
+//	@failure	400				{object}	api.ErrorResponse	"Bad request from client"
+//	@failure	403				{object}	api.ErrorResponse	"Forbidden"
+//	@failure	404				{object}	api.ErrorResponse	"Resource not found"
+//	@failure	422				{object}	api.ErrorResponse	"Render error"
+//	@failure	500				{object}	api.ErrorResponse	"Internal server error"
 //	@router		/subscription/{subscriptionID} [put]
 func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
@@ -200,9 +200,9 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 //	@produce	json
 //	@param		subscriptionID	path	string	true	"ID of the subscription to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200				"Subscription deleted"
-//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	403				{object}	api.ErrorResponse	"Forbidden"
+//	@failure	404				{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500				{object}	api.ErrorResponse	"Internal server error"
 //	@router		/subscription/{subscriptionID} [delete]
 func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
@@ -219,9 +219,9 @@ func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 //	@produce	json
 //	@param		subscriptionID	path	string	true	"ID of the subscription to send the test notification"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200				"Test notification sent successfully"
-//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	403				{object}	api.ErrorResponse	"Forbidden"
+//	@failure	404				{object}	api.ErrorResponse	"Resource not found"
+//	@failure	500				{object}	api.ErrorResponse	"Internal server error"
 //	@router		/subscription/{subscriptionID}/test [put]
 func sendTestNotification(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
