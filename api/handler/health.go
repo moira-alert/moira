@@ -29,8 +29,8 @@ func health(router chi.Router) {
 //	@tags		health
 //	@produce	json
 //	@success	200	{object}	dto.SubscriptionList				"Subscriptions fetched successfully"
-//	@failure	422	{object}	api.ErrorRender			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServer	"Internal server error"
+//	@failure	422	{object}	api.ErrorResponse			"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/health/system-subscriptions [get]
 func getSystemSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	sysTags := getSystemTags(request)
