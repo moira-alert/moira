@@ -33,13 +33,7 @@ func health(router chi.Router) {
 //	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/health/system-subscriptions [get]
 func getSystemSubscriptions(writer http.ResponseWriter, request *http.Request) {
-	const sysTagsKey = "tag"
-
-	sysTags, queryFiltered := request.URL.Query()[sysTagsKey]
-	if !queryFiltered {
-		checksConfig := middleware.GetSelfStateChecksConfig(request)
-		sysTags = checksConfig.GetUniqueSystemTags()
-	}
+	sysTags := getSystemTags(request)
 
 	subs, err := controller.GetSystemSubscriptions(database, sysTags)
 	if err != nil {
@@ -60,6 +54,18 @@ func getSystemSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Render(writer, request, dto); err != nil {
 		_ = render.Render(writer, request, api.ErrorRender(err))
 	}
+}
+
+func getSystemTags(request *http.Request) []string {
+	const sysTagsKey = "tag"
+
+	sysTags, queryFiltered := request.URL.Query()[sysTagsKey]
+	if !queryFiltered {
+		checksConfig := middleware.GetSelfStateChecksConfig(request)
+		sysTags = checksConfig.GetUniqueSystemTags()
+	}
+
+	return sysTags
 }
 
 // nolint: gofmt,goimports
