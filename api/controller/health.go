@@ -33,3 +33,13 @@ func UpdateNotifierState(database moira.Database, state *dto.NotifierState) *api
 
 	return nil
 }
+
+// GetSystemSubscriptions returns system subscriptions matched to system tags.
+func GetSystemSubscriptions(database moira.Database, systemTags []string) ([]*moira.SubscriptionData, *api.ErrorResponse) {
+	subs, err := database.GetTagsSubscriptions(systemTags)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	return subs, nil
+}
