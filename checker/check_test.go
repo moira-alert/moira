@@ -702,9 +702,9 @@ func TestCheck(t *testing.T) {
 		pattern := "super.puper.pattern" //nolint
 		metric := "super.puper.metric"   //nolint
 		message := "ooops, metric error"
-		metricErr := fmt.Errorf(message)
+		metricErr := errors.New(message)
 		messageException := `Unknown graphite function: "WrongFunction"`
-		unknownFunctionExc := local.ErrorUnknownFunction(fmt.Errorf(messageException))
+		unknownFunctionExc := local.ErrorUnknownFunction(errors.New(messageException))
 
 		testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix()
 

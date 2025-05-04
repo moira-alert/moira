@@ -53,7 +53,7 @@ type Sender struct {
 
 func (sender *Sender) removeTokenFromError(err error) error {
 	if err != nil && strings.Contains(err.Error(), sender.apiToken) {
-		return errors.New(strings.Replace(err.Error(), sender.apiToken, hidden, -1))
+		return errors.New(strings.ReplaceAll(err.Error(), sender.apiToken, hidden))
 	}
 
 	return err

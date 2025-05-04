@@ -6,6 +6,9 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func usage() {
@@ -35,8 +38,8 @@ func createGoFile(fileName string, dataTTF []byte) error {
 	}
 	defer f.Close()
 
-	_, err = f.WriteString(fmt.Sprintf("package fonts\n\nvar %s = %#v\n",
-		strings.Title(fileName), dataTTF)) // nolint: staticcheck
+	_, err = fmt.Fprintf(f, "package fonts\n\nvar %s = %#v\n",
+		cases.Title(language.Und).String(fileName), dataTTF)
 
 	return err
 }

@@ -196,7 +196,7 @@ func (sender *Sender) getContactValueByMessage(message *telebot.Message) (string
 	case message.Chat.Type == telebot.ChatChannel:
 		contactValue = "#" + message.Chat.Username
 	case message.Chat.Type == telebot.ChatChannelPrivate:
-		contactValue = strings.Replace(message.Chat.Recipient(), "-100", "%", -1)
+		contactValue = strings.ReplaceAll(message.Chat.Recipient(), "-100", "%")
 	default:
 		err = fmt.Errorf("unknown chat type")
 	}

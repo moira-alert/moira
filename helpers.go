@@ -338,7 +338,7 @@ func ValidateURL(requestUrl string) error {
 		return err
 	}
 
-	if !(urlStruct.Scheme == "http" || urlStruct.Scheme == "https") {
+	if urlStruct.Scheme != "http" && urlStruct.Scheme != "https" {
 		return fmt.Errorf("bad url scheme: %s", urlStruct.Scheme)
 	}
 
