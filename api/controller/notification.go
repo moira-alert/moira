@@ -39,3 +39,13 @@ func DeleteAllNotifications(database moira.Database) *api.ErrorResponse {
 
 	return nil
 }
+
+// DeleteAllNotifications removes all notifications.
+func DeleteFilteredNotifications(database moira.Database, from, to int64, ignoredTags []string) *api.ErrorResponse {
+	_, err := database.RemoveNotificationsFiltered(from, to, ignoredTags)
+	if err != nil {
+		return api.ErrorInternalServer(err)
+	}
+
+	return nil
+}
