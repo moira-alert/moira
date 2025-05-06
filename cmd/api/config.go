@@ -233,7 +233,7 @@ func (config *webConfig) validate() error {
 	return nil
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
+func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig, redisConfig cmd.RedisConfig) *api.WebConfig {
 	webContacts := make([]api.WebContact, 0, len(config.ContactsTemplate))
 
 	for _, contactTemplate := range config.ContactsTemplate {
@@ -253,6 +253,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		TriggerSource: moira.GraphiteLocal,
 		ClusterId:     moira.DefaultCluster,
 		ClusterName:   "Graphite Local",
+		MetricsTTL:    uint64(to.Duration(redisConfig.MetricsTTL).Seconds()),
 	}}
 
 	for _, remote := range remotes.Graphite {
@@ -260,6 +261,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 			TriggerSource: moira.GraphiteRemote,
 			ClusterId:     remote.ClusterId,
 			ClusterName:   remote.ClusterName,
+			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
 		}
 		clusters = append(clusters, cluster)
 	}
@@ -269,6 +271,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 			TriggerSource: moira.PrometheusRemote,
 			ClusterId:     remote.ClusterId,
 			ClusterName:   remote.ClusterName,
+			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
 		}
 		clusters = append(clusters, cluster)
 	}

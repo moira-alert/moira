@@ -145,11 +145,12 @@ func Test_webConfig_getSettings(t *testing.T) {
 		ClusterName:   "Graphite Local",
 	}}
 	remotesDefault := cmd.RemotesConfig{}
+	redisDefault := cmd.RedisConfig{}
 
 	Convey("Empty config, fill it", t, func() {
 		config := webConfig{}
 
-		settings := config.getSettings(true, remotesDefault)
+		settings := config.getSettings(true, remotesDefault, redisDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed:        true,
 			Contacts:             []api.WebContact{},
@@ -160,7 +161,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 	Convey("Default config, fill it", t, func() {
 		config := getDefault()
 
-		settings := config.Web.getSettings(true, remotesDefault)
+		settings := config.Web.getSettings(true, remotesDefault, redisDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},
@@ -199,7 +200,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			},
 		}
 
-		settings := config.getSettings(true, remotesDefault)
+		settings := config.getSettings(true, remotesDefault, redisDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			SupportEmail:  "lalal@mail.la",
 			RemoteAllowed: true,
@@ -243,7 +244,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			}},
 		}
 
-		settings := config.getSettings(true, remotes)
+		settings := config.getSettings(true, remotes, redisDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},

@@ -73,6 +73,7 @@ type WebConfig struct {
 type MetricSourceCluster struct {
 	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_remote"`
 	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`
+	MetricsTTL    uint64              `json:"metrics_ttl" example:"604800"`
 	ClusterName   string              `json:"cluster_name" example:"Graphite Remote Prod"`
 }
 
