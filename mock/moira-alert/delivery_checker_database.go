@@ -19,6 +19,7 @@ import (
 type MockDeliveryCheckerDatabase struct {
 	ctrl     *gomock.Controller
 	recorder *MockDeliveryCheckerDatabaseMockRecorder
+	isgomock struct{}
 }
 
 // MockDeliveryCheckerDatabaseMockRecorder is the mock recorder for MockDeliveryCheckerDatabase.
@@ -39,45 +40,45 @@ func (m *MockDeliveryCheckerDatabase) EXPECT() *MockDeliveryCheckerDatabaseMockR
 }
 
 // AddDeliveryChecksData mocks base method.
-func (m *MockDeliveryCheckerDatabase) AddDeliveryChecksData(arg0 string, arg1 int64, arg2 string) error {
+func (m *MockDeliveryCheckerDatabase) AddDeliveryChecksData(contactType string, timestamp int64, data string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddDeliveryChecksData", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "AddDeliveryChecksData", contactType, timestamp, data)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddDeliveryChecksData indicates an expected call of AddDeliveryChecksData.
-func (mr *MockDeliveryCheckerDatabaseMockRecorder) AddDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDeliveryCheckerDatabaseMockRecorder) AddDeliveryChecksData(contactType, timestamp, data any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).AddDeliveryChecksData), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).AddDeliveryChecksData), contactType, timestamp, data)
 }
 
 // GetDeliveryChecksData mocks base method.
-func (m *MockDeliveryCheckerDatabase) GetDeliveryChecksData(arg0, arg1, arg2 string) ([]string, error) {
+func (m *MockDeliveryCheckerDatabase) GetDeliveryChecksData(contactType, from, to string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDeliveryChecksData", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetDeliveryChecksData", contactType, from, to)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDeliveryChecksData indicates an expected call of GetDeliveryChecksData.
-func (mr *MockDeliveryCheckerDatabaseMockRecorder) GetDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDeliveryCheckerDatabaseMockRecorder) GetDeliveryChecksData(contactType, from, to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).GetDeliveryChecksData), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).GetDeliveryChecksData), contactType, from, to)
 }
 
 // RemoveDeliveryChecksData mocks base method.
-func (m *MockDeliveryCheckerDatabase) RemoveDeliveryChecksData(arg0, arg1, arg2 string) (int64, error) {
+func (m *MockDeliveryCheckerDatabase) RemoveDeliveryChecksData(contactType, from, to string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveDeliveryChecksData", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "RemoveDeliveryChecksData", contactType, from, to)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RemoveDeliveryChecksData indicates an expected call of RemoveDeliveryChecksData.
-func (mr *MockDeliveryCheckerDatabaseMockRecorder) RemoveDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDeliveryCheckerDatabaseMockRecorder) RemoveDeliveryChecksData(contactType, from, to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).RemoveDeliveryChecksData), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeliveryChecksData", reflect.TypeOf((*MockDeliveryCheckerDatabase)(nil).RemoveDeliveryChecksData), contactType, from, to)
 }

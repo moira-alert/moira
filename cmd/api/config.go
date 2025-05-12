@@ -125,6 +125,8 @@ type authorization struct {
 	Enabled bool `yaml:"enabled"`
 	// List of logins of users who are considered to be admins.
 	AdminList []string `yaml:"admin_list"`
+	// List for control trigger deletion and editing, if createdBy fit in this list: only who create trigger can delete it.
+	LimitedChangeTriggerOwners []string `yaml:"limited_change_trigger_owners"`
 }
 
 type sentryConfig struct {
@@ -203,10 +205,16 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 		allowedContactTypes[contactTemplate.ContactType] = struct{}{}
 	}
 
+	canChangeTriggersList := make(map[string]struct{}, len(auth.LimitedChangeTriggerOwners))
+	for _, login := range auth.LimitedChangeTriggerOwners {
+		canChangeTriggersList[login] = struct{}{}
+	}
+
 	return api.Authorization{
-		Enabled:             auth.Enabled,
-		AdminList:           adminList,
-		AllowedContactTypes: allowedContactTypes,
+		Enabled:                    auth.Enabled,
+		AdminList:                  adminList,
+		AllowedContactTypes:        allowedContactTypes,
+		LimitedChangeTriggerOwners: canChangeTriggersList,
 	}
 }
 
@@ -225,7 +233,7 @@ func (config *webConfig) validate() error {
 	return nil
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig) *api.WebConfig {
+func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig, redisConfig cmd.RedisConfig) *api.WebConfig {
 	webContacts := make([]api.WebContact, 0, len(config.ContactsTemplate))
 
 	for _, contactTemplate := range config.ContactsTemplate {
@@ -245,6 +253,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		TriggerSource: moira.GraphiteLocal,
 		ClusterId:     moira.DefaultCluster,
 		ClusterName:   "Graphite Local",
+		MetricsTTL:    uint64(to.Duration(redisConfig.MetricsTTL).Seconds()),
 	}}
 
 	for _, remote := range remotes.Graphite {
@@ -252,6 +261,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 			TriggerSource: moira.GraphiteRemote,
 			ClusterId:     remote.ClusterId,
 			ClusterName:   remote.ClusterName,
+			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
 		}
 		clusters = append(clusters, cluster)
 	}
@@ -261,6 +271,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 			TriggerSource: moira.PrometheusRemote,
 			ClusterId:     remote.ClusterId,
 			ClusterName:   remote.ClusterName,
+			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
 		}
 		clusters = append(clusters, cluster)
 	}

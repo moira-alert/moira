@@ -11,12 +11,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/moira-alert/moira/index"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/database/stats"
-	"github.com/moira-alert/moira/index"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	_ "go.uber.org/automaxprocs"
 )
@@ -75,6 +76,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
+
 	defer logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira API stopped")
@@ -136,7 +138,7 @@ func main() {
 	statsManager.Start()
 	defer statsManager.Stop() //nolint
 
-	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes)
+	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes, applicationConfig.Redis)
 	selfStateChecksConfig := toCheckConfig(applicationConfig.Checks)
 
 	httpHandler := handler.NewHandler(

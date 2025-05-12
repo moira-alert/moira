@@ -30,12 +30,12 @@ func notification(router chi.Router) {
 //	@id			get-notifications
 //	@tags		notification
 //	@produce	json
-//	@param		start	query		int								false	"Default Value: 0"	default(0)
-//	@param		end		query		int								false	"Default Value: -1"	default(-1)
-//	@success	200		{object}	dto.NotificationsList			"Notifications fetched successfully"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		start	query		int						false	"Default Value: 0"	default(0)
+//	@param		end		query		int						false	"Default Value: -1"	default(-1)
+//	@success	200		{object}	dto.NotificationsList	"Notifications fetched successfully"
+//	@failure	400		{object}	api.ErrorResponse		"Bad request from client"
+//	@failure	422		{object}	api.ErrorResponse		"Render error"
+//	@failure	500		{object}	api.ErrorResponse		"Internal server error"
 //	@router		/notification [get]
 func getNotification(writer http.ResponseWriter, request *http.Request) {
 	urlValues, err := url.ParseQuery(request.URL.RawQuery)
@@ -73,10 +73,10 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 //	@param		id	query	string	true	"The ID of deleted notification"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@produce	json
 //	@success	200	{object}	dto.NotificationDeleteResponse	"Notification have been deleted"
-//	@failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@failure	400	{object}	api.ErrorResponse				"Bad request from client"
+//	@failure	403	{object}	api.ErrorResponse				"Forbidden"
+//	@failure	422	{object}	api.ErrorResponse				"Render error"
+//	@failure	500	{object}	api.ErrorResponse				"Internal server error"
 //	@router		/notification [delete]
 func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 	urlValues, err := url.ParseQuery(request.URL.RawQuery)
@@ -108,9 +108,9 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 //	@id			delete-all-notifications
 //	@tags		notification
 //	@produce	json
-//	@success	200	{object}	dto.NotificationsList			"Notification have been deleted"
-//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.NotificationsList	"Notification have been deleted"
+//	@failure	403	{object}	api.ErrorResponse		"Forbidden"
+//	@failure	500	{object}	api.ErrorResponse		"Internal server error"
 //	@router		/notification/all [delete]
 func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllNotifications(database); errorResponse != nil {

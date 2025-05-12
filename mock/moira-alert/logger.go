@@ -21,6 +21,7 @@ import (
 type MockLogger struct {
 	ctrl     *gomock.Controller
 	recorder *MockLoggerMockRecorder
+	isgomock struct{}
 }
 
 // MockLoggerMockRecorder is the mock recorder for MockLogger.
@@ -97,17 +98,17 @@ func (mr *MockLoggerMockRecorder) Fatal() *gomock.Call {
 }
 
 // Fields mocks base method.
-func (m *MockLogger) Fields(arg0 map[string]any) moira.Logger {
+func (m *MockLogger) Fields(fields map[string]any) moira.Logger {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Fields", arg0)
+	ret := m.ctrl.Call(m, "Fields", fields)
 	ret0, _ := ret[0].(moira.Logger)
 	return ret0
 }
 
 // Fields indicates an expected call of Fields.
-func (mr *MockLoggerMockRecorder) Fields(arg0 any) *gomock.Call {
+func (mr *MockLoggerMockRecorder) Fields(fields any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fields", reflect.TypeOf((*MockLogger)(nil).Fields), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fields", reflect.TypeOf((*MockLogger)(nil).Fields), fields)
 }
 
 // Info mocks base method.
@@ -125,31 +126,31 @@ func (mr *MockLoggerMockRecorder) Info() *gomock.Call {
 }
 
 // Int mocks base method.
-func (m *MockLogger) Int(arg0 string, arg1 int) moira.Logger {
+func (m *MockLogger) Int(key string, value int) moira.Logger {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Int", arg0, arg1)
+	ret := m.ctrl.Call(m, "Int", key, value)
 	ret0, _ := ret[0].(moira.Logger)
 	return ret0
 }
 
 // Int indicates an expected call of Int.
-func (mr *MockLoggerMockRecorder) Int(arg0, arg1 any) *gomock.Call {
+func (mr *MockLoggerMockRecorder) Int(key, value any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Int", reflect.TypeOf((*MockLogger)(nil).Int), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Int", reflect.TypeOf((*MockLogger)(nil).Int), key, value)
 }
 
 // Int64 mocks base method.
-func (m *MockLogger) Int64(arg0 string, arg1 int64) moira.Logger {
+func (m *MockLogger) Int64(key string, value int64) moira.Logger {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Int64", arg0, arg1)
+	ret := m.ctrl.Call(m, "Int64", key, value)
 	ret0, _ := ret[0].(moira.Logger)
 	return ret0
 }
 
 // Int64 indicates an expected call of Int64.
-func (mr *MockLoggerMockRecorder) Int64(arg0, arg1 any) *gomock.Call {
+func (mr *MockLoggerMockRecorder) Int64(key, value any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Int64", reflect.TypeOf((*MockLogger)(nil).Int64), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Int64", reflect.TypeOf((*MockLogger)(nil).Int64), key, value)
 }
 
 // Level mocks base method.
@@ -168,17 +169,17 @@ func (mr *MockLoggerMockRecorder) Level(arg0 any) *gomock.Call {
 }
 
 // String mocks base method.
-func (m *MockLogger) String(arg0, arg1 string) moira.Logger {
+func (m *MockLogger) String(key, value string) moira.Logger {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "String", arg0, arg1)
+	ret := m.ctrl.Call(m, "String", key, value)
 	ret0, _ := ret[0].(moira.Logger)
 	return ret0
 }
 
 // String indicates an expected call of String.
-func (mr *MockLoggerMockRecorder) String(arg0, arg1 any) *gomock.Call {
+func (mr *MockLoggerMockRecorder) String(key, value any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockLogger)(nil).String), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockLogger)(nil).String), key, value)
 }
 
 // Warning mocks base method.
