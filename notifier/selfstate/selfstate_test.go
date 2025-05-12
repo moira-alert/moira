@@ -374,6 +374,17 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 		So(notifierEnabled, ShouldBeFalse)
 	})
 
+	Convey("Should not enable if notifier is disabled by a trigger", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateERROR,
+			Actor: moira.SelfStateActorTrigger,
+		}, nil)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+
 	Convey("Should not enable notifier if it is already enabled", t, func() {
 		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			State: moira.SelfStateOK,
