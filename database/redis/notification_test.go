@@ -1526,3 +1526,58 @@ func TestRemoveNotifications(t *testing.T) {
 		})
 	})
 }
+
+func TestRemoveNotificationsFiltered(t *testing.T) {
+	logger, _ := logging.GetLogger("database")
+	database := NewTestDatabase(logger)
+	database.Flush()
+
+	defer database.Flush()
+
+	ignoredTag := "ignored"
+	tag := "tag"
+
+	notification1 := &moira.ScheduledNotification{
+		Timestamp: 10,
+		Trigger:   moira.TriggerData{Tags: []string{tag}},
+	}
+	notification2 := &moira.ScheduledNotification{
+		Timestamp: 20,
+		Trigger:   moira.TriggerData{Tags: []string{tag, ignoredTag}},
+	}
+	notification3 := &moira.ScheduledNotification{
+		Timestamp: 30,
+		Trigger:   moira.TriggerData{Tags: []string{ignoredTag}},
+	}
+	notification4 := &moira.ScheduledNotification{
+		Timestamp: 40,
+		Trigger:   moira.TriggerData{Tags: []string{}},
+	}
+
+	Convey("Test removeNotifications filtered for all time", t, func() {
+		addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
+
+		count, err := database.RemoveNotificationsFiltered(0, -1, []string{ignoredTag})
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 2)
+
+		allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
+		So(err, ShouldBeNil)
+		So(countAllNotifications, ShouldEqual, 2)
+		So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification2, notification3})
+	})
+
+	Convey("Test removeNotifications filtered for time range", t, func() {
+		addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
+
+		count, err := database.RemoveNotificationsFiltered(25, 45, []string{ignoredTag})
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 1)
+
+		allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
+		So(err, ShouldBeNil)
+		So(countAllNotifications, ShouldEqual, 3)
+
+		So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification1, notification2, notification3})
+	})
+}

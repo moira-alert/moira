@@ -49,7 +49,16 @@ func limitNotifications(notifications []*moira.ScheduledNotification) []*moira.S
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
-	pipe.ZRange(ctx, notifierNotificationsKey, start, end)
+
+	var stop string
+	if end < 0 {
+		stop = "inf"
+	} else {
+		stop = strconv.FormatInt(end, 10)
+	}
+	rng := &redis.ZRangeBy{Min: strconv.FormatInt(start, 10), Max: stop}
+	pipe.ZRangeByScore(ctx, notifierNotificationsKey, rng)
+
 	pipe.ZCard(ctx, notifierNotificationsKey)
 
 	response, err := pipe.Exec(ctx)
@@ -123,14 +132,12 @@ func (connector *DbConnector) RemoveNotificationsFiltered(start, end int64, igno
 		ignoredTagsSet[tag] = struct{}{}
 	}
 
+outer:
 	for _, notification := range notifications {
-		timestamp := strconv.FormatInt(notification.Timestamp, 10)
-		contactID := notification.Contact.ID
-		subID := moira.UseString(notification.Event.SubscriptionID)
-
-		idstr := strings.Join([]string{timestamp, contactID, subID}, "")
-		if _, ok := ignoredTagsSet[idstr]; ok {
-			continue
+		for _, tag := range notification.Trigger.Tags {
+			if _, ok := ignoredTagsSet[tag]; ok {
+				continue outer
+			}
 		}
 
 		foundNotifications = append(foundNotifications, notification)
