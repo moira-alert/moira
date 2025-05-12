@@ -113,7 +113,6 @@ func HandlePushTriggerMetrics(
 	for _, patternMetrics := range patternsMetrics {
 		for metricName, metricValues := range patternMetrics.Metrics {
 			for _, metricValue := range metricValues {
-
 				retention, ok := patternMetrics.Retentions[metricName]
 				if !ok {
 					retention = defaultRetention
