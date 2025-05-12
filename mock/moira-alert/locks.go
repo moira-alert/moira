@@ -19,6 +19,7 @@ import (
 type MockLock struct {
 	ctrl     *gomock.Controller
 	recorder *MockLockMockRecorder
+	isgomock struct{}
 }
 
 // MockLockMockRecorder is the mock recorder for MockLock.
@@ -39,18 +40,18 @@ func (m *MockLock) EXPECT() *MockLockMockRecorder {
 }
 
 // Acquire mocks base method.
-func (m *MockLock) Acquire(arg0 <-chan struct{}) (<-chan struct{}, error) {
+func (m *MockLock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Acquire", arg0)
+	ret := m.ctrl.Call(m, "Acquire", stop)
 	ret0, _ := ret[0].(<-chan struct{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Acquire indicates an expected call of Acquire.
-func (mr *MockLockMockRecorder) Acquire(arg0 any) *gomock.Call {
+func (mr *MockLockMockRecorder) Acquire(stop any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Acquire", reflect.TypeOf((*MockLock)(nil).Acquire), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Acquire", reflect.TypeOf((*MockLock)(nil).Acquire), stop)
 }
 
 // Release mocks base method.

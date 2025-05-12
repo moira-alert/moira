@@ -28,8 +28,8 @@ type Config struct {
 	LastMetricReceivedDelaySeconds int64
 	LastCheckDelaySeconds          int64
 	LastRemoteCheckDelaySeconds    int64
-	NoticeIntervalSeconds          int64
 	CheckInterval                  time.Duration
+	UserNotificationsInterval      time.Duration
 	Contacts                       []map[string]string
 	Checks                         ChecksConfig
 }

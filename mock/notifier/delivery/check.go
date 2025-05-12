@@ -20,6 +20,7 @@ import (
 type MockNotificationDeliveryChecker struct {
 	ctrl     *gomock.Controller
 	recorder *MockNotificationDeliveryCheckerMockRecorder
+	isgomock struct{}
 }
 
 // MockNotificationDeliveryCheckerMockRecorder is the mock recorder for MockNotificationDeliveryChecker.
@@ -40,16 +41,16 @@ func (m *MockNotificationDeliveryChecker) EXPECT() *MockNotificationDeliveryChec
 }
 
 // CheckNotificationsDelivery mocks base method.
-func (m *MockNotificationDeliveryChecker) CheckNotificationsDelivery(arg0 []string) ([]string, moira.DeliveryTypesCounter) {
+func (m *MockNotificationDeliveryChecker) CheckNotificationsDelivery(fetchedDeliveryChecks []string) ([]string, moira.DeliveryTypesCounter) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckNotificationsDelivery", arg0)
+	ret := m.ctrl.Call(m, "CheckNotificationsDelivery", fetchedDeliveryChecks)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(moira.DeliveryTypesCounter)
 	return ret0, ret1
 }
 
 // CheckNotificationsDelivery indicates an expected call of CheckNotificationsDelivery.
-func (mr *MockNotificationDeliveryCheckerMockRecorder) CheckNotificationsDelivery(arg0 any) *gomock.Call {
+func (mr *MockNotificationDeliveryCheckerMockRecorder) CheckNotificationsDelivery(fetchedDeliveryChecks any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckNotificationsDelivery", reflect.TypeOf((*MockNotificationDeliveryChecker)(nil).CheckNotificationsDelivery), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckNotificationsDelivery", reflect.TypeOf((*MockNotificationDeliveryChecker)(nil).CheckNotificationsDelivery), fetchedDeliveryChecks)
 }

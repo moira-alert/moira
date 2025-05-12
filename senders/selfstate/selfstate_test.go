@@ -50,8 +50,9 @@ func TestSender_SendEvents(t *testing.T) {
 			Convey("Should ignore events received", func() {
 				for _, subjectState := range ignorableSubjectStates {
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
-
-					dataBase.EXPECT().GetNotifierState().Return(selfStateInitial, nil)
+					dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+						State: selfStateInitial,
+					}, nil)
 
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 					So(err, ShouldBeNil)
@@ -60,8 +61,10 @@ func TestSender_SendEvents(t *testing.T) {
 
 			Convey("Should disable notifications", func() {
 				for _, subjectState := range disablingSubjectStates {
-					dataBase.EXPECT().GetNotifierState().Return(selfStateInitial, nil)
-					dataBase.EXPECT().SetNotifierState(selfStateFinal).Return(nil)
+					dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+						State: selfStateInitial,
+					}, nil)
+					dataBase.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, selfStateFinal).Return(nil)
 
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
@@ -75,8 +78,9 @@ func TestSender_SendEvents(t *testing.T) {
 
 			for _, subjectState := range disablingSubjectStates {
 				testEvents := []moira.NotificationEvent{{State: subjectState}}
-
-				dataBase.EXPECT().GetNotifierState().Return(selfStateInitial, nil)
+				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+					State: selfStateInitial,
+				}, nil)
 
 				err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 				So(err, ShouldBeNil)
@@ -90,7 +94,7 @@ func TestSender_SendEvents(t *testing.T) {
 		for _, subjectState := range disablingSubjectStates {
 			testEvents := []moira.NotificationEvent{{State: subjectState}}
 
-			dataBase.EXPECT().GetNotifierState().Return("", fmt.Errorf("redis is down"))
+			dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{}, fmt.Errorf("redis is down"))
 
 			err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 			So(err, ShouldNotBeNil)

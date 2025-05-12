@@ -2,6 +2,7 @@ package selfstate
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -35,7 +36,10 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
-		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateOK,
+		}, nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 
@@ -57,7 +61,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 	mock.mockCtrl.Finish()
 }
 
-func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
+func TestSelfCheckWorker_sendMessages(t *testing.T) {
 	Convey("Should call notifier send", t, func() {
 		mock := configureWorker(t, true)
 		err := mock.selfCheckWorker.Start()
@@ -67,11 +71,185 @@ func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
 
 		var events []heartbeatNotificationEvent
 
-		mock.selfCheckWorker.sendErrorMessages(events)
+		mock.selfCheckWorker.sendMessages(events)
 
 		err = mock.selfCheckWorker.Stop()
 		So(err, ShouldBeNil)
 		mock.mockCtrl.Finish()
+	})
+
+	Convey("Should send user notifications if selfCheck state changes", t, func() {
+		cases := []struct {
+			oldState               moira.SelfStateWorkerState
+			state                  moira.SelfStateWorkerState
+			isNotificationExpected bool
+		}{
+			{
+				oldState:               moira.SelfStateWorkerOK,
+				state:                  moira.SelfStateWorkerWARN,
+				isNotificationExpected: false,
+			},
+			{
+				// NOTE: Impossible case but need to check
+				oldState:               moira.SelfStateWorkerOK,
+				state:                  moira.SelfStateERROR,
+				isNotificationExpected: false,
+			},
+			{
+				oldState:               moira.SelfStateWorkerWARN,
+				state:                  moira.SelfStateWorkerERROR,
+				isNotificationExpected: true,
+			},
+			{
+				oldState:               moira.SelfStateWorkerERROR,
+				state:                  moira.SelfStateWorkerOK,
+				isNotificationExpected: true,
+			},
+		}
+
+		for _, testCase := range cases {
+			Convey(fmt.Sprintf("should send: %v, state: %v -> %v", testCase.isNotificationExpected, testCase.oldState, testCase.state), func() {
+				mock := configureWorker(t, true)
+				err := mock.selfCheckWorker.Start()
+				So(err, ShouldBeNil)
+
+				if testCase.isNotificationExpected {
+					mock.database.EXPECT().GetTagsSubscriptions([]string{"tag"}).Return(nil, nil)
+				}
+
+				mock.selfCheckWorker.oldState = testCase.oldState
+				mock.selfCheckWorker.state = testCase.state
+
+				mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
+
+				events := []heartbeatNotificationEvent{
+					{
+						NotificationEvent: moira.NotificationEvent{},
+						CheckTags:         []string{"tag"},
+					},
+				}
+
+				mock.selfCheckWorker.sendMessages(events)
+
+				err = mock.selfCheckWorker.Stop()
+				So(err, ShouldBeNil)
+				mock.mockCtrl.Finish()
+			})
+		}
+	})
+}
+
+func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
+	Convey("Should change own state in full cycle", t, func() {
+		mock := configureWorker(t, false)
+		nowTS := time.Now()
+
+		successGraphResult1 := graphExecutionResult{
+			lastSuccessCheckElapsedTime: nowTS.Unix(),
+			nowTimestamp:                time.Duration(nowTS.UnixNano()),
+			hasErrors:                   false,
+			needTurnOffNotifier:         false,
+			errorMessages:               nil,
+			checksTags:                  nil,
+		}
+
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateOK,
+		}, nil).Times(2)
+
+		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult1)
+
+		So(mock.selfCheckWorker.oldState, ShouldEqual, "")
+		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerOK)
+
+		successGraphResult2 := successGraphResult1
+		successGraphResult2.nowTimestamp = time.Duration(nowTS.UnixNano()) + 500*time.Millisecond
+
+		events := mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult2)
+
+		So(len(events), ShouldEqual, 0)
+		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerOK)
+		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerOK)
+
+		errorGraphResult1 := graphExecutionResult{
+			lastSuccessCheckElapsedTime: nowTS.Unix(),
+			nowTimestamp:                time.Duration(nowTS.UnixNano()) + 1*time.Second,
+			hasErrors:                   true,
+			needTurnOffNotifier:         true,
+			errorMessages:               []string{"some error"},
+			checksTags:                  []string{"tag"},
+		}
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
+
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult1)
+
+		So(len(events), ShouldEqual, 1)
+		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerOK)
+		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerWARN)
+
+		errorGraphResult2 := errorGraphResult1
+		errorGraphResult2.nowTimestamp = time.Duration(nowTS.UnixNano()) + 1500*time.Millisecond
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
+
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult2)
+
+		So(len(events), ShouldEqual, 0)
+		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerWARN)
+		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerWARN)
+
+		errorGraphResult3 := errorGraphResult2
+		errorGraphResult3.nowTimestamp = time.Duration(nowTS.UnixNano()) + 3000*time.Millisecond
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
+
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult3)
+
+		So(len(events), ShouldEqual, 1)
+		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerWARN)
+		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerERROR)
+
+		errorGraphResult4 := errorGraphResult3
+		errorGraphResult4.nowTimestamp = time.Duration(nowTS.UnixNano()) + 3500*time.Millisecond
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
+
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult4)
+
+		So(len(events), ShouldEqual, 0)
+		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerERROR)
+		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerERROR)
+
+		successGraphResult3 := successGraphResult2
+		successGraphResult3.nowTimestamp = time.Duration(nowTS.UnixNano()) + 4000*time.Millisecond
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateERROR,
+		}, nil)
+
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult3)
+
+		So(len(events), ShouldEqual, 1)
+		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerERROR)
+		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerOK)
+
+		successGraphResult4 := successGraphResult3
+		successGraphResult4.nowTimestamp = time.Duration(nowTS.Unix()) + 4500*time.Millisecond
+
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateOK,
+		}, nil)
+
+		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult4)
+
+		So(len(events), ShouldEqual, 0)
+		So(mock.selfCheckWorker.oldState, ShouldEqual, moira.SelfStateWorkerOK)
+		So(mock.selfCheckWorker.state, ShouldEqual, moira.SelfStateWorkerOK)
 	})
 }
 
@@ -156,6 +334,82 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 	})
 }
 
+func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
+	mock := configureWorker(t, false)
+
+	Convey("Should enable if notifier is disabled by auto", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateERROR,
+			Actor: moira.SelfStateActorAutomatic,
+		}, nil)
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeTrue)
+	})
+
+	Convey("Should switch notifier to AUTO if enabled manually", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorManual,
+		}, nil)
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeTrue)
+	})
+
+	Convey("Should not enable if notifier is disabled manually", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateERROR,
+			Actor: moira.SelfStateActorManual,
+		}, nil)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+
+	Convey("Should not enable notifier if it is already enabled", t, func() {
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorAutomatic,
+		}, nil)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldBeNil)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+
+	Convey("Should not enable notifier if getting state throw error", t, func() {
+		expected_err := fmt.Errorf("error")
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{}, expected_err)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldResemble, expected_err)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+
+	Convey("Should not enable notifier if notifier enabling returns error", t, func() {
+		expected_err := fmt.Errorf("error")
+
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			State: moira.SelfStateERROR,
+			Actor: moira.SelfStateActorAutomatic,
+		}, nil)
+
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK).Return(expected_err)
+
+		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
+		So(err, ShouldEqual, expected_err)
+		So(notifierEnabled, ShouldBeFalse)
+	})
+}
+
 func TestSelfCheckWorker_Start(t *testing.T) {
 	mock := configureWorker(t, false)
 	Convey("When Contact not corresponds to any Sender", t, func() {
@@ -179,7 +433,11 @@ func TestSelfCheckWorker(t *testing.T) {
 			check := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph{{check}}
 
-			// check.EXPECT().NeedToCheckOthers().Return(false)
+			mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+				Actor: moira.SelfStateActorAutomatic,
+				State: moira.SelfStateOK,
+			}, nil)
+
 			check.EXPECT().Check(now).Return(int64(0), false, err)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
@@ -199,7 +457,29 @@ func TestSelfCheckWorker(t *testing.T) {
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetCheckTags().Return([]string{})
-			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR)
+
+			events := mock.selfCheckWorker.handleCheckServices(now)
+			So(len(events), ShouldEqual, 1)
+		})
+
+		Convey("Test turn on notification", func() {
+			first := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
+			second := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
+
+			mock.selfCheckWorker.heartbeatsGraph = heartbeatsGraph{
+				{first},
+				{second},
+			}
+
+			first.EXPECT().Check(now).Return(int64(15), false, nil)
+			second.EXPECT().Check(now).Return(int64(15), false, nil)
+
+			mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+				State: moira.SelfStateERROR,
+				Actor: moira.SelfStateActorAutomatic,
+			}, nil)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateOK)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
 			So(len(events), ShouldEqual, 1)
@@ -214,17 +494,15 @@ func TestSelfCheckWorker(t *testing.T) {
 				{first},
 				{second},
 			}
-			nextSendErrorMessage := time.Now().Unix() - time.Hour.Milliseconds()
 
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
 			first.EXPECT().GetErrorMessage().Return(moira.SelfStateERROR)
 			first.EXPECT().NeedTurnOffNotifier().Return(true)
 			first.EXPECT().GetCheckTags().Return([]string{})
-			mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(err)
+			mock.database.EXPECT().SetNotifierState(moira.SelfStateActorAutomatic, moira.SelfStateERROR).Return(err)
 			mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
-			nextSendErrorMessage = mock.selfCheckWorker.check(now, nextSendErrorMessage)
-			So(nextSendErrorMessage, ShouldEqual, now+60)
+			mock.selfCheckWorker.check(now)
 		})
 
 		mock.mockCtrl.Finish()
@@ -244,7 +522,7 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 		RedisDisconnectDelaySeconds:    10,
 		LastMetricReceivedDelaySeconds: 60,
 		LastCheckDelaySeconds:          120,
-		NoticeIntervalSeconds:          60,
+		UserNotificationsInterval:      2 * time.Second,
 		LastRemoteCheckDelaySeconds:    120,
 		CheckInterval:                  1 * time.Second,
 	}

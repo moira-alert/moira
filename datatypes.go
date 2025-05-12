@@ -78,7 +78,7 @@ type EventInfo struct {
 
 // CreateMessage - creates a message based on EventInfo.
 func (event *NotificationEvent) CreateMessage(location *time.Location) string { //nolint
-	// ToDo: DEPRECATED Message in NotificationEvent
+	// TODO: DEPRECATED Message in NotificationEvent
 	if len(UseString(event.Message)) > 0 {
 		return *event.Message
 	}
@@ -1006,6 +1006,14 @@ type DeliveryTypesCounter struct {
 	DeliveryFailed int64
 	// DeliveryChecksStopped is the number of notifications for which delivery checks have been stopped.
 	DeliveryChecksStopped int64
+}
+
+// NotifierState represents the state of the notifier.
+type NotifierState struct {
+	// Actor represents the entity performing the notifier state mutation.
+	Actor string `json:"actor"`
+	// State represents the current state of the notifier.
+	State string `json:"state"`
 }
 
 const (

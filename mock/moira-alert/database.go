@@ -22,6 +22,7 @@ import (
 type MockDatabase struct {
 	ctrl     *gomock.Controller
 	recorder *MockDatabaseMockRecorder
+	isgomock struct{}
 }
 
 // MockDatabaseMockRecorder is the mock recorder for MockDatabase.
@@ -42,87 +43,87 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // AcquireTriggerCheckLock mocks base method.
-func (m *MockDatabase) AcquireTriggerCheckLock(arg0 string, arg1 int) error {
+func (m *MockDatabase) AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AcquireTriggerCheckLock", arg0, arg1)
+	ret := m.ctrl.Call(m, "AcquireTriggerCheckLock", triggerID, maxAttemptsCount)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AcquireTriggerCheckLock indicates an expected call of AcquireTriggerCheckLock.
-func (mr *MockDatabaseMockRecorder) AcquireTriggerCheckLock(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) AcquireTriggerCheckLock(triggerID, maxAttemptsCount any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcquireTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).AcquireTriggerCheckLock), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcquireTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).AcquireTriggerCheckLock), triggerID, maxAttemptsCount)
 }
 
 // AddDeliveryChecksData mocks base method.
-func (m *MockDatabase) AddDeliveryChecksData(arg0 string, arg1 int64, arg2 string) error {
+func (m *MockDatabase) AddDeliveryChecksData(contactType string, timestamp int64, data string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddDeliveryChecksData", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "AddDeliveryChecksData", contactType, timestamp, data)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddDeliveryChecksData indicates an expected call of AddDeliveryChecksData.
-func (mr *MockDatabaseMockRecorder) AddDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) AddDeliveryChecksData(contactType, timestamp, data any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).AddDeliveryChecksData), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).AddDeliveryChecksData), contactType, timestamp, data)
 }
 
 // AddNotification mocks base method.
-func (m *MockDatabase) AddNotification(arg0 *moira.ScheduledNotification) error {
+func (m *MockDatabase) AddNotification(notification *moira.ScheduledNotification) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddNotification", arg0)
+	ret := m.ctrl.Call(m, "AddNotification", notification)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddNotification indicates an expected call of AddNotification.
-func (mr *MockDatabaseMockRecorder) AddNotification(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) AddNotification(notification any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNotification", reflect.TypeOf((*MockDatabase)(nil).AddNotification), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNotification", reflect.TypeOf((*MockDatabase)(nil).AddNotification), notification)
 }
 
 // AddNotifications mocks base method.
-func (m *MockDatabase) AddNotifications(arg0 []*moira.ScheduledNotification, arg1 int64) error {
+func (m *MockDatabase) AddNotifications(notification []*moira.ScheduledNotification, timestamp int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddNotifications", arg0, arg1)
+	ret := m.ctrl.Call(m, "AddNotifications", notification, timestamp)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddNotifications indicates an expected call of AddNotifications.
-func (mr *MockDatabaseMockRecorder) AddNotifications(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) AddNotifications(notification, timestamp any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNotifications", reflect.TypeOf((*MockDatabase)(nil).AddNotifications), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNotifications", reflect.TypeOf((*MockDatabase)(nil).AddNotifications), notification, timestamp)
 }
 
 // AddPatternMetric mocks base method.
-func (m *MockDatabase) AddPatternMetric(arg0, arg1 string) error {
+func (m *MockDatabase) AddPatternMetric(pattern, metric string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddPatternMetric", arg0, arg1)
+	ret := m.ctrl.Call(m, "AddPatternMetric", pattern, metric)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddPatternMetric indicates an expected call of AddPatternMetric.
-func (mr *MockDatabaseMockRecorder) AddPatternMetric(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) AddPatternMetric(pattern, metric any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPatternMetric", reflect.TypeOf((*MockDatabase)(nil).AddPatternMetric), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPatternMetric", reflect.TypeOf((*MockDatabase)(nil).AddPatternMetric), pattern, metric)
 }
 
 // AddTriggersToCheck mocks base method.
-func (m *MockDatabase) AddTriggersToCheck(arg0 moira.ClusterKey, arg1 []string) error {
+func (m *MockDatabase) AddTriggersToCheck(clusterKey moira.ClusterKey, triggerIDs []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddTriggersToCheck", arg0, arg1)
+	ret := m.ctrl.Call(m, "AddTriggersToCheck", clusterKey, triggerIDs)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddTriggersToCheck indicates an expected call of AddTriggersToCheck.
-func (mr *MockDatabaseMockRecorder) AddTriggersToCheck(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) AddTriggersToCheck(clusterKey, triggerIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToCheck), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToCheck), clusterKey, triggerIDs)
 }
 
 // CleanUpAbandonedRetentions mocks base method.
@@ -169,45 +170,45 @@ func (mr *MockDatabaseMockRecorder) CleanUpAbandonedTriggerLastCheck() *gomock.C
 }
 
 // CleanUpFutureMetrics mocks base method.
-func (m *MockDatabase) CleanUpFutureMetrics(arg0 time.Duration) error {
+func (m *MockDatabase) CleanUpFutureMetrics(duration time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CleanUpFutureMetrics", arg0)
+	ret := m.ctrl.Call(m, "CleanUpFutureMetrics", duration)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CleanUpFutureMetrics indicates an expected call of CleanUpFutureMetrics.
-func (mr *MockDatabaseMockRecorder) CleanUpFutureMetrics(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CleanUpFutureMetrics(duration any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpFutureMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpFutureMetrics), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpFutureMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpFutureMetrics), duration)
 }
 
 // CleanUpOutdatedMetrics mocks base method.
-func (m *MockDatabase) CleanUpOutdatedMetrics(arg0 time.Duration) error {
+func (m *MockDatabase) CleanUpOutdatedMetrics(duration time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CleanUpOutdatedMetrics", arg0)
+	ret := m.ctrl.Call(m, "CleanUpOutdatedMetrics", duration)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CleanUpOutdatedMetrics indicates an expected call of CleanUpOutdatedMetrics.
-func (mr *MockDatabaseMockRecorder) CleanUpOutdatedMetrics(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CleanUpOutdatedMetrics(duration any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedMetrics), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedMetrics), duration)
 }
 
 // CleanUpOutdatedNotificationHistory mocks base method.
-func (m *MockDatabase) CleanUpOutdatedNotificationHistory(arg0 int64) error {
+func (m *MockDatabase) CleanUpOutdatedNotificationHistory(ttl int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CleanUpOutdatedNotificationHistory", arg0)
+	ret := m.ctrl.Call(m, "CleanUpOutdatedNotificationHistory", ttl)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CleanUpOutdatedNotificationHistory indicates an expected call of CleanUpOutdatedNotificationHistory.
-func (mr *MockDatabaseMockRecorder) CleanUpOutdatedNotificationHistory(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CleanUpOutdatedNotificationHistory(ttl any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedNotificationHistory", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedNotificationHistory), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedNotificationHistory", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedNotificationHistory), ttl)
 }
 
 // CleanupOutdatedPatternMetrics mocks base method.
@@ -226,88 +227,88 @@ func (mr *MockDatabaseMockRecorder) CleanupOutdatedPatternMetrics() *gomock.Call
 }
 
 // CountEventsInNotificationHistory mocks base method.
-func (m *MockDatabase) CountEventsInNotificationHistory(arg0 []string, arg1, arg2 string) ([]*moira.ContactIDWithNotificationCount, error) {
+func (m *MockDatabase) CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*moira.ContactIDWithNotificationCount, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CountEventsInNotificationHistory", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CountEventsInNotificationHistory", contactIDs, from, to)
 	ret0, _ := ret[0].([]*moira.ContactIDWithNotificationCount)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CountEventsInNotificationHistory indicates an expected call of CountEventsInNotificationHistory.
-func (mr *MockDatabaseMockRecorder) CountEventsInNotificationHistory(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CountEventsInNotificationHistory(contactIDs, from, to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountEventsInNotificationHistory", reflect.TypeOf((*MockDatabase)(nil).CountEventsInNotificationHistory), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountEventsInNotificationHistory", reflect.TypeOf((*MockDatabase)(nil).CountEventsInNotificationHistory), contactIDs, from, to)
 }
 
 // CreateTags mocks base method.
-func (m *MockDatabase) CreateTags(arg0 []string) error {
+func (m *MockDatabase) CreateTags(tags []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateTags", arg0)
+	ret := m.ctrl.Call(m, "CreateTags", tags)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateTags indicates an expected call of CreateTags.
-func (mr *MockDatabaseMockRecorder) CreateTags(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateTags(tags any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTags", reflect.TypeOf((*MockDatabase)(nil).CreateTags), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTags", reflect.TypeOf((*MockDatabase)(nil).CreateTags), tags)
 }
 
 // DeleteTeam mocks base method.
-func (m *MockDatabase) DeleteTeam(arg0, arg1 string) error {
+func (m *MockDatabase) DeleteTeam(teamID, userID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteTeam", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteTeam", teamID, userID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteTeam indicates an expected call of DeleteTeam.
-func (mr *MockDatabaseMockRecorder) DeleteTeam(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteTeam(teamID, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTeam", reflect.TypeOf((*MockDatabase)(nil).DeleteTeam), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTeam", reflect.TypeOf((*MockDatabase)(nil).DeleteTeam), teamID, userID)
 }
 
 // DeleteTriggerCheckLock mocks base method.
-func (m *MockDatabase) DeleteTriggerCheckLock(arg0 string) error {
+func (m *MockDatabase) DeleteTriggerCheckLock(triggerID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteTriggerCheckLock", arg0)
+	ret := m.ctrl.Call(m, "DeleteTriggerCheckLock", triggerID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteTriggerCheckLock indicates an expected call of DeleteTriggerCheckLock.
-func (mr *MockDatabaseMockRecorder) DeleteTriggerCheckLock(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteTriggerCheckLock(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggerCheckLock), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggerCheckLock), triggerID)
 }
 
 // DeleteTriggerThrottling mocks base method.
-func (m *MockDatabase) DeleteTriggerThrottling(arg0 string) error {
+func (m *MockDatabase) DeleteTriggerThrottling(triggerID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteTriggerThrottling", arg0)
+	ret := m.ctrl.Call(m, "DeleteTriggerThrottling", triggerID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteTriggerThrottling indicates an expected call of DeleteTriggerThrottling.
-func (mr *MockDatabaseMockRecorder) DeleteTriggerThrottling(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteTriggerThrottling(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggerThrottling), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggerThrottling), triggerID)
 }
 
 // DeleteTriggersSearchResults mocks base method.
-func (m *MockDatabase) DeleteTriggersSearchResults(arg0 string) error {
+func (m *MockDatabase) DeleteTriggersSearchResults(pagerID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteTriggersSearchResults", arg0)
+	ret := m.ctrl.Call(m, "DeleteTriggersSearchResults", pagerID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteTriggersSearchResults indicates an expected call of DeleteTriggersSearchResults.
-func (mr *MockDatabaseMockRecorder) DeleteTriggersSearchResults(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) DeleteTriggersSearchResults(pagerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggersSearchResults), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggersSearchResults), pagerID)
 }
 
 // FetchNotificationEvent mocks base method.
@@ -326,33 +327,33 @@ func (mr *MockDatabaseMockRecorder) FetchNotificationEvent() *gomock.Call {
 }
 
 // FetchNotifications mocks base method.
-func (m *MockDatabase) FetchNotifications(arg0, arg1 int64) ([]*moira.ScheduledNotification, error) {
+func (m *MockDatabase) FetchNotifications(to, limit int64) ([]*moira.ScheduledNotification, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchNotifications", arg0, arg1)
+	ret := m.ctrl.Call(m, "FetchNotifications", to, limit)
 	ret0, _ := ret[0].([]*moira.ScheduledNotification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchNotifications indicates an expected call of FetchNotifications.
-func (mr *MockDatabaseMockRecorder) FetchNotifications(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) FetchNotifications(to, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockDatabase)(nil).FetchNotifications), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockDatabase)(nil).FetchNotifications), to, limit)
 }
 
 // FetchTriggersToReindex mocks base method.
-func (m *MockDatabase) FetchTriggersToReindex(arg0 int64) ([]string, error) {
+func (m *MockDatabase) FetchTriggersToReindex(from int64) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchTriggersToReindex", arg0)
+	ret := m.ctrl.Call(m, "FetchTriggersToReindex", from)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchTriggersToReindex indicates an expected call of FetchTriggersToReindex.
-func (mr *MockDatabaseMockRecorder) FetchTriggersToReindex(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) FetchTriggersToReindex(from any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).FetchTriggersToReindex), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).FetchTriggersToReindex), from)
 }
 
 // GetAllContacts mocks base method.
@@ -401,18 +402,18 @@ func (mr *MockDatabaseMockRecorder) GetAllTriggerIDs() *gomock.Call {
 }
 
 // GetChatByUsername mocks base method.
-func (m *MockDatabase) GetChatByUsername(arg0, arg1 string) (string, error) {
+func (m *MockDatabase) GetChatByUsername(messenger, username string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChatByUsername", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetChatByUsername", messenger, username)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetChatByUsername indicates an expected call of GetChatByUsername.
-func (mr *MockDatabaseMockRecorder) GetChatByUsername(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetChatByUsername(messenger, username any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChatByUsername", reflect.TypeOf((*MockDatabase)(nil).GetChatByUsername), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChatByUsername", reflect.TypeOf((*MockDatabase)(nil).GetChatByUsername), messenger, username)
 }
 
 // GetChecksUpdatesCount mocks base method.
@@ -431,63 +432,63 @@ func (mr *MockDatabaseMockRecorder) GetChecksUpdatesCount() *gomock.Call {
 }
 
 // GetContact mocks base method.
-func (m *MockDatabase) GetContact(arg0 string) (moira.ContactData, error) {
+func (m *MockDatabase) GetContact(contactID string) (moira.ContactData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContact", arg0)
+	ret := m.ctrl.Call(m, "GetContact", contactID)
 	ret0, _ := ret[0].(moira.ContactData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetContact indicates an expected call of GetContact.
-func (mr *MockDatabaseMockRecorder) GetContact(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetContact(contactID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContact", reflect.TypeOf((*MockDatabase)(nil).GetContact), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContact", reflect.TypeOf((*MockDatabase)(nil).GetContact), contactID)
 }
 
 // GetContacts mocks base method.
-func (m *MockDatabase) GetContacts(arg0 []string) ([]*moira.ContactData, error) {
+func (m *MockDatabase) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetContacts", arg0)
+	ret := m.ctrl.Call(m, "GetContacts", contactIDs)
 	ret0, _ := ret[0].([]*moira.ContactData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetContacts indicates an expected call of GetContacts.
-func (mr *MockDatabaseMockRecorder) GetContacts(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetContacts(contactIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContacts", reflect.TypeOf((*MockDatabase)(nil).GetContacts), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContacts", reflect.TypeOf((*MockDatabase)(nil).GetContacts), contactIDs)
 }
 
 // GetDeliveryChecksData mocks base method.
-func (m *MockDatabase) GetDeliveryChecksData(arg0, arg1, arg2 string) ([]string, error) {
+func (m *MockDatabase) GetDeliveryChecksData(contactType, from, to string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDeliveryChecksData", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetDeliveryChecksData", contactType, from, to)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetDeliveryChecksData indicates an expected call of GetDeliveryChecksData.
-func (mr *MockDatabaseMockRecorder) GetDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetDeliveryChecksData(contactType, from, to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).GetDeliveryChecksData), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).GetDeliveryChecksData), contactType, from, to)
 }
 
 // GetMetricRetention mocks base method.
-func (m *MockDatabase) GetMetricRetention(arg0 string) (int64, error) {
+func (m *MockDatabase) GetMetricRetention(metric string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMetricRetention", arg0)
+	ret := m.ctrl.Call(m, "GetMetricRetention", metric)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetMetricRetention indicates an expected call of GetMetricRetention.
-func (mr *MockDatabaseMockRecorder) GetMetricRetention(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetMetricRetention(metric any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricRetention", reflect.TypeOf((*MockDatabase)(nil).GetMetricRetention), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricRetention", reflect.TypeOf((*MockDatabase)(nil).GetMetricRetention), metric)
 }
 
 // GetMetricsTTLSeconds mocks base method.
@@ -520,53 +521,53 @@ func (mr *MockDatabaseMockRecorder) GetMetricsUpdatesCount() *gomock.Call {
 }
 
 // GetMetricsValues mocks base method.
-func (m *MockDatabase) GetMetricsValues(arg0 []string, arg1, arg2 int64) (map[string][]*moira.MetricValue, error) {
+func (m *MockDatabase) GetMetricsValues(metrics []string, from, until int64) (map[string][]*moira.MetricValue, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMetricsValues", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetMetricsValues", metrics, from, until)
 	ret0, _ := ret[0].(map[string][]*moira.MetricValue)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetMetricsValues indicates an expected call of GetMetricsValues.
-func (mr *MockDatabaseMockRecorder) GetMetricsValues(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetMetricsValues(metrics, from, until any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsValues", reflect.TypeOf((*MockDatabase)(nil).GetMetricsValues), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsValues", reflect.TypeOf((*MockDatabase)(nil).GetMetricsValues), metrics, from, until)
 }
 
 // GetNotificationEventCount mocks base method.
-func (m *MockDatabase) GetNotificationEventCount(arg0, arg1, arg2 string) int64 {
+func (m *MockDatabase) GetNotificationEventCount(triggerID, from, to string) int64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotificationEventCount", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetNotificationEventCount", triggerID, from, to)
 	ret0, _ := ret[0].(int64)
 	return ret0
 }
 
 // GetNotificationEventCount indicates an expected call of GetNotificationEventCount.
-func (mr *MockDatabaseMockRecorder) GetNotificationEventCount(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetNotificationEventCount(triggerID, from, to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEventCount", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEventCount), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEventCount", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEventCount), triggerID, from, to)
 }
 
 // GetNotificationEvents mocks base method.
-func (m *MockDatabase) GetNotificationEvents(arg0 string, arg1, arg2 int64, arg3, arg4 string) ([]*moira.NotificationEvent, error) {
+func (m *MockDatabase) GetNotificationEvents(triggerID string, page, size int64, from, to string) ([]*moira.NotificationEvent, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotificationEvents", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "GetNotificationEvents", triggerID, page, size, from, to)
 	ret0, _ := ret[0].([]*moira.NotificationEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNotificationEvents indicates an expected call of GetNotificationEvents.
-func (mr *MockDatabaseMockRecorder) GetNotificationEvents(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetNotificationEvents(triggerID, page, size, from, to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEvents", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEvents), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEvents", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEvents), triggerID, page, size, from, to)
 }
 
 // GetNotifications mocks base method.
-func (m *MockDatabase) GetNotifications(arg0, arg1 int64) ([]*moira.ScheduledNotification, int64, error) {
+func (m *MockDatabase) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotifications", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetNotifications", start, end)
 	ret0, _ := ret[0].([]*moira.ScheduledNotification)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(error)
@@ -574,31 +575,31 @@ func (m *MockDatabase) GetNotifications(arg0, arg1 int64) ([]*moira.ScheduledNot
 }
 
 // GetNotifications indicates an expected call of GetNotifications.
-func (mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetNotifications(start, end any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifications", reflect.TypeOf((*MockDatabase)(nil).GetNotifications), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifications", reflect.TypeOf((*MockDatabase)(nil).GetNotifications), start, end)
 }
 
 // GetNotificationsHistoryByContactID mocks base method.
-func (m *MockDatabase) GetNotificationsHistoryByContactID(arg0 string, arg1, arg2, arg3, arg4 int64) ([]*moira.NotificationEventHistoryItem, error) {
+func (m *MockDatabase) GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*moira.NotificationEventHistoryItem, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotificationsHistoryByContactID", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "GetNotificationsHistoryByContactID", contactID, from, to, page, size)
 	ret0, _ := ret[0].([]*moira.NotificationEventHistoryItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNotificationsHistoryByContactID indicates an expected call of GetNotificationsHistoryByContactID.
-func (mr *MockDatabaseMockRecorder) GetNotificationsHistoryByContactID(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetNotificationsHistoryByContactID(contactID, from, to, page, size any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationsHistoryByContactID", reflect.TypeOf((*MockDatabase)(nil).GetNotificationsHistoryByContactID), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationsHistoryByContactID", reflect.TypeOf((*MockDatabase)(nil).GetNotificationsHistoryByContactID), contactID, from, to, page, size)
 }
 
 // GetNotifierState mocks base method.
-func (m *MockDatabase) GetNotifierState() (string, error) {
+func (m *MockDatabase) GetNotifierState() (moira.NotifierState, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotifierState")
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].(moira.NotifierState)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -610,33 +611,33 @@ func (mr *MockDatabaseMockRecorder) GetNotifierState() *gomock.Call {
 }
 
 // GetPatternMetrics mocks base method.
-func (m *MockDatabase) GetPatternMetrics(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetPatternMetrics(pattern string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPatternMetrics", arg0)
+	ret := m.ctrl.Call(m, "GetPatternMetrics", pattern)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPatternMetrics indicates an expected call of GetPatternMetrics.
-func (mr *MockDatabaseMockRecorder) GetPatternMetrics(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetPatternMetrics(pattern any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternMetrics", reflect.TypeOf((*MockDatabase)(nil).GetPatternMetrics), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternMetrics", reflect.TypeOf((*MockDatabase)(nil).GetPatternMetrics), pattern)
 }
 
 // GetPatternTriggerIDs mocks base method.
-func (m *MockDatabase) GetPatternTriggerIDs(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetPatternTriggerIDs(pattern string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPatternTriggerIDs", arg0)
+	ret := m.ctrl.Call(m, "GetPatternTriggerIDs", pattern)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPatternTriggerIDs indicates an expected call of GetPatternTriggerIDs.
-func (mr *MockDatabaseMockRecorder) GetPatternTriggerIDs(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetPatternTriggerIDs(pattern any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetPatternTriggerIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetPatternTriggerIDs), pattern)
 }
 
 // GetPatterns mocks base method.
@@ -685,33 +686,33 @@ func (mr *MockDatabaseMockRecorder) GetRemoteChecksUpdatesCount() *gomock.Call {
 }
 
 // GetSubscription mocks base method.
-func (m *MockDatabase) GetSubscription(arg0 string) (moira.SubscriptionData, error) {
+func (m *MockDatabase) GetSubscription(id string) (moira.SubscriptionData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSubscription", arg0)
+	ret := m.ctrl.Call(m, "GetSubscription", id)
 	ret0, _ := ret[0].(moira.SubscriptionData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSubscription indicates an expected call of GetSubscription.
-func (mr *MockDatabaseMockRecorder) GetSubscription(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetSubscription(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscription", reflect.TypeOf((*MockDatabase)(nil).GetSubscription), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscription", reflect.TypeOf((*MockDatabase)(nil).GetSubscription), id)
 }
 
 // GetSubscriptions mocks base method.
-func (m *MockDatabase) GetSubscriptions(arg0 []string) ([]*moira.SubscriptionData, error) {
+func (m *MockDatabase) GetSubscriptions(subscriptionIDs []string) ([]*moira.SubscriptionData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSubscriptions", arg0)
+	ret := m.ctrl.Call(m, "GetSubscriptions", subscriptionIDs)
 	ret0, _ := ret[0].([]*moira.SubscriptionData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetSubscriptions indicates an expected call of GetSubscriptions.
-func (mr *MockDatabaseMockRecorder) GetSubscriptions(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetSubscriptions(subscriptionIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetSubscriptions), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetSubscriptions), subscriptionIDs)
 }
 
 // GetTagNames mocks base method.
@@ -730,234 +731,234 @@ func (mr *MockDatabaseMockRecorder) GetTagNames() *gomock.Call {
 }
 
 // GetTagTriggerIDs mocks base method.
-func (m *MockDatabase) GetTagTriggerIDs(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetTagTriggerIDs(tagName string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTagTriggerIDs", arg0)
+	ret := m.ctrl.Call(m, "GetTagTriggerIDs", tagName)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTagTriggerIDs indicates an expected call of GetTagTriggerIDs.
-func (mr *MockDatabaseMockRecorder) GetTagTriggerIDs(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTagTriggerIDs(tagName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetTagTriggerIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetTagTriggerIDs), tagName)
 }
 
 // GetTagsSubscriptions mocks base method.
-func (m *MockDatabase) GetTagsSubscriptions(arg0 []string) ([]*moira.SubscriptionData, error) {
+func (m *MockDatabase) GetTagsSubscriptions(tags []string) ([]*moira.SubscriptionData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTagsSubscriptions", arg0)
+	ret := m.ctrl.Call(m, "GetTagsSubscriptions", tags)
 	ret0, _ := ret[0].([]*moira.SubscriptionData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTagsSubscriptions indicates an expected call of GetTagsSubscriptions.
-func (mr *MockDatabaseMockRecorder) GetTagsSubscriptions(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTagsSubscriptions(tags any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagsSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetTagsSubscriptions), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagsSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetTagsSubscriptions), tags)
 }
 
 // GetTeam mocks base method.
-func (m *MockDatabase) GetTeam(arg0 string) (moira.Team, error) {
+func (m *MockDatabase) GetTeam(teamID string) (moira.Team, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTeam", arg0)
+	ret := m.ctrl.Call(m, "GetTeam", teamID)
 	ret0, _ := ret[0].(moira.Team)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTeam indicates an expected call of GetTeam.
-func (mr *MockDatabaseMockRecorder) GetTeam(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTeam(teamID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeam", reflect.TypeOf((*MockDatabase)(nil).GetTeam), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeam", reflect.TypeOf((*MockDatabase)(nil).GetTeam), teamID)
 }
 
 // GetTeamByName mocks base method.
-func (m *MockDatabase) GetTeamByName(arg0 string) (moira.Team, error) {
+func (m *MockDatabase) GetTeamByName(name string) (moira.Team, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTeamByName", arg0)
+	ret := m.ctrl.Call(m, "GetTeamByName", name)
 	ret0, _ := ret[0].(moira.Team)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTeamByName indicates an expected call of GetTeamByName.
-func (mr *MockDatabaseMockRecorder) GetTeamByName(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTeamByName(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamByName", reflect.TypeOf((*MockDatabase)(nil).GetTeamByName), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamByName", reflect.TypeOf((*MockDatabase)(nil).GetTeamByName), name)
 }
 
 // GetTeamContactIDs mocks base method.
-func (m *MockDatabase) GetTeamContactIDs(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetTeamContactIDs(teamID string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTeamContactIDs", arg0)
+	ret := m.ctrl.Call(m, "GetTeamContactIDs", teamID)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTeamContactIDs indicates an expected call of GetTeamContactIDs.
-func (mr *MockDatabaseMockRecorder) GetTeamContactIDs(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTeamContactIDs(teamID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamContactIDs", reflect.TypeOf((*MockDatabase)(nil).GetTeamContactIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamContactIDs", reflect.TypeOf((*MockDatabase)(nil).GetTeamContactIDs), teamID)
 }
 
 // GetTeamSubscriptionIDs mocks base method.
-func (m *MockDatabase) GetTeamSubscriptionIDs(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetTeamSubscriptionIDs(teamID string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTeamSubscriptionIDs", arg0)
+	ret := m.ctrl.Call(m, "GetTeamSubscriptionIDs", teamID)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTeamSubscriptionIDs indicates an expected call of GetTeamSubscriptionIDs.
-func (mr *MockDatabaseMockRecorder) GetTeamSubscriptionIDs(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTeamSubscriptionIDs(teamID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamSubscriptionIDs", reflect.TypeOf((*MockDatabase)(nil).GetTeamSubscriptionIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamSubscriptionIDs", reflect.TypeOf((*MockDatabase)(nil).GetTeamSubscriptionIDs), teamID)
 }
 
 // GetTeamUsers mocks base method.
-func (m *MockDatabase) GetTeamUsers(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetTeamUsers(teamID string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTeamUsers", arg0)
+	ret := m.ctrl.Call(m, "GetTeamUsers", teamID)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTeamUsers indicates an expected call of GetTeamUsers.
-func (mr *MockDatabaseMockRecorder) GetTeamUsers(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTeamUsers(teamID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamUsers", reflect.TypeOf((*MockDatabase)(nil).GetTeamUsers), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamUsers", reflect.TypeOf((*MockDatabase)(nil).GetTeamUsers), teamID)
 }
 
 // GetTrigger mocks base method.
-func (m *MockDatabase) GetTrigger(arg0 string) (moira.Trigger, error) {
+func (m *MockDatabase) GetTrigger(triggerID string) (moira.Trigger, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTrigger", arg0)
+	ret := m.ctrl.Call(m, "GetTrigger", triggerID)
 	ret0, _ := ret[0].(moira.Trigger)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTrigger indicates an expected call of GetTrigger.
-func (mr *MockDatabaseMockRecorder) GetTrigger(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTrigger(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTrigger", reflect.TypeOf((*MockDatabase)(nil).GetTrigger), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTrigger", reflect.TypeOf((*MockDatabase)(nil).GetTrigger), triggerID)
 }
 
 // GetTriggerChecks mocks base method.
-func (m *MockDatabase) GetTriggerChecks(arg0 []string) ([]*moira.TriggerCheck, error) {
+func (m *MockDatabase) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerCheck, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggerChecks", arg0)
+	ret := m.ctrl.Call(m, "GetTriggerChecks", triggerIDs)
 	ret0, _ := ret[0].([]*moira.TriggerCheck)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTriggerChecks indicates an expected call of GetTriggerChecks.
-func (mr *MockDatabaseMockRecorder) GetTriggerChecks(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggerChecks(triggerIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerChecks", reflect.TypeOf((*MockDatabase)(nil).GetTriggerChecks), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerChecks", reflect.TypeOf((*MockDatabase)(nil).GetTriggerChecks), triggerIDs)
 }
 
 // GetTriggerCount mocks base method.
-func (m *MockDatabase) GetTriggerCount(arg0 []moira.ClusterKey) (map[moira.ClusterKey]int64, error) {
+func (m *MockDatabase) GetTriggerCount(clusterKeys []moira.ClusterKey) (map[moira.ClusterKey]int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggerCount", arg0)
+	ret := m.ctrl.Call(m, "GetTriggerCount", clusterKeys)
 	ret0, _ := ret[0].(map[moira.ClusterKey]int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTriggerCount indicates an expected call of GetTriggerCount.
-func (mr *MockDatabaseMockRecorder) GetTriggerCount(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggerCount(clusterKeys any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggerCount), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggerCount), clusterKeys)
 }
 
 // GetTriggerIDs mocks base method.
-func (m *MockDatabase) GetTriggerIDs(arg0 moira.ClusterKey) ([]string, error) {
+func (m *MockDatabase) GetTriggerIDs(clusterKey moira.ClusterKey) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggerIDs", arg0)
+	ret := m.ctrl.Call(m, "GetTriggerIDs", clusterKey)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTriggerIDs indicates an expected call of GetTriggerIDs.
-func (mr *MockDatabaseMockRecorder) GetTriggerIDs(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggerIDs(clusterKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDs), clusterKey)
 }
 
 // GetTriggerIDsStartWith mocks base method.
-func (m *MockDatabase) GetTriggerIDsStartWith(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetTriggerIDsStartWith(prefix string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggerIDsStartWith", arg0)
+	ret := m.ctrl.Call(m, "GetTriggerIDsStartWith", prefix)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTriggerIDsStartWith indicates an expected call of GetTriggerIDsStartWith.
-func (mr *MockDatabaseMockRecorder) GetTriggerIDsStartWith(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggerIDsStartWith(prefix any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerIDsStartWith", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDsStartWith), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerIDsStartWith", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDsStartWith), prefix)
 }
 
 // GetTriggerLastCheck mocks base method.
-func (m *MockDatabase) GetTriggerLastCheck(arg0 string) (moira.CheckData, error) {
+func (m *MockDatabase) GetTriggerLastCheck(triggerID string) (moira.CheckData, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggerLastCheck", arg0)
+	ret := m.ctrl.Call(m, "GetTriggerLastCheck", triggerID)
 	ret0, _ := ret[0].(moira.CheckData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTriggerLastCheck indicates an expected call of GetTriggerLastCheck.
-func (mr *MockDatabaseMockRecorder) GetTriggerLastCheck(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggerLastCheck(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).GetTriggerLastCheck), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).GetTriggerLastCheck), triggerID)
 }
 
 // GetTriggerThrottling mocks base method.
-func (m *MockDatabase) GetTriggerThrottling(arg0 string) (time.Time, time.Time) {
+func (m *MockDatabase) GetTriggerThrottling(triggerID string) (time.Time, time.Time) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggerThrottling", arg0)
+	ret := m.ctrl.Call(m, "GetTriggerThrottling", triggerID)
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(time.Time)
 	return ret0, ret1
 }
 
 // GetTriggerThrottling indicates an expected call of GetTriggerThrottling.
-func (mr *MockDatabaseMockRecorder) GetTriggerThrottling(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggerThrottling(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).GetTriggerThrottling), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).GetTriggerThrottling), triggerID)
 }
 
 // GetTriggers mocks base method.
-func (m *MockDatabase) GetTriggers(arg0 []string) ([]*moira.Trigger, error) {
+func (m *MockDatabase) GetTriggers(triggerIDs []string) ([]*moira.Trigger, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggers", arg0)
+	ret := m.ctrl.Call(m, "GetTriggers", triggerIDs)
 	ret0, _ := ret[0].([]*moira.Trigger)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTriggers indicates an expected call of GetTriggers.
-func (mr *MockDatabaseMockRecorder) GetTriggers(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggers(triggerIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggers", reflect.TypeOf((*MockDatabase)(nil).GetTriggers), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggers", reflect.TypeOf((*MockDatabase)(nil).GetTriggers), triggerIDs)
 }
 
 // GetTriggersSearchResults mocks base method.
-func (m *MockDatabase) GetTriggersSearchResults(arg0 string, arg1, arg2 int64) ([]*moira.SearchResult, int64, error) {
+func (m *MockDatabase) GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*moira.SearchResult, int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggersSearchResults", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetTriggersSearchResults", searchResultsID, page, size)
 	ret0, _ := ret[0].([]*moira.SearchResult)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(error)
@@ -965,39 +966,39 @@ func (m *MockDatabase) GetTriggersSearchResults(arg0 string, arg1, arg2 int64) (
 }
 
 // GetTriggersSearchResults indicates an expected call of GetTriggersSearchResults.
-func (mr *MockDatabaseMockRecorder) GetTriggersSearchResults(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggersSearchResults(searchResultsID, page, size any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).GetTriggersSearchResults), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).GetTriggersSearchResults), searchResultsID, page, size)
 }
 
 // GetTriggersToCheck mocks base method.
-func (m *MockDatabase) GetTriggersToCheck(arg0 moira.ClusterKey, arg1 int) ([]string, error) {
+func (m *MockDatabase) GetTriggersToCheck(clusterKey moira.ClusterKey, count int) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggersToCheck", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetTriggersToCheck", clusterKey, count)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTriggersToCheck indicates an expected call of GetTriggersToCheck.
-func (mr *MockDatabaseMockRecorder) GetTriggersToCheck(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggersToCheck(clusterKey, count any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheck), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheck), clusterKey, count)
 }
 
 // GetTriggersToCheckCount mocks base method.
-func (m *MockDatabase) GetTriggersToCheckCount(arg0 moira.ClusterKey) (int64, error) {
+func (m *MockDatabase) GetTriggersToCheckCount(clusterKey moira.ClusterKey) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggersToCheckCount", arg0)
+	ret := m.ctrl.Call(m, "GetTriggersToCheckCount", clusterKey)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetTriggersToCheckCount indicates an expected call of GetTriggersToCheckCount.
-func (mr *MockDatabaseMockRecorder) GetTriggersToCheckCount(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetTriggersToCheckCount(clusterKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheckCount), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheckCount), clusterKey)
 }
 
 // GetUnusedTriggerIDs mocks base method.
@@ -1016,85 +1017,85 @@ func (mr *MockDatabaseMockRecorder) GetUnusedTriggerIDs() *gomock.Call {
 }
 
 // GetUserContactIDs mocks base method.
-func (m *MockDatabase) GetUserContactIDs(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetUserContactIDs(userLogin string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserContactIDs", arg0)
+	ret := m.ctrl.Call(m, "GetUserContactIDs", userLogin)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserContactIDs indicates an expected call of GetUserContactIDs.
-func (mr *MockDatabaseMockRecorder) GetUserContactIDs(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUserContactIDs(userLogin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserContactIDs", reflect.TypeOf((*MockDatabase)(nil).GetUserContactIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserContactIDs", reflect.TypeOf((*MockDatabase)(nil).GetUserContactIDs), userLogin)
 }
 
 // GetUserSubscriptionIDs mocks base method.
-func (m *MockDatabase) GetUserSubscriptionIDs(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetUserSubscriptionIDs(userLogin string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserSubscriptionIDs", arg0)
+	ret := m.ctrl.Call(m, "GetUserSubscriptionIDs", userLogin)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserSubscriptionIDs indicates an expected call of GetUserSubscriptionIDs.
-func (mr *MockDatabaseMockRecorder) GetUserSubscriptionIDs(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUserSubscriptionIDs(userLogin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSubscriptionIDs", reflect.TypeOf((*MockDatabase)(nil).GetUserSubscriptionIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSubscriptionIDs", reflect.TypeOf((*MockDatabase)(nil).GetUserSubscriptionIDs), userLogin)
 }
 
 // GetUserTeams mocks base method.
-func (m *MockDatabase) GetUserTeams(arg0 string) ([]string, error) {
+func (m *MockDatabase) GetUserTeams(userID string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserTeams", arg0)
+	ret := m.ctrl.Call(m, "GetUserTeams", userID)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserTeams indicates an expected call of GetUserTeams.
-func (mr *MockDatabaseMockRecorder) GetUserTeams(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetUserTeams(userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTeams", reflect.TypeOf((*MockDatabase)(nil).GetUserTeams), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTeams", reflect.TypeOf((*MockDatabase)(nil).GetUserTeams), userID)
 }
 
 // IsTeamContainUser mocks base method.
-func (m *MockDatabase) IsTeamContainUser(arg0, arg1 string) (bool, error) {
+func (m *MockDatabase) IsTeamContainUser(teamID, userID string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsTeamContainUser", arg0, arg1)
+	ret := m.ctrl.Call(m, "IsTeamContainUser", teamID, userID)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // IsTeamContainUser indicates an expected call of IsTeamContainUser.
-func (mr *MockDatabaseMockRecorder) IsTeamContainUser(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) IsTeamContainUser(teamID, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTeamContainUser", reflect.TypeOf((*MockDatabase)(nil).IsTeamContainUser), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTeamContainUser", reflect.TypeOf((*MockDatabase)(nil).IsTeamContainUser), teamID, userID)
 }
 
 // IsTriggersSearchResultsExist mocks base method.
-func (m *MockDatabase) IsTriggersSearchResultsExist(arg0 string) (bool, error) {
+func (m *MockDatabase) IsTriggersSearchResultsExist(pagerID string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsTriggersSearchResultsExist", arg0)
+	ret := m.ctrl.Call(m, "IsTriggersSearchResultsExist", pagerID)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // IsTriggersSearchResultsExist indicates an expected call of IsTriggersSearchResultsExist.
-func (mr *MockDatabaseMockRecorder) IsTriggersSearchResultsExist(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) IsTriggersSearchResultsExist(pagerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTriggersSearchResultsExist", reflect.TypeOf((*MockDatabase)(nil).IsTriggersSearchResultsExist), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTriggersSearchResultsExist", reflect.TypeOf((*MockDatabase)(nil).IsTriggersSearchResultsExist), pagerID)
 }
 
 // MarkTriggersAsUnused mocks base method.
-func (m *MockDatabase) MarkTriggersAsUnused(arg0 ...string) error {
+func (m *MockDatabase) MarkTriggersAsUnused(triggerIDs ...string) error {
 	m.ctrl.T.Helper()
 	varargs := []any{}
-	for _, a := range arg0 {
+	for _, a := range triggerIDs {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "MarkTriggersAsUnused", varargs...)
@@ -1103,16 +1104,16 @@ func (m *MockDatabase) MarkTriggersAsUnused(arg0 ...string) error {
 }
 
 // MarkTriggersAsUnused indicates an expected call of MarkTriggersAsUnused.
-func (mr *MockDatabaseMockRecorder) MarkTriggersAsUnused(arg0 ...any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) MarkTriggersAsUnused(triggerIDs ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriggersAsUnused", reflect.TypeOf((*MockDatabase)(nil).MarkTriggersAsUnused), arg0...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriggersAsUnused", reflect.TypeOf((*MockDatabase)(nil).MarkTriggersAsUnused), triggerIDs...)
 }
 
 // MarkTriggersAsUsed mocks base method.
-func (m *MockDatabase) MarkTriggersAsUsed(arg0 ...string) error {
+func (m *MockDatabase) MarkTriggersAsUsed(triggerIDs ...string) error {
 	m.ctrl.T.Helper()
 	varargs := []any{}
-	for _, a := range arg0 {
+	for _, a := range triggerIDs {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "MarkTriggersAsUsed", varargs...)
@@ -1121,63 +1122,63 @@ func (m *MockDatabase) MarkTriggersAsUsed(arg0 ...string) error {
 }
 
 // MarkTriggersAsUsed indicates an expected call of MarkTriggersAsUsed.
-func (mr *MockDatabaseMockRecorder) MarkTriggersAsUsed(arg0 ...any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) MarkTriggersAsUsed(triggerIDs ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriggersAsUsed", reflect.TypeOf((*MockDatabase)(nil).MarkTriggersAsUsed), arg0...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriggersAsUsed", reflect.TypeOf((*MockDatabase)(nil).MarkTriggersAsUsed), triggerIDs...)
 }
 
 // NewLock mocks base method.
-func (m *MockDatabase) NewLock(arg0 string, arg1 time.Duration) moira.Lock {
+func (m *MockDatabase) NewLock(name string, ttl time.Duration) moira.Lock {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewLock", arg0, arg1)
+	ret := m.ctrl.Call(m, "NewLock", name, ttl)
 	ret0, _ := ret[0].(moira.Lock)
 	return ret0
 }
 
 // NewLock indicates an expected call of NewLock.
-func (mr *MockDatabaseMockRecorder) NewLock(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) NewLock(name, ttl any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewLock", reflect.TypeOf((*MockDatabase)(nil).NewLock), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewLock", reflect.TypeOf((*MockDatabase)(nil).NewLock), name, ttl)
 }
 
 // PushContactNotificationToHistory mocks base method.
-func (m *MockDatabase) PushContactNotificationToHistory(arg0 *moira.ScheduledNotification) error {
+func (m *MockDatabase) PushContactNotificationToHistory(notification *moira.ScheduledNotification) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PushContactNotificationToHistory", arg0)
+	ret := m.ctrl.Call(m, "PushContactNotificationToHistory", notification)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // PushContactNotificationToHistory indicates an expected call of PushContactNotificationToHistory.
-func (mr *MockDatabaseMockRecorder) PushContactNotificationToHistory(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) PushContactNotificationToHistory(notification any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushContactNotificationToHistory", reflect.TypeOf((*MockDatabase)(nil).PushContactNotificationToHistory), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushContactNotificationToHistory", reflect.TypeOf((*MockDatabase)(nil).PushContactNotificationToHistory), notification)
 }
 
 // PushNotificationEvent mocks base method.
-func (m *MockDatabase) PushNotificationEvent(arg0 *moira.NotificationEvent, arg1 bool) error {
+func (m *MockDatabase) PushNotificationEvent(event *moira.NotificationEvent, ui bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PushNotificationEvent", arg0, arg1)
+	ret := m.ctrl.Call(m, "PushNotificationEvent", event, ui)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // PushNotificationEvent indicates an expected call of PushNotificationEvent.
-func (mr *MockDatabaseMockRecorder) PushNotificationEvent(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) PushNotificationEvent(event, ui any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushNotificationEvent", reflect.TypeOf((*MockDatabase)(nil).PushNotificationEvent), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushNotificationEvent", reflect.TypeOf((*MockDatabase)(nil).PushNotificationEvent), event, ui)
 }
 
 // ReleaseTriggerCheckLock mocks base method.
-func (m *MockDatabase) ReleaseTriggerCheckLock(arg0 string) {
+func (m *MockDatabase) ReleaseTriggerCheckLock(triggerID string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ReleaseTriggerCheckLock", arg0)
+	m.ctrl.Call(m, "ReleaseTriggerCheckLock", triggerID)
 }
 
 // ReleaseTriggerCheckLock indicates an expected call of ReleaseTriggerCheckLock.
-func (mr *MockDatabaseMockRecorder) ReleaseTriggerCheckLock(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) ReleaseTriggerCheckLock(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReleaseTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).ReleaseTriggerCheckLock), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReleaseTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).ReleaseTriggerCheckLock), triggerID)
 }
 
 // RemoveAllMetrics mocks base method.
@@ -1223,456 +1224,456 @@ func (mr *MockDatabaseMockRecorder) RemoveAllNotifications() *gomock.Call {
 }
 
 // RemoveContact mocks base method.
-func (m *MockDatabase) RemoveContact(arg0 string) error {
+func (m *MockDatabase) RemoveContact(contactID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveContact", arg0)
+	ret := m.ctrl.Call(m, "RemoveContact", contactID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveContact indicates an expected call of RemoveContact.
-func (mr *MockDatabaseMockRecorder) RemoveContact(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveContact(contactID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveContact", reflect.TypeOf((*MockDatabase)(nil).RemoveContact), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveContact", reflect.TypeOf((*MockDatabase)(nil).RemoveContact), contactID)
 }
 
 // RemoveDeliveryChecksData mocks base method.
-func (m *MockDatabase) RemoveDeliveryChecksData(arg0, arg1, arg2 string) (int64, error) {
+func (m *MockDatabase) RemoveDeliveryChecksData(contactType, from, to string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveDeliveryChecksData", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "RemoveDeliveryChecksData", contactType, from, to)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RemoveDeliveryChecksData indicates an expected call of RemoveDeliveryChecksData.
-func (mr *MockDatabaseMockRecorder) RemoveDeliveryChecksData(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveDeliveryChecksData(contactType, from, to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).RemoveDeliveryChecksData), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).RemoveDeliveryChecksData), contactType, from, to)
 }
 
 // RemoveMetricRetention mocks base method.
-func (m *MockDatabase) RemoveMetricRetention(arg0 string) error {
+func (m *MockDatabase) RemoveMetricRetention(metric string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveMetricRetention", arg0)
+	ret := m.ctrl.Call(m, "RemoveMetricRetention", metric)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveMetricRetention indicates an expected call of RemoveMetricRetention.
-func (mr *MockDatabaseMockRecorder) RemoveMetricRetention(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveMetricRetention(metric any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricRetention", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricRetention), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricRetention", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricRetention), metric)
 }
 
 // RemoveMetricValues mocks base method.
-func (m *MockDatabase) RemoveMetricValues(arg0, arg1, arg2 string) (int64, error) {
+func (m *MockDatabase) RemoveMetricValues(metric, from, to string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveMetricValues", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "RemoveMetricValues", metric, from, to)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RemoveMetricValues indicates an expected call of RemoveMetricValues.
-func (mr *MockDatabaseMockRecorder) RemoveMetricValues(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveMetricValues(metric, from, to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricValues), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricValues), metric, from, to)
 }
 
 // RemoveMetricsByPrefix mocks base method.
-func (m *MockDatabase) RemoveMetricsByPrefix(arg0 string) error {
+func (m *MockDatabase) RemoveMetricsByPrefix(pattern string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveMetricsByPrefix", arg0)
+	ret := m.ctrl.Call(m, "RemoveMetricsByPrefix", pattern)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveMetricsByPrefix indicates an expected call of RemoveMetricsByPrefix.
-func (mr *MockDatabaseMockRecorder) RemoveMetricsByPrefix(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveMetricsByPrefix(pattern any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricsByPrefix", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricsByPrefix), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricsByPrefix", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricsByPrefix), pattern)
 }
 
 // RemoveMetricsValues mocks base method.
-func (m *MockDatabase) RemoveMetricsValues(arg0 []string, arg1 int64) error {
+func (m *MockDatabase) RemoveMetricsValues(metrics []string, toTime int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveMetricsValues", arg0, arg1)
+	ret := m.ctrl.Call(m, "RemoveMetricsValues", metrics, toTime)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveMetricsValues indicates an expected call of RemoveMetricsValues.
-func (mr *MockDatabaseMockRecorder) RemoveMetricsValues(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveMetricsValues(metrics, toTime any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricsValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricsValues), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricsValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricsValues), metrics, toTime)
 }
 
 // RemoveNotification mocks base method.
-func (m *MockDatabase) RemoveNotification(arg0 string) (int64, error) {
+func (m *MockDatabase) RemoveNotification(notificationKey string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveNotification", arg0)
+	ret := m.ctrl.Call(m, "RemoveNotification", notificationKey)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // RemoveNotification indicates an expected call of RemoveNotification.
-func (mr *MockDatabaseMockRecorder) RemoveNotification(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveNotification(notificationKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveNotification", reflect.TypeOf((*MockDatabase)(nil).RemoveNotification), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveNotification", reflect.TypeOf((*MockDatabase)(nil).RemoveNotification), notificationKey)
 }
 
 // RemovePattern mocks base method.
-func (m *MockDatabase) RemovePattern(arg0 string) error {
+func (m *MockDatabase) RemovePattern(pattern string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemovePattern", arg0)
+	ret := m.ctrl.Call(m, "RemovePattern", pattern)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemovePattern indicates an expected call of RemovePattern.
-func (mr *MockDatabaseMockRecorder) RemovePattern(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemovePattern(pattern any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePattern", reflect.TypeOf((*MockDatabase)(nil).RemovePattern), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePattern", reflect.TypeOf((*MockDatabase)(nil).RemovePattern), pattern)
 }
 
 // RemovePatternTriggerIDs mocks base method.
-func (m *MockDatabase) RemovePatternTriggerIDs(arg0 string) error {
+func (m *MockDatabase) RemovePatternTriggerIDs(pattern string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemovePatternTriggerIDs", arg0)
+	ret := m.ctrl.Call(m, "RemovePatternTriggerIDs", pattern)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemovePatternTriggerIDs indicates an expected call of RemovePatternTriggerIDs.
-func (mr *MockDatabaseMockRecorder) RemovePatternTriggerIDs(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemovePatternTriggerIDs(pattern any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePatternTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).RemovePatternTriggerIDs), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePatternTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).RemovePatternTriggerIDs), pattern)
 }
 
 // RemovePatternWithMetrics mocks base method.
-func (m *MockDatabase) RemovePatternWithMetrics(arg0 string) error {
+func (m *MockDatabase) RemovePatternWithMetrics(pattern string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemovePatternWithMetrics", arg0)
+	ret := m.ctrl.Call(m, "RemovePatternWithMetrics", pattern)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemovePatternWithMetrics indicates an expected call of RemovePatternWithMetrics.
-func (mr *MockDatabaseMockRecorder) RemovePatternWithMetrics(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemovePatternWithMetrics(pattern any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePatternWithMetrics", reflect.TypeOf((*MockDatabase)(nil).RemovePatternWithMetrics), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePatternWithMetrics", reflect.TypeOf((*MockDatabase)(nil).RemovePatternWithMetrics), pattern)
 }
 
 // RemovePatternsMetrics mocks base method.
-func (m *MockDatabase) RemovePatternsMetrics(arg0 []string) error {
+func (m *MockDatabase) RemovePatternsMetrics(pattern []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemovePatternsMetrics", arg0)
+	ret := m.ctrl.Call(m, "RemovePatternsMetrics", pattern)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemovePatternsMetrics indicates an expected call of RemovePatternsMetrics.
-func (mr *MockDatabaseMockRecorder) RemovePatternsMetrics(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemovePatternsMetrics(pattern any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePatternsMetrics", reflect.TypeOf((*MockDatabase)(nil).RemovePatternsMetrics), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePatternsMetrics", reflect.TypeOf((*MockDatabase)(nil).RemovePatternsMetrics), pattern)
 }
 
 // RemoveSubscription mocks base method.
-func (m *MockDatabase) RemoveSubscription(arg0 string) error {
+func (m *MockDatabase) RemoveSubscription(subscriptionID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveSubscription", arg0)
+	ret := m.ctrl.Call(m, "RemoveSubscription", subscriptionID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveSubscription indicates an expected call of RemoveSubscription.
-func (mr *MockDatabaseMockRecorder) RemoveSubscription(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveSubscription(subscriptionID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSubscription", reflect.TypeOf((*MockDatabase)(nil).RemoveSubscription), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveSubscription", reflect.TypeOf((*MockDatabase)(nil).RemoveSubscription), subscriptionID)
 }
 
 // RemoveTag mocks base method.
-func (m *MockDatabase) RemoveTag(arg0 string) error {
+func (m *MockDatabase) RemoveTag(tagName string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveTag", arg0)
+	ret := m.ctrl.Call(m, "RemoveTag", tagName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveTag indicates an expected call of RemoveTag.
-func (mr *MockDatabaseMockRecorder) RemoveTag(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveTag(tagName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTag", reflect.TypeOf((*MockDatabase)(nil).RemoveTag), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTag", reflect.TypeOf((*MockDatabase)(nil).RemoveTag), tagName)
 }
 
 // RemoveTrigger mocks base method.
-func (m *MockDatabase) RemoveTrigger(arg0 string) error {
+func (m *MockDatabase) RemoveTrigger(triggerID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveTrigger", arg0)
+	ret := m.ctrl.Call(m, "RemoveTrigger", triggerID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveTrigger indicates an expected call of RemoveTrigger.
-func (mr *MockDatabaseMockRecorder) RemoveTrigger(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveTrigger(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTrigger", reflect.TypeOf((*MockDatabase)(nil).RemoveTrigger), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTrigger", reflect.TypeOf((*MockDatabase)(nil).RemoveTrigger), triggerID)
 }
 
 // RemoveTriggerLastCheck mocks base method.
-func (m *MockDatabase) RemoveTriggerLastCheck(arg0 string) error {
+func (m *MockDatabase) RemoveTriggerLastCheck(triggerID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveTriggerLastCheck", arg0)
+	ret := m.ctrl.Call(m, "RemoveTriggerLastCheck", triggerID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveTriggerLastCheck indicates an expected call of RemoveTriggerLastCheck.
-func (mr *MockDatabaseMockRecorder) RemoveTriggerLastCheck(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveTriggerLastCheck(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggerLastCheck), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggerLastCheck), triggerID)
 }
 
 // RemoveTriggersToReindex mocks base method.
-func (m *MockDatabase) RemoveTriggersToReindex(arg0 int64) error {
+func (m *MockDatabase) RemoveTriggersToReindex(to int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveTriggersToReindex", arg0)
+	ret := m.ctrl.Call(m, "RemoveTriggersToReindex", to)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveTriggersToReindex indicates an expected call of RemoveTriggersToReindex.
-func (mr *MockDatabaseMockRecorder) RemoveTriggersToReindex(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveTriggersToReindex(to any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggersToReindex), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggersToReindex), to)
 }
 
 // RemoveUser mocks base method.
-func (m *MockDatabase) RemoveUser(arg0, arg1 string) error {
+func (m *MockDatabase) RemoveUser(messenger, username string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveUser", arg0, arg1)
+	ret := m.ctrl.Call(m, "RemoveUser", messenger, username)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveUser indicates an expected call of RemoveUser.
-func (mr *MockDatabaseMockRecorder) RemoveUser(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) RemoveUser(messenger, username any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUser", reflect.TypeOf((*MockDatabase)(nil).RemoveUser), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUser", reflect.TypeOf((*MockDatabase)(nil).RemoveUser), messenger, username)
 }
 
 // SaveContact mocks base method.
-func (m *MockDatabase) SaveContact(arg0 *moira.ContactData) error {
+func (m *MockDatabase) SaveContact(contact *moira.ContactData) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveContact", arg0)
+	ret := m.ctrl.Call(m, "SaveContact", contact)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveContact indicates an expected call of SaveContact.
-func (mr *MockDatabaseMockRecorder) SaveContact(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveContact(contact any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveContact", reflect.TypeOf((*MockDatabase)(nil).SaveContact), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveContact", reflect.TypeOf((*MockDatabase)(nil).SaveContact), contact)
 }
 
 // SaveMetrics mocks base method.
-func (m *MockDatabase) SaveMetrics(arg0 []*moira.MatchedMetric) error {
+func (m *MockDatabase) SaveMetrics(buffer []*moira.MatchedMetric) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveMetrics", arg0)
+	ret := m.ctrl.Call(m, "SaveMetrics", buffer)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveMetrics indicates an expected call of SaveMetrics.
-func (mr *MockDatabaseMockRecorder) SaveMetrics(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveMetrics(buffer any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetrics", reflect.TypeOf((*MockDatabase)(nil).SaveMetrics), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetrics", reflect.TypeOf((*MockDatabase)(nil).SaveMetrics), buffer)
 }
 
 // SaveSubscription mocks base method.
-func (m *MockDatabase) SaveSubscription(arg0 *moira.SubscriptionData) error {
+func (m *MockDatabase) SaveSubscription(subscription *moira.SubscriptionData) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveSubscription", arg0)
+	ret := m.ctrl.Call(m, "SaveSubscription", subscription)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveSubscription indicates an expected call of SaveSubscription.
-func (mr *MockDatabaseMockRecorder) SaveSubscription(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveSubscription(subscription any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSubscription", reflect.TypeOf((*MockDatabase)(nil).SaveSubscription), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSubscription", reflect.TypeOf((*MockDatabase)(nil).SaveSubscription), subscription)
 }
 
 // SaveSubscriptions mocks base method.
-func (m *MockDatabase) SaveSubscriptions(arg0 []*moira.SubscriptionData) error {
+func (m *MockDatabase) SaveSubscriptions(subscriptions []*moira.SubscriptionData) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveSubscriptions", arg0)
+	ret := m.ctrl.Call(m, "SaveSubscriptions", subscriptions)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveSubscriptions indicates an expected call of SaveSubscriptions.
-func (mr *MockDatabaseMockRecorder) SaveSubscriptions(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveSubscriptions(subscriptions any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSubscriptions", reflect.TypeOf((*MockDatabase)(nil).SaveSubscriptions), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSubscriptions", reflect.TypeOf((*MockDatabase)(nil).SaveSubscriptions), subscriptions)
 }
 
 // SaveTeam mocks base method.
-func (m *MockDatabase) SaveTeam(arg0 string, arg1 moira.Team) error {
+func (m *MockDatabase) SaveTeam(teamID string, team moira.Team) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveTeam", arg0, arg1)
+	ret := m.ctrl.Call(m, "SaveTeam", teamID, team)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveTeam indicates an expected call of SaveTeam.
-func (mr *MockDatabaseMockRecorder) SaveTeam(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveTeam(teamID, team any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTeam", reflect.TypeOf((*MockDatabase)(nil).SaveTeam), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTeam", reflect.TypeOf((*MockDatabase)(nil).SaveTeam), teamID, team)
 }
 
 // SaveTeamsAndUsers mocks base method.
-func (m *MockDatabase) SaveTeamsAndUsers(arg0 string, arg1 []string, arg2 map[string][]string) error {
+func (m *MockDatabase) SaveTeamsAndUsers(teamID string, users []string, usersTeams map[string][]string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveTeamsAndUsers", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "SaveTeamsAndUsers", teamID, users, usersTeams)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveTeamsAndUsers indicates an expected call of SaveTeamsAndUsers.
-func (mr *MockDatabaseMockRecorder) SaveTeamsAndUsers(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveTeamsAndUsers(teamID, users, usersTeams any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTeamsAndUsers", reflect.TypeOf((*MockDatabase)(nil).SaveTeamsAndUsers), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTeamsAndUsers", reflect.TypeOf((*MockDatabase)(nil).SaveTeamsAndUsers), teamID, users, usersTeams)
 }
 
 // SaveTrigger mocks base method.
-func (m *MockDatabase) SaveTrigger(arg0 string, arg1 *moira.Trigger) error {
+func (m *MockDatabase) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveTrigger", arg0, arg1)
+	ret := m.ctrl.Call(m, "SaveTrigger", triggerID, trigger)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveTrigger indicates an expected call of SaveTrigger.
-func (mr *MockDatabaseMockRecorder) SaveTrigger(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveTrigger(triggerID, trigger any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTrigger", reflect.TypeOf((*MockDatabase)(nil).SaveTrigger), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTrigger", reflect.TypeOf((*MockDatabase)(nil).SaveTrigger), triggerID, trigger)
 }
 
 // SaveTriggersSearchResults mocks base method.
-func (m *MockDatabase) SaveTriggersSearchResults(arg0 string, arg1 []*moira.SearchResult, arg2 time.Duration) error {
+func (m *MockDatabase) SaveTriggersSearchResults(searchResultsID string, searchResults []*moira.SearchResult, recordTTL time.Duration) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveTriggersSearchResults", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "SaveTriggersSearchResults", searchResultsID, searchResults, recordTTL)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveTriggersSearchResults indicates an expected call of SaveTriggersSearchResults.
-func (mr *MockDatabaseMockRecorder) SaveTriggersSearchResults(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SaveTriggersSearchResults(searchResultsID, searchResults, recordTTL any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).SaveTriggersSearchResults), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).SaveTriggersSearchResults), searchResultsID, searchResults, recordTTL)
 }
 
 // SetNotifierState mocks base method.
-func (m *MockDatabase) SetNotifierState(arg0 string) error {
+func (m *MockDatabase) SetNotifierState(actor, state string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetNotifierState", arg0)
+	ret := m.ctrl.Call(m, "SetNotifierState", actor, state)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetNotifierState indicates an expected call of SetNotifierState.
-func (mr *MockDatabaseMockRecorder) SetNotifierState(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetNotifierState(actor, state any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotifierState", reflect.TypeOf((*MockDatabase)(nil).SetNotifierState), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotifierState", reflect.TypeOf((*MockDatabase)(nil).SetNotifierState), actor, state)
 }
 
 // SetTriggerCheckLock mocks base method.
-func (m *MockDatabase) SetTriggerCheckLock(arg0 string) (bool, error) {
+func (m *MockDatabase) SetTriggerCheckLock(triggerID string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetTriggerCheckLock", arg0)
+	ret := m.ctrl.Call(m, "SetTriggerCheckLock", triggerID)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SetTriggerCheckLock indicates an expected call of SetTriggerCheckLock.
-func (mr *MockDatabaseMockRecorder) SetTriggerCheckLock(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetTriggerCheckLock(triggerID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).SetTriggerCheckLock), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).SetTriggerCheckLock), triggerID)
 }
 
 // SetTriggerCheckMaintenance mocks base method.
-func (m *MockDatabase) SetTriggerCheckMaintenance(arg0 string, arg1 map[string]int64, arg2 *int64, arg3 string, arg4 int64) error {
+func (m *MockDatabase) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetTriggerCheckMaintenance", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "SetTriggerCheckMaintenance", triggerID, metrics, triggerMaintenance, userLogin, timeCallMaintenance)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetTriggerCheckMaintenance indicates an expected call of SetTriggerCheckMaintenance.
-func (mr *MockDatabaseMockRecorder) SetTriggerCheckMaintenance(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetTriggerCheckMaintenance(triggerID, metrics, triggerMaintenance, userLogin, timeCallMaintenance any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerCheckMaintenance", reflect.TypeOf((*MockDatabase)(nil).SetTriggerCheckMaintenance), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerCheckMaintenance", reflect.TypeOf((*MockDatabase)(nil).SetTriggerCheckMaintenance), triggerID, metrics, triggerMaintenance, userLogin, timeCallMaintenance)
 }
 
 // SetTriggerLastCheck mocks base method.
-func (m *MockDatabase) SetTriggerLastCheck(arg0 string, arg1 *moira.CheckData, arg2 moira.ClusterKey) error {
+func (m *MockDatabase) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, clusterKey moira.ClusterKey) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetTriggerLastCheck", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "SetTriggerLastCheck", triggerID, checkData, clusterKey)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetTriggerLastCheck indicates an expected call of SetTriggerLastCheck.
-func (mr *MockDatabaseMockRecorder) SetTriggerLastCheck(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetTriggerLastCheck(triggerID, checkData, clusterKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).SetTriggerLastCheck), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).SetTriggerLastCheck), triggerID, checkData, clusterKey)
 }
 
 // SetTriggerThrottling mocks base method.
-func (m *MockDatabase) SetTriggerThrottling(arg0 string, arg1 time.Time) error {
+func (m *MockDatabase) SetTriggerThrottling(triggerID string, next time.Time) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetTriggerThrottling", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetTriggerThrottling", triggerID, next)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetTriggerThrottling indicates an expected call of SetTriggerThrottling.
-func (mr *MockDatabaseMockRecorder) SetTriggerThrottling(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetTriggerThrottling(triggerID, next any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).SetTriggerThrottling), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).SetTriggerThrottling), triggerID, next)
 }
 
 // SetUsernameChat mocks base method.
-func (m *MockDatabase) SetUsernameChat(arg0, arg1, arg2 string) error {
+func (m *MockDatabase) SetUsernameChat(messenger, username, chatRaw string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetUsernameChat", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "SetUsernameChat", messenger, username, chatRaw)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetUsernameChat indicates an expected call of SetUsernameChat.
-func (mr *MockDatabaseMockRecorder) SetUsernameChat(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetUsernameChat(messenger, username, chatRaw any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUsernameChat", reflect.TypeOf((*MockDatabase)(nil).SetUsernameChat), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUsernameChat", reflect.TypeOf((*MockDatabase)(nil).SetUsernameChat), messenger, username, chatRaw)
 }
 
 // SubscribeMetricEvents mocks base method.
-func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb, arg1 *moira.SubscribeMetricEventsParams) (<-chan *moira.MetricEvent, error) {
+func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb, params *moira.SubscribeMetricEventsParams) (<-chan *moira.MetricEvent, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SubscribeMetricEvents", arg0, arg1)
+	ret := m.ctrl.Call(m, "SubscribeMetricEvents", arg0, params)
 	ret0, _ := ret[0].(<-chan *moira.MetricEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SubscribeMetricEvents indicates an expected call of SubscribeMetricEvents.
-func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0, params)
 }
 
 // UpdateMetricsHeartbeat mocks base method.

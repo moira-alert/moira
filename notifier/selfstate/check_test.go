@@ -21,7 +21,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			worker := createWorker(t)
 			redisError := fmt.Errorf("Redis connection timeout")
 			worker.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), redisError)
-			worker.database.EXPECT().SetNotifierState(gomock.Any()).Return(redisError)
+			worker.database.EXPECT().SetNotifierState(gomock.Any(), gomock.Any()).Return(redisError)
 			worker.database.EXPECT().GetTagsSubscriptions(gomock.Any()).Return(nil, redisError)
 
 			var sendingWG sync.WaitGroup
@@ -32,7 +32,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 
 			registerAdminNotification(worker, nowTS, "Redis disconnected", val, &sendingWG)
 
-			worker.selfCheckWorker.check(nowTS, 10)
+			worker.selfCheckWorker.check(nowTS)
 		})
 
 		Convey("Send notifications to admins and users on single heartbeat error", func() {
@@ -73,7 +73,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 
 			worker.notif.EXPECT().Send(&toUsersPack, &sendingWG).Times(1)
 
-			worker.selfCheckWorker.check(nowTS, 10)
+			worker.selfCheckWorker.check(nowTS)
 		})
 	})
 }
@@ -118,7 +118,6 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 		RedisDisconnectDelaySeconds:    1,
 		LastMetricReceivedDelaySeconds: 60,
 		LastCheckDelaySeconds:          120,
-		NoticeIntervalSeconds:          60,
 		LastRemoteCheckDelaySeconds:    120,
 		CheckInterval:                  1 * time.Second,
 		Checks: ChecksConfig{
@@ -163,7 +162,7 @@ func fillDatabase(database *mock_moira_alert.MockDatabase) {
 		},
 	}
 	database.EXPECT().GetContacts(moira.Map(contacts, func(c *moira.ContactData) string { return c.ID })).Return(contacts, nil)
-	database.EXPECT().SetNotifierState(gomock.Any()).Return(nil)
+	database.EXPECT().SetNotifierState(gomock.Any(), gomock.Any()).Return(nil)
 	database.EXPECT().GetTagsSubscriptions([]string{"sys-tag-database", "moira-fatal"}).Return([]*moira.SubscriptionData{
 		{
 			Contacts: []string{"contact1"},
