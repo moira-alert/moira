@@ -56,7 +56,7 @@ func NewCacheStorage(logger moira.Logger, metrics *metrics.FilterMetrics, reader
 }
 
 // EnrichMatchedMetric calculate retention and filter cached values.
-func (storage *Storage) EnrichMatchedMetric(batch map[string]*moira.MatchedMetric, m *moira.MatchedMetric) {
+func (storage *Storage) EnrichMatchedMetric(batch map[moira.MetricNameAndTimestamp]*moira.MatchedMetric, m *moira.MatchedMetric) {
 	m.Retention = storage.getRetention(m)
 	m.RetentionTimestamp = moira.RoundToNearestRetention(m.Timestamp, int64(m.Retention))
 
@@ -64,16 +64,10 @@ func (storage *Storage) EnrichMatchedMetric(batch map[string]*moira.MatchedMetri
 		return
 	}
 
-	if old, ok := batch[m.Metric]; ok && old.RetentionTimestamp != m.RetentionTimestamp {
-		storage.logger.Warning().
-			Int64("old_retention_timestamp", old.RetentionTimestamp).
-			Int64("new_retention_timestamp", m.RetentionTimestamp).
-			String("metric_name", m.Metric).
-			Msg("Metric override")
-	}
-
 	storage.metricsCache[m.Metric] = m
-	batch[m.Metric] = m
+
+	metricKey := moira.MetricNameAndTimestamp{Name: m.Metric, Timestamp: m.RetentionTimestamp}
+	batch[metricKey] = m
 }
 
 // getRetention returns first matched retention for metric.

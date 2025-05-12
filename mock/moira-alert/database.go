@@ -1478,7 +1478,7 @@ func (mr *MockDatabaseMockRecorder) SaveContact(arg0 any) *gomock.Call {
 }
 
 // SaveMetrics mocks base method.
-func (m *MockDatabase) SaveMetrics(arg0 map[string]*moira.MatchedMetric) error {
+func (m *MockDatabase) SaveMetrics(arg0 []*moira.MatchedMetric) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveMetrics", arg0)
 	ret0, _ := ret[0].(error)

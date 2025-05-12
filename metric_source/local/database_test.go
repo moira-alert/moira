@@ -41,24 +41,24 @@ func saveMetrics(database moira.Database, metrics map[string]metricMock, now, re
 	for i := range maxValues {
 		time := timeStart + int64(i)*retention
 
-		metricsMap := make(map[string]*moira.MatchedMetric, len(metrics))
+		metricsBuffer := make([]*moira.MatchedMetric, 0, len(metrics))
 
 		for name, metric := range metrics {
 			if len(metric.values) <= i {
 				continue
 			}
 
-			metricsMap[name] = &moira.MatchedMetric{
+			metricsBuffer = append(metricsBuffer, &moira.MatchedMetric{
 				Metric:             name,
 				Patterns:           metric.patterns,
 				Value:              metric.values[i],
 				Timestamp:          time,
 				RetentionTimestamp: time,
 				Retention:          int(retention),
-			}
+			})
 		}
 
-		err := database.SaveMetrics(metricsMap)
+		err := database.SaveMetrics(metricsBuffer)
 		if err != nil {
 			return err
 		}

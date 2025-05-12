@@ -183,7 +183,7 @@ func TestCacheStorage(t *testing.T) {
 	})
 
 	Convey("Test empty buffer and different metrics, should buffer len equal to matchedMetrics len", t, func() {
-		buffer := make(map[string]*moira.MatchedMetric)
+		buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
 		for _, matchedMetric := range matchedMetrics {
 			storage.EnrichMatchedMetric(buffer, &matchedMetric)
 		}
@@ -194,7 +194,7 @@ func TestCacheStorage(t *testing.T) {
 	storage, _ = NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 
 	Convey("Test add one metric twice, should buffer len is 1", t, func() {
-		buffer := make(map[string]*moira.MatchedMetric)
+		buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
 		storage.EnrichMatchedMetric(buffer, &matchedMetrics[0])
 		So(len(buffer), ShouldEqual, 1)
 		storage.EnrichMatchedMetric(buffer, &matchedMetrics[0])
@@ -207,7 +207,7 @@ func TestRetentions(t *testing.T) {
 	storage, _ := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 
 	Convey("Simple metric, should 60sec", t, func() {
-		buffer := make(map[string]*moira.MatchedMetric)
+		buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
 		matchedMetric := matchedMetrics[0]
 
 		storage.EnrichMatchedMetric(buffer, &matchedMetric)
@@ -217,7 +217,7 @@ func TestRetentions(t *testing.T) {
 	})
 
 	Convey("Suf metric, should 1200sec", t, func() {
-		buffer := make(map[string]*moira.MatchedMetric)
+		buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
 		metr := matchedMetrics[6]
 
 		storage.EnrichMatchedMetric(buffer, &metr)
@@ -227,7 +227,7 @@ func TestRetentions(t *testing.T) {
 	})
 
 	Convey("Default metric, should 120sec", t, func() {
-		buffer := make(map[string]*moira.MatchedMetric)
+		buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
 		metr := matchedMetrics[14]
 
 		storage.EnrichMatchedMetric(buffer, &metr)
@@ -245,7 +245,7 @@ func TestRetentions(t *testing.T) {
 				RetentionTimestamp: 0,
 				Retention:          10,
 			}
-			buffer := make(map[string]*moira.MatchedMetric)
+			buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
 			storage.EnrichMatchedMetric(buffer, &matchedMetric)
 			So(len(buffer), ShouldEqual, 1)
 			So(matchedMetric.Retention, ShouldEqual, 10)
@@ -260,7 +260,7 @@ func TestRetentions(t *testing.T) {
 				RetentionTimestamp: 0,
 				Retention:          60,
 			}
-			buffer := make(map[string]*moira.MatchedMetric)
+			buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
 			storage.EnrichMatchedMetric(buffer, &matchedMetric)
 			So(len(buffer), ShouldEqual, 1)
 			So(matchedMetric.Retention, ShouldEqual, 120)

@@ -127,7 +127,7 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 }
 
 // SaveMetrics saves new metrics.
-func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetric) error {
+func (connector *DbConnector) SaveMetrics(metrics []*moira.MatchedMetric) error {
 	if len(metrics) == 0 {
 		return nil
 	}
