@@ -56,6 +56,7 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 	} else {
 		stop = strconv.FormatInt(end, 10)
 	}
+
 	rng := &redis.ZRangeBy{Min: strconv.FormatInt(start, 10), Max: stop}
 	pipe.ZRangeByScore(ctx, notifierNotificationsKey, rng)
 
