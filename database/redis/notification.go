@@ -47,38 +47,12 @@ func limitNotifications(notifications []*moira.ScheduledNotification) []*moira.S
 
 // GetNotifications gets ScheduledNotifications in given range and full range, where 'start' and 'end' are indices of notifications.
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
-	ctx := connector.context
-	pipe := (*connector.client).TxPipeline()
-
-	pipe.ZRange(ctx, notifierNotificationsKey, start, end)
-	pipe.ZCard(ctx, notifierNotificationsKey)
-
-	response, err := pipe.Exec(ctx)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to EXEC: %s", err.Error())
-	}
-
-	if len(response) == 0 {
-		return make([]*moira.ScheduledNotification, 0), 0, nil
-	}
-
-	total, err := response[1].(*redis.IntCmd).Result()
-	if err != nil {
-		return nil, 0, err
-	}
-
-	notifications, err := reply.Notifications(response[0].(*redis.StringSliceCmd))
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return notifications, total, nil
+	return connector.getNotificationsBy(func(pipe redis.Pipeliner) {
+		pipe.ZRange(connector.context, notifierNotificationsKey, start, end)
+	})
 }
 
 func (connector *DbConnector) getNotificationsByTime(timeStart, timeEnd int64) ([]*moira.ScheduledNotification, int64, error) {
-	ctx := connector.context
-	pipe := (*connector.client).TxPipeline()
-
 	var stop string
 	if timeEnd < 0 {
 		stop = "inf"
@@ -90,7 +64,17 @@ func (connector *DbConnector) getNotificationsByTime(timeStart, timeEnd int64) (
 		Min: strconv.FormatInt(timeStart, 10),
 		Max: stop,
 	}
-	pipe.ZRangeByScore(ctx, notifierNotificationsKey, rng)
+
+	return connector.getNotificationsBy(func(pipe redis.Pipeliner) {
+		pipe.ZRangeByScore(connector.context, notifierNotificationsKey, rng)
+	})
+}
+
+func (connector *DbConnector) getNotificationsBy(query func(pipe redis.Pipeliner)) ([]*moira.ScheduledNotification, int64, error) {
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
+
+	query(pipe)
 	pipe.ZCard(ctx, notifierNotificationsKey)
 
 	response, err := pipe.Exec(ctx)
