@@ -45,21 +45,52 @@ func limitNotifications(notifications []*moira.ScheduledNotification) []*moira.S
 	return notifications[:i+1]
 }
 
-// GetNotifications gets ScheduledNotifications in given range and full range.
+// GetNotifications gets ScheduledNotifications in given range and full range, where 'start' and 'end' are indices of notifications.
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
 
-	var stop string
-	if end < 0 {
-		stop = "inf"
-	} else {
-		stop = strconv.FormatInt(end, 10)
+	pipe.ZRange(ctx, notifierNotificationsKey, start, end)
+	pipe.ZCard(ctx, notifierNotificationsKey)
+
+	response, err := pipe.Exec(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 
-	rng := &redis.ZRangeBy{Min: strconv.FormatInt(start, 10), Max: stop}
-	pipe.ZRangeByScore(ctx, notifierNotificationsKey, rng)
+	if len(response) == 0 {
+		return make([]*moira.ScheduledNotification, 0), 0, nil
+	}
 
+	total, err := response[1].(*redis.IntCmd).Result()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	notifications, err := reply.Notifications(response[0].(*redis.StringSliceCmd))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return notifications, total, nil
+}
+
+func (connector *DbConnector) getNotificationsByTime(timeStart, timeEnd int64) ([]*moira.ScheduledNotification, int64, error) {
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
+
+	var stop string
+	if timeEnd < 0 {
+		stop = "inf"
+	} else {
+		stop = strconv.FormatInt(timeEnd, 10)
+	}
+
+	rng := &redis.ZRangeBy{
+		Min: strconv.FormatInt(timeStart, 10),
+		Max: stop,
+	}
+	pipe.ZRangeByScore(ctx, notifierNotificationsKey, rng)
 	pipe.ZCard(ctx, notifierNotificationsKey)
 
 	response, err := pipe.Exec(ctx)
@@ -119,9 +150,10 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	return connector.removeNotifications(connector.context, (*connector.client).TxPipeline(), foundNotifications)
 }
 
-// RemoveNotification delete notifications by key = timestamp + contactID + subID.
+// RemoveNotificationsFiltered deletes notifications ine time range from startTime to endTime,
+// excluding the ones that have tag from ignoredTags.
 func (connector *DbConnector) RemoveNotificationsFiltered(start, end int64, ignoredTags []string) (int64, error) {
-	notifications, _, err := connector.GetNotifications(start, end)
+	notifications, _, err := connector.getNotificationsByTime(start, end)
 	if err != nil {
 		return 0, err
 	}
