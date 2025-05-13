@@ -124,9 +124,9 @@ func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 //	@id			delete-notifications-filtered
 //	@tags		notification
 //	@produce	json
-//	@success	200	{object}	dto.NotificationsList			"Notification have been deleted"
-//	@failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.NotificationsList		"Notification have been deleted"
+//	@failure	403	{object}	api.ErrorResponse			"Forbidden"
+//	@failure	500	{object}	api.ErrorResponse			"Internal server error"
 //	@router		/notification/filtered [delete]
 func deleteNotificationsFiltered(writer http.ResponseWriter, request *http.Request) {
 	urlValues, err := url.ParseQuery(request.URL.RawQuery)
