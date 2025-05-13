@@ -63,8 +63,8 @@ func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetri
 		Msg("Moira Filter Metrics Matcher started to save cached metrics with cooldown")
 }
 
-func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric) <-chan map[string]*moira.MatchedMetric {
-	batchedMetrics := make(chan map[string]*moira.MatchedMetric, 1)
+func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric) <-chan map[moira.MetricNameAndTimestamp]*moira.MatchedMetric {
+	batchedMetrics := make(chan map[moira.MetricNameAndTimestamp]*moira.MatchedMetric, 1)
 
 	go func() {
 		defer close(batchedMetrics)
@@ -73,7 +73,7 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 		defer batchTimer.Stop()
 
 		for {
-			batch := make(map[string]*moira.MatchedMetric, matcher.cacheCapacity)
+			batch := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric, matcher.cacheCapacity)
 		retry:
 			select {
 			case <-matcher.closeRequest:
@@ -106,8 +106,13 @@ func (matcher *MetricsMatcher) Wait() {
 	matcher.logger.Info().Msg("Moira Filter Metrics Matcher stopped")
 }
 
-func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {
-	if err := matcher.database.SaveMetrics(buffer); err != nil {
+func (matcher *MetricsMatcher) save(buffer map[moira.MetricNameAndTimestamp]*moira.MatchedMetric) {
+	bufferValues := make([]*moira.MatchedMetric, 0, len(buffer))
+	for _, v := range buffer {
+		bufferValues = append(bufferValues, v)
+	}
+
+	if err := matcher.database.SaveMetrics(bufferValues); err != nil {
 		matcher.logger.Error().
 			Error(err).
 			Msg("Failed to save matched metrics")

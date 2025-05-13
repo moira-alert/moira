@@ -395,6 +395,11 @@ type MatchedMetric struct {
 	Retention          int
 }
 
+type MetricNameAndTimestamp struct {
+	Name      string
+	Timestamp int64
+}
+
 // MetricValue represents metric data.
 type MetricValue struct {
 	RetentionTimestamp int64   `json:"step,omitempty" format:"int64"`

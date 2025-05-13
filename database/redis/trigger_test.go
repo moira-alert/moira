@@ -372,7 +372,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTriggers, ShouldResemble, []*moira.Trigger{triggerVer1})
 
 			// Save metrics
-			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: val1})
+			err = dataBase.SaveMetrics([]*moira.MatchedMetric{val1})
 			So(err, ShouldBeNil)
 
 			// And check it
@@ -420,7 +420,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTriggers, ShouldResemble, []*moira.Trigger{triggerVer2})
 
 			// Save metrics for a new pattern metrics
-			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: val2})
+			err = dataBase.SaveMetrics([]*moira.MatchedMetric{val2})
 			So(err, ShouldBeNil)
 
 			// And check it

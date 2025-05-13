@@ -108,14 +108,11 @@ func HandlePushTriggerMetrics(
 ) error {
 	logger.Info().Msg("Save trigger metrics")
 
-	buffer := make(map[string]*moira.MatchedMetric, len(patternsMetrics))
-	i := 0
+	buffer := make([]*moira.MatchedMetric, 0, len(patternsMetrics))
 
 	for _, patternMetrics := range patternsMetrics {
 		for metricName, metricValues := range patternMetrics.Metrics {
 			for _, metricValue := range metricValues {
-				i++
-
 				retention, ok := patternMetrics.Retentions[metricName]
 				if !ok {
 					retention = defaultRetention
@@ -131,7 +128,7 @@ func HandlePushTriggerMetrics(
 					RetentionTimestamp: metricValue.RetentionTimestamp,
 					Retention:          int(retention),
 				}
-				buffer[fmt.Sprintf("%d", i)] = &matchedMetric
+				buffer = append(buffer, &matchedMetric)
 			}
 		}
 	}
