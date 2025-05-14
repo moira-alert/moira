@@ -45,11 +45,36 @@ func limitNotifications(notifications []*moira.ScheduledNotification) []*moira.S
 	return notifications[:i+1]
 }
 
-// GetNotifications gets ScheduledNotifications in given range and full range.
+// GetNotifications gets ScheduledNotifications in given range and full range, where 'start' and 'end' are indices of notifications.
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
+	return connector.getNotificationsBy(func(pipe redis.Pipeliner) {
+		pipe.ZRange(connector.context, notifierNotificationsKey, start, end)
+	})
+}
+
+func (connector *DbConnector) getNotificationsByTime(timeStart, timeEnd int64) ([]*moira.ScheduledNotification, int64, error) {
+	var stop string
+	if timeEnd < 0 {
+		stop = "inf"
+	} else {
+		stop = strconv.FormatInt(timeEnd, 10)
+	}
+
+	rng := &redis.ZRangeBy{
+		Min: strconv.FormatInt(timeStart, 10),
+		Max: stop,
+	}
+
+	return connector.getNotificationsBy(func(pipe redis.Pipeliner) {
+		pipe.ZRangeByScore(connector.context, notifierNotificationsKey, rng)
+	})
+}
+
+func (connector *DbConnector) getNotificationsBy(query func(pipe redis.Pipeliner)) ([]*moira.ScheduledNotification, int64, error) {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
-	pipe.ZRange(ctx, notifierNotificationsKey, start, end)
+
+	query(pipe)
 	pipe.ZCard(ctx, notifierNotificationsKey)
 
 	response, err := pipe.Exec(ctx)
@@ -104,6 +129,35 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 		if idstr == notificationKey {
 			foundNotifications = append(foundNotifications, notification)
 		}
+	}
+
+	return connector.removeNotifications(connector.context, (*connector.client).TxPipeline(), foundNotifications)
+}
+
+// RemoveFilteredNotifications deletes notifications ine time range from startTime to endTime,
+// excluding the ones that have tag from ignoredTags.
+func (connector *DbConnector) RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error) {
+	notifications, _, err := connector.getNotificationsByTime(start, end)
+	if err != nil {
+		return 0, err
+	}
+
+	foundNotifications := make([]*moira.ScheduledNotification, 0)
+
+	ignoredTagsSet := make(map[string]struct{}, len(ignoredTags))
+	for _, tag := range ignoredTags {
+		ignoredTagsSet[tag] = struct{}{}
+	}
+
+outer:
+	for _, notification := range notifications {
+		for _, tag := range notification.Trigger.Tags {
+			if _, ok := ignoredTagsSet[tag]; ok {
+				continue outer
+			}
+		}
+
+		foundNotifications = append(foundNotifications, notification)
 	}
 
 	return connector.removeNotifications(connector.context, (*connector.client).TxPipeline(), foundNotifications)

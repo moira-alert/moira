@@ -1324,6 +1324,21 @@ func (mr *MockDatabaseMockRecorder) RemoveNotification(notificationKey any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveNotification", reflect.TypeOf((*MockDatabase)(nil).RemoveNotification), notificationKey)
 }
 
+// RemoveFilteredNotifications mocks base method.
+func (m *MockDatabase) RemoveFilteredNotifications(arg0, arg1 int64, arg2 []string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFilteredNotifications", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveFilteredNotifications indicates an expected call of RemoveFilteredNotifications.
+func (mr *MockDatabaseMockRecorder) RemoveFilteredNotifications(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFilteredNotifications", reflect.TypeOf((*MockDatabase)(nil).RemoveFilteredNotifications), arg0, arg1, arg2)
+}
+
 // RemovePattern mocks base method.
 func (m *MockDatabase) RemovePattern(pattern string) error {
 	m.ctrl.T.Helper()
