@@ -62,7 +62,6 @@ require (
 require (
 	github.com/JaderDias/movingmedian v0.0.0-20220813210630-d8c6b6de8835 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/RoaringBitmap/roaring v1.3.0 // indirect
 	github.com/aclements/go-moremath v0.0.0-20210112150236-f10218a38794 // indirect
 	github.com/ansel1/merry/v2 v2.2.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

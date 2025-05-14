@@ -171,7 +171,7 @@ func limitedChangeTriggerOwnersMiddleware() func(next http.Handler) http.Handler
 				isAdmin := auth.IsAdmin(userLogin)
 				isOwner := trigger.CreatedBy == userLogin
 
-				if triggerHasRestriction && !(isAdmin || isOwner) {
+				if triggerHasRestriction && !isAdmin && !isOwner {
 					_ = render.Render(w, r, api.ErrorForbidden(fmt.Sprintf("Only administrators and %s can use this", trigger.CreatedBy)))
 					return
 				}
