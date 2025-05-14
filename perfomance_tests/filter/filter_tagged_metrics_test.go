@@ -13,7 +13,7 @@ import (
 func BenchmarkProcessIncomingTaggedMetric(b *testing.B) {
 	taggedPatterns, err := loadPatterns("tagged_patterns.txt")
 	if err != nil {
-		b.Errorf(err.Error())
+		b.Error(err.Error())
 	}
 
 	patternsStorage, err := createPatternsStorage(taggedPatterns, b)

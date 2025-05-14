@@ -563,9 +563,9 @@ func Test_metricEvaluationRulesChanged(t *testing.T) {
 		}
 
 		var (
-			floatValueOne                float64 = 1.0
-			floatValueEqualToValueOne    float64 = 1.0
-			floatValueNotEqualToValueOne float64 = 2.0
+			floatValueOne                = 1.0
+			floatValueEqualToValueOne    = 1.0
+			floatValueNotEqualToValueOne = 2.0
 
 			stringValueOne                = "some str"
 			stringValueEqualToValueOne    = "some str"

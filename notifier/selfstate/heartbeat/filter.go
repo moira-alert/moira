@@ -45,7 +45,7 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 		return 0, false, nil
 	}
 
-	if check.lastSuccessfulCheck < nowTS-check.heartbeat.delay {
+	if check.lastSuccessfulCheck < nowTS-check.delay {
 		check.logger.Error().
 			String("error", check.GetErrorMessage()).
 			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
@@ -53,7 +53,7 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 
 		check.firstCheckWasSuccessful = true
 
-		return nowTS - check.heartbeat.lastSuccessfulCheck, true, nil
+		return nowTS - check.lastSuccessfulCheck, true, nil
 	}
 
 	return 0, false, nil
