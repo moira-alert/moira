@@ -20,7 +20,7 @@ func notification(router chi.Router) {
 		r.Use(middleware.AdminOnlyMiddleware())
 		r.Delete("/", deleteNotification)
 		r.Delete("/all", deleteAllNotifications)
-		r.Delete("/filtered", deleteNotificationsFiltered)
+		r.Delete("/filtered", deleteFilteredNotifications)
 	})
 }
 
@@ -128,7 +128,7 @@ func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 //	@failure	403	{object}	api.ErrorResponse			"Forbidden"
 //	@failure	500	{object}	api.ErrorResponse			"Internal server error"
 //	@router		/notification/filtered [delete]
-func deleteNotificationsFiltered(writer http.ResponseWriter, request *http.Request) {
+func deleteFilteredNotifications(writer http.ResponseWriter, request *http.Request) {
 	urlValues, err := url.ParseQuery(request.URL.RawQuery)
 	if err != nil {
 		_ = render.Render(writer, request, api.ErrorInvalidRequest(err))

@@ -134,9 +134,9 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	return connector.removeNotifications(connector.context, (*connector.client).TxPipeline(), foundNotifications)
 }
 
-// RemoveNotificationsFiltered deletes notifications ine time range from startTime to endTime,
+// RemoveFilteredNotifications deletes notifications ine time range from startTime to endTime,
 // excluding the ones that have tag from ignoredTags.
-func (connector *DbConnector) RemoveNotificationsFiltered(start, end int64, ignoredTags []string) (int64, error) {
+func (connector *DbConnector) RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error) {
 	notifications, _, err := connector.getNotificationsByTime(start, end)
 	if err != nil {
 		return 0, err
