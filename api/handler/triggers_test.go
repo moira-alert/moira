@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metric_source/remote"
 
@@ -1040,7 +1039,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 				ownerLogin: {},
 			},
 		}
-		logger, _ := zerolog_adapter.GetLogger("Test")
+		logger, _ := logging.GetLogger("Test")
 		config := &api.Config{Authorization: auth}
 		webConfig := &api.WebConfig{
 			SupportEmail: "test",
@@ -1101,7 +1100,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 				ownerLogin: {},
 			},
 		}
-		logger, _ := zerolog_adapter.GetLogger("Test")
+		logger, _ := logging.GetLogger("Test")
 		config := &api.Config{Authorization: auth}
 		webConfig := &api.WebConfig{
 			SupportEmail: "test",
@@ -1204,7 +1203,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 				ownerLogin: {},
 			},
 		}
-		logger, _ := zerolog_adapter.GetLogger("Test")
+		logger, _ := logging.GetLogger("Test")
 		config := &api.Config{
 			Authorization: auth,
 			Limits: api.LimitsConfig{
@@ -1293,7 +1292,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 				ownerLogin: {},
 			},
 		}
-		logger, _ := zerolog_adapter.GetLogger("Test")
+		logger, _ := logging.GetLogger("Test")
 		config := &api.Config{
 			Authorization: auth,
 			Limits: api.LimitsConfig{
