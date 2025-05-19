@@ -332,7 +332,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		Page:                  middleware.GetPage(request),
 		Size:                  middleware.GetSize(request),
 		OnlyProblems:          getOnlyProblemsFlag(request),
-		Tags:                  getRequestTags(request),
+		Tags:                  getRequestTags(request, "tags"),
 		SearchString:          getSearchRequestString(request),
 		CreatedBy:             createdBy,
 		NeedSearchByCreatedBy: ok,
@@ -380,13 +380,13 @@ func deletePager(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getRequestTags(request *http.Request) []string {
+func getRequestTags(request *http.Request, fieldName string) []string {
 	var filterTags []string
 
 	i := 0
 
 	for {
-		tag := request.FormValue(fmt.Sprintf("tags[%v]", i))
+		tag := request.FormValue(fmt.Sprintf("%s[%d]", fieldName, i))
 		if tag == "" {
 			break
 		}

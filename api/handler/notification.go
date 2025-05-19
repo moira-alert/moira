@@ -20,6 +20,7 @@ func notification(router chi.Router) {
 		r.Use(middleware.AdminOnlyMiddleware())
 		r.Delete("/", deleteNotification)
 		r.Delete("/all", deleteAllNotifications)
+		r.Delete("/filtered", deleteFilteredNotifications)
 	})
 }
 
@@ -114,5 +115,41 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllNotifications(database); errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Delete notifications filtered by tags and timestamps
+//	@id			delete-notifications-filtered
+//	@tags		notification
+//	@produce	json
+//	@success	200	{object}	dto.NotificationsList		"Notification have been deleted"
+//	@failure	403	{object}	api.ErrorResponse			"Forbidden"
+//	@failure	500	{object}	api.ErrorResponse			"Internal server error"
+//	@router		/notification/filtered [delete]
+func deleteFilteredNotifications(writer http.ResponseWriter, request *http.Request) {
+	urlValues, err := url.ParseQuery(request.URL.RawQuery)
+	if err != nil {
+		_ = render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+
+	start, err := strconv.ParseInt(urlValues.Get("start"), 10, 64)
+	if err != nil {
+		_ = render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+
+	end, err := strconv.ParseInt(urlValues.Get("end"), 10, 64)
+	if err != nil {
+		_ = render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+
+	ignoredTags := getRequestTags(request, "ignoredTags")
+
+	if errorResponse := controller.DeleteFilteredNotifications(database, start, end, ignoredTags); errorResponse != nil {
+		_ = render.Render(writer, request, errorResponse)
 	}
 }
