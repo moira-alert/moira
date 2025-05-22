@@ -28,6 +28,14 @@ func TestTargetVerification(t *testing.T) {
 			So(problems[0].SyntaxOk, ShouldBeFalse)
 		})
 
+		Convey("Check target with unrecognized syntax error", func() {
+			targets := []string{`alias(test.one,'One'))`}
+			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
+			So(problems[0].SyntaxOk, ShouldBeFalse)
+			So(problems[0].TreeOfProblems, ShouldBeNil)
+		})
+
 		Convey("Check correct construction", func() {
 			targets := []string{`alias(test.one,'One')`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
