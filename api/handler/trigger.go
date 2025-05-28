@@ -117,7 +117,7 @@ func validateTargets(request *http.Request, trigger *dto.Trigger) ([]dto.TreeOfP
 	}
 
 	for _, tree := range treesOfProblems {
-		if tree.TreeOfProblems != nil {
+		if tree.TreeOfProblems != nil || !tree.SyntaxOk {
 			return treesOfProblems, nil
 		}
 	}
