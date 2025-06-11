@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -61,12 +62,15 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 
 	renderable, err := buildRenderable(request, trigger, targetMetrics, targetName)
 	if err != nil {
-			switch err.(type) {
-			case plotting.ErrNoPointsToRender:
-				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-			default:
-				render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
-			}
+		var noPointsToRender plotting.ErrNoPointsToRender
+
+		switch {
+		case errors.As(err, &noPointsToRender):
+			_ = render.Render(writer, request, api.ErrorInvalidRequest(err))
+		default:
+			_ = render.Render(writer, request, api.ErrorInternalServer(err))
+		}
+
 		return
 	}
 
