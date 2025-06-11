@@ -61,7 +61,12 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 
 	renderable, err := buildRenderable(request, trigger, targetMetrics, targetName)
 	if err != nil {
-		render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
+			switch err.(type) {
+			case plotting.ErrNoPointsToRender:
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+			default:
+				render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
+			}
 		return
 	}
 
