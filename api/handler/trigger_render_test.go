@@ -109,11 +109,11 @@ func TestRenderTrigger(t *testing.T) {
 			defer response.Body.Close()
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
-			expected := `{"status":"Internal Server Error","error":"no points found to render trigger: triggerID-0000000000001"}
+			expected := `{"status":"Invalid request","error":"no points found to render trigger: triggerID-0000000000001"}
 `
 
 			So(contents, ShouldEqual, expected)
-			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("with the wrong query string", func() {
