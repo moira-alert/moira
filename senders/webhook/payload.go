@@ -27,8 +27,8 @@ type eventData struct {
 	Values         map[string]float64 `json:"values"`
 	Timestamp      int64              `json:"timestamp"`
 	IsTriggerEvent bool               `json:"trigger_event"`
-	State          string             `json:"state"`
-	OldState       string             `json:"old_state"`
+	State          moira.State        `json:"state"`
+	OldState       moira.State        `json:"old_state"`
 }
 
 type contactData struct {
@@ -61,8 +61,8 @@ func toEventsData(events moira.NotificationEvents) []eventData {
 			Values:         event.Values,
 			Timestamp:      event.Timestamp,
 			IsTriggerEvent: event.IsTriggerEvent,
-			State:          event.State.String(),
-			OldState:       event.OldState.String(),
+			State:          event.State,
+			OldState:       event.OldState,
 		})
 	}
 
