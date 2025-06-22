@@ -23,10 +23,11 @@ type Contact struct {
 	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
+	ScorePercent uint8 `json:"score_percent" example:"78"`
 }
 
 // NewContact init Contact with data from moira.ContactData.
-func NewContact(data moira.ContactData) Contact {
+func NewContact(data moira.ContactData, score moira.ContactScore) Contact {
 	return Contact{
 		Type:   data.Type,
 		Name:   data.Name,
@@ -34,6 +35,7 @@ func NewContact(data moira.ContactData) Contact {
 		ID:     data.ID,
 		User:   data.User,
 		TeamID: data.Team,
+		ScorePercent: moira.CalculatePercentage(score.SuccessTXCount, score.AllTXCount),
 	}
 }
 

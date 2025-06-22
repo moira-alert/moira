@@ -1187,15 +1187,15 @@ func TestGetContactNoisiness(t *testing.T) {
 					Total: 3,
 					List: []*dto.ContactNoisiness{
 						{
-							Contact:     dto.NewContact(*contacts[1]),
+							Contact:     dto.NewContact(*contacts[1], moira.ContactScore{}),
 							EventsCount: 3,
 						},
 						{
-							Contact:     dto.NewContact(*contacts[0]),
+							Contact:     dto.NewContact(*contacts[0], moira.ContactScore{}),
 							EventsCount: 2,
 						},
 						{
-							Contact:     dto.NewContact(*contacts[2]),
+							Contact:     dto.NewContact(*contacts[2], moira.ContactScore{}),
 							EventsCount: 1,
 						},
 					},
@@ -1222,15 +1222,15 @@ func TestGetContactNoisiness(t *testing.T) {
 					Total: 3,
 					List: []*dto.ContactNoisiness{
 						{
-							Contact:     dto.NewContact(*contacts[2]),
+							Contact:     dto.NewContact(*contacts[2], moira.ContactScore{}),
 							EventsCount: 1,
 						},
 						{
-							Contact:     dto.NewContact(*contacts[0]),
+							Contact:     dto.NewContact(*contacts[0], moira.ContactScore{}),
 							EventsCount: 2,
 						},
 						{
-							Contact:     dto.NewContact(*contacts[1]),
+							Contact:     dto.NewContact(*contacts[1], moira.ContactScore{}),
 							EventsCount: 3,
 						},
 					},
