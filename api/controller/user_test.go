@@ -34,8 +34,8 @@ func TestGetUserSettings(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
 			User:          dto.User{Login: login},
-			Contacts:      []moira.ContactData{*contacts[0], *contacts[1]},
-			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
+			Contacts:      []dto.Contact{dto.NewContact(*contacts[0], moira.ContactScore{}), dto.NewContact(*contacts[1], moira.ContactScore{})},
+			Subscriptions: []dto.Subscription{dto.Subscription(*subscriptions[0]), dto.Subscription(*subscriptions[1])},
 		})
 	})
 
@@ -48,8 +48,8 @@ func TestGetUserSettings(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
 			User:          dto.User{Login: login},
-			Contacts:      make([]moira.ContactData, 0),
-			Subscriptions: make([]moira.SubscriptionData, 0),
+			Contacts:      make([]dto.Contact, 0),
+			Subscriptions: make([]dto.Subscription, 0),
 		})
 	})
 
@@ -66,8 +66,8 @@ func TestGetUserSettings(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(settings, ShouldResemble, &dto.UserSettings{
 				User:          dto.User{Login: login, Role: api.RoleUser, AuthEnabled: true},
-				Contacts:      make([]moira.ContactData, 0),
-				Subscriptions: make([]moira.SubscriptionData, 0),
+				Contacts:      make([]dto.Contact, 0),
+				Subscriptions: make([]dto.Subscription, 0),
 			})
 		})
 
@@ -80,8 +80,8 @@ func TestGetUserSettings(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(settings, ShouldResemble, &dto.UserSettings{
 				User:          dto.User{Login: adminLogin, Role: api.RoleAdmin, AuthEnabled: true},
-				Contacts:      make([]moira.ContactData, 0),
-				Subscriptions: make([]moira.SubscriptionData, 0),
+				Contacts:      make([]dto.Contact, 0),
+				Subscriptions: make([]dto.Subscription, 0),
 			})
 		})
 	})
