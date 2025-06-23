@@ -237,12 +237,23 @@ func (connector *DbConnector) GetContactsScore(contactIDs []string) (map[string]
 	contactScores := make(map[string]*moira.ContactScore, len(contactIDs))
 
 	for _, contactID := range contactIDs {
+		var contactScore moira.ContactScore
+
 		result := c.Get(connector.context, contactScoreKey(contactID))
 		if errors.Is(result.Err(), redis.Nil) {
-			return nil, database.ErrNil
+			contactScore = moira.ContactScore{
+				ContactId:      contactID,
+				AllTXCount:     0,
+				SuccessTXCount: 0,
+			}
+			connector.SaveContactsScore([]*moira.ContactScore{&contactScore})
+			contactScores[contactID] = &contactScore
+			continue
+		}
+		if err := result.Err(); err != nil {
+			return nil, err
 		}
 
-		var contactScore moira.ContactScore
 		err := json.Unmarshal([]byte(result.Val()), &contactScore)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal contact score: %s", err.Error())
