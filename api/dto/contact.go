@@ -23,7 +23,7 @@ type Contact struct {
 	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
-	ScorePercent uint8 `json:"score_percent" example:"78"`
+	ScorePercent *uint8 `json:"score_percent,omitempty" example:"78" extensions:"x-nullable"`
 }
 
 // NewContact init Contact with data from moira.ContactData.

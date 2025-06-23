@@ -349,15 +349,16 @@ func ValidateURL(requestUrl string) error {
 	return nil
 }
 
-func CalculatePercentage(part, total uint64) uint8 {
+func CalculatePercentage(part, total uint64) *uint8 {
 	if total == 0 {
-		return 0
+		return nil
 	}
 	percentage := (float64(part) * float64(100)) / float64(total)
 	if percentage > math.MaxUint8 {
-		return math.MaxUint8
+		return nil
 	}
-	return uint8(percentage)
+	percentageValue := uint8(percentage)
+	return &percentageValue
 }
 
 func SafeAdd(a, b uint64) (uint64, error) {

@@ -209,22 +209,25 @@ func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) 
 }
 
 
-func (connector *DbConnector) SaveContactsScore(contactScore []*moira.ContactScore) error {
+func (connector *DbConnector) SaveContactsScore(contactsScore []*moira.ContactScore) error {
 	c := *connector.client
-	scoreStr, err := json.Marshal(contactScore)
-	if err != nil {
-		return fmt.Errorf("failed to marshal contact score: %s", err.Error())
-	}
-
 	pipe := c.TxPipeline()
-	for _, contactScore := range contactScore {
+
+
+	for _, contactScore := range contactsScore {
 		if contactScore == nil {
 			continue
 		}
+
+		scoreStr, err := json.Marshal(contactScore)
+		if err != nil {
+			return fmt.Errorf("failed to marshal contact score: %s", err.Error())
+		}
+
 		pipe.Set(connector.context, contactScoreKey(contactScore.ContactId), scoreStr, redis.KeepTTL)
 	}
 
-	_, err = pipe.Exec(connector.context)
+	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
