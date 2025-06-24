@@ -51,10 +51,13 @@ func GetUserSettings(database moira.Database, userLogin string, auth *api.Author
 
 	for _, contact := range contacts {
 		if contact != nil {
-			if contactScore := contactsScores[contact.ID]; contactScore != nil {
-				contactDto := dto.NewContact(*contact, *contactScore)
-				userSettings.Contacts = append(userSettings.Contacts, contactDto)
+			contactScore := contactsScores[contact.ID]
+			if contactScore == nil {
+				contactScore = &moira.ContactScore{}
 			}
+
+			contactDto := dto.NewContact(*contact, *contactScore)
+			userSettings.Contacts = append(userSettings.Contacts, contactDto)
 		}
 	}
 

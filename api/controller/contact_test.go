@@ -89,16 +89,18 @@ func TestGetContactById(t *testing.T) {
 		}
 
 		dataBase.EXPECT().GetContact(contact.ID).Return(contact, nil)
+		dataBase.EXPECT().GetContactScore(contact.ID).Return(&moira.ContactScore{}, nil)
 		actual, err := GetContactById(dataBase, contact.ID)
 		So(err, ShouldBeNil)
 		So(actual,
 			ShouldResemble,
 			&dto.Contact{
-				ID:    contact.ID,
-				Name:  contact.Name,
-				Type:  contact.Type,
-				User:  contact.User,
-				Value: contact.Value,
+				ID:           contact.ID,
+				Name:         contact.Name,
+				Type:         contact.Type,
+				User:         contact.User,
+				Value:        contact.Value,
+				ScorePercent: nil,
 			})
 	})
 
@@ -106,6 +108,8 @@ func TestGetContactById(t *testing.T) {
 		const invalidId = "invalidID"
 
 		dataBase.EXPECT().GetContact(invalidId).Return(moira.ContactData{}, nil)
+		dataBase.EXPECT().GetContactScore(invalidId).Return(nil, nil)
+
 		actual, err := GetContactById(dataBase, invalidId)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Contact{})
@@ -1179,6 +1183,7 @@ func TestGetContactNoisiness(t *testing.T) {
 						{ID: "contactID2", Count: 3},
 						{ID: "contactID3", Count: 1},
 					}, nil).Times(1)
+				dataBase.EXPECT().GetContactsScore([]string{"contactID1", "contactID2", "contactID3"}).Return(map[string]*moira.ContactScore{}, nil)
 
 				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.DescSortOrder)
 				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
@@ -1214,6 +1219,7 @@ func TestGetContactNoisiness(t *testing.T) {
 						{ID: "contactID2", Count: 3},
 						{ID: "contactID3", Count: 1},
 					}, nil).Times(1)
+				dataBase.EXPECT().GetContactsScore([]string{"contactID1", "contactID2", "contactID3"}).Return(map[string]*moira.ContactScore{}, nil)
 
 				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.AscSortOrder)
 				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{

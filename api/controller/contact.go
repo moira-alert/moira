@@ -53,9 +53,14 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	contactScore, err := database.GetContactScore(contactID)
-	if err != nil || contactScore == nil {
+	if err != nil {
 		return nil, api.ErrorInternalServer(err)
+	}
+
+	if contactScore == nil {
+		contactScore = &moira.ContactScore{}
 	}
 
 	contactToReturn := dto.NewContact(contact, *contactScore)
@@ -341,10 +346,12 @@ func GetContactNoisiness(
 	}
 
 	contactsIds := getOnlyIDs(contacts)
+
 	idsWithEventsCount, err := database.CountEventsInNotificationHistory(contactsIds, from, to)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	contactsScore, err := database.GetContactsScore(contactsIds)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
@@ -379,8 +386,9 @@ func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount
 	for i, contact := range contacts {
 		contactScore := idsWithContactScore[contact.ID]
 		if contactScore == nil {
-			continue
+			contactScore = &moira.ContactScore{}
 		}
+
 		noisiness = append(noisiness,
 			&dto.ContactNoisiness{
 				Contact:     dto.NewContact(*contact, *contactScore),

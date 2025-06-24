@@ -26,5 +26,4 @@ type Config struct {
 	LogContactsToLevel            map[string]string
 	LogSubscriptionsToLevel       map[string]string
 	CheckNotifierStateTimeout     time.Duration
-	ContactScoreDefaultTtl time.Duration
 }
