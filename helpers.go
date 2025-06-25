@@ -374,13 +374,3 @@ func SafeAdd(a, b uint64) (uint64, error) {
 
 	return result, nil
 }
-
-// MapToSlice converts a map's values into a slice.
-func MapToSlice[K comparable, T any](input map[K]T) []T {
-	result := make([]T, 0, len(input))
-	for _, i := range input {
-		result = append(result, i)
-	}
-
-	return result
-}
