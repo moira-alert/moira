@@ -1006,7 +1006,23 @@ type ContactScore struct {
 	AllTXCount uint64 `json:"all_tx_count" example:"123"`
 	// SuccessTXCount is the number of successful transactions for the contact.
 	SuccessTXCount uint64 `json:"success_tx_count" example:"120"`
+	// LastErrorMsg provides the last error message encountered during transaction processing.
+	LastErrorMsg string `json:"last_error" example:"Invalid webhook URL"`
+	// LastErrorTimestamp is the timestamp of the last error encountered during transaction processing.
+	LastErrorTimestamp uint64 `json:"last_error_timestamp" example:"1750858559"`
+	// Status indicates the current status of the contact.
+	Status ContactStatus `json:"status" example:"Success"`
 }
+
+type ContactStatus string
+const (
+	// ContactStatusOK indicates a successful contact status.
+	ContactStatusOK ContactStatus = "Success"
+	// ContactStatusFailed indicates a failed contact status.
+	ContactStatusFailed ContactStatus = "Failed"
+	// ContactStatusUnknown indicates an unknown contact status.
+	ContactStatusUnknown ContactStatus = "Unknown"
+)
 
 // DeliveryTypesCounter contains counters for different types of delivery statuses.
 type DeliveryTypesCounter struct {

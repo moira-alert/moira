@@ -100,7 +100,6 @@ func TestGetContactById(t *testing.T) {
 				Type:         contact.Type,
 				User:         contact.User,
 				Value:        contact.Value,
-				ScorePercent: nil,
 			})
 	})
 

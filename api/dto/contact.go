@@ -23,7 +23,7 @@ type Contact struct {
 	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
-	ScorePercent *uint8 `json:"score_percent,omitempty" example:"78" extensions:"x-nullable"`
+	Score ContactScore `json:"score,omitempty"`
 }
 
 // NewContact init Contact with data from moira.ContactData.
@@ -35,7 +35,12 @@ func NewContact(data moira.ContactData, score moira.ContactScore) Contact {
 		ID:     data.ID,
 		User:   data.User,
 		TeamID: data.Team,
-		ScorePercent: moira.CalculatePercentage(score.SuccessTXCount, score.AllTXCount),
+		Score: ContactScore{
+			ScorePercent: moira.CalculatePercentage(score.SuccessTXCount, score.AllTXCount),
+			LastErrMessage: score.LastErrorMsg,
+			LastErrTimestamp: score.LastErrorTimestamp,
+			Status: string(score.Status),
+		},
 	}
 }
 
@@ -73,3 +78,11 @@ type ContactNoisinessList ListDTO[*ContactNoisiness]
 func (*ContactNoisinessList) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type ContactScore struct {
+	ScorePercent *uint8 `json:"score_percent,omitempty"`
+	LastErrMessage string `json:"last_err,omitempty"`
+	LastErrTimestamp uint64 `json:"last_err_timestamp,omitempty"`
+	Status string `json:"status,omitempty"`
+}
+
