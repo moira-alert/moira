@@ -54,9 +54,10 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
 	titleLen := calcRunesCountWithoutHTML(title) + len("\n")
 
-	var tags string
-
-	var tagsLen int
+	var (
+		tags    string
+		tagsLen int
+	)
 
 	triggerTags := params.Trigger.GetTags()
 	if len(triggerTags) != 0 {
@@ -222,16 +223,22 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 	)
 	mdWithNoTags := replacer.Replace(desc)
 
-	htmlDescStr := string(blackfriday.Run([]byte(mdWithNoTags),
-		blackfriday.WithExtensions(
-			blackfriday.CommonExtensions &
-				^blackfriday.DefinitionLists &
-				^blackfriday.Tables),
-		blackfriday.WithRenderer(
-			blackfriday.NewHTMLRenderer(
-				blackfriday.HTMLRendererParameters{
-					Flags: blackfriday.UseXHTML,
-				}))))
+	htmlDescStr := string(
+		blackfriday.Run(
+			[]byte(mdWithNoTags),
+			blackfriday.WithExtensions(
+				blackfriday.CommonExtensions &
+					^blackfriday.DefinitionLists &
+					^blackfriday.Tables),
+			blackfriday.WithRenderer(
+				blackfriday.NewHTMLRenderer(
+					blackfriday.HTMLRendererParameters{
+						Flags: blackfriday.UseXHTML,
+					},
+				),
+			),
+		),
+	)
 
 	// html headers are not supported by telegram html, so make them bold instead.
 	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
