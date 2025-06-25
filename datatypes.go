@@ -1015,6 +1015,7 @@ type ContactScore struct {
 }
 
 type ContactStatus string
+
 const (
 	// ContactStatusOK indicates a successful contact status.
 	ContactStatusOK ContactStatus = "Success"

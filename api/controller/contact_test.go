@@ -95,11 +95,11 @@ func TestGetContactById(t *testing.T) {
 		So(actual,
 			ShouldResemble,
 			&dto.Contact{
-				ID:           contact.ID,
-				Name:         contact.Name,
-				Type:         contact.Type,
-				User:         contact.User,
-				Value:        contact.Value,
+				ID:    contact.ID,
+				Name:  contact.Name,
+				Type:  contact.Type,
+				User:  contact.User,
+				Value: contact.Value,
 			})
 	})
 
