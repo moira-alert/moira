@@ -17,13 +17,13 @@ func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type Contact struct {
-	Type   string `json:"type" example:"mail"`
-	Name   string `json:"name,omitempty" example:"Mail Alerts"`
-	Value  string `json:"value" example:"devops@example.com"`
-	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
-	User   string `json:"user,omitempty" example:""`
-	TeamID string `json:"team_id,omitempty"`
-	Score ContactScore `json:"score,omitempty"`
+	Type   string       `json:"type" example:"mail"`
+	Name   string       `json:"name,omitempty" example:"Mail Alerts"`
+	Value  string       `json:"value" example:"devops@example.com"`
+	ID     string       `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User   string       `json:"user,omitempty" example:""`
+	TeamID string       `json:"team_id,omitempty"`
+	Score  ContactScore `json:"score,omitempty"`
 }
 
 // NewContact init Contact with data from moira.ContactData.
@@ -36,10 +36,10 @@ func NewContact(data moira.ContactData, score moira.ContactScore) Contact {
 		User:   data.User,
 		TeamID: data.Team,
 		Score: ContactScore{
-			ScorePercent: moira.CalculatePercentage(score.SuccessTXCount, score.AllTXCount),
-			LastErrMessage: score.LastErrorMsg,
+			ScorePercent:     moira.CalculatePercentage(score.SuccessTXCount, score.AllTXCount),
+			LastErrMessage:   score.LastErrorMsg,
 			LastErrTimestamp: score.LastErrorTimestamp,
-			Status: string(score.Status),
+			Status:           string(score.Status),
 		},
 	}
 }
@@ -79,10 +79,14 @@ func (*ContactNoisinessList) Render(w http.ResponseWriter, r *http.Request) erro
 	return nil
 }
 
+// ContactScore represents the score details of a contact.
 type ContactScore struct {
+	// ScorePercent is the percentage score of successful transactions.
 	ScorePercent *uint8 `json:"score_percent,omitempty"`
+	// LastErrMessage is the last error message encountered.
 	LastErrMessage string `json:"last_err,omitempty"`
+	// LastErrTimestamp is the timestamp of the last error.
 	LastErrTimestamp uint64 `json:"last_err_timestamp,omitempty"`
+	// Status is the current status of the contact.
 	Status string `json:"status,omitempty"`
 }
-

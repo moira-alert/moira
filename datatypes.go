@@ -1000,8 +1000,8 @@ type SchedulerParams struct {
 
 // ContactScore represents the score and transaction statistics for a contact over a specific time period.
 type ContactScore struct {
-	// ContactId is the unique identifier for the contact.
-	ContactId string `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	// ContactID is the unique identifier for the contact.
+	ContactID string `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	// AllTXCount is the total number of transactions for the contact.
 	AllTXCount uint64 `json:"all_tx_count" example:"123"`
 	// SuccessTXCount is the number of successful transactions for the contact.
@@ -1014,6 +1014,7 @@ type ContactScore struct {
 	Status ContactStatus `json:"status" example:"Success"`
 }
 
+// ContactStatus represents an actual contact status.
 type ContactStatus string
 
 const (
@@ -1021,8 +1022,6 @@ const (
 	ContactStatusOK ContactStatus = "Success"
 	// ContactStatusFailed indicates a failed contact status.
 	ContactStatusFailed ContactStatus = "Failed"
-	// ContactStatusUnknown indicates an unknown contact status.
-	ContactStatusUnknown ContactStatus = "Unknown"
 )
 
 // DeliveryTypesCounter contains counters for different types of delivery statuses.

@@ -208,21 +208,18 @@ func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) 
 	return contacts, nil
 }
 
-func (connector *DbConnector) SaveContactsScore(contactsScore []*moira.ContactScore) error {
+// SaveContactsScore saves the scores of multiple contacts in Redis.
+func (connector *DbConnector) SaveContactsScore(contactsScore []moira.ContactScore) error {
 	c := *connector.client
 	pipe := c.TxPipeline()
 
 	for _, contactScore := range contactsScore {
-		if contactScore == nil {
-			continue
-		}
-
 		scoreStr, err := json.Marshal(contactScore)
 		if err != nil {
 			return fmt.Errorf("failed to marshal contact score: %s", err.Error())
 		}
 
-		pipe.Set(connector.context, contactScoreKey(contactScore.ContactId), scoreStr, redis.KeepTTL)
+		pipe.Set(connector.context, contactScoreKey(contactScore.ContactID), scoreStr, redis.KeepTTL)
 	}
 
 	_, err := pipe.Exec(connector.context)
@@ -233,6 +230,7 @@ func (connector *DbConnector) SaveContactsScore(contactsScore []*moira.ContactSc
 	return nil
 }
 
+// GetContactsScore returns contacts scores as map[contactID]ContactScore.
 func (connector *DbConnector) GetContactsScore(contactIDs []string) (map[string]*moira.ContactScore, error) {
 	c := *connector.client
 
@@ -263,6 +261,7 @@ func (connector *DbConnector) GetContactsScore(contactIDs []string) (map[string]
 	return contactScores, nil
 }
 
+// GetContactScore returns contact score by given contact id.
 func (connector *DbConnector) GetContactScore(contactID string) (*moira.ContactScore, error) {
 	scores, err := connector.GetContactsScore([]string{contactID})
 	if err != nil {
