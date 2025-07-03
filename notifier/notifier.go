@@ -243,7 +243,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 
-		if incrErr := notifier.incrementContactScore(&pkg.Contact, err == nil); incrErr != nil {
+		if incrErr := notifier.incrementContactScore(&pkg.Contact, err); incrErr != nil {
 			notifier.logger.Warning().Error(incrErr).Msg("Cannot increment contact score")
 		}
 
@@ -279,7 +279,7 @@ func (notifier *StandardNotifier) needToStop(failCount int) bool {
 	return time.Duration(failCount)*notifier.config.ReschedulingDelay > notifier.config.ResendingTimeout
 }
 
-func (notifier *StandardNotifier) incrementContactScore(contact *moira.ContactData, isSuccess bool) error {
+func (notifier *StandardNotifier) incrementContactScore(contact *moira.ContactData, sendingErr error) error {
 	if contact == nil {
 		return nil
 	}
@@ -295,7 +295,7 @@ func (notifier *StandardNotifier) incrementContactScore(contact *moira.ContactDa
 		}
 	}
 
-	if isSuccess {
+	if sendingErr == nil {
 		nextAll, errAll := moira.SafeAdd(score.AllTXCount, 1)
 		nextSuccess, errSuccess := moira.SafeAdd(score.SuccessTXCount, 1)
 
@@ -306,6 +306,7 @@ func (notifier *StandardNotifier) incrementContactScore(contact *moira.ContactDa
 
 		score.AllTXCount = nextAll
 		score.SuccessTXCount = nextSuccess
+		score.Status = moira.ContactStatusOK
 	} else {
 		nextAll, err := moira.SafeAdd(score.AllTXCount, 1)
 		nextSuccess := score.SuccessTXCount
@@ -317,6 +318,9 @@ func (notifier *StandardNotifier) incrementContactScore(contact *moira.ContactDa
 
 		score.AllTXCount = nextAll
 		score.SuccessTXCount = nextSuccess
+		score.LastErrorMsg = sendingErr.Error()
+		score.LastErrorTimestamp = uint64(time.Now().Unix())
+		score.Status = moira.ContactStatusFailed
 	}
 
 	return notifier.database.SaveContactsScore([]*moira.ContactScore{score})
