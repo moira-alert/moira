@@ -171,6 +171,7 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 
 	pipe := c.TxPipeline()
 	pipe.Del(connector.context, contactKey(contactID))
+	pipe.Del(connector.context, contactScoreKey(contactID))
 	pipe.SRem(connector.context, userContactsKey(existing.User), contactID)
 	pipe.SRem(connector.context, teamContactsKey(existing.Team), contactID)
 
@@ -206,8 +207,68 @@ func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) 
 	return contacts, nil
 }
 
+
+func (connector *DbConnector) SaveContactsScore(contactScore []*moira.ContactScore) error {
+	c := *connector.client
+	scoreStr, err := json.Marshal(contactScore)
+	if err != nil {
+		return fmt.Errorf("failed to marshal contact score: %s", err.Error())
+	}
+
+	pipe := c.TxPipeline()
+	for _, contactScore := range contactScore {
+		if contactScore == nil {
+			continue
+		}
+		pipe.Set(connector.context, contactScoreKey(contactScore.ContactId), scoreStr, redis.KeepTTL)
+	}
+
+	_, err = pipe.Exec(connector.context)
+	if err != nil {
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
+	}
+
+	return nil
+}
+
+func (connector *DbConnector) GetContactsScore(contactIDs []string) (map[string]*moira.ContactScore, error) {
+	c := *connector.client
+
+	contactScores := make(map[string]*moira.ContactScore, len(contactIDs))
+
+	for _, contactID := range contactIDs {
+		result := c.Get(connector.context, contactScoreKey(contactID))
+		if errors.Is(result.Err(), redis.Nil) {
+			return nil, database.ErrNil
+		}
+
+		var contactScore moira.ContactScore
+		err := json.Unmarshal([]byte(result.Val()), &contactScore)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal contact score: %s", err.Error())
+		}
+
+		contactScores[contactID] = &contactScore
+	}
+
+	return contactScores, nil
+}
+
+
+func (connector *DbConnector) GetContactScore(contactID string) (*moira.ContactScore, error) {
+	scores, err := connector.GetContactsScore([]string{contactID})
+	if err != nil {
+		return nil, err
+	}
+	return scores[contactID], nil
+}
+
 func contactKey(id string) string {
 	return "moira-contact:" + id
+}
+
+func contactScoreKey(id string) string {
+	return "moira-contact-score:" + id
 }
 
 func userContactsKey(userName string) string {
