@@ -367,11 +367,12 @@ func CalculatePercentage(part, total uint64) *uint8 {
 
 // SafeAdd safely adds two uint64 numbers and returns an error if an overflow occurs.
 func SafeAdd(a, b uint64) (uint64, error) {
-    result := a + b
-    if result < a {
-        return 0, fmt.Errorf("integer overflow occurred during addition")
-    }
-    return result, nil
+	result := a + b
+	if result < a {
+		return 0, fmt.Errorf("integer overflow occurred during addition")
+	}
+
+	return result, nil
 }
 
 // MapToSlice converts a map's values into a slice.

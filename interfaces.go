@@ -74,9 +74,6 @@ type Database interface {
 	SaveContact(contact *ContactData) error
 	GetUserContactIDs(userLogin string) ([]string, error)
 	GetTeamContactIDs(teamID string) ([]string, error)
-	SaveContactsScore(contactScore []*ContactScore) error
-	GetContactsScore(contactIDs []string) (map[string]*ContactScore, error)
-	GetContactScore(contactID string) (*ContactScore, error)
 
 	// ContactScore storing
 	SaveContactsScore(contactScore []ContactScore) error
