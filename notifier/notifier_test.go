@@ -154,6 +154,14 @@ func TestFailSendEvent(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
+	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
+	dataBase.EXPECT().SaveContactsScore([]*moira.ContactScore{
+		{
+			ContactId:      pkg.Contact.ID,
+			AllTXCount:     1,
+			SuccessTXCount: 0,
+		},
+	})
 
 	var wg sync.WaitGroup
 
@@ -182,6 +190,15 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).
 		Return(moira.NewSenderBrokenContactError(fmt.Errorf("some sender reason")))
 
+	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
+	dataBase.EXPECT().SaveContactsScore([]*moira.ContactScore{
+		{
+			ContactId:      pkg.Contact.ID,
+			AllTXCount:     1,
+			SuccessTXCount: 0,
+		},
+	})
+
 	var wg sync.WaitGroup
 
 	standardNotifier.Send(&pkg, &wg)
@@ -207,7 +224,7 @@ func TestTimeout(t *testing.T) {
 	}
 
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
-		fmt.Print("Trying to send for 10 second")
+		fmt.Println("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
 	}).Times(maxParallelSendsPerSender)
 
@@ -236,6 +253,8 @@ func TestTimeout(t *testing.T) {
 
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
+	dataBase.EXPECT().GetContactScore(gomock.Any()).Return(nil, nil).AnyTimes()
+	dataBase.EXPECT().SaveContactsScore(gomock.Any()).AnyTimes()
 
 	standardNotifier.Send(&pkg2, &wg)
 	wg.Wait()
