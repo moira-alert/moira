@@ -372,6 +372,7 @@ func GetContactNoisiness(
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	contactsScore, err := database.GetContactsScore(contactsIds)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
@@ -408,6 +409,7 @@ func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount
 		if contactScore == nil {
 			contactScore = &moira.ContactScore{}
 		}
+
 		noisiness = append(noisiness,
 			&dto.ContactNoisiness{
 				Contact:     dto.NewContact(*contact, *contactScore),
