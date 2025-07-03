@@ -295,21 +295,29 @@ func (notifier *StandardNotifier) incrementContactScore(contact *moira.ContactDa
 		}
 	}
 
-	nextAll, err := moira.SafeAdd(score.AllTXCount, 1)
-	if err != nil {
-		nextAll = 1
-	}
-
-	nextSuccess := score.SuccessTXCount
 	if isSuccess {
-		nextSuccess, err = moira.SafeAdd(score.SuccessTXCount, 1)
-		if err != nil {
+		nextAll, errAll := moira.SafeAdd(score.AllTXCount, 1)
+		nextSuccess, errSuccess := moira.SafeAdd(score.SuccessTXCount, 1)
+
+		if errAll != nil || errSuccess != nil {
+			nextAll = 1
 			nextSuccess = 1
 		}
-	}
 
-	score.AllTXCount = nextAll
-	score.SuccessTXCount = nextSuccess
+		score.AllTXCount = nextAll
+		score.SuccessTXCount = nextSuccess
+	} else {
+		nextAll, err := moira.SafeAdd(score.AllTXCount, 1)
+		nextSuccess := score.SuccessTXCount
+
+		if err != nil {
+			nextAll = 1
+			nextSuccess = 0
+		}
+
+		score.AllTXCount = nextAll
+		score.SuccessTXCount = nextSuccess
+	}
 
 	return notifier.database.SaveContactsScore([]*moira.ContactScore{score})
 }
