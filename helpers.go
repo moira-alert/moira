@@ -348,3 +348,38 @@ func ValidateURL(requestUrl string) error {
 
 	return nil
 }
+
+// CalculatePercentage computes the percentage of 'part' relative to 'total' as a uint8 pointer, or returns nil if invalid.
+func CalculatePercentage(part, total uint64) *uint8 {
+	if total == 0 {
+		return nil
+	}
+
+	percentage := (float64(part) * float64(100)) / float64(total)
+	if percentage > math.MaxUint8 {
+		return nil
+	}
+
+	percentageValue := uint8(percentage)
+
+	return &percentageValue
+}
+
+// SafeAdd safely adds two uint64 numbers and returns an error if an overflow occurs.
+func SafeAdd(a, b uint64) (uint64, error) {
+    result := a + b
+    if result < a {
+        return 0, fmt.Errorf("integer overflow occurred during addition")
+    }
+    return result, nil
+}
+
+// MapToSlice converts a map's values into a slice.
+func MapToSlice[K, V comparable](input map[K]V) []V {
+	res := make([]V, 0, len(input))
+	for _, v := range input {
+		res = append(res, v)
+	}
+
+	return res
+}

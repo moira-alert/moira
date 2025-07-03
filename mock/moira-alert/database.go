@@ -1524,7 +1524,7 @@ func (mr *MockDatabaseMockRecorder) SaveContact(contact any) *gomock.Call {
 }
 
 // SaveContactsScore mocks base method.
-func (m *MockDatabase) SaveContactsScore(contactScore []*moira.ContactScore) error {
+func (m *MockDatabase) SaveContactsScore(contactScore []moira.ContactScore) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveContactsScore", contactScore)
 	ret0, _ := ret[0].(error)

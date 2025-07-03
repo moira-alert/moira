@@ -78,6 +78,11 @@ type Database interface {
 	GetContactsScore(contactIDs []string) (map[string]*ContactScore, error)
 	GetContactScore(contactID string) (*ContactScore, error)
 
+	// ContactScore storing
+	SaveContactsScore(contactScore []ContactScore) error
+	GetContactsScore(contactIDs []string) (map[string]*ContactScore, error)
+	GetContactScore(contactID string) (*ContactScore, error)
+
 	// SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
 	GetSubscriptions(subscriptionIDs []string) ([]*SubscriptionData, error)
