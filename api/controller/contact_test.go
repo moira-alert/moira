@@ -941,18 +941,18 @@ func TestSendTestContactNotification(t *testing.T) {
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
 
 		dataBase.EXPECT().GetContactScore(id).Return(&moira.ContactScore{
-			SuccessTXCount: 9,
-			AllTXCount: 10,
-			LastErrorMsg: "some error",
+			SuccessTXCount:     9,
+			AllTXCount:         10,
+			LastErrorMsg:       "some error",
 			LastErrorTimestamp: 123,
-			Status: moira.ContactStatusOK,
+			Status:             moira.ContactStatusOK,
 		}, nil).Times(1)
 		dataBase.EXPECT().GetContactScore(id).Return(&moira.ContactScore{
-			SuccessTXCount: 10,
-			AllTXCount: 10,
-			LastErrorMsg: "some error",
+			SuccessTXCount:     10,
+			AllTXCount:         10,
+			LastErrorMsg:       "some error",
 			LastErrorTimestamp: 123,
-			Status: moira.ContactStatusOK,
+			Status:             moira.ContactStatusOK,
 		}, nil).Times(1)
 
 		err := SendTestContactNotification(dataBase, id, time.Second)

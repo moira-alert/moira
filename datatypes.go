@@ -1018,21 +1018,27 @@ func (cs ContactScore) Compare(other ContactScore) int {
 	if cs.ContactID != other.ContactID {
 		return 1
 	}
+
 	if cs.AllTXCount != other.AllTXCount {
 		return 1
 	}
+
 	if cs.SuccessTXCount != other.SuccessTXCount {
 		return 1
 	}
+
 	if cs.LastErrorMsg != other.LastErrorMsg {
 		return 1
 	}
+
 	if cs.LastErrorTimestamp != other.LastErrorTimestamp {
 		return 1
 	}
+
 	if cs.Status != other.Status {
 		return 1
 	}
+
 	return 0
 }
 

@@ -258,12 +258,12 @@ func SendTestContactNotification(dataBase moira.Database, contactID string, wait
 		return api.ErrorInternalServer(err)
 	}
 
-	WAITER:
+WAITER:
 	for {
 		select {
-			case <- time.After(waitTime):
-				break WAITER
-			default:
+		case <-time.After(waitTime):
+			break WAITER
+		default:
 			score, err := dataBase.GetContactScore(contactID)
 			if err != nil {
 				return api.ErrorInternalServer(err)
