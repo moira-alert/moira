@@ -106,6 +106,9 @@ func Test_webConfig_getDefault(t *testing.T) {
 						MaxNameSize:        api.DefaultTeamNameMaxSize,
 						MaxDescriptionSize: api.DefaultTeamDescriptionMaxSize,
 					},
+					Contact: ContactLimits{
+						TestNotificationWaitTime: 10 * time.Second,
+					},
 				},
 			},
 			Web: webConfig{
