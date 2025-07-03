@@ -390,6 +390,7 @@ func TestSetContactScoreIfSuccessSending(t *testing.T) {
 			ContactId:      pkg.Contact.ID,
 			AllTXCount:     1,
 			SuccessTXCount: 1,
+			Status: moira.ContactStatusOK,
 		},
 	})
 
@@ -431,11 +432,15 @@ func TestSetContactScoreIfFailedSenging(t *testing.T) {
 		AllTXCount:     20,
 		SuccessTXCount: 20,
 	}, nil)
-	dataBase.EXPECT().SaveContactsScore([]*moira.ContactScore{
-		{
-			ContactId:      pkg.Contact.ID,
-			AllTXCount:     21,
-			SuccessTXCount: 20,
+	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
+		Expected: []*moira.ContactScore {
+			{
+				ContactId: pkg.Contact.ID,
+				AllTXCount: 21,
+				SuccessTXCount: 20,
+				LastErrorMsg: "some sender reason",
+				Status: moira.ContactStatusFailed,
+			},
 		},
 	})
 
@@ -477,11 +482,15 @@ func TestDropContactStatisticsOnOverflow(t *testing.T) {
 		AllTXCount:     math.MaxUint64,
 		SuccessTXCount: 20,
 	}, nil)
-	dataBase.EXPECT().SaveContactsScore([]*moira.ContactScore{
-		{
-			ContactId:      pkg.Contact.ID,
-			AllTXCount:     1,
-			SuccessTXCount: 0,
+	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
+		Expected: []*moira.ContactScore {
+			{
+				ContactId: pkg.Contact.ID,
+				AllTXCount: 1,
+				SuccessTXCount: 0,
+				LastErrorMsg: "some sender reason",
+				Status: moira.ContactStatusFailed,
+			},
 		},
 	})
 
