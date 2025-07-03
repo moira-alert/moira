@@ -582,9 +582,27 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
 
+	contactScores, err := database.GetContactsScore(contactIDs)
+	if err != nil {
+		return dto.TeamSettings{}, api.ErrorInternalServer(err)
+	}
+
 	for _, contact := range contacts {
 		if contact == nil {
 			continue
+		}
+
+		var scoreDto dto.ContactScore
+		score := contactScores[contact.ID]
+
+		if score != nil {
+			scorePercent := moira.CalculatePercentage(score.SuccessTXCount, score.AllTXCount)
+			scoreDto = dto.ContactScore{
+				ScorePercent:     scorePercent,
+				LastErrMessage:   score.LastErrorMsg,
+				LastErrTimestamp: score.LastErrorTimestamp,
+				Status:           string(score.Status),
+			}
 		}
 
 		teamSettings.Contacts = append(teamSettings.Contacts, dto.TeamContact{
@@ -595,6 +613,7 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 			Team:   contact.Team,
 			Type:   contact.Type,
 			Value:  contact.Value,
+			Score: scoreDto,
 		})
 	}
 

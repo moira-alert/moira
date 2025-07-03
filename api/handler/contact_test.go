@@ -29,6 +29,7 @@ const (
 	defaultContact          = "testContact"
 	defaultLogin            = "testLogin"
 	defaultTeamID           = "testTeamID"
+	limitsContextKey = "limits"
 )
 
 func TestGetAllContacts(t *testing.T) {
@@ -128,6 +129,7 @@ func TestGetContactById(t *testing.T) {
 				User:  defaultLogin,
 				Team:  "",
 			}, nil).Times(1)
+			mockDb.EXPECT().GetContactScore(contactID).Return(&moira.ContactScore{}, nil)
 
 			database = mockDb
 
@@ -986,10 +988,12 @@ func TestSendTestContactNotification(t *testing.T) {
 
 		Convey("Successful send test contact notification", func() {
 			mockDb.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil).Times(1)
+			mockDb.EXPECT().GetContactScore(contactID).Return(nil, nil).Times(1)
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/contact/"+contactID+"/test", nil)
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, contactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), limitsContextKey, api.LimitsConfig{}))
 
 			sendTestContactNotification(responseWriter, testRequest)
 
@@ -1015,6 +1019,7 @@ func TestSendTestContactNotification(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/contact/"+contactID+"/test", nil)
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, contactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), limitsContextKey, api.LimitsConfig{}))
 
 			sendTestContactNotification(responseWriter, testRequest)
 
@@ -1084,7 +1089,7 @@ func Test_getContactNoisiness(t *testing.T) {
 				Total: 4,
 				List: []*dto.ContactNoisiness{
 					{
-						Contact:     dto.NewContact(*contacts[3]),
+						Contact:     dto.NewContact(*contacts[3], moira.ContactScore{}),
 						EventsCount: 7,
 					},
 				},
@@ -1095,6 +1100,13 @@ func Test_getContactNoisiness(t *testing.T) {
 			expectedBytes = append(expectedBytes, '\n')
 
 			mockDb.EXPECT().GetAllContacts().Return(contacts, nil).Times(1)
+			mockDb.EXPECT().GetContactsScore(moira.Map(contacts, func(cont *moira.ContactData) string {
+				if cont == nil {
+					return ""
+				} else {
+					return cont.ID
+				}
+			})).Return(map[string]*moira.ContactScore{}, nil)
 			mockDb.EXPECT().CountEventsInNotificationHistory(
 				[]string{"contact-id-1", "contact-id-2", "contact-id-3", "contact-id-4"},
 				parsedFrom,
