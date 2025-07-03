@@ -135,6 +135,7 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 
 	pipe := c.TxPipeline()
 	pipe.Set(connector.context, contactKey(contact.ID), contactString, redis.KeepTTL)
+	pipe.Del(connector.context, contactScoreKey(contact.ID))
 
 	if !errors.Is(getContactErr, database.ErrNil) && contact.User != existing.User {
 		pipe.SRem(connector.context, userContactsKey(existing.User), contact.ID)
