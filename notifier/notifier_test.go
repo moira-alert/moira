@@ -157,9 +157,9 @@ func TestFailSendEvent(t *testing.T) {
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
 	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
-		Expected: []*moira.ContactScore{
+		Expected: []moira.ContactScore{
 			{
-				ContactId:      pkg.Contact.ID,
+				ContactID:      pkg.Contact.ID,
 				AllTXCount:     1,
 				SuccessTXCount: 0,
 				LastErrorMsg:   "Can't send",
@@ -197,9 +197,9 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 
 	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
 	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
-		Expected: []*moira.ContactScore{
+		Expected: []moira.ContactScore{
 			{
-				ContactId:      pkg.Contact.ID,
+				ContactID:      pkg.Contact.ID,
 				AllTXCount:     1,
 				SuccessTXCount: 0,
 				LastErrorMsg:   "some sender reason",
@@ -230,9 +230,9 @@ func TestSetContactScoreIfSuccessSending(t *testing.T) {
 
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil)
 	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
-	dataBase.EXPECT().SaveContactsScore([]*moira.ContactScore{
+	dataBase.EXPECT().SaveContactsScore([]moira.ContactScore{
 		{
-			ContactId:      pkg.Contact.ID,
+			ContactID:      pkg.Contact.ID,
 			AllTXCount:     1,
 			SuccessTXCount: 1,
 			Status:         moira.ContactStatusOK,
@@ -273,14 +273,14 @@ func TestSetContactScoreIfFailedSenging(t *testing.T) {
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(&moira.ContactScore{
-		ContactId:      pkg.Contact.ID,
+		ContactID:      pkg.Contact.ID,
 		AllTXCount:     20,
 		SuccessTXCount: 20,
 	}, nil)
 	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
-		Expected: []*moira.ContactScore{
+		Expected: []moira.ContactScore{
 			{
-				ContactId:      pkg.Contact.ID,
+				ContactID:      pkg.Contact.ID,
 				AllTXCount:     21,
 				SuccessTXCount: 20,
 				LastErrorMsg:   "some sender reason",
@@ -323,14 +323,14 @@ func TestDropContactStatisticsOnOverflow(t *testing.T) {
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(&moira.ContactScore{
-		ContactId:      pkg.Contact.ID,
+		ContactID:      pkg.Contact.ID,
 		AllTXCount:     math.MaxUint64,
 		SuccessTXCount: 20,
 	}, nil)
 	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
-		Expected: []*moira.ContactScore{
+		Expected: []moira.ContactScore{
 			{
-				ContactId:      pkg.Contact.ID,
+				ContactID:      pkg.Contact.ID,
 				AllTXCount:     1,
 				SuccessTXCount: 0,
 				LastErrorMsg:   "some sender reason",
@@ -476,11 +476,11 @@ var notificationsPackage = NotificationPackage{
 }
 
 type contactScoreMatcher struct {
-	Expected []*moira.ContactScore
+	Expected []moira.ContactScore
 }
 
 func (m contactScoreMatcher) Matches(x any) bool {
-	actuals, ok := x.([]*moira.ContactScore)
+	actuals, ok := x.([]moira.ContactScore)
 	if !ok {
 		return false
 	}
@@ -495,7 +495,7 @@ func (m contactScoreMatcher) Matches(x any) bool {
 
 		if actual.AllTXCount != exp.AllTXCount ||
 			actual.SuccessTXCount != exp.SuccessTXCount ||
-			actual.ContactId != exp.ContactId ||
+			actual.ContactID != exp.ContactID ||
 			actual.LastErrorMsg != exp.LastErrorMsg {
 			return false
 		}
