@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
@@ -926,16 +927,42 @@ func TestSendTestContactNotification(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	id := uuid.Must(uuid.NewV4()).String()
 
-	Convey("Success", t, func() {
+	Convey("Success on unscored contact", t, func() {
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
-		err := SendTestContactNotification(dataBase, id)
+
+		dataBase.EXPECT().GetContactScore(id).Return(nil, nil).Times(1)
+		dataBase.EXPECT().GetContactScore(id).Return(&moira.ContactScore{}, nil).Times(1)
+
+		err := SendTestContactNotification(dataBase, id, time.Second)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success on scored contact", t, func() {
+		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
+
+		dataBase.EXPECT().GetContactScore(id).Return(&moira.ContactScore{
+			SuccessTXCount: 9,
+			AllTXCount: 10,
+			LastErrorMsg: "some error",
+			LastErrorTimestamp: 123,
+			Status: moira.ContactStatusOK,
+		}, nil).Times(1)
+		dataBase.EXPECT().GetContactScore(id).Return(&moira.ContactScore{
+			SuccessTXCount: 10,
+			AllTXCount: 10,
+			LastErrorMsg: "some error",
+			LastErrorTimestamp: 123,
+			Status: moira.ContactStatusOK,
+		}, nil).Times(1)
+
+		err := SendTestContactNotification(dataBase, id, time.Second)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("oooops! Can not push event")
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
-		err := SendTestContactNotification(dataBase, id)
+		err := SendTestContactNotification(dataBase, id, time.Second)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }

@@ -240,7 +240,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 }
 
 // SendTestContactNotification push test notification to verify the correct contact settings.
-func SendTestContactNotification(dataBase moira.Database, contactID string) *api.ErrorResponse {
+func SendTestContactNotification(dataBase moira.Database, contactID string, waitTime time.Duration) *api.ErrorResponse {
 	eventData := &moira.NotificationEvent{
 		ContactID: contactID,
 		Metric:    "Test.metric.value",
@@ -251,6 +251,27 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 	}
 	if err := dataBase.PushNotificationEvent(eventData, false); err != nil {
 		return api.ErrorInternalServer(err)
+	}
+
+	baseScore, err := dataBase.GetContactScore(contactID)
+	if err != nil {
+		return api.ErrorInternalServer(err)
+	}
+
+	WAITER:
+	for {
+		select {
+			case <- time.After(waitTime):
+				break WAITER
+			default:
+			score, err := dataBase.GetContactScore(contactID)
+			if err != nil {
+				return api.ErrorInternalServer(err)
+			}
+			if !moira.EqualTwoPointerValues(baseScore, score) {
+				break WAITER
+			}
+		}
 	}
 
 	return nil
