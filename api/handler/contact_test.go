@@ -29,7 +29,7 @@ const (
 	defaultContact          = "testContact"
 	defaultLogin            = "testLogin"
 	defaultTeamID           = "testTeamID"
-	limitsContextKey = "limits"
+	limitsContextKey        = "limits"
 )
 
 func TestGetAllContacts(t *testing.T) {

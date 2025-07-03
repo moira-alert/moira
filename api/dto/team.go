@@ -122,7 +122,7 @@ type TeamContact struct {
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
 	// This field is deprecated
-	Team string `json:"team,omitempty"`
+	Team  string       `json:"team,omitempty"`
 	Score ContactScore `json:"score,omitempty"`
 }
 

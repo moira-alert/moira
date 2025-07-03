@@ -926,7 +926,6 @@ func TestSendTestContactNotification(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	id := uuid.Must(uuid.NewV4()).String()
 
-
 	Convey("Success on unscored contact", t, func() {
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
 

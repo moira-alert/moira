@@ -593,6 +593,7 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 		}
 
 		var scoreDto dto.ContactScore
+
 		score := contactScores[contact.ID]
 
 		if score != nil {
@@ -613,7 +614,7 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 			Team:   contact.Team,
 			Type:   contact.Type,
 			Value:  contact.Value,
-			Score: scoreDto,
+			Score:  scoreDto,
 		})
 	}
 
