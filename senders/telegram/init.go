@@ -96,6 +96,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		if err != nil {
 			return sender.removeTokenFromError(fmt.Errorf("can't create HTTP client with proxy: %w", err))
 		}
+
 		botSettings.Client = httpClient
 	}
 
