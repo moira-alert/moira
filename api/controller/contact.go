@@ -263,7 +263,7 @@ WAITER:
 		select {
 		case <-time.After(waitTime):
 			break WAITER
-		default:
+		case <-time.Tick(1 * time.Second):
 			score, err := dataBase.GetContactScore(contactID)
 			if err != nil {
 				return api.ErrorInternalServer(err)
