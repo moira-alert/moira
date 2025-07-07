@@ -964,12 +964,14 @@ func TestGetTeamSettings(t *testing.T) {
 
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+		contactsScores := map[string]*moira.ContactScore{}
 		contactsDto := []dto.TeamContact{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
 
 		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
 		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
+		database.EXPECT().GetContactsScore(contactIDs).Return(contactsScores, nil)
 
 		settings, err := GetTeamSettings(database, teamID)
 		So(err, ShouldBeNil)
@@ -986,12 +988,14 @@ func TestGetTeamSettings(t *testing.T) {
 
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contacts := []*moira.ContactData{{ID: contactIDs[0], Team: teamID}, {ID: contactIDs[1], Team: teamID}}
+		contactsScores := map[string]*moira.ContactScore{}
 		contactsDto := []dto.TeamContact{{ID: contactIDs[0], Team: teamID, TeamID: teamID}, {ID: contactIDs[1], Team: teamID, TeamID: teamID}}
 
 		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
 		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
+		database.EXPECT().GetContactsScore(contactIDs).Return(contactsScores, nil)
 
 		settings, err := GetTeamSettings(database, teamID)
 		So(err, ShouldBeNil)
@@ -1003,10 +1007,11 @@ func TestGetTeamSettings(t *testing.T) {
 	})
 
 	Convey("No contacts and subscriptions", t, func() {
-		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
-		database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
-		database.EXPECT().GetTeamContactIDs(teamID).Return(make([]string, 0), nil)
-		database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
+		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{}, nil)
+		database.EXPECT().GetSubscriptions([]string{}).Return([]*moira.SubscriptionData{}, nil)
+		database.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, nil)
+		database.EXPECT().GetContacts([]string{}).Return([]*moira.ContactData{}, nil)
+		database.EXPECT().GetContactsScore([]string{}).Return(map[string]*moira.ContactScore{}, nil)
 		settings, err := GetTeamSettings(database, teamID)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, dto.TeamSettings{

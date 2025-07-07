@@ -102,6 +102,8 @@ type LimitsConfig struct {
 	Trigger TriggerLimits
 	// Trigger contains limits for teams.
 	Team TeamLimits
+	// Contact contains limits for contacts.
+	Contact ContactLimits
 }
 
 // TriggerLimits contains all limits applied for triggers.
@@ -137,4 +139,10 @@ type TeamLimits struct {
 	MaxNameSize int
 	// MaxNameSize is the amount of characters allowed in team description.
 	MaxDescriptionSize int
+}
+
+// ContactLimits defines limits for contact-related configurations.
+type ContactLimits struct {
+	// TestNotificationWaitTime specifies the duration to wait for test notifications.
+	TestNotificationWaitTime time.Duration
 }

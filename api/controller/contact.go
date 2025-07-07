@@ -54,16 +54,18 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	contactToReturn := &dto.Contact{
-		ID:     contact.ID,
-		Name:   contact.Name,
-		User:   contact.User,
-		TeamID: contact.Team,
-		Type:   contact.Type,
-		Value:  contact.Value,
+	contactScore, err := database.GetContactScore(contactID)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
 	}
 
-	return contactToReturn, nil
+	if contactScore == nil {
+		contactScore = &moira.ContactScore{}
+	}
+
+	contactToReturn := dto.NewContact(contact, *contactScore)
+
+	return &contactToReturn, nil
 }
 
 // CreateContact creates new notification contact for current user.
@@ -238,7 +240,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 }
 
 // SendTestContactNotification push test notification to verify the correct contact settings.
-func SendTestContactNotification(dataBase moira.Database, contactID string) *api.ErrorResponse {
+func SendTestContactNotification(dataBase moira.Database, contactID string, waitTime time.Duration) *api.ErrorResponse {
 	eventData := &moira.NotificationEvent{
 		ContactID: contactID,
 		Metric:    "Test.metric.value",
@@ -251,7 +253,26 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 		return api.ErrorInternalServer(err)
 	}
 
-	return nil
+	baseScore, err := dataBase.GetContactScore(contactID)
+	if err != nil {
+		return api.ErrorInternalServer(err)
+	}
+
+	for {
+		select {
+		case <-time.After(waitTime):
+			return nil
+		case <-time.Tick(1 * time.Second):
+			score, err := dataBase.GetContactScore(contactID)
+			if err != nil {
+				return api.ErrorInternalServer(err)
+			}
+
+			if !moira.EqualTwoPointerValues(baseScore, score) {
+				return nil
+			}
+		}
+	}
 }
 
 // CheckUserPermissionsForContact checks contact for existence and permissions for given user.
@@ -343,12 +364,19 @@ func GetContactNoisiness(
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	idsWithEventsCount, err := database.CountEventsInNotificationHistory(getOnlyIDs(contacts), from, to)
+	contactsIds := getOnlyIDs(contacts)
+
+	idsWithEventsCount, err := database.CountEventsInNotificationHistory(contactsIds, from, to)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	noisinessSlice := makeContactNoisinessSlice(contacts, idsWithEventsCount)
+	contactsScore, err := database.GetContactsScore(contactsIds)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	noisinessSlice := makeContactNoisinessSlice(contacts, idsWithEventsCount, contactsScore)
 
 	sortContactNoisinessByEventsCount(noisinessSlice, sortOrder)
 	total := int64(len(noisinessSlice))
@@ -371,13 +399,18 @@ func getOnlyIDs(contactsData []*moira.ContactData) []string {
 	return ids
 }
 
-func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount []*moira.ContactIDWithNotificationCount) []*dto.ContactNoisiness {
+func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount []*moira.ContactIDWithNotificationCount, idsWithContactScore map[string]*moira.ContactScore) []*dto.ContactNoisiness {
 	noisiness := make([]*dto.ContactNoisiness, 0, len(contacts))
 
 	for i, contact := range contacts {
+		contactScore := idsWithContactScore[contact.ID]
+		if contactScore == nil {
+			contactScore = &moira.ContactScore{}
+		}
+
 		noisiness = append(noisiness,
 			&dto.ContactNoisiness{
-				Contact:     dto.NewContact(*contact),
+				Contact:     dto.NewContact(*contact, *contactScore),
 				EventsCount: idsWithEventsCount[i].Count,
 			})
 	}
