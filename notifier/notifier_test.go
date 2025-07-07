@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"testing"
 	"time"
@@ -151,9 +152,21 @@ func TestFailSendEvent(t *testing.T) {
 	}
 	notification := moira.ScheduledNotification{}
 
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("Can't send"))
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
+	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
+	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
+		Expected: []moira.ContactScore{
+			{
+				ContactID:      pkg.Contact.ID,
+				AllTXCount:     1,
+				SuccessTXCount: 0,
+				LastErrorMsg:   "Can't send",
+				Status:         moira.ContactStatusFailed,
+			},
+		},
+	})
 
 	var wg sync.WaitGroup
 
@@ -182,6 +195,150 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).
 		Return(moira.NewSenderBrokenContactError(fmt.Errorf("some sender reason")))
 
+	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
+	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
+		Expected: []moira.ContactScore{
+			{
+				ContactID:      pkg.Contact.ID,
+				AllTXCount:     1,
+				SuccessTXCount: 0,
+				LastErrorMsg:   "some sender reason",
+				Status:         moira.ContactStatusFailed,
+			},
+		},
+	})
+
+	var wg sync.WaitGroup
+
+	standardNotifier.Send(&pkg, &wg)
+	wg.Wait()
+	time.Sleep(time.Second * 2)
+}
+
+func TestSetContactScoreIfSuccessSending(t *testing.T) {
+	configureNotifier(t, defaultConfig)
+
+	defer afterTest()
+
+	eventsData := []moira.NotificationEvent{event}
+	pkg := NotificationPackage{
+		Events: eventsData,
+		Contact: moira.ContactData{
+			Type: "test_contact_type",
+		},
+	}
+
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil)
+	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
+	dataBase.EXPECT().SaveContactsScore([]moira.ContactScore{
+		{
+			ContactID:      pkg.Contact.ID,
+			AllTXCount:     1,
+			SuccessTXCount: 1,
+			Status:         moira.ContactStatusOK,
+		},
+	})
+
+	var wg sync.WaitGroup
+
+	standardNotifier.Send(&pkg, &wg)
+	wg.Wait()
+	time.Sleep(time.Second * 2)
+}
+
+func TestSetContactScoreIfFailedSenging(t *testing.T) {
+	configureNotifier(t, defaultConfig)
+
+	defer afterTest()
+
+	eventsData := []moira.NotificationEvent{event}
+	pkg := NotificationPackage{
+		Events: eventsData,
+		Contact: moira.ContactData{
+			Type: "test_contact_type",
+		},
+	}
+
+	params := moira.SchedulerParams{
+		Event:        event,
+		Trigger:      pkg.Trigger,
+		Contact:      pkg.Contact,
+		Plotting:     pkg.Plotting,
+		ThrottledOld: pkg.Throttled,
+		SendFail:     pkg.FailCount + 1,
+	}
+	notification := moira.ScheduledNotification{}
+
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("some sender reason"))
+	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
+	dataBase.EXPECT().AddNotification(&notification).Return(nil)
+	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(&moira.ContactScore{
+		ContactID:      pkg.Contact.ID,
+		AllTXCount:     20,
+		SuccessTXCount: 20,
+	}, nil)
+	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
+		Expected: []moira.ContactScore{
+			{
+				ContactID:      pkg.Contact.ID,
+				AllTXCount:     21,
+				SuccessTXCount: 20,
+				LastErrorMsg:   "some sender reason",
+				Status:         moira.ContactStatusFailed,
+			},
+		},
+	})
+
+	var wg sync.WaitGroup
+
+	standardNotifier.Send(&pkg, &wg)
+	wg.Wait()
+	time.Sleep(time.Second * 2)
+}
+
+func TestDropContactStatisticsOnOverflow(t *testing.T) {
+	configureNotifier(t, defaultConfig)
+
+	defer afterTest()
+
+	eventsData := []moira.NotificationEvent{event}
+	pkg := NotificationPackage{
+		Events: eventsData,
+		Contact: moira.ContactData{
+			Type: "test_contact_type",
+		},
+	}
+
+	params := moira.SchedulerParams{
+		Event:        event,
+		Trigger:      pkg.Trigger,
+		Contact:      pkg.Contact,
+		Plotting:     pkg.Plotting,
+		ThrottledOld: pkg.Throttled,
+		SendFail:     pkg.FailCount + 1,
+	}
+	notification := moira.ScheduledNotification{}
+
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("some sender reason"))
+	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
+	dataBase.EXPECT().AddNotification(&notification).Return(nil)
+	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(&moira.ContactScore{
+		ContactID:      pkg.Contact.ID,
+		AllTXCount:     math.MaxUint64,
+		SuccessTXCount: 20,
+	}, nil)
+	dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
+		Expected: []moira.ContactScore{
+			{
+				ContactID:      pkg.Contact.ID,
+				AllTXCount:     1,
+				SuccessTXCount: 0,
+				LastErrorMsg:   "some sender reason",
+				Status:         moira.ContactStatusFailed,
+			},
+		},
+	})
+
 	var wg sync.WaitGroup
 
 	standardNotifier.Send(&pkg, &wg)
@@ -207,7 +364,7 @@ func TestTimeout(t *testing.T) {
 	}
 
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
-		fmt.Print("Trying to send for 10 second")
+		fmt.Println("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
 	}).Times(maxParallelSendsPerSender)
 
@@ -236,6 +393,8 @@ func TestTimeout(t *testing.T) {
 
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
+	dataBase.EXPECT().GetContactScore(gomock.Any()).Return(nil, nil).AnyTimes()
+	dataBase.EXPECT().SaveContactsScore(gomock.Any()).AnyTimes()
 
 	standardNotifier.Send(&pkg2, &wg)
 	wg.Wait()
@@ -314,4 +473,37 @@ var notificationsPackage = NotificationPackage{
 		{Metric: "metricName4", Timestamp: 179, IsTriggerEvent: true},
 		{Metric: "metricName5", Timestamp: 12, IsTriggerEvent: false},
 	},
+}
+
+type contactScoreMatcher struct {
+	Expected []moira.ContactScore
+}
+
+func (m contactScoreMatcher) Matches(x any) bool {
+	actuals, ok := x.([]moira.ContactScore)
+	if !ok {
+		return false
+	}
+
+	if len(actuals) != len(m.Expected) {
+		return false
+	}
+
+	for i := range actuals {
+		actual := actuals[i]
+		exp := m.Expected[i]
+
+		if actual.AllTXCount != exp.AllTXCount ||
+			actual.SuccessTXCount != exp.SuccessTXCount ||
+			actual.ContactID != exp.ContactID ||
+			actual.LastErrorMsg != exp.LastErrorMsg {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (m contactScoreMatcher) String() string {
+	return fmt.Sprintf("%+v", m.Expected)
 }
