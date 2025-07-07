@@ -63,7 +63,7 @@ OS := $(shell uname)
 spec-v3:
 	@echo "Generating Swagger documentation in open-api v3"
 	swag init -g api/handler/handler.go --v3.1
-	@echo "Patching generated swagger.yaml with deepObject/explode for tags"
+	@echo "Patching generated swagger.yaml with deepObject/explode for search tags as ?tag[1]=val1&tag[2]=val2 (swag cannot generate it by comments)"
 	@awk '\
 		{ \
 			print $$0; \
