@@ -258,23 +258,21 @@ func SendTestContactNotification(dataBase moira.Database, contactID string, wait
 		return api.ErrorInternalServer(err)
 	}
 
-WAITER:
 	for {
 		select {
 		case <-time.After(waitTime):
-			break WAITER
+			return nil
 		case <-time.Tick(1 * time.Second):
 			score, err := dataBase.GetContactScore(contactID)
 			if err != nil {
 				return api.ErrorInternalServer(err)
 			}
+
 			if !moira.EqualTwoPointerValues(baseScore, score) {
-				break WAITER
+				return nil
 			}
 		}
 	}
-
-	return nil
 }
 
 // CheckUserPermissionsForContact checks contact for existence and permissions for given user.
