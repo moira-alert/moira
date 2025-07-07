@@ -75,11 +75,6 @@ type Database interface {
 	GetUserContactIDs(userLogin string) ([]string, error)
 	GetTeamContactIDs(teamID string) ([]string, error)
 
-	// ContactScore storing
-	SaveContactsScore(contactScore []ContactScore) error
-	GetContactsScore(contactIDs []string) (map[string]*ContactScore, error)
-	GetContactScore(contactID string) (*ContactScore, error)
-
 	// SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
 	GetSubscriptions(subscriptionIDs []string) ([]*SubscriptionData, error)
@@ -168,6 +163,9 @@ type Database interface {
 
 	// Delivery checks
 	DeliveryCheckerDatabase
+
+	// ContactScore storing
+	ContactScoreDatabase
 }
 
 // DeliveryCheckerDatabase is used by senders that can track if the notification was delivered.
@@ -178,6 +176,16 @@ type DeliveryCheckerDatabase interface {
 	GetDeliveryChecksData(contactType string, from string, to string) ([]string, error)
 	// RemoveDeliveryChecksData must remove already used data for performing delivery checks.
 	RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error)
+}
+
+// ContactScore storing.
+type ContactScoreDatabase interface {
+	// SaveContactsScore must be used to persist contact score in database.
+	SaveContactsScore(contactScore []ContactScore) error
+	// GetContactsScore must be used to get contact scores persisted in database by contact ids.
+	GetContactsScore(contactIDs []string) (map[string]*ContactScore, error)
+	// GetContactScore must be used to get contact score persisted in database by contact id.
+	GetContactScore(contactID string) (*ContactScore, error)
 }
 
 // Lock implements lock abstraction.
