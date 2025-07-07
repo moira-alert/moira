@@ -3,6 +3,8 @@ package telegram
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -29,6 +31,7 @@ type config struct {
 	ContactType string `mapstructure:"contact_type"`
 	APIToken    string `mapstructure:"api_token" validate:"required"`
 	FrontURI    string `mapstructure:"front_uri"`
+	ProxyURL    string `mapstructure:"proxy_url"`
 }
 
 // Bot is abstraction over gopkg.in/telebot.v3#Bot.
@@ -82,12 +85,22 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		location)
 
 	sender.logger = logger
-
-	sender.bot, err = telebot.NewBot(telebot.Settings{
+	botSettings := telebot.Settings{
 		Token:   cfg.APIToken,
 		Poller:  &telebot.LongPoller{Timeout: pollerTimeout},
 		OnError: sender.customOnErrorFunc,
-	})
+	}
+
+	if cfg.ProxyURL != "" {
+		httpClient, err := createHTTPClientWithProxy(cfg.ProxyURL)
+		if err != nil {
+			return sender.removeTokenFromError(fmt.Errorf("can't create HTTP client with proxy: %w", err))
+		}
+
+		botSettings.Client = httpClient
+	}
+
+	sender.bot, err = telebot.NewBot(botSettings)
 	if err != nil {
 		return sender.removeTokenFromError(err)
 	}
@@ -107,6 +120,19 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	go sender.runTelebot(cfg.ContactType)
 
 	return nil
+}
+
+func createHTTPClientWithProxy(proxyURL string) (*http.Client, error) {
+	parsedURL, err := url.Parse(proxyURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse proxy URL: %w", err)
+	}
+
+	return &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyURL(parsedURL),
+		},
+	}, nil
 }
 
 // runTelebot starts telegram bot and manages bot subscriptions
