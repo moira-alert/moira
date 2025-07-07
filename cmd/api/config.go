@@ -125,6 +125,9 @@ func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 			MaxNameSize:        conf.Team.MaxNameSize,
 			MaxDescriptionSize: conf.Team.MaxDescriptionSize,
 		},
+		Contact: api.ContactLimits{
+			TestNotificationWaitTime: conf.Contact.TestNotificationWaitTime,
+		},
 	}
 }
 
