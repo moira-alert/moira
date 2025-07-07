@@ -63,6 +63,18 @@ OS := $(shell uname)
 spec-v3:
 	@echo "Generating Swagger documentation in open-api v3"
 	swag init -g api/handler/handler.go --v3.1
+	@echo "Patching generated swagger.yaml with deepObject/explode for search tags as ?tag[1]=val1&tag[2]=val2 (swag cannot generate it by comments)"
+	@awk '\
+		{ \
+			print $$0; \
+			if ($$0 ~ /description: Search tag/) tag_found=1; \
+			else if (tag_found && $$0 ~ /in: query/) { \
+				print "        style: deepObject"; \
+				print "        explode: true"; \
+				tag_found=0; \
+			} \
+		} \
+	' docs/swagger.yaml > docs/swagger_patched.yaml && mv docs/swagger_patched.yaml docs/swagger.yaml
 	@echo "Swagger UI does not support openapi 3.1.0, downgrade version"
 ifeq ($(OS), Darwin)
 	sed -i '' 's/"openapi": "3.1.0"/"openapi": "3.0.0"/' docs/docs.go
