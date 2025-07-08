@@ -104,8 +104,13 @@ func (connector *DbConnector) RemoveAllNotifications() error {
 	ctx := connector.context
 	c := *connector.client
 
-	if _, err := c.Del(ctx, notifierNotificationsKey).Result(); err != nil {
-		return fmt.Errorf("failed to remove %s: %s", notifierNotificationsKey, err.Error())
+	redisKeys := make([]string, 0, len(connector.clusterList))
+	for _, clusterKey := range connector.clusterList {
+		redisKeys = append(redisKeys, makeNotifierNotificationsKey(clusterKey))
+	}
+
+	if _, err := c.Del(ctx, redisKeys...).Result(); err != nil {
+		return fmt.Errorf("failed to remove notification keys: %s", err.Error())
 	}
 
 	return nil
@@ -113,6 +118,18 @@ func (connector *DbConnector) RemoveAllNotifications() error {
 
 // RemoveNotification delete notifications by key = timestamp + contactID + subID.
 func (connector *DbConnector) RemoveNotification(notificationId string) (int64, error) {
+	countTotal := int64(0)
+	for _, clusterKey := range connector.clusterList {
+		count, err := connector.removeNotificationInKey(makeNotifierNotificationsKey(clusterKey), notificationId)
+		countTotal += count
+		if err != nil {
+			return countTotal, err
+		}
+	}
+	return countTotal, nil
+}
+
+func (connector *DbConnector) removeNotificationInKey(redisKey string, notificationId string) (int64, error) {
 	notifications, _, err := connector.GetNotifications(0, -1)
 	if err != nil {
 		return 0, err
@@ -131,12 +148,24 @@ func (connector *DbConnector) RemoveNotification(notificationId string) (int64, 
 		}
 	}
 
-	return connector.removeNotifications(notifierNotificationsKey, connector.context, (*connector.client).TxPipeline(), foundNotifications)
+	return connector.removeNotifications(redisKey, connector.context, (*connector.client).TxPipeline(), foundNotifications)
 }
 
 // RemoveFilteredNotifications deletes notifications ine time range from startTime to endTime,
 // excluding the ones that have tag from ignoredTags.
 func (connector *DbConnector) RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error) {
+	countTotal := int64(0)
+	for _, clusterKey := range connector.clusterList {
+		count, err := connector.removeFilteredNotificationsInRedisKey(makeNotifierNotificationsKey(clusterKey), start, end, ignoredTags)
+		countTotal += count
+		if err != nil {
+			return countTotal, err
+		}
+	}
+	return countTotal, nil
+}
+
+func (connector *DbConnector) removeFilteredNotificationsInRedisKey(redisKey string, start, end int64, ignoredTags []string) (int64, error) {
 	notifications, _, err := connector.getNotificationsByTime(start, end)
 	if err != nil {
 		return 0, err
@@ -160,7 +189,7 @@ outer:
 		foundNotifications = append(foundNotifications, notification)
 	}
 
-	return connector.removeNotifications(notifierNotificationsKey, connector.context, (*connector.client).TxPipeline(), foundNotifications)
+	return connector.removeNotifications(redisKey, connector.context, (*connector.client).TxPipeline(), foundNotifications)
 }
 
 func (connector *DbConnector) removeNotifications(
