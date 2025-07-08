@@ -569,7 +569,8 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 
 	z := &redis.Z{Score: float64(notification.Timestamp), Member: bytes}
 
-	_, err = c.ZAdd(ctx, notifierNotificationsKey, z).Result()
+	redisKey := makeNotifierNotificationsKey(moira.MakeClusterKey(notification.Trigger.TriggerSource, notification.Trigger.ClusterId))
+	_, err = c.ZAdd(ctx, redisKey, z).Result()
 	if err != nil {
 		return fmt.Errorf("failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
 	}
@@ -589,7 +590,8 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 		}
 
 		z := &redis.Z{Score: float64(timestamp), Member: bytes}
-		pipe.ZAdd(ctx, notifierNotificationsKey, z)
+		redisKey := makeNotifierNotificationsKey(moira.MakeClusterKey(notification.Trigger.TriggerSource, notification.Trigger.ClusterId))
+		pipe.ZAdd(ctx, redisKey, z)
 	}
 
 	_, err := pipe.Exec(ctx)
