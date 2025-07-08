@@ -327,18 +327,18 @@ func (mr *MockDatabaseMockRecorder) FetchNotificationEvent() *gomock.Call {
 }
 
 // FetchNotifications mocks base method.
-func (m *MockDatabase) FetchNotifications(to, limit int64) ([]*moira.ScheduledNotification, error) {
+func (m *MockDatabase) FetchNotifications(custerKey moira.ClusterKey, to, limit int64) ([]*moira.ScheduledNotification, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchNotifications", to, limit)
+	ret := m.ctrl.Call(m, "FetchNotifications", custerKey, to, limit)
 	ret0, _ := ret[0].([]*moira.ScheduledNotification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchNotifications indicates an expected call of FetchNotifications.
-func (mr *MockDatabaseMockRecorder) FetchNotifications(to, limit any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) FetchNotifications(custerKey, to, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockDatabase)(nil).FetchNotifications), to, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockDatabase)(nil).FetchNotifications), custerKey, to, limit)
 }
 
 // FetchTriggersToReindex mocks base method.
@@ -1252,6 +1252,21 @@ func (mr *MockDatabaseMockRecorder) RemoveDeliveryChecksData(contactType, from, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeliveryChecksData", reflect.TypeOf((*MockDatabase)(nil).RemoveDeliveryChecksData), contactType, from, to)
 }
 
+// RemoveFilteredNotifications mocks base method.
+func (m *MockDatabase) RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFilteredNotifications", start, end, ignoredTags)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveFilteredNotifications indicates an expected call of RemoveFilteredNotifications.
+func (mr *MockDatabaseMockRecorder) RemoveFilteredNotifications(start, end, ignoredTags any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFilteredNotifications", reflect.TypeOf((*MockDatabase)(nil).RemoveFilteredNotifications), start, end, ignoredTags)
+}
+
 // RemoveMetricRetention mocks base method.
 func (m *MockDatabase) RemoveMetricRetention(metric string) error {
 	m.ctrl.T.Helper()
@@ -1322,21 +1337,6 @@ func (m *MockDatabase) RemoveNotification(notificationKey string) (int64, error)
 func (mr *MockDatabaseMockRecorder) RemoveNotification(notificationKey any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveNotification", reflect.TypeOf((*MockDatabase)(nil).RemoveNotification), notificationKey)
-}
-
-// RemoveFilteredNotifications mocks base method.
-func (m *MockDatabase) RemoveFilteredNotifications(arg0, arg1 int64, arg2 []string) (int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveFilteredNotifications", arg0, arg1, arg2)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RemoveFilteredNotifications indicates an expected call of RemoveFilteredNotifications.
-func (mr *MockDatabaseMockRecorder) RemoveFilteredNotifications(arg0, arg1, arg2 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFilteredNotifications", reflect.TypeOf((*MockDatabase)(nil).RemoveFilteredNotifications), arg0, arg1, arg2)
 }
 
 // RemovePattern mocks base method.

@@ -83,7 +83,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 
 	fetchNotificationsStartTime := time.Now()
 
-	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
+	notifications, err := worker.Database.FetchNotifications(moira.DefaultLocalCluster, time.Now().Unix(), worker.Notifier.GetReadBatchSize())
 	if err != nil {
 		return err
 	}
