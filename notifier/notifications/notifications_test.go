@@ -1,6 +1,8 @@
 package notifications
 
 import (
+	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -103,7 +105,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 			Actor: moira.SelfStateActorManual,
 		}, nil)
 
-		err := worker.processScheduledNotifications()
+		err := worker.processScheduledNotifications(moira.DefaultLocalCluster)
 		So(err, ShouldBeEmpty)
 	})
 
@@ -134,7 +136,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}, nil)
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 
-		err := worker.processScheduledNotifications()
+		err := worker.processScheduledNotifications(moira.DefaultLocalCluster)
 		So(err, ShouldBeEmpty)
 	})
 }
@@ -150,9 +152,27 @@ func TestGoRoutine(t *testing.T) {
 		Contact:   contact1,
 		Throttled: false,
 		Timestamp: 1441188915,
+		Trigger: moira.TriggerData{
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
+		},
 	}
 
-	pkg := notifier2.NotificationPackage{
+	notification2 := moira.ScheduledNotification{
+		Event: moira.NotificationEvent{
+			SubscriptionID: &subID5,
+			State:          moira.StateTEST,
+		},
+		Contact:   contact1,
+		Throttled: false,
+		Timestamp: 1441188915,
+		Trigger: moira.TriggerData{
+			TriggerSource: moira.GraphiteRemote,
+			ClusterId:     moira.DefaultCluster,
+		},
+	}
+
+	pkg1 := notifier2.NotificationPackage{
 		Trigger:    notification1.Trigger,
 		Throttled:  notification1.Throttled,
 		Contact:    notification1.Contact,
@@ -163,43 +183,83 @@ func TestGoRoutine(t *testing.T) {
 		},
 	}
 
+	pkg2 := notifier2.NotificationPackage{
+		Trigger:    notification2.Trigger,
+		Throttled:  notification2.Throttled,
+		Contact:    notification2.Contact,
+		DontResend: false,
+		FailCount:  0,
+		Events: []moira.NotificationEvent{
+			notification2.Event,
+		},
+	}
+
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
 
+	clusterList := moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}
 	worker := &FetchNotificationsWorker{
-		Database: dataBase,
-		Logger:   logger,
-		Notifier: notifier,
-		Metrics:  notifierMetrics,
+		Database:    dataBase,
+		Logger:      logger,
+		Notifier:    notifier,
+		Metrics:     notifierMetrics,
+		ClusterList: clusterList,
 	}
 
-	shutdown := make(chan struct{})
+	shutdown := make(chan moira.ClusterKey)
 
-	dataBase.EXPECT().FetchNotifications(moira.DefaultLocalCluster, gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{&notification1}, nil)
+	dataBase.EXPECT().
+		FetchNotifications(moira.DefaultLocalCluster, gomock.Any(), notifier2.NotificationsLimitUnlimited).
+		Return([]*moira.ScheduledNotification{&notification1}, nil).AnyTimes()
+
+	dataBase.EXPECT().
+		FetchNotifications(moira.DefaultGraphiteRemoteCluster, gomock.Any(), notifier2.NotificationsLimitUnlimited).
+		Return([]*moira.ScheduledNotification{&notification2}, nil).AnyTimes()
+
 	dataBase.EXPECT().PushContactNotificationToHistory(&notification1).Return(nil).AnyTimes()
-	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(arg0, arg1 interface{}) { close(shutdown) })
-	notifier.EXPECT().StopSenders()
-	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
+	dataBase.EXPECT().PushContactNotificationToHistory(&notification2).Return(nil).AnyTimes()
+
+	notifier.EXPECT().Send(&pkg1, gomock.Any()).Do(func(arg0, arg1 interface{}) { shutdown <- moira.DefaultLocalCluster }).AnyTimes()
+	notifier.EXPECT().Send(&pkg2, gomock.Any()).Do(func(arg0, arg1 interface{}) { shutdown <- moira.DefaultGraphiteRemoteCluster }).AnyTimes()
+
+	notifier.EXPECT().StopSenders().AnyTimes()
+
+	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited).AnyTimes()
 	dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 		State: moira.SelfStateOK,
 		Actor: moira.SelfStateActorManual,
-	}, nil)
+	}, nil).AnyTimes()
 
-	worker.Start()
-	waitTestEnd(shutdown, worker)
-	mockCtrl.Finish()
+	Convey("Start goroutines", t, func() {
+		worker.Start()
+		err := waitTestEnd(shutdown, clusterList, worker)
+
+		So(err, ShouldBeNil)
+	})
 }
 
-func waitTestEnd(shutdown chan struct{}, worker *FetchNotificationsWorker) {
-	select {
-	case <-shutdown:
-		worker.Stop() //nolint
-		break
-	case <-time.After(time.Second * 10):
-		close(shutdown)
-		break
+func waitTestEnd(shutdown chan moira.ClusterKey, clusterList moira.ClusterList, worker *FetchNotificationsWorker) error {
+	clusterList = append(moira.ClusterList(nil), clusterList...)
+
+	for {
+		select {
+		case key := <-shutdown:
+			clusterList = slices.DeleteFunc(clusterList, func(clusterKey moira.ClusterKey) bool {
+				return clusterKey == key
+			})
+			if len(clusterList) != 0 {
+				break
+			}
+			worker.Stop() //nolint
+			fmt.Printf("worker.Stop()")
+			return nil
+		case <-time.After(time.Second * 10):
+			close(shutdown)
+			return fmt.Errorf("Must send notifications for each cluster in 10 seconds, but didn't")
+		}
 	}
 }
 

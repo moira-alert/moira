@@ -541,6 +541,9 @@ func (clusterKey ClusterKey) String() string {
 	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
 }
 
+// ClusterList represents list of all available cluster keys
+type ClusterList []ClusterKey
+
 // TriggerCheck represents trigger data with last check data and check timestamp.
 type TriggerCheck struct {
 	Trigger
