@@ -78,10 +78,12 @@ func main() {
 	}
 	defer telemetry.Stop()
 
+	clusterList := cmd.MakeClusterList(config.Remotes)
+
 	databaseSettings := config.Redis.GetSettings()
 	notificationHistorySettings := config.NotificationHistory.GetSettings()
 	notificationSettings := config.Notification.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier)
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier, clusterList)
 
 	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
 	if err != nil {
@@ -89,8 +91,6 @@ func main() {
 			Error(err).
 			Msg("Failed to initialize metric sources")
 	}
-
-	clusterList := cmd.MakeClusterList(config.Remotes)
 
 	// Initialize the image store
 	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)
