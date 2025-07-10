@@ -2,6 +2,8 @@ package selfstate
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -14,6 +16,7 @@ import (
 type heartbeatNotificationEvent struct {
 	moira.NotificationEvent
 	heartbeat.CheckTags
+	NotifyAboutEnabledNotifier bool
 }
 
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
@@ -72,8 +75,9 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 		if selfCheck.hasStateChanged() {
 			errorMessage := strings.Join(graphResult.errorMessages, "\n")
 			events = append(events, heartbeatNotificationEvent{
-				NotificationEvent: generateNotificationEvent(errorMessage, graphResult.lastSuccessCheckElapsedTime, nowTS, moira.StateNODATA, moira.StateERROR),
-				CheckTags:         graphResult.checksTags,
+				NotificationEvent:          generateNotificationEvent(errorMessage, graphResult.lastSuccessCheckElapsedTime, nowTS, moira.StateNODATA, moira.StateERROR),
+				CheckTags:                  graphResult.checksTags,
+				NotifyAboutEnabledNotifier: false,
 			})
 		}
 	} else {
@@ -87,8 +91,9 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 				Msg("Enabling notifier failed")
 		} else if notifierEnabled {
 			events = append(events, heartbeatNotificationEvent{
-				NotificationEvent: generateNotificationEvent("Moira notifications enabled", 0, nowTS, moira.StateERROR, moira.StateOK),
-				CheckTags:         selfCheck.lastChecksResult.checksTags,
+				NotificationEvent:          generateNotificationEvent("Moira notifications enabled", 0, nowTS, moira.StateERROR, moira.StateOK),
+				CheckTags:                  selfCheck.lastChecksResult.checksTags,
+				NotifyAboutEnabledNotifier: true,
 			})
 		}
 	}
@@ -142,6 +147,10 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 		}
 
 		for _, subscription := range subscriptions {
+			if event.NotifyAboutEnabledNotifier {
+				selfCheck.appendTriggersTableToMetric(subscription, &event)
+			}
+
 			contacts, err := selfCheck.Database.GetContacts(subscription.Contacts)
 			if err != nil {
 				return nil, err
@@ -167,6 +176,39 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 	}
 
 	return notificationPkgs, nil
+}
+
+func (selfCheck *SelfCheckWorker) appendTriggersTableToMetric(subscription *moira.SubscriptionData, event *heartbeatNotificationEvent) {
+	if subscription == nil || event == nil {
+		return
+	}
+
+	triggersTable, err := selfCheck.constructTriggersTable(subscription, selfCheck.Config.Checks.GetUniqueSystemTags())
+	if err != nil {
+		selfCheck.Logger.Warning().
+			Error(err).
+			Msg("cannot build triggers table")
+
+		return
+	}
+
+	if len(triggersTable) == 0 {
+		return
+	}
+
+	var builder strings.Builder
+
+	builder.WriteString(event.Metric)
+	builder.WriteString("\n\nThese triggers in bad state. Check them:\n")
+
+	for _, link := range triggersTable {
+		builder.WriteString("- ")
+		builder.WriteString(link)
+		builder.WriteString("\n")
+	}
+
+	newMessage := builder.String()
+	event.Metric = newMessage
 }
 
 func (selfCheck *SelfCheckWorker) sendMessages(events []heartbeatNotificationEvent) {
@@ -220,6 +262,86 @@ func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.Notifi
 
 		selfCheck.Notifier.Send(&pkg, sendingWG)
 	}
+}
+
+type linkResult struct {
+	Link  string
+	Error error
+}
+
+func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.SubscriptionData, systemTags []string) ([]string, error) {
+	var subscriptionsIds []string
+
+	var err error
+
+	if subscription.TeamID != "" {
+		subscriptionsIds, err = selfCheck.Database.GetTeamSubscriptionIDs(subscription.TeamID)
+	} else {
+		subscriptionsIds, err = selfCheck.Database.GetUserSubscriptionIDs(subscription.User)
+	}
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	table := make([]string, 0)
+	tableRows := make(chan linkResult, len(subscriptionsIds))
+
+	var wg sync.WaitGroup
+	for _, subId := range subscriptionsIds {
+		wg.Add(1)
+
+		go selfCheck.constructLinkToTriggers(subId, systemTags, tableRows, &wg)
+	}
+
+	wg.Wait()
+	close(tableRows)
+
+	for r := range tableRows {
+		if r.Error != nil {
+			selfCheck.Logger.Warning().
+				Error(r.Error).
+				Msg("Failed to construct link to triggers")
+
+			continue
+		}
+
+		table = append(table, r.Link)
+	}
+
+	return table, nil
+}
+
+func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string, systemTags []string, resultCh chan<- linkResult, wg *sync.WaitGroup) {
+	sub, err := selfCheck.Database.GetSubscription(subscriptionId)
+
+	defer wg.Done()
+
+	if err != nil {
+		resultCh <- linkResult{"", err}
+		return
+	}
+
+	if len(moira.Intersect(sub.Tags, systemTags)) > 0 {
+		return
+	}
+
+	baseUrl, err := url.Parse(selfCheck.Config.FrontURL)
+	if err != nil {
+		resultCh <- linkResult{"", err}
+		return
+	}
+
+	query := url.Values{}
+	query.Add("onlyProblems", "true")
+
+	for i, tag := range sub.Tags {
+		query.Add(fmt.Sprintf("tags[%d]", i), tag)
+	}
+
+	baseUrl.RawQuery = query.Encode()
+
+	resultCh <- linkResult{baseUrl.String(), nil}
 }
 
 func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, timestamp int64, oldState, state moira.State) moira.NotificationEvent {
