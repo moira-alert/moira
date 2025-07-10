@@ -121,8 +121,8 @@ func main() {
 	}
 
 	// Start moira self state checker
-	if config.Notifier.SelfState.getSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
+	if config.Notifier.getSelfstateSettings().Enabled {
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.getSelfstateSettings())
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).
