@@ -135,10 +135,11 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64) {
 
 func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNotificationEvent) ([]*notifier.NotificationPackage, error) {
 	type contactEvents struct {
-		contact *moira.ContactData
-		events  []moira.NotificationEvent
+		contact       *moira.ContactData
+		events        []moira.NotificationEvent
 		triggersTable string
 	}
+
 	contactToData := make(map[*moira.ContactData]*contactEvents)
 
 	for _, event := range events {
@@ -164,6 +165,7 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 						events:  []moira.NotificationEvent{},
 					}
 				}
+
 				contactToData[contact].events = append(contactToData[contact].events, event.NotificationEvent)
 
 				// Build triggers table for this contact if needed
@@ -178,6 +180,7 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 	}
 
 	notificationPkgs := make([]*notifier.NotificationPackage, 0, len(contactToData))
+
 	for _, data := range contactToData {
 		triggerData := moira.TriggerData{
 			Name:       "Moira health check",
@@ -189,8 +192,8 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 		}
 
 		notificationPkgs = append(notificationPkgs, &notifier.NotificationPackage{
-			Contact: *data.contact,
-			Trigger: triggerData,
+			Contact:    *data.contact,
+			Trigger:    triggerData,
 			Events:     data.events,
 			DontResend: true,
 		})
@@ -285,7 +288,7 @@ func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.Notifi
 
 type linkResult struct {
 	Link  string
-	Tags []string
+	Tags  []string
 	Error error
 }
 
