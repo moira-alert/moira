@@ -134,7 +134,12 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64) {
 }
 
 func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNotificationEvent) ([]*notifier.NotificationPackage, error) {
-	contactToEvents := make(map[*moira.ContactData][]moira.NotificationEvent)
+	type contactEvents struct {
+		contact *moira.ContactData
+		events  []moira.NotificationEvent
+		triggersTable string
+	}
+	contactToData := make(map[*moira.ContactData]*contactEvents)
 
 	for _, event := range events {
 		if len(event.CheckTags) == 0 {
@@ -147,30 +152,46 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 		}
 
 		for _, subscription := range subscriptions {
-			if event.NotifyAboutEnabledNotifier {
-				selfCheck.appendTriggersTableToMetric(subscription, &event)
-			}
-
 			contacts, err := selfCheck.Database.GetContacts(subscription.Contacts)
 			if err != nil {
 				return nil, err
 			}
 
 			for _, contact := range contacts {
-				contactToEvents[contact] = append(contactToEvents[contact], event.NotificationEvent)
+				if _, exists := contactToData[contact]; !exists {
+					contactToData[contact] = &contactEvents{
+						contact: contact,
+						events:  []moira.NotificationEvent{},
+					}
+				}
+				contactToData[contact].events = append(contactToData[contact].events, event.NotificationEvent)
+
+				// Build triggers table for this contact if needed
+				if event.NotifyAboutEnabledNotifier && contactToData[contact].triggersTable == "" {
+					triggersTable := selfCheck.buildTriggersTableForSubscription(subscription)
+					if triggersTable != "" {
+						contactToData[contact].triggersTable = triggersTable
+					}
+				}
 			}
 		}
 	}
 
-	notificationPkgs := make([]*notifier.NotificationPackage, 0, len(contactToEvents))
-	for contact, events := range contactToEvents {
+	notificationPkgs := make([]*notifier.NotificationPackage, 0, len(contactToData))
+	for _, data := range contactToData {
+		triggerData := moira.TriggerData{
+			Name:       "Moira health check",
+			ErrorValue: float64(0),
+		}
+
+		if data.triggersTable != "" {
+			triggerData.Desc = data.triggersTable
+		}
+
 		notificationPkgs = append(notificationPkgs, &notifier.NotificationPackage{
-			Contact: *contact,
-			Trigger: moira.TriggerData{
-				Name:       "Moira health check",
-				ErrorValue: float64(0),
-			},
-			Events:     events,
+			Contact: *data.contact,
+			Trigger: triggerData,
+			Events:     data.events,
 			DontResend: true,
 		})
 	}
@@ -178,9 +199,9 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 	return notificationPkgs, nil
 }
 
-func (selfCheck *SelfCheckWorker) appendTriggersTableToMetric(subscription *moira.SubscriptionData, event *heartbeatNotificationEvent) {
-	if subscription == nil || event == nil {
-		return
+func (selfCheck *SelfCheckWorker) buildTriggersTableForSubscription(subscription *moira.SubscriptionData) string {
+	if subscription == nil {
+		return ""
 	}
 
 	triggersTable, err := selfCheck.constructTriggersTable(subscription, selfCheck.Config.Checks.GetUniqueSystemTags())
@@ -189,17 +210,16 @@ func (selfCheck *SelfCheckWorker) appendTriggersTableToMetric(subscription *moir
 			Error(err).
 			Msg("cannot build triggers table")
 
-		return
+		return ""
 	}
 
 	if len(triggersTable) == 0 {
-		return
+		return ""
 	}
 
 	var builder strings.Builder
 
-	builder.WriteString(event.Metric)
-	builder.WriteString("\n\nThese triggers in bad state. Check them:\n")
+	builder.WriteString("These triggers in bad state. Check them:\n")
 
 	for _, link := range triggersTable {
 		builder.WriteString("- ")
@@ -207,8 +227,7 @@ func (selfCheck *SelfCheckWorker) appendTriggersTableToMetric(subscription *moir
 		builder.WriteString("\n")
 	}
 
-	newMessage := builder.String()
-	event.Metric = newMessage
+	return builder.String()
 }
 
 func (selfCheck *SelfCheckWorker) sendMessages(events []heartbeatNotificationEvent) {
