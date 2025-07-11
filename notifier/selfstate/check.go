@@ -223,7 +223,7 @@ func (selfCheck *SelfCheckWorker) buildTriggersTableForSubscription(subscription
 
 	for _, link := range triggersTable {
 		builder.WriteString("- ")
-		builder.WriteString(fmt.Sprintf("[By tags: %s](%s)", strings.Join(subscription.Tags, "|"), link))
+		builder.WriteString(fmt.Sprintf("[By tags: %s](%s)", strings.Join(link.Tags, "|"), link.Link))
 		builder.WriteString("\n")
 	}
 
@@ -285,10 +285,16 @@ func (selfCheck *SelfCheckWorker) sendNotificationToAdmins(events []moira.Notifi
 
 type linkResult struct {
 	Link  string
+	Tags []string
 	Error error
 }
 
-func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.SubscriptionData, systemTags []string) ([]string, error) {
+type triggersTableElem struct {
+	Link string
+	Tags []string
+}
+
+func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.SubscriptionData, systemTags []string) ([]triggersTableElem, error) {
 	var subscriptionsIds []string
 
 	var err error
@@ -300,10 +306,10 @@ func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.Sub
 	}
 
 	if err != nil {
-		return []string{}, err
+		return []triggersTableElem{}, err
 	}
 
-	table := make([]string, 0)
+	table := make([]triggersTableElem, 0)
 	tableRows := make(chan linkResult, len(subscriptionsIds))
 
 	var wg sync.WaitGroup
@@ -325,7 +331,10 @@ func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.Sub
 			continue
 		}
 
-		table = append(table, r.Link)
+		table = append(table, triggersTableElem{
+			Link: r.Link,
+			Tags: r.Tags,
+		})
 	}
 
 	return table, nil
@@ -337,7 +346,7 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 	defer wg.Done()
 
 	if err != nil {
-		resultCh <- linkResult{"", err}
+		resultCh <- linkResult{"", []string{}, err}
 		return
 	}
 
@@ -347,7 +356,7 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 
 	baseUrl, err := url.Parse(selfCheck.Config.FrontURL)
 	if err != nil {
-		resultCh <- linkResult{"", err}
+		resultCh <- linkResult{"", []string{}, err}
 		return
 	}
 
@@ -360,7 +369,7 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 
 	baseUrl.RawQuery = query.Encode()
 
-	resultCh <- linkResult{baseUrl.String(), nil}
+	resultCh <- linkResult{baseUrl.String(), sub.Tags, nil}
 }
 
 func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, timestamp int64, oldState, state moira.State) moira.NotificationEvent {
