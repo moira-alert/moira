@@ -875,6 +875,27 @@ func TestNotificationsCount(t *testing.T) {
 			err = database.RemoveAllNotifications()
 			So(err, ShouldBeNil)
 		})
+
+		Convey("Test different redis keys", func() {
+			notificationRemote := moira.ScheduledNotification{
+				SendFail:  1,
+				Timestamp: now - database.getDelayedTimeInSeconds(),
+				CreatedAt: now,
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
+			}
+			addNotifications(database, []moira.ScheduledNotification{notification, notificationOld, notificationRemote})
+
+			actual, err := database.notificationsCount(redisKey, now)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, int64(2))
+
+			actual, err = database.notificationsCount(makeNotifierNotificationsKey(moira.DefaultGraphiteRemoteCluster), now)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, int64(1))
+
+			err = database.RemoveAllNotifications()
+			So(err, ShouldBeNil)
+		})
 	})
 }
 
@@ -1492,6 +1513,34 @@ func TestResaveNotifications(t *testing.T) {
 			err = database.RemoveAllNotifications()
 			So(err, ShouldBeNil)
 		})
+
+		Convey("Test resave notifications with different redis keys", func() {
+			notificationOld4 := &moira.ScheduledNotification{
+				Timestamp: 7,
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
+			}
+
+			notificationNew4 := &moira.ScheduledNotification{
+				Timestamp: 8,
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
+			}
+
+			redisKey := makeNotifierNotificationsKey(moira.DefaultGraphiteRemoteCluster)
+
+			addNotifications(database, []moira.ScheduledNotification{*notificationOld4})
+
+			affected, err := database.resaveNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{notificationOld4}, []*moira.ScheduledNotification{notificationNew4})
+			So(err, ShouldBeNil)
+			So(affected, ShouldResemble, 2)
+
+			allNotifications, count, err := database.GetNotifications(0, -1)
+			So(err, ShouldBeNil)
+			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notificationNew4})
+			So(count, ShouldEqual, 1)
+
+			err = database.RemoveAllNotifications()
+			So(err, ShouldBeNil)
+		})
 	})
 }
 
@@ -1502,7 +1551,7 @@ func TestRemoveNotifications(t *testing.T) {
 
 	defer database.Flush()
 
-	redisKey := makeNotifierNotificationsKey(moira.DefaultLocalCluster)
+	localDefaultRedisKey := makeNotifierNotificationsKey(moira.DefaultLocalCluster)
 
 	client := database.client
 	ctx := database.context
@@ -1523,7 +1572,7 @@ func TestRemoveNotifications(t *testing.T) {
 
 	Convey("Test removeNotifications", t, func() {
 		Convey("Test remove empty notifications", func() {
-			count, err := database.removeNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{})
+			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{})
 			So(err, ShouldBeNil)
 			So(count, ShouldEqual, 0)
 
@@ -1536,7 +1585,7 @@ func TestRemoveNotifications(t *testing.T) {
 		Convey("Test remove one notification", func() {
 			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
 
-			count, err := database.removeNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{notification2})
+			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{notification2})
 			So(err, ShouldBeNil)
 			So(count, ShouldEqual, 1)
 
@@ -1549,7 +1598,7 @@ func TestRemoveNotifications(t *testing.T) {
 		Convey("Test remove all notifications", func() {
 			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
 
-			count, err := database.removeNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{notification1, notification2, notification3})
+			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{notification1, notification2, notification3})
 			So(err, ShouldBeNil)
 			So(count, ShouldEqual, 3)
 
@@ -1566,7 +1615,7 @@ func TestRemoveNotifications(t *testing.T) {
 
 			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
 
-			count, err := database.removeNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{notification4})
+			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{notification4})
 			So(err, ShouldBeNil)
 			So(count, ShouldEqual, 0)
 
@@ -1574,6 +1623,31 @@ func TestRemoveNotifications(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(countAllNotifications, ShouldEqual, 3)
 			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification1, notification2, notification3})
+		})
+
+		Convey("Test remove notifications from different sources", func() {
+			notification4 := &moira.ScheduledNotification{
+				Timestamp: 2,
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
+			}
+			notification5 := &moira.ScheduledNotification{
+				Timestamp: 3,
+				Trigger:   moira.TriggerData{TriggerSource: moira.PrometheusRemote, ClusterId: moira.DefaultCluster},
+			}
+
+			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification4, *notification5})
+
+			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{notification1})
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 1)
+
+			count, err = database.removeNotifications(makeNotifierNotificationsKey(moira.DefaultGraphiteRemoteCluster), ctx, pipe, []*moira.ScheduledNotification{notification4})
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 1)
+
+			count, err = database.removeNotifications(makeNotifierNotificationsKey(moira.DefaultPrometheusRemoteCluster), ctx, pipe, []*moira.ScheduledNotification{notification5})
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 1)
 		})
 	})
 }
@@ -1594,11 +1668,11 @@ func TestRemoveFilteredNotifications(t *testing.T) {
 	}
 	notification2 := &moira.ScheduledNotification{
 		Timestamp: 20,
-		Trigger:   moira.TriggerData{Tags: []string{tag, ignoredTag}, TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
+		Trigger:   moira.TriggerData{Tags: []string{tag, ignoredTag}, TriggerSource: moira.PrometheusRemote, ClusterId: moira.DefaultCluster},
 	}
 	notification3 := &moira.ScheduledNotification{
 		Timestamp: 30,
-		Trigger:   moira.TriggerData{Tags: []string{ignoredTag}, TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
+		Trigger:   moira.TriggerData{Tags: []string{ignoredTag}, TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
 	}
 	notification4 := &moira.ScheduledNotification{
 		Timestamp: 40,

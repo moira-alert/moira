@@ -76,9 +76,9 @@ func (connector *DbConnector) getNotificationsBy(query func(pipe redis.Pipeliner
 	pipe := (*connector.client).TxPipeline()
 
 	for _, clusterKey := range connector.clusterList {
-		redisKet := makeNotifierNotificationsKey(clusterKey)
-		query(pipe, redisKet)
-		pipe.ZCard(ctx, redisKet)
+		redisKey := makeNotifierNotificationsKey(clusterKey)
+		query(pipe, redisKey)
+		pipe.ZCard(ctx, redisKey)
 	}
 
 	response, err := pipe.Exec(ctx)
