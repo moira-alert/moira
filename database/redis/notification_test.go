@@ -28,16 +28,19 @@ func TestScheduledNotification(t *testing.T) {
 			SendFail:  1,
 			Timestamp: now + database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notification := moira.ScheduledNotification{
 			SendFail:  2,
 			Timestamp: now,
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationOld := moira.ScheduledNotification{
 			SendFail:  3,
 			Timestamp: now - database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
 		Convey("Test add and get by pages", func() {
@@ -91,18 +94,21 @@ func TestScheduledNotification(t *testing.T) {
 				Event:     moira.NotificationEvent{SubscriptionID: &id1},
 				SendFail:  1,
 				Timestamp: now,
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 			}
 			notification2 := moira.ScheduledNotification{
 				Contact:   moira.ContactData{ID: id1},
 				Event:     moira.NotificationEvent{SubscriptionID: &id1},
 				SendFail:  2,
 				Timestamp: now,
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 			}
 			notification3 := moira.ScheduledNotification{
 				Contact:   moira.ContactData{ID: id1},
 				Event:     moira.NotificationEvent{SubscriptionID: &id1},
 				SendFail:  3,
 				Timestamp: now + database.getDelayedTimeInSeconds(),
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 			}
 			addNotifications(database, []moira.ScheduledNotification{notification1, notification2, notification3})
 			actual, total, err := database.GetNotifications(0, -1)
@@ -140,18 +146,21 @@ func TestScheduledNotification(t *testing.T) {
 				Event:     moira.NotificationEvent{SubscriptionID: &id1},
 				SendFail:  1,
 				Timestamp: now,
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 			}
 			notification2 := moira.ScheduledNotification{
 				Contact:   moira.ContactData{ID: id1},
 				Event:     moira.NotificationEvent{SubscriptionID: &id1},
 				SendFail:  2,
 				Timestamp: now,
+				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
 			}
 			notification3 := moira.ScheduledNotification{
 				Contact:   moira.ContactData{ID: id1},
 				Event:     moira.NotificationEvent{SubscriptionID: &id1},
 				SendFail:  3,
 				Timestamp: now + database.getDelayedTimeInSeconds(),
+				Trigger:   moira.TriggerData{TriggerSource: moira.PrometheusRemote, ClusterId: moira.DefaultCluster},
 			}
 			addNotifications(database, []moira.ScheduledNotification{notification1, notification2, notification3})
 			actual, total, err := database.GetNotifications(0, -1)
@@ -227,16 +236,19 @@ func TestFetchNotifications(t *testing.T) {
 			SendFail:  1,
 			Timestamp: now + database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notification := moira.ScheduledNotification{
 			SendFail:  2,
 			Timestamp: now,
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationOld := moira.ScheduledNotification{
 			SendFail:  3,
 			Timestamp: now - database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
 		Convey("Test fetch notifications with limit if all notifications has diff timestamp", func() {
@@ -321,16 +333,19 @@ func TestGetNotificationsInTxWithLimit(t *testing.T) {
 			SendFail:  1,
 			Timestamp: now + database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notification := moira.ScheduledNotification{
 			SendFail:  2,
 			Timestamp: now,
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationOld := moira.ScheduledNotification{
 			SendFail:  3,
 			Timestamp: now - database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
 		Convey("Test with zero notifications without limit", func() {
@@ -423,16 +438,19 @@ func TestGetLimitedNotifications(t *testing.T) {
 			SendFail:  1,
 			Timestamp: now + database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notification := moira.ScheduledNotification{
 			SendFail:  2,
 			Timestamp: now,
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationOld := moira.ScheduledNotification{
 			SendFail:  3,
 			Timestamp: now - database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
 		Convey("Test all notifications with different timestamps without limit", func() {
@@ -803,16 +821,19 @@ func TestNotificationsCount(t *testing.T) {
 			SendFail:  1,
 			Timestamp: now + database.getDelayedTimeInSeconds(),
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notification := moira.ScheduledNotification{
 			SendFail:  2,
 			Timestamp: now,
 			CreatedAt: now,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationOld := moira.ScheduledNotification{
 			SendFail:  3,
 			Timestamp: now - database.getDelayedTimeInSeconds(),
 			CreatedAt: now - database.getDelayedTimeInSeconds(),
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
 		Convey("Test all notification with different ts in db", func() {
@@ -887,27 +908,33 @@ func TestFetchNotificationsDo(t *testing.T) {
 		SendFail:  1,
 		Timestamp: now - database.getDelayedTimeInSeconds() + 1,
 		CreatedAt: now - database.getDelayedTimeInSeconds() + 1,
+		Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 	notification4 := moira.ScheduledNotification{
 		SendFail:  2,
 		Timestamp: now - database.getDelayedTimeInSeconds() + 2,
 		CreatedAt: now - database.getDelayedTimeInSeconds() + 2,
+		Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 	notificationNew := moira.ScheduledNotification{
 		SendFail:  3,
 		Timestamp: now + database.getDelayedTimeInSeconds(),
 		CreatedAt: now,
+		Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 	notification := moira.ScheduledNotification{
 		SendFail:  4,
 		Timestamp: now,
 		CreatedAt: now,
+		Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 
 	// create delayed notifications
 	notificationOld2 := moira.ScheduledNotification{
 		Trigger: moira.TriggerData{
-			ID: "test2",
+			ID:            "test2",
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
 		},
 		Event: moira.NotificationEvent{
 			Metric: "test1",
@@ -918,7 +945,9 @@ func TestFetchNotificationsDo(t *testing.T) {
 	}
 	notificationNew2 := moira.ScheduledNotification{
 		Trigger: moira.TriggerData{
-			ID: "test1",
+			ID:            "test1",
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
 		},
 		Event: moira.NotificationEvent{
 			Metric: "test1",
@@ -929,7 +958,9 @@ func TestFetchNotificationsDo(t *testing.T) {
 	}
 	notificationNew3 := moira.ScheduledNotification{
 		Trigger: moira.TriggerData{
-			ID: "test2",
+			ID:            "test2",
+			TriggerSource: moira.GraphiteLocal,
+			ClusterId:     moira.DefaultCluster,
 		},
 		Event: moira.NotificationEvent{
 			Metric: "test2",
@@ -1378,22 +1409,28 @@ func TestResaveNotifications(t *testing.T) {
 	Convey("Test resaveNotifications", t, func() {
 		notificationOld1 := &moira.ScheduledNotification{
 			Timestamp: 1,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationOld2 := &moira.ScheduledNotification{
 			Timestamp: 2,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationOld3 := &moira.ScheduledNotification{
 			Timestamp: 3,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
 		notificationNew1 := &moira.ScheduledNotification{
 			Timestamp: 4,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationNew2 := &moira.ScheduledNotification{
 			Timestamp: 5,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 		notificationNew3 := &moira.ScheduledNotification{
 			Timestamp: 6,
+			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
 		Convey("Test resave with zero notifications", func() {
@@ -1473,12 +1510,15 @@ func TestRemoveNotifications(t *testing.T) {
 
 	notification1 := &moira.ScheduledNotification{
 		Timestamp: 1,
+		Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 	notification2 := &moira.ScheduledNotification{
 		Timestamp: 2,
+		Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 	notification3 := &moira.ScheduledNotification{
 		Timestamp: 3,
+		Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 
 	Convey("Test removeNotifications", t, func() {
@@ -1550,19 +1590,19 @@ func TestRemoveFilteredNotifications(t *testing.T) {
 
 	notification1 := &moira.ScheduledNotification{
 		Timestamp: 10,
-		Trigger:   moira.TriggerData{Tags: []string{tag}},
+		Trigger:   moira.TriggerData{Tags: []string{tag}, TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 	notification2 := &moira.ScheduledNotification{
 		Timestamp: 20,
-		Trigger:   moira.TriggerData{Tags: []string{tag, ignoredTag}},
+		Trigger:   moira.TriggerData{Tags: []string{tag, ignoredTag}, TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 	notification3 := &moira.ScheduledNotification{
 		Timestamp: 30,
-		Trigger:   moira.TriggerData{Tags: []string{ignoredTag}},
+		Trigger:   moira.TriggerData{Tags: []string{ignoredTag}, TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 	notification4 := &moira.ScheduledNotification{
 		Timestamp: 40,
-		Trigger:   moira.TriggerData{Tags: []string{}},
+		Trigger:   moira.TriggerData{Tags: []string{}, TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 
 	Convey("Test removeNotifications filtered for all time", t, func() {
