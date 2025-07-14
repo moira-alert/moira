@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -47,8 +48,8 @@ func limitNotifications(notifications []*moira.ScheduledNotification) []*moira.S
 
 // GetNotifications gets ScheduledNotifications in given range and full range, where 'start' and 'end' are indices of notifications.
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
-	return connector.getNotificationsBy(func(pipe redis.Pipeliner) {
-		pipe.ZRange(connector.context, notifierNotificationsKey, start, end)
+	return connector.getNotificationsBy(func(pipe redis.Pipeliner, redisKey string) {
+		pipe.ZRange(connector.context, redisKey, start, end)
 	})
 }
 
@@ -65,17 +66,20 @@ func (connector *DbConnector) getNotificationsByTime(timeStart, timeEnd int64) (
 		Max: stop,
 	}
 
-	return connector.getNotificationsBy(func(pipe redis.Pipeliner) {
-		pipe.ZRangeByScore(connector.context, notifierNotificationsKey, rng)
+	return connector.getNotificationsBy(func(pipe redis.Pipeliner, redisKey string) {
+		pipe.ZRangeByScore(connector.context, redisKey, rng)
 	})
 }
 
-func (connector *DbConnector) getNotificationsBy(query func(pipe redis.Pipeliner)) ([]*moira.ScheduledNotification, int64, error) {
+func (connector *DbConnector) getNotificationsBy(query func(pipe redis.Pipeliner, redisKey string)) ([]*moira.ScheduledNotification, int64, error) {
 	ctx := connector.context
 	pipe := (*connector.client).TxPipeline()
 
-	query(pipe)
-	pipe.ZCard(ctx, notifierNotificationsKey)
+	for _, clusterKey := range connector.clusterList {
+		redisKet := makeNotifierNotificationsKey(clusterKey)
+		query(pipe, redisKet)
+		pipe.ZCard(ctx, redisKet)
+	}
 
 	response, err := pipe.Exec(ctx)
 	if err != nil {
@@ -86,15 +90,28 @@ func (connector *DbConnector) getNotificationsBy(query func(pipe redis.Pipeliner
 		return make([]*moira.ScheduledNotification, 0), 0, nil
 	}
 
-	total, err := response[1].(*redis.IntCmd).Result()
-	if err != nil {
-		return nil, 0, err
+	total := int64(0)
+	notifications := make([]*moira.ScheduledNotification, 0)
+
+	for i := range connector.clusterList {
+		t, err := response[2*i+1].(*redis.IntCmd).Result()
+		if err != nil {
+			return nil, 0, err
+		}
+
+		ns, err := reply.Notifications(response[2*i].(*redis.StringSliceCmd))
+		if err != nil {
+			return nil, 0, err
+		}
+
+		notifications = append(notifications, ns...)
+
+		total += t
 	}
 
-	notifications, err := reply.Notifications(response[0].(*redis.StringSliceCmd))
-	if err != nil {
-		return nil, 0, err
-	}
+	sort.Slice(notifications, func(i, j int) bool {
+		return notifications[i].Timestamp < notifications[j].Timestamp
+	})
 
 	return notifications, total, nil
 }
