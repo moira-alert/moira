@@ -47,7 +47,7 @@ func InitMetricSources(remotes RemotesConfig, database moira.Database, logger mo
 	return provider, nil
 }
 
-// MakeClustersWebConfig initializes cluster list for api web config
+// MakeClustersWebConfig initializes cluster list for api web config.
 func MakeClustersWebConfig(redisConfig RedisConfig, remotes RemotesConfig) []api.MetricSourceCluster {
 	clusters := []api.MetricSourceCluster{{
 		TriggerSource: moira.GraphiteLocal,
@@ -79,7 +79,7 @@ func MakeClustersWebConfig(redisConfig RedisConfig, remotes RemotesConfig) []api
 	return clusters
 }
 
-// MakeClusterList creates a comprehensive list of metric source clusters
+// MakeClusterList creates a comprehensive list of metric source clusters.
 func MakeClusterList(remotes RemotesConfig) moira.ClusterList {
 	clusterList := moira.ClusterList{moira.DefaultLocalCluster}
 

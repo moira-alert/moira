@@ -136,13 +136,16 @@ func (connector *DbConnector) RemoveAllNotifications() error {
 // RemoveNotification delete notifications by key = timestamp + contactID + subID.
 func (connector *DbConnector) RemoveNotification(notificationId string) (int64, error) {
 	countTotal := int64(0)
+
 	for _, clusterKey := range connector.clusterList {
 		count, err := connector.removeNotificationInKey(makeNotifierNotificationsKey(clusterKey), notificationId)
 		countTotal += count
+
 		if err != nil {
 			return countTotal, err
 		}
 	}
+
 	return countTotal, nil
 }
 
@@ -172,13 +175,16 @@ func (connector *DbConnector) removeNotificationInKey(redisKey string, notificat
 // excluding the ones that have tag from ignoredTags.
 func (connector *DbConnector) RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error) {
 	countTotal := int64(0)
+
 	for _, clusterKey := range connector.clusterList {
 		count, err := connector.removeFilteredNotificationsInRedisKey(makeNotifierNotificationsKey(clusterKey), start, end, ignoredTags)
 		countTotal += count
+
 		if err != nil {
 			return countTotal, err
 		}
 	}
+
 	return countTotal, nil
 }
 
@@ -616,6 +622,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	z := &redis.Z{Score: float64(notification.Timestamp), Member: bytes}
 
 	redisKey := makeNotifierNotificationsKey(moira.MakeClusterKey(notification.Trigger.TriggerSource, notification.Trigger.ClusterId))
+
 	_, err = c.ZAdd(ctx, redisKey, z).Result()
 	if err != nil {
 		return fmt.Errorf("failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
@@ -701,6 +708,7 @@ func makeNotifierNotificationsKey(clusterKey moira.ClusterKey) string {
 	if clusterKey == moira.DefaultLocalCluster {
 		return notifierNotificationsKey
 	}
+
 	return fmt.Sprintf("%s:%s.%s", notifierNotificationsKey, clusterKey.TriggerSource, clusterKey.ClusterId)
 }
 

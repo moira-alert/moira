@@ -307,6 +307,7 @@ func TestGetNotificationsInTxWithLimit(t *testing.T) {
 	database.Flush()
 
 	defer database.Flush()
+
 	redisKey := makeNotifierNotificationsKey(moira.DefaultLocalCluster)
 
 	client := *database.client
@@ -793,6 +794,7 @@ func TestNotificationsCount(t *testing.T) {
 	database.Flush()
 
 	defer database.Flush()
+
 	redisKey := makeNotifierNotificationsKey(moira.DefaultLocalCluster)
 
 	Convey("notificationsCount in db", t, func() {
@@ -1366,6 +1368,7 @@ func TestResaveNotifications(t *testing.T) {
 	database.Flush()
 
 	defer database.Flush()
+
 	redisKey := makeNotifierNotificationsKey(moira.DefaultLocalCluster)
 
 	client := database.client
@@ -1461,6 +1464,7 @@ func TestRemoveNotifications(t *testing.T) {
 	database.Flush()
 
 	defer database.Flush()
+
 	redisKey := makeNotifierNotificationsKey(moira.DefaultLocalCluster)
 
 	client := database.client

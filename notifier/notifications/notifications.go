@@ -65,6 +65,7 @@ func (worker *FetchNotificationsWorker) Start() {
 			}
 		})
 	}
+
 	worker.Logger.Info().Msg("Moira Notifier Fetching scheduled notifications started")
 }
 
