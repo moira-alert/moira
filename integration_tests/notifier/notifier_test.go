@@ -77,6 +77,7 @@ var triggerData = moira.TriggerData{
 	Targets:       []string{"test.target.1"},
 	Tags:          []string{"test-tag-1"},
 	TriggerSource: moira.GraphiteLocal,
+	ClusterId:     moira.DefaultCluster,
 }
 
 var event = moira.NotificationEvent{

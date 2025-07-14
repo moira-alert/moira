@@ -705,6 +705,13 @@ func (connector *DbConnector) resaveNotifications(
 }
 
 func makeNotifierNotificationsKey(clusterKey moira.ClusterKey) string {
+	if clusterKey.ClusterId == moira.ClusterNotSet {
+		clusterKey.ClusterId = moira.DefaultCluster
+	}
+	if clusterKey.TriggerSource == moira.TriggerSourceNotSet {
+		clusterKey.TriggerSource = moira.GraphiteLocal
+	}
+
 	if clusterKey == moira.DefaultLocalCluster {
 		return notifierNotificationsKey
 	}
