@@ -167,10 +167,11 @@ func TestNotifier(t *testing.T) {
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
-		Database: database,
-		Logger:   logger,
-		Metrics:  notifierMetrics,
-		Notifier: notifierInstance,
+		Database:    database,
+		Logger:      logger,
+		Metrics:     notifierMetrics,
+		Notifier:    notifierInstance,
+		ClusterList: moira.ClusterList{moira.DefaultLocalCluster},
 	}
 
 	fetchEventsWorker.Start()
