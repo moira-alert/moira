@@ -34,13 +34,14 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 
 	for _, contact := range contacts {
 		contactsList.List = append(contactsList.List, dto.TeamContact{
-			Type:   contact.Type,
-			Name:   contact.Name,
-			Value:  contact.Value,
-			ID:     contact.ID,
-			User:   contact.User,
-			TeamID: contact.Team,
-			Team:   contact.Team,
+			Type:         contact.Type,
+			Name:         contact.Name,
+			Value:        contact.Value,
+			ID:           contact.ID,
+			User:         contact.User,
+			TeamID:       contact.Team,
+			Team:         contact.Team,
+			ExtraMessage: contact.ExtraMessage,
 		})
 	}
 
@@ -55,12 +56,13 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 	}
 
 	contactToReturn := &dto.Contact{
-		ID:     contact.ID,
-		Name:   contact.Name,
-		User:   contact.User,
-		TeamID: contact.Team,
-		Type:   contact.Type,
-		Value:  contact.Value,
+		ID:           contact.ID,
+		Name:         contact.Name,
+		User:         contact.User,
+		TeamID:       contact.Team,
+		Type:         contact.Type,
+		Value:        contact.Value,
+		ExtraMessage: contact.ExtraMessage,
 	}
 
 	return contactToReturn, nil
@@ -85,12 +87,13 @@ func CreateContact(
 	}
 
 	contactData := moira.ContactData{
-		ID:    contact.ID,
-		Name:  contact.Name,
-		User:  contact.User,
-		Team:  teamID,
-		Type:  contact.Type,
-		Value: contact.Value,
+		ID:           contact.ID,
+		Name:         contact.Name,
+		User:         contact.User,
+		Team:         teamID,
+		Type:         contact.Type,
+		Value:        contact.Value,
+		ExtraMessage: contact.ExtraMessage,
 	}
 
 	if contactData.ID == "" {

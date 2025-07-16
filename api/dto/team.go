@@ -122,7 +122,8 @@ type TeamContact struct {
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
 	// This field is deprecated
-	Team string `json:"team,omitempty"`
+	Team         string `json:"team,omitempty"`
+	ExtraMessage string `json:"extra_message,omitempty"`
 }
 
 // Render is a function that implements chi Renderer interface for TeamContact.
