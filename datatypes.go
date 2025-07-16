@@ -216,12 +216,13 @@ type Team struct {
 
 // ContactData represents contact object.
 type ContactData struct {
-	Type  string `json:"type" example:"mail"`
-	Name  string `json:"name,omitempty" example:"Mail Alerts"`
-	Value string `json:"value" example:"devops@example.com"`
-	ID    string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
-	User  string `json:"user" example:""`
-	Team  string `json:"team"`
+	Type         string `json:"type" example:"mail"`
+	Name         string `json:"name,omitempty" example:"Mail Alerts"`
+	Value        string `json:"value" example:"devops@example.com"`
+	ID           string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User         string `json:"user" example:""`
+	Team         string `json:"team"`
+	ExtraMessage string `json:"extra_message,omitempty"`
 }
 
 // ToTemplateContact converts a ContactData into a template Contact.

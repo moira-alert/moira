@@ -229,13 +229,13 @@ some other text italic text
 `
 
 		Convey("Build empty desc", func() {
-			actual := descriptionFormatter(moira.TriggerData{Desc: ""})
+			actual := descriptionFormatter(moira.TriggerData{Desc: ""}, moira.ContactData{})
 			expected := ""
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Build desc with headers and bold", func() {
-			actual := descriptionFormatter(trigger)
+			actual := descriptionFormatter(trigger, moira.ContactData{})
 			expected := slackCompatibleMD + "\n\n"
 			So(actual, ShouldResemble, expected)
 		})
@@ -254,7 +254,7 @@ some other text italic text
 `
 
 		Convey("Expect descriptionFormatter not to panic", func() {
-			actual := descriptionFormatter(trigger)
+			actual := descriptionFormatter(trigger, moira.ContactData{})
 
 			So(actual, ShouldEqual, expected)
 		})

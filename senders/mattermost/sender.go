@@ -97,10 +97,14 @@ func uriFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
 }
 
-func descriptionFormatter(trigger moira.TriggerData) string {
+func descriptionFormatter(trigger moira.TriggerData, contact moira.ContactData) string {
 	desc := trigger.Desc
 	if trigger.Desc != "" {
 		desc += "\n"
+	}
+
+	if contact.ExtraMessage != "" {
+		desc = contact.ExtraMessage + "\n" + desc
 	}
 
 	return desc

@@ -36,13 +36,13 @@ func TestBuildMessage(t *testing.T) {
 		strippedDesc := "test\n test test test\n"
 
 		Convey("Print moira message with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, false)
 			expected := strippedDesc + "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with empty trigger", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, moira.ContactData{}, false)
 			expected := "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
 			So(actual, ShouldResemble, expected)
 		})
@@ -50,25 +50,25 @@ func TestBuildMessage(t *testing.T) {
 		Convey("Print moira message with one event and message", func() {
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, false)
 			expected := strippedDesc + "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix."
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, true)
 			expected := strippedDesc + "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\nPlease, fix your system or tune this trigger to generate less events."
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with 6 events", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, moira.ContactData{}, false)
 			expected := strippedDesc + "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with empty triggerID, but with trigger name", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, moira.ContactData{}, false)
 			expected := "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
 			So(actual, ShouldResemble, expected)
 		})
@@ -102,10 +102,10 @@ func TestBuildCreateAlertRequest(t *testing.T) {
 		Convey("Build CreateAlertRequest with one moira event and plot", func() {
 			imageStore.EXPECT().StoreImage([]byte("test")).Return("test", nil)
 
-			actual := sender.buildCreateAlertRequest(moira.NotificationEvents{event}, trigger, false, [][]byte{[]byte("test")}, 150000000)
+			actual := sender.buildCreateAlertRequest(moira.NotificationEvents{event}, trigger, moira.ContactData{}, false, [][]byte{[]byte("test")}, 150000000)
 			expected := api.CreateAlertRequest{
 				MessageType:       api.Warning,
-				StateMessage:      sender.buildMessage(moira.NotificationEvents{event}, trigger, false),
+				StateMessage:      sender.buildMessage(moira.NotificationEvents{event}, trigger, moira.ContactData{}, false),
 				EntityID:          trigger.ID,
 				Timestamp:         150000000,
 				StateStartTime:    event.Timestamp,

@@ -65,7 +65,7 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 		tagsLen = calcRunesCountWithoutHTML(tags)
 	}
 
-	desc := descriptionFormatter(params.Trigger)
+	desc := descriptionFormatter(params.Trigger, params.Contact)
 	descLen := calcRunesCountWithoutHTML(desc)
 
 	events := formatter.buildEventsString(params.Events, -1, params.Throttled)
@@ -206,12 +206,16 @@ var (
 	endHeaderRegexp   = regexp.MustCompile("</h[0-9]+>")
 )
 
-func descriptionFormatter(trigger moira.TriggerData) string {
+func descriptionFormatter(trigger moira.TriggerData, contact moira.ContactData) string {
 	if trigger.Desc == "" {
 		return ""
 	}
 
 	desc := trigger.Desc + "\n"
+
+	if contact.ExtraMessage != "" {
+		desc = contact.ExtraMessage + "\n" + desc
+	}
 
 	// Sometimes in trigger description may be text constructions like <param>.
 	// blackfriday may recognise it as tag, so it won't be escaped.
