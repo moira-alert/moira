@@ -144,6 +144,7 @@ func UpdateContact(
 	contactData.Type = contactDTO.Type
 	contactData.Value = contactDTO.Value
 	contactData.Name = contactDTO.Name
+	contactData.ExtraMessage = contactDTO.ExtraMessage
 
 	if contactDTO.User != "" || contactDTO.TeamID != "" {
 		contactData.User = contactDTO.User
