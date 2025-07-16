@@ -207,7 +207,7 @@ var (
 )
 
 func descriptionFormatter(trigger moira.TriggerData, contact moira.ContactData) string {
-	if trigger.Desc == "" {
+	if trigger.Desc == "" && contact.ExtraMessage == "" {
 		return ""
 	}
 
