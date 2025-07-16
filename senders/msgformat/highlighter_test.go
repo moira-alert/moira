@@ -55,6 +55,7 @@ func TestFormat(t *testing.T) {
 			ID:   "TriggerID",
 			Desc: shortDesc,
 		}
+
 		Convey("Message with one event", func() {
 			events, throttled := moira.NotificationEvents{event}, false
 			msg := formatter.Format(getParams(events, trigger, throttled))
