@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/url"
 	"slices"
+	"sort"
 	"testing"
 	"time"
 
@@ -63,6 +64,83 @@ func TestSubset(t *testing.T) {
 		So(Subset([]string{"1", "2", "3"}, []string{"123", "2", "3"}), ShouldBeFalse)
 		So(Subset([]string{"1", "2", "3"}, []string{"1", "2", "4"}), ShouldBeFalse)
 	})
+}
+
+func TestDiff(t *testing.T) {
+	tests := []struct {
+		name     string
+		lists    [][]int
+		expected []int
+	}{
+		{
+			name:     "empty input",
+			lists:    [][]int{},
+			expected: []int{},
+		},
+		{
+			name:     "single array",
+			lists:    [][]int{{1, 2, 3}},
+			expected: []int{},
+		},
+		{
+			name:     "two arrays with partial overlap",
+			lists:    [][]int{{1, 2, 3}, {2, 3, 4}},
+			expected: []int{1, 4},
+		},
+		{
+			name:     "three arrays with common element",
+			lists:    [][]int{{1, 2, 3}, {2, 3, 4}, {3, 4, 5}},
+			expected: []int{1, 2, 4, 5},
+		},
+		{
+			name:     "no common elements",
+			lists:    [][]int{{1, 2}, {3, 4}, {5, 6}},
+			expected: []int{1, 2, 3, 4, 5, 6},
+		},
+		{
+			name:     "all same elements",
+			lists:    [][]int{{1, 2, 3}, {1, 2, 3}, {1, 2, 3}},
+			expected: []int{},
+		},
+		{
+			name:     "arrays with duplicates",
+			lists:    [][]int{{1, 1, 2, 2}, {2, 2, 3, 3}, {2, 3, 4}},
+			expected: []int{1, 3, 4},
+		},
+		{
+			name:     "one empty array",
+			lists:    [][]int{{1, 2, 3}, {}, {2, 3, 4}},
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			name:     "single element arrays",
+			lists:    [][]int{{1}, {2}, {3}},
+			expected: []int{1, 2, 3},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Diff(tt.lists...)
+
+			// Sort both slices for comparison since map iteration order is random
+			sort.Ints(result)
+			sort.Ints(tt.expected)
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("Diff() = %v (len=%d), want %v (len=%d)",
+					result, len(result), tt.expected, len(tt.expected))
+				return
+			}
+
+			for i := range result {
+				if result[i] != tt.expected[i] {
+					t.Errorf("Diff() = %v, want %v", result, tt.expected)
+					break
+				}
+			}
+		})
+	}
 }
 
 func TestGetStringListsDiff(t *testing.T) {
