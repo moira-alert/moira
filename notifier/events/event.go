@@ -115,6 +115,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			ErrorValue:    moira.UseFloat64(trigger.ErrorValue),
 			IsRemote:      trigger.TriggerSource == moira.GraphiteRemote,
 			TriggerSource: trigger.TriggerSource,
+			ClusterId:     trigger.ClusterId,
 			Tags:          trigger.Tags,
 		}
 
