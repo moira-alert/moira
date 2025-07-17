@@ -166,13 +166,13 @@ func (selfCheck *SelfCheckWorker) constructUserNotification(events []heartbeatNo
 					}
 				}
 
-				contactToData[contact].events = append(contactToData[contact].events, event.NotificationEvent)
+				contEvents := contactToData[contact]
+				contEvents.events = append(contEvents.events, event.NotificationEvent)
 
-				// Build triggers table for this contact if needed
-				if event.NotifyAboutEnabledNotifier && contactToData[contact].triggersTable == "" {
+				if event.NotifyAboutEnabledNotifier && contEvents.triggersTable == "" {
 					triggersTable := selfCheck.buildTriggersTableForSubscription(subscription)
 					if triggersTable != "" {
-						contactToData[contact].triggersTable = triggersTable
+						contEvents.triggersTable = triggersTable
 					}
 				}
 			}
