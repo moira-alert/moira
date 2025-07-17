@@ -322,6 +322,7 @@ func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.Sub
 		go func(subId string) {
 			defer func() {
 				wg.Done()
+
 				if r := recover(); r != nil {
 					selfCheck.Logger.Error().
 						Interface("panic", r).
@@ -358,7 +359,6 @@ func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.Sub
 
 func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string, systemTags []string, resultCh chan<- linkResult) {
 	sub, err := selfCheck.Database.GetSubscription(subscriptionId)
-
 	if err != nil {
 		resultCh <- linkResult{"", []string{}, err}
 		return
@@ -396,11 +396,13 @@ func (selfCheck *SelfCheckWorker) doesSubscriptionContainsFailedTriigers(subscri
 	}
 
 	triggerIDs := make(map[string]bool)
+
 	for _, tag := range subscription.Tags {
 		ids, err := selfCheck.Database.GetTagTriggerIDs(tag)
 		if err != nil {
 			return false, fmt.Errorf("failed to get trigger IDs for tag %s: %w", tag, err)
 		}
+
 		for _, id := range ids {
 			triggerIDs[id] = true
 		}
