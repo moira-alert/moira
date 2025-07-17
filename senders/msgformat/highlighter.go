@@ -15,7 +15,7 @@ import (
 type UriFormatter func(triggerURI, triggerName string) string
 
 // DescriptionFormatter is used to format trigger description to supported description.
-type DescriptionFormatter func(trigger moira.TriggerData) string
+type DescriptionFormatter func(trigger moira.TriggerData, contact moira.ContactData) string
 
 // BoldFormatter makes str bold. For example in Markdown it should return **str**.
 type BoldFormatter func(str string) string
@@ -93,7 +93,7 @@ func (formatter *highlightSyntaxFormatter) Format(params MessageFormatterParams)
 		tagsLen = utf8.RuneCountInString(tags)
 	}
 
-	desc := formatter.descriptionFormatter(params.Trigger)
+	desc := formatter.descriptionFormatter(params.Trigger, params.Contact)
 	descLen := utf8.RuneCountInString(desc)
 
 	events := formatter.buildEventsString(params.Events, -1, params.Throttled)

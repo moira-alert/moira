@@ -97,10 +97,14 @@ func uriFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("[%s](%s)", triggerName, triggerURI)
 }
 
-func descriptionFormatter(trigger moira.TriggerData) string {
+func descriptionFormatter(trigger moira.TriggerData, contact moira.ContactData) string {
 	desc := trigger.Desc
 	if trigger.Desc != "" {
 		desc += "\n"
+	}
+
+	if contact.ExtraMessage != "" {
+		desc = contact.ExtraMessage + "\n" + desc
 	}
 
 	return desc
@@ -122,7 +126,7 @@ func eventStringFormatter(event moira.NotificationEvent, loc *time.Location) str
 
 // SendEvents implements moira.Sender interface.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	message := sender.buildMessage(events, trigger, throttled)
+	message := sender.buildMessage(events, trigger, contact, throttled)
 	ctx := context.Background()
 
 	post, err := sender.sendMessage(ctx, message, contact.Value, trigger.ID)
@@ -144,12 +148,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, contact moira.ContactData, throttled bool) string {
 	return sender.formatter.Format(msgformat.MessageFormatterParams{
 		Events:          events,
 		Trigger:         trigger,
 		MessageMaxChars: messageMaxCharacters,
 		Throttled:       throttled,
+		Contact:         contact,
 	})
 }
 

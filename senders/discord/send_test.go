@@ -39,7 +39,7 @@ some text **bold text**
 some other text _italic text_`
 
 		Convey("Print moira message with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, false)
 			expected := "NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
@@ -50,7 +50,7 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with empty triggerID, but with trigger Name", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, moira.ContactData{}, false)
 			expected := `NODATA Name  (1)
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)`
@@ -58,7 +58,7 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with empty trigger", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, moira.ContactData{}, false)
 			expected := `NODATA   (1)
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)`
@@ -70,7 +70,7 @@ http://moira.url/trigger/TriggerID
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			event.TriggerID = ""
 			trigger.ID = ""
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, false)
 			expected := "NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.`
@@ -78,7 +78,7 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, true)
 			expected := "NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
 02:40 (GMT+00:00): Metric name = 97.4458331200185 (OK to NODATA)
@@ -113,7 +113,7 @@ Please, fix your system or tune this trigger to generate less events.`
 		longDesc := strings.Repeat("a", messageMaxCharacters/2+79)
 
 		Convey("Print moira message with desc + events < msgLimit", func() {
-			actual := sender.buildMessage(shortEvents, moira.TriggerData{Desc: longDesc}, false)
+			actual := sender.buildMessage(shortEvents, moira.TriggerData{Desc: longDesc}, moira.ContactData{}, false)
 			expected := "NODATA   (12)\n" + longDesc + "\n" + shortEventsString
 			So(actual, ShouldResemble, expected)
 		})
@@ -128,7 +128,7 @@ Please, fix your system or tune this trigger to generate less events.`
 				eventsString += eventLine
 			}
 
-			actual := sender.buildMessage(events, moira.TriggerData{Desc: longDesc}, false)
+			actual := sender.buildMessage(events, moira.TriggerData{Desc: longDesc}, moira.ContactData{}, false)
 			expected := `NODATA   (15)
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
 
@@ -153,7 +153,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 		Convey("Print moira message events string > msgLimit/2", func() {
 			desc := strings.Repeat("a", messageMaxCharacters/2-100)
-			actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: desc}, false)
+			actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: desc}, moira.ContactData{}, false)
 			expected := `NODATA   (18)
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
@@ -180,7 +180,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 		})
 
 		Convey("Print moira message with both desc and events > msgLimit/2", func() {
-			actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: longDesc}, false)
+			actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: longDesc}, moira.ContactData{}, false)
 			expected := `NODATA   (18)
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
 
@@ -225,13 +225,13 @@ some other text _italic text_
 `
 
 		Convey("Build empty desc", func() {
-			actual := sender.buildDescription(moira.TriggerData{Desc: ""})
+			actual := sender.buildDescription(moira.TriggerData{Desc: ""}, moira.ContactData{})
 			expected := ""
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Build desc with headers and bold", func() {
-			actual := sender.buildDescription(trigger)
+			actual := sender.buildDescription(trigger, moira.ContactData{})
 			expected := discordCompatibleMD
 			So(actual, ShouldResemble, expected)
 		})

@@ -124,8 +124,13 @@ func uriFormatter(triggerURI, triggerName string) string {
 	return fmt.Sprintf("<%s|%s>", triggerURI, triggerName)
 }
 
-func descriptionFormatter(trigger moira.TriggerData) string {
+func descriptionFormatter(trigger moira.TriggerData, contact moira.ContactData) string {
 	desc := trigger.Desc
+
+	if contact.ExtraMessage != "" {
+		desc = contact.ExtraMessage + "\n" + desc
+	}
+
 	if trigger.Desc != "" {
 		desc = string(slackdown.Run([]byte(desc)))
 		desc += "\n"
