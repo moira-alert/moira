@@ -272,7 +272,11 @@ const (
 )
 
 func descriptionCutter(maxSize int, extraMessage string) string {
-	newDesc := extraMessage + "\n" + tooLongDescMessage
+	newDesc := tooLongDescMessage
+
+	if extraMessage != "" {
+		newDesc = extraMessage + "\n" + newDesc
+	}
 
 	if utf8.RuneCountInString(newDesc) <= maxSize {
 		return newDesc
