@@ -56,7 +56,7 @@ func (contact *Contact) Bind(r *http.Request) error {
 		return fmt.Errorf("contact cannot have both the user field and the team_id field filled in")
 	}
 	if len(contact.ExtraMessage) > maxExtraMessageLen {
-		return fmt.Errorf("contact extra message must not be longer then %d", maxExtraMessageLen)
+		return fmt.Errorf("contact extra message must not be longer then %d characters long", maxExtraMessageLen)
 	}
 	return nil
 }
