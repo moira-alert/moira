@@ -31,6 +31,7 @@ type Config struct {
 	CheckInterval                  time.Duration
 	UserNotificationsInterval      time.Duration
 	Contacts                       []map[string]string
+	FrontURL                       string
 	Checks                         ChecksConfig
 }
 
