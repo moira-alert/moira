@@ -77,7 +77,7 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	}
 
 	if descLen != descNewLen {
-		desc = descriptionCutter(desc, descNewLen)
+		desc = descriptionCutter(descNewLen, params.Contact.ExtraMessage)
 	}
 
 	if eventsStringLen != eventsNewLen {
@@ -271,7 +271,13 @@ const (
 	badFormatMessage   = "\nBad trigger description for telegram sender. Please check trigger.\n"
 )
 
-func descriptionCutter(_ string, maxSize int) string {
+func descriptionCutter(maxSize int, extraMessage string) string {
+	newDesc := extraMessage + "\n" + tooLongDescMessage
+
+	if utf8.RuneCountInString(newDesc) <= maxSize {
+		return newDesc
+	}
+
 	if utf8.RuneCountInString(tooLongDescMessage) <= maxSize {
 		return tooLongDescMessage
 	}

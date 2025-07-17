@@ -43,6 +43,8 @@ func (*Contact) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+const maxExtraMessageLen = 100
+
 func (contact *Contact) Bind(r *http.Request) error {
 	if contact.Type == "" {
 		return fmt.Errorf("contact type can not be empty")
@@ -52,6 +54,9 @@ func (contact *Contact) Bind(r *http.Request) error {
 	}
 	if contact.User != "" && contact.TeamID != "" {
 		return fmt.Errorf("contact cannot have both the user field and the team_id field filled in")
+	}
+	if len(contact.ExtraMessage) > maxExtraMessageLen {
+		return fmt.Errorf("contact extra message must not be longer then %d", maxExtraMessageLen)
 	}
 	return nil
 }
