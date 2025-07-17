@@ -319,7 +319,20 @@ func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.Sub
 	for _, subId := range subscriptionsIds {
 		wg.Add(1)
 
-		go selfCheck.constructLinkToTriggers(subId, systemTags, tableRows, &wg)
+		go func(subId string) {
+			defer func() {
+				wg.Done()
+				if r := recover(); r != nil {
+					selfCheck.Logger.Error().
+						Interface("panic", r).
+						String("subscriptionId", subId).
+						Msg("Panic in goroutine")
+					tableRows <- linkResult{"", []string{}, fmt.Errorf("panic: %v", r)}
+				}
+			}()
+
+			selfCheck.constructLinkToTriggers(subId, systemTags, tableRows)
+		}(subId)
 	}
 
 	wg.Wait()
@@ -343,10 +356,8 @@ func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.Sub
 	return table, nil
 }
 
-func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string, systemTags []string, resultCh chan<- linkResult, wg *sync.WaitGroup) {
+func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string, systemTags []string, resultCh chan<- linkResult) {
 	sub, err := selfCheck.Database.GetSubscription(subscriptionId)
-
-	defer wg.Done()
 
 	if err != nil {
 		resultCh <- linkResult{"", []string{}, err}
@@ -354,6 +365,10 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 	}
 
 	if len(moira.Intersect(sub.Tags, systemTags)) > 0 {
+		return
+	}
+
+	if containsFailedTriggers, e := selfCheck.doesSubscriptionContainsFailedTriigers(&sub); !containsFailedTriggers || e != nil {
 		return
 	}
 
@@ -373,6 +388,42 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 	baseUrl.RawQuery = query.Encode()
 
 	resultCh <- linkResult{baseUrl.String(), sub.Tags, nil}
+}
+
+func (selfCheck *SelfCheckWorker) doesSubscriptionContainsFailedTriigers(subscription *moira.SubscriptionData) (bool, error) {
+	if subscription == nil || len(subscription.Tags) == 0 {
+		return false, nil
+	}
+
+	triggerIDs := make(map[string]bool)
+	for _, tag := range subscription.Tags {
+		ids, err := selfCheck.Database.GetTagTriggerIDs(tag)
+		if err != nil {
+			return false, fmt.Errorf("failed to get trigger IDs for tag %s: %w", tag, err)
+		}
+		for _, id := range ids {
+			triggerIDs[id] = true
+		}
+	}
+
+	for triggerID := range triggerIDs {
+		checkData, err := selfCheck.Database.GetTriggerLastCheck(triggerID)
+		if err != nil {
+			continue
+		}
+
+		if checkData.State == moira.StateERROR || checkData.State == moira.StateNODATA {
+			return true, nil
+		}
+
+		for _, metricState := range checkData.Metrics {
+			if metricState.State == moira.StateERROR || metricState.State == moira.StateNODATA {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
 
 func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, timestamp int64, oldState, state moira.State) moira.NotificationEvent {
