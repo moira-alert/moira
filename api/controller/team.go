@@ -587,15 +587,7 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 			continue
 		}
 
-		teamSettings.Contacts = append(teamSettings.Contacts, dto.TeamContact{
-			ID:     contact.ID,
-			Name:   contact.Name,
-			User:   contact.User,
-			TeamID: contact.Team,
-			Team:   contact.Team,
-			Type:   contact.Type,
-			Value:  contact.Value,
-		})
+		teamSettings.Contacts = append(teamSettings.Contacts, dto.MakeTeamContact(contact))
 	}
 
 	return teamSettings, nil

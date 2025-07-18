@@ -126,6 +126,19 @@ type TeamContact struct {
 	ExtraMessage string `json:"extra_message,omitempty"`
 }
 
+func MakeTeamContact(contact *moira.ContactData) TeamContact {
+	return TeamContact{
+		ID:           contact.ID,
+		Name:         contact.Name,
+		User:         contact.User,
+		TeamID:       contact.Team,
+		Team:         contact.Team,
+		Type:         contact.Type,
+		Value:        contact.Value,
+		ExtraMessage: contact.ExtraMessage,
+	}
+}
+
 // Render is a function that implements chi Renderer interface for TeamContact.
 func (TeamContact) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
