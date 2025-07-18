@@ -126,7 +126,7 @@ type TeamContact struct {
 	ExtraMessage string `json:"extra_message,omitempty"`
 }
 
-// MakeTeamContact converts moira.ContactData to a TeamContact
+// MakeTeamContact converts moira.ContactData to a TeamContact.
 func MakeTeamContact(contact *moira.ContactData) TeamContact {
 	return TeamContact{
 		ID:           contact.ID,
