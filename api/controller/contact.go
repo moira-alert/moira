@@ -33,16 +33,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	}
 
 	for _, contact := range contacts {
-		contactsList.List = append(contactsList.List, dto.TeamContact{
-			Type:         contact.Type,
-			Name:         contact.Name,
-			Value:        contact.Value,
-			ID:           contact.ID,
-			User:         contact.User,
-			TeamID:       contact.Team,
-			Team:         contact.Team,
-			ExtraMessage: contact.ExtraMessage,
-		})
+		contactsList.List = append(contactsList.List, dto.MakeTeamContact(contact))
 	}
 
 	return &contactsList, nil
