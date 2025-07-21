@@ -552,7 +552,7 @@ func CheckUserPermissionsForTeam(
 func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, *api.ErrorResponse) {
 	teamSettings := dto.TeamSettings{
 		TeamID:        teamID,
-		Contacts:      make([]dto.TeamContact, 0),
+		Contacts:      make([]dto.TeamContactWithScore, 0),
 		Subscriptions: make([]moira.SubscriptionData, 0),
 	}
 
@@ -582,7 +582,7 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
 
-	contactScores, err := database.GetContactsScore(contactIDs)
+	contactsScores, err := database.GetContactsScore(contactIDs)
 	if err != nil {
 		return dto.TeamSettings{}, api.ErrorInternalServer(err)
 	}
@@ -592,29 +592,18 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 			continue
 		}
 
-		var scoreDto dto.ContactScore
-
-		score := contactScores[contact.ID]
-
-		if score != nil {
-			scorePercent := moira.CalculatePercentage(score.SuccessTXCount, score.AllTXCount)
-			scoreDto = dto.ContactScore{
-				ScorePercent:     scorePercent,
-				LastErrMessage:   score.LastErrorMsg,
-				LastErrTimestamp: score.LastErrorTimestamp,
-				Status:           string(score.Status),
-			}
-		}
-
-		teamSettings.Contacts = append(teamSettings.Contacts, dto.TeamContact{
-			ID:     contact.ID,
-			Name:   contact.Name,
-			User:   contact.User,
-			TeamID: contact.Team,
-			Team:   contact.Team,
-			Type:   contact.Type,
-			Value:  contact.Value,
-			Score:  scoreDto,
+		contactScore := contactsScores[contact.ID]
+		teamSettings.Contacts = append(teamSettings.Contacts, dto.TeamContactWithScore{
+			TeamContact: dto.TeamContact{
+				ID:     contact.ID,
+				Name:   contact.Name,
+				User:   contact.User,
+				TeamID: contact.Team,
+				Team:   contact.Team,
+				Type:   contact.Type,
+				Value:  contact.Value,
+			},
+			Score: dto.NewContactScore(contactScore),
 		})
 	}
 

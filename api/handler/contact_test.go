@@ -1089,7 +1089,7 @@ func Test_getContactNoisiness(t *testing.T) {
 				Total: 4,
 				List: []*dto.ContactNoisiness{
 					{
-						Contact:     dto.NewContact(*contacts[3], moira.ContactScore{}),
+						Contact:     dto.NewContact(*contacts[3]),
 						EventsCount: 7,
 					},
 				},
@@ -1100,13 +1100,6 @@ func Test_getContactNoisiness(t *testing.T) {
 			expectedBytes = append(expectedBytes, '\n')
 
 			mockDb.EXPECT().GetAllContacts().Return(contacts, nil).Times(1)
-			mockDb.EXPECT().GetContactsScore(moira.Map(contacts, func(cont *moira.ContactData) string {
-				if cont == nil {
-					return ""
-				} else {
-					return cont.ID
-				}
-			})).Return(map[string]*moira.ContactScore{}, nil)
 			mockDb.EXPECT().CountEventsInNotificationHistory(
 				[]string{"contact-id-1", "contact-id-2", "contact-id-3", "contact-id-4"},
 				parsedFrom,

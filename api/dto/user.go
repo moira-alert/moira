@@ -8,7 +8,7 @@ import (
 
 type UserSettings struct {
 	User
-	Contacts      []Contact      `json:"contacts"`
+	Contacts      []ContactWithScore      `json:"contacts"`
 	Subscriptions []Subscription `json:"subscriptions"`
 }
 

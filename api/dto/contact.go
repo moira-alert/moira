@@ -23,11 +23,10 @@ type Contact struct {
 	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
-	Score ContactScore `json:"score,omitempty"`
 }
 
 // NewContact init Contact with data from moira.ContactData.
-func NewContact(data moira.ContactData, score moira.ContactScore) Contact {
+func NewContact(data moira.ContactData) Contact {
 	return Contact{
 		Type:   data.Type,
 		Name:   data.Name,
@@ -35,12 +34,6 @@ func NewContact(data moira.ContactData, score moira.ContactScore) Contact {
 		ID:     data.ID,
 		User:   data.User,
 		TeamID: data.Team,
-		Score: ContactScore{
-			ScorePercent: moira.CalculatePercentage(score.SuccessTXCount, score.AllTXCount),
-			LastErrMessage: score.LastErrorMsg,
-			LastErrTimestamp: score.LastErrorTimestamp,
-			Status: string(score.Status),
-		},
 	}
 }
 
@@ -89,4 +82,23 @@ type ContactScore struct {
 	LastErrTimestamp uint64 `json:"last_err_timestamp,omitempty"`
 	// Status is the current status of the contact.
 	Status string `json:"status,omitempty"`
+}
+
+func NewContactScore(data *moira.ContactScore) *ContactScore {
+	if data == nil {
+		return nil
+	}
+
+	return &ContactScore{
+		Status: string(data.Status),
+		LastErrMessage: data.LastErrorMsg,
+		LastErrTimestamp: data.LastErrorTimestamp,
+		ScorePercent: moira.CalculatePercentage(data.SuccessTXCount, data.AllTXCount),
+	}
+}
+
+// ContactWithScore represents a contact with an associated score.
+type ContactWithScore struct {
+	Contact
+	Score *ContactScore `json:"score,omitempty" extensions:"x-nullable"`
 }

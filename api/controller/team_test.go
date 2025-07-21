@@ -965,7 +965,18 @@ func TestGetTeamSettings(t *testing.T) {
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
 		contactsScores := map[string]*moira.ContactScore{}
-		contactsDto := []dto.TeamContact{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+		contactsDto := []dto.TeamContactWithScore{
+			{
+				TeamContact: dto.TeamContact{
+					ID: contactIDs[0],
+				},
+			},
+			{
+				TeamContact: dto.TeamContact{
+					ID: contactIDs[1],
+				},
+			},
+		}
 
 		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
@@ -989,7 +1000,10 @@ func TestGetTeamSettings(t *testing.T) {
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contacts := []*moira.ContactData{{ID: contactIDs[0], Team: teamID}, {ID: contactIDs[1], Team: teamID}}
 		contactsScores := map[string]*moira.ContactScore{}
-		contactsDto := []dto.TeamContact{{ID: contactIDs[0], Team: teamID, TeamID: teamID}, {ID: contactIDs[1], Team: teamID, TeamID: teamID}}
+		contactsDto := []dto.TeamContactWithScore{
+			{TeamContact: dto.TeamContact{ID: contactIDs[0], Team: teamID, TeamID: teamID}},
+			{TeamContact: dto.TeamContact{ID: contactIDs[1], Team: teamID, TeamID: teamID}},
+		}
 
 		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
@@ -1016,7 +1030,7 @@ func TestGetTeamSettings(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, dto.TeamSettings{
 			TeamID:        teamID,
-			Contacts:      make([]dto.TeamContact, 0),
+			Contacts:      make([]dto.TeamContactWithScore, 0),
 			Subscriptions: make([]moira.SubscriptionData, 0),
 		})
 	})

@@ -48,7 +48,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 }
 
 // GetContactById gets notification contact by its id string.
-func GetContactById(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
+func GetContactById(database moira.Database, contactID string) (*dto.ContactWithScore, *api.ErrorResponse) {
 	contact, err := database.GetContact(contactID)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
@@ -59,11 +59,10 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if contactScore == nil {
-		contactScore = &moira.ContactScore{}
+	contactToReturn := dto.ContactWithScore{
+		Contact: dto.NewContact(contact),
+		Score:   dto.NewContactScore(contactScore),
 	}
-
-	contactToReturn := dto.NewContact(contact, *contactScore)
 
 	return &contactToReturn, nil
 }
@@ -371,12 +370,7 @@ func GetContactNoisiness(
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	contactsScore, err := database.GetContactsScore(contactsIds)
-	if err != nil {
-		return nil, api.ErrorInternalServer(err)
-	}
-
-	noisinessSlice := makeContactNoisinessSlice(contacts, idsWithEventsCount, contactsScore)
+	noisinessSlice := makeContactNoisinessSlice(contacts, idsWithEventsCount)
 
 	sortContactNoisinessByEventsCount(noisinessSlice, sortOrder)
 	total := int64(len(noisinessSlice))
@@ -399,18 +393,13 @@ func getOnlyIDs(contactsData []*moira.ContactData) []string {
 	return ids
 }
 
-func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount []*moira.ContactIDWithNotificationCount, idsWithContactScore map[string]*moira.ContactScore) []*dto.ContactNoisiness {
+func makeContactNoisinessSlice(contacts []*moira.ContactData, idsWithEventsCount []*moira.ContactIDWithNotificationCount) []*dto.ContactNoisiness {
 	noisiness := make([]*dto.ContactNoisiness, 0, len(contacts))
 
 	for i, contact := range contacts {
-		contactScore := idsWithContactScore[contact.ID]
-		if contactScore == nil {
-			contactScore = &moira.ContactScore{}
-		}
-
 		noisiness = append(noisiness,
 			&dto.ContactNoisiness{
-				Contact:     dto.NewContact(*contact, *contactScore),
+				Contact:     dto.NewContact(*contact),
 				EventsCount: idsWithEventsCount[i].Count,
 			})
 	}
