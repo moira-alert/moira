@@ -94,19 +94,20 @@ func (connector *DbConnector) getNotificationsBy(query func(pipe redis.Pipeliner
 	notifications := make([]*moira.ScheduledNotification, 0)
 
 	for i := range connector.clusterList {
-		t, err := response[2*i+1].(*redis.IntCmd).Result()
+		offset := 2 * i
+
+		t, err := response[offset+1].(*redis.IntCmd).Result()
 		if err != nil {
 			return nil, 0, err
 		}
 
-		ns, err := reply.Notifications(response[2*i].(*redis.StringSliceCmd))
+		ns, err := reply.Notifications(response[offset+0].(*redis.StringSliceCmd))
 		if err != nil {
 			return nil, 0, err
 		}
-
-		notifications = append(notifications, ns...)
 
 		total += t
+		notifications = append(notifications, ns...)
 	}
 
 	sort.Slice(notifications, func(i, j int) bool {
