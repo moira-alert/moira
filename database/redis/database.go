@@ -51,7 +51,7 @@ type DbConnector struct {
 	clusterList  moira.ClusterList
 }
 
-// NewDatabase returns configured instance of DbConnector
+// NewDatabase returns configured instance of DbConnector.
 func NewDatabase(
 	logger moira.Logger,
 	config DatabaseConfig,
