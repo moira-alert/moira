@@ -180,8 +180,8 @@ type DeliveryCheckerDatabase interface {
 
 // ContactScore storing.
 type ContactScoreDatabase interface {
-	// SaveContactsScore must be used to persist contact score in database.
-	SaveContactsScore(contactScore []ContactScore) error
+	// UpdateContactScores updates the contact scores based on the provided updater function.
+	UpdateContactScores(contactIDs []string, updater func(ContactScore) ContactScore) error
 	// GetContactsScore must be used to get contact scores persisted in database by contact ids.
 	GetContactsScore(contactIDs []string) (map[string]*ContactScore, error)
 	// GetContactScore must be used to get contact score persisted in database by contact id.

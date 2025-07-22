@@ -208,26 +208,54 @@ func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) 
 	return contacts, nil
 }
 
-// SaveContactsScore saves the scores of multiple contacts in Redis.
-func (connector *DbConnector) SaveContactsScore(contactsScore []moira.ContactScore) error {
+// UpdateContactScores updates the scores of contacts in the database based on the provided IDs and updater function.
+func (connector *DbConnector) UpdateContactScores(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
 	c := *connector.client
-	pipe := c.TxPipeline()
+	ctx := connector.context
+	contactScoresIDs := moira.Map(contactIDs, func(contactID string) string { return contactScoreKey(contactID) })
 
-	for _, contactScore := range contactsScore {
-		scoreStr, err := json.Marshal(contactScore)
-		if err != nil {
-			return fmt.Errorf("failed to marshal contact score: %s", err.Error())
+	return c.Watch(ctx, func(tx *redis.Tx) error {
+		pipe := tx.Pipeline()
+		cmds := make([]*redis.StringCmd, len(contactScoresIDs))
+
+		for i, key := range contactScoresIDs {
+			cmds[i] = pipe.Get(ctx, key)
 		}
 
-		pipe.Set(connector.context, contactScoreKey(contactScore.ContactID), scoreStr, redis.KeepTTL)
-	}
+		_, err := pipe.Exec(ctx)
+		if err != nil && !errors.Is(err, redis.Nil) {
+			return err
+		}
 
-	_, err := pipe.Exec(connector.context)
-	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
-	}
+		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+			for i, cmd := range cmds {
+				data, err := cmd.Result()
+				if err != nil && !errors.Is(err, redis.Nil) {
+					return err
+				}
 
-	return nil
+				contactScore := moira.ContactScore{ContactID: contactIDs[i]}
+				if data != "" {
+					if err := json.Unmarshal([]byte(data), &contactScore); err != nil {
+						return err
+					}
+				}
+
+				updatedScore := updater(contactScore)
+
+				updatedData, err := json.Marshal(updatedScore)
+				if err != nil {
+					return err
+				}
+
+				pipe.Set(ctx, contactScoresIDs[i], updatedData, 0)
+			}
+
+			return nil
+		})
+
+		return err
+	}, contactScoresIDs...)
 }
 
 // GetContactsScore returns contacts scores as map[contactID]ContactScore.

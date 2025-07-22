@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/moira-alert/moira/database"
@@ -448,8 +450,16 @@ func TestContacts(t *testing.T) {
 		Convey("Write and remove user3 contacts scores", func() {
 			ids := moira.Map(user3ContactsScores, func(score moira.ContactScore) string { return score.ContactID })
 
-			Convey("Save-write contact score", func() {
-				err := dataBase.SaveContactsScore(user3ContactsScores)
+			Convey("Save-update contact score", func() {
+				scoreIndex := 0
+				err := dataBase.UpdateContactScores(ids, func(cs moira.ContactScore) moira.ContactScore {
+					So(cs.ContactID, ShouldNotBeEmpty)
+
+					score := user3ContactsScores[scoreIndex]
+					scoreIndex += 1
+
+					return score
+				})
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetContactsScore(ids)
@@ -462,6 +472,12 @@ func TestContacts(t *testing.T) {
 						return *score
 					}
 				})
+
+				sort.Slice(actualSlice, func(i, j int) bool { return strings.Compare(actualSlice[i].ContactID, actualSlice[j].ContactID) >= 0 })
+				sort.Slice(user3ContactsScores, func(i, j int) bool {
+					return strings.Compare(user3ContactsScores[i].ContactID, user3ContactsScores[j].ContactID) >= 0
+				})
+
 				So(actualSlice, ShouldResemble, user3ContactsScores)
 			})
 		})

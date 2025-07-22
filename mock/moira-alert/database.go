@@ -1523,20 +1523,6 @@ func (mr *MockDatabaseMockRecorder) SaveContact(contact any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveContact", reflect.TypeOf((*MockDatabase)(nil).SaveContact), contact)
 }
 
-// SaveContactsScore mocks base method.
-func (m *MockDatabase) SaveContactsScore(contactScore []moira.ContactScore) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveContactsScore", contactScore)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SaveContactsScore indicates an expected call of SaveContactsScore.
-func (mr *MockDatabaseMockRecorder) SaveContactsScore(contactScore any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveContactsScore", reflect.TypeOf((*MockDatabase)(nil).SaveContactsScore), contactScore)
-}
-
 // SaveMetrics mocks base method.
 func (m *MockDatabase) SaveMetrics(buffer []*moira.MatchedMetric) error {
 	m.ctrl.T.Helper()
@@ -1733,6 +1719,20 @@ func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb, params *moira.Subs
 func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0, params)
+}
+
+// UpdateContactScores mocks base method.
+func (m *MockDatabase) UpdateContactScores(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateContactScores", contactIDs, updater)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateContactScores indicates an expected call of UpdateContactScores.
+func (mr *MockDatabaseMockRecorder) UpdateContactScores(contactIDs, updater any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateContactScores", reflect.TypeOf((*MockDatabase)(nil).UpdateContactScores), contactIDs, updater)
 }
 
 // UpdateMetricsHeartbeat mocks base method.
