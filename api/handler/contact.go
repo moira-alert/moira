@@ -227,9 +227,10 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 //	@router		/contact/{contactID}/test [post]
 //	@tags		contact
 func sendTestContactNotification(writer http.ResponseWriter, request *http.Request) {
+	limits := middleware.GetLimits(request)
 	contactID := middleware.GetContactID(request)
 
-	err := controller.SendTestContactNotification(database, contactID)
+	err := controller.SendTestContactNotification(database, contactID, limits.Contact.TestNotificationWaitTime)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 	}

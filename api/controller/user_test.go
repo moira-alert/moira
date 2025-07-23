@@ -25,17 +25,27 @@ func TestGetUserSettings(t *testing.T) {
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+		contactsScore := map[string]*moira.ContactScore{}
 
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetUserContactIDs(login).Return(contactIDs, nil)
 		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
+		database.EXPECT().GetContactsScore(contactIDs).Return(contactsScore, nil)
+
 		settings, err := GetUserSettings(database, login, auth)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
-			User:          dto.User{Login: login},
-			Contacts:      []moira.ContactData{*contacts[0], *contacts[1]},
-			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
+			User: dto.User{Login: login},
+			Contacts: []dto.ContactWithScore{
+				{
+					Contact: dto.NewContact(*contacts[0]),
+				},
+				{
+					Contact: dto.NewContact(*contacts[1]),
+				},
+			},
+			Subscriptions: []dto.Subscription{dto.Subscription(*subscriptions[0]), dto.Subscription(*subscriptions[1])},
 		})
 	})
 
@@ -44,12 +54,14 @@ func TestGetUserSettings(t *testing.T) {
 		database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 		database.EXPECT().GetUserContactIDs(login).Return(make([]string, 0), nil)
 		database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
+		database.EXPECT().GetContactsScore([]string{}).Return(map[string]*moira.ContactScore{}, nil)
+
 		settings, err := GetUserSettings(database, login, auth)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
 			User:          dto.User{Login: login},
-			Contacts:      make([]moira.ContactData, 0),
-			Subscriptions: make([]moira.SubscriptionData, 0),
+			Contacts:      make([]dto.ContactWithScore, 0),
+			Subscriptions: make([]dto.Subscription, 0),
 		})
 	})
 
@@ -62,12 +74,13 @@ func TestGetUserSettings(t *testing.T) {
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetUserContactIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
+			database.EXPECT().GetContactsScore([]string{}).Return(map[string]*moira.ContactScore{}, nil)
 			settings, err := GetUserSettings(database, login, authFull)
 			So(err, ShouldBeNil)
 			So(settings, ShouldResemble, &dto.UserSettings{
 				User:          dto.User{Login: login, Role: api.RoleUser, AuthEnabled: true},
-				Contacts:      make([]moira.ContactData, 0),
-				Subscriptions: make([]moira.SubscriptionData, 0),
+				Contacts:      make([]dto.ContactWithScore, 0),
+				Subscriptions: make([]dto.Subscription, 0),
 			})
 		})
 
@@ -76,12 +89,13 @@ func TestGetUserSettings(t *testing.T) {
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetUserContactIDs(adminLogin).Return(make([]string, 0), nil)
 			database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
+			database.EXPECT().GetContactsScore([]string{}).Return(map[string]*moira.ContactScore{}, nil)
 			settings, err := GetUserSettings(database, adminLogin, authFull)
 			So(err, ShouldBeNil)
 			So(settings, ShouldResemble, &dto.UserSettings{
 				User:          dto.User{Login: adminLogin, Role: api.RoleAdmin, AuthEnabled: true},
-				Contacts:      make([]moira.ContactData, 0),
-				Subscriptions: make([]moira.SubscriptionData, 0),
+				Contacts:      make([]dto.ContactWithScore, 0),
+				Subscriptions: make([]dto.Subscription, 0),
 			})
 		})
 	})

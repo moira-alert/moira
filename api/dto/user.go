@@ -3,15 +3,13 @@ package dto
 
 import (
 	"net/http"
-
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 )
 
 type UserSettings struct {
 	User
-	Contacts      []moira.ContactData      `json:"contacts"`
-	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
+	Contacts      []ContactWithScore      `json:"contacts"`
+	Subscriptions []Subscription `json:"subscriptions"`
 }
 
 func (*UserSettings) Render(w http.ResponseWriter, r *http.Request) error {
