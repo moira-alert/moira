@@ -107,6 +107,7 @@ func (connector *DbConnector) getNotificationsBy(query func(pipe redis.Pipeliner
 		}
 
 		total += t
+
 		notifications = append(notifications, ns...)
 	}
 
