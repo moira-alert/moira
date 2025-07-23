@@ -242,6 +242,11 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			Msg("Try to send notification package")
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
+
+		if incrErr := notifier.incrementContactScore(&pkg.Contact, err); incrErr != nil {
+			notifier.logger.Warning().Error(incrErr).Msg("Cannot increment contact score")
+		}
+
 		if err == nil {
 			notifier.metrics.MarkContactSendingNotificationOK(pkg.Contact.Type)
 			continue
@@ -272,4 +277,55 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 func (notifier *StandardNotifier) needToStop(failCount int) bool {
 	return time.Duration(failCount)*notifier.config.ReschedulingDelay > notifier.config.ResendingTimeout
+}
+
+func (notifier *StandardNotifier) incrementContactScore(contact *moira.ContactData, sendingErr error) error {
+	if contact == nil {
+		return nil
+	}
+
+	return notifier.database.UpdateContactScores([]string{contact.ID}, func(cs moira.ContactScore) moira.ContactScore {
+		if sendingErr == nil {
+			notifier.incrementContactScoreSuccess(&cs)
+		} else {
+			notifier.incrementContactScoreFailed(&cs, sendingErr)
+		}
+
+		return cs
+	})
+}
+
+const (
+	increment uint64 = 1
+	base      uint64 = 0
+)
+
+func (notifier *StandardNotifier) incrementContactScoreSuccess(score *moira.ContactScore) {
+	nextAll, errAll := moira.SafeAdd(score.AllTXCount, increment)
+	nextSuccess, errSuccess := moira.SafeAdd(score.SuccessTXCount, increment)
+
+	if errAll != nil || errSuccess != nil {
+		nextAll = increment
+		nextSuccess = increment
+	}
+
+	score.AllTXCount = nextAll
+	score.SuccessTXCount = nextSuccess
+	score.Status = moira.ContactStatusOK
+}
+
+func (notifier *StandardNotifier) incrementContactScoreFailed(score *moira.ContactScore, sendingErr error) {
+	nextAll, err := moira.SafeAdd(score.AllTXCount, increment)
+	nextSuccess := score.SuccessTXCount
+
+	if err != nil {
+		nextAll = increment
+		nextSuccess = base
+	}
+
+	score.AllTXCount = nextAll
+	score.SuccessTXCount = nextSuccess
+	score.LastErrorMsg = sendingErr.Error()
+	score.LastErrorTimestamp = uint64(time.Now().Unix())
+	score.Status = moira.ContactStatusFailed
 }
