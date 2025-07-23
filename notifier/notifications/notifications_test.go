@@ -254,7 +254,6 @@ func waitTestEnd(shutdown chan moira.ClusterKey, clusterList moira.ClusterList, 
 				break
 			}
 			worker.Stop() //nolint
-			fmt.Printf("worker.Stop()")
 
 			return nil
 		case <-time.After(time.Second * 10):
