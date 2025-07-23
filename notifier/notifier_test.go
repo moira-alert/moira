@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
@@ -155,19 +157,22 @@ func TestFailSendEvent(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("Can't send"))
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
-	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
-	// dataBase.EXPECT().UpdateContactScores()
-	// dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
-	// 	Expected: []moira.ContactScore{
-	// 		{
-	// 			ContactID:      pkg.Contact.ID,
-	// 			AllTXCount:     1,
-	// 			SuccessTXCount: 0,
-	// 			LastErrorMsg:   "Can't send",
-	// 			Status:         moira.ContactStatusFailed,
-	// 		},
-	// 	},
-	// })
+	dataBase.EXPECT().UpdateContactScores([]string{pkg.Contact.ID}, gomock.Any()).DoAndReturn(func(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
+		expected := moira.ContactScore{
+			ContactID:      pkg.Contact.ID,
+			AllTXCount:     1,
+			SuccessTXCount: 0,
+			LastErrorMsg:   "Can't send",
+			Status:         moira.ContactStatusFailed,
+		}
+		actual := updater(moira.ContactScore{})
+
+		if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(moira.ContactScore{}, "LastErrorTimestamp")); diff != "" {
+			t.Errorf("Not equal: %s", diff)
+		}
+
+		return nil
+	})
 
 	var wg sync.WaitGroup
 
@@ -196,18 +201,22 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).
 		Return(moira.NewSenderBrokenContactError(fmt.Errorf("some sender reason")))
 
-	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
-	// dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
-	// 	Expected: []moira.ContactScore{
-	// 		{
-	// 			ContactID:      pkg.Contact.ID,
-	// 			AllTXCount:     1,
-	// 			SuccessTXCount: 0,
-	// 			LastErrorMsg:   "some sender reason",
-	// 			Status:         moira.ContactStatusFailed,
-	// 		},
-	// 	},
-	// })
+	dataBase.EXPECT().UpdateContactScores([]string{pkg.Contact.ID}, gomock.Any()).DoAndReturn(func(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
+		expected := moira.ContactScore{
+			ContactID:      pkg.Contact.ID,
+			AllTXCount:     1,
+			SuccessTXCount: 0,
+			LastErrorMsg:   "some sender reason",
+			Status:         moira.ContactStatusFailed,
+		}
+		actual := updater(moira.ContactScore{})
+
+		if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(moira.ContactScore{}, "LastErrorTimestamp")); diff != "" {
+			t.Errorf("Not equal: %s", diff)
+		}
+
+		return nil
+	})
 
 	var wg sync.WaitGroup
 
@@ -230,15 +239,21 @@ func TestSetContactScoreIfSuccessSending(t *testing.T) {
 	}
 
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil)
-	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(nil, nil)
-	// dataBase.EXPECT().SaveContactsScore([]moira.ContactScore{
-	// 	{
-	// 		ContactID:      pkg.Contact.ID,
-	// 		AllTXCount:     1,
-	// 		SuccessTXCount: 1,
-	// 		Status:         moira.ContactStatusOK,
-	// 	},
-	// })
+	dataBase.EXPECT().UpdateContactScores([]string{pkg.Contact.ID}, gomock.Any()).DoAndReturn(func(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
+		expected := moira.ContactScore{
+			ContactID:      pkg.Contact.ID,
+			AllTXCount:     1,
+			SuccessTXCount: 1,
+			Status:         moira.ContactStatusOK,
+		}
+		actual := updater(moira.ContactScore{})
+
+		if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(moira.ContactScore{}, "LastErrorTimestamp")); diff != "" {
+			t.Errorf("Not equal: %s", diff)
+		}
+
+		return nil
+	})
 
 	var wg sync.WaitGroup
 
@@ -273,22 +288,26 @@ func TestSetContactScoreIfFailedSenging(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("some sender reason"))
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
-	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(&moira.ContactScore{
-		ContactID:      pkg.Contact.ID,
-		AllTXCount:     20,
-		SuccessTXCount: 20,
-	}, nil)
-	// dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
-	// 	Expected: []moira.ContactScore{
-	// 		{
-	// 			ContactID:      pkg.Contact.ID,
-	// 			AllTXCount:     21,
-	// 			SuccessTXCount: 20,
-	// 			LastErrorMsg:   "some sender reason",
-	// 			Status:         moira.ContactStatusFailed,
-	// 		},
-	// 	},
-	// })
+	dataBase.EXPECT().UpdateContactScores([]string{pkg.Contact.ID}, gomock.Any()).DoAndReturn(func(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
+		expected := moira.ContactScore{
+			ContactID:      pkg.Contact.ID,
+			AllTXCount:     21,
+			SuccessTXCount: 20,
+			LastErrorMsg:   "some sender reason",
+			Status:         moira.ContactStatusFailed,
+		}
+		actual := updater(moira.ContactScore{
+			ContactID:      pkg.Contact.ID,
+			AllTXCount:     20,
+			SuccessTXCount: 20,
+		})
+
+		if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(moira.ContactScore{}, "LastErrorTimestamp")); diff != "" {
+			t.Errorf("Not equal: %s", diff)
+		}
+
+		return nil
+	})
 
 	var wg sync.WaitGroup
 
@@ -323,34 +342,26 @@ func TestDropContactStatisticsOnOverflow(t *testing.T) {
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(fmt.Errorf("some sender reason"))
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
-	dataBase.EXPECT().GetContactScore(pkg.Contact.ID).Return(&moira.ContactScore{
-		ContactID:      pkg.Contact.ID,
-		AllTXCount:     math.MaxUint64,
-		SuccessTXCount: 20,
-	}, nil)
-	dataBase.EXPECT().UpdateContactScores([]string{pkg.Contact.ID}, gomock.Any()).Do(func(arg0 any, arg1 any) {
-		f := arg1.(func(moira.ContactScore) moira.ContactScore)
-		actual := f(moira.ContactScore{ContactID: pkg.Contact.ID})
-		_ = actual.AllTXCount
-		// So(actual, ShouldResemble, moira.ContactScore{
-		// 	ContactID: pkg.Contact.ID,
-		// 	AllTXCount: 1,
-		// 	SuccessTXCount: 0,
-		// 	LastErrorMsg: "some sender reason",
-		// 	Status: moira.ContactStatusFailed,
-		// })
+	dataBase.EXPECT().UpdateContactScores([]string{pkg.Contact.ID}, gomock.Any()).DoAndReturn(func(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
+		expected := moira.ContactScore{
+			ContactID:      pkg.Contact.ID,
+			AllTXCount:     1,
+			SuccessTXCount: 0,
+			LastErrorMsg:   "some sender reason",
+			Status:         moira.ContactStatusFailed,
+		}
+		actual := updater(moira.ContactScore{
+			ContactID:      pkg.Contact.ID,
+			AllTXCount:     math.MaxUint64,
+			SuccessTXCount: 20,
+		})
+
+		if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(moira.ContactScore{}, "LastErrorTimestamp")); diff != "" {
+			t.Errorf("Not equal: %s", diff)
+		}
+
+		return nil
 	})
-	// dataBase.EXPECT().SaveContactsScore(contactScoreMatcher{
-	// 	Expected: []moira.ContactScore{
-	// 		{
-	// 			ContactID:      pkg.Contact.ID,
-	// 			AllTXCount:     1,
-	// 			SuccessTXCount: 0,
-	// 			LastErrorMsg:   "some sender reason",
-	// 			Status:         moira.ContactStatusFailed,
-	// 		},
-	// 	},
-	// })
 
 	var wg sync.WaitGroup
 
@@ -406,8 +417,7 @@ func TestTimeout(t *testing.T) {
 
 	scheduler.EXPECT().ScheduleNotification(params, gomock.Any()).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
-	dataBase.EXPECT().GetContactScore(gomock.Any()).Return(nil, nil).AnyTimes()
-	// dataBase.EXPECT().SaveContactsScore(gomock.Any()).AnyTimes()
+	dataBase.EXPECT().UpdateContactScores(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	standardNotifier.Send(&pkg2, &wg)
 	wg.Wait()
@@ -486,37 +496,4 @@ var notificationsPackage = NotificationPackage{
 		{Metric: "metricName4", Timestamp: 179, IsTriggerEvent: true},
 		{Metric: "metricName5", Timestamp: 12, IsTriggerEvent: false},
 	},
-}
-
-type contactScoreMatcher struct {
-	Expected []moira.ContactScore
-}
-
-func (m contactScoreMatcher) Matches(x any) bool {
-	actuals, ok := x.([]moira.ContactScore)
-	if !ok {
-		return false
-	}
-
-	if len(actuals) != len(m.Expected) {
-		return false
-	}
-
-	for i := range actuals {
-		actual := actuals[i]
-		exp := m.Expected[i]
-
-		if actual.AllTXCount != exp.AllTXCount ||
-			actual.SuccessTXCount != exp.SuccessTXCount ||
-			actual.ContactID != exp.ContactID ||
-			actual.LastErrorMsg != exp.LastErrorMsg {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (m contactScoreMatcher) String() string {
-	return fmt.Sprintf("%+v", m.Expected)
 }

@@ -290,27 +290,9 @@ func (notifier *StandardNotifier) incrementContactScore(contact *moira.ContactDa
 		} else {
 			notifier.incrementContactScoreFailed(&cs, sendingErr)
 		}
+
 		return cs
 	})
-
-	// score, err := notifier.database.GetContactScore(contact.ID)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// if score == nil {
-	// 	score = &moira.ContactScore{
-	// 		ContactID: contact.ID,
-	// 	}
-	// }
-
-	// if sendingErr == nil {
-	// 	notifier.incrementContactScoreSuccess(score)
-	// } else {
-	// 	notifier.incrementContactScoreFailed(score, sendingErr)
-	// }
-
-	// return notifier.database.SaveContactsScore([]moira.ContactScore{*score})
 }
 
 const (
