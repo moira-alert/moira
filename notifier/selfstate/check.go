@@ -364,6 +364,13 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 		return
 	}
 
+	if !sub.Enabled {
+		selfCheck.Logger.Debug().
+			String("subscription_id", subscriptionId).
+			Msg("Subscription is disabled, skipping from triggers table construction")
+		return
+	}
+
 	if len(moira.Intersect(sub.Tags, systemTags)) > 0 {
 		return
 	}
