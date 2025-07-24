@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/moira-alert/moira/database"
@@ -444,6 +446,41 @@ func TestContacts(t *testing.T) {
 				So(actual1, ShouldHaveLength, 1)
 			})
 		})
+
+		Convey("Write and remove user3 contacts scores", func() {
+			ids := moira.Map(user3ContactsScores, func(score moira.ContactScore) string { return score.ContactID })
+
+			Convey("Save-update contact score", func() {
+				scoreIndex := 0
+				err := dataBase.UpdateContactScores(ids, func(cs moira.ContactScore) moira.ContactScore {
+					So(cs.ContactID, ShouldNotBeEmpty)
+
+					score := user3ContactsScores[scoreIndex]
+					scoreIndex += 1
+
+					return score
+				})
+				So(err, ShouldBeNil)
+
+				actual, err := dataBase.GetContactsScore(ids)
+				So(err, ShouldBeNil)
+
+				actualSlice := moira.Map(moira.MapToSlice(actual), func(score *moira.ContactScore) moira.ContactScore {
+					if score == nil {
+						return moira.ContactScore{}
+					} else {
+						return *score
+					}
+				})
+
+				sort.Slice(actualSlice, func(i, j int) bool { return strings.Compare(actualSlice[i].ContactID, actualSlice[j].ContactID) >= 0 })
+				sort.Slice(user3ContactsScores, func(i, j int) bool {
+					return strings.Compare(user3ContactsScores[i].ContactID, user3ContactsScores[j].ContactID) >= 0
+				})
+
+				So(actualSlice, ShouldResemble, user3ContactsScores)
+			})
+		})
 	})
 }
 
@@ -588,5 +625,20 @@ var team2Contacts = []*moira.ContactData{
 		Type:  "slack",
 		Value: "#devops",
 		Team:  team2,
+	},
+}
+
+var user3ContactsScores = []moira.ContactScore{
+	{
+		ContactID:      "TeamContactIDScore-000000000000001",
+		AllTXCount:     1,
+		SuccessTXCount: 1,
+	},
+	{
+		ContactID:          "TeamContactIDScore-000000000000002",
+		AllTXCount:         1,
+		SuccessTXCount:     0,
+		LastErrorMsg:       "some error",
+		LastErrorTimestamp: 10,
 	},
 }
