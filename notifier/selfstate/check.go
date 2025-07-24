@@ -368,7 +368,7 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 		return
 	}
 
-	if containsFailedTriggers, e := selfCheck.doesSubscriptionContainsFailedTriigers(&sub); !containsFailedTriggers || e != nil {
+	if containsFailedTriggers, e := selfCheck.doesSubscriptionContainsFailedTriggers(&sub); !containsFailedTriggers || e != nil {
 		return
 	}
 
@@ -390,7 +390,7 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 	resultCh <- linkResult{baseUrl.String(), sub.Tags, nil}
 }
 
-func (selfCheck *SelfCheckWorker) doesSubscriptionContainsFailedTriigers(subscription *moira.SubscriptionData) (bool, error) {
+func (selfCheck *SelfCheckWorker) doesSubscriptionContainsFailedTriggers(subscription *moira.SubscriptionData) (bool, error) {
 	if subscription == nil || len(subscription.Tags) == 0 {
 		return false, nil
 	}

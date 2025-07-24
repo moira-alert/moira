@@ -149,8 +149,8 @@ func Intersect[T comparable](lists ...[]T) []T {
 	return result
 }
 
-// Diff returns the members of the set resulting from the difference between the first set and all the successive lists.
-func Diff[T comparable](lists ...[]T) []T {
+// SymmetricDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
+func SymmetricDiff[T comparable](lists ...[]T) []T {
 	if len(lists) == 0 {
 		return []T{}
 	}
