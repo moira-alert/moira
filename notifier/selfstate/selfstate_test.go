@@ -387,7 +387,7 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 					Contact: contact,
 					Trigger: moira.TriggerData{
 						Name:       "Moira health check",
-						Desc:       "These triggers in bad state. Check them:\n- [By tags: tag1|tag2](https://moira/?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2)\n",
+						Desc:       "These triggers are in a bad state. Check them by tags:\n- [tag1|tag2](https://moira/?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2)\n",
 						ErrorValue: float64(0),
 					},
 					Events: []moira.NotificationEvent{
