@@ -91,7 +91,7 @@ type Database interface {
 	RemoveNotification(notificationKey string) (int64, error)
 	RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error)
 	RemoveAllNotifications() error
-	FetchNotifications(to int64, limit int64) ([]*ScheduledNotification, error)
+	FetchNotifications(custerKey ClusterKey, to int64, limit int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 	PushContactNotificationToHistory(notification *ScheduledNotification) error
