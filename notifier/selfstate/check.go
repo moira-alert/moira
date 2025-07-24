@@ -222,11 +222,11 @@ func (selfCheck *SelfCheckWorker) buildTriggersTableForSubscription(subscription
 
 	var builder strings.Builder
 
-	builder.WriteString("These triggers in bad state. Check them:\n")
+	builder.WriteString("These triggers are in a bad state. Check them by tags:\n")
 
 	for _, link := range triggersTable {
 		builder.WriteString("- ")
-		builder.WriteString(fmt.Sprintf("[By tags: %s](%s)", strings.Join(link.Tags, "|"), link.Link))
+		builder.WriteString(fmt.Sprintf("[%s](%s)", strings.Join(link.Tags, "|"), link.Link))
 		builder.WriteString("\n")
 	}
 
