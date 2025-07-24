@@ -368,6 +368,7 @@ func (selfCheck *SelfCheckWorker) constructLinkToTriggers(subscriptionId string,
 		selfCheck.Logger.Debug().
 			String("subscription_id", subscriptionId).
 			Msg("Subscription is disabled, skipping from triggers table construction")
+
 		return
 	}
 
