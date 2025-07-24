@@ -608,7 +608,7 @@ func TestSelfCheck_should_construct_links_to_triggers(t *testing.T) {
 	}
 	actual := moira.Map(res, func(elem triggersTableElem) string { return elem.Link })
 
-	if len(moira.Diff(actual, expectedTable)) > 0 {
+	if len(moira.SymmetricDiff(actual, expectedTable)) > 0 {
 		t.Fatalf("trigger table invalid: %v", res)
 	}
 }

@@ -121,7 +121,7 @@ func TestDiff(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := Diff(tt.lists...)
+			result := SymmetricDiff(tt.lists...)
 
 			// Sort both slices for comparison since map iteration order is random
 			sort.Ints(result)
