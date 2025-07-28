@@ -21,7 +21,7 @@ var mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$
 // SendEvents implements pushover build and send message functionality.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	data := &discordgo.MessageSend{}
-	data.Content = sender.buildMessage(events, trigger, throttled)
+	data.Content = sender.buildMessage(events, trigger, contact, throttled)
 
 	if len(plots) > 0 {
 		data.File = sender.buildPlot(plots[0])
@@ -58,7 +58,7 @@ func (sender *Sender) getChannelID(username string) (string, error) {
 	return chid, nil
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, contact moira.ContactData, throttled bool) string {
 	var buffer strings.Builder
 
 	state := events.GetCurrentState(throttled)
@@ -67,7 +67,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	title := fmt.Sprintf("%s %s %s (%d)\n", state, trigger.Name, tags, len(events))
 	titleLen := len([]rune(title))
 
-	desc := sender.buildDescription(trigger)
+	desc := sender.buildDescription(trigger, contact)
 	descLen := len([]rune(desc))
 
 	eventsString := sender.buildEventsString(events, -1, throttled, trigger)
@@ -92,8 +92,13 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	return buffer.String()
 }
 
-func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
+func (sender *Sender) buildDescription(trigger moira.TriggerData, contact moira.ContactData) string {
 	desc := trigger.Desc
+
+	if contact.ExtraMessage != "" {
+		desc = contact.ExtraMessage + "\n" + desc
+	}
+
 	if trigger.Desc != "" {
 		// Replace MD headers (## header text) with **header text** that telegram supports
 		desc = mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")

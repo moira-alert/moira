@@ -260,32 +260,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		webContacts = append(webContacts, contact)
 	}
 
-	clusters := []api.MetricSourceCluster{{
-		TriggerSource: moira.GraphiteLocal,
-		ClusterId:     moira.DefaultCluster,
-		ClusterName:   "Graphite Local",
-		MetricsTTL:    uint64(to.Duration(redisConfig.MetricsTTL).Seconds()),
-	}}
-
-	for _, remote := range remotes.Graphite {
-		cluster := api.MetricSourceCluster{
-			TriggerSource: moira.GraphiteRemote,
-			ClusterId:     remote.ClusterId,
-			ClusterName:   remote.ClusterName,
-			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
-		}
-		clusters = append(clusters, cluster)
-	}
-
-	for _, remote := range remotes.Prometheus {
-		cluster := api.MetricSourceCluster{
-			TriggerSource: moira.PrometheusRemote,
-			ClusterId:     remote.ClusterId,
-			ClusterName:   remote.ClusterName,
-			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
-		}
-		clusters = append(clusters, cluster)
-	}
+	clusters := cmd.MakeClustersWebConfig(redisConfig, remotes)
 
 	return &api.WebConfig{
 		SupportEmail:         config.SupportEmail,

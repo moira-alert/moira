@@ -65,7 +65,7 @@ func (c *Chat) Recipient() string {
 // SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	msgType := getMessageType(plots)
-	message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
+	message := sender.buildMessage(events, trigger, contact, throttled, characterLimits[msgType])
 	sender.logger.Debug().
 		String("chat_id", contact.Value).
 		String("message", message).
@@ -85,12 +85,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
+func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, contact moira.ContactData, throttled bool, maxChars int) string {
 	return sender.formatter.Format(msgformat.MessageFormatterParams{
 		Events:          events,
 		Trigger:         trigger,
 		MessageMaxChars: maxChars,
 		Throttled:       throttled,
+		Contact:         contact,
 	})
 }
 
@@ -335,7 +336,7 @@ func (sender *Sender) retryIfBadMessageError(
 				Msg("Failed to send alert because of bad description. Retrying now.")
 
 			trigger.Desc = badFormatMessage
-			message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
+			message := sender.buildMessage(events, trigger, contact, throttled, characterLimits[msgType])
 
 			err = sender.talk(chat, message, plots, msgType)
 

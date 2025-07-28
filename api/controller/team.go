@@ -594,16 +594,8 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 
 		contactScore := contactsScores[contact.ID]
 		teamSettings.Contacts = append(teamSettings.Contacts, dto.TeamContactWithScore{
-			TeamContact: dto.TeamContact{
-				ID:     contact.ID,
-				Name:   contact.Name,
-				User:   contact.User,
-				TeamID: contact.Team,
-				Team:   contact.Team,
-				Type:   contact.Type,
-				Value:  contact.Value,
-			},
-			Score: dto.NewContactScore(contactScore),
+			TeamContact: dto.MakeTeamContact(contact),
+			Score:       dto.NewContactScore(contactScore),
 		})
 	}
 

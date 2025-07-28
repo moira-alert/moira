@@ -52,7 +52,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 
 	templateData := triggerData{
 		Link:         trigger.GetTriggerURI(sender.FrontURI),
-		Description:  formatDescription(trigger.Desc),
+		Description:  formatDescription(trigger.Desc, contact.ExtraMessage),
 		Throttled:    throttled,
 		TriggerName:  trigger.Name,
 		Tags:         tags,
@@ -96,7 +96,11 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	return m
 }
 
-func formatDescription(desc string) template.HTML {
+func formatDescription(desc string, extraMessage string) template.HTML {
+	if extraMessage != "" {
+		desc = extraMessage + "\n" + desc
+	}
+
 	htmlDesc := blackfriday.Run([]byte(desc))
 	htmlDescWithbr := strings.ReplaceAll(string(htmlDesc), "\n", "<br/>")
 

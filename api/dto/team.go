@@ -122,7 +122,22 @@ type TeamContact struct {
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
 	// This field is deprecated
-	Team string `json:"team,omitempty"`
+	Team         string `json:"team,omitempty"`
+	ExtraMessage string `json:"extra_message,omitempty"`
+}
+
+// MakeTeamContact converts moira.ContactData to a TeamContact.
+func MakeTeamContact(contact *moira.ContactData) TeamContact {
+	return TeamContact{
+		ID:           contact.ID,
+		Name:         contact.Name,
+		User:         contact.User,
+		TeamID:       contact.Team,
+		Team:         contact.Team,
+		Type:         contact.Type,
+		Value:        contact.Value,
+		ExtraMessage: contact.ExtraMessage,
+	}
 }
 
 type TeamContactWithScore struct {

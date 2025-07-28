@@ -67,15 +67,16 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	currentCheck.Suppressed = false
 	currentCheck.SuppressedState = ""
 
-	err := triggerChecker.database.PushNotificationEvent(&moira.NotificationEvent{
-		IsTriggerEvent:   true,
-		TriggerID:        triggerChecker.triggerID,
-		State:            currentStateValue,
-		OldState:         getEventOldState(lastCheck.State, lastCheck.SuppressedState, lastCheck.Suppressed),
-		Timestamp:        currentCheckTimestamp,
-		Metric:           triggerChecker.trigger.Name,
-		MessageEventInfo: eventInfo,
-	}, true)
+	err := triggerChecker.database.PushNotificationEvent(
+		&moira.NotificationEvent{
+			IsTriggerEvent:   true,
+			TriggerID:        triggerChecker.triggerID,
+			State:            currentStateValue,
+			OldState:         getEventOldState(lastCheck.State, lastCheck.SuppressedState, lastCheck.Suppressed),
+			Timestamp:        currentCheckTimestamp,
+			Metric:           triggerChecker.trigger.Name,
+			MessageEventInfo: eventInfo,
+		}, true)
 
 	return currentCheck, err
 }

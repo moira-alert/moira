@@ -36,7 +36,7 @@ func ReadImageStoreConfig(senderSettings interface{}, imageStores map[string]moi
 			String("image_store_id", imageStoreID).
 			Msg("Image store specified has not been configured")
 
-		return "", nil, false
+		return "", nil, imageStoreConfigured
 	}
 
 	return imageStoreID, imageStore, imageStoreConfigured

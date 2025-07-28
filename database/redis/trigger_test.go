@@ -99,7 +99,6 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTags, ShouldResemble, trigger.Tags)
 
 			// Now just add tag and pattern in trigger and save it
-			trigger = nil
 			changedTrigger := &testTriggers[1]
 			err = dataBase.SaveTrigger(changedTrigger.ID, changedTrigger)
 			So(err, ShouldBeNil)
@@ -139,7 +138,7 @@ func TestTriggerStoring(t *testing.T) {
 			// Now remove old tag and pattern in trigger and save it
 			oldTag := changedTrigger.Tags[1]
 			oldPattern := changedTrigger.Patterns[1]
-			changedTrigger = nil
+
 			changedAgainTrigger := &testTriggers[2]
 			err = dataBase.SaveTrigger(changedAgainTrigger.ID, changedAgainTrigger)
 			So(err, ShouldBeNil)

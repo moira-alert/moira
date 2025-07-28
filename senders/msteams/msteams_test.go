@@ -155,7 +155,7 @@ some other text _italic text_`,
 					OldState:  moira.StateOK,
 					State:     moira.StateERROR,
 					Message:   nil,
-				}}, moira.TriggerData{Name: "Name"}, false)
+				}}, moira.TriggerData{Name: "Name"}, moira.ContactData{}, false)
 				expected := MessageCard{
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
@@ -186,7 +186,7 @@ some other text _italic text_`,
 					OldState:  moira.StateOK,
 					State:     moira.StateWARN,
 					Message:   nil,
-				}}, moira.TriggerData{Name: "Name"}, false)
+				}}, moira.TriggerData{Name: "Name"}, moira.ContactData{}, false)
 				expected := MessageCard{
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
@@ -217,7 +217,7 @@ some other text _italic text_`,
 					OldState:  moira.StateWARN,
 					State:     moira.StateOK,
 					Message:   nil,
-				}}, moira.TriggerData{Name: "Name"}, false)
+				}}, moira.TriggerData{Name: "Name"}, moira.ContactData{}, false)
 				expected := MessageCard{
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
@@ -248,7 +248,7 @@ some other text _italic text_`,
 					OldState:  moira.StateNODATA,
 					State:     moira.StateNODATA,
 					Message:   nil,
-				}}, moira.TriggerData{Name: "Name"}, false)
+				}}, moira.TriggerData{Name: "Name"}, moira.ContactData{}, false)
 				expected := MessageCard{
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
@@ -273,7 +273,7 @@ some other text _italic text_`,
 		})
 
 		Convey("Create MessageCard with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, false)
 			expected := MessageCard{
 				Context:     "http://schema.org/extensions",
 				MessageType: "MessageCard",
@@ -328,7 +328,7 @@ some other text _italic text_`,
 					},
 				},
 			}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, moira.ContactData{}, false)
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -368,7 +368,7 @@ some other text _italic text_`,
 					},
 				},
 			}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, true)
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -424,7 +424,7 @@ some other text _italic text_`,
 					},
 				},
 			}
-			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, moira.ContactData{}, false)
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -448,7 +448,7 @@ some other text _italic text_`,
 					},
 				},
 			}
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, moira.ContactData{}, false)
 			So(actual, ShouldResemble, expected)
 		})
 	})

@@ -119,10 +119,15 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
+func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, contact moira.ContactData, throttled bool) MessageCard {
 	title, uri := sender.buildTitleAndURI(events, trigger, throttled)
 
 	var triggerDescription string
+
+	if contact.ExtraMessage != "" {
+		triggerDescription = contact.ExtraMessage + "\n" + triggerDescription
+	}
+
 	if trigger.Desc != "" {
 		triggerDescription = string(blackfriday.Run([]byte(trigger.Desc)))
 	}
@@ -163,7 +168,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 }
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (*http.Request, error) {
-	messageCard := sender.buildMessage(events, trigger, throttled)
+	messageCard := sender.buildMessage(events, trigger, contact, throttled)
 	requestURL := contact.Value
 
 	requestBody, err := json.Marshal(messageCard)

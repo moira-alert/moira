@@ -17,29 +17,33 @@ func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type Contact struct {
-	Type   string `json:"type" example:"mail"`
-	Name   string `json:"name,omitempty" example:"Mail Alerts"`
-	Value  string `json:"value" example:"devops@example.com"`
-	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
-	User   string `json:"user,omitempty" example:""`
-	TeamID string `json:"team_id,omitempty"`
+	Type         string `json:"type" example:"mail"`
+	Name         string `json:"name,omitempty" example:"Mail Alerts"`
+	Value        string `json:"value" example:"devops@example.com"`
+	ID           string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User         string `json:"user,omitempty" example:""`
+	TeamID       string `json:"team_id,omitempty"`
+	ExtraMessage string `json:"extra_message,omitempty"`
 }
 
 // NewContact init Contact with data from moira.ContactData.
 func NewContact(data moira.ContactData) Contact {
 	return Contact{
-		Type:   data.Type,
-		Name:   data.Name,
-		Value:  data.Value,
-		ID:     data.ID,
-		User:   data.User,
-		TeamID: data.Team,
+		Type:         data.Type,
+		Name:         data.Name,
+		Value:        data.Value,
+		ID:           data.ID,
+		User:         data.User,
+		TeamID:       data.Team,
+		ExtraMessage: data.ExtraMessage,
 	}
 }
 
 func (*Contact) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+const maxExtraMessageLen = 100
 
 func (contact *Contact) Bind(r *http.Request) error {
 	if contact.Type == "" {
@@ -50,6 +54,9 @@ func (contact *Contact) Bind(r *http.Request) error {
 	}
 	if contact.User != "" && contact.TeamID != "" {
 		return fmt.Errorf("contact cannot have both the user field and the team_id field filled in")
+	}
+	if len(contact.ExtraMessage) > maxExtraMessageLen {
+		return fmt.Errorf("contact extra message must not be longer then %d characters long", maxExtraMessageLen)
 	}
 	return nil
 }
