@@ -80,8 +80,10 @@ func main() {
 
 	logger.Info().Msg("Debug: checker started")
 
+	clusterList := cmd.MakeClusterList(config.Remotes)
+
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Checker)
+	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Checker, clusterList)
 
 	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
 	if err != nil {
