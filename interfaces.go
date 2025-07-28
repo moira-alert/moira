@@ -18,6 +18,8 @@ type Database interface {
 	GetPrometheusChecksUpdatesCount() (int64, error)
 	GetNotifierState() (NotifierState, error)
 	SetNotifierState(actor, state string) error
+	GetNotifierStateForSources() (map[ClusterKey]NotifierState, error)
+	SetNotifierStateForSource(clusterKey ClusterKey, actor, state string) error
 
 	// Tag storing
 	GetTagNames() ([]string, error)

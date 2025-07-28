@@ -130,10 +130,59 @@ func (connector *DbConnector) setNotifierState(dto moira.NotifierState) error {
 	return c.Set(connector.context, selfStateNotifierHealth, state, redis.KeepTTL).Err()
 }
 
+func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey]moira.NotifierState, error) {
+	return nil, nil
+}
+
+func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.ClusterKey, actor, state string) error {
+	c := *connector.client
+
+	_, err := c.TxPipelined(connector.context, func(pipe redis.Pipeliner) error {
+		currentState := notifierStateForSources{}
+
+		currentStateCmd := pipe.Get(connector.context, selfStateNotifierStateForSource)
+
+		err := currentStateCmd.Err()
+		if err != nil && !errors.Is(err, redis.Nil) {
+			return err
+		}
+
+		currentState.States[clusterKey.String()] = moira.NotifierState{
+			Actor: actor,
+			State: state,
+		}
+
+		bytes, err := json.Marshal(currentState)
+		if err != nil {
+			return err
+		}
+
+		saveCmd := pipe.Set(connector.context, selfStateNotifierStateForSource, bytes, redis.KeepTTL)
+		err = saveCmd.Err()
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type notifierStateForSources struct {
+	States map[string]moira.NotifierState `json:"states"`
+}
+
 var (
 	selfStateMetricsHeartbeatKey        = "moira-selfstate:metrics-heartbeat"
 	selfStateChecksCounterKey           = "moira-selfstate:checks-counter"
 	selfStateRemoteChecksCounterKey     = "moira-selfstate:remote-checks-counter"
 	selfStatePrometheusChecksCounterKey = "moira-selfstate:prometheus-checks-counter"
 	selfStateNotifierHealth             = "moira-selfstate:notifier-health"
+	selfStateNotifierStateForSource     = "moira-selfstate:notifier-state-for-source"
 )
