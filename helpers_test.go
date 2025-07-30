@@ -11,6 +11,7 @@ import (
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBytesScanner(t *testing.T) {
@@ -66,7 +67,7 @@ func TestSubset(t *testing.T) {
 	})
 }
 
-func TestDiff(t *testing.T) {
+func TestSymmetricDiff(t *testing.T) {
 	tests := []struct {
 		name     string
 		lists    [][]int
@@ -127,18 +128,7 @@ func TestDiff(t *testing.T) {
 			sort.Ints(result)
 			sort.Ints(tt.expected)
 
-			if len(result) != len(tt.expected) {
-				t.Errorf("Diff() = %v (len=%d), want %v (len=%d)",
-					result, len(result), tt.expected, len(tt.expected))
-				return
-			}
-
-			for i := range result {
-				if result[i] != tt.expected[i] {
-					t.Errorf("Diff() = %v, want %v", result, tt.expected)
-					break
-				}
-			}
+			assert.Equal(t, tt.expected, result, "SymmetricDiff should return expected result")
 		})
 	}
 }

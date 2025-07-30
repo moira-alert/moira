@@ -16,6 +16,8 @@ import (
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_notifier "github.com/moira-alert/moira/mock/notifier"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -254,204 +256,202 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 }
 
 func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
-	Convey("Should resemble events to contacts trought system tags", t, func() {
-		baseContact := moira.ContactData{
-			ID:    "some-contact",
-			Type:  "my_type",
-			Value: "123",
-		}
+	baseContact := moira.ContactData{
+		ID:    "some-contact",
+		Type:  "my_type",
+		Value: "123",
+	}
 
-		baseSystemSubscription1 := moira.SubscriptionData{
-			ID:       "sys-sub-1",
-			Contacts: []string{baseContact.ID},
-			Tags:     []string{"sys-tag1"},
-		}
-		baseSystemSubscription2 := moira.SubscriptionData{
-			ID:       "sys-sub-2",
-			Contacts: []string{baseContact.ID},
-			Tags:     []string{"sys-tag2", "sys-tag-common"},
-		}
+	baseSystemSubscription1 := moira.SubscriptionData{
+		ID:       "sys-sub-1",
+		Contacts: []string{baseContact.ID},
+		Tags:     []string{"sys-tag1"},
+	}
+	baseSystemSubscription2 := moira.SubscriptionData{
+		ID:       "sys-sub-2",
+		Contacts: []string{baseContact.ID},
+		Tags:     []string{"sys-tag2", "sys-tag-common"},
+	}
 
-		Convey("if owner does not exists", func() {
-			notifAndTags := []heartbeatNotificationEvent{
-				{
-					NotificationEvent: moira.NotificationEvent{
+	t.Run("if owner does not exists", func(t *testing.T) {
+		notifAndTags := []heartbeatNotificationEvent{
+			{
+				NotificationEvent: moira.NotificationEvent{
+					Metric: "Triggered!!!",
+				},
+				CheckTags: heartbeat.CheckTags{
+					"sys-tag1",
+				},
+			},
+			{
+				NotificationEvent: moira.NotificationEvent{
+					Metric: "Some another problem!!!",
+				},
+				CheckTags: heartbeat.CheckTags{
+					"sys-tag2", "sys-tag-common",
+				},
+			},
+		}
+		expected := []*notifier.NotificationPackage{
+			{
+				Contact: baseContact,
+				Trigger: moira.TriggerData{
+					Name:       "Moira health check",
+					ErrorValue: float64(0),
+				},
+				Events: []moira.NotificationEvent{
+					{
 						Metric: "Triggered!!!",
 					},
-					CheckTags: heartbeat.CheckTags{
-						"sys-tag1",
-					},
-				},
-				{
-					NotificationEvent: moira.NotificationEvent{
+					{
 						Metric: "Some another problem!!!",
 					},
-					CheckTags: heartbeat.CheckTags{
-						"sys-tag2", "sys-tag-common",
-					},
 				},
-			}
-			expected := []*notifier.NotificationPackage{
-				{
-					Contact: baseContact,
-					Trigger: moira.TriggerData{
-						Name:       "Moira health check",
-						ErrorValue: float64(0),
-					},
-					Events: []moira.NotificationEvent{
-						{
-							Metric: "Triggered!!!",
-						},
-						{
-							Metric: "Some another problem!!!",
-						},
-					},
-					DontResend: true,
+				DontResend: true,
+			},
+		}
+
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		database := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+		database.EXPECT().GetTagsSubscriptions(baseSystemSubscription1.Tags).Return([]*moira.SubscriptionData{
+			&baseSystemSubscription1,
+		}, nil)
+		database.EXPECT().GetTagsSubscriptions(baseSystemSubscription2.Tags).Return([]*moira.SubscriptionData{
+			&baseSystemSubscription2,
+		}, nil)
+
+		database.EXPECT().GetContacts([]string{baseContact.ID}).Return([]*moira.ContactData{
+			&baseContact,
+		}, nil).Times(2)
+
+		logger, _ := logging.GetLogger("SelfState")
+		notif := mock_notifier.NewMockNotifier(mockCtrl)
+
+		mock := &selfCheckWorkerMock{
+			selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}),
+			mockCtrl:        mockCtrl,
+		}
+
+		actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
+		require.NoError(t, err)
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("if owner is user", func(t *testing.T) {
+		user := "user-1"
+
+		contact := baseContact
+		contact.User = user
+
+		systemSubscription1 := baseSystemSubscription1
+		systemSubscription1.User = user
+
+		systemSubscription2 := baseSystemSubscription2
+		systemSubscription2.User = user
+
+		subscription1 := moira.SubscriptionData{
+			ID:       "sub-1",
+			Contacts: []string{contact.ID},
+			Tags:     []string{"tag1", "tag2"},
+			User:     user,
+		}
+
+		lastCheckData := moira.CheckData{
+			State: moira.StateERROR,
+		}
+
+		notifAndTags := []heartbeatNotificationEvent{
+			{
+				NotificationEvent: moira.NotificationEvent{
+					Metric: "Check passed!",
 				},
-			}
+				CheckTags: heartbeat.CheckTags{
+					"sys-tag1",
+				},
+				NotifyAboutEnabledNotifier: true,
+			},
+			{
+				NotificationEvent: moira.NotificationEvent{
+					Metric: "Some another check passed!",
+				},
+				CheckTags: heartbeat.CheckTags{
+					"sys-tag2", "sys-tag-common",
+				},
+				NotifyAboutEnabledNotifier: true,
+			},
+		}
 
-			mockCtrl := gomock.NewController(t)
-			database := mock_moira_alert.NewMockDatabase(mockCtrl)
-
-			database.EXPECT().GetTagsSubscriptions(baseSystemSubscription1.Tags).Return([]*moira.SubscriptionData{
-				&baseSystemSubscription1,
-			}, nil)
-			database.EXPECT().GetTagsSubscriptions(baseSystemSubscription2.Tags).Return([]*moira.SubscriptionData{
-				&baseSystemSubscription2,
-			}, nil)
-
-			database.EXPECT().GetContacts([]string{baseContact.ID}).Return([]*moira.ContactData{
-				&baseContact,
-			}, nil).Times(2)
-
-			logger, _ := logging.GetLogger("SelfState")
-			notif := mock_notifier.NewMockNotifier(mockCtrl)
-
-			mock := &selfCheckWorkerMock{
-				selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}),
-				mockCtrl:        mockCtrl,
-			}
-
-			actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, expected)
-			mock.mockCtrl.Finish()
-		})
-
-		Convey("if owner is user", func() {
-			user := "user-1"
-
-			contact := baseContact
-			contact.User = user
-
-			systemSubscription1 := baseSystemSubscription1
-			systemSubscription1.User = user
-
-			systemSubscription2 := baseSystemSubscription2
-			systemSubscription2.User = user
-
-			subscription1 := moira.SubscriptionData{
-				ID:       "sub-1",
-				Contacts: []string{contact.ID},
-				Tags:     []string{"tag1", "tag2"},
-				User:     user,
-			}
-
-			lastCheckData := moira.CheckData{
-				State: moira.StateERROR,
-			}
-
-			notifAndTags := []heartbeatNotificationEvent{
-				{
-					NotificationEvent: moira.NotificationEvent{
+		expected := []*notifier.NotificationPackage{
+			{
+				Contact: contact,
+				Trigger: moira.TriggerData{
+					Name:       "Moira health check",
+					Desc:       "These triggers are in a bad state. Check them by tags:\n- [tag1|tag2](https://moira/?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2)\n",
+					ErrorValue: float64(0),
+				},
+				Events: []moira.NotificationEvent{
+					{
 						Metric: "Check passed!",
 					},
-					CheckTags: heartbeat.CheckTags{
-						"sys-tag1",
-					},
-					NotifyAboutEnabledNotifier: true,
-				},
-				{
-					NotificationEvent: moira.NotificationEvent{
+					{
 						Metric: "Some another check passed!",
 					},
-					CheckTags: heartbeat.CheckTags{
-						"sys-tag2", "sys-tag-common",
-					},
-					NotifyAboutEnabledNotifier: true,
 				},
-			}
+				DontResend: true,
+			},
+		}
 
-			expected := []*notifier.NotificationPackage{
-				{
-					Contact: contact,
-					Trigger: moira.TriggerData{
-						Name:       "Moira health check",
-						Desc:       "These triggers are in a bad state. Check them by tags:\n- [tag1|tag2](https://moira/?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2)\n",
-						ErrorValue: float64(0),
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		database := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+		database.EXPECT().GetTagsSubscriptions(systemSubscription1.Tags).Return([]*moira.SubscriptionData{
+			&systemSubscription1,
+		}, nil)
+		database.EXPECT().GetTagsSubscriptions(systemSubscription2.Tags).Return([]*moira.SubscriptionData{
+			&systemSubscription2,
+		}, nil)
+
+		database.EXPECT().GetSubscription(systemSubscription1.ID).Return(systemSubscription1, nil).Times(1)
+		database.EXPECT().GetSubscription(systemSubscription2.ID).Return(systemSubscription2, nil).Times(1)
+		database.EXPECT().GetSubscription(subscription1.ID).Return(subscription1, nil).Times(1)
+
+		for _, tag := range subscription1.Tags {
+			database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-1"}, nil).Times(1)
+		}
+
+		database.EXPECT().GetTriggerLastCheck("trigger-1").Return(lastCheckData, nil).Times(1)
+
+		database.EXPECT().GetContacts([]string{contact.ID}).Return([]*moira.ContactData{
+			&contact,
+		}, nil).Times(2)
+
+		database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{
+			systemSubscription1.ID,
+			systemSubscription2.ID,
+			subscription1.ID,
+		}, nil).Times(1)
+
+		logger, _ := logging.GetLogger("SelfState")
+		notif := mock_notifier.NewMockNotifier(mockCtrl)
+
+		mock := &selfCheckWorkerMock{
+			selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{
+				FrontURL: "https://moira/",
+				Checks: ChecksConfig{
+					Filter: HeartbeatConfig{
+						SystemTags: []string{"sys-tag1", "sys-tag2", "sys-tag-common"},
 					},
-					Events: []moira.NotificationEvent{
-						{
-							Metric: "Check passed!",
-						},
-						{
-							Metric: "Some another check passed!",
-						},
-					},
-					DontResend: true,
 				},
-			}
+			}),
+			mockCtrl: mockCtrl,
+		}
 
-			mockCtrl := gomock.NewController(t)
-			database := mock_moira_alert.NewMockDatabase(mockCtrl)
-
-			database.EXPECT().GetTagsSubscriptions(systemSubscription1.Tags).Return([]*moira.SubscriptionData{
-				&systemSubscription1,
-			}, nil)
-			database.EXPECT().GetTagsSubscriptions(systemSubscription2.Tags).Return([]*moira.SubscriptionData{
-				&systemSubscription2,
-			}, nil)
-
-			database.EXPECT().GetSubscription(systemSubscription1.ID).Return(systemSubscription1, nil).Times(1)
-			database.EXPECT().GetSubscription(systemSubscription2.ID).Return(systemSubscription2, nil).Times(1)
-			database.EXPECT().GetSubscription(subscription1.ID).Return(subscription1, nil).Times(1)
-
-			for _, tag := range subscription1.Tags {
-				database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-1"}, nil).Times(1)
-			}
-
-			database.EXPECT().GetTriggerLastCheck("trigger-1").Return(lastCheckData, nil).Times(1)
-
-			database.EXPECT().GetContacts([]string{contact.ID}).Return([]*moira.ContactData{
-				&contact,
-			}, nil).Times(2)
-
-			database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{
-				systemSubscription1.ID,
-				systemSubscription2.ID,
-				subscription1.ID,
-			}, nil).Times(1)
-
-			logger, _ := logging.GetLogger("SelfState")
-			notif := mock_notifier.NewMockNotifier(mockCtrl)
-
-			mock := &selfCheckWorkerMock{
-				selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{
-					FrontURL: "https://moira/",
-					Checks: ChecksConfig{
-						Filter: HeartbeatConfig{
-							SystemTags: []string{"sys-tag1", "sys-tag2", "sys-tag-common"},
-						},
-					},
-				}),
-				mockCtrl: mockCtrl,
-			}
-
-			actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, expected)
-			mock.mockCtrl.Finish()
-		})
+		actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
+		require.NoError(t, err)
+		assert.Equal(t, expected, actual)
 	})
 }
 
