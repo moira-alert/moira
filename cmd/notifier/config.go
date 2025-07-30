@@ -243,22 +243,23 @@ func checkDateTimeFormat(format string) error {
 	return nil
 }
 
-func (config *selfStateConfig) getSettings() selfstate.Config {
+func (config *notifierConfig) getSelfstateSettings() selfstate.Config {
 	// 10 sec is default check value
 	checkInterval := 10 * time.Second
-	if config.CheckInterval != "" {
-		checkInterval = to.Duration(config.CheckInterval)
+	if config.SelfState.CheckInterval != "" {
+		checkInterval = to.Duration(config.SelfState.CheckInterval)
 	}
 
 	return selfstate.Config{
-		Enabled:                        config.Enabled,
-		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
-		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
-		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
-		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelay).Seconds()),
+		Enabled:                        config.SelfState.Enabled,
+		RedisDisconnectDelaySeconds:    int64(to.Duration(config.SelfState.RedisDisconnectDelay).Seconds()),
+		LastMetricReceivedDelaySeconds: int64(to.Duration(config.SelfState.LastMetricReceivedDelay).Seconds()),
+		LastCheckDelaySeconds:          int64(to.Duration(config.SelfState.LastCheckDelay).Seconds()),
+		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.SelfState.LastRemoteCheckDelay).Seconds()),
 		CheckInterval:                  checkInterval,
-		Contacts:                       config.Contacts,
-		UserNotificationsInterval:      to.Duration(config.UserNotificationsInterval),
-		Checks:                         toCheckConfig(config.Checks),
+		Contacts:                       config.SelfState.Contacts,
+		UserNotificationsInterval:      to.Duration(config.SelfState.UserNotificationsInterval),
+		Checks:                         toCheckConfig(config.SelfState.Checks),
+		FrontURL:                       config.FrontURI,
 	}
 }
