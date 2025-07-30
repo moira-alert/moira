@@ -78,3 +78,34 @@ type ContactNoisinessList ListDTO[*ContactNoisiness]
 func (*ContactNoisinessList) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+// ContactScore represents the score details of a contact.
+type ContactScore struct {
+	// ScorePercent is the percentage score of successful transactions.
+	ScorePercent *uint8 `json:"score_percent,omitempty"`
+	// LastErrMessage is the last error message encountered.
+	LastErrMessage string `json:"last_err,omitempty"`
+	// LastErrTimestamp is the timestamp of the last error.
+	LastErrTimestamp uint64 `json:"last_err_timestamp,omitempty"`
+	// Status is the current status of the contact.
+	Status string `json:"status,omitempty"`
+}
+
+func NewContactScore(data *moira.ContactScore) *ContactScore {
+	if data == nil {
+		return nil
+	}
+
+	return &ContactScore{
+		Status: string(data.Status),
+		LastErrMessage: data.LastErrorMsg,
+		LastErrTimestamp: data.LastErrorTimestamp,
+		ScorePercent: moira.CalculatePercentage(data.SuccessTXCount, data.AllTXCount),
+	}
+}
+
+// ContactWithScore represents a contact with an associated score.
+type ContactWithScore struct {
+	Contact
+	Score *ContactScore `json:"score,omitempty" extensions:"x-nullable"`
+}
