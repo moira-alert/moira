@@ -619,6 +619,7 @@ func TestSelfCheck_should_construct_links_to_triggers(t *testing.T) {
 
 func TestSelfCheck_should_filter_disabled_subscriptions(t *testing.T) {
 	mock := configureWorker(t, false)
+	defer mock.mockCtrl.Finish()
 
 	user := "user"
 	systemTags := []string{"sys-tag1", "sys-tag2"}
@@ -678,9 +679,7 @@ func TestSelfCheck_should_filter_disabled_subscriptions(t *testing.T) {
 	}, nil).Times(1)
 
 	res, err := mock.selfCheckWorker.constructTriggersTable(&systemSubscription, systemTags)
-	if err != nil {
-		t.Fatalf("error not nil: %v", err)
-	}
+	require.NoError(t, err, "constructTriggersTable should not return error")
 
 	expectedTable := []string{
 		mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2",
@@ -688,17 +687,10 @@ func TestSelfCheck_should_filter_disabled_subscriptions(t *testing.T) {
 	}
 	actual := moira.Map(res, func(elem triggersTableElem) string { return elem.Link })
 
-	if len(moira.SymmetricDiff(actual, expectedTable)) > 0 {
-		t.Fatalf("trigger table invalid: expected %v, got %v", expectedTable, actual)
-	}
+	assert.Empty(t, moira.SymmetricDiff(actual, expectedTable), "trigger table should match expected links")
 
-	// Verify that disabled subscription link is not present
 	disabledSubscriptionLink := mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag3&tags%5B1%5D=tag4"
-	for _, link := range actual {
-		if link == disabledSubscriptionLink {
-			t.Fatalf("disabled subscription link should not be present in triggers table: %s", disabledSubscriptionLink)
-		}
-	}
+	assert.NotContains(t, actual, disabledSubscriptionLink, "disabled subscription link should not be present in triggers table")
 }
 
 func TestSelfCheck_should_handle_all_disabled_subscriptions(t *testing.T) {
