@@ -1,6 +1,7 @@
 name: Publish spec version to SwaggerHub
 
 on:
+  pull_request:
   push:
     branches:
       - master
