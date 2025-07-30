@@ -6,10 +6,12 @@ import (
 	"math"
 	"net/url"
 	"slices"
+	"sort"
 	"testing"
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBytesScanner(t *testing.T) {
@@ -63,6 +65,72 @@ func TestSubset(t *testing.T) {
 		So(Subset([]string{"1", "2", "3"}, []string{"123", "2", "3"}), ShouldBeFalse)
 		So(Subset([]string{"1", "2", "3"}, []string{"1", "2", "4"}), ShouldBeFalse)
 	})
+}
+
+func TestSymmetricDiff(t *testing.T) {
+	tests := []struct {
+		name     string
+		lists    [][]int
+		expected []int
+	}{
+		{
+			name:     "empty input",
+			lists:    [][]int{},
+			expected: []int{},
+		},
+		{
+			name:     "single array",
+			lists:    [][]int{{1, 2, 3}},
+			expected: []int{},
+		},
+		{
+			name:     "two arrays with partial overlap",
+			lists:    [][]int{{1, 2, 3}, {2, 3, 4}},
+			expected: []int{1, 4},
+		},
+		{
+			name:     "three arrays with common element",
+			lists:    [][]int{{1, 2, 3}, {2, 3, 4}, {3, 4, 5}},
+			expected: []int{1, 2, 4, 5},
+		},
+		{
+			name:     "no common elements",
+			lists:    [][]int{{1, 2}, {3, 4}, {5, 6}},
+			expected: []int{1, 2, 3, 4, 5, 6},
+		},
+		{
+			name:     "all same elements",
+			lists:    [][]int{{1, 2, 3}, {1, 2, 3}, {1, 2, 3}},
+			expected: []int{},
+		},
+		{
+			name:     "arrays with duplicates",
+			lists:    [][]int{{1, 1, 2, 2}, {2, 2, 3, 3}, {2, 3, 4}},
+			expected: []int{1, 3, 4},
+		},
+		{
+			name:     "one empty array",
+			lists:    [][]int{{1, 2, 3}, {}, {2, 3, 4}},
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			name:     "single element arrays",
+			lists:    [][]int{{1}, {2}, {3}},
+			expected: []int{1, 2, 3},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := SymmetricDiff(tt.lists...)
+
+			// Sort both slices for comparison since map iteration order is random
+			sort.Ints(result)
+			sort.Ints(tt.expected)
+
+			assert.Equal(t, tt.expected, result, "SymmetricDiff should return expected result")
+		})
+	}
 }
 
 func TestGetStringListsDiff(t *testing.T) {
