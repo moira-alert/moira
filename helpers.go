@@ -149,6 +149,34 @@ func Intersect[T comparable](lists ...[]T) []T {
 	return result
 }
 
+// SymmetricDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
+func SymmetricDiff[T comparable](lists ...[]T) []T {
+	if len(lists) == 0 {
+		return []T{}
+	}
+
+	allElements := make(map[T]bool)
+
+	for _, list := range lists {
+		for _, value := range list {
+			allElements[value] = true
+		}
+	}
+
+	intersection := Intersect(lists...)
+
+	for _, value := range intersection {
+		delete(allElements, value)
+	}
+
+	result := make([]T, 0, len(allElements))
+	for value := range allElements {
+		result = append(result, value)
+	}
+
+	return result
+}
+
 // GetStringListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
 func GetStringListsDiff(stringLists ...[]string) []string {
 	if len(stringLists) == 0 {
