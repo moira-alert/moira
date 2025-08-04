@@ -13,7 +13,7 @@ import (
 
 // SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	createAlertRequest := sender.buildCreateAlertRequest(events, trigger, throttled, plots, time.Now().Unix())
+	createAlertRequest := sender.buildCreateAlertRequest(events, trigger, contact, throttled, plots, time.Now().Unix())
 
 	err := sender.client.CreateAlert(contact.Value, createAlertRequest)
 	if err != nil {
@@ -23,12 +23,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, plots [][]byte, time int64) api.CreateAlertRequest {
+func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, trigger moira.TriggerData, contact moira.ContactData, throttled bool, plots [][]byte, time int64) api.CreateAlertRequest {
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 
 	createAlertRequest := api.CreateAlertRequest{
 		MessageType:       sender.getMessageType(events),
-		StateMessage:      sender.buildMessage(events, trigger, throttled),
+		StateMessage:      sender.buildMessage(events, trigger, contact, throttled),
 		EntityDisplayName: sender.buildTitle(events, trigger, throttled),
 		StateStartTime:    events[len(events)-1].Timestamp,
 		TriggerURL:        triggerURI,
@@ -51,11 +51,16 @@ func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, t
 	return createAlertRequest
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, contact moira.ContactData, throttled bool) string {
 	var message strings.Builder
 
 	desc := stripmd.Strip(trigger.Desc)
 	eventsString := sender.buildEventsString(events, -1, throttled)
+
+	if contact.ExtraMessage != "" {
+		message.WriteString(contact.ExtraMessage)
+		message.WriteRune('\n')
+	}
 
 	message.WriteString(desc)
 	message.WriteString(eventsString)

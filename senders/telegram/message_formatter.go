@@ -54,9 +54,10 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	title := formatter.buildTitle(params.Events, params.Trigger, emoji, params.Throttled)
 	titleLen := calcRunesCountWithoutHTML(title) + len("\n")
 
-	var tags string
-
-	var tagsLen int
+	var (
+		tags    string
+		tagsLen int
+	)
 
 	triggerTags := params.Trigger.GetTags()
 	if len(triggerTags) != 0 {
@@ -64,7 +65,7 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 		tagsLen = calcRunesCountWithoutHTML(tags)
 	}
 
-	desc := descriptionFormatter(params.Trigger)
+	desc := descriptionFormatter(params.Trigger, params.Contact)
 	descLen := calcRunesCountWithoutHTML(desc)
 
 	events := formatter.buildEventsString(params.Events, -1, params.Throttled)
@@ -76,7 +77,7 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 	}
 
 	if descLen != descNewLen {
-		desc = descriptionCutter(desc, descNewLen)
+		desc = descriptionCutter(descNewLen, params.Contact.ExtraMessage)
 	}
 
 	if eventsStringLen != eventsNewLen {
@@ -205,12 +206,16 @@ var (
 	endHeaderRegexp   = regexp.MustCompile("</h[0-9]+>")
 )
 
-func descriptionFormatter(trigger moira.TriggerData) string {
-	if trigger.Desc == "" {
+func descriptionFormatter(trigger moira.TriggerData, contact moira.ContactData) string {
+	if trigger.Desc == "" && contact.ExtraMessage == "" {
 		return ""
 	}
 
 	desc := trigger.Desc + "\n"
+
+	if contact.ExtraMessage != "" {
+		desc = contact.ExtraMessage + "\n" + desc
+	}
 
 	// Sometimes in trigger description may be text constructions like <param>.
 	// blackfriday may recognise it as tag, so it won't be escaped.
@@ -222,16 +227,22 @@ func descriptionFormatter(trigger moira.TriggerData) string {
 	)
 	mdWithNoTags := replacer.Replace(desc)
 
-	htmlDescStr := string(blackfriday.Run([]byte(mdWithNoTags),
-		blackfriday.WithExtensions(
-			blackfriday.CommonExtensions &
-				^blackfriday.DefinitionLists &
-				^blackfriday.Tables),
-		blackfriday.WithRenderer(
-			blackfriday.NewHTMLRenderer(
-				blackfriday.HTMLRendererParameters{
-					Flags: blackfriday.UseXHTML,
-				}))))
+	htmlDescStr := string(
+		blackfriday.Run(
+			[]byte(mdWithNoTags),
+			blackfriday.WithExtensions(
+				blackfriday.CommonExtensions &
+					^blackfriday.DefinitionLists &
+					^blackfriday.Tables),
+			blackfriday.WithRenderer(
+				blackfriday.NewHTMLRenderer(
+					blackfriday.HTMLRendererParameters{
+						Flags: blackfriday.UseXHTML,
+					},
+				),
+			),
+		),
+	)
 
 	// html headers are not supported by telegram html, so make them bold instead.
 	htmlDescStr = startHeaderRegexp.ReplaceAllString(htmlDescStr, "<b>")
@@ -260,7 +271,17 @@ const (
 	badFormatMessage   = "\nBad trigger description for telegram sender. Please check trigger.\n"
 )
 
-func descriptionCutter(_ string, maxSize int) string {
+func descriptionCutter(maxSize int, extraMessage string) string {
+	newDesc := tooLongDescMessage
+
+	if extraMessage != "" {
+		newDesc = extraMessage + "\n" + newDesc
+	}
+
+	if utf8.RuneCountInString(newDesc) <= maxSize {
+		return newDesc
+	}
+
 	if utf8.RuneCountInString(tooLongDescMessage) <= maxSize {
 		return tooLongDescMessage
 	}

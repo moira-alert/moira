@@ -91,7 +91,7 @@ type Database interface {
 	RemoveNotification(notificationKey string) (int64, error)
 	RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error)
 	RemoveAllNotifications() error
-	FetchNotifications(to int64, limit int64) ([]*ScheduledNotification, error)
+	FetchNotifications(custerKey ClusterKey, to int64, limit int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 	PushContactNotificationToHistory(notification *ScheduledNotification) error
@@ -163,6 +163,9 @@ type Database interface {
 
 	// Delivery checks
 	DeliveryCheckerDatabase
+
+	// ContactScore storing
+	ContactScoreDatabase
 }
 
 // DeliveryCheckerDatabase is used by senders that can track if the notification was delivered.
@@ -173,6 +176,16 @@ type DeliveryCheckerDatabase interface {
 	GetDeliveryChecksData(contactType string, from string, to string) ([]string, error)
 	// RemoveDeliveryChecksData must remove already used data for performing delivery checks.
 	RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error)
+}
+
+// ContactScore storing.
+type ContactScoreDatabase interface {
+	// UpdateContactScores updates the contact scores based on the provided updater function.
+	UpdateContactScores(contactIDs []string, updater func(ContactScore) ContactScore) error
+	// GetContactsScore must be used to get contact scores persisted in database by contact ids.
+	GetContactsScore(contactIDs []string) (map[string]*ContactScore, error)
+	// GetContactScore must be used to get contact score persisted in database by contact id.
+	GetContactScore(contactID string) (*ContactScore, error)
 }
 
 // Lock implements lock abstraction.

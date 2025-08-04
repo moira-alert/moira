@@ -216,12 +216,13 @@ type Team struct {
 
 // ContactData represents contact object.
 type ContactData struct {
-	Type  string `json:"type" example:"mail"`
-	Name  string `json:"name,omitempty" example:"Mail Alerts"`
-	Value string `json:"value" example:"devops@example.com"`
-	ID    string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
-	User  string `json:"user" example:""`
-	Team  string `json:"team"`
+	Type         string `json:"type" example:"mail"`
+	Name         string `json:"name,omitempty" example:"Mail Alerts"`
+	Value        string `json:"value" example:"devops@example.com"`
+	ID           string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User         string `json:"user" example:""`
+	Team         string `json:"team"`
+	ExtraMessage string `json:"extra_message,omitempty"`
 }
 
 // ToTemplateContact converts a ContactData into a template Contact.
@@ -540,6 +541,9 @@ func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey
 func (clusterKey ClusterKey) String() string {
 	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
 }
+
+// ClusterList represents list of all available cluster keys.
+type ClusterList []ClusterKey
 
 // TriggerCheck represents trigger data with last check data and check timestamp.
 type TriggerCheck struct {
@@ -997,6 +1001,32 @@ type SchedulerParams struct {
 	// SendFail is amount of failed send attempts
 	SendFail int
 }
+
+// ContactScore represents the score and transaction statistics for a contact over a specific time period.
+type ContactScore struct {
+	// ContactID is the unique identifier for the contact.
+	ContactID string `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	// AllTXCount is the total number of transactions for the contact.
+	AllTXCount uint64 `json:"all_tx_count" example:"123"`
+	// SuccessTXCount is the number of successful transactions for the contact.
+	SuccessTXCount uint64 `json:"success_tx_count" example:"120"`
+	// LastErrorMsg provides the last error message encountered during transaction processing.
+	LastErrorMsg string `json:"last_error" example:"Invalid webhook URL"`
+	// LastErrorTimestamp is the timestamp of the last error encountered during transaction processing.
+	LastErrorTimestamp uint64 `json:"last_error_timestamp" example:"1750858559"`
+	// Status indicates the current status of the contact.
+	Status ContactStatus `json:"status" example:"Success"`
+}
+
+// ContactStatus represents an actual contact status.
+type ContactStatus string
+
+const (
+	// ContactStatusOK indicates a successful contact status.
+	ContactStatusOK ContactStatus = "Success"
+	// ContactStatusFailed indicates a failed contact status.
+	ContactStatusFailed ContactStatus = "Failed"
+)
 
 // DeliveryTypesCounter contains counters for different types of delivery statuses.
 type DeliveryTypesCounter struct {

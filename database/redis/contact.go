@@ -135,6 +135,7 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 
 	pipe := c.TxPipeline()
 	pipe.Set(connector.context, contactKey(contact.ID), contactString, redis.KeepTTL)
+	pipe.Del(connector.context, contactScoreKey(contact.ID))
 
 	if !errors.Is(getContactErr, database.ErrNil) && contact.User != existing.User {
 		pipe.SRem(connector.context, userContactsKey(existing.User), contact.ID)
@@ -171,6 +172,7 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 
 	pipe := c.TxPipeline()
 	pipe.Del(connector.context, contactKey(contactID))
+	pipe.Del(connector.context, contactScoreKey(contactID))
 	pipe.SRem(connector.context, userContactsKey(existing.User), contactID)
 	pipe.SRem(connector.context, teamContactsKey(existing.Team), contactID)
 
@@ -206,8 +208,103 @@ func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) 
 	return contacts, nil
 }
 
+// UpdateContactScores updates the scores of contacts in the database based on the provided IDs and updater function.
+func (connector *DbConnector) UpdateContactScores(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
+	c := *connector.client
+	ctx := connector.context
+	contactScoresIDs := moira.Map(contactIDs, func(contactID string) string { return contactScoreKey(contactID) })
+
+	return c.Watch(ctx, func(tx *redis.Tx) error {
+		pipe := tx.Pipeline()
+		cmds := make([]*redis.StringCmd, len(contactScoresIDs))
+
+		for i, key := range contactScoresIDs {
+			cmds[i] = pipe.Get(ctx, key)
+		}
+
+		_, err := pipe.Exec(ctx)
+		if err != nil && !errors.Is(err, redis.Nil) {
+			return err
+		}
+
+		_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+			for i, cmd := range cmds {
+				data, err := cmd.Result()
+				if err != nil && !errors.Is(err, redis.Nil) {
+					return err
+				}
+
+				contactScore := moira.ContactScore{ContactID: contactIDs[i]}
+				if data != "" {
+					if err := json.Unmarshal([]byte(data), &contactScore); err != nil {
+						return err
+					}
+				}
+
+				updatedScore := updater(contactScore)
+
+				updatedData, err := json.Marshal(updatedScore)
+				if err != nil {
+					return err
+				}
+
+				pipe.Set(ctx, contactScoresIDs[i], updatedData, 0)
+			}
+
+			return nil
+		})
+
+		return err
+	}, contactScoresIDs...)
+}
+
+// GetContactsScore returns contacts scores as map[contactID]ContactScore.
+func (connector *DbConnector) GetContactsScore(contactIDs []string) (map[string]*moira.ContactScore, error) {
+	c := *connector.client
+
+	contactScores := make(map[string]*moira.ContactScore, len(contactIDs))
+
+	for _, contactID := range contactIDs {
+		var contactScore moira.ContactScore
+
+		result := c.Get(connector.context, contactScoreKey(contactID))
+
+		err := result.Err()
+		if errors.Is(err, redis.Nil) {
+			continue
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal([]byte(result.Val()), &contactScore)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal contact score: %s", err.Error())
+		}
+
+		contactScores[contactID] = &contactScore
+	}
+
+	return contactScores, nil
+}
+
+// GetContactScore returns contact score by given contact id.
+func (connector *DbConnector) GetContactScore(contactID string) (*moira.ContactScore, error) {
+	scores, err := connector.GetContactsScore([]string{contactID})
+	if err != nil {
+		return nil, err
+	}
+
+	return scores[contactID], nil
+}
+
 func contactKey(id string) string {
 	return "moira-contact:" + id
+}
+
+func contactScoreKey(id string) string {
+	return "moira-contact-score:" + id
 }
 
 func userContactsKey(userName string) string {

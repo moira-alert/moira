@@ -558,3 +558,88 @@ func TestValidateURL(t *testing.T) {
 		}
 	})
 }
+
+func TestSafeAdd(t *testing.T) {
+	Convey("Test SafeAdd", t, func() {
+		type testcase struct {
+			a           uint64
+			b           uint64
+			expected    uint64
+			expectedErr error
+		}
+
+		cases := []testcase{
+			{
+				a:           0,
+				b:           0,
+				expected:    0,
+				expectedErr: nil,
+			},
+			{
+				a:           1,
+				b:           2,
+				expected:    3,
+				expectedErr: nil,
+			},
+			{
+				a:           math.MaxUint64,
+				b:           1,
+				expected:    0,
+				expectedErr: fmt.Errorf("integer overflow occurred during addition"),
+			},
+		}
+
+		for _, c := range cases {
+			Convey(fmt.Sprintf("%v + %v = %v | err = %v", c.a, c.b, c.expected, c.expectedErr), func() {
+				res, err := SafeAdd(c.a, c.b)
+				So(res, ShouldEqual, c.expected)
+				So(err, ShouldResemble, c.expectedErr)
+			})
+		}
+	})
+}
+
+func TestCalculatePercentage(t *testing.T) {
+	Convey("Test CalculatePercentage", t, func() {
+		type testcase struct {
+			part     uint64
+			total    uint64
+			expected *uint8
+		}
+
+		cases := []testcase{
+			{
+				part:     50,
+				total:    100,
+				expected: func() *uint8 { v := uint8(50); return &v }(),
+			},
+			{
+				part:     25,
+				total:    200,
+				expected: func() *uint8 { v := uint8(12); return &v }(),
+			},
+			{
+				part:     0,
+				total:    100,
+				expected: func() *uint8 { v := uint8(0); return &v }(),
+			},
+			{
+				part:     100,
+				total:    0,
+				expected: nil,
+			},
+			{
+				part:     150,
+				total:    100,
+				expected: func() *uint8 { v := uint8(150); return &v }(),
+			},
+		}
+
+		for i, c := range cases {
+			Convey(fmt.Sprintf("Case %v: CalculatePercentage(%v, %v)", i, c.part, c.total), func() {
+				res := CalculatePercentage(c.part, c.total)
+				So(res, ShouldResemble, c.expected)
+			})
+		}
+	})
+}

@@ -78,10 +78,12 @@ func main() {
 	}
 	defer telemetry.Stop()
 
+	clusterList := cmd.MakeClusterList(config.Remotes)
+
 	databaseSettings := config.Redis.GetSettings()
 	notificationHistorySettings := config.NotificationHistory.GetSettings()
 	notificationSettings := config.Notification.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier)
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier, clusterList)
 
 	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
 	if err != nil {
@@ -135,10 +137,11 @@ func main() {
 
 	// Start moira notification fetcher
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
-		Logger:   logger,
-		Database: database,
-		Notifier: sender,
-		Metrics:  notifierMetrics,
+		Logger:      logger,
+		Database:    database,
+		Notifier:    sender,
+		Metrics:     notifierMetrics,
+		ClusterList: clusterList,
 	}
 	fetchNotificationsWorker.Start()
 	defer stopNotificationsFetcher(fetchNotificationsWorker)

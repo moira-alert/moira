@@ -48,9 +48,18 @@ type DbConnector struct {
 	notificationHistory  NotificationHistoryConfig
 	// Notifier configuration in redis
 	notification NotificationConfig
+	clusterList  moira.ClusterList
 }
 
-func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, n NotificationConfig, source DBSource) *DbConnector {
+// NewDatabase returns configured instance of DbConnector.
+func NewDatabase(
+	logger moira.Logger,
+	config DatabaseConfig,
+	nh NotificationHistoryConfig,
+	n NotificationConfig,
+	source DBSource,
+	clusterList moira.ClusterList,
+) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs: config.Addrs,
 
@@ -95,6 +104,7 @@ func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHist
 		clock:                clock.NewSystemClock(),
 		notificationHistory:  nh,
 		notification:         n,
+		clusterList:          clusterList,
 	}
 
 	return &connector
@@ -118,6 +128,7 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 			ResaveTime:                30 * time.Second,
 		},
 		testSource,
+		moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster, moira.DefaultPrometheusRemoteCluster},
 	)
 }
 
@@ -135,7 +146,8 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 			TransactionHeuristicLimit: 10000,
 			ResaveTime:                30 * time.Second,
 		},
-		testSource)
+		testSource,
+		moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster, moira.DefaultPrometheusRemoteCluster})
 }
 
 // Flush deletes all the keys of the DB, use it only for tests.

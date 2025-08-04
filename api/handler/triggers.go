@@ -315,6 +315,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@param			text			query		string				false	"Search text"			default(cpu)
 //	@param			p				query		integer				false	"Page number"			default(0)
 //	@param			size			query		integer				false	"Page size"				default(10)
+//	@param			tags			query		[]string			false	"Search tag"			style(deepObject) explode(true)
 //	@param			createPager		query		boolean				false	"Create pager"			default(false)
 //	@param			pagerID			query		string				false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param			createdBy		query		string				false	"Created By"			default(moira.team)

@@ -252,6 +252,22 @@ func TestFormat(t *testing.T) {
 				So(utf8.RuneCountInString(actual), ShouldBeLessThanOrEqualTo, testMaxChars)
 			})
 		})
+
+		Convey("Contact extra message", func() {
+			actual := formatter.Format(MessageFormatterParams{
+				Events:          moira.NotificationEvents{event},
+				Trigger:         trigger,
+				MessageMaxChars: testMaxChars,
+				Contact:         moira.ContactData{ExtraMessage: "@moira, help!"},
+				Throttled:       false,
+			})
+			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
+				"@moira, help!" + "\n" +
+				shortDesc + "\n" +
+				"```\n" +
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n```"
+			So(actual, ShouldResemble, expected)
+		})
 	})
 }
 
@@ -286,10 +302,14 @@ func testBoldFormatter(str string) string {
 	return fmt.Sprintf("**%s**", str)
 }
 
-func testDescriptionFormatter(trigger moira.TriggerData) string {
+func testDescriptionFormatter(trigger moira.TriggerData, contact moira.ContactData) string {
 	desc := trigger.Desc
 	if trigger.Desc != "" {
 		desc += "\n"
+	}
+
+	if contact.ExtraMessage != "" {
+		desc = contact.ExtraMessage + "\n" + desc
 	}
 
 	return desc

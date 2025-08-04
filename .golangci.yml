@@ -47,7 +47,7 @@ linters:
     - unparam
     - unused
     - usestdlibvars
-#    - wastedassign
+    - wastedassign
     - whitespace
     - wsl
   settings:

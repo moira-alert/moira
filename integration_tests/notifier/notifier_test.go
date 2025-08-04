@@ -77,6 +77,7 @@ var triggerData = moira.TriggerData{
 	Targets:       []string{"test.target.1"},
 	Tags:          []string{"test-tag-1"},
 	TriggerSource: moira.GraphiteLocal,
+	ClusterId:     moira.DefaultCluster,
 }
 
 var event = moira.NotificationEvent{
@@ -167,10 +168,11 @@ func TestNotifier(t *testing.T) {
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
-		Database: database,
-		Logger:   logger,
-		Metrics:  notifierMetrics,
-		Notifier: notifierInstance,
+		Database:    database,
+		Logger:      logger,
+		Metrics:     notifierMetrics,
+		Notifier:    notifierInstance,
+		ClusterList: moira.ClusterList{moira.DefaultLocalCluster},
 	}
 
 	fetchEventsWorker.Start()

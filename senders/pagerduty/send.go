@@ -38,8 +38,13 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		details["Trigger URI"] = triggerURI
 	}
 
-	if trigger.Desc != "" {
-		details["Description"] = stripmd.Strip(trigger.Desc)
+	desc := trigger.Desc
+	if contact.ExtraMessage != "" {
+		desc = contact.ExtraMessage + "\n" + desc
+	}
+
+	if desc != "" {
+		details["Description"] = stripmd.Strip(desc)
 	}
 
 	var eventList string

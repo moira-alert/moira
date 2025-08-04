@@ -104,7 +104,7 @@ func (TeamMembers) Render(w http.ResponseWriter, r *http.Request) error {
 // TeamSettings is a structure that contains info about team: contacts and subscriptions.
 type TeamSettings struct {
 	TeamID        string                   `json:"team_id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
-	Contacts      []TeamContact            `json:"contacts"`
+	Contacts      []TeamContactWithScore   `json:"contacts"`
 	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
 }
 
@@ -122,7 +122,27 @@ type TeamContact struct {
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
 	// This field is deprecated
-	Team string `json:"team,omitempty"`
+	Team         string `json:"team,omitempty"`
+	ExtraMessage string `json:"extra_message,omitempty"`
+}
+
+// MakeTeamContact converts moira.ContactData to a TeamContact.
+func MakeTeamContact(contact *moira.ContactData) TeamContact {
+	return TeamContact{
+		ID:           contact.ID,
+		Name:         contact.Name,
+		User:         contact.User,
+		TeamID:       contact.Team,
+		Team:         contact.Team,
+		Type:         contact.Type,
+		Value:        contact.Value,
+		ExtraMessage: contact.ExtraMessage,
+	}
+}
+
+type TeamContactWithScore struct {
+	TeamContact
+	Score *ContactScore `json:"score,omitempty" extensions:"x-nullable"`
 }
 
 // Render is a function that implements chi Renderer interface for TeamContact.
