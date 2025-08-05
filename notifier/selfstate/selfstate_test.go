@@ -731,7 +731,7 @@ func TestSelfCheck_should_handle_all_disabled_subscriptions(t *testing.T) {
 	mock.database.EXPECT().GetSubscription(disabledSubscription2.ID).Return(disabledSubscription2, nil)
 
 	res, err := mock.selfCheckWorker.constructTriggersTable(&systemSubscription, systemTags)
-	assert.NoError(err)
+	require.NoError(t, err)
 	assert.Empty(res)
 }
 
