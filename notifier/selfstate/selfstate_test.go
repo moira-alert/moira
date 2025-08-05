@@ -694,6 +694,7 @@ func TestSelfCheck_should_filter_disabled_subscriptions(t *testing.T) {
 }
 
 func TestSelfCheck_should_handle_all_disabled_subscriptions(t *testing.T) {
+	assert := assert.New(t)
 	mock := configureWorker(t, false)
 
 	user := "user"
@@ -730,13 +731,8 @@ func TestSelfCheck_should_handle_all_disabled_subscriptions(t *testing.T) {
 	mock.database.EXPECT().GetSubscription(disabledSubscription2.ID).Return(disabledSubscription2, nil)
 
 	res, err := mock.selfCheckWorker.constructTriggersTable(&systemSubscription, systemTags)
-	if err != nil {
-		t.Fatalf("error not nil: %v", err)
-	}
-
-	if len(res) != 0 {
-		t.Fatalf("expected empty triggers table, got: %v", res)
-	}
+	assert.NoError(err)
+	assert.Empty(res)
 }
 
 func TestSelfCheckWorker_Start(t *testing.T) {
