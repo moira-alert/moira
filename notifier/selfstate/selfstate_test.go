@@ -353,6 +353,7 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 
 		subscription1 := moira.SubscriptionData{
 			ID:       "sub-1",
+			Enabled:  true,
 			Contacts: []string{contact.ID},
 			Tags:     []string{"tag1", "tag2"},
 			User:     user,
@@ -555,21 +556,24 @@ func TestSelfCheck_should_construct_links_to_triggers(t *testing.T) {
 	}
 
 	userSubscription1 := moira.SubscriptionData{
-		ID:   "sub-2",
-		Tags: []string{"tag1", "tag2"},
-		User: user,
+		ID:      "sub-2",
+		Enabled: true,
+		Tags:    []string{"tag1", "tag2"},
+		User:    user,
 	}
 
 	userSubscription2 := moira.SubscriptionData{
-		ID:   "sub-3",
-		Tags: []string{"tag3", "tag4"},
-		User: user,
+		ID:      "sub-3",
+		Enabled: true,
+		Tags:    []string{"tag3", "tag4"},
+		User:    user,
 	}
 
 	userSubscription3 := moira.SubscriptionData{
-		ID:   "sub-4",
-		Tags: []string{"tag5"},
-		User: user,
+		ID:      "sub-4",
+		Enabled: true,
+		Tags:    []string{"tag5"},
+		User:    user,
 	}
 
 	mock.database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{systemSubscription.ID, userSubscription1.ID, userSubscription2.ID, userSubscription3.ID}, nil)
@@ -611,6 +615,124 @@ func TestSelfCheck_should_construct_links_to_triggers(t *testing.T) {
 	if len(moira.SymmetricDiff(actual, expectedTable)) > 0 {
 		t.Fatalf("trigger table invalid: %v", res)
 	}
+}
+
+func TestSelfCheck_should_filter_disabled_subscriptions(t *testing.T) {
+	mock := configureWorker(t, false)
+	defer mock.mockCtrl.Finish()
+
+	user := "user"
+	systemTags := []string{"sys-tag1", "sys-tag2"}
+
+	systemSubscription := moira.SubscriptionData{
+		ID:   "sub-1",
+		Tags: systemTags,
+		User: user,
+	}
+
+	enabledSubscription := moira.SubscriptionData{
+		ID:      "sub-2",
+		Enabled: true,
+		Tags:    []string{"tag1", "tag2"},
+		User:    user,
+	}
+
+	disabledSubscription := moira.SubscriptionData{
+		ID:      "sub-3",
+		Enabled: false,
+		Tags:    []string{"tag3", "tag4"},
+		User:    user,
+	}
+
+	anotherEnabledSubscription := moira.SubscriptionData{
+		ID:      "sub-4",
+		Enabled: true,
+		Tags:    []string{"tag5"},
+		User:    user,
+	}
+
+	mock.database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{
+		systemSubscription.ID,
+		enabledSubscription.ID,
+		disabledSubscription.ID,
+		anotherEnabledSubscription.ID,
+	}, nil)
+
+	mock.database.EXPECT().GetSubscription(systemSubscription.ID).Return(systemSubscription, nil)
+	mock.database.EXPECT().GetSubscription(enabledSubscription.ID).Return(enabledSubscription, nil)
+	mock.database.EXPECT().GetSubscription(disabledSubscription.ID).Return(disabledSubscription, nil)
+	mock.database.EXPECT().GetSubscription(anotherEnabledSubscription.ID).Return(anotherEnabledSubscription, nil)
+
+	for _, tag := range enabledSubscription.Tags {
+		mock.database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-1"}, nil)
+	}
+
+	for _, tag := range anotherEnabledSubscription.Tags {
+		mock.database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-2"}, nil)
+	}
+
+	mock.database.EXPECT().GetTriggerLastCheck("trigger-1").Return(moira.CheckData{
+		State: moira.StateERROR,
+	}, nil).Times(1)
+	mock.database.EXPECT().GetTriggerLastCheck("trigger-2").Return(moira.CheckData{
+		State: moira.StateERROR,
+	}, nil).Times(1)
+
+	res, err := mock.selfCheckWorker.constructTriggersTable(&systemSubscription, systemTags)
+	require.NoError(t, err, "constructTriggersTable should not return error")
+
+	expectedTable := []string{
+		mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2",
+		mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag5",
+	}
+	actual := moira.Map(res, func(elem triggersTableElem) string { return elem.Link })
+
+	assert.Empty(t, moira.SymmetricDiff(actual, expectedTable), "trigger table should match expected links")
+
+	disabledSubscriptionLink := mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag3&tags%5B1%5D=tag4"
+	assert.NotContains(t, actual, disabledSubscriptionLink, "disabled subscription link should not be present in triggers table")
+}
+
+func TestSelfCheck_should_handle_all_disabled_subscriptions(t *testing.T) {
+	assert := assert.New(t)
+	mock := configureWorker(t, false)
+
+	user := "user"
+	systemTags := []string{"sys-tag1", "sys-tag2"}
+
+	systemSubscription := moira.SubscriptionData{
+		ID:   "sub-1",
+		Tags: systemTags,
+		User: user,
+	}
+
+	disabledSubscription1 := moira.SubscriptionData{
+		ID:      "sub-2",
+		Enabled: false,
+		Tags:    []string{"tag1", "tag2"},
+		User:    user,
+	}
+
+	disabledSubscription2 := moira.SubscriptionData{
+		ID:      "sub-3",
+		Enabled: false,
+		Tags:    []string{"tag3", "tag4"},
+		User:    user,
+	}
+
+	mock.database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{
+		systemSubscription.ID,
+		disabledSubscription1.ID,
+		disabledSubscription2.ID,
+	}, nil)
+
+	mock.database.EXPECT().GetSubscription(systemSubscription.ID).Return(systemSubscription, nil)
+	mock.database.EXPECT().GetSubscription(disabledSubscription1.ID).Return(disabledSubscription1, nil)
+	mock.database.EXPECT().GetSubscription(disabledSubscription2.ID).Return(disabledSubscription2, nil)
+
+	res, err := mock.selfCheckWorker.constructTriggersTable(&systemSubscription, systemTags)
+	require.NoError(t, err)
+	assert.Empty(res)
 }
 
 func TestSelfCheckWorker_Start(t *testing.T) {
