@@ -104,6 +104,12 @@ func TestProcessScheduledEvent(t *testing.T) {
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
+		dataBase.EXPECT().GetNotifierStateForSources().Return(map[moira.ClusterKey]moira.NotifierState{
+			moira.DefaultLocalCluster: {
+				State: moira.SelfStateOK,
+				Actor: moira.SelfStateActorManual,
+			},
+		}, nil).AnyTimes()
 
 		err := worker.processScheduledNotifications(moira.DefaultLocalCluster)
 		So(err, ShouldBeEmpty)
@@ -231,6 +237,16 @@ func TestGoRoutine(t *testing.T) {
 	dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 		State: moira.SelfStateOK,
 		Actor: moira.SelfStateActorManual,
+	}, nil).AnyTimes()
+	dataBase.EXPECT().GetNotifierStateForSources().Return(map[moira.ClusterKey]moira.NotifierState{
+		moira.DefaultLocalCluster: {
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorManual,
+		},
+		moira.DefaultGraphiteRemoteCluster: {
+			State: moira.SelfStateOK,
+			Actor: moira.SelfStateActorManual,
+		},
 	}, nil).AnyTimes()
 
 	Convey("Start goroutines", t, func() {
