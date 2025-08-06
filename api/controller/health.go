@@ -32,19 +32,23 @@ func GetNotifierStatesForSources(database moira.Database) (*dto.NotifierStatesFo
 	}
 
 	notifierStates := dto.NotifierStatesForSources{
-		Sources: map[string]dto.NotifierState{},
+		Sources: []dto.NotifierStateForSource{},
 	}
 
 	for key, state := range states {
-		notifierState := dto.NotifierState{
-			Actor: state.Actor,
-			State: state.State,
+		notifierState := dto.NotifierStateForSource{
+			NotifierState: dto.NotifierState{
+				Actor: state.Actor,
+				State: state.State,
+			},
+			TriggerSource: key.TriggerSource,
+			ClusterId:     key.ClusterId,
 		}
 		if state.State == moira.SelfStateERROR {
 			notifierState.Message = dto.ErrorMessageForSource(key)
 		}
 
-		notifierStates.Sources[key.String()] = notifierState
+		notifierStates.Sources = append(notifierStates.Sources, notifierState)
 	}
 
 	return &notifierStates, nil

@@ -36,8 +36,14 @@ func (state *NotifierState) Bind(r *http.Request) error {
 	return nil
 }
 
+type NotifierStateForSource struct {
+	TriggerSource moira.TriggerSource `json:"trigger_source"`
+	ClusterId     moira.ClusterId     `json:"cluster_id"`
+	NotifierState
+}
+
 type NotifierStatesForSources struct {
-	Sources map[string]NotifierState `json:"sources"`
+	Sources []NotifierStateForSource `json:"sources"`
 }
 
 func (*NotifierStatesForSources) Render(w http.ResponseWriter, r *http.Request) error {
