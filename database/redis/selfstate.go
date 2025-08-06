@@ -130,19 +130,47 @@ func (connector *DbConnector) setNotifierState(dto moira.NotifierState) error {
 	return c.Set(connector.context, selfStateNotifierHealth, state, redis.KeepTTL).Err()
 }
 
+// GetNotifierStateForSources returns state for all metric source clusters.
 func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey]moira.NotifierState, error) {
-	return nil, nil
+	c := *connector.client
+
+	statesCmd := c.Get(connector.context, selfStateNotifierStateForSource)
+
+	err := statesCmd.Err()
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return nil, err
+	}
+
+	states, err := reply.ParseNotifierStateForSources(statesCmd)
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return nil, err
+	}
+
+	result := make(map[moira.ClusterKey]moira.NotifierState, len(connector.clusterList))
+
+	for _, cluster := range connector.clusterList {
+		if state, ok := states.States[cluster.String()]; ok {
+			result[cluster] = state
+		} else {
+			// If state for cluster was never set, set OK by default
+			result[cluster] = moira.NotifierState{
+				State: moira.SelfStateOK,
+				Actor: moira.SelfStateActorManual,
+			}
+		}
+	}
+
+	return result, nil
 }
 
+// SetNotifierStateForSource saves state for given metric source cluster.
 func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.ClusterKey, actor, state string) error {
 	c := *connector.client
 
 	_, err := c.TxPipelined(connector.context, func(pipe redis.Pipeliner) error {
-		currentState := notifierStateForSources{}
-
 		currentStateCmd := pipe.Get(connector.context, selfStateNotifierStateForSource)
 
-		err := currentStateCmd.Err()
+		currentState, err := reply.ParseNotifierStateForSources(currentStateCmd)
 		if err != nil && !errors.Is(err, redis.Nil) {
 			return err
 		}
@@ -158,24 +186,19 @@ func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.Cluster
 		}
 
 		saveCmd := pipe.Set(connector.context, selfStateNotifierStateForSource, bytes, redis.KeepTTL)
-		err = saveCmd.Err()
 
+		err = saveCmd.Err()
 		if err != nil {
 			return err
 		}
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-type notifierStateForSources struct {
-	States map[string]moira.NotifierState `json:"states"`
 }
 
 var (
