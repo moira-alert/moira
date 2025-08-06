@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
@@ -136,13 +137,8 @@ func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey
 
 	statesCmd := c.Get(connector.context, selfStateNotifierStateForSource)
 
-	err := statesCmd.Err()
-	if err != nil && !errors.Is(err, redis.Nil) {
-		return nil, err
-	}
-
 	states, err := reply.ParseNotifierStateForSources(statesCmd)
-	if err != nil && !errors.Is(err, redis.Nil) {
+	if err != nil && !errors.Is(err, database.ErrNil) {
 		return nil, err
 	}
 
@@ -168,10 +164,11 @@ func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.Cluster
 	c := *connector.client
 
 	_, err := c.TxPipelined(connector.context, func(pipe redis.Pipeliner) error {
+		// pipe := c
 		currentStateCmd := pipe.Get(connector.context, selfStateNotifierStateForSource)
 
 		currentState, err := reply.ParseNotifierStateForSources(currentStateCmd)
-		if err != nil && !errors.Is(err, redis.Nil) {
+		if err != nil && !errors.Is(err, database.ErrNil) {
 			return err
 		}
 
@@ -194,7 +191,7 @@ func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.Cluster
 
 		return nil
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, redis.Nil) {
 		return err
 	}
 

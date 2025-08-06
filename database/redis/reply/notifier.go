@@ -38,7 +38,9 @@ type NotifierStateForSources struct {
 
 // ParseNotifierStateForSources parses NotifierStateBySources from redis.StringCmd.
 func ParseNotifierStateForSources(rep *redis.StringCmd) (NotifierStateForSources, error) {
-	state := NotifierStateForSources{}
+	state := NotifierStateForSources{
+		States: map[string]moira.NotifierState{},
+	}
 
 	bytes, err := rep.Bytes()
 	if err != nil {
@@ -49,9 +51,13 @@ func ParseNotifierStateForSources(rep *redis.StringCmd) (NotifierStateForSources
 		return state, fmt.Errorf("failed to read state: %s", err.Error())
 	}
 
+	if len(bytes) == 0 {
+		return state, nil
+	}
+
 	err = json.Unmarshal(bytes, &state)
 	if err != nil {
-		return state, fmt.Errorf("failed to parse state json %s %s", string(bytes), err.Error())
+		return state, fmt.Errorf("failed to parse state json '%s' %s", string(bytes), err.Error())
 	}
 
 	return state, nil
