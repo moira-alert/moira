@@ -175,7 +175,7 @@ func graphiteTargetVerification(targets []string, ttl time.Duration, triggerSour
 // It is wrapper to handle slice of trees.
 func DoesAnyTreeHaveError(trees []TreeOfProblems) bool {
 	for _, tree := range trees {
-		if !tree.SyntaxOk || tree.TreeOfProblems.hasError() {
+		if !tree.SyntaxOk || (tree.TreeOfProblems != nil && tree.TreeOfProblems.hasError()) {
 			return true
 		}
 	}
