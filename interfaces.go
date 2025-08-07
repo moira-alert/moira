@@ -19,6 +19,7 @@ type Database interface {
 	GetNotifierState() (NotifierState, error)
 	SetNotifierState(actor, state string) error
 	GetNotifierStateForSources() (map[ClusterKey]NotifierState, error)
+	GetNotifierStateForSource(clusterKey ClusterKey) (NotifierState, error)
 	SetNotifierStateForSource(clusterKey ClusterKey, actor, state string) error
 
 	// Tag storing

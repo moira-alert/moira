@@ -85,12 +85,12 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications(clusterKey
 		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state.State))
 	}
 
-	sourcesStates, err := worker.Database.GetNotifierStateForSources()
+	sourceState, err := worker.Database.GetNotifierStateForSource(clusterKey)
 	if err != nil {
 		return notifierInBadStateError("can't get current notifier states for sources")
 	}
 
-	if state, ok := sourcesStates[clusterKey]; !ok || state.State != moira.SelfStateOK {
+	if sourceState.State != moira.SelfStateOK {
 		return notifierInBadStateError(fmt.Sprintf("notifier's source '%s' in a bad state: %v", clusterKey.String(), state.State))
 	}
 

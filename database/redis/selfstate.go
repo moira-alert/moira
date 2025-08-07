@@ -3,6 +3,8 @@ package redis
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"slices"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -69,10 +71,6 @@ func (connector *DbConnector) GetPrometheusChecksUpdatesCount() (int64, error) {
 // GetNotifierState return current notifier state: <OK|ERROR>.
 func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 	c := *connector.client
-	defaultState := moira.NotifierState{
-		State: moira.SelfStateERROR,
-		Actor: moira.SelfStateActorManual,
-	}
 
 	getResult := c.Get(connector.context, selfStateNotifierHealth)
 	if errors.Is(getResult.Err(), redis.Nil) {
@@ -131,28 +129,54 @@ func (connector *DbConnector) setNotifierState(dto moira.NotifierState) error {
 	return c.Set(connector.context, selfStateNotifierHealth, state, redis.KeepTTL).Err()
 }
 
+// GetNotifierStateForSource returns state for a given metric source cluster.
+func (connector *DbConnector) GetNotifierStateForSource(clusterKey moira.ClusterKey) (moira.NotifierState, error) {
+	if !slices.Contains(connector.clusterList, clusterKey) {
+		return defaultState, fmt.Errorf("unknown cluster '%s'", clusterKey.String())
+	}
+
+	c := *connector.client
+
+	stateCmd := c.Get(connector.context, makeSelfStateNotifierStateForSource(clusterKey))
+
+	state, err := reply.NotifierState(stateCmd)
+	if err != nil && !errors.Is(err, database.ErrNil) {
+		return defaultState, err
+	}
+
+	return state, nil
+}
+
 // GetNotifierStateForSources returns state for all metric source clusters.
 func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey]moira.NotifierState, error) {
 	c := *connector.client
 
-	statesCmd := c.Get(connector.context, selfStateNotifierStateForSource)
+	statesCmd := make([]*redis.StringCmd, 0, len(connector.clusterList))
 
-	states, err := reply.ParseNotifierStateForSources(statesCmd)
-	if err != nil && !errors.Is(err, database.ErrNil) {
-		return nil, err
-	}
+	c.TxPipelined(connector.context, func(p redis.Pipeliner) error {
+		for _, cluster := range connector.clusterList {
+			statesCmd = append(statesCmd, p.Get(connector.context, makeSelfStateNotifierStateForSource(cluster)))
+		}
+
+		return nil
+	})
 
 	result := make(map[moira.ClusterKey]moira.NotifierState, len(connector.clusterList))
 
-	for _, cluster := range connector.clusterList {
-		if state, ok := states.States[cluster.String()]; ok {
-			result[cluster] = state
-		} else {
+	for i, cluster := range connector.clusterList {
+		state, err := reply.NotifierState(statesCmd[i])
+		if err != nil && !errors.Is(err, database.ErrNil) {
+			return nil, err
+		}
+
+		if errors.Is(err, database.ErrNil) {
 			// If state for cluster was never set, set OK by default
 			result[cluster] = moira.NotifierState{
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
 			}
+		} else {
+			result[cluster] = state
 		}
 	}
 
@@ -161,41 +185,39 @@ func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey
 
 // SetNotifierStateForSource saves state for given metric source cluster.
 func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.ClusterKey, actor, state string) error {
+	if !slices.Contains(connector.clusterList, clusterKey) {
+		return fmt.Errorf("unknown cluster '%s'", clusterKey.String())
+	}
+
 	c := *connector.client
 
-	_, err := c.TxPipelined(connector.context, func(pipe redis.Pipeliner) error {
-		// pipe := c
-		currentStateCmd := pipe.Get(connector.context, selfStateNotifierStateForSource)
+	currentState := moira.NotifierState{
+		State: state,
+		Actor: actor,
+	}
 
-		currentState, err := reply.ParseNotifierStateForSources(currentStateCmd)
-		if err != nil && !errors.Is(err, database.ErrNil) {
-			return err
-		}
+	bytes, err := json.Marshal(currentState)
+	if err != nil {
+		return err
+	}
 
-		currentState.States[clusterKey.String()] = moira.NotifierState{
-			Actor: actor,
-			State: state,
-		}
+	saveCmd := c.Set(connector.context, makeSelfStateNotifierStateForSource(clusterKey), bytes, redis.KeepTTL)
 
-		bytes, err := json.Marshal(currentState)
-		if err != nil {
-			return err
-		}
-
-		saveCmd := pipe.Set(connector.context, selfStateNotifierStateForSource, bytes, redis.KeepTTL)
-
-		err = saveCmd.Err()
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil && !errors.Is(err, redis.Nil) {
+	err = saveCmd.Err()
+	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+var defaultState moira.NotifierState = moira.NotifierState{
+	State: moira.SelfStateERROR,
+	Actor: moira.SelfStateActorManual,
+}
+
+func makeSelfStateNotifierStateForSource(clusterKey moira.ClusterKey) string {
+	return selfStateNotifierStateForSource + ":" + clusterKey.String()
 }
 
 var (
