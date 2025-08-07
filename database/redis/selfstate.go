@@ -153,7 +153,7 @@ func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey
 
 	statesCmd := make([]*redis.StringCmd, 0, len(connector.clusterList))
 
-	c.TxPipelined(connector.context, func(p redis.Pipeliner) error {
+	_, _ = c.TxPipelined(connector.context, func(p redis.Pipeliner) error {
 		for _, cluster := range connector.clusterList {
 			statesCmd = append(statesCmd, p.Get(connector.context, makeSelfStateNotifierStateForSource(cluster)))
 		}

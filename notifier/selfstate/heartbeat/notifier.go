@@ -19,7 +19,7 @@ func GetNotifier(checkTags []string, logger moira.Logger, database moira.Databas
 }
 
 func (check notifier) Check(int64) (int64, bool, error) {
-	state, _ := check.database.GetNotifierState()
+	state, _ := check.database.GetNotifierStateForSource(moira.DefaultLocalCluster)
 	if state.State != moira.SelfStateOK && state.Actor != moira.SelfStateActorAutomatic {
 		check.logger.Error().
 			String("error", check.GetErrorMessage()).
@@ -44,7 +44,7 @@ func (notifier) NeedToCheckOthers() bool {
 }
 
 func (check notifier) GetErrorMessage() string {
-	state, _ := check.database.GetNotifierState()
+	state, _ := check.database.GetNotifierStateForSource(moira.DefaultLocalCluster)
 	return fmt.Sprintf("Moira-Notifier does not send messages. State: %v", state.State)
 }
 
