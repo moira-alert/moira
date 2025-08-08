@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/moira-alert/moira"
 
@@ -241,6 +243,62 @@ func TestFuncIsSupported(t *testing.T) {
 			So(ok, ShouldBeFalse)
 		})
 	})
+}
+
+func TestDoesAnyTreeHaveError(t *testing.T) {
+	type testCase struct {
+		name  string
+		trees []TreeOfProblems
+		want  bool
+	}
+
+	tests := []testCase{
+		{
+			name: "All trees ok",
+			trees: []TreeOfProblems{
+				{SyntaxOk: true, TreeOfProblems: nil},
+				{SyntaxOk: true, TreeOfProblems: nil},
+			},
+			want: false,
+		},
+		{
+			name: "One tree syntax error",
+			trees: []TreeOfProblems{
+				{SyntaxOk: false, TreeOfProblems: nil},
+				{SyntaxOk: true, TreeOfProblems: nil},
+			},
+			want: true,
+		},
+		{
+			name: "One tree has error",
+			trees: []TreeOfProblems{
+				{SyntaxOk: true, TreeOfProblems: &ProblemOfTarget{Type: isBad}},
+				{SyntaxOk: true, TreeOfProblems: nil},
+			},
+			want: true,
+		},
+		{
+			name:  "Empty slice",
+			trees: []TreeOfProblems{},
+			want:  false,
+		},
+		{
+			name: "Multiple trees, mixed errors",
+			trees: []TreeOfProblems{
+				{SyntaxOk: true, TreeOfProblems: nil},
+				{SyntaxOk: false, TreeOfProblems: nil},
+				{SyntaxOk: true, TreeOfProblems: &ProblemOfTarget{Type: isBad}},
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := DoesAnyTreeHaveError(tt.trees)
+			assert.Equal(t, tt.want, got, "DoesAnyTreeHaveError() for %s", tt.name)
+		})
+	}
 }
 
 func getTestDataTargetWithTimeInterval() []struct {
