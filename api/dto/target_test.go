@@ -7,187 +7,186 @@ import (
 
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/moira-alert/moira"
-
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTargetVerification(t *testing.T) {
-	Convey("Target verification", t, func() {
-		Convey("Check unknown trigger type", func() {
+	t.Run("Target verification", func(t *testing.T) {
+		t.Run("Check unknown trigger type", func(t *testing.T) {
 			targets := []string{`alias(test.one,'One'`}
 			problems, err := TargetVerification(targets, 10, "random_source")
-			So(err, ShouldResemble, fmt.Errorf("unknown trigger source '%s'", "random_source"))
-			So(problems, ShouldBeNil)
+			assert.Equal(t, fmt.Errorf("unknown trigger source '%s'", "random_source"), err)
+			assert.Nil(t, problems)
 		})
 
-		Convey("Check bad function", func() {
+		t.Run("Check bad function", func(t *testing.T) {
 			targets := []string{`alias(test.one,'One'`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(len(problems), ShouldEqual, 1)
-			So(problems[0].SyntaxOk, ShouldBeFalse)
+			assert.NoError(t, err)
+			assert.Len(t, problems, 1)
+			assert.False(t, problems[0].SyntaxOk)
 		})
 
-		Convey("Check target with unrecognized syntax error", func() {
+		t.Run("Check target with unrecognized syntax error", func(t *testing.T) {
 			targets := []string{`alias(test.one,'One'))`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeFalse)
-			So(problems[0].TreeOfProblems, ShouldBeNil)
+			assert.NoError(t, err)
+			assert.False(t, problems[0].SyntaxOk)
+			assert.Nil(t, problems[0].TreeOfProblems)
 		})
 
-		Convey("Check correct construction", func() {
+		t.Run("Check correct construction", func(t *testing.T) {
 			targets := []string{`alias(test.one,'One')`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
 		})
 
-		Convey("Check correct empty function", func() {
+		t.Run("Check correct empty function", func(t *testing.T) {
 			targets := []string{`alias(movingSum(),'One')`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems, ShouldBeNil)
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Nil(t, problems[0].TreeOfProblems)
 		})
 
-		Convey("Check interval larger that TTL", func() {
+		t.Run("Check interval larger that TTL", func(t *testing.T) {
 			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
 			problems, err := TargetVerification(targets, 5*time.Minute, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
+			assert.NoError(t, err)
 			// target is not valid because set of metrics by last 5 minutes is not enough for function with 10min interval
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "movingAverage")
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "movingAverage", problems[0].TreeOfProblems.Argument)
 		})
 
 		// potentially unreal case, because we have TTL > 0 in configs
-		Convey("Check ttl is 0", func() {
+		t.Run("Check ttl is 0", func(t *testing.T) {
 			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
 			// ttl is 0 means that metrics will persist forever
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
+			assert.NoError(t, err)
 			// target is valid because there is enough metrics
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems, ShouldBeNil)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Nil(t, problems[0].TreeOfProblems)
 		})
 
-		Convey("Check unstable function", func() {
+		t.Run("Check unstable function", func(t *testing.T) {
 			targets := []string{"summarize(test.metric, '10min')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "summarize")
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "summarize", problems[0].TreeOfProblems.Argument)
 		})
 
-		Convey("Check false notifications function", func() {
+		t.Run("Check false notifications function", func(t *testing.T) {
 			targets := []string{"highest(test.metric)"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "highest")
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "highest", problems[0].TreeOfProblems.Argument)
 		})
 
-		Convey("Check visual function", func() {
+		t.Run("Check visual function", func(t *testing.T) {
 			targets := []string{"consolidateBy(Servers.web01.sda1.free_space, 'max')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "consolidateBy")
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "consolidateBy", problems[0].TreeOfProblems.Argument)
 		})
 
-		Convey("Check unsupported function", func() {
+		t.Run("Check unsupported function", func(t *testing.T) {
 			targets := []string{"myUnsupportedFunction(Servers.web01.sda1.free_space, 'max')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "myUnsupportedFunction")
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "myUnsupportedFunction", problems[0].TreeOfProblems.Argument)
 		})
 
-		Convey("Check nested function", func() {
+		t.Run("Check nested function", func(t *testing.T) {
 			targets := []string{"movingAverage(myUnsupportedFunction(), '10min')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Problems[0].Argument, ShouldEqual, "myUnsupportedFunction")
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "myUnsupportedFunction", problems[0].TreeOfProblems.Problems[0].Argument)
 		})
 
-		Convey("Check target only with metric (without Graphite-function)", func() {
+		t.Run("Check target only with metric (without Graphite-function)", func(t *testing.T) {
 			targets := []string{"my.metric"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems, ShouldBeNil)
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Nil(t, problems[0].TreeOfProblems)
 		})
 
-		Convey("Check target with space symbol in metric name", func() {
+		t.Run("Check target with space symbol in metric name", func(t *testing.T) {
 			targets := []string{"a b"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeFalse)
-			So(problems[0].TreeOfProblems, ShouldBeNil)
+			assert.NoError(t, err)
+			assert.False(t, problems[0].SyntaxOk)
+			assert.Nil(t, problems[0].TreeOfProblems)
 		})
 
-		Convey("Check seriesByTag target without non-regex args, regex has anchors", func() {
+		t.Run("Check seriesByTag target without non-regex args, regex has anchors", func(t *testing.T) {
 			targets := []string{"seriesByTag('name=~^tag\\..*$')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "seriesByTag('name=~^tag\\..*$')")
-			So(problems[0].TreeOfProblems.Type, ShouldEqual, isBad)
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "seriesByTag('name=~^tag\\..*$')", problems[0].TreeOfProblems.Argument)
+			assert.Equal(t, isBad, problems[0].TreeOfProblems.Type)
 		})
 
-		Convey("Check seriesByTag target with a wildcard argument", func() {
+		t.Run("Check seriesByTag target with a wildcard argument", func(t *testing.T) {
 			targets := []string{"seriesByTag('name=ab.bc.*.cd.*.ef')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "seriesByTag('name=ab.bc.*.cd.*.ef')")
-			So(problems[0].TreeOfProblems.Type, ShouldEqual, isBad)
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "seriesByTag('name=ab.bc.*.cd.*.ef')", problems[0].TreeOfProblems.Argument)
+			assert.Equal(t, isBad, problems[0].TreeOfProblems.Type)
 		})
 
-		Convey("Check nested seriesByTag target without non-regex args", func() {
+		t.Run("Check nested seriesByTag target without non-regex args", func(t *testing.T) {
 			targets := []string{"aliasByTags(seriesByTag('name=~*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Problems[0].Argument, ShouldEqual, "seriesByTag('name=~*')")
-			So(problems[0].TreeOfProblems.Problems[0].Type, ShouldEqual, isBad)
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "seriesByTag('name=~*')", problems[0].TreeOfProblems.Problems[0].Argument)
+			assert.Equal(t, isBad, problems[0].TreeOfProblems.Problems[0].Type)
 		})
 
-		Convey("Check nested seriesByTag target without arguments that have strict equality", func() {
+		t.Run("Check nested seriesByTag target without arguments that have strict equality", func(t *testing.T) {
 			targets := []string{"aliasByTags(seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems.Problems[0].Argument, ShouldEqual, "seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*')")
-			So(problems[0].TreeOfProblems.Problems[0].Type, ShouldEqual, isBad)
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Equal(t, "seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*')", problems[0].TreeOfProblems.Problems[0].Argument)
+			assert.Equal(t, isBad, problems[0].TreeOfProblems.Problems[0].Type)
 		})
 
-		Convey("Check nested seriesByTag target with an argument that has strict equality", func() {
+		t.Run("Check nested seriesByTag target with an argument that has strict equality", func(t *testing.T) {
 			targets := []string{"aliasByTags(seriesByTag('name=~*', 'tag1=val1', 'tag2=val2', 'tag3=val3*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			So(err, ShouldBeNil)
-			So(problems[0].SyntaxOk, ShouldBeTrue)
-			So(problems[0].TreeOfProblems, ShouldBeNil)
+			assert.NoError(t, err)
+			assert.True(t, problems[0].SyntaxOk)
+			assert.Nil(t, problems[0].TreeOfProblems)
 		})
 	})
 }
 
 func TestConvertGraphiteTimeToTimeDuration(t *testing.T) {
-	Convey("Test graphite time functions", t, func() {
+	t.Run("Test graphite time functions", func(t *testing.T) {
 		for _, data := range getTestDataTargetWithTimeInterval() {
 			expr, _, err := parser.ParseExpr(data.target)
-			So(err, ShouldBeNil)
+			assert.NoError(t, err)
 
 			if len(expr.Args()) < 2 {
 				continue
 			}
 
 			_, expected := positiveDuration(expr.Args()[1])
-			So(expected, ShouldEqual, data.actual)
+			assert.Equal(t, expected, data.actual)
 		}
 	})
 }
@@ -196,7 +195,7 @@ func TestParseParametersToTimeDuration(t *testing.T) {
 	tmpl := "timeShift(Sales.widgets.largeBlue,'%s')"
 	tmplInt := "timeShift(Sales.widgets.largeBlue, %d)"
 
-	Convey("Strings", t, func() {
+	t.Run("Strings", func(t *testing.T) {
 		var expr parser.Expr
 
 		var err error
@@ -209,36 +208,36 @@ func TestParseParametersToTimeDuration(t *testing.T) {
 				expr, _, err = parser.ParseExpr(fmt.Sprintf(tmpl, value))
 			}
 
-			So(err, ShouldBeNil)
+			assert.NoError(t, err)
 
 			_, expected := positiveDuration(expr.Args()[1])
-			So(expected, ShouldEqual, actual)
+			assert.Equal(t, expected, actual)
 		}
 	})
 }
 
 func TestFuncIsSupported(t *testing.T) {
-	Convey("Test supported functions", t, func() {
-		Convey("func supported", func() {
+	t.Run("Test supported functions", func(t *testing.T) {
+		t.Run("func supported", func(t *testing.T) {
 			ok := funcIsSupported("divideSeries")
-			So(ok, ShouldBeTrue)
+			assert.True(t, ok)
 
 			ok = funcIsSupported("absolute")
-			So(ok, ShouldBeTrue)
+			assert.True(t, ok)
 
 			ok = funcIsSupported("alias")
-			So(ok, ShouldBeTrue)
+			assert.True(t, ok)
 
 			ok = funcIsSupported("aliasByMetric")
-			So(ok, ShouldBeTrue)
+			assert.True(t, ok)
 
 			ok = funcIsSupported("aliasByNode")
-			So(ok, ShouldBeTrue)
+			assert.True(t, ok)
 		})
 
-		Convey("func not supported", func() {
+		t.Run("func not supported", func(t *testing.T) {
 			ok := funcIsSupported("IAmNotSupported")
-			So(ok, ShouldBeFalse)
+			assert.False(t, ok)
 		})
 	})
 }
