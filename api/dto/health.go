@@ -12,10 +12,12 @@ const (
 	ErrorMessage = "Something unexpected happened to Moira, so we temporarily turned off the notification mailing. We are already working on the problem and will fix it in the near future."
 )
 
+// ErrorMessageForSource constructs an error message for a given metric source.
 func ErrorMessageForSource(source moira.ClusterKey) string {
 	return fmt.Sprintf("Something unexpected happened to Moira's %s metric source, so we temporarily turned off the notification mailing for it. We are already working on the problem and will fix it in the near future.", source.String())
 }
 
+// NotifierState represents state of notifier: <OK|ERROR>.
 type NotifierState struct {
 	Actor   string `json:"actor" example:"AUTO"`
 	State   string `json:"state" example:"ERROR"`
@@ -36,12 +38,16 @@ func (state *NotifierState) Bind(r *http.Request) error {
 	return nil
 }
 
+
+// NotifierState represents state of notifier for specific metric source: <OK|ERROR>.
 type NotifierStateForSource struct {
 	TriggerSource moira.TriggerSource `json:"trigger_source"`
 	ClusterId     moira.ClusterId     `json:"cluster_id"`
 	NotifierState
 }
 
+
+// NotifierState represents state of notifier for all metric sources: <OK|ERROR>.
 type NotifierStatesForSources struct {
 	Sources []NotifierStateForSource `json:"sources"`
 }

@@ -24,7 +24,7 @@ func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorRe
 	return &notifierState, nil
 }
 
-// GetNotifierState return current notifier state.
+// GetNotifierStatesForSources return current notifier state for all metric sources.
 func GetNotifierStatesForSources(database moira.Database) (*dto.NotifierStatesForSources, *api.ErrorResponse) {
 	states, err := database.GetNotifierStateForSources()
 	if err != nil {
@@ -64,7 +64,7 @@ func UpdateNotifierState(database moira.Database, state *dto.NotifierState) *api
 	return nil
 }
 
-// UpdateNotifierState update current notifier state.
+// UpdateNotifierStateForSource update current notifier state for a given source.
 func UpdateNotifierStateForSource(database moira.Database, clusterKey moira.ClusterKey, state *dto.NotifierState) *api.ErrorResponse {
 	err := database.SetNotifierStateForSource(clusterKey, moira.SelfStateActorManual, state.State)
 	if err != nil {
