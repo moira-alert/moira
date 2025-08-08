@@ -28,7 +28,7 @@ type selfCheckWorkerMock struct {
 }
 
 func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
-	defaultLocalCluster := moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster)
+	defaultLocalCluster := moira.DefaultLocalCluster
 	defaultRemoteCluster := moira.DefaultGraphiteRemoteCluster
 
 	mock := configureWorker(t, true)
@@ -36,7 +36,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
-		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+		mock.database.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 			Actor: moira.SelfStateActorAutomatic,
 			State: moira.SelfStateOK,
 		}, nil).Times(2)
