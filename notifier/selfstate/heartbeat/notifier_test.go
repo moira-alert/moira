@@ -18,7 +18,7 @@ func TestNotifierState(t *testing.T) {
 		check := createNotifierStateTest(t)
 
 		Convey("Test get notifier delay", func() {
-			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
 			}, nil)
@@ -30,7 +30,7 @@ func TestNotifierState(t *testing.T) {
 		})
 
 		Convey("Test get notification", func() {
-			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateERROR,
 				Actor: moira.SelfStateActorManual,
 			}, nil).Times(2)
@@ -42,7 +42,7 @@ func TestNotifierState(t *testing.T) {
 		})
 
 		Convey("Should return OK if notifier disabled automatically", func() {
-			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateERROR,
 				Actor: moira.SelfStateActorAutomatic,
 			}, nil)

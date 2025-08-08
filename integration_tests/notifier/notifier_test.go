@@ -92,6 +92,8 @@ func TestNotifier(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	database := redis.NewTestDatabase(logger)
+	database.Flush()
+	defer database.Flush()
 
 	err := database.SaveContact(&contact)
 	if err != nil {
