@@ -116,7 +116,7 @@ func NewHandler(
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Use(moiramiddle.AuthorizationContext(&apiConfig.Authorization))
-		router.Route("/health", health)
+		router.Route("/health", health(metricSourceProvider))
 		router.Route("/", func(router chi.Router) {
 			router.Use(moiramiddle.ReadOnlyMiddleware(apiConfig))
 			router.Get("/config", getWebConfig(webConfig))
