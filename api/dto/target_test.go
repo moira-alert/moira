@@ -251,51 +251,52 @@ func TestDoesAnyTreeHaveError(t *testing.T) {
 		trees []TreeOfProblems
 		want  bool
 	}
-    tests := []testCase{
-			{
-				name: "All trees ok",
-				trees: []TreeOfProblems{
-					{SyntaxOk: true, TreeOfProblems: nil},
-					{SyntaxOk: true, TreeOfProblems: nil},
-				},
-				want: false,
+
+	tests := []testCase{
+		{
+			name: "All trees ok",
+			trees: []TreeOfProblems{
+				{SyntaxOk: true, TreeOfProblems: nil},
+				{SyntaxOk: true, TreeOfProblems: nil},
 			},
-			{
-				name: "One tree syntax error",
-				trees: []TreeOfProblems{
-					{SyntaxOk: false, TreeOfProblems: nil},
-					{SyntaxOk: true, TreeOfProblems: nil},
-				},
-				want: true,
+			want: false,
+		},
+		{
+			name: "One tree syntax error",
+			trees: []TreeOfProblems{
+				{SyntaxOk: false, TreeOfProblems: nil},
+				{SyntaxOk: true, TreeOfProblems: nil},
 			},
-			{
-				name: "One tree has error",
-				trees: []TreeOfProblems{
-					{SyntaxOk: true, TreeOfProblems: &ProblemOfTarget{Type: isBad}},
-					{SyntaxOk: true, TreeOfProblems: nil},
-				},
-				want: true,
+			want: true,
+		},
+		{
+			name: "One tree has error",
+			trees: []TreeOfProblems{
+				{SyntaxOk: true, TreeOfProblems: &ProblemOfTarget{Type: isBad}},
+				{SyntaxOk: true, TreeOfProblems: nil},
 			},
-			{
-				name: "Empty slice",
-				trees: []TreeOfProblems{},
-				want: false,
+			want: true,
+		},
+		{
+			name:  "Empty slice",
+			trees: []TreeOfProblems{},
+			want:  false,
+		},
+		{
+			name: "Multiple trees, mixed errors",
+			trees: []TreeOfProblems{
+				{SyntaxOk: true, TreeOfProblems: nil},
+				{SyntaxOk: false, TreeOfProblems: nil},
+				{SyntaxOk: true, TreeOfProblems: &ProblemOfTarget{Type: isBad}},
 			},
-			{
-				name: "Multiple trees, mixed errors",
-				trees: []TreeOfProblems{
-					{SyntaxOk: true, TreeOfProblems: nil},
-					{SyntaxOk: false, TreeOfProblems: nil},
-					{SyntaxOk: true, TreeOfProblems: &ProblemOfTarget{Type: isBad}},
-				},
-				want: true,
-			},
-    }
+			want: true,
+		},
+	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := DoesAnyTreeHaveError(tt.trees)
-      assert.Equal(t, tt.want, got, "DoesAnyTreeHaveError() for %s", tt.name)
+			assert.Equal(t, tt.want, got, "DoesAnyTreeHaveError() for %s", tt.name)
 		})
 	}
 }
