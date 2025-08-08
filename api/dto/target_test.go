@@ -14,164 +14,183 @@ import (
 func TestTargetVerification(t *testing.T) {
 	t.Run("Target verification", func(t *testing.T) {
 		t.Run("Check unknown trigger type", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{`alias(test.one,'One'`}
 			problems, err := TargetVerification(targets, 10, "random_source")
-			assert.Equal(t, fmt.Errorf("unknown trigger source '%s'", "random_source"), err)
-			assert.Nil(t, problems)
+			assert.Equal(fmt.Errorf("unknown trigger source '%s'", "random_source"), err)
+			assert.Nil(problems)
 		})
 
 		t.Run("Check bad function", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{`alias(test.one,'One'`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.Len(t, problems, 1)
-			assert.False(t, problems[0].SyntaxOk)
+			assert.Len(problems, 1)
+			assert.False(problems[0].SyntaxOk)
 		})
 
 		t.Run("Check target with unrecognized syntax error", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{`alias(test.one,'One'))`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.False(t, problems[0].SyntaxOk)
-			assert.Nil(t, problems[0].TreeOfProblems)
+			assert.False(problems[0].SyntaxOk)
+			assert.Nil(problems[0].TreeOfProblems)
 		})
 
 		t.Run("Check correct construction", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{`alias(test.one,'One')`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
+			assert.True(problems[0].SyntaxOk)
 		})
 
 		t.Run("Check correct empty function", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{`alias(movingSum(),'One')`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Nil(t, problems[0].TreeOfProblems)
+			assert.True(problems[0].SyntaxOk)
+			assert.Nil(problems[0].TreeOfProblems)
 		})
 
 		t.Run("Check interval larger that TTL", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
 			problems, err := TargetVerification(targets, 5*time.Minute, moira.GraphiteLocal)
 			require.NoError(t, err)
 			// target is not valid because set of metrics by last 5 minutes is not enough for function with 10min interval
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "movingAverage", problems[0].TreeOfProblems.Argument)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("movingAverage", problems[0].TreeOfProblems.Argument)
 		})
 
 		// potentially unreal case, because we have TTL > 0 in configs
 		t.Run("Check ttl is 0", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
 			// ttl is 0 means that metrics will persist forever
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
 			// target is valid because there is enough metrics
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Nil(t, problems[0].TreeOfProblems)
+			assert.True(problems[0].SyntaxOk)
+			assert.Nil(problems[0].TreeOfProblems)
 		})
 
 		t.Run("Check unstable function", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"summarize(test.metric, '10min')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "summarize", problems[0].TreeOfProblems.Argument)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("summarize", problems[0].TreeOfProblems.Argument)
 		})
 
 		t.Run("Check false notifications function", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"highest(test.metric)"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "highest", problems[0].TreeOfProblems.Argument)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("highest", problems[0].TreeOfProblems.Argument)
 		})
 
 		t.Run("Check visual function", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"consolidateBy(Servers.web01.sda1.free_space, 'max')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "consolidateBy", problems[0].TreeOfProblems.Argument)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("consolidateBy", problems[0].TreeOfProblems.Argument)
 		})
 
 		t.Run("Check unsupported function", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"myUnsupportedFunction(Servers.web01.sda1.free_space, 'max')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "myUnsupportedFunction", problems[0].TreeOfProblems.Argument)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("myUnsupportedFunction", problems[0].TreeOfProblems.Argument)
 		})
 
 		t.Run("Check nested function", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"movingAverage(myUnsupportedFunction(), '10min')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "myUnsupportedFunction", problems[0].TreeOfProblems.Problems[0].Argument)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("myUnsupportedFunction", problems[0].TreeOfProblems.Problems[0].Argument)
 		})
 
 		t.Run("Check target only with metric (without Graphite-function)", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"my.metric"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Nil(t, problems[0].TreeOfProblems)
+			assert.True(problems[0].SyntaxOk)
+			assert.Nil(problems[0].TreeOfProblems)
 		})
 
 		t.Run("Check target with space symbol in metric name", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"a b"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.False(t, problems[0].SyntaxOk)
-			assert.Nil(t, problems[0].TreeOfProblems)
+			assert.False(problems[0].SyntaxOk)
+			assert.Nil(problems[0].TreeOfProblems)
 		})
 
 		t.Run("Check seriesByTag target without non-regex args, regex has anchors", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"seriesByTag('name=~^tag\\..*$')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "seriesByTag('name=~^tag\\..*$')", problems[0].TreeOfProblems.Argument)
-			assert.Equal(t, isBad, problems[0].TreeOfProblems.Type)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("seriesByTag('name=~^tag\\..*$')", problems[0].TreeOfProblems.Argument)
+			assert.Equal(isBad, problems[0].TreeOfProblems.Type)
 		})
 
 		t.Run("Check seriesByTag target with a wildcard argument", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"seriesByTag('name=ab.bc.*.cd.*.ef')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "seriesByTag('name=ab.bc.*.cd.*.ef')", problems[0].TreeOfProblems.Argument)
-			assert.Equal(t, isBad, problems[0].TreeOfProblems.Type)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("seriesByTag('name=ab.bc.*.cd.*.ef')", problems[0].TreeOfProblems.Argument)
+			assert.Equal(isBad, problems[0].TreeOfProblems.Type)
 		})
 
 		t.Run("Check nested seriesByTag target without non-regex args", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"aliasByTags(seriesByTag('name=~*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "seriesByTag('name=~*')", problems[0].TreeOfProblems.Problems[0].Argument)
-			assert.Equal(t, isBad, problems[0].TreeOfProblems.Problems[0].Type)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("seriesByTag('name=~*')", problems[0].TreeOfProblems.Problems[0].Argument)
+			assert.Equal(isBad, problems[0].TreeOfProblems.Problems[0].Type)
 		})
 
 		t.Run("Check nested seriesByTag target without arguments that have strict equality", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"aliasByTags(seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Equal(t, "seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*')", problems[0].TreeOfProblems.Problems[0].Argument)
-			assert.Equal(t, isBad, problems[0].TreeOfProblems.Problems[0].Type)
+			assert.True(problems[0].SyntaxOk)
+			assert.Equal("seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*')", problems[0].TreeOfProblems.Problems[0].Argument)
+			assert.Equal(isBad, problems[0].TreeOfProblems.Problems[0].Type)
 		})
 
 		t.Run("Check nested seriesByTag target with an argument that has strict equality", func(t *testing.T) {
+			assert := assert.New(t)
 			targets := []string{"aliasByTags(seriesByTag('name=~*', 'tag1=val1', 'tag2=val2', 'tag3=val3*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
 			require.NoError(t, err)
-			assert.True(t, problems[0].SyntaxOk)
-			assert.Nil(t, problems[0].TreeOfProblems)
+			assert.True(problems[0].SyntaxOk)
+			assert.Nil(problems[0].TreeOfProblems)
 		})
 	})
 }
