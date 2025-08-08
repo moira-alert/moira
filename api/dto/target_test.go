@@ -239,20 +239,22 @@ func TestParseParametersToTimeDuration(t *testing.T) {
 func TestFuncIsSupported(t *testing.T) {
 	t.Run("Test supported functions", func(t *testing.T) {
 		t.Run("func supported", func(t *testing.T) {
+			assert := assert.New(t)
+
 			ok := funcIsSupported("divideSeries")
-			assert.True(t, ok)
+			assert.True(ok)
 
 			ok = funcIsSupported("absolute")
-			assert.True(t, ok)
+			assert.True(ok)
 
 			ok = funcIsSupported("alias")
-			assert.True(t, ok)
+			assert.True(ok)
 
 			ok = funcIsSupported("aliasByMetric")
-			assert.True(t, ok)
+			assert.True(ok)
 
 			ok = funcIsSupported("aliasByNode")
-			assert.True(t, ok)
+			assert.True(ok)
 		})
 
 		t.Run("func not supported", func(t *testing.T) {
