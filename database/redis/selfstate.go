@@ -81,7 +81,7 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 
 		err := connector.setNotifierState(state)
 		if err != nil {
-			return defaultState, err
+			return errorState, err
 		}
 
 		return state, err
@@ -132,7 +132,7 @@ func (connector *DbConnector) setNotifierState(dto moira.NotifierState) error {
 // GetNotifierStateForSource returns state for a given metric source cluster.
 func (connector *DbConnector) GetNotifierStateForSource(clusterKey moira.ClusterKey) (moira.NotifierState, error) {
 	if !slices.Contains(connector.clusterList, clusterKey) {
-		return defaultState, fmt.Errorf("unknown cluster '%s'", clusterKey.String())
+		return errorState, fmt.Errorf("unknown cluster '%s'", clusterKey.String())
 	}
 
 	c := *connector.client
@@ -141,7 +141,12 @@ func (connector *DbConnector) GetNotifierStateForSource(clusterKey moira.Cluster
 
 	state, err := reply.NotifierState(stateCmd)
 	if err != nil && !errors.Is(err, database.ErrNil) {
-		return defaultState, err
+		return errorState, err
+	}
+
+	if errors.Is(err, database.ErrNil) {
+		// If state for cluster was never set, set OK by default
+		return okState, nil
 	}
 
 	return state, nil
@@ -171,10 +176,7 @@ func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey
 
 		if errors.Is(err, database.ErrNil) {
 			// If state for cluster was never set, set OK by default
-			result[cluster] = moira.NotifierState{
-				State: moira.SelfStateOK,
-				Actor: moira.SelfStateActorManual,
-			}
+			result[cluster] = okState
 		} else {
 			result[cluster] = state
 		}
@@ -211,8 +213,13 @@ func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.Cluster
 	return nil
 }
 
-var defaultState moira.NotifierState = moira.NotifierState{
+var errorState moira.NotifierState = moira.NotifierState{
 	State: moira.SelfStateERROR,
+	Actor: moira.SelfStateActorManual,
+}
+
+var okState moira.NotifierState = moira.NotifierState{
+	State: moira.SelfStateOK,
 	Actor: moira.SelfStateActorManual,
 }
 
