@@ -8,6 +8,7 @@ import (
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/moira-alert/moira"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTargetVerification(t *testing.T) {
@@ -22,7 +23,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check bad function", func(t *testing.T) {
 			targets := []string{`alias(test.one,'One'`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Len(t, problems, 1)
 			assert.False(t, problems[0].SyntaxOk)
 		})
@@ -30,7 +31,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check target with unrecognized syntax error", func(t *testing.T) {
 			targets := []string{`alias(test.one,'One'))`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, problems[0].SyntaxOk)
 			assert.Nil(t, problems[0].TreeOfProblems)
 		})
@@ -38,14 +39,14 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check correct construction", func(t *testing.T) {
 			targets := []string{`alias(test.one,'One')`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 		})
 
 		t.Run("Check correct empty function", func(t *testing.T) {
 			targets := []string{`alias(movingSum(),'One')`}
 			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Nil(t, problems[0].TreeOfProblems)
 		})
@@ -53,7 +54,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check interval larger that TTL", func(t *testing.T) {
 			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
 			problems, err := TargetVerification(targets, 5*time.Minute, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			// target is not valid because set of metrics by last 5 minutes is not enough for function with 10min interval
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "movingAverage", problems[0].TreeOfProblems.Argument)
@@ -64,7 +65,7 @@ func TestTargetVerification(t *testing.T) {
 			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
 			// ttl is 0 means that metrics will persist forever
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			// target is valid because there is enough metrics
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Nil(t, problems[0].TreeOfProblems)
@@ -73,7 +74,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check unstable function", func(t *testing.T) {
 			targets := []string{"summarize(test.metric, '10min')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "summarize", problems[0].TreeOfProblems.Argument)
 		})
@@ -81,7 +82,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check false notifications function", func(t *testing.T) {
 			targets := []string{"highest(test.metric)"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "highest", problems[0].TreeOfProblems.Argument)
 		})
@@ -89,7 +90,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check visual function", func(t *testing.T) {
 			targets := []string{"consolidateBy(Servers.web01.sda1.free_space, 'max')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "consolidateBy", problems[0].TreeOfProblems.Argument)
 		})
@@ -97,7 +98,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check unsupported function", func(t *testing.T) {
 			targets := []string{"myUnsupportedFunction(Servers.web01.sda1.free_space, 'max')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "myUnsupportedFunction", problems[0].TreeOfProblems.Argument)
 		})
@@ -105,7 +106,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check nested function", func(t *testing.T) {
 			targets := []string{"movingAverage(myUnsupportedFunction(), '10min')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "myUnsupportedFunction", problems[0].TreeOfProblems.Problems[0].Argument)
 		})
@@ -113,7 +114,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check target only with metric (without Graphite-function)", func(t *testing.T) {
 			targets := []string{"my.metric"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Nil(t, problems[0].TreeOfProblems)
 		})
@@ -121,7 +122,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check target with space symbol in metric name", func(t *testing.T) {
 			targets := []string{"a b"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, problems[0].SyntaxOk)
 			assert.Nil(t, problems[0].TreeOfProblems)
 		})
@@ -129,7 +130,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check seriesByTag target without non-regex args, regex has anchors", func(t *testing.T) {
 			targets := []string{"seriesByTag('name=~^tag\\..*$')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "seriesByTag('name=~^tag\\..*$')", problems[0].TreeOfProblems.Argument)
 			assert.Equal(t, isBad, problems[0].TreeOfProblems.Type)
@@ -138,7 +139,7 @@ func TestTargetVerification(t *testing.T) {
 		t.Run("Check seriesByTag target with a wildcard argument", func(t *testing.T) {
 			targets := []string{"seriesByTag('name=ab.bc.*.cd.*.ef')"}
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "seriesByTag('name=ab.bc.*.cd.*.ef')", problems[0].TreeOfProblems.Argument)
 			assert.Equal(t, isBad, problems[0].TreeOfProblems.Type)
@@ -148,7 +149,7 @@ func TestTargetVerification(t *testing.T) {
 			targets := []string{"aliasByTags(seriesByTag('name=~*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "seriesByTag('name=~*')", problems[0].TreeOfProblems.Problems[0].Argument)
 			assert.Equal(t, isBad, problems[0].TreeOfProblems.Problems[0].Type)
@@ -158,7 +159,7 @@ func TestTargetVerification(t *testing.T) {
 			targets := []string{"aliasByTags(seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Equal(t, "seriesByTag('name=~*', 'tag1~=*val1*', 'tag2=*val2*')", problems[0].TreeOfProblems.Problems[0].Argument)
 			assert.Equal(t, isBad, problems[0].TreeOfProblems.Problems[0].Type)
@@ -168,7 +169,7 @@ func TestTargetVerification(t *testing.T) {
 			targets := []string{"aliasByTags(seriesByTag('name=~*', 'tag1=val1', 'tag2=val2', 'tag3=val3*'),'tag')"}
 
 			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, problems[0].SyntaxOk)
 			assert.Nil(t, problems[0].TreeOfProblems)
 		})
@@ -179,7 +180,7 @@ func TestConvertGraphiteTimeToTimeDuration(t *testing.T) {
 	t.Run("Test graphite time functions", func(t *testing.T) {
 		for _, data := range getTestDataTargetWithTimeInterval() {
 			expr, _, err := parser.ParseExpr(data.target)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			if len(expr.Args()) < 2 {
 				continue
@@ -208,7 +209,7 @@ func TestParseParametersToTimeDuration(t *testing.T) {
 				expr, _, err = parser.ParseExpr(fmt.Sprintf(tmpl, value))
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			_, expected := positiveDuration(expr.Args()[1])
 			assert.Equal(t, expected, actual)
