@@ -7,7 +7,6 @@ import (
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -180,7 +179,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 		state, err := database.GetNotifierStateForSources()
 		require.NoError(t, err)
-		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
+		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
 				Actor: moira.SelfStateActorManual,
 				State: moira.SelfStateOK,
@@ -204,7 +203,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 		state, err := database.GetNotifierStateForSources()
 		require.NoError(t, err)
-		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
+		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
 				Actor: moira.SelfStateActorManual,
 				State: moira.SelfStateERROR,
@@ -230,7 +229,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 		state, err := database.GetNotifierStateForSources()
 		require.NoError(t, err)
-		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
+		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
 				Actor: moira.SelfStateActorManual,
 				State: moira.SelfStateERROR,
@@ -256,7 +255,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 		state, err := database.GetNotifierStateForSources()
 		require.NoError(t, err)
-		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
+		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
 				Actor: moira.SelfStateActorManual,
 				State: moira.SelfStateOK,
@@ -281,7 +280,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		}
 
 		err := database.SetNotifierStateForSource(clusterKey, moira.SelfStateActorManual, moira.SelfStateERROR)
-		assert.Error(t, err, "unknown cluster 'prometheus_remote.cluster_that_does_not_exist'")
+		require.Error(t, err, "unknown cluster 'prometheus_remote.cluster_that_does_not_exist'")
 	})
 }
 
@@ -298,21 +297,21 @@ func TestGetNotifierStateForSource(t *testing.T) {
 
 		state, err := database.GetNotifierStateForSource(moira.DefaultLocalCluster)
 		require.NoError(t, err)
-		assert.Equal(t, moira.NotifierState{
+		require.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,
 			State: moira.SelfStateERROR,
 		}, state)
 
 		state, err = database.GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster)
 		require.NoError(t, err)
-		assert.Equal(t, moira.NotifierState{
+		require.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,
 			State: moira.SelfStateOK,
 		}, state)
 
 		state, err = database.GetNotifierStateForSource(moira.DefaultPrometheusRemoteCluster)
 		require.NoError(t, err)
-		assert.Equal(t, moira.NotifierState{
+		require.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,
 			State: moira.SelfStateOK,
 		}, state)

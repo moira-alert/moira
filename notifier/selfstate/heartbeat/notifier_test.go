@@ -8,7 +8,6 @@ import (
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -26,8 +25,8 @@ func TestNotifierState(t *testing.T) {
 
 			value, needSend, errActual := check.Check(now)
 			require.NoError(t, errActual)
-			assert.False(t, needSend)
-			assert.EqualValues(t, 0, value)
+			require.False(t, needSend)
+			require.EqualValues(t, 0, value)
 		})
 
 		t.Run("Test get notification", func(t *testing.T) {
@@ -38,8 +37,8 @@ func TestNotifierState(t *testing.T) {
 
 			value, needSend, errActual := check.Check(now)
 			require.NoError(t, errActual)
-			assert.True(t, needSend)
-			assert.EqualValues(t, 0, value)
+			require.True(t, needSend)
+			require.EqualValues(t, 0, value)
 		})
 
 		t.Run("Should return OK if notifier disabled automatically", func(t *testing.T) {
@@ -50,13 +49,13 @@ func TestNotifierState(t *testing.T) {
 
 			value, hasError, err := check.Check(now)
 			require.NoError(t, err)
-			assert.False(t, hasError)
-			assert.EqualValues(t, 0, value)
+			require.False(t, hasError)
+			require.EqualValues(t, 0, value)
 		})
 
 		t.Run("Test NeedToCheckOthers and NeedTurnOffNotifier", func(t *testing.T) {
-			assert.False(t, check.NeedTurnOffNotifier())
-			assert.True(t, check.NeedToCheckOthers())
+			require.False(t, check.NeedTurnOffNotifier())
+			require.True(t, check.NeedToCheckOthers())
 		})
 	})
 }

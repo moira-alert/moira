@@ -9,7 +9,6 @@ import (
 	mock_heartbeat "github.com/moira-alert/moira/mock/heartbeat"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/moira-alert/moira"
@@ -48,8 +47,8 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		err := mock.selfCheckWorker.Start()
 		require.NoError(t, err)
 
-		assert.Len(t, mock.selfCheckWorker.heartbeatsGraph[0], 1)
-		assert.Len(t, mock.selfCheckWorker.heartbeatsGraph[1], 4)
+		require.Len(t, mock.selfCheckWorker.heartbeatsGraph[0], 1)
+		require.Len(t, mock.selfCheckWorker.heartbeatsGraph[1], 4)
 
 		const oneTickDelay = time.Millisecond * 1500
 
@@ -161,17 +160,17 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 
 		mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult1)
 
-		assert.Empty(t, mock.selfCheckWorker.oldState)
-		assert.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.state)
+		require.Empty(t, mock.selfCheckWorker.oldState)
+		require.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.state)
 
 		successGraphResult2 := successGraphResult1
 		successGraphResult2.nowTimestamp = time.Duration(nowTS.UnixNano()) + 500*time.Millisecond
 
 		events := mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult2)
 
-		assert.Empty(t, events)
-		assert.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.oldState)
-		assert.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.state)
+		require.Empty(t, events)
+		require.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.oldState)
+		require.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.state)
 
 		errorGraphResult1 := graphExecutionResult{
 			lastSuccessCheckElapsedTime: nowTS.Unix(),
@@ -186,9 +185,9 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 
 		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult1)
 
-		assert.Len(t, events, 1)
-		assert.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.oldState)
-		assert.Equal(t, moira.SelfStateWorkerWARN, mock.selfCheckWorker.state)
+		require.Len(t, events, 1)
+		require.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.oldState)
+		require.Equal(t, moira.SelfStateWorkerWARN, mock.selfCheckWorker.state)
 
 		errorGraphResult2 := errorGraphResult1
 		errorGraphResult2.nowTimestamp = time.Duration(nowTS.UnixNano()) + 1500*time.Millisecond
@@ -197,9 +196,9 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 
 		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult2)
 
-		assert.Empty(t, events)
-		assert.Equal(t, moira.SelfStateWorkerWARN, mock.selfCheckWorker.oldState)
-		assert.Equal(t, moira.SelfStateWorkerWARN, mock.selfCheckWorker.state)
+		require.Empty(t, events)
+		require.Equal(t, moira.SelfStateWorkerWARN, mock.selfCheckWorker.oldState)
+		require.Equal(t, moira.SelfStateWorkerWARN, mock.selfCheckWorker.state)
 
 		errorGraphResult3 := errorGraphResult2
 		errorGraphResult3.nowTimestamp = time.Duration(nowTS.UnixNano()) + 3000*time.Millisecond
@@ -208,9 +207,9 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 
 		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult3)
 
-		assert.Len(t, events, 1)
-		assert.Equal(t, moira.SelfStateWorkerWARN, mock.selfCheckWorker.oldState)
-		assert.Equal(t, moira.SelfStateWorkerERROR, mock.selfCheckWorker.state)
+		require.Len(t, events, 1)
+		require.Equal(t, moira.SelfStateWorkerWARN, mock.selfCheckWorker.oldState)
+		require.Equal(t, moira.SelfStateWorkerERROR, mock.selfCheckWorker.state)
 
 		errorGraphResult4 := errorGraphResult3
 		errorGraphResult4.nowTimestamp = time.Duration(nowTS.UnixNano()) + 3500*time.Millisecond
@@ -219,9 +218,9 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 
 		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), errorGraphResult4)
 
-		assert.Empty(t, events)
-		assert.Equal(t, moira.SelfStateWorkerERROR, mock.selfCheckWorker.oldState)
-		assert.Equal(t, moira.SelfStateWorkerERROR, mock.selfCheckWorker.state)
+		require.Empty(t, events)
+		require.Equal(t, moira.SelfStateWorkerERROR, mock.selfCheckWorker.oldState)
+		require.Equal(t, moira.SelfStateWorkerERROR, mock.selfCheckWorker.state)
 
 		successGraphResult3 := successGraphResult2
 		successGraphResult3.nowTimestamp = time.Duration(nowTS.UnixNano()) + 4000*time.Millisecond
@@ -234,9 +233,9 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 
 		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult3)
 
-		assert.Len(t, events, 1)
-		assert.Equal(t, moira.SelfStateWorkerERROR, mock.selfCheckWorker.oldState)
-		assert.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.state)
+		require.Len(t, events, 1)
+		require.Equal(t, moira.SelfStateWorkerERROR, mock.selfCheckWorker.oldState)
+		require.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.state)
 
 		successGraphResult4 := successGraphResult3
 		successGraphResult4.nowTimestamp = time.Duration(nowTS.Unix()) + 4500*time.Millisecond
@@ -248,9 +247,9 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 
 		events = mock.selfCheckWorker.handleGraphExecutionResult(nowTS.Unix(), successGraphResult4)
 
-		assert.Empty(t, events)
-		assert.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.oldState)
-		assert.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.state)
+		require.Empty(t, events)
+		require.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.oldState)
+		require.Equal(t, moira.SelfStateWorkerOK, mock.selfCheckWorker.state)
 	})
 }
 
@@ -330,7 +329,7 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 
 		actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
 		require.NoError(t, err)
-		assert.Equal(t, expected, actual)
+		require.Equal(t, expected, actual)
 		mock.mockCtrl.Finish()
 	})
 }
@@ -348,7 +347,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		require.NoError(t, err)
-		assert.True(t, notifierEnabled)
+		require.True(t, notifierEnabled)
 	})
 
 	t.Run("Should switch notifier to AUTO if enabled manually", func(t *testing.T) {
@@ -361,7 +360,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		require.NoError(t, err)
-		assert.True(t, notifierEnabled)
+		require.True(t, notifierEnabled)
 	})
 
 	t.Run("Should not enable if notifier is disabled manually", func(t *testing.T) {
@@ -372,7 +371,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		require.NoError(t, err)
-		assert.False(t, notifierEnabled)
+		require.False(t, notifierEnabled)
 	})
 
 	t.Run("Should not enable if notifier is disabled by a trigger", func(t *testing.T) {
@@ -383,7 +382,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		require.NoError(t, err)
-		assert.False(t, notifierEnabled)
+		require.False(t, notifierEnabled)
 	})
 
 	t.Run("Should not enable notifier if it is already enabled", func(t *testing.T) {
@@ -394,7 +393,7 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
 		require.NoError(t, err)
-		assert.False(t, notifierEnabled)
+		require.False(t, notifierEnabled)
 	})
 
 	t.Run("Should not enable notifier if getting state throw error", func(t *testing.T) {
@@ -402,8 +401,8 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 		mock.database.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{}, expected_err)
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
-		assert.Equal(t, err, expected_err)
-		assert.False(t, notifierEnabled)
+		require.Equal(t, err, expected_err)
+		require.False(t, notifierEnabled)
 	})
 
 	t.Run("Should not enable notifier if notifier enabling returns error", func(t *testing.T) {
@@ -417,8 +416,8 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 		mock.database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorAutomatic, moira.SelfStateOK).Return(expected_err)
 
 		notifierEnabled, err := mock.selfCheckWorker.enableNotifierIfPossible()
-		assert.Equal(t, err, expected_err)
-		assert.False(t, notifierEnabled)
+		require.Equal(t, err, expected_err)
+		require.False(t, notifierEnabled)
 	})
 }
 
@@ -453,7 +452,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			check.EXPECT().Check(now).Return(int64(0), false, err)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
-			assert.Nil(t, events)
+			require.Nil(t, events)
 		})
 
 		t.Run("Test turn off notification", func(t *testing.T) {
@@ -472,7 +471,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			mock.database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorAutomatic, moira.SelfStateERROR)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
-			assert.Len(t, events, 1)
+			require.Len(t, events, 1)
 		})
 
 		t.Run("Test turn on notification", func(t *testing.T) {
@@ -494,7 +493,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			mock.database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorAutomatic, moira.SelfStateOK)
 
 			events := mock.selfCheckWorker.handleCheckServices(now)
-			assert.Len(t, events, 1)
+			require.Len(t, events, 1)
 		})
 
 		t.Run("Test of sending notifications from a check", func(t *testing.T) {
