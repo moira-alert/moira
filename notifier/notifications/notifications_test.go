@@ -8,7 +8,7 @@ import (
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
@@ -68,7 +68,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		Metrics:  notifierMetrics,
 	}
 
-	Convey("Two different notifications, should send two packages", t, func() {
+	t.Run("Two different notifications, should send two packages", func(t *testing.T) {
 		dataBase.EXPECT().FetchNotifications(moira.DefaultLocalCluster, gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{
 			&notification1,
 			&notification2,
@@ -110,10 +110,10 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}, nil)
 
 		err := worker.processScheduledNotifications(moira.DefaultLocalCluster)
-		So(err, ShouldBeEmpty)
+		require.NoError(t, err)
 	})
 
-	Convey("Two same notifications, should send one package", t, func() {
+	t.Run("Two same notifications, should send one package", func(t *testing.T) {
 		dataBase.EXPECT().FetchNotifications(moira.DefaultLocalCluster, gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{ //nolint
 			&notification2,
 			&notification3,
@@ -145,7 +145,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 
 		err := worker.processScheduledNotifications(moira.DefaultLocalCluster)
-		So(err, ShouldBeEmpty)
+		require.NoError(t, err)
 	})
 }
 
@@ -250,11 +250,11 @@ func TestGoRoutine(t *testing.T) {
 		Actor: moira.SelfStateActorManual,
 	}, nil).AnyTimes()
 
-	Convey("Start goroutines", t, func() {
+	t.Run("Start goroutines", func(t *testing.T) {
 		worker.Start()
 		err := waitTestEnd(shutdown, clusterList, worker)
 
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 	})
 }
 

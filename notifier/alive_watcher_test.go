@@ -8,7 +8,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
-	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -37,8 +36,8 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 
 	aliveWatcher := NewAliveWatcher(nil, dataBase, 0, testNotifierMetrics)
 
-	Convey("checkNotifierState", t, func() {
-		Convey("when OK", func() {
+	t.Run("checkNotifierState", func(t *testing.T) {
+		t.Run("when OK", func(t *testing.T) {
 			dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
@@ -48,7 +47,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 			aliveWatcher.checkNotifierState()
 		})
 
-		Convey("when not OK state and no errors", func() {
+		t.Run("when not OK state and no errors", func(t *testing.T) {
 			notOKStates := []string{moira.SelfStateERROR, "err", "bad", "", "1"}
 
 			for _, badState := range notOKStates {
@@ -62,7 +61,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 			}
 		})
 
-		Convey("when not OK state and errors", func() {
+		t.Run("when not OK state and errors", func(t *testing.T) {
 			notOKState := ""
 			givenErrors := []error{
 				errors.New("one error"),
@@ -100,7 +99,7 @@ func TestAliveWatcher_Start(t *testing.T) {
 
 	aliveWatcher := NewAliveWatcher(logger, dataBase, testCheckNotifierStateTimeout, testNotifierMetrics)
 
-	Convey("AliveWatcher stops on cancel", t, func() {
+	t.Run("AliveWatcher stops on cancel", func(t *testing.T) {
 		eventsBuilder.EXPECT().
 			Interface("check_timeout_seconds", testCheckNotifierStateTimeout.Seconds()).
 			Return(eventsBuilder)

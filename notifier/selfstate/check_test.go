@@ -11,13 +11,12 @@ import (
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_notifier "github.com/moira-alert/moira/mock/notifier"
 	notifier2 "github.com/moira-alert/moira/notifier"
-	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
 
 func TestSelfCheckWorker_check(t *testing.T) {
-	Convey("Check should", t, func() {
-		Convey("Send notifications to admins only on database error", func() {
+	t.Run("Check should", func(t *testing.T) {
+		t.Run("Send notifications to admins only on database error", func(t *testing.T) {
 			worker := createWorker(t)
 			redisError := fmt.Errorf("Redis connection timeout")
 			worker.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), redisError)
@@ -35,7 +34,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			worker.selfCheckWorker.check(nowTS)
 		})
 
-		Convey("Send notifications to admins and users on single heartbeat error", func() {
+		t.Run("Send notifications to admins and users on single heartbeat error", func(t *testing.T) {
 			var timeDelta int64 = 100
 			nowTS := time.Now().Unix() + timeDelta
 			worker := createWorker(t)
