@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSelfCheckWithWritesInChecker(t *testing.T) {
@@ -164,5 +165,155 @@ func TestNotifierState(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(err2, ShouldBeNil)
 		})
+	})
+}
+
+func TestSetNotifierStateForSource(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	database := NewTestDatabase(logger)
+
+	database.Flush()
+
+	t.Run("Test set no states was set fot sources", func(t *testing.T) {
+		defer database.Flush()
+
+		state, err := database.GetNotifierStateForSources()
+		assert.NoError(t, err)
+		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
+			moira.DefaultLocalCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+			moira.DefaultGraphiteRemoteCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+			moira.DefaultPrometheusRemoteCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+		}, state)
+	})
+
+	t.Run("Test set ERROR for a single source", func(t *testing.T) {
+		defer database.Flush()
+
+		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		assert.NoError(t, err)
+
+		state, err := database.GetNotifierStateForSources()
+		assert.NoError(t, err)
+		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
+			moira.DefaultLocalCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateERROR,
+			},
+			moira.DefaultGraphiteRemoteCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+			moira.DefaultPrometheusRemoteCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+		}, state)
+	})
+
+	t.Run("Test set ERROR for a several sources", func(t *testing.T) {
+		defer database.Flush()
+
+		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		assert.NoError(t, err)
+		err = database.SetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		assert.NoError(t, err)
+
+		state, err := database.GetNotifierStateForSources()
+		assert.NoError(t, err)
+		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
+			moira.DefaultLocalCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateERROR,
+			},
+			moira.DefaultGraphiteRemoteCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateERROR,
+			},
+			moira.DefaultPrometheusRemoteCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+		}, state)
+	})
+
+	t.Run("Set source state to ERROR and then to OK", func(t *testing.T) {
+		defer database.Flush()
+
+		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		assert.NoError(t, err)
+		err = database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateOK)
+		assert.NoError(t, err)
+
+		state, err := database.GetNotifierStateForSources()
+		assert.NoError(t, err)
+		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
+			moira.DefaultLocalCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+			moira.DefaultGraphiteRemoteCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+			moira.DefaultPrometheusRemoteCluster: {
+				Actor: moira.SelfStateActorManual,
+				State: moira.SelfStateOK,
+			},
+		}, state)
+	})
+
+	t.Run("Set nonexisting source must return err", func(t *testing.T) {
+		defer database.Flush()
+
+		clusterKey := moira.ClusterKey{
+			TriggerSource: moira.PrometheusRemote,
+			ClusterId:     moira.ClusterId("cluster_that_does_not_exist"),
+		}
+
+		err := database.SetNotifierStateForSource(clusterKey, moira.SelfStateActorManual, moira.SelfStateERROR)
+		assert.Error(t, err, "unknown cluster 'prometheus_remote.cluster_that_does_not_exist'")
+	})
+}
+
+func TestGetNotifierStateForSource(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	database := NewTestDatabase(logger)
+	database.Flush()
+
+	defer database.Flush()
+
+	t.Run("Get state for all sources one by one", func(t *testing.T) {
+		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		assert.NoError(t, err)
+
+		state, err := database.GetNotifierStateForSource(moira.DefaultLocalCluster)
+		assert.NoError(t, err)
+		assert.Equal(t, moira.NotifierState{
+			Actor: moira.SelfStateActorManual,
+			State: moira.SelfStateERROR,
+		}, state)
+
+		state, err = database.GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster)
+		assert.NoError(t, err)
+		assert.Equal(t, moira.NotifierState{
+			Actor: moira.SelfStateActorManual,
+			State: moira.SelfStateOK,
+		}, state)
+
+		state, err = database.GetNotifierStateForSource(moira.DefaultPrometheusRemoteCluster)
+		assert.NoError(t, err)
+		assert.Equal(t, moira.NotifierState{
+			Actor: moira.SelfStateActorManual,
+			State: moira.SelfStateOK,
+		}, state)
 	})
 }
