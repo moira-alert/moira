@@ -8,6 +8,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSelfCheckWithWritesInChecker(t *testing.T) {
@@ -178,7 +179,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		defer database.Flush()
 
 		state, err := database.GetNotifierStateForSources()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
 				Actor: moira.SelfStateActorManual,
@@ -199,10 +200,10 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		defer database.Flush()
 
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		state, err := database.GetNotifierStateForSources()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
 				Actor: moira.SelfStateActorManual,
@@ -223,12 +224,12 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		defer database.Flush()
 
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = database.SetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		state, err := database.GetNotifierStateForSources()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
 				Actor: moira.SelfStateActorManual,
@@ -249,12 +250,12 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		defer database.Flush()
 
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		err = database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateOK)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		state, err := database.GetNotifierStateForSources()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
 				Actor: moira.SelfStateActorManual,
@@ -293,24 +294,24 @@ func TestGetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Get state for all sources one by one", func(t *testing.T) {
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		state, err := database.GetNotifierStateForSource(moira.DefaultLocalCluster)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,
 			State: moira.SelfStateERROR,
 		}, state)
 
 		state, err = database.GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,
 			State: moira.SelfStateOK,
 		}, state)
 
 		state, err = database.GetNotifierStateForSource(moira.DefaultPrometheusRemoteCluster)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,
 			State: moira.SelfStateOK,
