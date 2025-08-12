@@ -40,23 +40,23 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 }
 
 // GetContactById gets notification contact by its id string.
-func GetContactById(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
+func GetContactById(database moira.Database, contactID string) (*dto.ContactWithScore, *api.ErrorResponse) {
 	contact, err := database.GetContact(contactID)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	contactToReturn := &dto.Contact{
-		ID:           contact.ID,
-		Name:         contact.Name,
-		User:         contact.User,
-		TeamID:       contact.Team,
-		Type:         contact.Type,
-		Value:        contact.Value,
-		ExtraMessage: contact.ExtraMessage,
+	contactScore, err := database.GetContactScore(contactID)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
 	}
 
-	return contactToReturn, nil
+	contactToReturn := dto.ContactWithScore{
+		Contact: dto.NewContact(contact),
+		Score:   dto.NewContactScore(contactScore),
+	}
+
+	return &contactToReturn, nil
 }
 
 // CreateContact creates new notification contact for current user.
@@ -233,7 +233,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string, 
 }
 
 // SendTestContactNotification push test notification to verify the correct contact settings.
-func SendTestContactNotification(dataBase moira.Database, contactID string) *api.ErrorResponse {
+func SendTestContactNotification(dataBase moira.Database, contactID string, waitTime time.Duration) *api.ErrorResponse {
 	eventData := &moira.NotificationEvent{
 		ContactID: contactID,
 		Metric:    "Test.metric.value",
@@ -246,7 +246,26 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 		return api.ErrorInternalServer(err)
 	}
 
-	return nil
+	baseScore, err := dataBase.GetContactScore(contactID)
+	if err != nil {
+		return api.ErrorInternalServer(err)
+	}
+
+	for {
+		select {
+		case <-time.After(waitTime):
+			return nil
+		case <-time.Tick(1 * time.Second):
+			score, err := dataBase.GetContactScore(contactID)
+			if err != nil {
+				return api.ErrorInternalServer(err)
+			}
+
+			if !moira.EqualTwoPointerValues(baseScore, score) {
+				return nil
+			}
+		}
+	}
 }
 
 // CheckUserPermissionsForContact checks contact for existence and permissions for given user.
@@ -338,7 +357,9 @@ func GetContactNoisiness(
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	idsWithEventsCount, err := database.CountEventsInNotificationHistory(getOnlyIDs(contacts), from, to)
+	contactsIds := getOnlyIDs(contacts)
+
+	idsWithEventsCount, err := database.CountEventsInNotificationHistory(contactsIds, from, to)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}

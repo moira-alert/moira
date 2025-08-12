@@ -125,6 +125,8 @@ Easiest way to get redis is via docker:
 docker run -p 6379:6379 -d redis:alpine
 ```
 
+We use [testify](https://github.com/stretchr/testify) as the primary way to write new tests. Moira contains some legacy tests based on GoConvey, we don't recommend writing tests using it.
+
 To run test use ``go test ./...`` or run [GoConvey](http://goconvey.co/):
 
 ```bash

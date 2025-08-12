@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
@@ -89,16 +90,19 @@ func TestGetContactById(t *testing.T) {
 		}
 
 		dataBase.EXPECT().GetContact(contact.ID).Return(contact, nil)
+		dataBase.EXPECT().GetContactScore(contact.ID).Return(nil, nil)
 		actual, err := GetContactById(dataBase, contact.ID)
 		So(err, ShouldBeNil)
 		So(actual,
 			ShouldResemble,
-			&dto.Contact{
-				ID:    contact.ID,
-				Name:  contact.Name,
-				Type:  contact.Type,
-				User:  contact.User,
-				Value: contact.Value,
+			&dto.ContactWithScore{
+				Contact: dto.Contact{
+					ID:    contact.ID,
+					Name:  contact.Name,
+					Type:  contact.Type,
+					User:  contact.User,
+					Value: contact.Value,
+				},
 			})
 	})
 
@@ -106,9 +110,10 @@ func TestGetContactById(t *testing.T) {
 		const invalidId = "invalidID"
 
 		dataBase.EXPECT().GetContact(invalidId).Return(moira.ContactData{}, nil)
+		dataBase.EXPECT().GetContactScore(invalidId).Return(nil, nil)
 		actual, err := GetContactById(dataBase, invalidId)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, &dto.Contact{})
+		So(actual, ShouldResemble, &dto.ContactWithScore{})
 	})
 
 	Convey("Error to fetch contact from db should rise api error", t, func() {
@@ -923,16 +928,34 @@ func TestSendTestContactNotification(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	id := uuid.Must(uuid.NewV4()).String()
 
-	Convey("Success", t, func() {
+	Convey("Success on unscored contact", t, func() {
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
-		err := SendTestContactNotification(dataBase, id)
+
+		dataBase.EXPECT().GetContactScore(id).Return(nil, nil).Times(1)
+
+		err := SendTestContactNotification(dataBase, id, time.Millisecond)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success on scored contact", t, func() {
+		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
+
+		dataBase.EXPECT().GetContactScore(id).Return(&moira.ContactScore{
+			SuccessTXCount:     9,
+			AllTXCount:         10,
+			LastErrorMsg:       "some error",
+			LastErrorTimestamp: 123,
+			Status:             moira.ContactStatusOK,
+		}, nil).Times(1)
+
+		err := SendTestContactNotification(dataBase, id, time.Millisecond)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("oooops! Can not push event")
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
-		err := SendTestContactNotification(dataBase, id)
+		err := SendTestContactNotification(dataBase, id, time.Millisecond)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
@@ -1179,7 +1202,7 @@ func TestGetContactNoisiness(t *testing.T) {
 						{ID: "contactID2", Count: 3},
 						{ID: "contactID3", Count: 1},
 					}, nil).Times(1)
-
+				// dataBase.EXPECT().GetContactsScore([]string{"contactID1", "contactID2", "contactID3"}).Return(map[string]*moira.ContactScore{}, nil)
 				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.DescSortOrder)
 				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
 					Page:  zeroPage,
@@ -1214,6 +1237,7 @@ func TestGetContactNoisiness(t *testing.T) {
 						{ID: "contactID2", Count: 3},
 						{ID: "contactID3", Count: 1},
 					}, nil).Times(1)
+				// dataBase.EXPECT().GetContactsScore([]string{"contactID1", "contactID2", "contactID3"}).Return(map[string]*moira.ContactScore{}, nil)
 
 				gotDTO, gotErrRsp := GetContactNoisiness(dataBase, zeroPage, allEventsSize, allTimeFrom, allTimeTo, api.AscSortOrder)
 				So(gotDTO, ShouldResemble, &dto.ContactNoisinessList{
