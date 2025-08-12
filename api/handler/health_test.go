@@ -152,7 +152,6 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 		database = mockDb
 
@@ -184,6 +183,8 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 
 		t.Run("Admin tries to get system subscriptions", func(t *testing.T) {
 			t.Run("Without filter", func(t *testing.T) {
+				responseWriter := httptest.NewRecorder()
+
 				mockDb.EXPECT().GetTagsSubscriptions(gomock.Any()).Return(nil, nil)
 
 				testRequest := httptest.NewRequest(http.MethodGet, "/api/health/system-subscriptions", bytes.NewReader([]byte{}))
@@ -196,6 +197,8 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 				require.Equal(t, http.StatusOK, response.StatusCode)
 			})
 			t.Run("With filter", func(t *testing.T) {
+				responseWriter := httptest.NewRecorder()
+
 				mockDb.EXPECT().GetTagsSubscriptions([]string{"remote-checker-tag", "local-checker-tag"}).Return(nil, nil)
 
 				testRequest := httptest.NewRequest(http.MethodGet, "/api/health/system-subscriptions?tag=remote-checker-tag&tag=local-checker-tag", bytes.NewReader([]byte{}))
@@ -210,6 +213,7 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 		})
 
 		t.Run("Non-admin tries to get system subscriptions", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			testRequest := httptest.NewRequest(http.MethodGet, "/api/health/system-subscriptions", bytes.NewReader([]byte{}))
 			testRequest.Header.Set("x-webauth-user", "non-admin")
 
