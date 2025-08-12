@@ -6,10 +6,12 @@ import (
 	"math"
 	"net/url"
 	"slices"
+	"sort"
 	"testing"
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBytesScanner(t *testing.T) {
@@ -63,6 +65,72 @@ func TestSubset(t *testing.T) {
 		So(Subset([]string{"1", "2", "3"}, []string{"123", "2", "3"}), ShouldBeFalse)
 		So(Subset([]string{"1", "2", "3"}, []string{"1", "2", "4"}), ShouldBeFalse)
 	})
+}
+
+func TestSymmetricDiff(t *testing.T) {
+	tests := []struct {
+		name     string
+		lists    [][]int
+		expected []int
+	}{
+		{
+			name:     "empty input",
+			lists:    [][]int{},
+			expected: []int{},
+		},
+		{
+			name:     "single array",
+			lists:    [][]int{{1, 2, 3}},
+			expected: []int{},
+		},
+		{
+			name:     "two arrays with partial overlap",
+			lists:    [][]int{{1, 2, 3}, {2, 3, 4}},
+			expected: []int{1, 4},
+		},
+		{
+			name:     "three arrays with common element",
+			lists:    [][]int{{1, 2, 3}, {2, 3, 4}, {3, 4, 5}},
+			expected: []int{1, 2, 4, 5},
+		},
+		{
+			name:     "no common elements",
+			lists:    [][]int{{1, 2}, {3, 4}, {5, 6}},
+			expected: []int{1, 2, 3, 4, 5, 6},
+		},
+		{
+			name:     "all same elements",
+			lists:    [][]int{{1, 2, 3}, {1, 2, 3}, {1, 2, 3}},
+			expected: []int{},
+		},
+		{
+			name:     "arrays with duplicates",
+			lists:    [][]int{{1, 1, 2, 2}, {2, 2, 3, 3}, {2, 3, 4}},
+			expected: []int{1, 3, 4},
+		},
+		{
+			name:     "one empty array",
+			lists:    [][]int{{1, 2, 3}, {}, {2, 3, 4}},
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			name:     "single element arrays",
+			lists:    [][]int{{1}, {2}, {3}},
+			expected: []int{1, 2, 3},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := SymmetricDiff(tt.lists...)
+
+			// Sort both slices for comparison since map iteration order is random
+			sort.Ints(result)
+			sort.Ints(tt.expected)
+
+			assert.Equal(t, tt.expected, result, "SymmetricDiff should return expected result")
+		})
+	}
 }
 
 func TestGetStringListsDiff(t *testing.T) {
@@ -486,6 +554,91 @@ func TestValidateURL(t *testing.T) {
 			Convey(fmt.Sprintf("Case %v: %s", i+1, singleCase.desc), func() {
 				err := ValidateURL(singleCase.givenURL)
 				So(err, ShouldResemble, singleCase.expectedErr)
+			})
+		}
+	})
+}
+
+func TestSafeAdd(t *testing.T) {
+	Convey("Test SafeAdd", t, func() {
+		type testcase struct {
+			a           uint64
+			b           uint64
+			expected    uint64
+			expectedErr error
+		}
+
+		cases := []testcase{
+			{
+				a:           0,
+				b:           0,
+				expected:    0,
+				expectedErr: nil,
+			},
+			{
+				a:           1,
+				b:           2,
+				expected:    3,
+				expectedErr: nil,
+			},
+			{
+				a:           math.MaxUint64,
+				b:           1,
+				expected:    0,
+				expectedErr: fmt.Errorf("integer overflow occurred during addition"),
+			},
+		}
+
+		for _, c := range cases {
+			Convey(fmt.Sprintf("%v + %v = %v | err = %v", c.a, c.b, c.expected, c.expectedErr), func() {
+				res, err := SafeAdd(c.a, c.b)
+				So(res, ShouldEqual, c.expected)
+				So(err, ShouldResemble, c.expectedErr)
+			})
+		}
+	})
+}
+
+func TestCalculatePercentage(t *testing.T) {
+	Convey("Test CalculatePercentage", t, func() {
+		type testcase struct {
+			part     uint64
+			total    uint64
+			expected *uint8
+		}
+
+		cases := []testcase{
+			{
+				part:     50,
+				total:    100,
+				expected: func() *uint8 { v := uint8(50); return &v }(),
+			},
+			{
+				part:     25,
+				total:    200,
+				expected: func() *uint8 { v := uint8(12); return &v }(),
+			},
+			{
+				part:     0,
+				total:    100,
+				expected: func() *uint8 { v := uint8(0); return &v }(),
+			},
+			{
+				part:     100,
+				total:    0,
+				expected: nil,
+			},
+			{
+				part:     150,
+				total:    100,
+				expected: func() *uint8 { v := uint8(150); return &v }(),
+			},
+		}
+
+		for i, c := range cases {
+			Convey(fmt.Sprintf("Case %v: CalculatePercentage(%v, %v)", i, c.part, c.total), func() {
+				res := CalculatePercentage(c.part, c.total)
+				So(res, ShouldResemble, c.expected)
 			})
 		}
 	})

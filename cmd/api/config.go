@@ -82,6 +82,8 @@ type LimitsConfig struct {
 	Trigger TriggerLimitsConfig `yaml:"trigger"`
 	// Team contains the limits applied to teams.
 	Team TeamLimitsConfig `yaml:"team"`
+	// Contact contains the limits applied to contacts.
+	Contact ContactLimits `yaml:"contact"`
 }
 
 // PagerLimits represents the limits which will be applied to all pagers.
@@ -104,6 +106,12 @@ type TeamLimitsConfig struct {
 	MaxDescriptionSize int `yaml:"max_description_size"`
 }
 
+// ContactLimits defines limits for contact-related configurations.
+type ContactLimits struct {
+	// TestNotificationWaitTime specifies the duration to wait for test notifications.
+	TestNotificationWaitTime time.Duration `yaml:"test_notification_wait_time"`
+}
+
 // ToLimits converts LimitsConfig to api.LimitsConfig.
 func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 	return api.LimitsConfig{
@@ -116,6 +124,9 @@ func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 		Team: api.TeamLimits{
 			MaxNameSize:        conf.Team.MaxNameSize,
 			MaxDescriptionSize: conf.Team.MaxDescriptionSize,
+		},
+		Contact: api.ContactLimits{
+			TestNotificationWaitTime: conf.Contact.TestNotificationWaitTime,
 		},
 	}
 }
@@ -304,6 +315,9 @@ func getDefault() config {
 				Team: TeamLimitsConfig{
 					MaxNameSize:        api.DefaultTeamNameMaxSize,
 					MaxDescriptionSize: api.DefaultTeamDescriptionMaxSize,
+				},
+				Contact: ContactLimits{
+					TestNotificationWaitTime: 10 * time.Second,
 				},
 			},
 		},

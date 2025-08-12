@@ -111,6 +111,10 @@ type ProblemOfTarget struct {
 }
 
 func (p *ProblemOfTarget) hasError() bool {
+	if p == nil {
+		return false
+	}
+
 	if p.Type == isBad {
 		return true
 	}

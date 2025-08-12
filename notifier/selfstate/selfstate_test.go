@@ -9,6 +9,7 @@ import (
 	mock_heartbeat "github.com/moira-alert/moira/mock/heartbeat"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/moira-alert/moira"
@@ -255,82 +256,206 @@ func TestSelfCheckWorker_handleGraphExecutionResult(t *testing.T) {
 
 func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 	t.Run("Should resemble events to contacts trought system tags", func(t *testing.T) {
-		contact := moira.ContactData{
+		baseContact := moira.ContactData{
 			ID:    "some-contact",
 			Type:  "my_type",
 			Value: "123",
 		}
 
-		notifAndTags := []heartbeatNotificationEvent{
-			{
-				NotificationEvent: moira.NotificationEvent{
-					Metric: "Triggered!!!",
-				},
-				CheckTags: heartbeat.CheckTags{
-					"sys-tag1",
-				},
-			},
-			{
-				NotificationEvent: moira.NotificationEvent{
-					Metric: "Some another problem!!!",
-				},
-				CheckTags: heartbeat.CheckTags{
-					"sys-tag2", "sys-tag-common",
-				},
-			},
+		baseSystemSubscription1 := moira.SubscriptionData{
+			ID:       "sys-sub-1",
+			Contacts: []string{baseContact.ID},
+			Tags:     []string{"sys-tag1"},
+		}
+		baseSystemSubscription2 := moira.SubscriptionData{
+			ID:       "sys-sub-2",
+			Contacts: []string{baseContact.ID},
+			Tags:     []string{"sys-tag2", "sys-tag-common"},
 		}
 
-		expected := []*notifier.NotificationPackage{
-			{
-				Contact: contact,
-				Trigger: moira.TriggerData{
-					Name:       "Moira health check",
-					ErrorValue: float64(0),
-				},
-				Events: []moira.NotificationEvent{
-					{
+		t.Run("if owner does not exists", func(t *testing.T) {
+			notifAndTags := []heartbeatNotificationEvent{
+				{
+					NotificationEvent: moira.NotificationEvent{
 						Metric: "Triggered!!!",
 					},
-					{
-						Metric: "Some another problem!!!",
+					CheckTags: heartbeat.CheckTags{
+						"sys-tag1",
 					},
 				},
-				DontResend: true,
-			},
-		}
+				{
+					NotificationEvent: moira.NotificationEvent{
+						Metric: "Some another problem!!!",
+					},
+					CheckTags: heartbeat.CheckTags{
+						"sys-tag2", "sys-tag-common",
+					},
+				},
+			}
+			expected := []*notifier.NotificationPackage{
+				{
+					Contact: baseContact,
+					Trigger: moira.TriggerData{
+						Name:       "Moira health check",
+						ErrorValue: float64(0),
+					},
+					Events: []moira.NotificationEvent{
+						{
+							Metric: "Triggered!!!",
+						},
+						{
+							Metric: "Some another problem!!!",
+						},
+					},
+					DontResend: true,
+				},
+			}
 
-		mockCtrl := gomock.NewController(t)
-		database := mock_moira_alert.NewMockDatabase(mockCtrl)
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-		database.EXPECT().GetTagsSubscriptions([]string{"sys-tag1"}).Return([]*moira.SubscriptionData{
-			{
+			database.EXPECT().GetTagsSubscriptions(baseSystemSubscription1.Tags).Return([]*moira.SubscriptionData{
+				&baseSystemSubscription1,
+			}, nil)
+			database.EXPECT().GetTagsSubscriptions(baseSystemSubscription2.Tags).Return([]*moira.SubscriptionData{
+				&baseSystemSubscription2,
+			}, nil)
+
+			database.EXPECT().GetContacts([]string{baseContact.ID}).Return([]*moira.ContactData{
+				&baseContact,
+			}, nil).Times(2)
+
+			logger, _ := logging.GetLogger("SelfState")
+			notif := mock_notifier.NewMockNotifier(mockCtrl)
+
+			mock := &selfCheckWorkerMock{
+				selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}),
+				mockCtrl:        mockCtrl,
+			}
+
+			actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
+			require.NoError(t, err)
+			require.Equal(t, expected, actual)
+			mock.mockCtrl.Finish()
+			assert.Equal(t, expected, actual)
+		})
+
+		t.Run("if owner is user", func(t *testing.T) {
+			user := "user-1"
+
+			contact := baseContact
+			contact.User = user
+
+			systemSubscription1 := baseSystemSubscription1
+			systemSubscription1.User = user
+
+			systemSubscription2 := baseSystemSubscription2
+			systemSubscription2.User = user
+
+			subscription1 := moira.SubscriptionData{
 				ID:       "sub-1",
+				Enabled:  true,
 				Contacts: []string{contact.ID},
-			},
-		}, nil)
-		database.EXPECT().GetTagsSubscriptions([]string{"sys-tag2", "sys-tag-common"}).Return([]*moira.SubscriptionData{
-			{
-				ID:       "sub-2",
-				Contacts: []string{contact.ID},
-			},
-		}, nil)
+				Tags:     []string{"tag1", "tag2"},
+				User:     user,
+			}
 
-		database.EXPECT().GetContacts([]string{contact.ID}).Return([]*moira.ContactData{
-			&contact,
-		}, nil).Times(2)
+			lastCheckData := moira.CheckData{
+				State: moira.StateERROR,
+			}
 
-		logger, _ := logging.GetLogger("SelfState")
-		notif := mock_notifier.NewMockNotifier(mockCtrl)
+			notifAndTags := []heartbeatNotificationEvent{
+				{
+					NotificationEvent: moira.NotificationEvent{
+						Metric: "Check passed!",
+					},
+					CheckTags: heartbeat.CheckTags{
+						"sys-tag1",
+					},
+					NotifyAboutEnabledNotifier: true,
+				},
+				{
+					NotificationEvent: moira.NotificationEvent{
+						Metric: "Some another check passed!",
+					},
+					CheckTags: heartbeat.CheckTags{
+						"sys-tag2", "sys-tag-common",
+					},
+					NotifyAboutEnabledNotifier: true,
+				},
+			}
 
-		mock := &selfCheckWorkerMock{
-			selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}),
-			mockCtrl:        mockCtrl,
-		}
+			expected := []*notifier.NotificationPackage{
+				{
+					Contact: contact,
+					Trigger: moira.TriggerData{
+						Name:       "Moira health check",
+						Desc:       "These triggers are in a bad state. Check them by tags:\n- [tag1|tag2](https://moira/?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2)\n",
+						ErrorValue: float64(0),
+					},
+					Events: []moira.NotificationEvent{
+						{
+							Metric: "Check passed!",
+						},
+						{
+							Metric: "Some another check passed!",
+						},
+					},
+					DontResend: true,
+				},
+			}
 
-		actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
-		require.NoError(t, err)
-		require.Equal(t, expected, actual)
-		mock.mockCtrl.Finish()
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			database := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+			database.EXPECT().GetTagsSubscriptions(systemSubscription1.Tags).Return([]*moira.SubscriptionData{
+				&systemSubscription1,
+			}, nil)
+			database.EXPECT().GetTagsSubscriptions(systemSubscription2.Tags).Return([]*moira.SubscriptionData{
+				&systemSubscription2,
+			}, nil)
+
+			database.EXPECT().GetSubscription(systemSubscription1.ID).Return(systemSubscription1, nil).Times(1)
+			database.EXPECT().GetSubscription(systemSubscription2.ID).Return(systemSubscription2, nil).Times(1)
+			database.EXPECT().GetSubscription(subscription1.ID).Return(subscription1, nil).Times(1)
+
+			for _, tag := range subscription1.Tags {
+				database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-1"}, nil).Times(1)
+			}
+
+			database.EXPECT().GetTriggerLastCheck("trigger-1").Return(lastCheckData, nil).Times(1)
+
+			database.EXPECT().GetContacts([]string{contact.ID}).Return([]*moira.ContactData{
+				&contact,
+			}, nil).Times(2)
+
+			database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{
+				systemSubscription1.ID,
+				systemSubscription2.ID,
+				subscription1.ID,
+			}, nil).Times(1)
+
+			logger, _ := logging.GetLogger("SelfState")
+			notif := mock_notifier.NewMockNotifier(mockCtrl)
+
+			mock := &selfCheckWorkerMock{
+				selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{
+					FrontURL: "https://moira/",
+					Checks: ChecksConfig{
+						Filter: HeartbeatConfig{
+							SystemTags: []string{"sys-tag1", "sys-tag2", "sys-tag-common"},
+						},
+					},
+				}),
+				mockCtrl: mockCtrl,
+			}
+
+			actual, err := mock.selfCheckWorker.constructUserNotification(notifAndTags)
+			require.NoError(t, err)
+			require.Equal(t, expected, actual)
+		})
 	})
 }
 
@@ -419,6 +544,198 @@ func TestSelfCheckWorker_enableNotifierIfNeed(t *testing.T) {
 		require.Equal(t, err, expected_err)
 		require.False(t, notifierEnabled)
 	})
+}
+
+func TestSelfCheck_should_construct_links_to_triggers(t *testing.T) {
+	mock := configureWorker(t, false)
+
+	user := "user"
+	systemTags := []string{"sys-tag1", "sys-tag2"}
+
+	systemSubscription := moira.SubscriptionData{
+		ID:   "sub-1",
+		Tags: systemTags,
+		User: user,
+	}
+
+	userSubscription1 := moira.SubscriptionData{
+		ID:      "sub-2",
+		Enabled: true,
+		Tags:    []string{"tag1", "tag2"},
+		User:    user,
+	}
+
+	userSubscription2 := moira.SubscriptionData{
+		ID:      "sub-3",
+		Enabled: true,
+		Tags:    []string{"tag3", "tag4"},
+		User:    user,
+	}
+
+	userSubscription3 := moira.SubscriptionData{
+		ID:      "sub-4",
+		Enabled: true,
+		Tags:    []string{"tag5"},
+		User:    user,
+	}
+
+	mock.database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{systemSubscription.ID, userSubscription1.ID, userSubscription2.ID, userSubscription3.ID}, nil)
+	mock.database.EXPECT().GetSubscription(systemSubscription.ID).Return(systemSubscription, nil)
+	mock.database.EXPECT().GetSubscription(userSubscription1.ID).Return(userSubscription1, nil)
+	mock.database.EXPECT().GetSubscription(userSubscription2.ID).Return(userSubscription2, nil)
+	mock.database.EXPECT().GetSubscription(userSubscription3.ID).Return(userSubscription3, nil)
+
+	for _, tag := range userSubscription1.Tags {
+		mock.database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-1"}, nil)
+	}
+
+	for _, tag := range userSubscription2.Tags {
+		mock.database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-1"}, nil)
+	}
+
+	for _, tag := range userSubscription3.Tags {
+		mock.database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-2"}, nil)
+	}
+
+	mock.database.EXPECT().GetTriggerLastCheck("trigger-1").Return(moira.CheckData{
+		State: moira.StateERROR,
+	}, nil).Times(2)
+	mock.database.EXPECT().GetTriggerLastCheck("trigger-2").Return(moira.CheckData{
+		State: moira.StateOK,
+	}, nil).Times(1)
+
+	res, err := mock.selfCheckWorker.constructTriggersTable(&systemSubscription, systemTags)
+	if err != nil {
+		t.Fatalf("error not nil: %v", err)
+	}
+
+	expectedTable := []string{
+		mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2",
+		mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag3&tags%5B1%5D=tag4",
+	}
+	actual := moira.Map(res, func(elem triggersTableElem) string { return elem.Link })
+
+	if len(moira.SymmetricDiff(actual, expectedTable)) > 0 {
+		t.Fatalf("trigger table invalid: %v", res)
+	}
+}
+
+func TestSelfCheck_should_filter_disabled_subscriptions(t *testing.T) {
+	mock := configureWorker(t, false)
+	defer mock.mockCtrl.Finish()
+
+	user := "user"
+	systemTags := []string{"sys-tag1", "sys-tag2"}
+
+	systemSubscription := moira.SubscriptionData{
+		ID:   "sub-1",
+		Tags: systemTags,
+		User: user,
+	}
+
+	enabledSubscription := moira.SubscriptionData{
+		ID:      "sub-2",
+		Enabled: true,
+		Tags:    []string{"tag1", "tag2"},
+		User:    user,
+	}
+
+	disabledSubscription := moira.SubscriptionData{
+		ID:      "sub-3",
+		Enabled: false,
+		Tags:    []string{"tag3", "tag4"},
+		User:    user,
+	}
+
+	anotherEnabledSubscription := moira.SubscriptionData{
+		ID:      "sub-4",
+		Enabled: true,
+		Tags:    []string{"tag5"},
+		User:    user,
+	}
+
+	mock.database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{
+		systemSubscription.ID,
+		enabledSubscription.ID,
+		disabledSubscription.ID,
+		anotherEnabledSubscription.ID,
+	}, nil)
+
+	mock.database.EXPECT().GetSubscription(systemSubscription.ID).Return(systemSubscription, nil)
+	mock.database.EXPECT().GetSubscription(enabledSubscription.ID).Return(enabledSubscription, nil)
+	mock.database.EXPECT().GetSubscription(disabledSubscription.ID).Return(disabledSubscription, nil)
+	mock.database.EXPECT().GetSubscription(anotherEnabledSubscription.ID).Return(anotherEnabledSubscription, nil)
+
+	for _, tag := range enabledSubscription.Tags {
+		mock.database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-1"}, nil)
+	}
+
+	for _, tag := range anotherEnabledSubscription.Tags {
+		mock.database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"trigger-2"}, nil)
+	}
+
+	mock.database.EXPECT().GetTriggerLastCheck("trigger-1").Return(moira.CheckData{
+		State: moira.StateERROR,
+	}, nil).Times(1)
+	mock.database.EXPECT().GetTriggerLastCheck("trigger-2").Return(moira.CheckData{
+		State: moira.StateERROR,
+	}, nil).Times(1)
+
+	res, err := mock.selfCheckWorker.constructTriggersTable(&systemSubscription, systemTags)
+	require.NoError(t, err, "constructTriggersTable should not return error")
+
+	expectedTable := []string{
+		mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag1&tags%5B1%5D=tag2",
+		mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag5",
+	}
+	actual := moira.Map(res, func(elem triggersTableElem) string { return elem.Link })
+
+	assert.Empty(t, moira.SymmetricDiff(actual, expectedTable), "trigger table should match expected links")
+
+	disabledSubscriptionLink := mock.conf.FrontURL + "?onlyProblems=true&tags%5B0%5D=tag3&tags%5B1%5D=tag4"
+	assert.NotContains(t, actual, disabledSubscriptionLink, "disabled subscription link should not be present in triggers table")
+}
+
+func TestSelfCheck_should_handle_all_disabled_subscriptions(t *testing.T) {
+	assert := assert.New(t)
+	mock := configureWorker(t, false)
+
+	user := "user"
+	systemTags := []string{"sys-tag1", "sys-tag2"}
+
+	systemSubscription := moira.SubscriptionData{
+		ID:   "sub-1",
+		Tags: systemTags,
+		User: user,
+	}
+
+	disabledSubscription1 := moira.SubscriptionData{
+		ID:      "sub-2",
+		Enabled: false,
+		Tags:    []string{"tag1", "tag2"},
+		User:    user,
+	}
+
+	disabledSubscription2 := moira.SubscriptionData{
+		ID:      "sub-3",
+		Enabled: false,
+		Tags:    []string{"tag3", "tag4"},
+		User:    user,
+	}
+
+	mock.database.EXPECT().GetUserSubscriptionIDs(user).Return([]string{
+		systemSubscription.ID,
+		disabledSubscription1.ID,
+		disabledSubscription2.ID,
+	}, nil)
+
+	mock.database.EXPECT().GetSubscription(systemSubscription.ID).Return(systemSubscription, nil)
+	mock.database.EXPECT().GetSubscription(disabledSubscription1.ID).Return(disabledSubscription1, nil)
+	mock.database.EXPECT().GetSubscription(disabledSubscription2.ID).Return(disabledSubscription2, nil)
+
+	res, err := mock.selfCheckWorker.constructTriggersTable(&systemSubscription, systemTags)
+	require.NoError(t, err)
+	assert.Empty(res)
 }
 
 func TestSelfCheckWorker_Start(t *testing.T) {
@@ -536,6 +853,7 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 		UserNotificationsInterval:      2 * time.Second,
 		LastRemoteCheckDelaySeconds:    120,
 		CheckInterval:                  1 * time.Second,
+		FrontURL:                       "https://moira-testing/",
 	}
 
 	mockCtrl := gomock.NewController(t)
