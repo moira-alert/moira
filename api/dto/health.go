@@ -24,6 +24,10 @@ type NotifierState struct {
 	Message string `json:"message,omitempty" example:"Moira has been turned off for maintenance"`
 }
 
+func (state *NotifierState) IsValid() bool {
+	return state.State == moira.SelfStateOK || state.State == moira.SelfStateERROR
+}
+
 func (*NotifierState) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
@@ -32,12 +36,11 @@ func (state *NotifierState) Bind(r *http.Request) error {
 	if state.State == "" {
 		return fmt.Errorf("state can not be empty")
 	}
-	if state.State != moira.SelfStateOK && state.State != moira.SelfStateERROR {
+	if !state.IsValid() {
 		return fmt.Errorf("invalid state '%s'. State should be one of: <OK|ERROR>", state.State)
 	}
 	return nil
 }
-
 
 // NotifierState represents state of notifier for specific metric source: <OK|ERROR>.
 type NotifierStateForSource struct {
@@ -45,7 +48,6 @@ type NotifierStateForSource struct {
 	ClusterId     moira.ClusterId     `json:"cluster_id"`
 	NotifierState
 }
-
 
 // NotifierState represents state of notifier for all metric sources: <OK|ERROR>.
 type NotifierStatesForSources struct {
@@ -61,7 +63,7 @@ func (states *NotifierStatesForSources) Bind(r *http.Request) error {
 		if state.State == "" {
 			return fmt.Errorf("state can not be empty")
 		}
-		if state.State != moira.SelfStateOK && state.State != moira.SelfStateERROR {
+		if !state.IsValid() {
 			return fmt.Errorf("invalid state '%s'. State should be one of: <OK|ERROR>", state.State)
 		}
 	}
