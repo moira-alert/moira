@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
+// NotifierState parses moira.NotifierState from redis.StringCmd.
 func NotifierState(rep *redis.StringCmd) (moira.NotifierState, error) {
 	state := moira.NotifierState{}
 

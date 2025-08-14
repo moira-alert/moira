@@ -640,6 +640,36 @@ func (mr *MockDatabaseMockRecorder) GetNotifierState() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifierState", reflect.TypeOf((*MockDatabase)(nil).GetNotifierState))
 }
 
+// GetNotifierStateForSource mocks base method.
+func (m *MockDatabase) GetNotifierStateForSource(clusterKey moira.ClusterKey) (moira.NotifierState, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNotifierStateForSource", clusterKey)
+	ret0, _ := ret[0].(moira.NotifierState)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotifierStateForSource indicates an expected call of GetNotifierStateForSource.
+func (mr *MockDatabaseMockRecorder) GetNotifierStateForSource(clusterKey any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifierStateForSource", reflect.TypeOf((*MockDatabase)(nil).GetNotifierStateForSource), clusterKey)
+}
+
+// GetNotifierStateForSources mocks base method.
+func (m *MockDatabase) GetNotifierStateForSources() (map[moira.ClusterKey]moira.NotifierState, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNotifierStateForSources")
+	ret0, _ := ret[0].(map[moira.ClusterKey]moira.NotifierState)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotifierStateForSources indicates an expected call of GetNotifierStateForSources.
+func (mr *MockDatabaseMockRecorder) GetNotifierStateForSources() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifierStateForSources", reflect.TypeOf((*MockDatabase)(nil).GetNotifierStateForSources))
+}
+
 // GetPatternMetrics mocks base method.
 func (m *MockDatabase) GetPatternMetrics(pattern string) ([]string, error) {
 	m.ctrl.T.Helper()
@@ -1633,6 +1663,20 @@ func (m *MockDatabase) SetNotifierState(actor, state string) error {
 func (mr *MockDatabaseMockRecorder) SetNotifierState(actor, state any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotifierState", reflect.TypeOf((*MockDatabase)(nil).SetNotifierState), actor, state)
+}
+
+// SetNotifierStateForSource mocks base method.
+func (m *MockDatabase) SetNotifierStateForSource(clusterKey moira.ClusterKey, actor, state string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetNotifierStateForSource", clusterKey, actor, state)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetNotifierStateForSource indicates an expected call of SetNotifierStateForSource.
+func (mr *MockDatabaseMockRecorder) SetNotifierStateForSource(clusterKey, actor, state any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotifierStateForSource", reflect.TypeOf((*MockDatabase)(nil).SetNotifierStateForSource), clusterKey, actor, state)
 }
 
 // SetTriggerCheckLock mocks base method.
