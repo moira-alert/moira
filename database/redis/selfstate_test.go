@@ -7,7 +7,6 @@ import (
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSelfCheckWithWritesInChecker(t *testing.T) {
