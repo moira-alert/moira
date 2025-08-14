@@ -8,54 +8,54 @@ import (
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
 func TestNotifierState(t *testing.T) {
-	Convey("Test notifier delay heartbeat", t, func() {
+	t.Run("Test notifier delay heartbeat", func(t *testing.T) {
 		now := time.Now().Unix()
 		check := createNotifierStateTest(t)
 
-		Convey("Test get notifier delay", func() {
+		t.Run("Test get notifier delay", func(t *testing.T) {
 			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
 			}, nil)
 
 			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
+			require.NoError(t, errActual)
+			require.False(t, needSend)
+			require.EqualValues(t, 0, value)
 		})
 
-		Convey("Test get notification", func() {
+		t.Run("Test get notification", func(t *testing.T) {
 			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateERROR,
 				Actor: moira.SelfStateActorManual,
 			}, nil).Times(2)
 
 			value, needSend, errActual := check.Check(now)
-			So(errActual, ShouldBeNil)
-			So(needSend, ShouldBeTrue)
-			So(value, ShouldEqual, 0)
+			require.NoError(t, errActual)
+			require.True(t, needSend)
+			require.EqualValues(t, 0, value)
 		})
 
-		Convey("Should return OK if notifier disabled automatically", func() {
+		t.Run("Should return OK if notifier disabled automatically", func(t *testing.T) {
 			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateERROR,
 				Actor: moira.SelfStateActorAutomatic,
 			}, nil)
 
 			value, hasError, err := check.Check(now)
-			So(err, ShouldBeNil)
-			So(hasError, ShouldBeFalse)
-			So(value, ShouldEqual, 0)
+			require.NoError(t, err)
+			require.False(t, hasError)
+			require.EqualValues(t, 0, value)
 		})
 
-		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			So(check.NeedTurnOffNotifier(), ShouldBeFalse)
-			So(check.NeedToCheckOthers(), ShouldBeTrue)
+		t.Run("Test NeedToCheckOthers and NeedTurnOffNotifier", func(t *testing.T) {
+			require.False(t, check.NeedTurnOffNotifier())
+			require.True(t, check.NeedToCheckOthers())
 		})
 	})
 }
