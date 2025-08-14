@@ -29,6 +29,7 @@ const (
 	defaultContact          = "testContact"
 	defaultLogin            = "testLogin"
 	defaultTeamID           = "testTeamID"
+	limitsContextKey        = "limits"
 )
 
 func TestGetAllContacts(t *testing.T) {
@@ -128,6 +129,7 @@ func TestGetContactById(t *testing.T) {
 				User:  defaultLogin,
 				Team:  "",
 			}, nil).Times(1)
+			mockDb.EXPECT().GetContactScore(contactID).Return(&moira.ContactScore{}, nil)
 
 			database = mockDb
 
@@ -986,10 +988,12 @@ func TestSendTestContactNotification(t *testing.T) {
 
 		Convey("Successful send test contact notification", func() {
 			mockDb.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil).Times(1)
+			mockDb.EXPECT().GetContactScore(contactID).Return(nil, nil).Times(1)
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/contact/"+contactID+"/test", nil)
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, contactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), limitsContextKey, api.LimitsConfig{}))
 
 			sendTestContactNotification(responseWriter, testRequest)
 
@@ -1015,6 +1019,7 @@ func TestSendTestContactNotification(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPost, "/contact/"+contactID+"/test", nil)
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), testContactIDKey, contactID))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), limitsContextKey, api.LimitsConfig{}))
 
 			sendTestContactNotification(responseWriter, testRequest)
 
