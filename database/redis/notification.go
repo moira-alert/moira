@@ -175,10 +175,17 @@ func (connector *DbConnector) removeNotificationInKey(redisKey string, notificat
 
 // RemoveFilteredNotifications deletes notifications ine time range from startTime to endTime,
 // excluding the ones that have tag from ignoredTags.
-func (connector *DbConnector) RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error) {
+func (connector *DbConnector) RemoveFilteredNotifications(start, end int64, ignoredTags []string, sourceList []moira.ClusterKey) (int64, error) {
 	countTotal := int64(0)
 
-	for _, clusterKey := range connector.clusterList {
+	var actualClusterList []moira.ClusterKey
+	if len(sourceList) == 0 {
+		actualClusterList = connector.clusterList
+	} else {
+		actualClusterList = sourceList
+	}
+
+	for _, clusterKey := range actualClusterList {
 		count, err := connector.removeFilteredNotificationsInRedisKey(makeNotifierNotificationsKey(clusterKey), start, end, ignoredTags)
 		countTotal += count
 

@@ -538,6 +538,15 @@ func MakeClusterKey(triggerSource TriggerSource, clusterId ClusterId) ClusterKey
 	}
 }
 
+func ParseClusterKey(cluster string) (ClusterKey, error) {
+	parts := strings.Split(cluster, ".")
+	if len(parts) != 2 {
+		return ClusterKey{}, fmt.Errorf("can't parse ClusterKey '%s'", cluster)
+	}
+
+	return MakeClusterKey(TriggerSource(parts[0]), ClusterId(parts[1])), nil
+}
+
 func (clusterKey ClusterKey) String() string {
 	return fmt.Sprintf("%s.%s", clusterKey.TriggerSource, clusterKey.ClusterId)
 }

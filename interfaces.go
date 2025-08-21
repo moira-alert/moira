@@ -80,7 +80,7 @@ type Database interface {
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, error)
 	RemoveNotification(notificationKey string) (int64, error)
-	RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error)
+	RemoveFilteredNotifications(start, end int64, ignoredTags []string, sourceList []ClusterKey) (int64, error)
 	RemoveAllNotifications() error
 	FetchNotifications(custerKey ClusterKey, to int64, limit int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error

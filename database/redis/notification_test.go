@@ -1682,7 +1682,7 @@ func TestRemoveFilteredNotifications(t *testing.T) {
 	Convey("Test removeNotifications filtered for all time", t, func() {
 		addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
 
-		count, err := database.RemoveFilteredNotifications(0, -1, []string{ignoredTag})
+		count, err := database.RemoveFilteredNotifications(0, -1, []string{ignoredTag}, []moira.ClusterKey{})
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 2)
 
@@ -1695,7 +1695,7 @@ func TestRemoveFilteredNotifications(t *testing.T) {
 	Convey("Test removeNotifications filtered for time range", t, func() {
 		addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
 
-		count, err := database.RemoveFilteredNotifications(25, 45, []string{ignoredTag})
+		count, err := database.RemoveFilteredNotifications(25, 45, []string{ignoredTag}, []moira.ClusterKey{})
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 1)
 
