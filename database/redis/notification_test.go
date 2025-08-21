@@ -10,9 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	"github.com/stretchr/testify/assert"
-
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 func TestScheduledNotification(t *testing.T) {
@@ -22,7 +20,7 @@ func TestScheduledNotification(t *testing.T) {
 
 	defer database.Flush()
 
-	Convey("ScheduledNotification manipulation", t, func() {
+	t.Run("ScheduledNotification manipulation", func(t *testing.T) {
 		now = time.Now().Unix()
 		notificationNew := moira.ScheduledNotification{
 			SendFail:  1,
@@ -43,51 +41,51 @@ func TestScheduledNotification(t *testing.T) {
 			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
-		Convey("Test add and get by pages", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test add and get by pages", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, total, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
+			require.NoError(t, err)
+			require.EqualValues(t, 3, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}, actual)
 
 			actual, total, err = database.GetNotifications(0, 0)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
+			require.NoError(t, err)
+			require.EqualValues(t, 3, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld}, actual)
 
 			actual, total, err = database.GetNotifications(1, 2)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
+			require.NoError(t, err)
+			require.EqualValues(t, 3, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notification, &notificationNew}, actual)
 		})
 
-		Convey("Test fetch notifications", func() {
+		t.Run("Test fetch notifications", func(t *testing.T) {
 			actual, err := database.FetchNotifications(moira.DefaultLocalCluster, now-database.getDelayedTimeInSeconds(), notificationsLimitUnlimited) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld}, actual)
 
 			actual, total, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 2)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
+			require.NoError(t, err)
+			require.EqualValues(t, 2, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notification, &notificationNew}, actual)
 
 			actual, err = database.FetchNotifications(moira.DefaultLocalCluster, now+database.getDelayedTimeInSeconds(), notificationsLimitUnlimited) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notification, &notificationNew}, actual)
 
 			actual, total, err = database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 0)
-			So(actual, ShouldResemble, make([]*moira.ScheduledNotification, 0))
+			require.NoError(t, err)
+			require.EqualValues(t, 0, total)
+			require.Equal(t, actual, make([]*moira.ScheduledNotification, 0))
 		})
 
-		Convey("Test fetch notifications limit 0", func() {
+		t.Run("Test fetch notifications limit 0", func(t *testing.T) {
 			actual, err := database.FetchNotifications(moira.DefaultLocalCluster, now-database.getDelayedTimeInSeconds(), 0) //nolint
-			So(err, ShouldBeError)
-			So(actual, ShouldBeNil) //nolint
+			require.Error(t, err)
+			require.Nil(t, actual) //nolint
 		})
 
-		Convey("Test remove notifications by key", func() {
+		t.Run("Test remove notifications by key", func(t *testing.T) {
 			id1 := "id1"
 			notification1 := moira.ScheduledNotification{
 				Contact:   moira.ContactData{ID: id1},
@@ -110,36 +108,36 @@ func TestScheduledNotification(t *testing.T) {
 				Timestamp: now + database.getDelayedTimeInSeconds(),
 				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 			}
-			addNotifications(database, []moira.ScheduledNotification{notification1, notification2, notification3})
+			addNotifications(t, database, []moira.ScheduledNotification{notification1, notification2, notification3})
 			actual, total, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification1, &notification2, &notification3})
+			require.NoError(t, err)
+			require.EqualValues(t, 3, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notification1, &notification2, &notification3}, actual)
 
 			total, err = database.RemoveNotification(strings.Join([]string{fmt.Sprintf("%v", now), id1, id1}, ""))
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 2)
+			require.NoError(t, err)
+			require.EqualValues(t, 2, total)
 
 			actual, total, err = database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 1)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification3})
+			require.NoError(t, err)
+			require.EqualValues(t, 1, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notification3}, actual)
 
 			total, err = database.RemoveNotification(strings.Join([]string{fmt.Sprintf("%v", now+database.getDelayedTimeInSeconds()), id1, id1}, "")) //nolint
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 1)
+			require.NoError(t, err)
+			require.EqualValues(t, 1, total)
 
 			actual, total, err = database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 0)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.EqualValues(t, 0, total)
+			require.Equal(t, []*moira.ScheduledNotification{}, actual)
 
 			actual, err = database.FetchNotifications(moira.DefaultLocalCluster, now+database.getDelayedTimeInSeconds(), notificationsLimitUnlimited) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{}, actual)
 		})
 
-		Convey("Test remove all notifications", func() {
+		t.Run("Test remove all notifications", func(t *testing.T) {
 			id1 := "id1"
 			notification1 := moira.ScheduledNotification{
 				Contact:   moira.ContactData{ID: id1},
@@ -162,31 +160,31 @@ func TestScheduledNotification(t *testing.T) {
 				Timestamp: now + database.getDelayedTimeInSeconds(),
 				Trigger:   moira.TriggerData{TriggerSource: moira.PrometheusRemote, ClusterId: moira.DefaultCluster},
 			}
-			addNotifications(database, []moira.ScheduledNotification{notification1, notification2, notification3})
+			addNotifications(t, database, []moira.ScheduledNotification{notification1, notification2, notification3})
 			actual, total, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification1, &notification2, &notification3})
+			require.NoError(t, err)
+			require.EqualValues(t, 3, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notification1, &notification2, &notification3}, actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			actual, total, err = database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 0)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.EqualValues(t, 0, total)
+			require.Equal(t, []*moira.ScheduledNotification{}, actual)
 
 			actual, err = database.FetchNotifications(moira.DefaultLocalCluster, now+database.getDelayedTimeInSeconds(), notificationsLimitUnlimited) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{}, actual)
 		})
 	})
 }
 
-func addNotifications(database *DbConnector, notifications []moira.ScheduledNotification) {
+func addNotifications(t *testing.T, database *DbConnector, notifications []moira.ScheduledNotification) {
 	for _, notification := range notifications {
 		err := database.AddNotification(&notification)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 	}
 }
 
@@ -197,29 +195,29 @@ func TestScheduledNotificationErrorConnection(t *testing.T) {
 
 	defer database.Flush()
 
-	Convey("Should throw error when no connection", t, func() {
+	t.Run("Should throw error when no connection", func(t *testing.T) {
 		actual1, total, err := database.GetNotifications(0, 1)
-		So(actual1, ShouldBeNil)
-		So(total, ShouldEqual, 0)
-		So(err, ShouldNotBeNil)
+		require.Nil(t, actual1)
+		require.EqualValues(t, 0, total)
+		require.Error(t, err)
 
 		total, err = database.RemoveNotification("123")
-		So(err, ShouldNotBeNil)
-		So(total, ShouldEqual, 0)
+		require.Error(t, err)
+		require.EqualValues(t, 0, total)
 
 		actual2, err := database.FetchNotifications(moira.DefaultLocalCluster, 0, notificationsLimitUnlimited)
-		So(err, ShouldNotBeNil)
-		So(actual2, ShouldBeNil)
+		require.Error(t, err)
+		require.Nil(t, actual2)
 
 		notification := moira.ScheduledNotification{}
 		err = database.AddNotification(&notification)
-		So(err, ShouldNotBeNil)
+		require.Error(t, err)
 
 		err = database.AddNotifications([]*moira.ScheduledNotification{&notification}, 0)
-		So(err, ShouldNotBeNil)
+		require.Error(t, err)
 
 		err = database.RemoveAllNotifications()
-		So(err, ShouldNotBeNil)
+		require.Error(t, err)
 	})
 }
 
@@ -230,7 +228,7 @@ func TestFetchNotifications(t *testing.T) {
 
 	defer database.Flush()
 
-	Convey("FetchNotifications manipulation", t, func() {
+	t.Run("FetchNotifications manipulation", func(t *testing.T) {
 		now = time.Now().Unix()
 		notificationNew := moira.ScheduledNotification{
 			SendFail:  1,
@@ -251,64 +249,64 @@ func TestFetchNotifications(t *testing.T) {
 			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
-		Convey("Test fetch notifications with limit if all notifications has diff timestamp", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test fetch notifications with limit if all notifications has diff timestamp", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, err := database.FetchNotifications(moira.DefaultLocalCluster, now+database.getDelayedTimeInSeconds(), 1) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld}, actual)
 
 			actual, total, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 2)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
+			require.NoError(t, err)
+			require.EqualValues(t, 2, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notification, &notificationNew}, actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test fetch notifications with limit little bit greater than count if all notifications has diff timestamp", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test fetch notifications with limit little bit greater than count if all notifications has diff timestamp", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, err := database.FetchNotifications(moira.DefaultLocalCluster, now+database.getDelayedTimeInSeconds(), 4) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification}, actual)
 
 			actual, total, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 1)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationNew})
+			require.NoError(t, err)
+			require.EqualValues(t, 1, total)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationNew}, actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test fetch notifications with limit greater than count if all notifications has diff timestamp", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test fetch notifications with limit greater than count if all notifications has diff timestamp", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, err := database.FetchNotifications(moira.DefaultLocalCluster, now+database.getDelayedTimeInSeconds(), 200000) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}, actual)
 
 			actual, total, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
-			So(total, ShouldEqual, 0)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{}, actual)
+			require.EqualValues(t, 0, total)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test fetch notifications without limit", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test fetch notifications without limit", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, err := database.FetchNotifications(moira.DefaultLocalCluster, now+database.getDelayedTimeInSeconds(), notificationsLimitUnlimited) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}, actual)
 
 			actual, total, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
-			So(total, ShouldEqual, 0)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{}, actual)
+			require.EqualValues(t, 0, total)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 	})
 }
@@ -325,7 +323,7 @@ func TestGetNotificationsInTxWithLimit(t *testing.T) {
 	client := *database.client
 	ctx := database.context
 
-	Convey("Test getNotificationsInTxWithLimit", t, func() {
+	t.Run("Test getNotificationsInTxWithLimit", func(t *testing.T) {
 		var limit int64 = 0
 
 		now = time.Now().Unix()
@@ -348,72 +346,72 @@ func TestGetNotificationsInTxWithLimit(t *testing.T) {
 			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
-		Convey("Test with zero notifications without limit", func() {
-			addNotifications(database, []moira.ScheduledNotification{})
+		t.Run("Test with zero notifications without limit", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{})
 
 			err := client.Watch(ctx, func(tx *redis.Tx) error {
 				actual, err := getNotificationsInTxWithLimit(redisKey, ctx, tx, now+database.getDelayedTimeInSeconds()*2, notificationsLimitUnlimited)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{}, actual)
 
 				return nil
 			}, notifierNotificationsKey)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test all notifications without limit", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test all notifications without limit", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 
 			err := client.Watch(ctx, func(tx *redis.Tx) error {
 				actual, err := getNotificationsInTxWithLimit(redisKey, ctx, tx, now+database.getDelayedTimeInSeconds()*2, notificationsLimitUnlimited)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}, actual)
 
 				return nil
 			}, notifierNotificationsKey)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test all notifications with limit != count", func() {
+		t.Run("Test all notifications with limit != count", func(t *testing.T) {
 			limit = 1
 
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 
 			err := client.Watch(ctx, func(tx *redis.Tx) error {
 				actual, err := getNotificationsInTxWithLimit(redisKey, ctx, tx, now+database.getDelayedTimeInSeconds()*2, limit)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld}, actual)
 
 				return nil
 			}, notifierNotificationsKey)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test all notifications with limit = count", func() {
+		t.Run("Test all notifications with limit = count", func(t *testing.T) {
 			limit = 3
 
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 
 			err := client.Watch(ctx, func(tx *redis.Tx) error {
 				actual, err := getNotificationsInTxWithLimit(redisKey, ctx, tx, now+database.getDelayedTimeInSeconds()*2, limit)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}, actual)
 
 				return nil
 			}, notifierNotificationsKey)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 	})
 }
@@ -430,7 +428,7 @@ func TestGetLimitedNotifications(t *testing.T) {
 	client := *database.client
 	ctx := database.context
 
-	Convey("Test getLimitedNotifications", t, func() {
+	t.Run("Test getLimitedNotifications", func(t *testing.T) {
 		var limit int64
 
 		now = time.Now().Unix()
@@ -453,37 +451,37 @@ func TestGetLimitedNotifications(t *testing.T) {
 			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
-		Convey("Test all notifications with different timestamps without limit", func() {
+		t.Run("Test all notifications with different timestamps without limit", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}
 			err := client.Watch(ctx, func(tx *redis.Tx) error {
 				actual, err := getLimitedNotifications(redisKey, ctx, tx, notificationsLimitUnlimited, notifications)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}, actual)
 
 				return nil
 			}, notifierNotificationsKey)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test all notifications with different timestamps and limit", func() {
+		t.Run("Test all notifications with different timestamps and limit", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}
 			err := client.Watch(ctx, func(tx *redis.Tx) error {
 				actual, err := getLimitedNotifications(redisKey, ctx, tx, limit, notifications)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification}, actual)
 
 				return nil
 			}, notifierNotificationsKey)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test all notifications with same timestamp and limit", func() {
+		t.Run("Test all notifications with same timestamp and limit", func(t *testing.T) {
 			notification.Timestamp = now
 			notificationNew.Timestamp = now
 			notificationOld.Timestamp = now
@@ -493,23 +491,23 @@ func TestGetLimitedNotifications(t *testing.T) {
 				notificationOld.Timestamp = now - database.getDelayedTimeInSeconds()
 			}()
 
-			addNotifications(database, []moira.ScheduledNotification{notificationOld, notification, notificationNew})
+			addNotifications(t, database, []moira.ScheduledNotification{notificationOld, notification, notificationNew})
 			notifications := []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}
 			expected := []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}
 			err := client.Watch(ctx, func(tx *redis.Tx) error {
 				actual, err := getLimitedNotifications(redisKey, ctx, tx, limit, notifications)
-				So(err, ShouldBeNil)
-				assert.ElementsMatch(t, actual, expected)
+				require.NoError(t, err)
+				require.ElementsMatch(t, actual, expected)
 
 				return nil
 			}, notifierNotificationsKey)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test not all notifications with same timestamp and limit", func() {
+		t.Run("Test not all notifications with same timestamp and limit", func(t *testing.T) {
 			notification.Timestamp = now
 			notificationNew.Timestamp = now
 			notificationOld.Timestamp = now
@@ -519,20 +517,20 @@ func TestGetLimitedNotifications(t *testing.T) {
 				notificationOld.Timestamp = now - database.getDelayedTimeInSeconds()
 			}()
 
-			addNotifications(database, []moira.ScheduledNotification{notificationOld, notification, notificationNew})
+			addNotifications(t, database, []moira.ScheduledNotification{notificationOld, notification, notificationNew})
 			notifications := []*moira.ScheduledNotification{&notificationOld, &notification}
 			expected := []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}
 			err := client.Watch(ctx, func(tx *redis.Tx) error {
 				actual, err := getLimitedNotifications(redisKey, ctx, tx, limit, notifications)
-				So(err, ShouldBeNil)
-				assert.ElementsMatch(t, actual, expected)
+				require.NoError(t, err)
+				require.ElementsMatch(t, actual, expected)
 
 				return nil
 			}, notifierNotificationsKey)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 	})
 }
@@ -588,26 +586,26 @@ func TestFilterNotificationsByState(t *testing.T) {
 		},
 	}, defaultSourceNotSetCluster)
 
-	Convey("Test filter notifications by state", t, func() {
-		Convey("With empty notifications", func() {
+	t.Run("Test filter notifications by state", func(t *testing.T) {
+		t.Run("With empty notifications", func(t *testing.T) {
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToRemove)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveOld)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveNew)
 		})
 
-		Convey("With all valid notifications", func() {
+		t.Run("With all valid notifications", func(t *testing.T) {
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notification, notificationNew}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToRemove)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveOld)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveNew)
 		})
 
-		Convey("With removed check data", func() {
+		t.Run("With removed check data", func(t *testing.T) {
 			database.RemoveTriggerLastCheck("test1") //nolint
 
 			defer func() {
@@ -615,28 +613,28 @@ func TestFilterNotificationsByState(t *testing.T) {
 			}()
 
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationNew})
-			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notification}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{notificationNew}, types.ToRemove)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveOld)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveNew)
 		})
 
-		Convey("With metric on maintenance", func() {
+		t.Run("With metric on maintenance", func(t *testing.T) {
 			database.SetTriggerCheckMaintenance("test2", map[string]int64{"test": time.Now().Add(time.Hour).Unix()}, nil, "test", 100) //nolint
 			defer database.SetTriggerCheckMaintenance("test2", map[string]int64{"test": 0}, nil, "test", 100)                          //nolint
 
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notification, notificationNew})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{})
-			So(len(types.ToResaveOld), ShouldResemble, 1)
-			So(types.ToResaveOld[0], ShouldResemble, notificationOld)
-			So(len(types.ToResaveNew), ShouldResemble, 1)
-			So(types.ToResaveNew[0].SendFail, ShouldResemble, notificationOld.SendFail)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notification, notificationNew}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToRemove)
+			require.Len(t, types.ToResaveOld, 1)
+			require.Equal(t, types.ToResaveOld[0], notificationOld)
+			require.Len(t, types.ToResaveNew, 1)
+			require.Equal(t, types.ToResaveNew[0].SendFail, notificationOld.SendFail)
 		})
 
-		Convey("With trigger on maintenance", func() {
+		t.Run("With trigger on maintenance", func(t *testing.T) {
 			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 
@@ -646,13 +644,13 @@ func TestFilterNotificationsByState(t *testing.T) {
 			}()
 
 			types, err := database.filterNotificationsByState([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{})
-			So(len(types.ToResaveOld), ShouldResemble, 1)
-			So(types.ToResaveOld[0], ShouldResemble, notificationNew)
-			So(len(types.ToResaveNew), ShouldResemble, 1)
-			So(types.ToResaveNew[0].SendFail, ShouldResemble, notificationNew.SendFail)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notification}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToRemove)
+			require.Len(t, types.ToResaveOld, 1)
+			require.Equal(t, types.ToResaveOld[0], notificationNew)
+			require.Len(t, types.ToResaveNew, 1)
+			require.Equal(t, types.ToResaveNew[0].SendFail, notificationNew.SendFail)
 		})
 	})
 }
@@ -734,29 +732,29 @@ func TestHandleNotifications(t *testing.T) {
 		},
 	}, defaultSourceNotSetCluster)
 
-	Convey("Test handle notifications", t, func() {
-		Convey("Without delayed notifications", func() {
+	t.Run("Test handle notifications", func(t *testing.T) {
+		t.Run("Without delayed notifications", func(t *testing.T) {
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notification, notificationNew}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notification, notificationNew}, types.ToRemove)
 
 			var toResaveNotificationsExpected []*moira.ScheduledNotification
 
-			So(types.ToResaveOld, ShouldResemble, toResaveNotificationsExpected)
-			So(types.ToResaveNew, ShouldResemble, toResaveNotificationsExpected)
+			require.Equal(t, toResaveNotificationsExpected, types.ToResaveOld)
+			require.Equal(t, toResaveNotificationsExpected, types.ToResaveNew)
 		})
 
-		Convey("With both delayed and not delayed valid notifications", func() {
+		t.Run("With both delayed and not delayed valid notifications", func(t *testing.T) {
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
-			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3}, types.ToRemove)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveOld)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveNew)
 		})
 
-		Convey("With both delayed and not delayed notifications and removed check data", func() {
+		t.Run("With both delayed and not delayed notifications and removed check data", func(t *testing.T) {
 			database.RemoveTriggerLastCheck("test1") //nolint
 
 			defer func() {
@@ -764,28 +762,28 @@ func TestHandleNotifications(t *testing.T) {
 			}()
 
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationNew2, notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
-			So(types.ToResaveOld, ShouldResemble, []*moira.ScheduledNotification{})
-			So(types.ToResaveNew, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{notificationNew2, notificationOld, notificationOld2, notification, notificationNew, notificationNew3}, types.ToRemove)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveOld)
+			require.Equal(t, []*moira.ScheduledNotification{}, types.ToResaveNew)
 		})
 
-		Convey("With both delayed and not delayed valid notifications and metric on maintenance", func() {
+		t.Run("With both delayed and not delayed valid notifications and metric on maintenance", func(t *testing.T) {
 			database.SetTriggerCheckMaintenance("test2", map[string]int64{"test": time.Now().Add(time.Hour).Unix()}, nil, "test", 100) //nolint
 			defer database.SetTriggerCheckMaintenance("test2", map[string]int64{"test": 0}, nil, "test", 100)                          //nolint
 
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew, notificationNew2, notificationNew3})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notification, notificationNew, notificationNew2, notificationNew3})
-			So(len(types.ToResaveNew), ShouldResemble, 1)
-			So(types.ToResaveNew[0].SendFail, ShouldResemble, notificationOld2.SendFail)
-			So(len(types.ToResaveOld), ShouldResemble, 1)
-			So(types.ToResaveOld[0], ShouldResemble, notificationOld2)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notification, notificationNew, notificationNew2, notificationNew3}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notification, notificationNew, notificationNew2, notificationNew3}, types.ToRemove)
+			require.Len(t, types.ToResaveNew, 1)
+			require.Equal(t, types.ToResaveNew[0].SendFail, notificationOld2.SendFail)
+			require.Len(t, types.ToResaveOld, 1)
+			require.Equal(t, types.ToResaveOld[0], notificationOld2)
 		})
 
-		Convey("With both delayed and not delayed valid notifications and trigger on maintenance", func() {
+		t.Run("With both delayed and not delayed valid notifications and trigger on maintenance", func(t *testing.T) {
 			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 
@@ -795,13 +793,13 @@ func TestHandleNotifications(t *testing.T) {
 			}()
 
 			types, err := database.handleNotifications([]*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
-			So(err, ShouldBeNil)
-			So(types.Valid, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
-			So(types.ToRemove, ShouldResemble, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3})
-			So(len(types.ToResaveNew), ShouldResemble, 1)
-			So(types.ToResaveNew[0].SendFail, ShouldResemble, notificationNew2.SendFail)
-			So(len(types.ToResaveOld), ShouldResemble, 1)
-			So(types.ToResaveOld[0], ShouldResemble, notificationNew2)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3}, types.Valid)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew3}, types.ToRemove)
+			require.Len(t, types.ToResaveNew, 1)
+			require.Equal(t, types.ToResaveNew[0].SendFail, notificationNew2.SendFail)
+			require.Len(t, types.ToResaveOld, 1)
+			require.Equal(t, types.ToResaveOld[0], notificationNew2)
 		})
 	})
 }
@@ -815,7 +813,7 @@ func TestNotificationsCount(t *testing.T) {
 
 	redisKey := makeNotifierNotificationsKey(moira.DefaultLocalCluster)
 
-	Convey("notificationsCount in db", t, func() {
+	t.Run("notificationsCount in db", func(t *testing.T) {
 		now = time.Now().Unix()
 		notificationNew := moira.ScheduledNotification{
 			SendFail:  1,
@@ -836,65 +834,65 @@ func TestNotificationsCount(t *testing.T) {
 			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
-		Convey("Test all notification with different ts in db", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test all notification with different ts in db", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, err := database.notificationsCount(redisKey, now+database.getDelayedTimeInSeconds()*2)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, int64(3))
+			require.NoError(t, err)
+			require.Equal(t, int64(3), actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test get 0 notification with ts in db", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test get 0 notification with ts in db", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, err := database.notificationsCount(redisKey, now-database.getDelayedTimeInSeconds()*2)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, int64(0))
+			require.NoError(t, err)
+			require.Equal(t, int64(0), actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test part notification in db with ts", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test part notification in db with ts", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, err := database.notificationsCount(redisKey, now)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, int64(2))
+			require.NoError(t, err)
+			require.Equal(t, int64(2), actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test 0 notification in db", func() {
-			addNotifications(database, []moira.ScheduledNotification{})
+		t.Run("Test 0 notification in db", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{})
 			actual, err := database.notificationsCount(redisKey, now)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, int64(0))
+			require.NoError(t, err)
+			require.Equal(t, int64(0), actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test different redis keys", func() {
+		t.Run("Test different redis keys", func(t *testing.T) {
 			notificationRemote := moira.ScheduledNotification{
 				SendFail:  1,
 				Timestamp: now - database.getDelayedTimeInSeconds(),
 				CreatedAt: now,
 				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
 			}
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationOld, notificationRemote})
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationOld, notificationRemote})
 
 			actual, err := database.notificationsCount(redisKey, now)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, int64(2))
+			require.NoError(t, err)
+			require.Equal(t, int64(2), actual)
 
 			actual, err = database.notificationsCount(makeNotifierNotificationsKey(moira.DefaultGraphiteRemoteCluster), now)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, int64(1))
+			require.NoError(t, err)
+			require.Equal(t, int64(1), actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 	})
 }
@@ -991,102 +989,102 @@ func TestFetchNotificationsDo(t *testing.T) {
 		CreatedAt: now,
 	}
 
-	Convey("Test fetchNotificationsDo", t, func() {
-		Convey("Test all notifications with diff ts in db", func() {
-			Convey("With limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+	t.Run("Test fetchNotificationsDo", func(t *testing.T) {
+		t.Run("Test all notifications with diff ts in db", func(t *testing.T) {
+			t.Run("With limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 
 				limit = 1
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds(), limit)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld}, actual)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 
-			Convey("Without limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+			t.Run("Without limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds(), notificationsLimitUnlimited)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}, actual)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 		})
 
-		Convey("Test zero notifications with ts in empty db", func() {
-			Convey("With limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{})
+		t.Run("Test zero notifications with ts in empty db", func(t *testing.T) {
+			t.Run("With limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{})
 
 				limit = 10
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds(), limit)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{}, actual)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 
-			Convey("Without limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{})
+			t.Run("Without limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{})
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds(), notificationsLimitUnlimited)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{}, actual)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 		})
 
-		Convey("Test all notification with ts and without limit in db", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld, notification4})
+		t.Run("Test all notification with ts and without limit in db", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld, notification4})
 			actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds(), notificationsLimitUnlimited)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification4, &notification, &notificationNew})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification4, &notification, &notificationNew}, actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test all notifications with ts and big limit in db", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test all notifications with ts and big limit in db", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 
 			limit = 100
 			actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds(), limit) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification}, actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test notifications with ts and small limit in db", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld, notification4})
+		t.Run("Test notifications with ts and small limit in db", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld, notification4})
 
 			limit = 3
 			actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds(), limit) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification4})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification4}, actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test notifications with ts and limit = count", func() {
-			addNotifications(database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		t.Run("Test notifications with ts and limit = count", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 
 			limit = 3
 			actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds(), limit) //nolint
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification}, actual)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test delayed notifications with ts and deleted trigger", func() {
+		t.Run("Test delayed notifications with ts and deleted trigger", func(t *testing.T) {
 			database.RemoveTriggerLastCheck("test1") //nolint
 
 			defer func() {
@@ -1097,77 +1095,77 @@ func TestFetchNotificationsDo(t *testing.T) {
 				}, defaultSourceNotSetCluster)
 			}()
 
-			Convey("With big limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
+			t.Run("With big limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 
 				limit = 100
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds()+3, limit)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew}, actual)
 
 				allNotifications, count, err := database.GetNotifications(0, -1)
-				So(err, ShouldBeNil)
-				So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{&notificationNew3})
-				So(count, ShouldEqual, 1)
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationNew3}, allNotifications)
+				require.EqualValues(t, 1, count)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 
-			Convey("Without limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
+			t.Run("Without limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds()+3, notificationsLimitUnlimited)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew, &notificationNew3})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew, &notificationNew3}, actual)
 
 				allNotifications, count, err := database.GetNotifications(0, -1)
-				So(err, ShouldBeNil)
-				So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{})
-				So(count, ShouldEqual, 0)
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{}, allNotifications)
+				require.EqualValues(t, 0, count)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 		})
 
-		Convey("Test notifications with ts and metric on maintenance", func() {
+		t.Run("Test notifications with ts and metric on maintenance", func(t *testing.T) {
 			database.SetTriggerCheckMaintenance("test2", map[string]int64{"test2": time.Now().Add(time.Hour).Unix()}, nil, "test", 100) //nolint
 			defer database.SetTriggerCheckMaintenance("test2", map[string]int64{"test2": 0}, nil, "test", 100)                          //nolint
 
-			Convey("With limit = count", func() {
-				addNotifications(database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
+			t.Run("With limit = count", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 
 				limit = 6
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds()+3, limit)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew, &notificationNew2})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew, &notificationNew2}, actual)
 
 				allNotifications, count, err := database.GetNotifications(0, -1)
-				So(err, ShouldBeNil)
-				So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{&notificationNew3})
-				So(count, ShouldEqual, 1)
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationNew3}, allNotifications)
+				require.EqualValues(t, 1, count)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 
-			Convey("Without limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
+			t.Run("Without limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds()+3, notificationsLimitUnlimited)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew, &notificationNew2})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew, &notificationNew2}, actual)
 
 				allNotifications, count, err := database.GetNotifications(0, -1)
-				So(err, ShouldBeNil)
-				So(count, ShouldEqual, 1)
-				So(allNotifications[0].SendFail, ShouldResemble, notificationNew3.SendFail)
+				require.NoError(t, err)
+				require.EqualValues(t, 1, count)
+				require.Equal(t, allNotifications[0].SendFail, notificationNew3.SendFail)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 		})
 
-		Convey("Test delayed notifications with ts and trigger on maintenance", func() {
+		t.Run("Test delayed notifications with ts and trigger on maintenance", func(t *testing.T) {
 			triggerMaintenance := time.Now().Add(time.Hour).Unix()
 			database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 
@@ -1176,43 +1174,43 @@ func TestFetchNotificationsDo(t *testing.T) {
 				database.SetTriggerCheckMaintenance("test1", map[string]int64{}, &triggerMaintenance, "test", 100) //nolint
 			}()
 
-			Convey("With small limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
+			t.Run("With small limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 
 				limit = 3
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds()+3, limit)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notificationOld2})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notificationOld2}, actual)
 
 				allNotifications, count, err := database.GetNotifications(0, -1)
-				So(err, ShouldBeNil)
-				So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew, &notificationNew2, &notificationNew3})
-				So(count, ShouldEqual, 4)
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notification, &notificationNew, &notificationNew2, &notificationNew3}, allNotifications)
+				require.EqualValues(t, 4, count)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 
-			Convey("without limit", func() {
-				addNotifications(database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
+			t.Run("without limit", func(t *testing.T) {
+				addNotifications(t, database, []moira.ScheduledNotification{notificationOld, notificationOld2, notification, notificationNew, notificationNew2, notificationNew3})
 				actual, err := database.fetchNotificationsTx(redisKey, now+database.getDelayedTimeInSeconds()+3, notificationsLimitUnlimited)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew, &notificationNew3})
+				require.NoError(t, err)
+				require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notificationOld2, &notification, &notificationNew, &notificationNew3}, actual)
 
 				allNotifications, count, err := database.GetNotifications(0, -1)
-				So(err, ShouldBeNil)
-				So(count, ShouldEqual, 1)
-				So(allNotifications[0].SendFail, ShouldResemble, notificationNew2.SendFail)
+				require.NoError(t, err)
+				require.EqualValues(t, 1, count)
+				require.Equal(t, allNotifications[0].SendFail, notificationNew2.SendFail)
 
 				err = database.RemoveAllNotifications()
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			})
 		})
 	})
 }
 
 func TestLimitNotifications(t *testing.T) { //nolint
-	Convey("limitNotifications manipulation", t, func() {
+	t.Run("limitNotifications manipulation", func(t *testing.T) {
 		now := time.Now().Unix()
 		notificationNew := moira.ScheduledNotification{
 			SendFail:  1,
@@ -1235,40 +1233,40 @@ func TestLimitNotifications(t *testing.T) { //nolint
 			Timestamp: now + 3600,
 		}
 
-		Convey("Test limit Notifications zero notifications", func() {
+		t.Run("Test limit Notifications zero notifications", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{}
 			actual := limitNotifications(notifications)
-			So(actual, ShouldResemble, notifications)
+			require.Equal(t, actual, notifications)
 		})
 
-		Convey("Test limit Notifications notifications diff ts", func() {
+		t.Run("Test limit Notifications notifications diff ts", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew}
 			actual := limitNotifications(notifications)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification}, actual)
 		})
 
-		Convey("Test limit Notifications all notifications same ts", func() {
+		t.Run("Test limit Notifications all notifications same ts", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{&notificationOld, &notification4}
 			actual := limitNotifications(notifications)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification4})
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification4}, actual)
 		})
 
-		Convey("Test limit Notifications 1 notifications diff ts and 2 same ts", func() {
+		t.Run("Test limit Notifications 1 notifications diff ts and 2 same ts", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{&notificationOld, &notificationNew, &notification5}
 			actual := limitNotifications(notifications)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld}, actual)
 		})
 
-		Convey("Test limit Notifications 2 notifications same ts and 1 diff ts", func() {
+		t.Run("Test limit Notifications 2 notifications same ts and 1 diff ts", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{&notificationOld, &notification4, &notification5}
 			actual := limitNotifications(notifications)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification4})
+			require.Equal(t, []*moira.ScheduledNotification{&notificationOld, &notification4}, actual)
 		})
 	})
 }
 
 func TestFilterNotificationsByDelay(t *testing.T) {
-	Convey("filterNotificationsByDelay manipulations", t, func() {
+	t.Run("filterNotificationsByDelay manipulations", func(t *testing.T) {
 		notification1 := &moira.ScheduledNotification{
 			Timestamp: 105,
 			CreatedAt: 100,
@@ -1282,32 +1280,32 @@ func TestFilterNotificationsByDelay(t *testing.T) {
 			CreatedAt: 100,
 		}
 
-		Convey("Test with zero notifications", func() {
+		t.Run("Test with zero notifications", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{}
 			delayed, notDelayed := filterNotificationsByDelay(notifications, 1)
-			So(delayed, ShouldResemble, []*moira.ScheduledNotification{})
-			So(notDelayed, ShouldResemble, []*moira.ScheduledNotification{})
+			require.Equal(t, []*moira.ScheduledNotification{}, delayed)
+			require.Equal(t, []*moira.ScheduledNotification{}, notDelayed)
 		})
 
-		Convey("Test with zero delayed notifications", func() {
+		t.Run("Test with zero delayed notifications", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{notification1, notification2, notification3}
 			delayed, notDelayed := filterNotificationsByDelay(notifications, 50)
-			So(delayed, ShouldResemble, []*moira.ScheduledNotification{})
-			So(notDelayed, ShouldResemble, notifications)
+			require.Equal(t, []*moira.ScheduledNotification{}, delayed)
+			require.Equal(t, notDelayed, notifications)
 		})
 
-		Convey("Test with zero not delayed notifications", func() {
+		t.Run("Test with zero not delayed notifications", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{notification1, notification2, notification3}
 			delayed, notDelayed := filterNotificationsByDelay(notifications, 2)
-			So(delayed, ShouldResemble, notifications)
-			So(notDelayed, ShouldResemble, []*moira.ScheduledNotification{})
+			require.Equal(t, delayed, notifications)
+			require.Equal(t, []*moira.ScheduledNotification{}, notDelayed)
 		})
 
-		Convey("Test with one delayed and two not delayed notifications", func() {
+		t.Run("Test with one delayed and two not delayed notifications", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{notification1, notification2, notification3}
 			delayed, notDelayed := filterNotificationsByDelay(notifications, 15)
-			So(delayed, ShouldResemble, []*moira.ScheduledNotification{notification3})
-			So(notDelayed, ShouldResemble, []*moira.ScheduledNotification{notification1, notification2})
+			require.Equal(t, []*moira.ScheduledNotification{notification3}, delayed)
+			require.Equal(t, []*moira.ScheduledNotification{notification1, notification2}, notDelayed)
 		})
 	})
 }
@@ -1328,7 +1326,7 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 		Timestamp: 2,
 	}, defaultSourceNotSetCluster)
 
-	Convey("getNotificationsTriggerChecks manipulations", t, func() {
+	t.Run("getNotificationsTriggerChecks manipulations", func(t *testing.T) {
 		notification1 := &moira.ScheduledNotification{
 			Trigger: moira.TriggerData{
 				ID: "test1",
@@ -1345,21 +1343,21 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 			},
 		}
 
-		Convey("Test with zero notifications", func() {
+		t.Run("Test with zero notifications", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{}
 			triggerChecks, err := database.getNotificationsTriggerChecks(notifications)
-			So(err, ShouldBeNil)
-			So(triggerChecks, ShouldResemble, []*moira.CheckData{})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.CheckData{}, triggerChecks)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test with correct notifications", func() {
+		t.Run("Test with correct notifications", func(t *testing.T) {
 			notifications := []*moira.ScheduledNotification{notification1, notification2, notification3}
 			triggerChecks, err := database.getNotificationsTriggerChecks(notifications)
-			So(err, ShouldBeNil)
-			So(triggerChecks, ShouldResemble, []*moira.CheckData{
+			require.NoError(t, err)
+			require.Equal(t, []*moira.CheckData{
 				{
 					Timestamp:               1,
 					MetricsToTargetRelation: map[string]string{},
@@ -1375,13 +1373,13 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 					MetricsToTargetRelation: map[string]string{},
 					Clock:                   clock.NewSystemClock(),
 				},
-			})
+			}, triggerChecks)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test notifications with removed test1 trigger check", func() {
+		t.Run("Test notifications with removed test1 trigger check", func(t *testing.T) {
 			database.RemoveTriggerLastCheck("test1") //nolint
 
 			defer func() {
@@ -1392,24 +1390,24 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 
 			notifications := []*moira.ScheduledNotification{notification1, notification2, notification3}
 			triggerChecks, err := database.getNotificationsTriggerChecks(notifications)
-			So(err, ShouldBeNil)
-			So(triggerChecks, ShouldResemble, []*moira.CheckData{nil, nil, {Timestamp: 2, MetricsToTargetRelation: map[string]string{}, Clock: clock.NewSystemClock()}})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.CheckData{nil, nil, {Timestamp: 2, MetricsToTargetRelation: map[string]string{}, Clock: clock.NewSystemClock()}}, triggerChecks)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test notifications with removed all trigger checks", func() {
+		t.Run("Test notifications with removed all trigger checks", func(t *testing.T) {
 			database.RemoveTriggerLastCheck("test1") //nolint
 			database.RemoveTriggerLastCheck("test2") //nolint
 
 			notifications := []*moira.ScheduledNotification{notification1, notification2, notification3}
 			triggerChecks, err := database.getNotificationsTriggerChecks(notifications)
-			So(err, ShouldBeNil)
-			So(triggerChecks, ShouldResemble, []*moira.CheckData{nil, nil, nil})
+			require.NoError(t, err)
+			require.Equal(t, []*moira.CheckData{nil, nil, nil}, triggerChecks)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 	})
 }
@@ -1427,7 +1425,7 @@ func TestResaveNotifications(t *testing.T) {
 	ctx := database.context
 	pipe := (*client).TxPipeline()
 
-	Convey("Test resaveNotifications", t, func() {
+	t.Run("Test resaveNotifications", func(t *testing.T) {
 		notificationOld1 := &moira.ScheduledNotification{
 			Timestamp: 1,
 			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
@@ -1454,67 +1452,67 @@ func TestResaveNotifications(t *testing.T) {
 			Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 		}
 
-		Convey("Test resave with zero notifications", func() {
+		t.Run("Test resave with zero notifications", func(t *testing.T) {
 			affected, err := database.resaveNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{}, []*moira.ScheduledNotification{})
-			So(err, ShouldBeNil)
-			So(affected, ShouldResemble, 0)
+			require.NoError(t, err)
+			require.Equal(t, 0, affected)
 
 			allNotifications, count, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{})
-			So(count, ShouldEqual, 0)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{}, allNotifications)
+			require.EqualValues(t, 0, count)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test resave notifications with empty database", func() {
+		t.Run("Test resave notifications with empty database", func(t *testing.T) {
 			affected, err := database.resaveNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{notificationOld1, notificationOld2}, []*moira.ScheduledNotification{notificationNew1, notificationNew2})
-			So(err, ShouldBeNil)
-			So(affected, ShouldResemble, 2)
+			require.NoError(t, err)
+			require.Equal(t, 2, affected)
 
 			allNotifications, count, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notificationNew1, notificationNew2})
-			So(count, ShouldEqual, 2)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationNew1, notificationNew2}, allNotifications)
+			require.EqualValues(t, 2, count)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test resave one notification when other notifications exist in the database", func() {
-			addNotifications(database, []moira.ScheduledNotification{*notificationOld1, *notificationOld3})
+		t.Run("Test resave one notification when other notifications exist in the database", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{*notificationOld1, *notificationOld3})
 
 			affected, err := database.resaveNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{notificationOld2}, []*moira.ScheduledNotification{notificationNew2})
-			So(err, ShouldBeNil)
-			So(affected, ShouldResemble, 1)
+			require.NoError(t, err)
+			require.Equal(t, 1, affected)
 
 			allNotifications, count, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notificationOld1, notificationOld3, notificationNew2})
-			So(count, ShouldEqual, 3)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationOld1, notificationOld3, notificationNew2}, allNotifications)
+			require.EqualValues(t, 3, count)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test resave all notifications", func() {
-			addNotifications(database, []moira.ScheduledNotification{*notificationOld1, *notificationOld2, *notificationOld3})
+		t.Run("Test resave all notifications", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{*notificationOld1, *notificationOld2, *notificationOld3})
 
 			affected, err := database.resaveNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{notificationOld1, notificationOld2, notificationOld3}, []*moira.ScheduledNotification{notificationNew1, notificationNew2, notificationNew3})
-			So(err, ShouldBeNil)
-			So(affected, ShouldResemble, 6)
+			require.NoError(t, err)
+			require.Equal(t, 6, affected)
 
 			allNotifications, count, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notificationNew1, notificationNew2, notificationNew3})
-			So(count, ShouldEqual, 3)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationNew1, notificationNew2, notificationNew3}, allNotifications)
+			require.EqualValues(t, 3, count)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 
-		Convey("Test resave notifications with different redis keys", func() {
+		t.Run("Test resave notifications with different redis keys", func(t *testing.T) {
 			notificationOld4 := &moira.ScheduledNotification{
 				Timestamp: 7,
 				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
@@ -1527,19 +1525,19 @@ func TestResaveNotifications(t *testing.T) {
 
 			redisKey := makeNotifierNotificationsKey(moira.DefaultGraphiteRemoteCluster)
 
-			addNotifications(database, []moira.ScheduledNotification{*notificationOld4})
+			addNotifications(t, database, []moira.ScheduledNotification{*notificationOld4})
 
 			affected, err := database.resaveNotifications(redisKey, ctx, pipe, []*moira.ScheduledNotification{notificationOld4}, []*moira.ScheduledNotification{notificationNew4})
-			So(err, ShouldBeNil)
-			So(affected, ShouldResemble, 2)
+			require.NoError(t, err)
+			require.Equal(t, 2, affected)
 
 			allNotifications, count, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notificationNew4})
-			So(count, ShouldEqual, 1)
+			require.NoError(t, err)
+			require.Equal(t, []*moira.ScheduledNotification{notificationNew4}, allNotifications)
+			require.EqualValues(t, 1, count)
 
 			err = database.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 		})
 	})
 }
@@ -1570,62 +1568,62 @@ func TestRemoveNotifications(t *testing.T) {
 		Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 
-	Convey("Test removeNotifications", t, func() {
-		Convey("Test remove empty notifications", func() {
+	t.Run("Test removeNotifications", func(t *testing.T) {
+		t.Run("Test remove empty notifications", func(t *testing.T) {
 			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{})
-			So(err, ShouldBeNil)
-			So(count, ShouldEqual, 0)
+			require.NoError(t, err)
+			require.EqualValues(t, 0, count)
 
 			allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(countAllNotifications, ShouldEqual, 0)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.EqualValues(t, 0, countAllNotifications)
+			require.Equal(t, []*moira.ScheduledNotification{}, allNotifications)
 		})
 
-		Convey("Test remove one notification", func() {
-			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
+		t.Run("Test remove one notification", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
 
 			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{notification2})
-			So(err, ShouldBeNil)
-			So(count, ShouldEqual, 1)
+			require.NoError(t, err)
+			require.EqualValues(t, 1, count)
 
 			allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(countAllNotifications, ShouldEqual, 2)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification1, notification3})
+			require.NoError(t, err)
+			require.EqualValues(t, 2, countAllNotifications)
+			require.Equal(t, []*moira.ScheduledNotification{notification1, notification3}, allNotifications)
 		})
 
-		Convey("Test remove all notifications", func() {
-			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
+		t.Run("Test remove all notifications", func(t *testing.T) {
+			addNotifications(t, database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
 
 			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{notification1, notification2, notification3})
-			So(err, ShouldBeNil)
-			So(count, ShouldEqual, 3)
+			require.NoError(t, err)
+			require.EqualValues(t, 3, count)
 
 			allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(countAllNotifications, ShouldEqual, 0)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{})
+			require.NoError(t, err)
+			require.EqualValues(t, 0, countAllNotifications)
+			require.Equal(t, []*moira.ScheduledNotification{}, allNotifications)
 		})
 
-		Convey("Test remove a nonexistent notification", func() {
+		t.Run("Test remove a nonexistent notification", func(t *testing.T) {
 			notification4 := &moira.ScheduledNotification{
 				Timestamp: 4,
 			}
 
-			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
+			addNotifications(t, database, []moira.ScheduledNotification{*notification1, *notification2, *notification3})
 
 			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{notification4})
-			So(err, ShouldBeNil)
-			So(count, ShouldEqual, 0)
+			require.NoError(t, err)
+			require.EqualValues(t, 0, count)
 
 			allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(countAllNotifications, ShouldEqual, 3)
-			So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification1, notification2, notification3})
+			require.NoError(t, err)
+			require.EqualValues(t, 3, countAllNotifications)
+			require.Equal(t, []*moira.ScheduledNotification{notification1, notification2, notification3}, allNotifications)
 		})
 
-		Convey("Test remove notifications from different sources", func() {
+		t.Run("Test remove notifications from different sources", func(t *testing.T) {
 			notification4 := &moira.ScheduledNotification{
 				Timestamp: 2,
 				Trigger:   moira.TriggerData{TriggerSource: moira.GraphiteRemote, ClusterId: moira.DefaultCluster},
@@ -1635,19 +1633,19 @@ func TestRemoveNotifications(t *testing.T) {
 				Trigger:   moira.TriggerData{TriggerSource: moira.PrometheusRemote, ClusterId: moira.DefaultCluster},
 			}
 
-			addNotifications(database, []moira.ScheduledNotification{*notification1, *notification4, *notification5})
+			addNotifications(t, database, []moira.ScheduledNotification{*notification1, *notification4, *notification5})
 
 			count, err := database.removeNotifications(localDefaultRedisKey, ctx, pipe, []*moira.ScheduledNotification{notification1})
-			So(err, ShouldBeNil)
-			So(count, ShouldEqual, 1)
+			require.NoError(t, err)
+			require.EqualValues(t, 1, count)
 
 			count, err = database.removeNotifications(makeNotifierNotificationsKey(moira.DefaultGraphiteRemoteCluster), ctx, pipe, []*moira.ScheduledNotification{notification4})
-			So(err, ShouldBeNil)
-			So(count, ShouldEqual, 1)
+			require.NoError(t, err)
+			require.EqualValues(t, 1, count)
 
 			count, err = database.removeNotifications(makeNotifierNotificationsKey(moira.DefaultPrometheusRemoteCluster), ctx, pipe, []*moira.ScheduledNotification{notification5})
-			So(err, ShouldBeNil)
-			So(count, ShouldEqual, 1)
+			require.NoError(t, err)
+			require.EqualValues(t, 1, count)
 		})
 	})
 }
@@ -1679,30 +1677,46 @@ func TestRemoveFilteredNotifications(t *testing.T) {
 		Trigger:   moira.TriggerData{Tags: []string{}, TriggerSource: moira.GraphiteLocal, ClusterId: moira.DefaultCluster},
 	}
 
-	Convey("Test removeNotifications filtered for all time", t, func() {
-		addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
+	t.Run("Test removeNotifications filtered for all time", func(t *testing.T) {
+		addNotifications(t, database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
 
 		count, err := database.RemoveFilteredNotifications(0, -1, []string{ignoredTag}, []moira.ClusterKey{})
-		So(err, ShouldBeNil)
-		So(count, ShouldEqual, 2)
+		require.NoError(t, err)
+		require.EqualValues(t, 2, count)
 
 		allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
-		So(err, ShouldBeNil)
-		So(countAllNotifications, ShouldEqual, 2)
-		So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification2, notification3})
+		require.NoError(t, err)
+		require.EqualValues(t, 2, countAllNotifications)
+		require.Equal(t, []*moira.ScheduledNotification{notification2, notification3}, allNotifications)
 	})
 
-	Convey("Test removeNotifications filtered for time range", t, func() {
-		addNotifications(database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
+	t.Run("Test removeNotifications filtered for time range", func(t *testing.T) {
+		addNotifications(t, database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
 
 		count, err := database.RemoveFilteredNotifications(25, 45, []string{ignoredTag}, []moira.ClusterKey{})
-		So(err, ShouldBeNil)
-		So(count, ShouldEqual, 1)
+		require.NoError(t, err)
+		require.EqualValues(t, 1, count)
 
 		allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
-		So(err, ShouldBeNil)
-		So(countAllNotifications, ShouldEqual, 3)
+		require.NoError(t, err)
+		require.EqualValues(t, 3, countAllNotifications)
 
-		So(allNotifications, ShouldResemble, []*moira.ScheduledNotification{notification1, notification2, notification3})
+		require.Equal(t, []*moira.ScheduledNotification{notification1, notification2, notification3}, allNotifications)
+	})
+
+	database.Flush()
+
+	t.Run("Test removeNotifications filtered by cluster key", func(t *testing.T) {
+		addNotifications(t, database, []moira.ScheduledNotification{*notification1, *notification2, *notification3, *notification4})
+
+		count, err := database.RemoveFilteredNotifications(0, -1, []string{}, []moira.ClusterKey{moira.DefaultLocalCluster})
+		require.NoError(t, err)
+		require.EqualValues(t, 2, count)
+
+		allNotifications, countAllNotifications, err := database.GetNotifications(0, -1)
+		require.NoError(t, err)
+		require.EqualValues(t, 2, countAllNotifications)
+
+		require.Equal(t, []*moira.ScheduledNotification{notification2, notification3}, allNotifications)
 	})
 }
