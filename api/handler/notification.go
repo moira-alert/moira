@@ -125,6 +125,10 @@ func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 //	@id			delete-notifications-filtered
 //	@tags		notification
 //	@produce	json
+//	@param		start			query		integer				true	"Time range start"
+//	@param		end				query		integer				true	"Time range end"
+//	@param		ignoredTags		query		[]string			false	"Notifications for triggers with any of these tags will not be deleted"
+//	@param		clusterKeys		query		[]string			false	"List of cluster keys for which notifications should be deleted. Defaults to all if no clusters are specified"
 //	@success	200	{object}	dto.NotificationsList		"Notification have been deleted"
 //	@failure	400	{object}	api.ErrorResponse			"Bad request"
 //	@failure	403	{object}	api.ErrorResponse			"Forbidden"
