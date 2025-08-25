@@ -70,27 +70,22 @@ func TestCounterShouldBeAtomic(t *testing.T) {
 		attributes: []attribute.KeyValue{},
 	}
 	wg := &sync.WaitGroup{}
-	wg.Add(2)
+	workersCount := 2
+	wg.Add(workersCount)
 
-	go func() {
-		for range 10_000 {
-			counter.Inc()
-		}
+	for range workersCount {
+		go func() {
+			for range 10_000 {
+				counter.Inc()
+			}
 
-		wg.Done()
-	}()
-
-	go func() {
-		for range 10_000 {
-			counter.Inc()
-		}
-
-		wg.Done()
-	}()
+			wg.Done()
+		}()
+	}
 
 	wg.Wait()
 
-	require.Equal(t, int64(20_000), counter.Count())
+	require.Equal(t, int64(10_000*workersCount), counter.Count())
 }
 
 type FakeExporter struct {
