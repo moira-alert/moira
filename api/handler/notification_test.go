@@ -25,12 +25,13 @@ func TestGetNotifications(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		t.Run("with the correct parameters", func(t *testing.T) {
 			parameters := []string{"start=0&end=100", "start=0", "end=100", "", "start=test&end=100", "start=0&end=test"}
 			for _, param := range parameters {
+				responseWriter := httptest.NewRecorder()
+
 				mockDb.EXPECT().GetNotifications(gomock.Any(), gomock.Any()).Return([]*moira.ScheduledNotification{}, int64(0), nil).Times(1)
 				database = mockDb
 
@@ -46,6 +47,7 @@ func TestGetNotifications(t *testing.T) {
 		})
 
 		t.Run("with the wrong url query string", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			testRequest := httptest.NewRequest(http.MethodGet, "/notifications?start=test%&end=100", nil)
 
 			getNotification(responseWriter, testRequest)
@@ -68,10 +70,10 @@ func TestDeleteNotifications(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		t.Run("with the empty id parameter", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			testRequest := httptest.NewRequest(http.MethodDelete, `/notifications`, nil)
 
 			deleteNotification(responseWriter, testRequest)
@@ -88,6 +90,8 @@ func TestDeleteNotifications(t *testing.T) {
 		})
 
 		t.Run("with the correct id", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().RemoveNotification(gomock.Any()).Return(int64(0), nil).Times(1)
 			database = mockDb
 
@@ -107,6 +111,7 @@ func TestDeleteNotifications(t *testing.T) {
 		})
 
 		t.Run("with the wrong url query string", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			testRequest := httptest.NewRequest(http.MethodDelete, `/notifications?id=test%&`, nil)
 
 			deleteNotification(responseWriter, testRequest)
