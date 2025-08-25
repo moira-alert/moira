@@ -2,9 +2,12 @@ package metrics
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/attribute"
+	internalMetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
@@ -21,8 +24,8 @@ func TestOtelCounter(t *testing.T) {
 			require.Len(t, scopeMetrics.Metrics, 1)
 			metric := scopeMetrics.Metrics[0]
 			require.Equal(t, "increments", metric.Name)
-			require.Equal(t, "", metric.Description)
-			require.Equal(t, "", metric.Unit)
+			require.Empty(t, metric.Description)
+			require.Empty(t, metric.Unit)
 
 			sum, ok := metric.Data.(metricdata.Sum[int64])
 			require.True(t, ok, "metric.Data should be Sum[int64]")
@@ -48,7 +51,7 @@ func TestOtelCounter(t *testing.T) {
 		require.True(t, exportCalled, "export should be called")
 	}()
 
-	registry := metricContext.CreateRegistry().WithAttributes(map[string]string {
+	registry := metricContext.CreateRegistry().WithAttributes(map[string]string{
 		"custom_label": "test_counter",
 	})
 
@@ -57,6 +60,37 @@ func TestOtelCounter(t *testing.T) {
 	for range 10 {
 		counter.Inc()
 	}
+}
+
+func TestCounterShouldBeAtomic(t *testing.T) {
+	counter := &OtelCounter{
+		counters:   []internalMetric.Int64Counter{},
+		count:      0,
+		mu:         sync.Mutex{},
+		attributes: []attribute.KeyValue{},
+	}
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		for range 10_000 {
+			counter.Inc()
+		}
+
+		wg.Done()
+	}()
+
+	go func() {
+		for range 10_000 {
+			counter.Inc()
+		}
+
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	require.Equal(t, int64(20_000), counter.Count())
 }
 
 type FakeExporter struct {
@@ -83,4 +117,3 @@ func (exp *FakeExporter) ForceFlush(context.Context) error {
 func (exp *FakeExporter) Shutdown(context.Context) error {
 	return nil
 }
-
