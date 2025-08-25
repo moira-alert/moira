@@ -52,14 +52,6 @@ type compositeMeter struct {
 	meters []Meter
 }
 
-func (source *compositeMeter) Count() int64 {
-	if len(source.meters) == 0 {
-		return 0
-	}
-
-	return source.meters[0].Count()
-}
-
 func (source *compositeMeter) Mark(value int64) {
 	for _, meter := range source.meters {
 		meter.Mark(value)
@@ -86,14 +78,6 @@ func (source *compositeTimer) UpdateSince(ts time.Time) {
 
 type compositeHistogram struct {
 	histograms []Histogram
-}
-
-func (source *compositeHistogram) Count() int64 {
-	if len(source.histograms) == 0 {
-		return 0
-	}
-
-	return source.histograms[0].Count()
 }
 
 func (source *compositeHistogram) Update(value int64) {
