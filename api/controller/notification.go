@@ -41,8 +41,8 @@ func DeleteAllNotifications(database moira.Database) *api.ErrorResponse {
 }
 
 // DeleteFilteredNotifications removes notifications filtered by timestamp and tags.
-func DeleteFilteredNotifications(database moira.Database, from, to int64, ignoredTags []string) *api.ErrorResponse {
-	_, err := database.RemoveFilteredNotifications(from, to, ignoredTags)
+func DeleteFilteredNotifications(database moira.Database, from, to int64, ignoredTags []string, sourceList []moira.ClusterKey) *api.ErrorResponse {
+	_, err := database.RemoveFilteredNotifications(from, to, ignoredTags, sourceList)
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}

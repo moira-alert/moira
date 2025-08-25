@@ -76,19 +76,6 @@ type Database interface {
 	GetTeamSubscriptionIDs(teamID string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 
-	// ScheduledNotification storing
-	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
-	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, error)
-	RemoveNotification(notificationKey string) (int64, error)
-	RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error)
-	RemoveAllNotifications() error
-	FetchNotifications(custerKey ClusterKey, to int64, limit int64) ([]*ScheduledNotification, error)
-	AddNotification(notification *ScheduledNotification) error
-	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
-	PushContactNotificationToHistory(notification *ScheduledNotification) error
-	CleanUpOutdatedNotificationHistory(ttl int64) error
-	CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*ContactIDWithNotificationCount, error)
-
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
 	AddPatternMetric(pattern, metric string) error
@@ -157,8 +144,27 @@ type Database interface {
 
 	// Self State
 	SelfStateDatabase
+
 	// ContactScore storing
 	ContactScoreDatabase
+
+	// ScheduledNotification storing
+	ScheduledNotificationsDatabase
+}
+
+// ScheduledNotificationsDatabase is used to schedule and fetch notifications, as well as to view list of all notifications and delete some when needed.
+type ScheduledNotificationsDatabase interface {
+	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
+	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, error)
+	RemoveNotification(notificationKey string) (int64, error)
+	RemoveFilteredNotifications(start, end int64, ignoredTags []string, sourceList []ClusterKey) (int64, error)
+	RemoveAllNotifications() error
+	FetchNotifications(custerKey ClusterKey, to int64, limit int64) ([]*ScheduledNotification, error)
+	AddNotification(notification *ScheduledNotification) error
+	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
+	PushContactNotificationToHistory(notification *ScheduledNotification) error
+	CleanUpOutdatedNotificationHistory(ttl int64) error
+	CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*ContactIDWithNotificationCount, error)
 }
 
 // DeliveryCheckerDatabase is used by senders that can track if the notification was delivered.
