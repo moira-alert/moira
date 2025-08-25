@@ -41,7 +41,7 @@ func TestGetNotifications(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				assert.EqualValues(t, http.StatusOK, response.StatusCode)
+				assert.Equal(t, http.StatusOK, response.StatusCode)
 			}
 		})
 
@@ -57,8 +57,8 @@ func TestGetNotifications(t *testing.T) {
 			expected := `{"status":"Invalid request","error":"invalid URL escape \"%\""}
 `
 
-			assert.EqualValues(t, expected, contents)
-			assert.EqualValues(t, http.StatusBadRequest, response.StatusCode)
+			assert.Equal(t, expected, contents)
+			assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 		})
 	})
 }
@@ -83,8 +83,8 @@ func TestDeleteNotifications(t *testing.T) {
 			expected := `{"status":"Invalid request","error":"notification id can not be empty"}
 `
 
-			assert.EqualValues(t, expected, contents)
-			assert.EqualValues(t, http.StatusBadRequest, response.StatusCode)
+			assert.Equal(t, expected, contents)
+			assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 		})
 
 		t.Run("with the correct id", func(t *testing.T) {
@@ -102,8 +102,8 @@ func TestDeleteNotifications(t *testing.T) {
 			expected := `{"result":0}
 `
 
-			assert.EqualValues(t, expected, contents)
-			assert.EqualValues(t, http.StatusOK, response.StatusCode)
+			assert.Equal(t, expected, contents)
+			assert.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
 		t.Run("with the wrong url query string", func(t *testing.T) {
@@ -118,8 +118,8 @@ func TestDeleteNotifications(t *testing.T) {
 			expected := `{"status":"Invalid request","error":"invalid URL escape \"%\""}
 `
 
-			assert.EqualValues(t, expected, contents)
-			assert.EqualValues(t, http.StatusBadRequest, response.StatusCode)
+			assert.Equal(t, expected, contents)
+			assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 		})
 	})
 }
