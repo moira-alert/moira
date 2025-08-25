@@ -22,7 +22,6 @@ type MetersCollection interface {
 // Meter count events to produce exponentially-weighted moving average rates
 // at one-, five-, and fifteen-minutes and a mean rate.
 type Meter interface {
-	Count() int64
 	Mark(int64)
 }
 
@@ -34,7 +33,6 @@ type Timer interface {
 
 // Histogram calculate distribution statistics from a series of int64 values.
 type Histogram interface {
-	Count() int64
 	Update(int64)
 }
 
