@@ -15,7 +15,6 @@ import (
 	metricsource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -42,7 +41,7 @@ func TestGetNotifications(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				assert.Equal(t, http.StatusOK, response.StatusCode)
+				require.Equal(t, http.StatusOK, response.StatusCode)
 			}
 		})
 
@@ -59,8 +58,8 @@ func TestGetNotifications(t *testing.T) {
 			expected := `{"status":"Invalid request","error":"invalid URL escape \"%\""}
 `
 
-			assert.Equal(t, expected, contents)
-			assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+			require.Equal(t, expected, contents)
+			require.Equal(t, http.StatusBadRequest, response.StatusCode)
 		})
 	})
 }
@@ -85,8 +84,8 @@ func TestDeleteNotifications(t *testing.T) {
 			expected := `{"status":"Invalid request","error":"notification id can not be empty"}
 `
 
-			assert.Equal(t, expected, contents)
-			assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+			require.Equal(t, expected, contents)
+			require.Equal(t, http.StatusBadRequest, response.StatusCode)
 		})
 
 		t.Run("with the correct id", func(t *testing.T) {
@@ -106,8 +105,8 @@ func TestDeleteNotifications(t *testing.T) {
 			expected := `{"result":0}
 `
 
-			assert.Equal(t, expected, contents)
-			assert.Equal(t, http.StatusOK, response.StatusCode)
+			require.Equal(t, expected, contents)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
 		t.Run("with the wrong url query string", func(t *testing.T) {
@@ -123,8 +122,8 @@ func TestDeleteNotifications(t *testing.T) {
 			expected := `{"status":"Invalid request","error":"invalid URL escape \"%\""}
 `
 
-			assert.Equal(t, expected, contents)
-			assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+			require.Equal(t, expected, contents)
+			require.Equal(t, http.StatusBadRequest, response.StatusCode)
 		})
 	})
 }

@@ -7,6 +7,7 @@ import (
 
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -1080,5 +1081,27 @@ func TestScheduledNotificationIsDelayed(t *testing.T) {
 			actual := notification.IsDelayed(delayedTime)
 			So(actual, ShouldBeFalse)
 		})
+	})
+}
+
+func TestParseClusterKey(t *testing.T) {
+	t.Run("Successfully parse cluster keys", func(t *testing.T) {
+		expected := DefaultLocalCluster
+		actual, err := ParseClusterKey("graphite_local.default")
+		require.NoError(t, err)
+		require.Equal(t, expected, actual)
+
+		expected = MakeClusterKey(PrometheusRemote, ClusterId("production"))
+		actual, err = ParseClusterKey("prometheus_remote.production")
+		require.NoError(t, err)
+		require.Equal(t, expected, actual)
+	})
+
+	t.Run("Errors when parsing cluster keys", func(t *testing.T) {
+		_, err := ParseClusterKey("prometheus_remote")
+		require.Error(t, err)
+
+		_, err = ParseClusterKey("prometheus_remote.production.foo")
+		require.Error(t, err)
 	})
 }
