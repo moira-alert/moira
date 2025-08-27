@@ -23,4 +23,6 @@ type MetricRegistry interface {
 	NewGauge(name string) Meter
 	// NewHistogram creates and returns a new Histogram metric with the given name.
 	NewHistogram(name string) Histogram
+	// NewTimer creates and returns a new Timer metric with the given name.
+	NewTimer(name string) Timer
 }

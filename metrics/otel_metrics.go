@@ -5,6 +5,8 @@ import (
 	"errors"
 	"maps"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"go.opentelemetry.io/otel/attribute"
@@ -80,7 +82,7 @@ func (r *DefaultMetricRegistry) NewCounter(name string) Counter {
 		counters,
 		0,
 		sync.Mutex{},
-		r.attributes.ToOtelAttributes(),
+		r.attributes.toOtelAttributes(),
 	}
 }
 
@@ -93,7 +95,7 @@ func (r *DefaultMetricRegistry) NewGauge(name string) Meter {
 
 	return &otelGauge{
 		gauges,
-		r.attributes.ToOtelAttributes(),
+		r.attributes.toOtelAttributes(),
 	}
 }
 
@@ -106,18 +108,26 @@ func (r *DefaultMetricRegistry) NewHistogram(name string) Histogram {
 
 	return &otelHistogram{
 		histograms,
-		r.attributes.ToOtelAttributes(),
+		r.attributes.toOtelAttributes(),
 	}
 }
 
-// ToOtelAttributes converts Attributes to a slice of attribute.KeyValue.
-func (a *Attributes) ToOtelAttributes() []attribute.KeyValue {
-	if a == nil {
-		return nil
+func (r *DefaultMetricRegistry) NewTimer(name string) Timer {
+	timers := moira.Map(r.providers, func(provider *metric.MeterProvider) internalMetric.Float64Histogram {
+		timer, _ := provider.Meter("timer").Float64Histogram(name)
+		return timer
+	})
+	return &otelTimer{
+		timers,
+		r.attributes.toOtelAttributes(),
+		0,
 	}
+}
 
-	attrs := make([]attribute.KeyValue, 0, len(*a))
-	for k, v := range *a {
+// toOtelAttributes converts Attributes to a slice of attribute.KeyValue.
+func (a Attributes) toOtelAttributes() []attribute.KeyValue {
+	attrs := make([]attribute.KeyValue, 0, len(a))
+	for k, v := range a {
 		attrs = append(attrs, attribute.String(k, v))
 	}
 
@@ -177,3 +187,24 @@ func (h *otelHistogram) Update(mark int64) {
 		histogram.Record(context.Background(), mark, internalMetric.WithAttributes(h.attributes...))
 	}
 }
+
+// otelTimer represents a timer that records durations in histograms with attributes.
+type otelTimer struct {
+	histogram []internalMetric.Float64Histogram
+	attributes []attribute.KeyValue
+	count int64
+}
+
+// UpdateSince records the duration since the given timestamp in all histograms and increments the count.
+func (t *otelTimer) UpdateSince(ts time.Time) {
+	for _, histogram := range t.histogram {
+		histogram.Record(context.Background(), float64(time.Since(ts)), internalMetric.WithAttributes(t.attributes...))
+	}
+	atomic.AddInt64(&t.count, 1)
+}
+
+// Count returns the number of times UpdateSince has been called.
+func (t *otelTimer) Count() int64 {
+	return atomic.LoadInt64(&t.count)
+}
+
