@@ -117,6 +117,7 @@ func (r *DefaultMetricRegistry) NewTimer(name string) Timer {
 		timer, _ := provider.Meter("timer").Float64Histogram(name)
 		return timer
 	})
+
 	return &otelTimer{
 		timers,
 		r.attributes.toOtelAttributes(),
@@ -190,9 +191,9 @@ func (h *otelHistogram) Update(mark int64) {
 
 // otelTimer represents a timer that records durations in histograms with attributes.
 type otelTimer struct {
-	histogram []internalMetric.Float64Histogram
+	histogram  []internalMetric.Float64Histogram
 	attributes []attribute.KeyValue
-	count int64
+	count      int64
 }
 
 // UpdateSince records the duration since the given timestamp in all histograms and increments the count.
@@ -200,6 +201,7 @@ func (t *otelTimer) UpdateSince(ts time.Time) {
 	for _, histogram := range t.histogram {
 		histogram.Record(context.Background(), float64(time.Since(ts)), internalMetric.WithAttributes(t.attributes...))
 	}
+
 	atomic.AddInt64(&t.count, 1)
 }
 
@@ -207,4 +209,3 @@ func (t *otelTimer) UpdateSince(ts time.Time) {
 func (t *otelTimer) Count() int64 {
 	return atomic.LoadInt64(&t.count)
 }
-
