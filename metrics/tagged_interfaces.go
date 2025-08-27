@@ -21,6 +21,6 @@ type MetricRegistry interface {
 	NewCounter(name string) Counter
 	// NewGauge creates and returns a new Meter gauge metric with the given name.
 	NewGauge(name string) Meter
-	// NewHistogram creates and returns a new Histogram metric with the given bucket boundaries and name.
-	NewHistogram(bucketBoundaries []uint64, name string) Histogram
+	// NewHistogram creates and returns a new Histogram metric with the given name.
+	NewHistogram(name string) Histogram
 }

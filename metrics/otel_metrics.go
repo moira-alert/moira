@@ -76,7 +76,7 @@ func (r *DefaultMetricRegistry) NewCounter(name string) Counter {
 		return counter
 	})
 
-	return &OtelCounter{
+	return &otelCounter{
 		counters,
 		0,
 		sync.Mutex{},
@@ -91,20 +91,20 @@ func (r *DefaultMetricRegistry) NewGauge(name string) Meter {
 		return gauge
 	})
 
-	return &OtelGauge{
+	return &otelGauge{
 		gauges,
 		r.attributes.ToOtelAttributes(),
 	}
 }
 
 // NewHistogram creates a new Histogram with the given name and bucket boundaries.
-func (r *DefaultMetricRegistry) NewHistogram(bucketBoundaries []uint64, name string) Histogram {
+func (r *DefaultMetricRegistry) NewHistogram(name string) Histogram {
 	histograms := moira.Map(r.providers, func(provider *metric.MeterProvider) internalMetric.Int64Histogram {
 		histogram, _ := provider.Meter("histogram").Int64Histogram(name)
 		return histogram
 	})
 
-	return &OtelHistogram{
+	return &otelHistogram{
 		histograms,
 		r.attributes.ToOtelAttributes(),
 	}
@@ -124,8 +124,8 @@ func (a *Attributes) ToOtelAttributes() []attribute.KeyValue {
 	return attrs
 }
 
-// OtelCounter implements Counter using OpenTelemetry Int64Counter.
-type OtelCounter struct {
+// otelCounter implements Counter using OpenTelemetry Int64Counter.
+type otelCounter struct {
 	counters   []internalMetric.Int64Counter
 	count      int64
 	mu         sync.Mutex
@@ -133,7 +133,7 @@ type OtelCounter struct {
 }
 
 // Inc increments the counter by 1.
-func (c *OtelCounter) Inc() {
+func (c *otelCounter) Inc() {
 	for _, counter := range c.counters {
 		counter.Add(context.Background(), 1, internalMetric.WithAttributes(c.attributes...))
 	}
@@ -145,34 +145,34 @@ func (c *OtelCounter) Inc() {
 }
 
 // Count returns the current count value.
-func (c *OtelCounter) Count() int64 {
+func (c *otelCounter) Count() int64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	return c.count
 }
 
-// OtelGauge implements Meter using OpenTelemetry Int64Gauge.
-type OtelGauge struct {
+// otelGauge implements Meter using OpenTelemetry Int64Gauge.
+type otelGauge struct {
 	gauges     []internalMetric.Int64Gauge
 	attributes []attribute.KeyValue
 }
 
 // Mark records a value for the gauge.
-func (c *OtelGauge) Mark(mark int64) {
+func (c *otelGauge) Mark(mark int64) {
 	for _, gauge := range c.gauges {
 		gauge.Record(context.Background(), mark, internalMetric.WithAttributes(c.attributes...))
 	}
 }
 
-// OtelHistogram implements Histogram using OpenTelemetry Int64Histogram.
-type OtelHistogram struct {
+// otelHistogram implements Histogram using OpenTelemetry Int64Histogram.
+type otelHistogram struct {
 	histograms []internalMetric.Int64Histogram
 	attributes []attribute.KeyValue
 }
 
 // Update records a value for the histogram.
-func (h *OtelHistogram) Update(mark int64) {
+func (h *otelHistogram) Update(mark int64) {
 	for _, histogram := range h.histograms {
 		histogram.Record(context.Background(), mark, internalMetric.WithAttributes(h.attributes...))
 	}

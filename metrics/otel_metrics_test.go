@@ -63,7 +63,7 @@ func TestOtelCounter(t *testing.T) {
 }
 
 func TestCounterShouldBeAtomic(t *testing.T) {
-	counter := &OtelCounter{
+	counter := &otelCounter{
 		counters:   []internalMetric.Int64Counter{},
 		count:      0,
 		mu:         sync.Mutex{},
