@@ -11,23 +11,19 @@ import (
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
-	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-func health(metricSourceProvider *metricSource.SourceProvider) func(chi.Router) {
-	return func(router chi.Router) {
-		router.Get("/notifier", getNotifierState)
-		router.With(middleware.AdminOnlyMiddleware()).
-			Put("/notifier", setNotifierState)
+func health(router chi.Router) {
+	router.Get("/notifier", getNotifierState)
+	router.With(middleware.AdminOnlyMiddleware()).
+		Put("/notifier", setNotifierState)
 
-		router.Get("/notifier-sources", getNotifierStatesForSources)
-		router.With(middleware.AdminOnlyMiddleware()).
-			With(middleware.MetricSourceProvider(metricSourceProvider)).
-			Put("/notifier-sources/{triggerSource}/{clusterId}", setNotifierStateForSource)
+	router.Get("/notifier-sources", getNotifierStatesForSources)
+	router.With(middleware.AdminOnlyMiddleware()).
+		Put("/notifier-sources/{triggerSource}/{clusterId}", setNotifierStateForSource)
 
-		router.With(middleware.AdminOnlyMiddleware()).
-			Get("/system-subscriptions", getSystemSubscriptions)
-	}
+	router.With(middleware.AdminOnlyMiddleware()).
+		Get("/system-subscriptions", getSystemSubscriptions)
 }
 
 // nolint: gofmt,goimports
