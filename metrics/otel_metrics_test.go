@@ -51,8 +51,11 @@ func TestOtelCounter(t *testing.T) {
 		require.True(t, exportCalled, "export should be called")
 	}()
 
-	registry := metricContext.CreateRegistry().WithAttributes(map[string]string{
-		"custom_label": "test_counter",
+	registry := metricContext.CreateRegistry().WithAttributes(Attributes{
+		{
+			key:   "custom_label",
+			value: "test_counter",
+		},
 	})
 
 	counter := registry.NewCounter("increments")

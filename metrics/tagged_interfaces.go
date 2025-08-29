@@ -2,8 +2,16 @@ package metrics
 
 import "context"
 
+// Attribute represents a key-value string pair for metric attributes.
+type Attribute struct {
+	// key is the attribute's key
+	key string
+	// value is the attribute's value
+	value string
+}
+
 // Attributes represents a set of key-value string pairs for metric attributes.
-type Attributes map[string]string
+type Attributes []Attribute
 
 // MetricsContext provides methods to create a metric registry and shutdown the context.
 type MetricsContext interface {

@@ -3,7 +3,6 @@ package metrics
 import (
 	"context"
 	"errors"
-	"maps"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -26,7 +25,7 @@ func NewMetricContext(ctx context.Context) *DefaultMetricsContext {
 	return &DefaultMetricsContext{
 		readers:    []metric.Reader{},
 		providers:  []*metric.MeterProvider{},
-		attributes: map[string]string{},
+		attributes: Attributes{},
 	}
 }
 
@@ -64,9 +63,9 @@ type DefaultMetricRegistry struct {
 
 // WithAttributes returns a new MetricRegistry with merged attributes.
 func (r *DefaultMetricRegistry) WithAttributes(attributes Attributes) MetricRegistry {
-	attrs := make(Attributes, len(r.attributes))
-	maps.Copy(attrs, r.attributes)
-	maps.Copy(attrs, attributes)
+	attrs := make(Attributes, 0, len(r.attributes)+len(attributes))
+	attrs = append(attrs, r.attributes...)
+	attrs = append(attrs, attributes...)
 
 	return &DefaultMetricRegistry{r.providers, attrs}
 }
@@ -128,8 +127,8 @@ func (r *DefaultMetricRegistry) NewTimer(name string) Timer {
 // toOtelAttributes converts Attributes to a slice of attribute.KeyValue.
 func (a Attributes) toOtelAttributes() []attribute.KeyValue {
 	attrs := make([]attribute.KeyValue, 0, len(a))
-	for k, v := range a {
-		attrs = append(attrs, attribute.String(k, v))
+	for _, attr := range a {
+		attrs = append(attrs, attribute.String(attr.key, attr.value))
 	}
 
 	return attrs
