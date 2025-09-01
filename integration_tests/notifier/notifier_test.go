@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -43,7 +44,7 @@ var notifierConfig = notifier.Config{
 var shutdown = make(chan struct{})
 
 var (
-	notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), "notifier")
 	logger, _       = logging.GetLogger("Notifier_Test")
 	mockCtrl        *gomock.Controller
 )

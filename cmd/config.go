@@ -170,22 +170,23 @@ type GraphiteConfig struct {
 }
 
 type PrometheusConfig struct {
-	Enabled bool `yaml:"enabled"`
+	Enabled     bool   `yaml:"enabled"`
 	MetricsPath string `yaml:"metrics_path"`
 }
 
 type OtelTransportProtocol string
+
 const (
 	Grpc OtelTransportProtocol = "grpc"
 	Http OtelTransportProtocol = "http"
 )
 
 type OtelConfig struct {
-	Enabled bool `yaml:"enabled"`
-	Protocol OtelTransportProtocol `yaml:"protocol"`
-	CollectorURI string `yaml:"collector_uri"`
-	AdditionalHeaders map[string]string `yaml:"headers"`
-	DefaultAttributes map[string]string `yaml:"attributes"`
+	Enabled           bool                  `yaml:"enabled"`
+	Protocol          OtelTransportProtocol `yaml:"protocol"`
+	CollectorURI      string                `yaml:"collector_uri"`
+	AdditionalHeaders map[string]string     `yaml:"headers"`
+	DefaultAttributes map[string]string     `yaml:"attributes"`
 }
 
 // GetSettings returns graphite metrics config parsed from moira config files.
@@ -208,12 +209,12 @@ type LoggerConfig struct {
 
 // TelemetryConfig is settings for listener, pprof, graphite.
 type TelemetryConfig struct {
-	Listen   string         `yaml:"listen"`
-	Pprof    ProfilerConfig `yaml:"pprof"`
-	UseNewMetrics bool `yaml:"use_new_metrics"`
-	Graphite GraphiteConfig `yaml:"graphite"`
-	Prometheus PrometheusConfig `yaml:"prometheus"`
-	Otel OtelConfig `yaml:"otel"`
+	Listen        string           `yaml:"listen"`
+	Pprof         ProfilerConfig   `yaml:"pprof"`
+	UseNewMetrics bool             `yaml:"use_new_metrics"`
+	Graphite      GraphiteConfig   `yaml:"graphite"`
+	Prometheus    PrometheusConfig `yaml:"prometheus"`
+	Otel          OtelConfig       `yaml:"otel"`
 }
 
 // ProfilerConfig is pprof settings structure that initialises at the start of moira.

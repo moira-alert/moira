@@ -19,9 +19,9 @@ import (
 )
 
 type Telemetry struct {
-	Metrics  metrics.Registry
+	Metrics           metrics.Registry
 	AttributedMetrics metrics.MetricRegistry
-	stopFunc func()
+	stopFunc          func()
 }
 
 func (source *Telemetry) Stop() {
@@ -37,7 +37,9 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 	}
 
 	var attributedMetrics metrics.MetricsContext = metrics.NewMetricContext(context.Background())
-	var metricsRegistry metrics.Registry = metrics.NewDummyRegistry()
+
+	metricsRegistry := metrics.NewDummyRegistry()
+
 	if config.UseNewMetrics {
 		attributedMetrics, err = configureAttributedTelemetry(logger, config, serverMux)
 		if err != nil {
@@ -67,9 +69,14 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 		}
 	}
 
+	defaultAttributes := metrics.Attributes{}
+	for k, v := range config.Otel.DefaultAttributes {
+		defaultAttributes = append(defaultAttributes, metrics.Attribute{Key: k, Value: v})
+	}
+
 	return &Telemetry{
-		Metrics: metricsRegistry,
-		AttributedMetrics: attributedMetrics.CreateRegistry().WithAttributes(config.Otel.DefaultAttributes),
+		Metrics:           metricsRegistry,
+		AttributedMetrics: attributedMetrics.CreateRegistry().WithAttributes(defaultAttributes),
 		stopFunc: func() {
 			err := attributedMetrics.Shutdown(context.Background())
 			stopServer()
@@ -81,7 +88,6 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 }
 
 func configureAttributedTelemetry(logger moira.Logger, config TelemetryConfig, serverMux *http.ServeMux) (metrics.MetricsContext, error) {
-
 	ctx := context.Background()
 	metricContext := metrics.NewMetricContext(ctx)
 
@@ -94,6 +100,7 @@ func configureAttributedTelemetry(logger moira.Logger, config TelemetryConfig, s
 		if err != nil {
 			return nil, err
 		}
+
 		metricContext.AddReader(promExporter)
 
 		serverMux.Handle(config.Prometheus.MetricsPath, promhttp.Handler())
@@ -109,6 +116,7 @@ func configureAttributedTelemetry(logger moira.Logger, config TelemetryConfig, s
 			if err != nil {
 				return nil, err
 			}
+
 			metricContext.AddReader(metric.NewPeriodicReader(exporter))
 		case Http:
 			exporter, err := otlpmetrichttp.New(ctx,
@@ -118,6 +126,7 @@ func configureAttributedTelemetry(logger moira.Logger, config TelemetryConfig, s
 			if err != nil {
 				return nil, err
 			}
+
 			metricContext.AddReader(metric.NewPeriodicReader(exporter))
 		}
 	}
@@ -145,9 +154,7 @@ func configureOldTelemetry(logger moira.Logger, config TelemetryConfig, service 
 	return metrics.NewCompositeRegistry(graphiteRegistry, prometheusRegistryAdapter), nil
 }
 
-
 func configureTelemetryServer(logger moira.Logger, listen string, pprofConfig ProfilerConfig, prometheusRegistry *prometheus.Registry, serverMux *http.ServeMux) error {
-
 	if pprofConfig.Enabled {
 		configurePprofServer(serverMux)
 	}
@@ -166,4 +173,3 @@ func configurePprofServer(serverMux *http.ServeMux) {
 	serverMux.HandleFunc("/pprof/heap", pprof.Handler("heap").ServeHTTP)
 	serverMux.HandleFunc("/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 }
-

@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -60,7 +61,7 @@ func TestThrottling(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	metrics2 := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	metrics2 := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), "notifier")
 
 	now := time.Now()
 	next := now.Add(10 * time.Minute)
@@ -221,7 +222,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), "notifier")
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	scheduler := NewScheduler(dataBase, logger, notifierMetrics, SchedulerConfig{ReschedulingDelay: time.Minute}, systemClock)
 

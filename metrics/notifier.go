@@ -6,43 +6,57 @@ import (
 
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
-	SubsMalformed                              Meter
-	EventsReceived                             Meter
-	EventsMalformed                            Meter
-	EventsProcessingFailed                     Meter
-	EventsByState                              MetersCollection
-	SendingFailed                              Meter
-	ContactsSendingNotificationsOK             MetersCollection
-	ContactsSendingNotificationsFailed         MetersCollection
-	ContactsDroppedNotifications               MetersCollection
-	ContactsDeliveryNotificationsOK            MetersCollection
-	ContactsDeliveryNotificationsFailed        MetersCollection
-	ContactsDeliveryNotificationsChecksStopped MetersCollection
-	PlotsBuildDurationMs                       Histogram
-	PlotsEvaluateTriggerDurationMs             Histogram
-	fetchNotificationsDurationMs               Histogram
-	notifierIsAlive                            Meter
+	SubsMalformed                                        Meter
+	EventsReceived                                       Meter
+	EventsMalformed                                      Meter
+	EventsProcessingFailed                               Meter
+	EventsByState                                        MetersCollection
+	EventsByStateAttributed                              AttributedMetricCollection
+	SendingFailed                                        Meter
+	ContactsSendingNotificationsOK                       MetersCollection
+	ContactsSendingNotificationsOKAttributed             AttributedMetricCollection
+	ContactsSendingNotificationsFailed                   MetersCollection
+	ContactsSendingNotificationsFailedAttributed         AttributedMetricCollection
+	ContactsDroppedNotifications                         MetersCollection
+	ContactsDroppedNotificationsAttributed               AttributedMetricCollection
+	ContactsDeliveryNotificationsOK                      MetersCollection
+	ContactsDeliveryNotificationsOKAttributed            AttributedMetricCollection
+	ContactsDeliveryNotificationsFailed                  MetersCollection
+	ContactsDeliveryNotificationsFailedAttributed        AttributedMetricCollection
+	ContactsDeliveryNotificationsChecksStopped           MetersCollection
+	ContactsDeliveryNotificationsChecksStoppedAttributed AttributedMetricCollection
+	PlotsBuildDurationMs                                 Histogram
+	PlotsEvaluateTriggerDurationMs                       Histogram
+	fetchNotificationsDurationMs                         Histogram
+	notifierIsAlive                                      Meter
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
-func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics {
+func ConfigureNotifierMetrics(registry Registry, attributedMetrics MetricRegistry, prefix string) *NotifierMetrics {
 	return &NotifierMetrics{
-		SubsMalformed:                              registry.NewMeter("subs", "malformed"),
-		EventsReceived:                             registry.NewMeter("events", "received"),
-		EventsMalformed:                            registry.NewMeter("events", "malformed"),
-		EventsProcessingFailed:                     registry.NewMeter("events", "failed"),
-		EventsByState:                              NewMetersCollection(registry),
-		SendingFailed:                              registry.NewMeter("sending", "failed"),
-		ContactsSendingNotificationsOK:             NewMetersCollection(registry),
-		ContactsSendingNotificationsFailed:         NewMetersCollection(registry),
-		ContactsDroppedNotifications:               NewMetersCollection(registry),
-		ContactsDeliveryNotificationsOK:            NewMetersCollection(registry),
-		ContactsDeliveryNotificationsFailed:        NewMetersCollection(registry),
-		ContactsDeliveryNotificationsChecksStopped: NewMetersCollection(registry),
-		PlotsBuildDurationMs:                       registry.NewHistogram("plots", "build", "duration", "ms"),
-		PlotsEvaluateTriggerDurationMs:             registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"),
-		fetchNotificationsDurationMs:               registry.NewHistogram("fetch", "notifications", "duration", "ms"),
-		notifierIsAlive:                            registry.NewMeter("", "alive"),
+		SubsMalformed:                                        NewCompositeMeter(registry.NewMeter("subs", "malformed"), attributedMetrics.NewGauge("subs_malformed")),
+		EventsReceived:                                       NewCompositeMeter(registry.NewMeter("events", "received"), attributedMetrics.NewGauge("events_received")),
+		EventsMalformed:                                      NewCompositeMeter(registry.NewMeter("events", "malformed"), attributedMetrics.NewGauge("events_malformed")),
+		EventsProcessingFailed:                               NewCompositeMeter(registry.NewMeter("events", "failed"), attributedMetrics.NewGauge("events_failed")),
+		EventsByState:                                        NewMetersCollection(registry),
+		EventsByStateAttributed:                              NewAttributedMetricCollection(attributedMetrics),
+		SendingFailed:                                        NewCompositeMeter(registry.NewMeter("sending", "failed"), attributedMetrics.NewGauge("sending_failed")),
+		ContactsSendingNotificationsOK:                       NewMetersCollection(registry),
+		ContactsSendingNotificationsOKAttributed:             NewAttributedMetricCollection(attributedMetrics),
+		ContactsSendingNotificationsFailed:                   NewMetersCollection(registry),
+		ContactsSendingNotificationsFailedAttributed:         NewAttributedMetricCollection(attributedMetrics),
+		ContactsDroppedNotifications:                         NewMetersCollection(registry),
+		ContactsDroppedNotificationsAttributed:               NewAttributedMetricCollection(attributedMetrics),
+		ContactsDeliveryNotificationsOK:                      NewMetersCollection(registry),
+		ContactsDeliveryNotificationsOKAttributed:            NewAttributedMetricCollection(attributedMetrics),
+		ContactsDeliveryNotificationsFailed:                  NewMetersCollection(registry),
+		ContactsDeliveryNotificationsFailedAttributed:        NewAttributedMetricCollection(attributedMetrics),
+		ContactsDeliveryNotificationsChecksStopped:           NewMetersCollection(registry),
+		ContactsDeliveryNotificationsChecksStoppedAttributed: NewAttributedMetricCollection(attributedMetrics),
+		PlotsBuildDurationMs:                                 NewCompositeHistogram(registry.NewHistogram("plots", "build", "duration", "ms"), attributedMetrics.NewHistogram("plots_build_duration_ms")),
+		PlotsEvaluateTriggerDurationMs:                       NewCompositeHistogram(registry.NewHistogram("plots", "evaluate", "trigger", "duration", "ms"), attributedMetrics.NewHistogram("plots_evaluate_trigger_duration_ms")),
+		fetchNotificationsDurationMs:                         NewCompositeHistogram(registry.NewHistogram("fetch", "notifications", "duration", "ms"), attributedMetrics.NewHistogram("fetch_notifications_duration_ms")),
+		notifierIsAlive:                                      NewCompositeMeter(registry.NewMeter("", "alive"), attributedMetrics.NewGauge("alive")),
 	}
 }
 

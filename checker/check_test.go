@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -33,7 +34,7 @@ func TestGetMetricDataState(t *testing.T) {
 	var errValue float64 = 20
 
 	checkerMetrics, _ := metrics.
-		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
 		GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		logger:  logger,
@@ -581,7 +582,7 @@ func TestCheckForNODATA(t *testing.T) {
 	var ttl int64 = 600
 
 	checkerMetrics, _ := metrics.
-		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
 		GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		metrics: checkerMetrics,
@@ -711,7 +712,7 @@ func TestCheck(t *testing.T) {
 		var ttl int64 = 30
 
 		checkerMetrics, _ := metrics.
-			ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+			ConfigureCheckerMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
 			GetCheckMetricsBySource(defaultLocalClusterKey)
 		triggerChecker := TriggerChecker{
 			triggerID: "SuperId",
@@ -1621,7 +1622,7 @@ func TestTriggerChecker_Check(t *testing.T) {
 	var ttl int64 = 30
 
 	checkerMetrics, _ := metrics.
-		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
 		GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
@@ -1713,7 +1714,7 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	var ttl int64 = 30
 
 	checkerMetrics, _ := metrics.
-		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
+		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
 		GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
@@ -2192,6 +2193,7 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 
 			checkMetrics, err := metrics.ConfigureCheckerMetrics(
 				metrics.NewDummyRegistry(),
+				metrics.NewMetricContext(context.Background()).CreateRegistry(),
 				[]moira.ClusterKey{moira.DefaultLocalCluster},
 			).GetCheckMetricsBySource(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)

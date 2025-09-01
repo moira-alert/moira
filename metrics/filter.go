@@ -14,17 +14,17 @@ type FilterMetrics struct {
 }
 
 // ConfigureFilterMetrics initialize metrics.
-func ConfigureFilterMetrics(registry Registry) *FilterMetrics {
+func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry) *FilterMetrics {
 	return &FilterMetrics{
-		TotalMetricsReceived:        registry.NewCounter("received", "total"),
-		ValidMetricsReceived:        registry.NewCounter("received", "valid"),
-		MatchingMetricsReceived:     registry.NewCounter("received", "matching"),
-		PatternMatchingCacheEvicted: registry.NewMeter("patternMatchingCache", "evicted"),
-		MatchingTimer:               registry.NewTimer("time", "match"),
-		SavingTimer:                 registry.NewTimer("time", "save"),
-		BuildTreeTimer:              registry.NewTimer("time", "buildtree"),
-		MetricChannelLen:            registry.NewHistogram("metricsToSave"),
-		LineChannelLen:              registry.NewHistogram("linesToMatch"),
+		TotalMetricsReceived:        NewCompositeCounter(registry.NewCounter("received", "total"), attributedRegistry.NewCounter("received_total")),
+		ValidMetricsReceived:        NewCompositeCounter(registry.NewCounter("received", "valid"), attributedRegistry.NewCounter("received_valid")),
+		MatchingMetricsReceived:     NewCompositeCounter(registry.NewCounter("received", "matching"), attributedRegistry.NewCounter("received_matching")),
+		PatternMatchingCacheEvicted: NewCompositeMeter(registry.NewMeter("patternMatchingCache", "evicted"), attributedRegistry.NewGauge("patternMatchingCache_evicted")),
+		MatchingTimer:               NewCompositeTimer(registry.NewTimer("time", "match"), attributedRegistry.NewTimer("time_match")),
+		SavingTimer:                 NewCompositeTimer(registry.NewTimer("time", "save"), attributedRegistry.NewTimer("time_save")),
+		BuildTreeTimer:              NewCompositeTimer(registry.NewTimer("time", "buildtree"), attributedRegistry.NewTimer("time_buildtree")),
+		MetricChannelLen:            NewCompositeHistogram(registry.NewHistogram("metricsToSave"), attributedRegistry.NewHistogram("metricsToSave")),
+		LineChannelLen:              NewCompositeHistogram(registry.NewHistogram("linesToMatch"), attributedRegistry.NewHistogram("linesToMatch")),
 	}
 }
 

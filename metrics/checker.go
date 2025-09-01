@@ -37,27 +37,31 @@ type CheckMetrics struct {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator.
-func ConfigureCheckerMetrics(registry Registry, sources []moira.ClusterKey) *CheckerMetrics {
+func ConfigureCheckerMetrics(registry Registry, attributedregistry MetricRegistry, sources []moira.ClusterKey) *CheckerMetrics {
 	metrics := &CheckerMetrics{
 		MetricsBySource:        make(map[moira.ClusterKey]*CheckMetrics),
-		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
-		MetricEventsHandleTime: registry.NewTimer("metricEventsHandle"),
-		UnusedTriggersCount:    registry.NewHistogram("triggers", "unused"),
+		MetricEventsChannelLen: NewCompositeHistogram(registry.NewHistogram("metricEvents"), attributedregistry.NewHistogram("metricEvents")),
+		MetricEventsHandleTime: NewCompositeTimer(registry.NewTimer("metricEventsHandle"), attributedregistry.NewTimer("metricEventsHandle")),
+		UnusedTriggersCount:    NewCompositeHistogram(registry.NewHistogram("triggers", "unused"), attributedregistry.NewHistogram("triggers_unused")),
 	}
 	for _, clusterKey := range sources {
-		metrics.MetricsBySource[clusterKey] = configureCheckMetrics(registry, clusterKey)
+		metrics.MetricsBySource[clusterKey] = configureCheckMetrics(registry, attributedregistry, clusterKey)
 	}
 
 	return metrics
 }
 
-func configureCheckMetrics(registry Registry, clusterKey moira.ClusterKey) *CheckMetrics {
+func configureCheckMetrics(registry Registry, attributedregistry MetricRegistry, clusterKey moira.ClusterKey) *CheckMetrics {
 	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId.String()
+	attributedByClusterRegistry := attributedregistry.WithAttributes(Attributes{
+		Attribute{"metric_source", source},
+		Attribute{"metric_cluster_id", id},
+	})
 
 	return &CheckMetrics{
-		CheckError:           registry.NewMeter(source, id, "errors", "check"),
-		HandleError:          registry.NewMeter(source, id, "errors", "handle"),
-		TriggersCheckTime:    registry.NewTimer(source, id, "triggers"),
-		TriggersToCheckCount: registry.NewHistogram(source, id, "triggersToCheck"),
+		CheckError:           NewCompositeMeter(registry.NewMeter(source, id, "errors", "check"), attributedByClusterRegistry.NewGauge("errors_check")),
+		HandleError:          NewCompositeMeter(registry.NewMeter(source, id, "errors", "handle"), attributedByClusterRegistry.NewGauge("errors_handle")),
+		TriggersCheckTime:    NewCompositeTimer(registry.NewTimer(source, id, "triggers"), attributedByClusterRegistry.NewTimer("triggers")),
+		TriggersToCheckCount: NewCompositeHistogram(registry.NewHistogram(source, id, "triggersToCheck"), attributedByClusterRegistry.NewHistogram("triggersToCheck")),
 	}
 }

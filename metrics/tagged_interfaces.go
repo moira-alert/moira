@@ -5,9 +5,9 @@ import "context"
 // Attribute represents a key-value string pair for metric attributes.
 type Attribute struct {
 	// key is the attribute's key
-	key string
+	Key string
 	// value is the attribute's value
-	value string
+	Value string
 }
 
 // Attributes represents a set of key-value string pairs for metric attributes.
@@ -33,4 +33,12 @@ type MetricRegistry interface {
 	NewHistogram(name string) (Histogram, error)
 	// NewTimer creates and returns a new Timer metric with the given name.
 	NewTimer(name string) (Timer, error)
+}
+
+// AttributedMetricCollection represents a collection of attributed meters.
+type AttributedMetricCollection interface {
+	// RegisterMeter registers a new Meter with the given name and attributes.
+	RegisterMeter(name string, attributes Attributes) Meter
+	// GetRegisteredMeter retrieves a registered Meter by name.
+	GetRegisteredMeter(name string) (Meter, bool)
 }

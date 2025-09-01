@@ -235,3 +235,27 @@ func (t *otelTimer) UpdateSince(ts time.Time) {
 func (t *otelTimer) Count() int64 {
 	return atomic.LoadInt64(&t.count)
 }
+
+type DefaultAttributedMetricCollection struct {
+	registry MetricRegistry
+	meters   map[string]Meter
+}
+
+func NewAttributedMetricCollection(registry MetricRegistry) AttributedMetricCollection {
+	return &DefaultAttributedMetricCollection{
+		registry: registry,
+		meters:   map[string]Meter{},
+	}
+}
+
+func (r *DefaultAttributedMetricCollection) RegisterMeter(name string, attributes Attributes) Meter {
+	gauge := r.registry.WithAttributes(attributes).NewGauge(name)
+	r.meters[name] = gauge
+
+	return gauge
+}
+
+func (r *DefaultAttributedMetricCollection) GetRegisteredMeter(name string) (Meter, bool) {
+	gauge, ok := r.meters[name]
+	return gauge, ok
+}

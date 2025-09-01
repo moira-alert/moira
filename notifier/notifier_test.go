@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"sync"
@@ -435,7 +436,7 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T, config Config) {
-	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), "notifier")
 
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
