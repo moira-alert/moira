@@ -19,11 +19,11 @@ type WebContact struct {
 
 // FeatureFlags is struct to manage feature flags.
 type FeatureFlags struct {
-	IsPlottingDefaultOn              bool            `json:"isPlottingDefaultOn" example:"false"`
-	IsPlottingAvailable              bool            `json:"isPlottingAvailable" example:"true"`
-	IsSubscriptionToAllTagsAvailable bool            `json:"isSubscriptionToAllTagsAvailable" example:"false"`
-	IsReadonlyEnabled                bool            `json:"isReadonlyEnabled" example:"false"`
-	CelebrationMode                  CelebrationMode `json:"celebrationMode" swaggertype:"string" example:"new_year"`
+	IsPlottingDefaultOn              bool            `json:"isPlottingDefaultOn" binding:"required" example:"false"`
+	IsPlottingAvailable              bool            `json:"isPlottingAvailable" binding:"required" example:"true"`
+	IsSubscriptionToAllTagsAvailable bool            `json:"isSubscriptionToAllTagsAvailable" binding:"required" example:"false"`
+	IsReadonlyEnabled                bool            `json:"isReadonlyEnabled" binding:"required" example:"false"`
+	CelebrationMode                  CelebrationMode `json:"celebrationMode" swaggertype:"string" binding:"required" example:"new_year"`
 }
 
 // CelebrationMode is type for celebrate Moira.
