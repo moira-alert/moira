@@ -331,7 +331,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		Page:                  middleware.GetPage(request),
 		Size:                  middleware.GetSize(request),
 		OnlyProblems:          getOnlyProblemsFlag(request),
-		Tags:                  getRequestTags(request, "tags"),
+		Tags:                  getRequestQueryList(request, "tags"),
 		SearchString:          getSearchRequestString(request),
 		CreatedBy:             createdBy,
 		NeedSearchByCreatedBy: ok,
@@ -379,8 +379,15 @@ func deletePager(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getRequestTags(request *http.Request, fieldName string) []string {
-	var filterTags []string
+func getRequestQueryList(request *http.Request, fieldName string) []string {
+	// Support for format `?tags=tag0,tag1`
+	tagList := request.FormValue(fieldName)
+	if tagList != "" {
+		return strings.Split(tagList, ",")
+	}
+
+	// Support for format `?tags[0]=tag0&tags[1]=tag1`
+	var result []string
 
 	i := 0
 
@@ -390,11 +397,11 @@ func getRequestTags(request *http.Request, fieldName string) []string {
 			break
 		}
 
-		filterTags = append(filterTags, tag)
+		result = append(result, tag)
 		i++
 	}
 
-	return filterTags
+	return result
 }
 
 func getOnlyProblemsFlag(request *http.Request) bool {

@@ -155,8 +155,8 @@ func deleteFilteredNotifications(writer http.ResponseWriter, request *http.Reque
 
 	sourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
 
-	ignoredTags := getRequestTags(request, "ignoredTags")
-	clusterKeys := getRequestTags(request, "clusterKeys")
+	ignoredTags := getRequestQueryList(request, "ignoredTags")
+	clusterKeys := getRequestQueryList(request, "clusterKeys")
 
 	clusterList := make([]moira.ClusterKey, 0, len(clusterKeys))
 
