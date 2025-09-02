@@ -58,7 +58,8 @@ func TestOtelCounter(t *testing.T) {
 		},
 	})
 
-	counter := registry.NewCounter("increments")
+	counter, err := registry.NewCounter("increments")
+	require.NoError(t, err)
 
 	for range 10 {
 		counter.Inc()

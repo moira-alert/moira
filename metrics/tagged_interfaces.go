@@ -26,11 +26,11 @@ type MetricRegistry interface {
 	// WithAttributes returns a new MetricRegistry with the given attributes.
 	WithAttributes(attributes Attributes) MetricRegistry
 	// NewCounter creates and returns a new Counter metric with the given name.
-	NewCounter(name string) Counter
+	NewCounter(name string) (Counter, error)
 	// NewGauge creates and returns a new Meter gauge metric with the given name.
-	NewGauge(name string) Meter
+	NewGauge(name string) (Meter, error)
 	// NewHistogram creates and returns a new Histogram metric with the given name.
-	NewHistogram(name string) Histogram
+	NewHistogram(name string) (Histogram, error)
 	// NewTimer creates and returns a new Timer metric with the given name.
-	NewTimer(name string) Timer
+	NewTimer(name string) (Timer, error)
 }

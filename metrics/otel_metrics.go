@@ -70,58 +70,85 @@ func (r *DefaultMetricRegistry) WithAttributes(attributes Attributes) MetricRegi
 	return &DefaultMetricRegistry{r.providers, attrs}
 }
 
+type metricWithErr[T any] struct {
+	metric T
+	err    error
+}
+
 // NewCounter creates a new Counter with the given name.
-func (r *DefaultMetricRegistry) NewCounter(name string) Counter {
-	counters := moira.Map(r.providers, func(provider *metric.MeterProvider) internalMetric.Int64Counter {
-		counter, _ := provider.Meter("counter").Int64Counter(name)
-		return counter
+func (r *DefaultMetricRegistry) NewCounter(name string) (Counter, error) {
+	counters := moira.Map(r.providers, func(provider *metric.MeterProvider) metricWithErr[internalMetric.Int64Counter] {
+		counter, err := provider.Meter("counter").Int64Counter(name)
+		return metricWithErr[internalMetric.Int64Counter]{counter, err}
 	})
 
+	err := errors.Join(moira.Map(counters, func(c metricWithErr[internalMetric.Int64Counter]) error { return c.err })...)
+	if err != nil {
+		return nil, err
+	}
+
 	return &otelCounter{
-		counters,
+		moira.Map(counters, func(c metricWithErr[internalMetric.Int64Counter]) internalMetric.Int64Counter { return c.metric }),
 		0,
 		sync.Mutex{},
 		r.attributes.toOtelAttributes(),
-	}
+	}, nil
 }
 
 // NewGauge creates a new Gauge with the given name.
-func (r *DefaultMetricRegistry) NewGauge(name string) Meter {
-	gauges := moira.Map(r.providers, func(provider *metric.MeterProvider) internalMetric.Int64Gauge {
-		gauge, _ := provider.Meter("gauge").Int64Gauge(name)
-		return gauge
+func (r *DefaultMetricRegistry) NewGauge(name string) (Meter, error) {
+	gauges := moira.Map(r.providers, func(provider *metric.MeterProvider) metricWithErr[internalMetric.Int64Gauge] {
+		gauge, err := provider.Meter("gauge").Int64Gauge(name)
+		return metricWithErr[internalMetric.Int64Gauge]{gauge, err}
 	})
 
-	return &otelGauge{
-		gauges,
-		r.attributes.toOtelAttributes(),
+	err := errors.Join(moira.Map(gauges, func(g metricWithErr[internalMetric.Int64Gauge]) error { return g.err })...)
+	if err != nil {
+		return nil, err
 	}
+
+	return &otelGauge{
+		moira.Map(gauges, func(g metricWithErr[internalMetric.Int64Gauge]) internalMetric.Int64Gauge { return g.metric }),
+		r.attributes.toOtelAttributes(),
+	}, nil
 }
 
 // NewHistogram creates a new Histogram with the given name and bucket boundaries.
-func (r *DefaultMetricRegistry) NewHistogram(name string) Histogram {
-	histograms := moira.Map(r.providers, func(provider *metric.MeterProvider) internalMetric.Int64Histogram {
-		histogram, _ := provider.Meter("histogram").Int64Histogram(name)
-		return histogram
+func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
+	histograms := moira.Map(r.providers, func(provider *metric.MeterProvider) metricWithErr[internalMetric.Int64Histogram] {
+		histogram, err := provider.Meter("histogram").Int64Histogram(name)
+		return metricWithErr[internalMetric.Int64Histogram]{histogram, err}
 	})
+
+	err := errors.Join(moira.Map(histograms, func(c metricWithErr[internalMetric.Int64Histogram]) error { return c.err })...)
+	if err != nil {
+		return nil, err
+	}
 
 	return &otelHistogram{
-		histograms,
+		moira.Map(histograms, func(c metricWithErr[internalMetric.Int64Histogram]) internalMetric.Int64Histogram { return c.metric }),
 		r.attributes.toOtelAttributes(),
-	}
+	}, nil
 }
 
-func (r *DefaultMetricRegistry) NewTimer(name string) Timer {
-	timers := moira.Map(r.providers, func(provider *metric.MeterProvider) internalMetric.Float64Histogram {
-		timer, _ := provider.Meter("timer").Float64Histogram(name)
-		return timer
+func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
+	timers := moira.Map(r.providers, func(provider *metric.MeterProvider) metricWithErr[internalMetric.Float64Histogram] {
+		timer, err := provider.Meter("timer").Float64Histogram(name)
+		return metricWithErr[internalMetric.Float64Histogram]{timer, err}
 	})
 
+	err := errors.Join(moira.Map(timers, func(c metricWithErr[internalMetric.Float64Histogram]) error { return c.err })...)
+	if err != nil {
+		return nil, err
+	}
+
 	return &otelTimer{
-		timers,
+		moira.Map(timers, func(c metricWithErr[internalMetric.Float64Histogram]) internalMetric.Float64Histogram {
+			return c.metric
+		}),
 		r.attributes.toOtelAttributes(),
 		0,
-	}
+	}, nil
 }
 
 // toOtelAttributes converts Attributes to a slice of attribute.KeyValue.
