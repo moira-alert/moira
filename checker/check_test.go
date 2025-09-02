@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -33,11 +34,16 @@ func TestGetMetricDataState(t *testing.T) {
 	var errValue float64 = 20
 
 	checkerMetrics, _ := metrics.
-		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
-		GetCheckMetricsBySource(defaultLocalClusterKey)
+		ConfigureCheckerMetrics(
+			metrics.NewDummyRegistry(),
+			metrics.NewMetricContext(context.Background()).CreateRegistry(),
+			[]moira.ClusterKey{defaultLocalClusterKey},
+		)
+
+	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		logger:  logger,
-		metrics: checkerMetrics,
+		metrics: checksMetrics,
 		until:   67,
 		from:    17,
 		trigger: &moira.Trigger{
@@ -581,10 +587,14 @@ func TestCheckForNODATA(t *testing.T) {
 	var ttl int64 = 600
 
 	checkerMetrics, _ := metrics.
-		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
-		GetCheckMetricsBySource(defaultLocalClusterKey)
+		ConfigureCheckerMetrics(
+			metrics.NewDummyRegistry(),
+			metrics.NewMetricContext(context.Background()).CreateRegistry(),
+			[]moira.ClusterKey{defaultLocalClusterKey},
+		)
+	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
-		metrics: checkerMetrics,
+		metrics: checksMetrics,
 		logger:  logger,
 		ttl:     ttl,
 		lastCheck: &moira.CheckData{
@@ -711,15 +721,18 @@ func TestCheck(t *testing.T) {
 		var ttl int64 = 30
 
 		checkerMetrics, _ := metrics.
-			ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
-			GetCheckMetricsBySource(defaultLocalClusterKey)
+			ConfigureCheckerMetrics(
+				metrics.NewDummyRegistry(),
+				metrics.NewMetricContext(context.Background()).CreateRegistry(),
+				[]moira.ClusterKey{defaultLocalClusterKey})
+		checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 		triggerChecker := TriggerChecker{
 			triggerID: "SuperId",
 			database:  dataBase,
 			source:    source,
 			logger:    logger,
 			config:    &Config{},
-			metrics:   checkerMetrics,
+			metrics:   checksMetrics,
 			from:      testTime - 5*retention,
 			until:     testTime,
 			ttl:       ttl,
@@ -1621,15 +1634,18 @@ func TestTriggerChecker_Check(t *testing.T) {
 	var ttl int64 = 30
 
 	checkerMetrics, _ := metrics.
-		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
-		GetCheckMetricsBySource(defaultLocalClusterKey)
+		ConfigureCheckerMetrics(
+			metrics.NewDummyRegistry(),
+			metrics.NewMetricContext(context.Background()).CreateRegistry(),
+			[]moira.ClusterKey{defaultLocalClusterKey})
+	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
 		database:  dataBase,
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   checkerMetrics,
+		metrics:   checksMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,
@@ -1713,15 +1729,18 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	var ttl int64 = 30
 
 	checkerMetrics, _ := metrics.
-		ConfigureCheckerMetrics(metrics.NewDummyRegistry(), []moira.ClusterKey{defaultLocalClusterKey}).
-		GetCheckMetricsBySource(defaultLocalClusterKey)
+		ConfigureCheckerMetrics(
+			metrics.NewDummyRegistry(),
+			metrics.NewMetricContext(context.Background()).CreateRegistry(),
+			[]moira.ClusterKey{defaultLocalClusterKey})
+	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
 		database:  dataBase,
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   checkerMetrics,
+		metrics:   checksMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,
@@ -2190,13 +2209,16 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 		Convey("with undefined err", func() {
 			givenErr := errors.New("some undefined error")
 
-			checkMetrics, err := metrics.ConfigureCheckerMetrics(
+			checkerMetrics, err := metrics.ConfigureCheckerMetrics(
 				metrics.NewDummyRegistry(),
+				metrics.NewMetricContext(context.Background()).CreateRegistry(),
 				[]moira.ClusterKey{moira.DefaultLocalCluster},
-			).GetCheckMetricsBySource(moira.DefaultLocalCluster)
+			)
+			So(err, ShouldBeNil)
+			checksMetrics, err := checkerMetrics.GetCheckMetricsBySource(moira.DefaultLocalCluster)
 			So(err, ShouldBeNil)
 
-			triggerChecker.metrics = checkMetrics
+			triggerChecker.metrics = checksMetrics
 
 			expectedCheckData := moira.CheckData{
 				Score:                        int64(100_000),

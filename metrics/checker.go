@@ -37,27 +37,57 @@ type CheckMetrics struct {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator.
-func ConfigureCheckerMetrics(registry Registry, sources []moira.ClusterKey) *CheckerMetrics {
+func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistry, sources []moira.ClusterKey) (*CheckerMetrics, error) {
 	metrics := &CheckerMetrics{
 		MetricsBySource:        make(map[moira.ClusterKey]*CheckMetrics),
 		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
 		MetricEventsHandleTime: registry.NewTimer("metricEventsHandle"),
 		UnusedTriggersCount:    registry.NewHistogram("triggers", "unused"),
 	}
+
 	for _, clusterKey := range sources {
-		metrics.MetricsBySource[clusterKey] = configureCheckMetrics(registry, clusterKey)
+		checkMetrics, err := configureCheckMetrics(registry, attributedRegistry, clusterKey)
+		if err != nil {
+			return nil, err
+		}
+
+		metrics.MetricsBySource[clusterKey] = checkMetrics
 	}
 
-	return metrics
+	return metrics, nil
 }
 
-func configureCheckMetrics(registry Registry, clusterKey moira.ClusterKey) *CheckMetrics {
+func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry, clusterKey moira.ClusterKey) (*CheckMetrics, error) {
 	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId.String()
+	metricRegistrySourced := attributedRegistry.WithAttributes(Attributes{
+		Attribute{"metric_source", source},
+		Attribute{"metric_source_id", id},
+	})
+
+	checkError, err := metricRegistrySourced.NewGauge("check_errors")
+	if err != nil {
+		return nil, err
+	}
+
+	handleError, err := metricRegistrySourced.NewGauge("handle_errors")
+	if err != nil {
+		return nil, err
+	}
+
+	triggersCheckTime, err := metricRegistrySourced.NewTimer("triggers")
+	if err != nil {
+		return nil, err
+	}
+
+	triggersToCheckCount, err := metricRegistrySourced.NewHistogram("triggersToCheck")
+	if err != nil {
+		return nil, err
+	}
 
 	return &CheckMetrics{
-		CheckError:           registry.NewMeter(source, id, "errors", "check"),
-		HandleError:          registry.NewMeter(source, id, "errors", "handle"),
-		TriggersCheckTime:    registry.NewTimer(source, id, "triggers"),
-		TriggersToCheckCount: registry.NewHistogram(source, id, "triggersToCheck"),
-	}
+		CheckError:           NewCompositeMeter(registry.NewMeter(source, id, "errors", "check"), checkError),
+		HandleError:          NewCompositeMeter(registry.NewMeter(source, id, "errors", "handle"), handleError),
+		TriggersCheckTime:    NewCompositeTimer(registry.NewTimer(source, id, "triggers"), triggersCheckTime),
+		TriggersToCheckCount: NewCompositeHistogram(registry.NewHistogram(source, id, "triggersToCheck"), triggersToCheckCount),
+	}, nil
 }
