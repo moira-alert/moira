@@ -9,7 +9,7 @@ import (
 )
 
 type ContactList struct {
-	List []TeamContact `json:"list"`
+	List []TeamContact `json:"list" binding:"required"`
 }
 
 func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {
@@ -17,9 +17,9 @@ func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type Contact struct {
-	Type         string `json:"type" example:"mail"`
+	Type         string `json:"type" binding:"required" example:"mail"`
 	Name         string `json:"name,omitempty" example:"Mail Alerts"`
-	Value        string `json:"value" example:"devops@example.com"`
+	Value        string `json:"value" binding:"required" example:"devops@example.com"`
 	ID           string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User         string `json:"user,omitempty" example:""`
 	TeamID       string `json:"team_id,omitempty"`
@@ -65,7 +65,7 @@ func (contact *Contact) Bind(r *http.Request) error {
 type ContactNoisiness struct {
 	Contact
 	// EventsCount for the contact.
-	EventsCount uint64 `json:"events_count"`
+	EventsCount uint64 `json:"events_count" binding:"required"`
 }
 
 func (*ContactNoisiness) Render(w http.ResponseWriter, r *http.Request) error {

@@ -9,8 +9,8 @@ import (
 
 // WebContact is container for web ui contact validation.
 type WebContact struct {
-	ContactType     string `json:"type" example:"webhook"`
-	ContactLabel    string `json:"label" example:"Webhook"`
+	ContactType     string `json:"type" binding:"required" example:"webhook"`
+	ContactLabel    string `json:"label" binding:"required" example:"Webhook"`
 	LogoURI         string `json:"logo_uri,omitempty" example:"discord-logo.svg"`
 	ValidationRegex string `json:"validation,omitempty" example:"^(http|https):\\/\\/.*(moira.ru)(:[0-9]{2,5})?\\/"`
 	Placeholder     string `json:"placeholder,omitempty" example:"https://moira.ru/webhooks"`
@@ -62,19 +62,19 @@ type Config struct {
 // WebConfig is container for web ui configuration parameters.
 type WebConfig struct {
 	SupportEmail         string                `json:"supportEmail,omitempty" example:"kontur.moira.alert@gmail.com"`
-	RemoteAllowed        bool                  `json:"remoteAllowed" example:"true"`
-	MetricSourceClusters []MetricSourceCluster `json:"metric_source_clusters"`
-	Contacts             []WebContact          `json:"contacts"`
-	FeatureFlags         FeatureFlags          `json:"featureFlags"`
-	Sentry               Sentry                `json:"sentry"`
+	RemoteAllowed        bool                  `json:"remoteAllowed" binding:"required" example:"true"`
+	MetricSourceClusters []MetricSourceCluster `json:"metric_source_clusters" binding:"required"`
+	Contacts             []WebContact          `json:"contacts" binding:"required"`
+	FeatureFlags         FeatureFlags          `json:"featureFlags" binding:"required"`
+	Sentry               Sentry                `json:"sentry" binding:"required"`
 }
 
 // MetricSourceCluster contains data about supported metric source cluster.
 type MetricSourceCluster struct {
-	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_remote"`
-	ClusterId     moira.ClusterId     `json:"cluster_id" example:"default"`
-	MetricsTTL    uint64              `json:"metrics_ttl" example:"604800"`
-	ClusterName   string              `json:"cluster_name" example:"Graphite Remote Prod"`
+	TriggerSource moira.TriggerSource `json:"trigger_source" binding:"required" example:"graphite_remote"`
+	ClusterId     moira.ClusterId     `json:"cluster_id" binding:"required" example:"default"`
+	MetricsTTL    uint64              `json:"metrics_ttl" binding:"required" example:"604800"`
+	ClusterName   string              `json:"cluster_name" binding:"required" example:"Graphite Remote Prod"`
 }
 
 func (WebConfig) Render(http.ResponseWriter, *http.Request) error {
