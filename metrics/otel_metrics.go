@@ -152,9 +152,9 @@ func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
 }
 
 // toOtelAttributes converts Attributes to a slice of attribute.KeyValue.
-func (a Attributes) toOtelAttributes() []attribute.KeyValue {
-	attrs := make([]attribute.KeyValue, 0, len(a))
-	for _, attr := range a {
+func (attributes Attributes) toOtelAttributes() []attribute.KeyValue {
+	attrs := make([]attribute.KeyValue, 0, len(attributes))
+	for _, attr := range attributes {
 		attrs = append(attrs, attribute.String(attr.key, attr.value))
 	}
 
