@@ -42,7 +42,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
 			}, nil)
-			mockAliveMeter.EXPECT().Mark(int64(1)).Times(2)
+			mockAliveMeter.EXPECT().Mark(int64(1))
 
 			aliveWatcher.checkNotifierState()
 		})
@@ -55,7 +55,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 					State: badState,
 					Actor: moira.SelfStateActorManual,
 				}, nil)
-				mockAliveMeter.EXPECT().Mark(int64(0)).Times(2)
+				mockAliveMeter.EXPECT().Mark(int64(0))
 
 				aliveWatcher.checkNotifierState()
 			}
@@ -72,7 +72,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 					State: notOKState,
 				}, err)
-				mockAliveMeter.EXPECT().Mark(int64(0)).Times(2)
+				mockAliveMeter.EXPECT().Mark(int64(0))
 
 				aliveWatcher.checkNotifierState()
 			}
