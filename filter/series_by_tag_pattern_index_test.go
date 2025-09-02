@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"context"
 	"sort"
 	"testing"
 
@@ -112,7 +113,7 @@ func TestParseSeriesByTag(t *testing.T) {
 
 func TestSeriesByTagPatternIndex(t *testing.T) {
 	logger, _ := logging.GetLogger("SeriesByTag")
-	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
+	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
 
 	Convey("Given empty patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		compatibility := Compatibility{
@@ -384,7 +385,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 
 func TestSeriesByTagPatternIndexCarbonCompatibility(t *testing.T) {
 	logger, _ := logging.GetLogger("SeriesByTag")
-	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
+	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
 
 	Convey("Given related patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		tagSpecsByPattern := map[string][]TagSpec{

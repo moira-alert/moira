@@ -14,18 +14,63 @@ type FilterMetrics struct {
 }
 
 // ConfigureFilterMetrics initialize metrics.
-func ConfigureFilterMetrics(registry Registry) *FilterMetrics {
-	return &FilterMetrics{
-		TotalMetricsReceived:        registry.NewCounter("received", "total"),
-		ValidMetricsReceived:        registry.NewCounter("received", "valid"),
-		MatchingMetricsReceived:     registry.NewCounter("received", "matching"),
-		PatternMatchingCacheEvicted: registry.NewMeter("patternMatchingCache", "evicted"),
-		MatchingTimer:               registry.NewTimer("time", "match"),
-		SavingTimer:                 registry.NewTimer("time", "save"),
-		BuildTreeTimer:              registry.NewTimer("time", "buildtree"),
-		MetricChannelLen:            registry.NewHistogram("metricsToSave"),
-		LineChannelLen:              registry.NewHistogram("linesToMatch"),
+func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry) (*FilterMetrics, error) {
+	totalMetricsReceived, err := attributedRegistry.NewCounter("received_total")
+	if err != nil {
+		return nil, err
 	}
+
+	validMetricsReceived, err := attributedRegistry.NewCounter("received_valid")
+	if err != nil {
+		return nil, err
+	}
+
+	matchingMetricsReceived, err := attributedRegistry.NewCounter("received_matching")
+	if err != nil {
+		return nil, err
+	}
+
+	patternMatchingCacheEvicted, err := attributedRegistry.NewGauge("patternMatchingCache_evicted")
+	if err != nil {
+		return nil, err
+	}
+
+	matchingTimer, err := attributedRegistry.NewTimer("time_match")
+	if err != nil {
+		return nil, err
+	}
+
+	savingTimer, err := attributedRegistry.NewTimer("time_save")
+	if err != nil {
+		return nil, err
+	}
+
+	buildTreeTimer, err := attributedRegistry.NewTimer("time_buildtree")
+	if err != nil {
+		return nil, err
+	}
+
+	metricChannelLen, err := attributedRegistry.NewHistogram("metricsToSave")
+	if err != nil {
+		return nil, err
+	}
+
+	lineChannelLen, err := attributedRegistry.NewHistogram("linesToMatch")
+	if err != nil {
+		return nil, err
+	}
+
+	return &FilterMetrics{
+		TotalMetricsReceived:        NewCompositeCounter(registry.NewCounter("received", "total"), totalMetricsReceived),
+		ValidMetricsReceived:        NewCompositeCounter(registry.NewCounter("received", "valid"), validMetricsReceived),
+		MatchingMetricsReceived:     NewCompositeCounter(registry.NewCounter("received", "matching"), matchingMetricsReceived),
+		PatternMatchingCacheEvicted: NewCompositeMeter(registry.NewMeter("patternMatchingCache", "evicted"), patternMatchingCacheEvicted),
+		MatchingTimer:               NewCompositeTimer(registry.NewTimer("time", "match"), matchingTimer),
+		SavingTimer:                 NewCompositeTimer(registry.NewTimer("time", "save"), savingTimer),
+		BuildTreeTimer:              NewCompositeTimer(registry.NewTimer("time", "buildtree"), buildTreeTimer),
+		MetricChannelLen:            NewCompositeHistogram(registry.NewHistogram("metricsToSave"), metricChannelLen),
+		LineChannelLen:              NewCompositeHistogram(registry.NewHistogram("linesToMatch"), lineChannelLen),
+	}, nil
 }
 
 // MarkPatternMatchingEvicted counts the number of evicted items in the pattern matching cache.
