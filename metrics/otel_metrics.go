@@ -155,7 +155,7 @@ func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
 func (attributes Attributes) toOtelAttributes() []attribute.KeyValue {
 	attrs := make([]attribute.KeyValue, 0, len(attributes))
 	for _, attr := range attributes {
-		attrs = append(attrs, attribute.String(attr.key, attr.value))
+		attrs = append(attrs, attribute.String(attr.Key, attr.Value))
 	}
 
 	return attrs
