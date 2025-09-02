@@ -14,20 +14,15 @@ import (
 	mock_metrics "github.com/moira-alert/moira/mock/moira-alert/metrics"
 )
 
-func initAliveMeter(mockCtrl *gomock.Controller) (*mock_metrics.MockRegistry, *mock_metrics.MockMetricRegistry, *mock_metrics.MockMeter) {
+func initAliveMeter(mockCtrl *gomock.Controller) (*mock_metrics.MockRegistry, *mock_metrics.MockMeter) {
 	mockRegistry := mock_metrics.NewMockRegistry(mockCtrl)
 	mockAliveMeter := mock_metrics.NewMockMeter(mockCtrl)
-	mockAttributesRegistry := mock_metrics.NewMockMetricRegistry(mockCtrl)
 
 	mockRegistry.EXPECT().NewMeter(gomock.Any()).Times(5)
 	mockRegistry.EXPECT().NewHistogram(gomock.Any()).Times(3)
 	mockRegistry.EXPECT().NewMeter("", "alive").Return(mockAliveMeter)
 
-	mockAttributesRegistry.EXPECT().NewGauge(gomock.Any()).Times(5)
-	mockAttributesRegistry.EXPECT().NewHistogram(gomock.Any()).Times(3)
-	mockAttributesRegistry.EXPECT().NewGauge("alive").Return(mockAliveMeter)
-
-	return mockRegistry, mockAttributesRegistry, mockAliveMeter
+	return mockRegistry, mockAliveMeter
 }
 
 func TestAliveWatcher_checkNotifierState(t *testing.T) {
@@ -36,8 +31,8 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	mockRegistry, mockAttributesRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
-	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, mockAttributesRegistry, "")
+	mockRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
+	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, "")
 
 	aliveWatcher := NewAliveWatcher(nil, dataBase, 0, testNotifierMetrics)
 
@@ -99,8 +94,8 @@ func TestAliveWatcher_Start(t *testing.T) {
 		testCheckNotifierStateTimeout = time.Second
 	)
 
-	mockRegistry, mockAttributesRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
-	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, mockAttributesRegistry, "")
+	mockRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
+	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, "")
 
 	aliveWatcher := NewAliveWatcher(logger, dataBase, testCheckNotifierStateTimeout, testNotifierMetrics)
 

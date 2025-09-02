@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"context"
 	"strings"
 	"testing"
 
@@ -171,7 +170,7 @@ var matchedMetrics = []moira.MatchedMetric{
 }
 
 func TestCacheStorage(t *testing.T) {
-	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
+	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 	storage, err := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 
 	Convey("Test good retentions", t, func() {
@@ -204,7 +203,7 @@ func TestCacheStorage(t *testing.T) {
 }
 
 func TestRetentions(t *testing.T) {
-	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
+	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 	storage, _ := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 
 	Convey("Simple metric, should 60sec", t, func() {

@@ -41,12 +41,12 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 	metricsRegistry := metrics.NewDummyRegistry()
 
 	if config.UseNewMetrics {
-		attributedMetrics, err = configureAttributedTelemetry(logger, config, serverMux)
+		attributedMetrics, err = configureAttributedTelemetry(config, serverMux)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		metricsRegistry, err = configureOldTelemetry(logger, config, service, serverMux)
+		metricsRegistry, err = configureOldTelemetry(config, service, serverMux)
 		if err != nil {
 			return nil, err
 		}
@@ -87,7 +87,7 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 	}, nil
 }
 
-func configureAttributedTelemetry(logger moira.Logger, config TelemetryConfig, serverMux *http.ServeMux) (metrics.MetricsContext, error) {
+func configureAttributedTelemetry(config TelemetryConfig, serverMux *http.ServeMux) (metrics.MetricsContext, error) {
 	ctx := context.Background()
 	metricContext := metrics.NewMetricContext(ctx)
 
@@ -131,13 +131,10 @@ func configureAttributedTelemetry(logger moira.Logger, config TelemetryConfig, s
 		}
 	}
 
-	if config.Graphite.Enabled {
-	}
-
 	return metricContext, nil
 }
 
-func configureOldTelemetry(logger moira.Logger, config TelemetryConfig, service string, serverMux *http.ServeMux) (metrics.Registry, error) {
+func configureOldTelemetry(config TelemetryConfig, service string, serverMux *http.ServeMux) (metrics.Registry, error) {
 	graphiteRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), service)
 	if err != nil {
 		return nil, err
@@ -146,22 +143,17 @@ func configureOldTelemetry(logger moira.Logger, config TelemetryConfig, service 
 	prometheusRegistry := metrics.NewPrometheusRegistry()
 	prometheusRegistryAdapter := metrics.NewPrometheusRegistryAdapter(prometheusRegistry, service)
 
-	err = configureTelemetryServer(logger, config.Listen, config.Pprof, prometheusRegistry, serverMux)
-	if err != nil {
-		return nil, err
-	}
+	configureTelemetryServer(config.Pprof, prometheusRegistry, serverMux)
 
 	return metrics.NewCompositeRegistry(graphiteRegistry, prometheusRegistryAdapter), nil
 }
 
-func configureTelemetryServer(logger moira.Logger, listen string, pprofConfig ProfilerConfig, prometheusRegistry *prometheus.Registry, serverMux *http.ServeMux) error {
+func configureTelemetryServer(pprofConfig ProfilerConfig, prometheusRegistry *prometheus.Registry, serverMux *http.ServeMux) {
 	if pprofConfig.Enabled {
 		configurePprofServer(serverMux)
 	}
 
 	serverMux.Handle("/metrics", promhttp.InstrumentMetricHandler(prometheusRegistry, promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})))
-
-	return nil
 }
 
 func configurePprofServer(serverMux *http.ServeMux) {

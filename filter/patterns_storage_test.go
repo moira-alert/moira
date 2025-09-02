@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -35,7 +34,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func() {
 		database.EXPECT().GetPatterns().Return(nil, fmt.Errorf("some error here"))
 
-		filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
+		filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 		_, err := NewPatternStorage(patternStorageCfg, database, filterMetrics, logger, Compatibility{AllowRegexLooseStartMatch: true})
 		So(err, ShouldBeError, fmt.Errorf("failed to refresh pattern storage: some error here"))
 	})
@@ -44,7 +43,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	patternsStorage, err := NewPatternStorage(
 		patternStorageCfg,
 		database,
-		metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry()),
+		metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry()),
 		logger,
 		Compatibility{AllowRegexLooseStartMatch: true},
 	)
@@ -66,7 +65,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	})
 
 	Convey("When valid non-matching metric arrives", t, func() {
-		patternsStorage.metrics = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 
 		Convey("For plain metric", func() {
 			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("disk.used 12 1234567890"), time.Hour)
@@ -118,7 +117,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	})
 
 	Convey("When valid matching metric arrives", t, func() {
-		patternsStorage.metrics = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 
 		Convey("For plain metric", func() {
 			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("plain.metric 12 1234567890"), time.Hour)
@@ -145,7 +144,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	})
 
 	Convey("When ten valid metrics arrive match timer should be updated", t, func() {
-		patternsStorage.metrics = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 		for i := 0; i < 10; i++ {
 			// 1234567890 = Saturday, 14 February 2009 г., 4:31:30 GMT+05:00
 			patternsStorage.ProcessIncomingMetric([]byte("cpu.used 12 1234567890"), time.Hour)

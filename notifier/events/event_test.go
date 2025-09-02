@@ -1,7 +1,6 @@
 package events
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -19,10 +18,7 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
-var notifierMetrics = metrics.ConfigureNotifierMetrics(
-	metrics.NewDummyRegistry(),
-	metrics.NewMetricContext(context.Background()).CreateRegistry(),
-	"notifier")
+var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 
 func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
