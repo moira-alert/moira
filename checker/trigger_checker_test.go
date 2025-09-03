@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -26,8 +27,9 @@ func TestInitTriggerChecker(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := local.Create(dataBase)
 	triggerID := "superId"
-	checkerMetrics := metrics.ConfigureCheckerMetrics(
+	checkerMetrics, _ := metrics.ConfigureCheckerMetrics(
 		metrics.NewDummyRegistry(),
+		metrics.NewMetricContext(context.Background()).CreateRegistry(),
 		[]moira.ClusterKey{moira.DefaultLocalCluster},
 	)
 
