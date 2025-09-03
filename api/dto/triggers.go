@@ -55,7 +55,7 @@ type TriggersList struct {
 	Size  *int64               `json:"size,omitempty" format:"int64" extensions:"x-nullable"`
 	Total *int64               `json:"total,omitempty" format:"int64" extensions:"x-nullable"`
 	Pager *string              `json:"pager,omitempty" extensions:"x-nullable"`
-	List  []moira.TriggerCheck `json:"list"`
+	List  []moira.TriggerCheck `json:"list" binding:"required"`
 }
 
 func (*TriggersList) Render(http.ResponseWriter, *http.Request) error {
@@ -64,27 +64,27 @@ func (*TriggersList) Render(http.ResponseWriter, *http.Request) error {
 
 type Trigger struct {
 	TriggerModel
-	Throttling int64 `json:"throttling" example:"0" format:"int64"`
+	Throttling int64 `json:"throttling" binding:"required" example:"0" format:"int64"`
 }
 
 // TriggerModel is moira.Trigger api representation.
 type TriggerModel struct {
 	// Trigger unique ID
-	ID string `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	ID string `json:"id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 	// Trigger name
-	Name string `json:"name" example:"Not enough disk space left"`
+	Name string `json:"name" binding:"required" example:"Not enough disk space left"`
 	// Description string
 	Desc *string `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
 	// Graphite-like targets: t1, t2, ...
-	Targets []string `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
+	Targets []string `json:"targets" binding:"required" example:"devOps.my_server.hdd.freespace_mbytes"`
 	// WARN threshold
-	WarnValue *float64 `json:"warn_value" example:"500" extensions:"x-nullable"`
+	WarnValue *float64 `json:"warn_value" binding:"required" example:"500" extensions:"x-nullable"`
 	// ERROR threshold
-	ErrorValue *float64 `json:"error_value" example:"1000" extensions:"x-nullable"`
+	ErrorValue *float64 `json:"error_value" binding:"required" example:"1000" extensions:"x-nullable"`
 	// Could be: rising, falling, expression
-	TriggerType string `json:"trigger_type" example:"rising"`
+	TriggerType string `json:"trigger_type" binding:"required" example:"rising"`
 	// Set of tags to manipulate subscriptions
-	Tags []string `json:"tags" example:"server,disk"`
+	Tags []string `json:"tags" binding:"required" example:"server,disk"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
 	TTLState *moira.TTLState `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
@@ -92,29 +92,29 @@ type TriggerModel struct {
 	// Determines when Moira should monitor trigger
 	Schedule *moira.ScheduleData `json:"sched,omitempty" extensions:"x-nullable"`
 	// Used if you need more complex logic than provided by WARN/ERROR values
-	Expression string `json:"expression" example:""`
+	Expression string `json:"expression" binding:"required" example:""`
 	// Graphite patterns for trigger
-	Patterns []string `json:"patterns" example:""`
+	Patterns []string `json:"patterns" binding:"required" example:""`
 	// Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB
 	//
 	// Deprecated: Use TriggerSource field instead
-	IsRemote bool `json:"is_remote" example:"false"`
+	IsRemote bool `json:"is_remote" binding:"required" example:"false"`
 	// Shows the type of source from where the metrics are fetched
-	TriggerSource moira.TriggerSource `json:"trigger_source" example:"graphite_local"`
+	TriggerSource moira.TriggerSource `json:"trigger_source" binding:"required" example:"graphite_local"`
 	// Shows the exact cluster from where the metrics are fetched
-	ClusterId moira.ClusterId `json:"cluster_id" example:"default"`
+	ClusterId moira.ClusterId `json:"cluster_id" binding:"required" example:"default"`
 	// If true, first event NODATA → OK will be omitted
-	MuteNewMetrics bool `json:"mute_new_metrics" example:"false"`
+	MuteNewMetrics bool `json:"mute_new_metrics" binding:"required" example:"false"`
 	// A list of targets that have only alone metrics
-	AloneMetrics map[string]bool `json:"alone_metrics" example:"t1:true"`
+	AloneMetrics map[string]bool `json:"alone_metrics" binding:"required" example:"t1:true"`
 	// Datetime when the trigger was created
-	CreatedAt *time.Time `json:"created_at" extensions:"x-nullable"`
+	CreatedAt *time.Time `json:"created_at" binding:"required" extensions:"x-nullable"`
 	// Datetime  when the trigger was updated
-	UpdatedAt *time.Time `json:"updated_at" extensions:"x-nullable"`
+	UpdatedAt *time.Time `json:"updated_at" binding:"required" extensions:"x-nullable"`
 	// Username who created trigger
-	CreatedBy string `json:"created_by"`
+	CreatedBy string `json:"created_by" binding:"required"`
 	// Username who updated trigger
-	UpdatedBy string `json:"updated_by"`
+	UpdatedBy string `json:"updated_by" binding:"required"`
 }
 
 // ClusterKey returns cluster key composed of trigger source and cluster id associated with the trigger.
@@ -536,7 +536,7 @@ type TriggerCheckResponse struct {
 
 type TriggerCheck struct {
 	*moira.CheckData
-	TriggerID string `json:"trigger_id" example:"trigger_id"`
+	TriggerID string `json:"trigger_id" binding:"required" example:"trigger_id"`
 }
 
 func (*TriggerCheck) Render(http.ResponseWriter, *http.Request) error {
@@ -551,7 +551,7 @@ func (*MetricsMaintenance) Bind(*http.Request) error {
 
 type TriggerMaintenance struct {
 	Trigger *int64           `json:"trigger" example:"1594225165" format:"int64" extensions:"x-nullable"`
-	Metrics map[string]int64 `json:"metrics"`
+	Metrics map[string]int64 `json:"metrics" binding:"required"`
 }
 
 func (*TriggerMaintenance) Bind(*http.Request) error {
@@ -559,7 +559,7 @@ func (*TriggerMaintenance) Bind(*http.Request) error {
 }
 
 type ThrottlingResponse struct {
-	Throttling int64 `json:"throttling" example:"0" format:"int64"`
+	Throttling int64 `json:"throttling" binding:"required" example:"0" format:"int64"`
 }
 
 func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
@@ -567,8 +567,8 @@ func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
 }
 
 type SaveTriggerResponse struct {
-	ID          string               `json:"id" example:"trigger_id"`
-	Message     string               `json:"message" example:"trigger created"`
+	ID          string               `json:"id" binding:"required" example:"trigger_id"`
+	Message     string               `json:"message" binding:"required" example:"trigger created"`
 	CheckResult TriggerCheckResponse `json:"checkResult,omitempty"`
 }
 
@@ -583,20 +583,20 @@ func (*TriggerMetrics) Render(http.ResponseWriter, *http.Request) error {
 }
 
 type PatternMetrics struct {
-	Pattern    string                          `json:"pattern"`
-	Metrics    map[string][]*moira.MetricValue `json:"metrics"`
-	Retentions map[string]int64                `json:"retention"`
+	Pattern    string                          `json:"pattern" binding:"required"`
+	Metrics    map[string][]*moira.MetricValue `json:"metrics" binding:"required"`
+	Retentions map[string]int64                `json:"retention" binding:"required"`
 }
 
 type TriggerDump struct {
-	Created   string           `json:"created"`
-	LastCheck moira.CheckData  `json:"last_check"`
-	Trigger   moira.Trigger    `json:"trigger"`
-	Metrics   []PatternMetrics `json:"metrics"`
+	Created   string           `json:"created" binding:"required"`
+	LastCheck moira.CheckData  `json:"last_check" binding:"required"`
+	Trigger   moira.Trigger    `json:"trigger" binding:"required"`
+	Metrics   []PatternMetrics `json:"metrics" binding:"required"`
 }
 
 type TriggersSearchResultDeleteResponse struct {
-	PagerID string `json:"pager_id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	PagerID string `json:"pager_id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 }
 
 func (TriggersSearchResultDeleteResponse) Render(http.ResponseWriter, *http.Request) error {
@@ -607,7 +607,7 @@ func (TriggersSearchResultDeleteResponse) Render(http.ResponseWriter, *http.Requ
 type TriggerNoisiness struct {
 	Trigger
 	// EventsCount for the trigger.
-	EventsCount int64 `json:"events_count"`
+	EventsCount int64 `json:"events_count" binding:"required"`
 }
 
 func (*TriggerNoisiness) Render(http.ResponseWriter, *http.Request) error {

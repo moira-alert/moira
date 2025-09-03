@@ -12,8 +12,8 @@ type ErrorResponse struct {
 	Err            error `json:"-"` // low-level runtime error
 	HTTPStatusCode int   `json:"-"` // http response status code
 
-	StatusText string `json:"status"`          // user-level status message
-	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
+	StatusText string `json:"status" binding:"required"` // user-level status message
+	ErrorText  string `json:"error,omitempty"`           // application-level error message, for debugging
 }
 
 // Render realization method for render.renderer.
