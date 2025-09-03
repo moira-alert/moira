@@ -38,11 +38,26 @@ type CheckMetrics struct {
 
 // ConfigureCheckerMetrics is checker metrics configurator.
 func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistry, sources []moira.ClusterKey) (*CheckerMetrics, error) {
+	metricEventsChannelLen, err := attributedRegistry.NewHistogram("metricEvents")
+	if err != nil {
+		return nil, err
+	}
+
+	metricEventsHandleTime, err := attributedRegistry.NewTimer("metricEventsHandle")
+	if err != nil {
+		return nil, err
+	}
+
+	unusedTriggersCount, err := attributedRegistry.NewHistogram("unused_triggers")
+	if err != nil {
+		return nil, err
+	}
+
 	metrics := &CheckerMetrics{
 		MetricsBySource:        make(map[moira.ClusterKey]*CheckMetrics),
-		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
-		MetricEventsHandleTime: registry.NewTimer("metricEventsHandle"),
-		UnusedTriggersCount:    registry.NewHistogram("triggers", "unused"),
+		MetricEventsChannelLen: NewCompositeHistogram(registry.NewHistogram("metricEvents"), metricEventsChannelLen),
+		MetricEventsHandleTime: NewCompositeTimer(registry.NewTimer("metricEventsHandle"), metricEventsHandleTime),
+		UnusedTriggersCount:    NewCompositeHistogram(registry.NewHistogram("triggers", "unused"), unusedTriggersCount),
 	}
 
 	for _, clusterKey := range sources {
