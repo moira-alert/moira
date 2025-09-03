@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/middleware"
@@ -124,7 +125,12 @@ func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 //	@id			delete-notifications-filtered
 //	@tags		notification
 //	@produce	json
+//	@param		start			query		integer				true	"Time range start"
+//	@param		end				query		integer				true	"Time range end"
+//	@param		ignoredTags		query		[]string			false	"Notifications for triggers with any of these tags will not be deleted"
+//	@param		clusterKeys		query		[]string			false	"List of cluster keys for which notifications should be deleted. Defaults to all if no clusters are specified"
 //	@success	200	{object}	dto.NotificationsList		"Notification have been deleted"
+//	@failure	400	{object}	api.ErrorResponse			"Bad request"
 //	@failure	403	{object}	api.ErrorResponse			"Forbidden"
 //	@failure	500	{object}	api.ErrorResponse			"Internal server error"
 //	@router		/notification/filtered [delete]
@@ -147,9 +153,29 @@ func deleteFilteredNotifications(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	ignoredTags := getRequestTags(request, "ignoredTags")
+	sourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
 
-	if errorResponse := controller.DeleteFilteredNotifications(database, start, end, ignoredTags); errorResponse != nil {
+	ignoredTags := getRequestQueryList(request, "ignoredTags")
+	clusterKeys := getRequestQueryList(request, "clusterKeys")
+
+	clusterList := make([]moira.ClusterKey, 0, len(clusterKeys))
+
+	for _, cluster := range clusterKeys {
+		clusterKey, err := moira.ParseClusterKey(cluster)
+		if err != nil {
+			_ = render.Render(writer, request, api.ErrorInvalidRequest(err))
+			return
+		}
+
+		if _, err := sourceProvider.GetMetricSource(clusterKey); err != nil {
+			_ = render.Render(writer, request, api.ErrorInvalidRequest(err))
+			return
+		}
+
+		clusterList = append(clusterList, clusterKey)
+	}
+
+	if errorResponse := controller.DeleteFilteredNotifications(database, start, end, ignoredTags, clusterList); errorResponse != nil {
 		_ = render.Render(writer, request, errorResponse)
 	}
 }
