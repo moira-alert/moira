@@ -81,7 +81,7 @@ func TestGetMetricNames(t *testing.T) {
 	t.Run("Test empty notification package", func(t *testing.T) {
 		emptyNotificationPackage := NotificationPackage{}
 		actual := emptyNotificationPackage.GetMetricNames()
-		require.Len(t, actual, 0)
+		require.Empty(t, actual)
 	})
 }
 
@@ -89,14 +89,14 @@ func TestGetWindow(t *testing.T) {
 	t.Run("Test non-empty notification package", func(t *testing.T) {
 		from, to, err := notificationsPackage.GetWindow()
 		require.NoError(t, err)
-		require.Equal(t, from, int64(11))
-		require.Equal(t, to, int64(179))
+		require.Equal(t, int64(11), from)
+		require.Equal(t, int64(179), to)
 	})
 
 	t.Run("Test empty notification package", func(t *testing.T) {
 		emptyNotificationPackage := NotificationPackage{}
 		_, _, err := emptyNotificationPackage.GetWindow()
-		require.Equal(t, err, fmt.Errorf("not enough data to resolve package window"))
+		require.Equal(t, fmt.Errorf("not enough data to resolve package window"), err)
 	})
 }
 
@@ -470,7 +470,7 @@ func configureNotifier(t *testing.T, config Config) {
 
 	t.Run("Should return one sender", func(t *testing.T) {
 		require.NoError(t, err)
-		require.Equal(t, standardNotifier.GetSenders(), map[string]bool{"test_contact_type": true})
+		require.Equal(t, map[string]bool{"test_contact_type": true}, standardNotifier.GetSenders())
 	})
 }
 
