@@ -41,11 +41,12 @@ func (m *MockMetricRegistry) EXPECT() *MockMetricRegistryMockRecorder {
 }
 
 // NewCounter mocks base method.
-func (m *MockMetricRegistry) NewCounter(name string) metrics.Counter {
+func (m *MockMetricRegistry) NewCounter(name string) (metrics.Counter, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewCounter", name)
 	ret0, _ := ret[0].(metrics.Counter)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // NewCounter indicates an expected call of NewCounter.
@@ -55,11 +56,12 @@ func (mr *MockMetricRegistryMockRecorder) NewCounter(name any) *gomock.Call {
 }
 
 // NewGauge mocks base method.
-func (m *MockMetricRegistry) NewGauge(name string) metrics.Meter {
+func (m *MockMetricRegistry) NewGauge(name string) (metrics.Meter, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewGauge", name)
 	ret0, _ := ret[0].(metrics.Meter)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // NewGauge indicates an expected call of NewGauge.
@@ -69,11 +71,12 @@ func (mr *MockMetricRegistryMockRecorder) NewGauge(name any) *gomock.Call {
 }
 
 // NewHistogram mocks base method.
-func (m *MockMetricRegistry) NewHistogram(name string) metrics.Histogram {
+func (m *MockMetricRegistry) NewHistogram(name string) (metrics.Histogram, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewHistogram", name)
 	ret0, _ := ret[0].(metrics.Histogram)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // NewHistogram indicates an expected call of NewHistogram.
@@ -83,11 +86,12 @@ func (mr *MockMetricRegistryMockRecorder) NewHistogram(name any) *gomock.Call {
 }
 
 // NewTimer mocks base method.
-func (m *MockMetricRegistry) NewTimer(name string) metrics.Timer {
+func (m *MockMetricRegistry) NewTimer(name string) (metrics.Timer, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewTimer", name)
 	ret0, _ := ret[0].(metrics.Timer)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // NewTimer indicates an expected call of NewTimer.

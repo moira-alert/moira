@@ -102,7 +102,12 @@ func main() {
 		ReschedulingDelay: notifierConfig.ReschedulingDelay,
 	}
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+	notifierMetrics, err := metrics.ConfigureNotifierMetrics(telemetry.Metrics, telemetry.AttributedMetrics, serviceName)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize notifier telemetry")
+	}
 
 	sender := notifier.NewNotifier(
 		database,

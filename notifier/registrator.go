@@ -134,10 +134,37 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 	return nil
 }
 
-func (notifier *StandardNotifier) registerMetrics(senderContactType string) {
+func (notifier *StandardNotifier) registerMetrics(senderContactType string) error {
+	const senderContactTypeAttribute = "sender_contact_type"
+
 	notifier.metrics.ContactsSendingNotificationsOK.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok")
+
+	_, err := notifier.metrics.ContactsSendingNotificationsOKAttributed.RegisterMeter("sends_ok", metrics.Attributes{
+		metrics.Attribute{Key: senderContactTypeAttribute, Value: getGraphiteSenderIdent(senderContactType)},
+	})
+	if err != nil {
+		return err
+	}
+
 	notifier.metrics.ContactsSendingNotificationsFailed.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed")
+
+	_, err = notifier.metrics.ContactsSendingNotificationsFailedAttributed.RegisterMeter("sends_failed", metrics.Attributes{
+		metrics.Attribute{Key: senderContactTypeAttribute, Value: getGraphiteSenderIdent(senderContactType)},
+	})
+	if err != nil {
+		return err
+	}
+
 	notifier.metrics.ContactsDroppedNotifications.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped")
+
+	_, err = notifier.metrics.ContactsDroppedNotificationsAttributed.RegisterMeter("notifications_dropped", metrics.Attributes{
+		metrics.Attribute{Key: senderContactTypeAttribute, Value: getGraphiteSenderIdent(senderContactType)},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 const (
@@ -162,10 +189,15 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	}
 
 	if senderMetricsEnabled, ok := senderSettings[senderMetricsEnabledKey].(bool); ok && senderMetricsEnabled {
-		senderSettings[senderMetricsKey] = metrics.ConfigureSenderMetrics(
+		senderMetrics, err := metrics.ConfigureSenderMetrics(
 			notifier.metrics,
 			getGraphiteSenderIdent(senderContactType),
 			senderContactType)
+		if err != nil {
+			return err
+		}
+
+		senderSettings[senderMetricsKey] = senderMetrics
 
 		notifier.logger.Info().
 			String("sender_contact_type", senderContactType).
@@ -181,7 +213,11 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]inter
 	eventsChannel := make(chan NotificationPackage)
 	notifier.senders[senderContactType] = eventsChannel
 
-	notifier.registerMetrics(senderContactType)
+	err = notifier.registerMetrics(senderContactType)
+	if err != nil {
+		return fmt.Errorf("failed to initialize sender [%s] metrics, err [%w]", senderContactType, err)
+	}
+
 	notifier.runSenders(sender, eventsChannel)
 
 	notifier.logger.Info().
