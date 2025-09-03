@@ -1,10 +1,13 @@
 package notifier
 
 import (
+	"errors"
 	"fmt"
 	"runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/moira-alert/go-chart"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/logging"
@@ -214,10 +217,12 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		plots, plotsBuildDuration, plotsBuildErr := notifier.buildNotificationPackagePlots(pkg, log)
 		if plotsBuildErr != nil {
 			var event logging.EventBuilder
-			switch plotsBuildErr.(type) { // nolint:errorlint
-			case plotting.ErrNoPointsToRender:
+
+			if errors.Is(plotsBuildErr, chart.ErrOnePoint) {
+				event = log.Warning()
+			} else if _, ok := plotsBuildErr.(plotting.ErrNoPointsToRender); ok {
 				event = log.Debug()
-			default:
+			} else {
 				event = log.Error()
 			}
 
