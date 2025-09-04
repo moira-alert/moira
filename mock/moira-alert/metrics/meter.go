@@ -39,20 +39,6 @@ func (m *MockMeter) EXPECT() *MockMeterMockRecorder {
 	return m.recorder
 }
 
-// Count mocks base method.
-func (m *MockMeter) Count() int64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Count")
-	ret0, _ := ret[0].(int64)
-	return ret0
-}
-
-// Count indicates an expected call of Count.
-func (mr *MockMeterMockRecorder) Count() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockMeter)(nil).Count))
-}
-
 // Mark mocks base method.
 func (m *MockMeter) Mark(arg0 int64) {
 	m.ctrl.T.Helper()

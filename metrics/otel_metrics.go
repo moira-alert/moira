@@ -155,7 +155,7 @@ func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
 func (attributes Attributes) toOtelAttributes() []attribute.KeyValue {
 	attrs := make([]attribute.KeyValue, 0, len(attributes))
 	for _, attr := range attributes {
-		attrs = append(attrs, attribute.String(attr.key, attr.value))
+		attrs = append(attrs, attribute.String(attr.Key, attr.Value))
 	}
 
 	return attrs
@@ -234,4 +234,32 @@ func (t *otelTimer) UpdateSince(ts time.Time) {
 // Count returns the number of times UpdateSince has been called.
 func (t *otelTimer) Count() int64 {
 	return atomic.LoadInt64(&t.count)
+}
+
+type DefaultAttributedMetricCollection struct {
+	registry MetricRegistry
+	meters   map[string]Meter
+}
+
+func NewAttributedMetricCollection(registry MetricRegistry) AttributedMetricCollection {
+	return &DefaultAttributedMetricCollection{
+		registry: registry,
+		meters:   map[string]Meter{},
+	}
+}
+
+func (r *DefaultAttributedMetricCollection) RegisterMeter(name string, attributes Attributes) (Meter, error) {
+	gauge, err := r.registry.WithAttributes(attributes).NewGauge(name)
+	if err != nil {
+		return nil, err
+	}
+
+	r.meters[name] = gauge
+
+	return gauge, nil
+}
+
+func (r *DefaultAttributedMetricCollection) GetRegisteredMeter(name string) (Meter, bool) {
+	gauge, ok := r.meters[name]
+	return gauge, ok
 }

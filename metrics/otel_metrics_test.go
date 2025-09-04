@@ -53,8 +53,8 @@ func TestOtelCounter(t *testing.T) {
 
 	registry := metricContext.CreateRegistry().WithAttributes(Attributes{
 		{
-			key:   "custom_label",
-			value: "test_counter",
+			Key:   "custom_label",
+			Value: "test_counter",
 		},
 	})
 

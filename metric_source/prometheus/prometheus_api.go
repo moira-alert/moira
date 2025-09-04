@@ -24,7 +24,7 @@ func createPrometheusApi(config *Config) (promApi.API, error) {
 
 		roundTripper = promConfig.NewAuthorizationCredentialsRoundTripper(
 			"Basic",
-			promConfig.Secret(token),
+			promConfig.NewInlineSecret(token),
 			roundTripper,
 		)
 	}
