@@ -42,7 +42,8 @@ func createTeamSubscription(writer http.ResponseWriter, request *http.Request) {
 	teamID := middleware.GetTeamID(request)
 	auth := middleware.GetAuth(request)
 	selfStateChecksConfig := middleware.GetSelfStateChecksConfig(request)
-	systemTags := selfStateChecksConfig.GetUniqueSystemTags()
+	metricSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
+	systemTags := selfStateChecksConfig.GetUniqueSystemTags(metricSourceProvider.GetClusterList())
 
 	if subscription.AnyTags && len(subscription.Tags) > 0 {
 		writer.WriteHeader(http.StatusBadRequest)

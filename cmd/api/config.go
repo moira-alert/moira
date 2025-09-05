@@ -38,8 +38,9 @@ func toCheckConfig(checksConfig cmd.ChecksConfig) *selfstate.ChecksConfig {
 		RemoteChecker: selfstate.HeartbeatConfig{
 			SystemTags: checksConfig.RemoteChecker.SystemTags,
 		},
-		Notifier: selfstate.HeartbeatConfig{
-			SystemTags: checksConfig.Notifier.SystemTags,
+		Notifier: selfstate.NotifierHeartbeatConfig{
+			DefaultTags:     checksConfig.Notifier.DefaultTags,
+			SourceTagPrefix: checksConfig.Notifier.SourceTagPrefix,
 		},
 	}
 }

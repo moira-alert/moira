@@ -66,7 +66,8 @@ func getSystemTags(request *http.Request) []string {
 	sysTags, queryFiltered := request.URL.Query()[sysTagsKey]
 	if !queryFiltered {
 		checksConfig := middleware.GetSelfStateChecksConfig(request)
-		sysTags = checksConfig.GetUniqueSystemTags()
+		metricSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
+		sysTags = checksConfig.GetUniqueSystemTags(metricSourceProvider.GetClusterList())
 	}
 
 	return sysTags

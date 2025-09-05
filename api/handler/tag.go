@@ -38,7 +38,9 @@ func systemTag(router chi.Router) {
 //	@router		/system-tag [get]
 func getAllSystemTags(writer http.ResponseWriter, request *http.Request) {
 	checksConfig := middleware.GetSelfStateChecksConfig(request)
-	tagsSet := checksConfig.GetUniqueSystemTags()
+	metricSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
+	tagsSet := checksConfig.GetUniqueSystemTags(metricSourceProvider.GetClusterList())
+
 	tagData := dto.TagsData{
 		TagNames: tagsSet,
 	}
@@ -92,8 +94,10 @@ func createTags(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	metricSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
+
 	checksConfig := middleware.GetSelfStateChecksConfig(request)
-	if err := controller.CreateTags(database, &tags, checksConfig.GetUniqueSystemTags()); err != nil {
+	if err := controller.CreateTags(database, &tags, checksConfig.GetUniqueSystemTags(metricSourceProvider.GetClusterList())); err != nil {
 		render.Render(writer, request, err) //nolint
 	}
 }

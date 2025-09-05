@@ -380,16 +380,17 @@ type heartbeatConfig struct {
 	SystemTags []string `yaml:"tags"`
 }
 
-type ChecksConfig struct {
-	Database      heartbeatConfig `yaml:"database"`
-	Filter        heartbeatConfig `yaml:"filter"`
-	LocalChecker  heartbeatConfig `yaml:"local_checker"`
-	RemoteChecker heartbeatConfig `yaml:"remote_checker"`
-	Notifier      heartbeatConfig `yaml:"notifier"`
+type notifierHeartbeatConfig struct {
+	DefaultTags     []string `yaml:"default_tags"`
+	SourceTagPrefix string   `yaml:"source_tag_prefix"`
 }
 
-type SelfStateChecksConfig struct {
-	Heartbeats ChecksConfig `yaml:"heartbeats"`
+type ChecksConfig struct {
+	Database      heartbeatConfig         `yaml:"database"`
+	Filter        heartbeatConfig         `yaml:"filter"`
+	LocalChecker  heartbeatConfig         `yaml:"local_checker"`
+	RemoteChecker heartbeatConfig         `yaml:"remote_checker"`
+	Notifier      notifierHeartbeatConfig `yaml:"notifier"`
 }
 
 // ReadConfig parses config file by the given path into Moira-used type.

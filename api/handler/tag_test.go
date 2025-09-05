@@ -14,6 +14,8 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	metricSource "github.com/moira-alert/moira/metric_source"
+	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/notifier/selfstate"
 	. "github.com/smartystreets/goconvey/convey"
@@ -31,6 +33,10 @@ func TestCreateTags(t *testing.T) {
 	Convey("Test create tags", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
+		localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -51,6 +57,7 @@ func TestCreateTags(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPost, tagRoute, bytes.NewBuffer(jsonTags))
 			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), selfstateChecksContextKey, selfstate.ChecksConfig{}))
 
 			createTags(responseWriter, testRequest)
@@ -69,6 +76,7 @@ func TestCreateTags(t *testing.T) {
 
 			testRequest := httptest.NewRequest(http.MethodPost, tagRoute, bytes.NewBuffer(jsonTags))
 			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
 			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), selfstateChecksContextKey, selfstate.ChecksConfig{}))
 
 			createTags(responseWriter, testRequest)

@@ -5,11 +5,18 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
 
 // HeartbeatConfig represents a heartbeat-specific settings.
 type HeartbeatConfig struct {
 	SystemTags []string
+}
+
+// HeartbeatConfig represents a heartbeat-specific settings.
+type NotifierHeartbeatConfig struct {
+	DefaultTags     []string
+	SourceTagPrefix string
 }
 
 // ChecksConfig represents a checks list.
@@ -18,7 +25,7 @@ type ChecksConfig struct {
 	Filter        HeartbeatConfig
 	LocalChecker  HeartbeatConfig
 	RemoteChecker HeartbeatConfig
-	Notifier      HeartbeatConfig
+	Notifier      NotifierHeartbeatConfig
 }
 
 // Config is representation of self state worker settings like moira admins contacts and threshold values for checked services.
@@ -57,13 +64,17 @@ func (config *Config) checkConfig(senders map[string]bool) error {
 	return nil
 }
 
-func (checksConfig *ChecksConfig) GetUniqueSystemTags() []string {
+func (checksConfig *ChecksConfig) GetUniqueSystemTags(clusterList moira.ClusterList) []string {
 	systemTags := make([]string, 0)
 	systemTags = append(systemTags, checksConfig.Database.SystemTags...)
 	systemTags = append(systemTags, checksConfig.Filter.SystemTags...)
 	systemTags = append(systemTags, checksConfig.LocalChecker.SystemTags...)
 	systemTags = append(systemTags, checksConfig.RemoteChecker.SystemTags...)
-	systemTags = append(systemTags, checksConfig.Notifier.SystemTags...)
+
+	for _, key := range clusterList {
+		tags := heartbeat.MakeNotifierTags(checksConfig.Notifier.DefaultTags, checksConfig.Notifier.SourceTagPrefix, key)
+		systemTags = append(systemTags, tags...)
+	}
 
 	return moira.GetUniqueValues(systemTags...)
 }
