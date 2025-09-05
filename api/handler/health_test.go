@@ -12,7 +12,6 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
-	metricsource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/notifier/selfstate"
@@ -103,7 +102,7 @@ func TestSetHealthForSourceWithAuth(t *testing.T) {
 		Contacts:     []api.WebContact{},
 	}
 	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
-	handler := NewHandler(mockDb, logger, nil, config, metricsource.CreateTestMetricSourceProvider(localSource, nil, nil), webConfig, nil)
+	handler := NewHandler(mockDb, logger, nil, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), webConfig, nil)
 
 	t.Run("Admin tries to set notifier state", func(t *testing.T) {
 		responseWriter := httptest.NewRecorder()
