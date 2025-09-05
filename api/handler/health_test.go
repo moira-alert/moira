@@ -11,6 +11,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	metricsource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -152,6 +153,10 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
+		localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
+
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 		database = mockDb
 
@@ -179,7 +184,7 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 				SystemTags: []string{"local-checker-tag"},
 			},
 		}
-		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, selfchecksConfig)
+		handler := NewHandler(mockDb, logger, nil, config, sourceProvider, webConfig, selfchecksConfig)
 
 		t.Run("Admin tries to get system subscriptions", func(t *testing.T) {
 			t.Run("Without filter", func(t *testing.T) {
