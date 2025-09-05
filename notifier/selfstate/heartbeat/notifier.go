@@ -8,18 +8,32 @@ import (
 
 type notifier struct {
 	heartbeat
+	clusterKey moira.ClusterKey
 }
 
-func GetNotifier(checkTags []string, logger moira.Logger, database moira.Database) Heartbeater {
-	return &notifier{heartbeat{
-		database:  database,
-		logger:    logger,
-		checkTags: checkTags,
-	}}
+func GetNotifier(defaultTags []string, tagPrefix string, clusterKey moira.ClusterKey, logger moira.Logger, database moira.Database) Heartbeater {
+	tags := MakeNotifierTags(defaultTags, tagPrefix, clusterKey)
+
+	return &notifier{
+		heartbeat: heartbeat{
+			database:  database,
+			logger:    logger,
+			checkTags: tags,
+		},
+		clusterKey: clusterKey,
+	}
+}
+
+func MakeNotifierTags(defaultTags []string, tagPrefix string, clusterKey moira.ClusterKey) []string {
+	tags := make([]string, 0, len(defaultTags)+1)
+	tags = append(tags, defaultTags...)
+	tags = append(tags, fmt.Sprintf("%s:%s", tagPrefix, clusterKey.String()))
+
+	return tags
 }
 
 func (check notifier) Check(int64) (int64, bool, error) {
-	state, _ := check.database.GetNotifierStateForSource(moira.DefaultLocalCluster)
+	state, _ := check.database.GetNotifierStateForSource(check.clusterKey)
 	if state.State != moira.SelfStateOK && state.Actor != moira.SelfStateActorAutomatic {
 		check.logger.Error().
 			String("error", check.GetErrorMessage()).

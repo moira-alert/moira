@@ -65,5 +65,5 @@ func createNotifierStateTest(t *testing.T) *notifier {
 	logger, _ := logging.GetLogger("MetricDelay")
 	checkTags := []string{}
 
-	return GetNotifier(checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*notifier)
+	return GetNotifier(checkTags, "moira-system-disable-notification", moira.DefaultLocalCluster, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*notifier)
 }

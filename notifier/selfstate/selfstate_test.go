@@ -49,7 +49,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Len(t, mock.selfCheckWorker.heartbeatsGraph[0], 1)
-		require.Len(t, mock.selfCheckWorker.heartbeatsGraph[1], 4)
+		require.Len(t, mock.selfCheckWorker.heartbeatsGraph[1], 5)
 
 		const oneTickDelay = time.Millisecond * 1500
 
@@ -330,7 +330,7 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 			notif := mock_notifier.NewMockNotifier(mockCtrl)
 
 			mock := &selfCheckWorkerMock{
-				selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}),
+				selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 				mockCtrl:        mockCtrl,
 			}
 
@@ -448,7 +448,8 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 							SystemTags: []string{"sys-tag1", "sys-tag2", "sys-tag-common"},
 						},
 					},
-				}),
+				},
+					moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 				mockCtrl: mockCtrl,
 			}
 
@@ -874,7 +875,7 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 	}
 
 	return &selfCheckWorkerMock{
-		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 		database:        database,
 		notif:           notif,
 		conf:            conf,
