@@ -386,6 +386,7 @@ type notifierHeartbeatConfig struct {
 	SourceTagPrefix string   `yaml:"source_tag_prefix"`
 }
 
+// ChecksConfig contains configuration for all Heartbeaters.
 type ChecksConfig struct {
 	Database      heartbeatConfig         `yaml:"database"`
 	Filter        heartbeatConfig         `yaml:"filter"`

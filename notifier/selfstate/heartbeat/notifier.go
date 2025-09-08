@@ -11,6 +11,7 @@ type notifier struct {
 	clusterKey moira.ClusterKey
 }
 
+// GetNotifier returns new Heartbeater that checks notifier state for given cluster key.
 func GetNotifier(defaultTags []string, tagPrefix string, localTag []string, clusterKey moira.ClusterKey, logger moira.Logger, database moira.Database) Heartbeater {
 	tags := MakeNotifierTags(defaultTags, tagPrefix, localTag, clusterKey)
 
@@ -24,6 +25,7 @@ func GetNotifier(defaultTags []string, tagPrefix string, localTag []string, clus
 	}
 }
 
+// MakeNotifierTags returns list of tags for a notifier Heartbeater with given configuration.
 func MakeNotifierTags(defaultTags []string, tagPrefix string, localTags []string, clusterKey moira.ClusterKey) []string {
 	tags := make([]string, 0, len(defaultTags)+1)
 	tags = append(tags, defaultTags...)
