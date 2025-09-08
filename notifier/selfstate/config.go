@@ -16,6 +16,7 @@ type HeartbeatConfig struct {
 // HeartbeatConfig represents a heartbeat-specific settings.
 type NotifierHeartbeatConfig struct {
 	DefaultTags     []string
+	LocalSourceTags []string
 	SourceTagPrefix string
 }
 
@@ -72,7 +73,7 @@ func (checksConfig *ChecksConfig) GetUniqueSystemTags(clusterList moira.ClusterL
 	systemTags = append(systemTags, checksConfig.RemoteChecker.SystemTags...)
 
 	for _, key := range clusterList {
-		tags := heartbeat.MakeNotifierTags(checksConfig.Notifier.DefaultTags, checksConfig.Notifier.SourceTagPrefix, key)
+		tags := heartbeat.MakeNotifierTags(checksConfig.Notifier.DefaultTags, checksConfig.Notifier.SourceTagPrefix, checksConfig.Notifier.LocalSourceTags, key)
 		systemTags = append(systemTags, tags...)
 	}
 

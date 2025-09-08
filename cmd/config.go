@@ -382,6 +382,7 @@ type heartbeatConfig struct {
 
 type notifierHeartbeatConfig struct {
 	DefaultTags     []string `yaml:"default_tags"`
+	LocalSourceTags []string `yaml:"local_source_tags"`
 	SourceTagPrefix string   `yaml:"source_tag_prefix"`
 }
 

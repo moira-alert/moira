@@ -134,6 +134,7 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 			},
 			Notifier: NotifierHeartbeatConfig{
 				DefaultTags:     []string{"sys-tag-notifier", "moira-fatal"},
+				LocalSourceTags: []string{"moira-fatal-local"},
 				SourceTagPrefix: "moira-system-disable-source",
 			},
 		},

@@ -11,8 +11,8 @@ type notifier struct {
 	clusterKey moira.ClusterKey
 }
 
-func GetNotifier(defaultTags []string, tagPrefix string, clusterKey moira.ClusterKey, logger moira.Logger, database moira.Database) Heartbeater {
-	tags := MakeNotifierTags(defaultTags, tagPrefix, clusterKey)
+func GetNotifier(defaultTags []string, tagPrefix string, localTag []string, clusterKey moira.ClusterKey, logger moira.Logger, database moira.Database) Heartbeater {
+	tags := MakeNotifierTags(defaultTags, tagPrefix, localTag, clusterKey)
 
 	return &notifier{
 		heartbeat: heartbeat{
@@ -24,10 +24,14 @@ func GetNotifier(defaultTags []string, tagPrefix string, clusterKey moira.Cluste
 	}
 }
 
-func MakeNotifierTags(defaultTags []string, tagPrefix string, clusterKey moira.ClusterKey) []string {
+func MakeNotifierTags(defaultTags []string, tagPrefix string, localTags []string, clusterKey moira.ClusterKey) []string {
 	tags := make([]string, 0, len(defaultTags)+1)
 	tags = append(tags, defaultTags...)
 	tags = append(tags, fmt.Sprintf("%s:%s", tagPrefix, clusterKey.String()))
+
+	if clusterKey == moira.DefaultLocalCluster {
+		tags = append(tags, localTags...)
+	}
 
 	return tags
 }

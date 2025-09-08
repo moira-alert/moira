@@ -99,6 +99,7 @@ func toCheckConfig(checksConfig cmd.ChecksConfig) selfstate.ChecksConfig {
 		},
 		Notifier: selfstate.NotifierHeartbeatConfig{
 			DefaultTags:     checksConfig.Notifier.DefaultTags,
+			LocalSourceTags: checksConfig.Notifier.LocalSourceTags,
 			SourceTagPrefix: checksConfig.Notifier.SourceTagPrefix,
 		},
 	}
