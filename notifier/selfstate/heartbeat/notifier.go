@@ -37,9 +37,19 @@ func MakeNotifierTags(defaultTags []string, tagPrefix string, localTags []string
 }
 
 func (check notifier) Check(int64) (int64, bool, error) {
-	state, _ := check.database.GetNotifierStateForSource(check.clusterKey)
+	state, _ := check.database.GetNotifierState()
 	if state.State != moira.SelfStateOK && state.Actor != moira.SelfStateActorAutomatic {
 		check.logger.Error().
+			String("error", check.GetErrorMessage()).
+			Msg("Notifier is not healthy")
+
+		return 0, true, nil
+	}
+
+	state, _ = check.database.GetNotifierStateForSource(check.clusterKey)
+	if state.State != moira.SelfStateOK && state.Actor != moira.SelfStateActorAutomatic {
+		check.logger.Error().
+			String("metric_source", check.clusterKey.String()).
 			String("error", check.GetErrorMessage()).
 			Msg("Notifier is not healthy")
 

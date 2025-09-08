@@ -14,10 +14,8 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
-	metricsource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/notifier/selfstate"
@@ -313,10 +311,10 @@ func TestGetAllSystemTags(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	responseWriter := httptest.NewRecorder()
-	logger, _ := zerolog_adapter.GetLogger("Test")
+	logger, _ := logging.GetLogger("Test")
 	mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 	mockSource := mock_metric_source.NewMockMetricSource(mockCtrl)
-	provider := metricsource.CreateTestMetricSourceProvider(mockSource, mockSource, mockSource)
+	provider := metricSource.CreateTestMetricSourceProvider(mockSource, mockSource, mockSource)
 	selfstateConfig := selfstate.ChecksConfig{
 		Database: selfstate.HeartbeatConfig{
 			SystemTags: []string{"moira-database-fatal"},
