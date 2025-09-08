@@ -45,6 +45,11 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 			Actor: moira.SelfStateActorAutomatic,
 			State: moira.SelfStateOK,
 		}, nil).Times(1)
+
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateOK,
+		}, nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultLocalCluster).Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetTriggersToCheckCount(defaultRemoteCluster).Return(int64(1), nil)
 
