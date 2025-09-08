@@ -41,7 +41,7 @@ func TestNotifierState(t *testing.T) {
 			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
-			}, nil)
+			}, nil).Times(2)
 
 			value, needSend, errActual := check.Check(now)
 			require.NoError(t, errActual)
@@ -69,11 +69,11 @@ func TestNotifierState(t *testing.T) {
 			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
 				State: moira.SelfStateERROR,
 				Actor: moira.SelfStateActorManual,
-			}, nil)
+			}, nil).Times(2)
 
 			value, hasError, err := check.Check(now)
 			require.NoError(t, err)
-			require.False(t, hasError)
+			require.True(t, hasError)
 			require.EqualValues(t, 0, value)
 		})
 

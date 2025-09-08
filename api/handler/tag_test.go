@@ -39,7 +39,6 @@ func TestCreateTags(t *testing.T) {
 		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		sourceProvider := metricSource.CreateTestMetricSourceProvider(localSource, remoteSource, nil)
 
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		emptyTags := dto.TagsData{
@@ -50,6 +49,7 @@ func TestCreateTags(t *testing.T) {
 		}
 
 		t.Run("Success with empty tags", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			jsonTags, err := json.Marshal(emptyTags)
 			require.NoError(t, err)
 
@@ -69,6 +69,7 @@ func TestCreateTags(t *testing.T) {
 		})
 
 		t.Run("Success with tags", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			jsonTags, err := json.Marshal(tags)
 			require.NoError(t, err)
 
@@ -94,7 +95,6 @@ func TestGetAllTags(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		expectedEmptyTags := &dto.TagsData{
@@ -105,6 +105,8 @@ func TestGetAllTags(t *testing.T) {
 		}
 
 		t.Run("Successfully get empty tags", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetTagNames().Return([]string{}, nil).Times(1)
 			database = mockDb
 
@@ -125,6 +127,8 @@ func TestGetAllTags(t *testing.T) {
 		})
 
 		t.Run("Successfully get tags", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetTagNames().Return([]string{"test1", "test2"}, nil).Times(1)
 			database = mockDb
 
@@ -153,7 +157,6 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 
 		logger, _ := logging.GetLogger("Test")
 
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		expectedEmptyTagsAndSubscriptions := &dto.TagsStatistics{
@@ -174,6 +177,8 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 		}
 
 		t.Run("Successfully get empty tags and subscriptions", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetTagNames().Return([]string{}, nil).Times(1)
 			database = mockDb
 
@@ -196,6 +201,8 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 		})
 
 		t.Run("Successfully get all tags and subscriptions", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetTagNames().Return([]string{defaultTag}, nil).Times(1)
 			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{
 				{
@@ -230,7 +237,6 @@ func TestRemoveTag(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		deletedTagMsg := &dto.MessageResponse{
@@ -238,6 +244,8 @@ func TestRemoveTag(t *testing.T) {
 		}
 
 		t.Run("Successfully remove tag", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveTag(defaultTag).Return(nil).Times(1)
@@ -261,6 +269,8 @@ func TestRemoveTag(t *testing.T) {
 		})
 
 		t.Run("Failed to remove tag with an existing trigger", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{defaultTag}, nil).Times(1)
 			database = mockDb
 
@@ -280,6 +290,8 @@ func TestRemoveTag(t *testing.T) {
 		})
 
 		t.Run("Failed to remove tag with an existing subscription", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{
 				{

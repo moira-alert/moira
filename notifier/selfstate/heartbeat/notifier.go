@@ -72,7 +72,11 @@ func (notifier) NeedToCheckOthers() bool {
 }
 
 func (check notifier) GetErrorMessage() string {
-	state, _ := check.database.GetNotifierStateForSource(moira.DefaultLocalCluster)
+	state, _ := check.database.GetNotifierState()
+	if state.State == moira.SelfStateOK {
+		state, _ = check.database.GetNotifierStateForSource(check.clusterKey)
+	}
+
 	return fmt.Sprintf("Moira-Notifier does not send messages. State: %v", state.State)
 }
 
