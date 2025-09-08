@@ -11,14 +11,17 @@ import (
 
 	chi_middleware "github.com/go-chi/chi/middleware"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
+	metricsource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/notifier/selfstate"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -30,7 +33,7 @@ const (
 func TestCreateTags(t *testing.T) {
 	const selfstateChecksContextKey = "selfstateChecks"
 
-	Convey("Test create tags", t, func() {
+	t.Run("Test create tags", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -48,9 +51,9 @@ func TestCreateTags(t *testing.T) {
 			TagNames: []string{"test1", "test2"},
 		}
 
-		Convey("Success with empty tags", func() {
+		t.Run("Success with empty tags", func(t *testing.T) {
 			jsonTags, err := json.Marshal(emptyTags)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			mockDb.EXPECT().CreateTags(emptyTags.TagNames).Return(nil).Times(1)
 			database = mockDb
@@ -64,12 +67,12 @@ func TestCreateTags(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
-		Convey("Success with tags", func() {
+		t.Run("Success with tags", func(t *testing.T) {
 			jsonTags, err := json.Marshal(tags)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			mockDb.EXPECT().CreateTags(tags.TagNames).Return(nil).Times(1)
 			database = mockDb
@@ -83,13 +86,13 @@ func TestCreateTags(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 	})
 }
 
 func TestGetAllTags(t *testing.T) {
-	Convey("Test get all tags", t, func() {
+	t.Run("Test get all tags", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -103,7 +106,7 @@ func TestGetAllTags(t *testing.T) {
 			TagNames: []string{"test1", "test2"},
 		}
 
-		Convey("Successfully get empty tags", func() {
+		t.Run("Successfully get empty tags", func(t *testing.T) {
 			mockDb.EXPECT().GetTagNames().Return([]string{}, nil).Times(1)
 			database = mockDb
 
@@ -117,13 +120,13 @@ func TestGetAllTags(t *testing.T) {
 			contents := string(contentBytes)
 			actualTags := &dto.TagsData{}
 			err := json.Unmarshal([]byte(contents), actualTags)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
-			So(actualTags, ShouldResemble, expectedEmptyTags)
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+			require.Equal(t, expectedEmptyTags, actualTags)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
-		Convey("Successfully get tags", func() {
+		t.Run("Successfully get tags", func(t *testing.T) {
 			mockDb.EXPECT().GetTagNames().Return([]string{"test1", "test2"}, nil).Times(1)
 			database = mockDb
 
@@ -137,16 +140,16 @@ func TestGetAllTags(t *testing.T) {
 			contents := string(contentBytes)
 			actualTags := &dto.TagsData{}
 			err := json.Unmarshal([]byte(contents), actualTags)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
-			So(actualTags, ShouldResemble, expectedTags)
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+			require.Equal(t, expectedTags, actualTags)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 	})
 }
 
 func TestGetAllTagsAndSubscriptions(t *testing.T) {
-	Convey("Test get all tags and subcriptions", t, func() {
+	t.Run("Test get all tags and subcriptions", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -172,7 +175,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 			},
 		}
 
-		Convey("Successfully get empty tags and subscriptions", func() {
+		t.Run("Successfully get empty tags and subscriptions", func(t *testing.T) {
 			mockDb.EXPECT().GetTagNames().Return([]string{}, nil).Times(1)
 			database = mockDb
 
@@ -188,13 +191,13 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 			contents := string(contentBytes)
 			actualTagsStatisctics := &dto.TagsStatistics{}
 			err := json.Unmarshal([]byte(contents), actualTagsStatisctics)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
-			So(actualTagsStatisctics, ShouldResemble, expectedEmptyTagsAndSubscriptions)
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+			require.Equal(t, expectedEmptyTagsAndSubscriptions, actualTagsStatisctics)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
-		Convey("Successfully get all tags and subscriptions", func() {
+		t.Run("Successfully get all tags and subscriptions", func(t *testing.T) {
 			mockDb.EXPECT().GetTagNames().Return([]string{defaultTag}, nil).Times(1)
 			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{
 				{
@@ -216,16 +219,16 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 			contents := string(contentBytes)
 			actualTagsStatistics := &dto.TagsStatistics{}
 			err := json.Unmarshal([]byte(contents), actualTagsStatistics)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
-			So(actualTagsStatistics, ShouldResemble, expectedTagsAndSubscriptions)
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+			require.Equal(t, expectedTagsAndSubscriptions, actualTagsStatistics)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 	})
 }
 
 func TestRemoveTag(t *testing.T) {
-	Convey("Test remove tag", t, func() {
+	t.Run("Test remove tag", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -236,7 +239,7 @@ func TestRemoveTag(t *testing.T) {
 			Message: "tag deleted",
 		}
 
-		Convey("Successfully remove tag", func() {
+		t.Run("Successfully remove tag", func(t *testing.T) {
 			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{}, nil).Times(1)
 			mockDb.EXPECT().RemoveTag(defaultTag).Return(nil).Times(1)
@@ -253,13 +256,13 @@ func TestRemoveTag(t *testing.T) {
 			contents := string(contentBytes)
 			actualMsg := &dto.MessageResponse{}
 			err := json.Unmarshal([]byte(contents), actualMsg)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
-			So(actualMsg, ShouldResemble, deletedTagMsg)
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+			require.Equal(t, actualMsg, deletedTagMsg)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
-		Convey("Failed to remove tag with an existing trigger", func() {
+		t.Run("Failed to remove tag with an existing trigger", func(t *testing.T) {
 			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{defaultTag}, nil).Times(1)
 			database = mockDb
 
@@ -274,11 +277,11 @@ func TestRemoveTag(t *testing.T) {
 			contents := string(contentBytes)
 			tagExistInTriggerErr := `{"status":"Invalid request","error":"this tag is assigned to 1 triggers. Remove tag from triggers first"}
 `
-			So(contents, ShouldEqual, tagExistInTriggerErr)
-			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+			require.Equal(t, contents, tagExistInTriggerErr)
+			require.Equal(t, http.StatusBadRequest, response.StatusCode)
 		})
 
-		Convey("Failed to remove tag with an existing subscription", func() {
+		t.Run("Failed to remove tag with an existing subscription", func(t *testing.T) {
 			mockDb.EXPECT().GetTagTriggerIDs(defaultTag).Return([]string{}, nil).Times(1)
 			mockDb.EXPECT().GetTagsSubscriptions([]string{defaultTag}).Return([]*moira.SubscriptionData{
 				{
@@ -299,8 +302,66 @@ func TestRemoveTag(t *testing.T) {
 			contents := string(contentBytes)
 			tagExistInSubscriptionErr := `{"status":"Invalid request","error":"this tag is assigned to 1 subscriptions. Remove tag from subscriptions first"}
 `
-			So(contents, ShouldEqual, tagExistInSubscriptionErr)
-			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+			require.Equal(t, contents, tagExistInSubscriptionErr)
+			require.Equal(t, http.StatusBadRequest, response.StatusCode)
+		})
+	})
+}
+
+func TestGetAllSystemTags(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	responseWriter := httptest.NewRecorder()
+	logger, _ := zerolog_adapter.GetLogger("Test")
+	mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
+	mockSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	provider := metricsource.CreateTestMetricSourceProvider(mockSource, mockSource, mockSource)
+	selfstateConfig := selfstate.ChecksConfig{
+		Database: selfstate.HeartbeatConfig{
+			SystemTags: []string{"moira-database-fatal"},
+		},
+		Filter: selfstate.HeartbeatConfig{
+			SystemTags: []string{"moira-filter-fatal"},
+		},
+		LocalChecker: selfstate.HeartbeatConfig{
+			SystemTags: []string{"moira-local-checker-fatal"},
+		},
+		RemoteChecker: selfstate.HeartbeatConfig{
+			SystemTags: []string{"moira-remote-checker-fatal"},
+		},
+		Notifier: selfstate.NotifierHeartbeatConfig{
+			DefaultTags:     []string{"moira-notifier-fatal"},
+			LocalSourceTags: []string{"moira-local-source-fatal"},
+			SourceTagPrefix: "moira-source-fatal",
+		},
+	}
+	handler := NewHandler(mockDb, logger, nil, &api.Config{}, provider, nil, &selfstateConfig)
+
+	t.Run("Successfully get system tags", func(t *testing.T) {
+		testRequest := httptest.NewRequest(http.MethodGet, "/api/system-tag", bytes.NewReader([]byte{}))
+		handler.ServeHTTP(responseWriter, testRequest)
+
+		response := responseWriter.Result()
+		defer response.Body.Close()
+
+		require.Equal(t, http.StatusOK, response.StatusCode)
+
+		contentBytes, _ := io.ReadAll(response.Body)
+		actual := &dto.TagsData{}
+		err := json.Unmarshal(contentBytes, actual)
+
+		require.NoError(t, err)
+		require.ElementsMatch(t, actual.TagNames, []string{
+			"moira-database-fatal",
+			"moira-filter-fatal",
+			"moira-local-checker-fatal",
+			"moira-remote-checker-fatal",
+			"moira-notifier-fatal",
+			"moira-local-source-fatal",
+			"moira-source-fatal:graphite_local.default",
+			"moira-source-fatal:graphite_remote.default",
+			"moira-source-fatal:prometheus_remote.default",
 		})
 	})
 }
