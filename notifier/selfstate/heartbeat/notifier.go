@@ -29,7 +29,7 @@ func GetNotifier(defaultTags []string, tagPrefix string, localTag []string, clus
 func MakeNotifierTags(defaultTags []string, tagPrefix string, localTags []string, clusterKey moira.ClusterKey) []string {
 	tags := make([]string, 0)
 	tags = append(tags, defaultTags...)
-	tags = append(tags, fmt.Sprintf("%s:%s", tagPrefix, clusterKey.String()))
+	tags = append(tags, tagPrefix+":"+clusterKey.String())
 
 	if clusterKey == moira.DefaultLocalCluster {
 		tags = append(tags, localTags...)
