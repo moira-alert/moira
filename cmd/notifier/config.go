@@ -98,9 +98,9 @@ func toCheckConfig(checksConfig cmd.ChecksConfig) selfstate.ChecksConfig {
 			SystemTags: checksConfig.RemoteChecker.SystemTags,
 		},
 		Notifier: selfstate.NotifierHeartbeatConfig{
-			DefaultTags:     checksConfig.Notifier.DefaultTags,
-			LocalSourceTags: checksConfig.Notifier.LocalSourceTags,
-			SourceTagPrefix: checksConfig.Notifier.SourceTagPrefix,
+			AnyClusterSourceTags:      checksConfig.Notifier.AnyClusterSourceTags,
+			LocalClusterSourceTags:    checksConfig.Notifier.LocalClusterSourceTags,
+			TagPrefixForClusterSource: checksConfig.Notifier.TagPrefixForClusterSource,
 		},
 	}
 }

@@ -133,9 +133,9 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 				SystemTags: []string{"sys-tag-remote-checker", "moira-fatal"},
 			},
 			Notifier: NotifierHeartbeatConfig{
-				DefaultTags:     []string{"sys-tag-notifier", "moira-fatal"},
-				LocalSourceTags: []string{"moira-fatal-local"},
-				SourceTagPrefix: "moira-system-disable-source",
+				AnyClusterSourceTags:      []string{"sys-tag-notifier", "moira-fatal"},
+				LocalClusterSourceTags:    []string{"moira-fatal-local"},
+				TagPrefixForClusterSource: "moira-system-disable-source",
 			},
 		},
 	}

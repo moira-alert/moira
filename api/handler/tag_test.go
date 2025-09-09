@@ -341,9 +341,9 @@ func TestGetAllSystemTags(t *testing.T) {
 			SystemTags: []string{"moira-remote-checker-fatal"},
 		},
 		Notifier: selfstate.NotifierHeartbeatConfig{
-			DefaultTags:     []string{"moira-notifier-fatal"},
-			LocalSourceTags: []string{"moira-local-source-fatal"},
-			SourceTagPrefix: "moira-source-fatal",
+			AnyClusterSourceTags:      []string{"moira-notifier-fatal"},
+			LocalClusterSourceTags:    []string{"moira-local-source-fatal"},
+			TagPrefixForClusterSource: "moira-source-fatal",
 		},
 	}
 	handler := NewHandler(mockDb, logger, nil, &api.Config{}, provider, nil, &selfstateConfig)

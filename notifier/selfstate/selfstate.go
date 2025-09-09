@@ -98,9 +98,9 @@ func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf
 
 	for _, key := range clusterList {
 		hb := heartbeat.GetNotifier(
-			conf.Checks.Notifier.DefaultTags,
-			conf.Checks.Notifier.SourceTagPrefix,
-			conf.Checks.Notifier.LocalSourceTags,
+			conf.Checks.Notifier.AnyClusterSourceTags,
+			conf.Checks.Notifier.TagPrefixForClusterSource,
+			conf.Checks.Notifier.LocalClusterSourceTags,
 			key,
 			logger,
 			database,

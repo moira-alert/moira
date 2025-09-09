@@ -381,9 +381,10 @@ type heartbeatConfig struct {
 }
 
 type notifierHeartbeatConfig struct {
-	DefaultTags     []string `yaml:"default_tags"`
-	LocalSourceTags []string `yaml:"local_source_tags"`
-	SourceTagPrefix string   `yaml:"source_tag_prefix"`
+	AnyClusterSourceTags      []string `yaml:"any_cluster_source_tags"`
+	TagPrefixForClusterSource string   `yaml:"tag_prefix_for_cluster_source"`
+	// Kept for backwards compatibility with previous version
+	LocalClusterSourceTags []string `yaml:"local_cluster_source_tags"`
 }
 
 // ChecksConfig contains configuration for all Heartbeaters.
