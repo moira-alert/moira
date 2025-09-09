@@ -27,7 +27,7 @@ func GetNotifier(defaultTags []string, tagPrefix string, localTag []string, clus
 
 // MakeNotifierTags returns list of tags for a notifier Heartbeater with given configuration.
 func MakeNotifierTags(defaultTags []string, tagPrefix string, localTags []string, clusterKey moira.ClusterKey) []string {
-	tags := make([]string, 0, len(defaultTags)+1)
+	tags := make([]string, 0)
 	tags = append(tags, defaultTags...)
 	tags = append(tags, fmt.Sprintf("%s:%s", tagPrefix, clusterKey.String()))
 
