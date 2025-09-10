@@ -78,9 +78,9 @@ type TriggerModel struct {
 	// Graphite-like targets: t1, t2, ...
 	Targets []string `json:"targets" binding:"required" example:"devOps.my_server.hdd.freespace_mbytes"`
 	// WARN threshold
-	WarnValue *float64 `json:"warn_value" example:"500" extensions:"x-nullable"`
+	WarnValue *float64 `json:"warn_value" binding:"required" example:"500" extensions:"x-nullable"`
 	// ERROR threshold
-	ErrorValue *float64 `json:"error_value" example:"1000" extensions:"x-nullable"`
+	ErrorValue *float64 `json:"error_value" binding:"required" example:"1000" extensions:"x-nullable"`
 	// Could be: rising, falling, expression
 	TriggerType string `json:"trigger_type" binding:"required" example:"rising"`
 	// Set of tags to manipulate subscriptions
@@ -108,9 +108,9 @@ type TriggerModel struct {
 	// A list of targets that have only alone metrics
 	AloneMetrics map[string]bool `json:"alone_metrics" binding:"required" example:"t1:true"`
 	// Datetime when the trigger was created
-	CreatedAt *time.Time `json:"created_at" extensions:"x-nullable"`
+	CreatedAt *time.Time `json:"created_at" binding:"required" extensions:"x-nullable"`
 	// Datetime  when the trigger was updated
-	UpdatedAt *time.Time `json:"updated_at" extensions:"x-nullable"`
+	UpdatedAt *time.Time `json:"updated_at" binding:"required" extensions:"x-nullable"`
 	// Username who created trigger
 	CreatedBy string `json:"created_by" binding:"required"`
 	// Username who updated trigger

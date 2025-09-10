@@ -56,7 +56,7 @@ type NotificationEvent struct {
 	ContactID        string             `json:"contact_id,omitempty"`
 	OldState         State              `json:"old_state" binding:"required" example:"ERROR"`
 	Message          *string            `json:"msg,omitempty" extensions:"x-nullable"`
-	MessageEventInfo *EventInfo         `json:"event_message" extensions:"x-nullable"`
+	MessageEventInfo *EventInfo         `json:"event_message" binding:"required" extensions:"x-nullable"`
 }
 
 // NotificationEventHistoryItem is in use to store notifications history of channel.
@@ -423,8 +423,8 @@ type Trigger struct {
 	Name             string          `json:"name" binding:"required" example:"Not enough disk space left"`
 	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
 	Targets          []string        `json:"targets" binding:"required" example:"devOps.my_server.hdd.freespace_mbytes"`
-	WarnValue        *float64        `json:"warn_value" example:"5000" extensions:"x-nullable"`
-	ErrorValue       *float64        `json:"error_value"  example:"1000" extensions:"x-nullable"`
+	WarnValue        *float64        `json:"warn_value" binding:"required" example:"5000" extensions:"x-nullable"`
+	ErrorValue       *float64        `json:"error_value" binding:"required" example:"1000" extensions:"x-nullable"`
 	TriggerType      string          `json:"trigger_type" binding:"required" example:"rising"`
 	Tags             []string        `json:"tags" binding:"required" example:"server,disk"`
 	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
@@ -437,8 +437,8 @@ type Trigger struct {
 	ClusterId        ClusterId       `json:"cluster_id,omitempty" example:"default"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics" binding:"required" example:"false"`
 	AloneMetrics     map[string]bool `json:"alone_metrics" binding:"required" example:"t1:true"`
-	CreatedAt        *int64          `json:"created_at" format:"int64" extensions:"x-nullable"`
-	UpdatedAt        *int64          `json:"updated_at" format:"int64" extensions:"x-nullable"`
+	CreatedAt        *int64          `json:"created_at" binding:"required" format:"int64" extensions:"x-nullable"`
+	UpdatedAt        *int64          `json:"updated_at" binding:"required" format:"int64" extensions:"x-nullable"`
 	CreatedBy        string          `json:"created_by" binding:"required"`
 	UpdatedBy        string          `json:"updated_by" binding:"required"`
 }
@@ -674,10 +674,10 @@ func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 
 // MaintenanceInfo represents user and time set/unset maintenance.
 type MaintenanceInfo struct {
-	StartUser *string `json:"setup_user" extensions:"x-nullable"`
-	StartTime *int64  `json:"setup_time" example:"0" format:"int64" extensions:"x-nullable"`
-	StopUser  *string `json:"remove_user" extensions:"x-nullable"`
-	StopTime  *int64  `json:"remove_time" example:"0" format:"int64" extensions:"x-nullable"`
+	StartUser *string `json:"setup_user" binding:"required" extensions:"x-nullable"`
+	StartTime *int64  `json:"setup_time" example:"0" format:"int64" binding:"required" extensions:"x-nullable"`
+	StopUser  *string `json:"remove_user" binding:"required" extensions:"x-nullable"`
+	StopTime  *int64  `json:"remove_time" example:"0" format:"int64" binding:"required" extensions:"x-nullable"`
 }
 
 // Set maintanace start and stop users and times.
