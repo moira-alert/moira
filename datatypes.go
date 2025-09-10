@@ -675,9 +675,9 @@ func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 // MaintenanceInfo represents user and time set/unset maintenance.
 type MaintenanceInfo struct {
 	StartUser *string `json:"setup_user" binding:"required" extensions:"x-nullable"`
-	StartTime *int64  `json:"setup_time" example:"0" format:"int64" binding:"required" extensions:"x-nullable"`
+    StartTime *int64  `json:"setup_time" binding:"required" example:"0" format:"int64" extensions:"x-nullable"`	
 	StopUser  *string `json:"remove_user" binding:"required" extensions:"x-nullable"`
-	StopTime  *int64  `json:"remove_time" example:"0" format:"int64" binding:"required" extensions:"x-nullable"`
+	StopTime  *int64  `json:"remove_time" binding:"required" example:"0" format:"int64" extensions:"x-nullable"`
 }
 
 // Set maintanace start and stop users and times.
