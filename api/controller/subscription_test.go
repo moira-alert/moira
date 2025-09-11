@@ -18,6 +18,7 @@ import (
 func TestGetUserSubscriptions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	const login = "user"
@@ -136,6 +137,7 @@ func TestUpdateSubscription(t *testing.T) {
 func TestRemoveSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	db := mock_moira_alert.NewMockDatabase(mockCtrl)
 	id := uuid.Must(uuid.NewV4()).String()
 
@@ -156,6 +158,7 @@ func TestRemoveSubscription(t *testing.T) {
 func TestSendTestNotification(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	db := mock_moira_alert.NewMockDatabase(mockCtrl)
 	id := uuid.Must(uuid.NewV4()).String()
 
@@ -176,6 +179,7 @@ func TestSendTestNotification(t *testing.T) {
 func TestCreateSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	const login = "user"
@@ -323,11 +327,13 @@ func TestCreateSubscription(t *testing.T) {
 func TestAdminsCreatesSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	const userLogin = "user"
 
 	const adminLogin = "admin"
+
 	auth := &api.Authorization{
 		Enabled:   true,
 		AdminList: map[string]struct{}{adminLogin: {}},
@@ -383,6 +389,7 @@ func TestAdminsCreatesSubscription(t *testing.T) {
 func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	userLogin := uuid.Must(uuid.NewV4()).String()
 	teamID := uuid.Must(uuid.NewV4()).String()
@@ -486,6 +493,7 @@ func TestCheckAdminPermissionsForSubscription(t *testing.T) {
 func Test_isSubscriptionExists(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	subscriptionID := "testSubscription"

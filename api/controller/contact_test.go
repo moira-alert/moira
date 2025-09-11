@@ -21,6 +21,7 @@ import (
 func TestGetAllContacts(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Error get all contacts", t, func() {
@@ -78,6 +79,7 @@ func TestGetAllContacts(t *testing.T) {
 func TestGetContactById(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Get contact by id should be success", t, func() {
@@ -131,6 +133,7 @@ func TestGetContactById(t *testing.T) {
 
 func TestCreateContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
 
@@ -250,6 +253,7 @@ func TestCreateContact(t *testing.T) {
 
 		Convey("Successfully create not allowed contact with disabled auth", func() {
 			auth.Enabled = false
+
 			defer func() {
 				auth.Enabled = true
 			}()
@@ -384,6 +388,7 @@ func TestCreateContact(t *testing.T) {
 
 		Convey("Successfully create not allowed contact with disabled auth", func() {
 			auth.Enabled = false
+
 			defer func() {
 				auth.Enabled = true
 			}()
@@ -428,6 +433,7 @@ func TestCreateContact(t *testing.T) {
 
 func TestAdminsCreatesContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
 
@@ -519,6 +525,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 
 func TestUpdateContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
 
@@ -635,6 +642,7 @@ func TestUpdateContact(t *testing.T) {
 
 		Convey("Successfully update not allowed contact with disabled auth", func() {
 			auth.Enabled = false
+
 			defer func() {
 				auth.Enabled = true
 			}()
@@ -808,6 +816,7 @@ func TestRemoveContact(t *testing.T) {
 	Convey("Delete user contact", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		Convey("Without subscriptions", func() {
@@ -866,6 +875,7 @@ func TestRemoveContact(t *testing.T) {
 	Convey("Delete team contact", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		Convey("Without subscriptions", func() {
@@ -925,6 +935,7 @@ func TestRemoveContact(t *testing.T) {
 func TestSendTestContactNotification(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	id := uuid.Must(uuid.NewV4()).String()
 
@@ -963,6 +974,7 @@ func TestSendTestContactNotification(t *testing.T) {
 func TestCheckUserPermissionsForContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	userLogin := uuid.Must(uuid.NewV4()).String()
 	teamID := uuid.Must(uuid.NewV4()).String()
@@ -1065,9 +1077,11 @@ func TestCheckAdminPermissionsForContact(t *testing.T) {
 func Test_isContactExists(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	const contactID = "testContact"
+
 	contact := moira.ContactData{ID: contactID}
 
 	Convey("isContactExists", t, func() {
@@ -1144,6 +1158,7 @@ func TestGetContactNoisiness(t *testing.T) {
 	Convey("Test get contact noisiness", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const (

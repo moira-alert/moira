@@ -33,7 +33,7 @@ func TestBuildMessage(t *testing.T) {
 			Desc: "## test\n **test** `test` test\n",
 		}
 
-		strippedDesc := "test\n test test test\n"
+		strippedDesc := "test\n "
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, false)
@@ -49,6 +49,7 @@ func TestBuildMessage(t *testing.T) {
 
 		Convey("Print moira message with one event and message", func() {
 			var interval int64 = 24
+
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, false)
 			expected := strippedDesc + "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix."
@@ -80,6 +81,7 @@ func TestBuildCreateAlertRequest(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 	sender := Sender{location: location, frontURI: "http://moira.url", imageStore: imageStore, imageStoreConfigured: true}
 

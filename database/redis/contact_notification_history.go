@@ -85,7 +85,6 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 	}
 
 	notificationBytes, serializationErr := GetNotificationBytes(notificationItemToSave)
-
 	if serializationErr != nil {
 		return fmt.Errorf("failed to serialize notification to contact event history item: %w", serializationErr)
 	}

@@ -65,6 +65,7 @@ func testRequestFails(
 
 	response := responseWriter.Result()
 	defer response.Body.Close()
+
 	contentBytes, _ := io.ReadAll(response.Body)
 	contents := string(contentBytes)
 

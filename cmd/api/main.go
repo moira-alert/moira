@@ -137,6 +137,7 @@ func main() {
 		stats.NewTriggerStats(telemetry.Metrics, database, logger, metricSourceProvider.GetClusterList()),
 		stats.NewContactStats(telemetry.Metrics, database, logger),
 	)
+
 	statsManager.Start()
 	defer statsManager.Stop() //nolint
 

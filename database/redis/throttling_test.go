@@ -14,6 +14,7 @@ func TestThrottlingErrorConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		t1, t2 := dataBase.GetTriggerThrottling("")
 		So(t1, ShouldResemble, time.Unix(0, 0))

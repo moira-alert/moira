@@ -142,6 +142,7 @@ func MakeTeamContact(contact *moira.ContactData) TeamContact {
 
 type TeamContactWithScore struct {
 	TeamContact
+
 	Score *ContactScore `json:"score,omitempty" extensions:"x-nullable"`
 }
 

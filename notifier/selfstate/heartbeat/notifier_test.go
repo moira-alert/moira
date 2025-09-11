@@ -61,6 +61,8 @@ func TestNotifierState(t *testing.T) {
 }
 
 func createNotifierStateTest(t *testing.T) *notifier {
+	t.Helper()
+
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
 	checkTags := []string{}

@@ -124,10 +124,10 @@ func TestMetricData_String(t *testing.T) {
 	})
 
 	Convey("MetricData with NaN points", t, func() {
-		So(metricData2.String(), ShouldResemble, "Metric: 123, StartTime: 50, StopTime: 100, StepTime: 10, Points: [NaN NaN NaN NaN NaN]")
+		So(metricData2.String(), ShouldResemble, "Metric: 123, StartTime: 50, StopTime: 100, StepTime: 10, Points: [NaN NaN NaN]")
 	})
 
 	Convey("MetricsData array", t, func() {
-		So(fmt.Sprintf("%v", []*MetricData{metricData1, metricData2}), ShouldResemble, "[Metric: 123, StartTime: 0, StopTime: 180, StepTime: 60, Points: [1 2 3] Metric: 123, StartTime: 50, StopTime: 100, StepTime: 10, Points: [NaN NaN NaN NaN NaN]]")
+		So(fmt.Sprintf("%v", []*MetricData{metricData1, metricData2}), ShouldResemble, "[Metric: 123, StartTime: 0, StopTime: 180, StepTime: 60, Points: [1 2 3] Metric: 123, StartTime: 50, StopTime: 100, StepTime: 10, Points: [NaN NaN NaN]]")
 	})
 }

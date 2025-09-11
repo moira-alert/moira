@@ -23,6 +23,7 @@ var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(
 func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
@@ -128,6 +129,7 @@ func TestNoSubscription(t *testing.T) {
 	Convey("When no subscription by event tags, should not call AddNotification", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		systemClock := mock_clock.NewMockClock(mockCtrl)
@@ -166,6 +168,7 @@ func TestDisabledNotification(t *testing.T) {
 	Convey("When subscription event tags is disabled, should not call AddNotification", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
 		eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
@@ -219,6 +222,7 @@ func TestDisabledNotification(t *testing.T) {
 func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 	eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
@@ -371,6 +375,7 @@ func TestAddNotification(t *testing.T) {
 	Convey("When good subscription, should add new notification", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
@@ -415,6 +420,7 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 	Convey("When good subscription and create 2 same scheduled notifications, should add one new notification", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
@@ -468,6 +474,7 @@ func TestFailReadContact(t *testing.T) {
 	Convey("When read contact returns error, should not call AddNotification and not crashed", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
 		eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
@@ -536,6 +543,7 @@ func TestEmptySubscriptions(t *testing.T) {
 
 	Convey("When subscription is empty value object", t, func() {
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		worker := FetchEventsWorker{
@@ -624,6 +632,7 @@ func TestEmptySubscriptions(t *testing.T) {
 func TestGetNotificationSubscriptions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
@@ -671,6 +680,7 @@ func TestGoRoutine(t *testing.T) {
 	Convey("When good subscription, should add new notification", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)

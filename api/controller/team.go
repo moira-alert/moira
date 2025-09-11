@@ -23,8 +23,8 @@ func CreateTeam(dataBase moira.Database, team dto.TeamModel, userID string) (dto
 	var teamID string
 	if team.ID != "" { // if teamID is specified in request data then check that team with this id is not exist
 		teamID = team.ID
-		_, err := dataBase.GetTeam(teamID)
 
+		_, err := dataBase.GetTeam(teamID)
 		if err == nil {
 			return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("team with ID you specified already exists %s", teamID))
 		}

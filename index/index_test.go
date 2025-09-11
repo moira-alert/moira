@@ -21,6 +21,7 @@ import (
 func TestGetTriggerChecksWithRetries(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
@@ -54,6 +55,7 @@ func TestGetTriggerChecksWithRetries(t *testing.T) {
 func TestIndex_CreateAndFill(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 
@@ -138,6 +140,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 func TestIndex_Start(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
@@ -176,6 +179,7 @@ func TestIndex_Start(t *testing.T) {
 func TestIndex_Errors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())

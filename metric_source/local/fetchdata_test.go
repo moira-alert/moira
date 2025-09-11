@@ -154,6 +154,7 @@ func TestFetchData(t *testing.T) {
 	var until int64 = 67
 
 	var retention int64 = 10
+
 	timer := newTimerRoundingTimestamps(from, until, retention)
 
 	Convey("Test no metrics", t, func() {
