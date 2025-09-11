@@ -17,7 +17,7 @@ var errEmptyTeamName = errors.New("team name cannot be empty")
 type TeamModel struct {
 	ID          string `json:"id" binding:"required" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
 	Name        string `json:"name" binding:"required" example:"Infrastructure Team"`
-	Description string `json:"description" binding:"required" example:"Team that holds all members of infrastructure division"`
+	Description string `json:"description" example:"Team that holds all members of infrastructure division"`
 }
 
 // NewTeamModel is a constructor function that creates a new TeamModel using moira.Team.
@@ -118,7 +118,7 @@ type TeamContact struct {
 	Type   string `json:"type" binding:"required" example:"mail"`
 	Name   string `json:"name,omitempty" example:"Mail Alerts"`
 	Value  string `json:"value" binding:"required" example:"devops@example.com"`
-	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	ID     string `json:"id" binding:"required" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
 	// This field is deprecated
