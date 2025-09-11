@@ -33,7 +33,8 @@ func TestBuildMessage(t *testing.T) {
 			Desc: "## test\n **test** `test` test\n",
 		}
 
-		strippedDesc := "test\n "
+		// nolint dupl
+		strippedDesc := "test\n test test test\n"
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, moira.ContactData{}, false)
