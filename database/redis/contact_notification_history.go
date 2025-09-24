@@ -49,7 +49,6 @@ func (connector *DbConnector) GetNotificationsTotalByContactID(contactID string,
 		strconv.FormatInt(from, 10),
 		strconv.FormatInt(to, 10),
 	).Result()
-
 	if err != nil {
 		return 0, err
 	}
