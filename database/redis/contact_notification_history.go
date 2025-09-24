@@ -39,21 +39,26 @@ func contactNotificationKeyWithID(contactID string) string {
 	return contactNotificationKey + ":" + contactID
 }
 
+// GetNotificationsTotalByContactID returns total count of notification events by contactId
+func (connector *DbConnector) GetNotificationsTotalByContactID(contactID string, from, to int64) (int64, error) {
+	c := *connector.client
+	total, err := c.ZCount(
+		connector.context,
+		contactNotificationKeyWithID(contactID),
+		strconv.FormatInt(from, 10),
+		strconv.FormatInt(to, 10),
+	).Result()
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
 // GetNotificationsHistoryByContactID returns `size` (or all if `size` is -1) notification events with timestamp between `from` and `to`.
 // The offset for fetching events may be changed by using `page` parameter, it is calculated as page * size.
 func (connector *DbConnector) GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64,
-) ([]*moira.NotificationEventHistoryItem, int64, error) {
+) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
-
-	total, err := c.ZCount(
-        connector.context,
-        contactNotificationKeyWithID(contactID),
-        strconv.FormatInt(from, 10),
-        strconv.FormatInt(to, 10),
-    ).Result()
-    if err != nil {
-        return nil, 0, err
-    }
 
 	notificationStrings, err := c.ZRangeByScore(
 		connector.context,
@@ -65,7 +70,7 @@ func (connector *DbConnector) GetNotificationsHistoryByContactID(contactID strin
 			Count:  size,
 		}).Result()
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	notifications := make([]*moira.NotificationEventHistoryItem, 0, len(notificationStrings))
@@ -73,13 +78,13 @@ func (connector *DbConnector) GetNotificationsHistoryByContactID(contactID strin
 	for _, notification := range notificationStrings {
 		notificationObj, err := GetNotificationStruct(notification)
 		if err != nil {
-			return notifications, total, err
+			return notifications, err
 		}
 
 		notifications = append(notifications, &notificationObj)
 	}
 
-	return notifications, total, nil
+	return notifications, nil
 }
 
 // PushContactNotificationToHistory converts ScheduledNotification to NotificationEventHistoryItem and saves it,

@@ -155,7 +155,7 @@ type Database interface {
 // ScheduledNotificationsDatabase is used to schedule and fetch notifications, as well as to view list of all notifications and delete some when needed.
 type ScheduledNotificationsDatabase interface {
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
-	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, int64, error)
+	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, error)
 	RemoveNotification(notificationKey string) (int64, error)
 	RemoveFilteredNotifications(start, end int64, ignoredTags []string, sourceList []ClusterKey) (int64, error)
 	RemoveAllNotifications() error
@@ -165,6 +165,7 @@ type ScheduledNotificationsDatabase interface {
 	PushContactNotificationToHistory(notification *ScheduledNotification) error
 	CleanUpOutdatedNotificationHistory(ttl int64) error
 	CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*ContactIDWithNotificationCount, error)
+	GetNotificationsTotalByContactID(contactID string, from, to int64) (int64, error)
 }
 
 // DeliveryCheckerDatabase is used by senders that can track if the notification was delivered.
