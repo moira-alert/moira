@@ -69,15 +69,14 @@ var eventsShouldBeInDb = []*moira.NotificationEventHistoryItem{
 func TestGetNotificationsTotalByContactID(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.Flush()
+
 	defer dataBase.Flush()
 
-	var contactID = "id"
-	var from int64 = 0
-	var to int64 = 1000
+	contactID := "id"
+	from := int64(0)
+	to := int64(1000)
 
 	Convey("GetNotificationsTotalByContactID", t, func() {
-
 		Convey("When no notifications exist, total should be 0", func() {
 			total, err := dataBase.GetNotificationsTotalByContactID(contactID, from, to)
 			So(err, ShouldBeNil)
