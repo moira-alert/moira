@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source/retries"
@@ -185,8 +186,9 @@ type OtelConfig struct {
 	Enabled           bool                  `yaml:"enabled"`
 	Protocol          OtelTransportProtocol `yaml:"protocol"`
 	CollectorURI      string                `yaml:"collector_uri"`
+	Insecure          bool                  `yaml:"insecure"`
 	AdditionalHeaders map[string]string     `yaml:"headers"`
-	DefaultAttributes map[string]string     `yaml:"attributes"`
+	PushInterval      time.Duration         `yaml:"push_interval"`
 }
 
 // GetSettings returns graphite metrics config parsed from moira config files.
@@ -209,12 +211,14 @@ type LoggerConfig struct {
 
 // TelemetryConfig is settings for listener, pprof, graphite.
 type TelemetryConfig struct {
-	Listen        string           `yaml:"listen"`
-	Pprof         ProfilerConfig   `yaml:"pprof"`
-	UseNewMetrics bool             `yaml:"use_new_metrics"`
-	Graphite      GraphiteConfig   `yaml:"graphite"`
-	Prometheus    PrometheusConfig `yaml:"prometheus"`
-	Otel          OtelConfig       `yaml:"otel"`
+	Listen            string            `yaml:"listen"`
+	Pprof             ProfilerConfig    `yaml:"pprof"`
+	UseNewMetrics     bool              `yaml:"use_new_metrics"`
+	Graphite          GraphiteConfig    `yaml:"graphite"`
+	Prometheus        PrometheusConfig  `yaml:"prometheus"`
+	Otel              OtelConfig        `yaml:"otel"`
+	DefaultAttributes map[string]string `yaml:"attributes"`
+	RuntimeStats      bool              `yaml:"runtime_stats"`
 }
 
 // ProfilerConfig is pprof settings structure that initialises at the start of moira.
