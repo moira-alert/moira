@@ -39,7 +39,7 @@ func contactNotificationKeyWithID(contactID string) string {
 	return contactNotificationKey + ":" + contactID
 }
 
-// GetNotificationsTotalByContactID returns total count of notification events by contactId
+// GetNotificationsTotalByContactID returns total count of notification events by contactId.
 func (connector *DbConnector) GetNotificationsTotalByContactID(contactID string, from, to int64) (int64, error) {
 	c := *connector.client
 	total, err := c.ZCount(
