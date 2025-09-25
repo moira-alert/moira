@@ -88,7 +88,6 @@ func main() {
 	}
 
 	filterMetrics, err := metrics.ConfigureFilterMetrics(telemetry.Metrics, telemetry.AttributedMetrics)
-
 	if err != nil {
 		logger.Fatal().
 			Error(err).
