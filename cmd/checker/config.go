@@ -155,7 +155,7 @@ func getDefault() config {
 			},
 			Otel: cmd.OtelConfig{
 				Enabled:      false,
-				Insecure:     false,
+				Insecure:     true,
 				PushInterval: time.Minute,
 			},
 			Prometheus: cmd.PrometheusConfig{
