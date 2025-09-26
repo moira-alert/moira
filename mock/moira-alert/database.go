@@ -611,33 +611,19 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(start, end any) *gomock.Cal
 }
 
 // GetNotificationsHistoryByContactID mocks base method.
-func (m *MockDatabase) GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*moira.NotificationEventHistoryItem, error) {
+func (m *MockDatabase) GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*moira.NotificationEventHistoryItem, int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotificationsHistoryByContactID", contactID, from, to, page, size)
 	ret0, _ := ret[0].([]*moira.NotificationEventHistoryItem)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetNotificationsHistoryByContactID indicates an expected call of GetNotificationsHistoryByContactID.
 func (mr *MockDatabaseMockRecorder) GetNotificationsHistoryByContactID(contactID, from, to, page, size any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationsHistoryByContactID", reflect.TypeOf((*MockDatabase)(nil).GetNotificationsHistoryByContactID), contactID, from, to, page, size)
-}
-
-// GetNotificationsTotalByContactID mocks base method.
-func (m *MockDatabase) GetNotificationsTotalByContactID(contactID string, from, to int64) (int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotificationsTotalByContactID", contactID, from, to)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetNotificationsTotalByContactID indicates an expected call of GetNotificationsTotalByContactID.
-func (mr *MockDatabaseMockRecorder) GetNotificationsTotalByContactID(contactID, from, to any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationsTotalByContactID", reflect.TypeOf((*MockDatabase)(nil).GetNotificationsTotalByContactID), contactID, from, to)
 }
 
 // GetNotifierState mocks base method.

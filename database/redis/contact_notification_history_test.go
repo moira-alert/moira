@@ -66,38 +66,6 @@ var eventsShouldBeInDb = []*moira.NotificationEventHistoryItem{
 	},
 }
 
-func TestGetNotificationsTotalByContactID(t *testing.T) {
-	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
-
-	defer dataBase.Flush()
-
-	contactID := "id"
-	from := int64(0)
-	to := int64(1000)
-
-	Convey("GetNotificationsTotalByContactID", t, func() {
-		Convey("When no notifications exist, total should be 0", func() {
-			total, err := dataBase.GetNotificationsTotalByContactID(contactID, from, to)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 0)
-		})
-
-		Convey("After adding a notification, total should reflect it", func() {
-			err := dataBase.PushContactNotificationToHistory(&inputScheduledNotification)
-			So(err, ShouldBeNil)
-
-			total, err := dataBase.GetNotificationsTotalByContactID(
-				inputScheduledNotification.Contact.ID,
-				inputScheduledNotification.Timestamp-5,
-				inputScheduledNotification.Timestamp+5,
-			)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 1)
-		})
-	})
-}
-
 func TestGetNotificationsHistoryByContactID(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
@@ -111,7 +79,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 		defer dataBase.Flush()
 
 		Convey("While no data then notification items should be empty", func() {
-			items, err := dataBase.GetNotificationsHistoryByContactID(
+			items, total, err := dataBase.GetNotificationsHistoryByContactID(
 				"id",
 				eventsShouldBeInDb[0].TimeStamp,
 				eventsShouldBeInDb[0].TimeStamp,
@@ -120,6 +88,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 
 			So(err, ShouldBeNil)
 			So(items, ShouldHaveLength, 0)
+			So(total, ShouldEqual, 0)
 		})
 
 		Convey("Write event and check for success write", func() {
@@ -127,7 +96,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 			So(errPushEvents, ShouldBeNil)
 
 			Convey("Ensure that we can find event on +- 5 seconds interval", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
 					eventsShouldBeInDb[0].TimeStamp+5,
@@ -135,10 +104,11 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
+				So(total, ShouldEqual, int64(len(eventsShouldBeInDb)))
 			})
 
 			Convey("Ensure that we can find event exactly by its timestamp", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					eventsShouldBeInDb[0].TimeStamp,
@@ -146,10 +116,11 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
+				So(total, ShouldEqual, int64(len(eventsShouldBeInDb)))
 			})
 
 			Convey("Ensure that we can find event if 'from' border equals its timestamp", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					eventsShouldBeInDb[0].TimeStamp+5,
@@ -157,10 +128,11 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
+				So(total, ShouldEqual, int64(len(eventsShouldBeInDb)))
 			})
 
 			Convey("Ensure that we can find event if 'to' border equals its timestamp", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
 					eventsShouldBeInDb[0].TimeStamp,
@@ -168,13 +140,14 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
+				So(total, ShouldEqual, int64(len(eventsShouldBeInDb)))
 			})
 
 			Convey("Ensure that we can't find event time borders don't fit event timestamp", func() {
 				veryOldFrom := int64(928930626) // 09.06.1999, 12:17:06
 				veryOldTo := int64(992089026)   // 09.06.2001, 12:17:06
 
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					veryOldFrom,
 					veryOldTo,
@@ -182,10 +155,11 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					defaultSize)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldNotResemble, eventsShouldBeInDb)
+				So(total, ShouldEqual, 0)
 			})
 
 			Convey("Ensure that with negative page and positive size empty slice returned", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					eventsShouldBeInDb[0].TimeStamp,
@@ -193,10 +167,11 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					1)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldHaveLength, 0)
+				So(total, ShouldEqual, int64(len(eventsShouldBeInDb)))
 			})
 
 			Convey("Ensure that with positive page and negative size empty slice returned", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					eventsShouldBeInDb[0].TimeStamp,
@@ -204,6 +179,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					-1)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldHaveLength, 0)
+				So(total, ShouldEqual, int64(len(eventsShouldBeInDb)))
 			})
 
 			otherScheduledNotification := inputScheduledNotification
@@ -212,7 +188,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 			So(errPushEvents, ShouldBeNil)
 
 			Convey("Ensure that with page=0 size=1 returns first event", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
 					eventsShouldBeInDb[0].TimeStamp+5,
@@ -220,6 +196,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					1)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, eventsShouldBeInDb)
+				So(total, ShouldEqual, 2)
 			})
 
 			otherEventShouldBeInDb := []*moira.NotificationEventHistoryItem{
@@ -234,7 +211,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 			}
 
 			Convey("Ensure that with page=1 size=1 returns another event", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					eventsShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp-5,
 					eventsShouldBeInDb[0].TimeStamp+5,
@@ -242,10 +219,11 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					1)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldResemble, otherEventShouldBeInDb)
+				So(total, ShouldEqual, 2)
 			})
 
 			Convey("Ensure that with page=0 size=-1 returns all events", func() {
-				eventFromDb, err := dataBase.GetNotificationsHistoryByContactID(
+				eventFromDb, total, err := dataBase.GetNotificationsHistoryByContactID(
 					otherEventShouldBeInDb[0].ContactID,
 					eventsShouldBeInDb[0].TimeStamp,
 					otherEventShouldBeInDb[0].TimeStamp,
@@ -253,6 +231,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 					-1)
 				So(err, ShouldBeNil)
 				So(eventFromDb, ShouldHaveLength, 2)
+				So(total, ShouldEqual, 2)
 			})
 		})
 	})
@@ -272,7 +251,7 @@ func TestPushNotificationToHistory(t *testing.T) {
 		err2 := dataBase.PushContactNotificationToHistory(&inputScheduledNotification)
 		So(err2, ShouldBeNil)
 
-		dbContent, err3 := dataBase.GetNotificationsHistoryByContactID(
+		dbContent, total, err3 := dataBase.GetNotificationsHistoryByContactID(
 			inputScheduledNotification.Contact.ID,
 			inputScheduledNotification.Timestamp,
 			inputScheduledNotification.Timestamp,
@@ -281,6 +260,7 @@ func TestPushNotificationToHistory(t *testing.T) {
 
 		So(err3, ShouldBeNil)
 		So(dbContent, ShouldHaveLength, 1)
+		So(total, ShouldEqual, 1)
 	})
 }
 
@@ -381,9 +361,10 @@ func TestCleanUpOutdatedNotificationHistory(t *testing.T) {
 
 			for _, contactID := range contactIDs {
 				Convey(fmt.Sprintf("for contact with id: %s", contactID), func() {
-					events, errGet := dataBase.GetNotificationsHistoryByContactID(contactID, testNow-testTTL, testNow, 0, -1)
+					events, total, errGet := dataBase.GetNotificationsHistoryByContactID(contactID, testNow-testTTL, testNow, 0, -1)
 					So(errGet, ShouldBeNil)
 					So(events, ShouldHaveLength, len(eventsMap[contactID]))
+					So(total, ShouldEqual, int64(len(eventsMap[contactID])))
 
 					for i := range events {
 						So(events[i], ShouldResemble, eventsMap[contactID][i])
