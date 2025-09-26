@@ -64,8 +64,8 @@ func (connector *DbConnector) GetNotificationsHistoryByContactID(contactID strin
 			Count:  size,
 		},
 	)
-	_, err := pipe.Exec(connector.context)
 
+	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return nil, 0, err
 	}
