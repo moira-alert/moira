@@ -73,12 +73,12 @@ func TestRegisterSender(t *testing.T) {
 			contactsDroppedNotificationsAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 
 			notifierMetrics := &metrics.NotifierMetrics{
-				ContactsSendingNotificationsOK:     contactsSendingNotificationsOKMetrics,
-				ContactsSendingNotificationsOKAttributed: contactsSendingNotificationsOKMetricsAttributed,
-				ContactsSendingNotificationsFailed: contactsSendingNotificationsFailedMetrics,
+				ContactsSendingNotificationsOK:               contactsSendingNotificationsOKMetrics,
+				ContactsSendingNotificationsOKAttributed:     contactsSendingNotificationsOKMetricsAttributed,
+				ContactsSendingNotificationsFailed:           contactsSendingNotificationsFailedMetrics,
 				ContactsSendingNotificationsFailedAttributed: contactsSendingNotificationsFailedMetricsAttributed,
-				ContactsDroppedNotifications:       contactsDroppedNotifications,
-				ContactsDroppedNotificationsAttributed: contactsDroppedNotificationsAttributed,
+				ContactsDroppedNotifications:                 contactsDroppedNotifications,
+				ContactsDroppedNotificationsAttributed:       contactsDroppedNotificationsAttributed,
 			}
 			standardNotifier.metrics = notifierMetrics
 
@@ -125,17 +125,17 @@ func TestRegisterSender(t *testing.T) {
 			contactsDeliveryNotificationsChecksStoppedAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 
 			notifierMetrics := &metrics.NotifierMetrics{
-				ContactsSendingNotificationsOK:             contactsSendingNotificationsOKMetrics,
-				ContactsSendingNotificationsOKAttributed: contactsSendingNotificationsOKMetricsAttributed,
-				ContactsSendingNotificationsFailed:         contactsSendingNotificationsFailedMetrics,
-				ContactsSendingNotificationsFailedAttributed: contactsSendingNotificationsFailedMetricsAttributed,
-				ContactsDroppedNotifications:               contactsDroppedNotifications,
-				ContactsDroppedNotificationsAttributed: contactsDroppedNotificationsAttributed,
-				ContactsDeliveryNotificationsOK:            contactsDeliveryNotificationsOK,
-				ContactsDeliveryNotificationsOKAttributed: contactsDeliveryNotificationsOKAttributed,
-				ContactsDeliveryNotificationsFailed:        contactsDeliveryNotificationsFailed,
-				ContactsDeliveryNotificationsFailedAttributed: contactsDeliveryNotificationsFailedAttributed,
-				ContactsDeliveryNotificationsChecksStopped: contactsDeliveryNotificationsChecksStopped,
+				ContactsSendingNotificationsOK:                       contactsSendingNotificationsOKMetrics,
+				ContactsSendingNotificationsOKAttributed:             contactsSendingNotificationsOKMetricsAttributed,
+				ContactsSendingNotificationsFailed:                   contactsSendingNotificationsFailedMetrics,
+				ContactsSendingNotificationsFailedAttributed:         contactsSendingNotificationsFailedMetricsAttributed,
+				ContactsDroppedNotifications:                         contactsDroppedNotifications,
+				ContactsDroppedNotificationsAttributed:               contactsDroppedNotificationsAttributed,
+				ContactsDeliveryNotificationsOK:                      contactsDeliveryNotificationsOK,
+				ContactsDeliveryNotificationsOKAttributed:            contactsDeliveryNotificationsOKAttributed,
+				ContactsDeliveryNotificationsFailed:                  contactsDeliveryNotificationsFailed,
+				ContactsDeliveryNotificationsFailedAttributed:        contactsDeliveryNotificationsFailedAttributed,
+				ContactsDeliveryNotificationsChecksStopped:           contactsDeliveryNotificationsChecksStopped,
 				ContactsDeliveryNotificationsChecksStoppedAttributed: contactsDeliveryNotificationsChecksStoppedAttributed,
 			}
 			standardNotifier.metrics = notifierMetrics
