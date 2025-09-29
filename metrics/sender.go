@@ -11,21 +11,21 @@ type SenderMetrics struct {
 func ConfigureSenderMetrics(notifierMetrics *NotifierMetrics, graphiteIdent string, senderContactType string) (*SenderMetrics, error) {
 	const senderContactTypeField = "sender_contact_type"
 
-	deliveryOk, err := notifierMetrics.ContactsDeliveryNotificationsOKAttributed.RegisterMeter("delivery_ok", Attributes{
+	deliveryOk, err := notifierMetrics.ContactsDeliveryNotificationsOKAttributed.RegisterMeter(senderContactType, "delivery_ok", Attributes{
 		Attribute{Key: senderContactTypeField, Value: graphiteIdent},
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	deliveryFailed, err := notifierMetrics.ContactsDeliveryNotificationsFailedAttributed.RegisterMeter("delivery_failed", Attributes{
+	deliveryFailed, err := notifierMetrics.ContactsDeliveryNotificationsFailedAttributed.RegisterMeter(senderContactType, "delivery_failed", Attributes{
 		Attribute{Key: senderContactTypeField, Value: graphiteIdent},
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	deliveryChecksStopped, err := notifierMetrics.ContactsDeliveryNotificationsChecksStoppedAttributed.RegisterMeter("delivery_checks_stopped", Attributes{
+	deliveryChecksStopped, err := notifierMetrics.ContactsDeliveryNotificationsChecksStoppedAttributed.RegisterMeter(senderContactType, "delivery_checks_stopped", Attributes{
 		Attribute{Key: senderContactTypeField, Value: graphiteIdent},
 	})
 	if err != nil {

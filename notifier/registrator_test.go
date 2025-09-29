@@ -66,13 +66,19 @@ func TestRegisterSender(t *testing.T) {
 
 		Convey("Successfully register sender with damaged enable_metrics", func() {
 			contactsSendingNotificationsOKMetrics := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsSendingNotificationsOKMetricsAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 			contactsSendingNotificationsFailedMetrics := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsSendingNotificationsFailedMetricsAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 			contactsDroppedNotifications := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsDroppedNotificationsAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 
 			notifierMetrics := &metrics.NotifierMetrics{
 				ContactsSendingNotificationsOK:     contactsSendingNotificationsOKMetrics,
+				ContactsSendingNotificationsOKAttributed: contactsSendingNotificationsOKMetricsAttributed,
 				ContactsSendingNotificationsFailed: contactsSendingNotificationsFailedMetrics,
+				ContactsSendingNotificationsFailedAttributed: contactsSendingNotificationsFailedMetricsAttributed,
 				ContactsDroppedNotifications:       contactsDroppedNotifications,
+				ContactsDroppedNotificationsAttributed: contactsDroppedNotificationsAttributed,
 			}
 			standardNotifier.metrics = notifierMetrics
 
@@ -84,8 +90,20 @@ func TestRegisterSender(t *testing.T) {
 			}
 
 			contactsSendingNotificationsOKMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
+			contactsSendingNotificationsOKMetricsAttributed.EXPECT().RegisterMeter(senderContactType, "sends_ok", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			contactsSendingNotificationsFailedMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed").Times(1)
+			contactsSendingNotificationsFailedMetricsAttributed.EXPECT().RegisterMeter(senderContactType, "sends_failed", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			contactsDroppedNotifications.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped").Times(1)
+			contactsDroppedNotificationsAttributed.EXPECT().RegisterMeter(senderContactType, "notifications_dropped", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			sender.EXPECT().Init(senderSettings, standardNotifier.logger, standardNotifier.config.Location, standardNotifier.config.DateTimeFormat)
 
 			err := standardNotifier.RegisterSender(senderSettings, sender)
@@ -94,19 +112,31 @@ func TestRegisterSender(t *testing.T) {
 
 		Convey("Register sender with additional metrics", func() {
 			contactsSendingNotificationsOKMetrics := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsSendingNotificationsOKMetricsAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 			contactsSendingNotificationsFailedMetrics := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsSendingNotificationsFailedMetricsAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 			contactsDroppedNotifications := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsDroppedNotificationsAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 			contactsDeliveryNotificationsOK := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsDeliveryNotificationsOKAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 			contactsDeliveryNotificationsFailed := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsDeliveryNotificationsFailedAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 			contactsDeliveryNotificationsChecksStopped := mock_metrics.NewMockMetersCollection(mockCtrl)
+			contactsDeliveryNotificationsChecksStoppedAttributed := mock_metrics.NewMockAttributedMetricCollection(mockCtrl)
 
 			notifierMetrics := &metrics.NotifierMetrics{
 				ContactsSendingNotificationsOK:             contactsSendingNotificationsOKMetrics,
+				ContactsSendingNotificationsOKAttributed: contactsSendingNotificationsOKMetricsAttributed,
 				ContactsSendingNotificationsFailed:         contactsSendingNotificationsFailedMetrics,
+				ContactsSendingNotificationsFailedAttributed: contactsSendingNotificationsFailedMetricsAttributed,
 				ContactsDroppedNotifications:               contactsDroppedNotifications,
+				ContactsDroppedNotificationsAttributed: contactsDroppedNotificationsAttributed,
 				ContactsDeliveryNotificationsOK:            contactsDeliveryNotificationsOK,
+				ContactsDeliveryNotificationsOKAttributed: contactsDeliveryNotificationsOKAttributed,
 				ContactsDeliveryNotificationsFailed:        contactsDeliveryNotificationsFailed,
+				ContactsDeliveryNotificationsFailedAttributed: contactsDeliveryNotificationsFailedAttributed,
 				ContactsDeliveryNotificationsChecksStopped: contactsDeliveryNotificationsChecksStopped,
+				ContactsDeliveryNotificationsChecksStoppedAttributed: contactsDeliveryNotificationsChecksStoppedAttributed,
 			}
 			standardNotifier.metrics = notifierMetrics
 
@@ -118,11 +148,35 @@ func TestRegisterSender(t *testing.T) {
 			}
 
 			contactsSendingNotificationsOKMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
+			contactsSendingNotificationsOKMetricsAttributed.EXPECT().RegisterMeter(senderContactType, "sends_ok", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			contactsSendingNotificationsFailedMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed").Times(1)
+			contactsSendingNotificationsFailedMetricsAttributed.EXPECT().RegisterMeter(senderContactType, "sends_failed", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			contactsDroppedNotifications.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped").Times(1)
+			contactsDroppedNotificationsAttributed.EXPECT().RegisterMeter(senderContactType, "notifications_dropped", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			contactsDeliveryNotificationsOK.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_ok").Times(1)
+			contactsDeliveryNotificationsOKAttributed.EXPECT().RegisterMeter(senderContactType, "delivery_ok", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			contactsDeliveryNotificationsFailed.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_failed").Times(1)
+			contactsDeliveryNotificationsFailedAttributed.EXPECT().RegisterMeter(senderContactType, "delivery_failed", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			contactsDeliveryNotificationsChecksStopped.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "delivery_checks_stopped").Times(1)
+			contactsDeliveryNotificationsChecksStoppedAttributed.EXPECT().RegisterMeter(senderContactType, "delivery_checks_stopped", metrics.Attributes{
+				metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
+			})
+
 			sender.EXPECT().Init(senderSettings, standardNotifier.logger, standardNotifier.config.Location, standardNotifier.config.DateTimeFormat)
 
 			err := standardNotifier.RegisterSender(senderSettings, sender)
