@@ -121,7 +121,7 @@ func configureTelemetry(config TelemetryConfig, service string, serverMux *http.
 		prometheusRegistryAdapter := metrics.NewPrometheusRegistryAdapter(prometheusRegistry, service)
 		metricRegistries = append(metricRegistries, prometheusRegistryAdapter)
 
-		serverMux.Handle("/metrics", promhttp.InstrumentMetricHandler(prometheusRegistry, promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})))
+		serverMux.Handle(config.Prometheus.MetricsPath, promhttp.InstrumentMetricHandler(prometheusRegistry, promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})))
 	}
 
 	if config.Graphite.Enabled {
