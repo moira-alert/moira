@@ -37,8 +37,8 @@ type MetricRegistry interface {
 
 // AttributedMetricCollection represents a collection of attributed meters.
 type AttributedMetricCollection interface {
-	// RegisterMeter registers a new Meter with the given name and attributes.
-	RegisterMeter(name string, attributes Attributes) (Meter, error)
+	// RegisterMeter registers a new Meter with the given name, metric and attributes.
+	RegisterMeter(name string, metric string, attributes Attributes) (Meter, error)
 	// GetRegisteredMeter retrieves a registered Meter by name.
 	GetRegisteredMeter(name string) (Meter, bool)
 }

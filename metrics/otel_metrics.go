@@ -248,8 +248,8 @@ func NewAttributedMetricCollection(registry MetricRegistry) AttributedMetricColl
 	}
 }
 
-func (r *DefaultAttributedMetricCollection) RegisterMeter(name string, attributes Attributes) (Meter, error) {
-	gauge, err := r.registry.WithAttributes(attributes).NewGauge(name)
+func (r *DefaultAttributedMetricCollection) RegisterMeter(name string, metric string, attributes Attributes) (Meter, error) {
+	gauge, err := r.registry.WithAttributes(attributes).NewGauge(metric)
 	if err != nil {
 		return nil, err
 	}

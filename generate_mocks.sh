@@ -26,6 +26,7 @@ mockgen -destination=mock/notifier/mattermost/client.go -package=mock_mattermost
 mockgen -destination=mock/moira-alert/metrics/registry.go -package=mock_moira_alert github.com/moira-alert/moira/metrics Registry
 mockgen -destination=mock/moira-alert/metrics/meter.go -package=mock_moira_alert github.com/moira-alert/moira/metrics Meter
 mockgen -destination=mock/moira-alert/metrics/meters_collection.go -package=mock_moira_alert github.com/moira-alert/moira/metrics MetersCollection
+mockgen -destination=mock/moira-alert/metrics/attributed_metrics_collection.go -package=mock_moira_alert github.com/moira-alert/moira/metrics AttributedMetricCollection
 mockgen -destination=mock/moira-alert/metrics/attributed_registry.go -package=mock_moira_alert github.com/moira-alert/moira/metrics MetricRegistry 
 mockgen -destination=mock/moira-alert/prometheus_api.go -package=mock_moira_alert github.com/moira-alert/moira/metric_source/prometheus PrometheusApi
 
