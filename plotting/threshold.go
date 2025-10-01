@@ -87,15 +87,13 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold 
 			deltaThresholds := math.Abs(*trigger.ErrorValue - *trigger.WarnValue)
 			if deltaThresholds > thresholdGapCoefficient*deltaLimits {
 				//// there is enough place to draw both of ERROR and WARN thresholds
-				thresholds = append(thresholds, newThreshold(
+				= append(thresholds, newThreshold(
 					trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
-			}
-		} else {
+			} else {
 			//// there is no ERROR threshold required
 			thresholds = append(thresholds, newThreshold(
 				trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
 		}
-	}
 	*/
 	return thresholds
 }

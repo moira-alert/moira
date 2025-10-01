@@ -67,8 +67,8 @@ func (manager *WorkerManager) filterOutLazyTriggerIDs(triggerIDs []string) []str
 	for _, triggerID := range triggerIDs {
 		if _, ok := lazyTriggerIDs[triggerID]; ok {
 			randomDuration := manager.getRandomLazyCacheDuration()
-			cacheContainsIdErr := manager.LazyTriggersCache.Add(triggerID, true, randomDuration)
 
+			cacheContainsIdErr := manager.LazyTriggersCache.Add(triggerID, true, randomDuration)
 			if cacheContainsIdErr != nil {
 				continue
 			}

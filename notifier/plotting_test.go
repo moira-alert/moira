@@ -216,6 +216,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 	Convey("Run fetchAvailableSeries", t, func() {
 		mockController := gomock.NewController(t)
 		defer mockController.Finish()
+
 		source := mockMetricSource.NewMockMetricSource(mockController)
 		result := mockMetricSource.NewMockFetchResult(mockController)
 

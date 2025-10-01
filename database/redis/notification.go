@@ -463,7 +463,6 @@ func (connector *DbConnector) fetchNotifications(redisKey string, to int64, limi
 	// see https://redis.io/topics/transactions
 	for i := range connector.notification.TransactionMaxRetries {
 		res, err := connector.fetchNotificationsTx(redisKey, to, limit)
-
 		if err == nil {
 			return res, nil
 		}

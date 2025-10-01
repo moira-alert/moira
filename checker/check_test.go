@@ -73,6 +73,7 @@ func TestGetMetricDataState(t *testing.T) {
 		var valueTimestamp int64 = 37
 
 		var checkPoint int64 = 47
+
 		metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 		So(err, ShouldBeNil)
 		So(metricState, ShouldBeNil)
@@ -83,6 +84,7 @@ func TestGetMetricDataState(t *testing.T) {
 			var valueTimestamp int64 = 42
 
 			var checkPoint int64 = 27
+
 			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
 			So(metricState, ShouldResemble, &moira.MetricState{
@@ -99,6 +101,7 @@ func TestGetMetricDataState(t *testing.T) {
 			var valueTimestamp int64 = 66
 
 			var checkPoint int64 = 11
+
 			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
@@ -108,6 +111,7 @@ func TestGetMetricDataState(t *testing.T) {
 			var valueTimestamp int64 = 29
 
 			var checkPoint int64 = 11
+
 			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
@@ -117,6 +121,7 @@ func TestGetMetricDataState(t *testing.T) {
 			var valueTimestamp int64 = 26
 
 			var checkPoint int64 = 11
+
 			metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
@@ -130,6 +135,7 @@ func TestGetMetricDataState(t *testing.T) {
 		var valueTimestamp int64 = 42
 
 		var checkPoint int64 = 27
+
 		metricState, err := triggerChecker.getMetricDataState(metrics, &metricLastState, &valueTimestamp, &checkPoint, logger)
 		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
 		So(metricState, ShouldBeNil)
@@ -1808,6 +1814,7 @@ func TestGetExpressionValues(t *testing.T) {
 			expectedValues := map[string]float64{"t1": 0}
 
 			var valueTimestamp int64 = 17
+
 			expression, values, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeTrue)
 			So(expression, ShouldResemble, expectedExpression)
@@ -1816,18 +1823,21 @@ func TestGetExpressionValues(t *testing.T) {
 
 		Convey("last value is empty", func() {
 			var valueTimestamp int64 = 67
+
 			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeFalse)
 		})
 
 		Convey("value before first value", func() {
 			var valueTimestamp int64 = 11
+
 			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeFalse)
 		})
 
 		Convey("value in the middle is empty ", func() {
 			var valueTimestamp int64 = 44
+
 			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeFalse)
 		})
@@ -1840,6 +1850,7 @@ func TestGetExpressionValues(t *testing.T) {
 			expectedValues := map[string]float64{"t1": 3}
 
 			var valueTimestamp int64 = 53
+
 			expression, values, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeTrue)
 			So(expression, ShouldResemble, expectedExpression)
@@ -1869,12 +1880,14 @@ func TestGetExpressionValues(t *testing.T) {
 
 		Convey("t1 value in the middle is empty ", func() {
 			var valueTimestamp int64 = 29
+
 			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeFalse)
 		})
 
 		Convey("t1 and t2 values in the middle is empty ", func() {
 			var valueTimestamp int64 = 42
+
 			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeFalse)
 		})
@@ -1883,6 +1896,7 @@ func TestGetExpressionValues(t *testing.T) {
 			expectedValues := map[string]float64{"t1": 0, "t2": 4}
 
 			var valueTimestamp int64 = 17
+
 			expression, values, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeTrue)
 			So(expression.MainTargetValue, ShouldBeIn, []float64{0, 4})
@@ -1904,6 +1918,7 @@ func TestGetExpressionValues(t *testing.T) {
 
 		Convey("Couldn't get a metric by t1", func() {
 			var valueTimestamp int64 = 17
+
 			_, _, noEmptyValues := getExpressionValues(metrics, &valueTimestamp, logger)
 			So(noEmptyValues, ShouldBeFalse)
 		})
@@ -1914,6 +1929,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 	Convey("Test handlePrepareError", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
 
@@ -1997,6 +2013,7 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 	Convey("Test handleFetchError", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
 

@@ -41,6 +41,8 @@ func BenchmarkFillIndex(b *testing.B) {
 }
 
 func runBenchmark(b *testing.B, triggersSize int, batchSize int) {
+	b.Helper()
+
 	logger, _ := logging.GetLogger("Benchmark")
 	triggersPointers := generateTriggerChecks(triggersSize)
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})

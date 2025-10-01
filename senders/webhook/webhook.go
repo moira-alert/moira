@@ -97,6 +97,7 @@ var (
 // Init read yaml config.
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var cfg config
+
 	cfg.DeliveryCheck = getDefaultDeliveryCheckConfig()
 
 	err := mapstructure.Decode(senderSettings, &cfg)

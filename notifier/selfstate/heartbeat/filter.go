@@ -4,6 +4,7 @@ import "github.com/moira-alert/moira"
 
 type filter struct {
 	heartbeat
+
 	count                   int64
 	firstCheckWasSuccessful bool
 }

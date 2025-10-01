@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -18,7 +19,7 @@ func TestTeamValidation(t *testing.T) {
 
 		limits := api.GetTestLimitsConfig()
 
-		request, _ := http.NewRequest(http.MethodPost, "/api/teams", nil)
+		request, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, "/api/teams", nil)
 		request.Header.Set("Content-Type", "application/json")
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "limits", limits))
 

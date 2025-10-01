@@ -30,6 +30,7 @@ func (handler *Handler) HandleConnection(connection net.Conn, lineChan chan<- []
 
 	go func() {
 		defer handler.wg.Done()
+
 		handler.handle(connection, lineChan)
 	}()
 }

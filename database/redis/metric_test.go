@@ -308,6 +308,7 @@ func TestRemoveMetricValues(t *testing.T) {
 		})
 
 		var toTs int64 = 11
+
 		to := strconv.FormatInt(toTs, 10)
 		deletedCount, err := dataBase.RemoveMetricValues(metric1, from, to)
 		So(err, ShouldBeNil)
@@ -634,6 +635,7 @@ func TestMetricSubscription(t *testing.T) {
 
 	Convey("Subscription manipulation", t, func() {
 		var tomb1 tomb.Tomb
+
 		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
 			&moira.SubscribeMetricEventsParams{BatchSize: 100, Delay: time.Duration(0)})
 		So(err, ShouldBeNil)
@@ -706,6 +708,7 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		actual, err := dataBase.GetPatterns()
 		So(actual, ShouldBeEmpty)
@@ -743,12 +746,14 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		from := fromInf
 
 		var toTs int64 = 1
+
 		to := strconv.FormatInt(toTs, 10)
 		deletedCount, err := dataBase.RemoveMetricValues("123", from, to)
 		So(err, ShouldNotBeNil)
 		So(deletedCount, ShouldResemble, int64(0))
 
 		var tomb1 tomb.Tomb
+
 		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
 			&moira.SubscribeMetricEventsParams{BatchSize: 100, Delay: time.Duration(0)})
 		So(err, ShouldNotBeNil)
@@ -916,6 +921,7 @@ func TestCleanupFutureMetrics(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	mockClock := mock_clock.NewMockClock(mockCtrl)
 
 	dataBase.clock = mockClock
@@ -1444,6 +1450,7 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	client := *dataBase.client
 
 	const pattern = "my.test.*.metric*"
@@ -1514,6 +1521,7 @@ func TestRemoveAllMetrics(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	client := *dataBase.client
 
 	const pattern = "my.test.*.metric*"

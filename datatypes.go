@@ -558,6 +558,7 @@ type ClusterList []ClusterKey
 // TriggerCheck represents trigger data with last check data and check timestamp.
 type TriggerCheck struct {
 	Trigger
+
 	Throttling int64             `json:"throttling" binding:"required" example:"0" format:"int64"`
 	LastCheck  CheckData         `json:"last_check" binding:"required"`
 	Highlights map[string]string `json:"highlights" binding:"required"`
@@ -775,6 +776,7 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 		endOffset = schedule.EndOffset + 24*60 //nolint
 	}
 	timestamp := ts - ts%60 - schedule.TimezoneOffset*60 //nolint
+
 	date := time.Unix(timestamp, 0).UTC()
 	if !schedule.Days[int(date.Weekday()+6)%7].Enabled { //nolint
 		return false

@@ -67,6 +67,7 @@ some other text _italic text_`,
 	Convey("When HTTP Response", t, func() {
 		Convey("is 200 and body is '1' there should be no error", func() {
 			defer gock.Off()
+
 			gock.New("https://outlook.office.com/webhook/foo").
 				Post("/").
 				Reply(http.StatusOK).
@@ -79,6 +80,7 @@ some other text _italic text_`,
 		})
 		Convey("is 200 and body is not '1', result should be an error", func() {
 			defer gock.Off()
+
 			gock.New("https://outlook.office.com/webhook/foo").
 				Post("/").
 				Reply(http.StatusOK).
@@ -91,6 +93,7 @@ some other text _italic text_`,
 		})
 		Convey("is not any of HTTP success, result should be an error", func() {
 			defer gock.Off()
+
 			gock.New("https://outlook.office.com/webhook/foo").
 				Post("/").
 				Reply(http.StatusInternalServerError).

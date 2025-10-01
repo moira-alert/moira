@@ -20,6 +20,7 @@ func TestCreateTeam(t *testing.T) {
 	Convey("CreateTeam", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const user = "userID"
@@ -102,6 +103,7 @@ func TestDeleteTeam(t *testing.T) {
 	Convey("DeleteTeam", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "temaID"
@@ -184,6 +186,7 @@ func TestGetTeam(t *testing.T) {
 	Convey("GetTeam", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
@@ -218,6 +221,7 @@ func TestSearchTeams(t *testing.T) {
 	Convey("SearchTeams", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		teams := []moira.Team{
@@ -490,6 +494,7 @@ func TestGetUserTeams(t *testing.T) {
 	Convey("GetUserTeams", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const userID = "userID"
@@ -497,6 +502,7 @@ func TestGetUserTeams(t *testing.T) {
 		const teamID = "team1"
 
 		const teamID2 = "team2"
+
 		teamsIDs := []string{teamID, teamID2}
 		teams := []dto.TeamModel{
 			{
@@ -541,6 +547,7 @@ func TestGetTeamUsers(t *testing.T) {
 	Convey("GetTeamUsers", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
@@ -575,6 +582,7 @@ func TestAddTeamUsers(t *testing.T) {
 	Convey("AddTeamUsers", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
@@ -659,6 +667,7 @@ func TestUpdateTeam(t *testing.T) {
 	Convey("UpdateTeam", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
@@ -678,6 +687,7 @@ func TestDeleteTeamUser(t *testing.T) {
 	Convey("DeleteTeamUser", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
@@ -756,6 +766,7 @@ func Test_fillCurrentUsersTeamsMap(t *testing.T) {
 	Convey("fillCurrentUsersTeamsMap", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
@@ -829,6 +840,7 @@ func Test_addTeamsForNewUsers(t *testing.T) {
 	Convey("addTeamsForNewUsers", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const teamID = "testTeam"
@@ -877,6 +889,7 @@ func Test_addTeamsForNewUsers(t *testing.T) {
 func TestSetTeamUsers(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	const teamID = "testTeam"
@@ -916,6 +929,7 @@ func TestCheckUserPermissionsForTeam(t *testing.T) {
 	Convey("CheckUserPermissionsForTeam", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		Convey("user in team", func() {
@@ -955,6 +969,7 @@ func TestCheckUserPermissionsForTeam(t *testing.T) {
 func TestGetTeamSettings(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	teamID := "testTeam"
 

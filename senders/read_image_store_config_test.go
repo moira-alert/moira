@@ -12,6 +12,7 @@ import (
 func TestReadImageStoreConfig(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	mockimageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 	eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)

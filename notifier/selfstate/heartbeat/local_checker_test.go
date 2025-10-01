@@ -86,6 +86,8 @@ func TestCheckDelay_Check(t *testing.T) {
 }
 
 func createGraphiteLocalCheckerTest(t *testing.T) (*localChecker, *gomock.Controller) {
+	t.Helper()
+
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("CheckDelay")
 	checkTags := []string{}

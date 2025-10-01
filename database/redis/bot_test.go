@@ -65,6 +65,7 @@ func TestBotDataStoringErrorConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetChatByUsername(messenger1, user1)
 		So(actual1, ShouldBeEmpty)

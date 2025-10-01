@@ -73,6 +73,7 @@ func TestGetAllContacts(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			actual := &dto.ContactList{}
@@ -98,6 +99,7 @@ func TestGetAllContacts(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			actual := &api.ErrorResponse{}
@@ -149,6 +151,7 @@ func TestGetContactById(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -179,6 +182,7 @@ func TestGetContactById(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -253,6 +257,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -267,6 +272,7 @@ func TestCreateNewContact(t *testing.T) {
 
 		Convey("Correctly create new contact without given id", func() {
 			newContactDto.ID = ""
+
 			defer func() {
 				newContactDto.ID = defaultContact
 			}()
@@ -287,6 +293,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -331,6 +338,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -364,6 +372,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -404,6 +413,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -425,6 +435,7 @@ func TestCreateNewContact(t *testing.T) {
 
 		Convey("Trying to create a contact when both userLogin and teamID specified", func() {
 			newContactDto.TeamID = defaultTeamID
+
 			defer func() {
 				newContactDto.TeamID = ""
 			}()
@@ -446,6 +457,7 @@ func TestCreateNewContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -521,6 +533,7 @@ func TestUpdateContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -535,6 +548,7 @@ func TestUpdateContact(t *testing.T) {
 
 		Convey("Failed to update a contact with the specified user and team field", func() {
 			updatedContactDto.TeamID = defaultTeamID
+
 			defer func() {
 				updatedContactDto.TeamID = ""
 			}()
@@ -568,6 +582,7 @@ func TestUpdateContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -616,6 +631,7 @@ func TestUpdateContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -673,6 +689,7 @@ func TestUpdateContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -715,6 +732,7 @@ func TestRemoveContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -743,6 +761,7 @@ func TestRemoveContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -771,6 +790,7 @@ func TestRemoveContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -801,6 +821,7 @@ func TestRemoveContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -839,6 +860,7 @@ func TestRemoveContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -880,6 +902,7 @@ func TestRemoveContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -927,6 +950,7 @@ func TestRemoveContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -961,6 +985,7 @@ func TestRemoveContact(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -999,6 +1024,7 @@ func TestSendTestContactNotification(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -1025,6 +1051,7 @@ func TestSendTestContactNotification(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -1124,6 +1151,7 @@ func Test_getContactNoisiness(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 
 			contentBytes, err := io.ReadAll(response.Body)
@@ -1154,6 +1182,7 @@ func Test_getContactNoisiness(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
 
 			contentBytes, err := io.ReadAll(response.Body)
@@ -1188,6 +1217,7 @@ func Test_getContactNoisiness(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 
 			contentBytes, err := io.ReadAll(response.Body)

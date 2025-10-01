@@ -182,6 +182,8 @@ func TestScheduledNotification(t *testing.T) {
 }
 
 func addNotifications(t *testing.T, database *DbConnector, notifications []moira.ScheduledNotification) {
+	t.Helper()
+
 	for _, notification := range notifications {
 		err := database.AddNotification(&notification)
 		require.NoError(t, err)

@@ -21,6 +21,7 @@ import (
 func TestDeleteTriggerMetric(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	trigger := moira.Trigger{ID: triggerID}
@@ -132,6 +133,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	trigger := moira.Trigger{ID: triggerID}
@@ -276,6 +278,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 func TestGetTriggerMetrics(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)

@@ -12,6 +12,7 @@ const twimletsEchoURL = "https://twimlets.com/echo?Twiml="
 
 type twilioSenderVoice struct {
 	twilioSender
+
 	voiceURL      string
 	appendMessage bool
 	twimletsEcho  bool

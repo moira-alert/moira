@@ -159,6 +159,7 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 			message := "This metric has been in bad state for more than 24 hours - please, fix."
 
 			var interval int64 = 24
+
 			event := NotificationEvent{MessageEventInfo: &EventInfo{Interval: &interval}}
 			So(event.CreateMessage(nil), ShouldEqual, message)
 		})

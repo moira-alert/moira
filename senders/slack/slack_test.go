@@ -103,6 +103,7 @@ some other text italic text
 
 		Convey("Print moira message with one event and message", func() {
 			var interval int64 = 24
+
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := "*NODATA* <http://moira.url/trigger/TriggerID|Name> [tag1][tag2]\n" + slackCompatibleMD +

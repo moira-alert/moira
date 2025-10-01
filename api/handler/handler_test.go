@@ -48,6 +48,7 @@ func TestReadonlyMode(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			content, _ := io.ReadAll(response.Body)
 			actual := &dto.NotifierState{}
 			err := json.Unmarshal(content, actual)
@@ -73,6 +74,7 @@ func TestReadonlyMode(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
@@ -87,6 +89,7 @@ func TestReadonlyMode(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusForbidden)
 		})
 
@@ -97,6 +100,7 @@ func TestReadonlyMode(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			actual, err := io.ReadAll(response.Body)
 			So(err, ShouldBeNil)
 
@@ -145,6 +149,7 @@ func TestAdminOnly(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusForbidden)
 		})
 
@@ -182,6 +187,7 @@ func TestAdminOnly(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusForbidden)
 		})
 

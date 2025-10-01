@@ -115,6 +115,7 @@ func TestGetTimestampValue(t *testing.T) {
 	})
 }
 
+// nolint dupl
 func TestMetricData_String(t *testing.T) {
 	metricData1 := MakeMetricData("123", []float64{1, 2, 3}, 60, 0)
 	metricData2 := MakeEmptyMetricData("123", 10, 50, 100)

@@ -13,6 +13,7 @@ func TestTagStoring(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	client := *dataBase.client
 
 	Convey("Tags manipulation", t, func() {
@@ -95,6 +96,7 @@ func TestTagErrorConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		actual, err := dataBase.GetTagNames()
 		So(err, ShouldNotBeNil)

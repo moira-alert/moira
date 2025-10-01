@@ -37,6 +37,7 @@ var (
 func TestSender_SendEvents(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)

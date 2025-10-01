@@ -84,6 +84,8 @@ func TestGraphiteRemoteChecker(t *testing.T) {
 }
 
 func createGraphiteRemoteCheckerTest(t *testing.T) (*remoteChecker, *gomock.Controller) {
+	t.Helper()
+
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
 	checkTags := []string{}

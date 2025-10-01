@@ -90,6 +90,7 @@ func (lock *Lock) tryAcquire() (<-chan struct{}, error) {
 	lock.extend = make(chan struct{})
 
 	go extendMutex(lock.mutex, lock.ttl, lost, lock.extend)
+
 	lock.isHeld = true
 
 	return lost, nil

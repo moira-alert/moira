@@ -595,6 +595,7 @@ func TestLocalSourceFetchWithMultiplePatterns(t *testing.T) {
 func TestLocalMetricsTTL(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(dataBase)
 	ttl := int64(42)

@@ -16,6 +16,7 @@ func TestCleanUpOutdatedMetrics(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	db := mocks.NewMockDatabase(mockCtrl)
 
 	Convey("Test cleanup outdated metrics", t, func() {
@@ -40,6 +41,7 @@ func TestCleanUpFutureMetrics(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	db := mocks.NewMockDatabase(mockCtrl)
 
 	Convey("Test cleanup future metrics", t, func() {

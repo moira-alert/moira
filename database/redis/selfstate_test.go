@@ -71,6 +71,8 @@ func TestSelfCheckWithWritesNotInChecker(t *testing.T) {
 }
 
 func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
+	t.Helper()
+
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.source = dbSource
@@ -106,6 +108,7 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		count, err := dataBase.GetMetricsUpdatesCount()
 		So(count, ShouldEqual, 0)
@@ -128,6 +131,7 @@ func TestNotifierState(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
 		Convey("On empty database should return ERROR", func() {
 			notifierState, err := emptyDataBase.GetNotifierState()

@@ -28,6 +28,7 @@ func TestCluster(t *testing.T) {
 	database.Flush()
 
 	defer database.Flush()
+
 	client := database.Client()
 	ctx := database.Context()
 
@@ -309,6 +310,7 @@ func Test_renameKey(t *testing.T) {
 		database.Flush()
 
 		defer database.Flush()
+
 		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
 		So(err, ShouldBeNil)
 
@@ -328,6 +330,7 @@ func Test_renameKey(t *testing.T) {
 		database.Flush()
 
 		defer database.Flush()
+
 		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
 		So(err, ShouldBeNil)
 
@@ -353,6 +356,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 		database.Flush()
 
 		defer database.Flush()
+
 		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
 		So(err, ShouldBeNil)
 		err = database.Client().Set(database.Context(), oldKey+"2", "2", 0).Err()
@@ -386,6 +390,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 		database.Flush()
 
 		defer database.Flush()
+
 		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
 		So(err, ShouldBeNil)
 		err = database.Client().Set(database.Context(), oldKey+"2", "2", 0).Err()

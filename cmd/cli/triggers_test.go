@@ -18,6 +18,7 @@ func Test_deleteTriggers(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	db := mocks.NewMockDatabase(mockCtrl)
 	delay = 1 * time.Millisecond
 
@@ -46,6 +47,7 @@ func Test_handleRemoveTriggersStartWith(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	db := mocks.NewMockDatabase(mockCtrl)
 	delay = 1 * time.Millisecond
 
@@ -74,6 +76,7 @@ func Test_handleRemoveUnusedTriggersStartWith(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	db := mocks.NewMockDatabase(mockCtrl)
 	delay = 1 * time.Millisecond
 
@@ -111,6 +114,7 @@ func Test_handleRemoveUnusedTriggersWithTTL(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	db := mocks.NewMockDatabase(mockCtrl)
 	delay = 1 * time.Millisecond
 	nowTime := time.Now()

@@ -285,6 +285,7 @@ func toDTOList(eventPtrs []*moira.NotificationEvent) []moira.NotificationEvent {
 
 func TestDeleteAllNotificationEvents(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
 

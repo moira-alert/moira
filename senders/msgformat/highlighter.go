@@ -151,6 +151,7 @@ func (formatter *highlightSyntaxFormatter) buildEventsString(events moira.Notifi
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
+
 	eventsString += formatter.codeBlockStart
 
 	var tailString string

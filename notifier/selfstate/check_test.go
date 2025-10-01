@@ -26,6 +26,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			var sendingWG sync.WaitGroup
 
 			var timeDelta int64 = 100
+
 			nowTS := time.Now().Unix() + timeDelta
 			val := float64(timeDelta)
 
@@ -36,6 +37,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 
 		t.Run("Send notifications to admins and users on single heartbeat error", func(t *testing.T) {
 			var timeDelta int64 = 100
+
 			nowTS := time.Now().Unix() + timeDelta
 			worker := createWorker(t)
 
@@ -105,6 +107,8 @@ func registerAdminNotification(worker *selfCheckWorkerMock, nowTS int64, eventMe
 }
 
 func createWorker(t *testing.T) *selfCheckWorkerMock {
+	t.Helper()
+
 	adminContact := map[string]string{
 		"type":  "admin-mail",
 		"value": "admin@company.com",

@@ -222,6 +222,7 @@ func TestUpdateTrigger(t *testing.T) {
 			Convey(fmt.Sprintf("should return 400, url=%s", url), func() {
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 			})
 		}
@@ -262,6 +263,7 @@ func TestUpdateTrigger(t *testing.T) {
 			Convey("should return 200", func() {
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				So(response.StatusCode, ShouldEqual, http.StatusOK)
 				So(isTriggerUpdated(response), ShouldBeTrue)
 			})
@@ -355,6 +357,7 @@ func TestUpdateTrigger(t *testing.T) {
 			Convey("should return 200", func() {
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				So(response.StatusCode, ShouldEqual, http.StatusOK)
 				So(isTriggerUpdated(response), ShouldBeTrue)
 			})

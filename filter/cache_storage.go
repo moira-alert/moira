@@ -16,7 +16,7 @@ import (
 const defaultRetention = 60
 
 var (
-	errInvalidRetentionsFormat = errors.New("invalid retentions format, it is correct to write in the format 'retentions = timePerPoint:timeToStore, timePerPoint:timeToStore, ...'")
+	errInvalidRetentionsFormat = errors.New("invalid retentions format, it is correct to write in the format 'retentions = timePerPoint:timeToStore, ...'")
 	errInvalidPatternFormat    = errors.New("invalid pattern format, it is correct to write in the format 'pattern = regex'")
 )
 

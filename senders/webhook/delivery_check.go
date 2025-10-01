@@ -50,6 +50,7 @@ func (sender *Sender) CheckNotificationsDelivery(fetchedData []string) ([]string
 			String(logFieldNameDeliveryCheckUrl, checksData[i].URL)
 
 		var deliveryState string
+
 		checksData[i], deliveryState = sender.performSingleDeliveryCheck(&extendedLogger, checksData[i])
 
 		newCheckData, scheduleAgain := handleStateTransition(checksData[i], deliveryState, sender.deliveryCheckConfig.MaxAttemptsCount, &counter)

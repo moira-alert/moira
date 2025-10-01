@@ -67,6 +67,8 @@ func TestDatabaseHeartbeat(t *testing.T) {
 }
 
 func createRedisDelayTest(t *testing.T) *databaseHeartbeat {
+	t.Helper()
+
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("CheckDelay")
 	checkTags := []string{}

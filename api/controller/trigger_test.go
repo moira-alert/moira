@@ -18,6 +18,7 @@ import (
 func TestUpdateTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success update", t, func() {
@@ -55,6 +56,7 @@ func TestUpdateTrigger(t *testing.T) {
 func TestSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerID := uuid.Must(uuid.NewV4()).String()
@@ -209,6 +211,7 @@ func TestSaveTrigger(t *testing.T) {
 func TestVariousTtlState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerID := uuid.Must(uuid.NewV4()).String()
@@ -300,6 +303,7 @@ func TestVariousTtlState(t *testing.T) {
 func TestGetTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	triggerModel := dto.TriggerModel{ID: triggerID}
@@ -352,6 +356,7 @@ func TestGetTrigger(t *testing.T) {
 func TestRemoveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 
@@ -379,6 +384,7 @@ func TestRemoveTrigger(t *testing.T) {
 func TestGetTriggerThrottling(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	begging := time.Unix(0, 0)
@@ -411,6 +417,7 @@ func TestGetTriggerThrottling(t *testing.T) {
 func TestGetTriggerLastCheck(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	lastCheck := moira.CheckData{}
@@ -475,6 +482,7 @@ func TestGetTriggerLastCheck(t *testing.T) {
 func TestDeleteTriggerThrottling(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 
@@ -502,6 +510,7 @@ func TestDeleteTriggerThrottling(t *testing.T) {
 func TestSetTriggerMaintenance(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.Must(uuid.NewV4()).String()
 	metricsMaintenance := dto.MetricsMaintenance{

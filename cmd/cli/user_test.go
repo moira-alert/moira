@@ -39,6 +39,8 @@ func TestUpdateUsers(t *testing.T) {
 		}
 
 		defer func(t *testing.T) {
+			t.Helper()
+
 			if err := cleanData(database); err != nil {
 				t.Fatal(err)
 			}

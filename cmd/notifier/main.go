@@ -143,6 +143,7 @@ func main() {
 		Metrics:     notifierMetrics,
 		ClusterList: clusterList,
 	}
+
 	fetchNotificationsWorker.Start()
 	defer stopNotificationsFetcher(fetchNotificationsWorker)
 
@@ -159,6 +160,7 @@ func main() {
 		Metrics: notifierMetrics,
 		Config:  notifierConfig,
 	}
+
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)
 

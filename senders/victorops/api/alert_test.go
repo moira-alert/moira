@@ -21,6 +21,7 @@ func TestCreateAlert(t *testing.T) {
 		res.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
+
 	client := NewClient(server.URL, server.Client())
 
 	Convey("CreateAlert Tests", t, func() {

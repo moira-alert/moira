@@ -341,6 +341,7 @@ func TestIsValidFloat64(t *testing.T) {
 
 func TestRoundToNearestRetention(t *testing.T) {
 	var baseTimestamp, retentionSeconds int64
+
 	baseTimestamp = 1582286400 // 17:00:00
 
 	Convey("Test even retention: 60s", t, func() {

@@ -93,6 +93,7 @@ func (sender *Sender) runBot(contactType string) {
 
 	workerAction := func(stop <-chan struct{}) error {
 		defer sender.session.Close()
+
 		<-stop
 
 		return nil

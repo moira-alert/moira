@@ -157,6 +157,7 @@ func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration
 
 type responseWriterWithBody struct {
 	http.ResponseWriter
+
 	body bytes.Buffer
 }
 

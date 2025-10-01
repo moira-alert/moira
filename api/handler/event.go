@@ -58,8 +58,8 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	metricStr := middleware.GetMetric(request)
-	metricRegexp, errCompile := regexp.Compile(metricStr)
 
+	metricRegexp, errCompile := regexp.Compile(metricStr)
 	if errCompile != nil {
 		_ = render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse metric \"%s\": %w", metricStr, errCompile)))
 		return

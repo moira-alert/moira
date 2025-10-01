@@ -93,6 +93,8 @@ func TestFilter(t *testing.T) {
 }
 
 func createFilterTest(t *testing.T) (*filter, *gomock.Controller) {
+	t.Helper()
+
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
 	checkTags := []string{}

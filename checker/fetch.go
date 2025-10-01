@@ -45,7 +45,6 @@ func (triggerChecker *TriggerChecker) fetch() (map[string][]metricSource.MetricD
 		metricsData := fetchResult.GetMetricsData()
 
 		metricsFetchResult, metricsErr := fetchResult.GetPatternMetrics()
-
 		if metricsErr == nil {
 			metricsArr = append(metricsArr, metricsFetchResult...)
 		}

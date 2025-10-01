@@ -301,6 +301,7 @@ func TestUnusedTriggersConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.MarkTriggersAsUnused("123")
 		So(err, ShouldNotBeNil)

@@ -436,6 +436,8 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T, config Config) {
+	t.Helper()
+
 	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 
 	mockCtrl = gomock.NewController(t)

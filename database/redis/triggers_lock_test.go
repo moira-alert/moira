@@ -16,6 +16,7 @@ func TestLock(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Test lock manipulation", t, func() {
 		triggerID1 := "id"
 
@@ -51,6 +52,7 @@ func TestLockErrorConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.AcquireTriggerCheckLock("tr1", 4)
 		So(err, ShouldNotBeNil)
@@ -72,6 +74,7 @@ func TestLockErrorLogging(t *testing.T) {
 
 	dataBase.Flush()
 	defer dataBase.Flush()
+
 	Convey("Should log error on releasing the lock", t, func() {
 		logger.EXPECT().Warning().Return(eventBuilder).AnyTimes()
 		eventBuilder.EXPECT().Error(gomock.Any()).Return(eventBuilder)

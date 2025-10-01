@@ -15,6 +15,7 @@ func TestTriggerToCheck(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Trigger to check get and add", t, func() {
 		triggerID1 := uuid.Must(uuid.NewV4()).String()
 		triggerID2 := uuid.Must(uuid.NewV4()).String()
@@ -109,6 +110,7 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Trigger to check get and add", t, func() {
 		triggerID1 := uuid.Must(uuid.NewV4()).String()
 		triggerID2 := uuid.Must(uuid.NewV4()).String()
@@ -202,6 +204,7 @@ func TestRemoteTriggerToCheckConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.AddRemoteTriggersToCheck([]string{"123"})
 		So(err, ShouldNotBeNil)
@@ -218,6 +221,7 @@ func TestTriggerToCheckConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.AddLocalTriggersToCheck([]string{"123"})
 		So(err, ShouldNotBeNil)

@@ -15,6 +15,7 @@ import (
 
 func TestGetContactEventsByIdWithLimit(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
 

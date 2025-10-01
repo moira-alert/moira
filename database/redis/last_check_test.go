@@ -488,6 +488,7 @@ func TestLastCheckErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		var triggerMaintenanceTS int64 = 123
+
 		err = dataBase.SetTriggerCheckMaintenance("123", map[string]int64{}, &triggerMaintenanceTS, "", 0)
 		So(err, ShouldNotBeNil)
 

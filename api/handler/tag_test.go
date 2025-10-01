@@ -57,6 +57,7 @@ func TestCreateTags(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
@@ -75,6 +76,7 @@ func TestCreateTags(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			So(response.StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
@@ -105,6 +107,7 @@ func TestGetAllTags(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			actualTags := &dto.TagsData{}
@@ -125,6 +128,7 @@ func TestGetAllTags(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			actualTags := &dto.TagsData{}
@@ -176,6 +180,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			actualTagsStatisctics := &dto.TagsStatistics{}
@@ -204,6 +209,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			actualTagsStatistics := &dto.TagsStatistics{}
@@ -241,6 +247,7 @@ func TestRemoveTag(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			actualMsg := &dto.MessageResponse{}
@@ -262,6 +269,7 @@ func TestRemoveTag(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			tagExistInTriggerErr := `{"status":"Invalid request","error":"this tag is assigned to 1 triggers. Remove tag from triggers first"}
@@ -287,6 +295,7 @@ func TestRemoveTag(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			tagExistInSubscriptionErr := `{"status":"Invalid request","error":"this tag is assigned to 1 subscriptions. Remove tag from subscriptions first"}

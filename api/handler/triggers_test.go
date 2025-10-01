@@ -494,6 +494,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 					Convey(fmt.Sprintf("url=%s, error=%s", url, fetchRemoteErrorType), func() {
 						response := responseWriter.Result()
 						defer response.Body.Close()
+
 						So(response.StatusCode, ShouldEqual, http.StatusServiceUnavailable)
 						So(isTriggerCreated(response), ShouldBeFalse)
 					})
@@ -530,6 +531,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 				Convey(url, func() {
 					response := responseWriter.Result()
 					defer response.Body.Close()
+
 					So(response.StatusCode, ShouldEqual, http.StatusOK)
 					So(isTriggerCreated(response), ShouldBeTrue)
 				})
@@ -570,6 +572,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 			Convey(fmt.Sprintf("should return 400, url=%s", url), func() {
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 			})
 		}
@@ -604,6 +607,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 			Convey("should return 200", func() {
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				So(response.StatusCode, ShouldEqual, http.StatusOK)
 				So(isTriggerCreated(response), ShouldBeTrue)
 			})
@@ -682,6 +686,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 			Convey("should return 200", func() {
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				So(response.StatusCode, ShouldEqual, http.StatusOK)
 				So(isTriggerCreated(response), ShouldBeTrue)
 			})
@@ -980,6 +985,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			var gotDTO dto.TriggerNoisinessList
+
 			err = json.Unmarshal(contentBytes, &gotDTO)
 			So(err, ShouldBeNil)
 			So(&gotDTO, ShouldResemble, &dto.TriggerNoisinessList{
