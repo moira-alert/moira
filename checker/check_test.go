@@ -15,6 +15,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira/metrics"
@@ -33,10 +34,13 @@ func TestGetMetricDataState(t *testing.T) {
 
 	var errValue float64 = 20
 
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
 	checkerMetrics, _ := metrics.
 		ConfigureCheckerMetrics(
 			metrics.NewDummyRegistry(),
-			metrics.NewMetricContext(context.Background()).CreateRegistry(),
+			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey},
 		)
 
@@ -586,10 +590,13 @@ func TestCheckForNODATA(t *testing.T) {
 
 	var ttl int64 = 600
 
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
 	checkerMetrics, _ := metrics.
 		ConfigureCheckerMetrics(
 			metrics.NewDummyRegistry(),
-			metrics.NewMetricContext(context.Background()).CreateRegistry(),
+			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey},
 		)
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
@@ -720,10 +727,13 @@ func TestCheck(t *testing.T) {
 
 		var ttl int64 = 30
 
+		metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+		So(err, ShouldBeNil)
+
 		checkerMetrics, _ := metrics.
 			ConfigureCheckerMetrics(
 				metrics.NewDummyRegistry(),
-				metrics.NewMetricContext(context.Background()).CreateRegistry(),
+				metricRegistry,
 				[]moira.ClusterKey{defaultLocalClusterKey})
 		checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 		triggerChecker := TriggerChecker{
@@ -1633,10 +1643,13 @@ func TestTriggerChecker_Check(t *testing.T) {
 
 	var ttl int64 = 30
 
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
 	checkerMetrics, _ := metrics.
 		ConfigureCheckerMetrics(
 			metrics.NewDummyRegistry(),
-			metrics.NewMetricContext(context.Background()).CreateRegistry(),
+			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey})
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
@@ -1728,10 +1741,12 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 
 	var ttl int64 = 30
 
+	metricRegistry, _ := metrics.NewMetricContext(context.Background()).CreateRegistry()
+
 	checkerMetrics, _ := metrics.
 		ConfigureCheckerMetrics(
 			metrics.NewDummyRegistry(),
-			metrics.NewMetricContext(context.Background()).CreateRegistry(),
+			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey})
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
@@ -2209,9 +2224,12 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 		Convey("with undefined err", func() {
 			givenErr := errors.New("some undefined error")
 
+			metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+			So(err, ShouldBeNil)
+
 			checkerMetrics, err := metrics.ConfigureCheckerMetrics(
 				metrics.NewDummyRegistry(),
-				metrics.NewMetricContext(context.Background()).CreateRegistry(),
+				metricRegistry,
 				[]moira.ClusterKey{moira.DefaultLocalCluster},
 			)
 			So(err, ShouldBeNil)
