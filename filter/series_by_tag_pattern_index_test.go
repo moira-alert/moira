@@ -9,6 +9,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTransformTaggedWildCardToMatchOperator(t *testing.T) {
@@ -112,8 +113,12 @@ func TestParseSeriesByTag(t *testing.T) {
 }
 
 func TestSeriesByTagPatternIndex(t *testing.T) {
-	logger, _ := logging.GetLogger("SeriesByTag")
-	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
+	logger, err := logging.GetLogger("SeriesByTag")
+	require.NoError(t, err)
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 
 	Convey("Given empty patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		compatibility := Compatibility{
@@ -384,8 +389,12 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 }
 
 func TestSeriesByTagPatternIndexCarbonCompatibility(t *testing.T) {
-	logger, _ := logging.GetLogger("SeriesByTag")
-	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry())
+	logger, err := logging.GetLogger("SeriesByTag")
+	require.NoError(t, err)
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
+	require.NoError(t, err)
 
 	Convey("Given related patterns with tagspecs, should build index and match patterns", t, func(c C) {
 		tagSpecsByPattern := map[string][]TagSpec{
