@@ -18,7 +18,10 @@ import (
 	notifier2 "github.com/moira-alert/moira/notifier"
 )
 
-var notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), "notifier")
+var (
+	metricsRegistry, _ = metrics.NewMetricContext(context.Background()).CreateRegistry()
+	notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")
+)
 
 func TestProcessScheduledEvent(t *testing.T) {
 	subID2 := "subscriptionID-00000000000002"

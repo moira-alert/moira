@@ -14,6 +14,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
@@ -436,7 +437,10 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T, config Config) {
-	notifierMetrics, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metrics.NewMetricContext(context.Background()).CreateRegistry(), "notifier")
+	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+	notifierMetrics, err := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")
+	require.NoError(t, err)
 
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -466,7 +470,7 @@ func configureNotifier(t *testing.T, config Config) {
 
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
-	err := standardNotifier.RegisterSender(senderSettings, sender)
+	err = standardNotifier.RegisterSender(senderSettings, sender)
 
 	Convey("Should return one sender", t, func() {
 		So(err, ShouldBeNil)
