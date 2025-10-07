@@ -15,47 +15,47 @@ type FilterMetrics struct {
 
 // ConfigureFilterMetrics initialize metrics.
 func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry) (*FilterMetrics, error) {
-	totalMetricsReceived, err := attributedRegistry.NewCounter("received_total")
+	totalMetricsReceived, err := attributedRegistry.NewCounter("received.total")
 	if err != nil {
 		return nil, err
 	}
 
-	validMetricsReceived, err := attributedRegistry.NewCounter("received_valid")
+	validMetricsReceived, err := attributedRegistry.NewCounter("received.valid")
 	if err != nil {
 		return nil, err
 	}
 
-	matchingMetricsReceived, err := attributedRegistry.NewCounter("received_matching")
+	matchingMetricsReceived, err := attributedRegistry.NewCounter("received.matching")
 	if err != nil {
 		return nil, err
 	}
 
-	patternMatchingCacheEvicted, err := attributedRegistry.NewGauge("patternMatchingCache_evicted")
+	patternMatchingCacheEvicted, err := attributedRegistry.NewGauge("pattern_matching_cache.evicted")
 	if err != nil {
 		return nil, err
 	}
 
-	matchingTimer, err := attributedRegistry.NewTimer("time_match")
+	matchingTimer, err := attributedRegistry.NewTimer("time.match")
 	if err != nil {
 		return nil, err
 	}
 
-	savingTimer, err := attributedRegistry.NewTimer("time_save")
+	savingTimer, err := attributedRegistry.NewTimer("time.save")
 	if err != nil {
 		return nil, err
 	}
 
-	buildTreeTimer, err := attributedRegistry.NewTimer("time_buildtree")
+	buildTreeTimer, err := attributedRegistry.NewTimer("time.buildtree")
 	if err != nil {
 		return nil, err
 	}
 
-	metricChannelLen, err := attributedRegistry.NewHistogram("metricsToSave")
+	metricChannelLen, err := attributedRegistry.NewHistogram("channel.metric.to_save.len")
 	if err != nil {
 		return nil, err
 	}
 
-	lineChannelLen, err := attributedRegistry.NewHistogram("linesToMatch")
+	linesToMatch, err := attributedRegistry.NewHistogram("channel.lines.to_match.len")
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry
 		SavingTimer:                 NewCompositeTimer(registry.NewTimer("time", "save"), savingTimer),
 		BuildTreeTimer:              NewCompositeTimer(registry.NewTimer("time", "buildtree"), buildTreeTimer),
 		MetricChannelLen:            NewCompositeHistogram(registry.NewHistogram("metricsToSave"), metricChannelLen),
-		LineChannelLen:              NewCompositeHistogram(registry.NewHistogram("linesToMatch"), lineChannelLen),
+		LineChannelLen:              NewCompositeHistogram(registry.NewHistogram("linesToMatch"), linesToMatch),
 	}, nil
 }
 
