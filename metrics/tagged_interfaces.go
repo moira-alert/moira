@@ -16,7 +16,7 @@ type Attributes []Attribute
 // MetricsContext provides methods to create a metric registry and shutdown the context.
 type MetricsContext interface {
 	// CreateRegistry creates and returns a new MetricRegistry.
-	CreateRegistry() MetricRegistry
+	CreateRegistry(attributes ...Attribute) (MetricRegistry, error)
 	// Shutdown gracefully shuts down the metrics context.
 	Shutdown(ctx context.Context) error
 }
