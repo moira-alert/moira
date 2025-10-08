@@ -75,8 +75,8 @@ func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistr
 func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry, clusterKey moira.ClusterKey) (*CheckMetrics, error) {
 	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId.String()
 	metricRegistrySourced := attributedRegistry.WithAttributes(Attributes{
-		Attribute{"metric_source", source},
-		Attribute{"metric_source_id", id},
+		Attribute{"metric.source.name", source},
+		Attribute{"metric.source.id", id},
 	})
 
 	checkError, err := metricRegistrySourced.NewGauge("triggers.check.errors.count")
