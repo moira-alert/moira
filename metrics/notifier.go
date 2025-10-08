@@ -33,42 +33,42 @@ type NotifierMetrics struct {
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
 func ConfigureNotifierMetrics(registry Registry, attributedRegistry MetricRegistry, prefix string) (*NotifierMetrics, error) {
-	subsMalformed, err := attributedRegistry.NewGauge("malformed_subs")
+	subsMalformed, err := attributedRegistry.NewGauge("subs.malformed")
 	if err != nil {
 		return nil, err
 	}
 
-	eventsReceived, err := attributedRegistry.NewGauge("received_events")
+	eventsMalformed, err := attributedRegistry.NewGauge("events.malformed")
 	if err != nil {
 		return nil, err
 	}
 
-	eventsMalformed, err := attributedRegistry.NewGauge("malformed_events")
+	eventsReceived, err := attributedRegistry.NewGauge("events.received")
 	if err != nil {
 		return nil, err
 	}
 
-	eventsProcessingFailed, err := attributedRegistry.NewGauge("failed_events_processing")
+	eventsProcessingFailed, err := attributedRegistry.NewGauge("events.failed_processing")
 	if err != nil {
 		return nil, err
 	}
 
-	sendingFailed, err := attributedRegistry.NewGauge("failed_sending")
+	sendingFailed, err := attributedRegistry.NewGauge("notifications.sending.failed")
 	if err != nil {
 		return nil, err
 	}
 
-	plotsBuildDurationMs, err := attributedRegistry.NewHistogram("plots_build_duration_ms")
+	plotsBuildDurationMs, err := attributedRegistry.NewHistogram("plots.build.duration_ms")
 	if err != nil {
 		return nil, err
 	}
 
-	plotsEvaluateTriggerDurationMs, err := attributedRegistry.NewHistogram("plots_evaluate_trigger_duration_ms")
+	plotsEvaluateTriggerDurationMs, err := attributedRegistry.NewHistogram("plots.evaluate_trigger.duration_ms")
 	if err != nil {
 		return nil, err
 	}
 
-	fetchNotificationsDurationMs, err := attributedRegistry.NewHistogram("fetch_notifications_duration_ms")
+	fetchNotificationsDurationMs, err := attributedRegistry.NewHistogram("notifications.fetch.duration_ms")
 	if err != nil {
 		return nil, err
 	}
