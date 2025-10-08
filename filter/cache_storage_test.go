@@ -222,7 +222,7 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &matchedMetric)
 		require.Len(t, buffer, 1)
 		require.Equal(t, 60, matchedMetric.Retention)
-		require.Equal(t, 60, matchedMetric.RetentionTimestamp)
+		require.Equal(t, int64(60), matchedMetric.RetentionTimestamp)
 	})
 
 	t.Run("Suf metric, should 1200sec", func(t *testing.T) {
@@ -232,7 +232,7 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &metr)
 		require.Len(t, buffer, 1)
 		require.Equal(t, 1200, metr.Retention)
-		require.Equal(t, 1200, metr.RetentionTimestamp)
+		require.Equal(t, int64(1200), metr.RetentionTimestamp)
 	})
 
 	t.Run("Default metric, should 120sec", func(t *testing.T) {
@@ -242,7 +242,7 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &metr)
 		require.Len(t, buffer, 1)
 		require.Equal(t, 120, metr.Retention)
-		require.Equal(t, 120, metr.RetentionTimestamp)
+		require.Equal(t, int64(120), metr.RetentionTimestamp)
 	})
 
 	t.Run("Tagged metrics", func(t *testing.T) {
@@ -258,7 +258,7 @@ func TestRetentions(t *testing.T) {
 			storage.EnrichMatchedMetric(buffer, &matchedMetric)
 			require.Len(t, buffer, 1)
 			require.Equal(t, 10, matchedMetric.Retention)
-			require.Equal(t, 150, matchedMetric.RetentionTimestamp)
+			require.Equal(t, int64(150), matchedMetric.RetentionTimestamp)
 		})
 
 		t.Run("should be default 120sec", func(t *testing.T) {
@@ -273,7 +273,7 @@ func TestRetentions(t *testing.T) {
 			storage.EnrichMatchedMetric(buffer, &matchedMetric)
 			require.Len(t, buffer, 1)
 			require.Equal(t, 120, matchedMetric.Retention)
-			require.Equal(t, 120, matchedMetric.RetentionTimestamp)
+			require.Equal(t, int64(120), matchedMetric.RetentionTimestamp)
 		})
 	})
 }
