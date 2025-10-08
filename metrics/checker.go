@@ -79,22 +79,22 @@ func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry,
 		Attribute{"metric_source_id", id},
 	})
 
-	checkError, err := metricRegistrySourced.NewGauge("check_errors")
+	checkError, err := metricRegistrySourced.NewGauge("triggers.check.errors.count")
 	if err != nil {
 		return nil, err
 	}
 
-	handleError, err := metricRegistrySourced.NewGauge("handle_errors")
+	handleError, err := metricRegistrySourced.NewGauge("triggers.handle.errors.count")
 	if err != nil {
 		return nil, err
 	}
 
-	triggersCheckTime, err := metricRegistrySourced.NewTimer("triggers")
+	triggersCheckTime, err := metricRegistrySourced.NewTimer("triggers.check.time")
 	if err != nil {
 		return nil, err
 	}
 
-	triggersToCheckCount, err := metricRegistrySourced.NewHistogram("triggersToCheck")
+	triggersToCheckCount, err := metricRegistrySourced.NewHistogram("triggers.to_check.count")
 	if err != nil {
 		return nil, err
 	}
