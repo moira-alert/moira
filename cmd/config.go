@@ -236,7 +236,7 @@ type TelemetryConfig struct {
 	Prometheus PrometheusConfig `yaml:"prometheus"`
 	// Otel holds OpenTelemetry backend configuration.
 	Otel OtelConfig `yaml:"otel"`
-	// DefaultAttributes are default attributes for telemetry events.
+	// DefaultAttributes are the default attributes for telemetry events.
 	DefaultAttributes map[string]string `yaml:"attributes"`
 	// RuntimeStats enables runtime statistics collection.
 	RuntimeStats bool `yaml:"runtime_stats"`
