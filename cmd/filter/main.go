@@ -91,7 +91,7 @@ func main() {
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Can not configure filter telemetry")
+			Msg("Failed to configure filter telemetry")
 	}
 
 	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Filter, moira.ClusterList{})
