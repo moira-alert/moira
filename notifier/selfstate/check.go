@@ -403,6 +403,8 @@ func (selfCheck *SelfCheckWorker) doesSubscriptionContainsFailedTriggers(subscri
 		return false, nil
 	}
 
+	selfCheck.Logger.Info().Msg(fmt.Sprintf("Checking for subscription [%s]", subscription.ID))
+
 	triggerIDs := make(map[string]bool)
 
 	for _, tag := range subscription.Tags {
@@ -423,11 +425,13 @@ func (selfCheck *SelfCheckWorker) doesSubscriptionContainsFailedTriggers(subscri
 		}
 
 		if checkData.State == moira.StateERROR || checkData.State == moira.StateNODATA {
+			selfCheck.Logger.Info().Msg(fmt.Sprintf("Subscription [%s] contains trigger [%s] with checkData state [%s]", subscription.ID, triggerID, checkData.State))
 			return true, nil
 		}
 
 		for _, metricState := range checkData.Metrics {
 			if metricState.State == moira.StateERROR || metricState.State == moira.StateNODATA {
+				selfCheck.Logger.Info().Msg(fmt.Sprintf("Subscription [%s] contains trigger [%s] with bad metric state [%s]", subscription.ID, triggerID, metricState.State))
 				return true, nil
 			}
 		}
