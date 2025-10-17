@@ -61,15 +61,24 @@ func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry
 	}
 
 	return &FilterMetrics{
-		TotalMetricsReceived:        NewCompositeCounter(registry.NewCounter("received", "total"), totalMetricsReceived),
-		ValidMetricsReceived:        NewCompositeCounter(registry.NewCounter("received", "valid"), validMetricsReceived),
-		MatchingMetricsReceived:     NewCompositeCounter(registry.NewCounter("received", "matching"), matchingMetricsReceived),
+		// Deprecated: only received.total metric of attributedRegistry should be used.
+		TotalMetricsReceived: NewCompositeCounter(registry.NewCounter("received", "total"), totalMetricsReceived),
+		// Deprecated: only received.valid metric of attributedRegistry should be used.
+		ValidMetricsReceived: NewCompositeCounter(registry.NewCounter("received", "valid"), validMetricsReceived),
+		// Deprecated: only received.matching metric of attributedRegistry should be used.
+		MatchingMetricsReceived: NewCompositeCounter(registry.NewCounter("received", "matching"), matchingMetricsReceived),
+		// Deprecated: only pattern_matching_cache.evicted metric of attributedRegistry should be used.
 		PatternMatchingCacheEvicted: NewCompositeMeter(registry.NewMeter("patternMatchingCache", "evicted"), patternMatchingCacheEvicted),
-		MatchingTimer:               NewCompositeTimer(registry.NewTimer("time", "match"), matchingTimer),
-		SavingTimer:                 NewCompositeTimer(registry.NewTimer("time", "save"), savingTimer),
-		BuildTreeTimer:              NewCompositeTimer(registry.NewTimer("time", "buildtree"), buildTreeTimer),
-		MetricChannelLen:            NewCompositeHistogram(registry.NewHistogram("metricsToSave"), metricChannelLen),
-		LineChannelLen:              NewCompositeHistogram(registry.NewHistogram("linesToMatch"), linesToMatch),
+		// Deprecated: only time.match metric of attributedRegistry should be used.
+		MatchingTimer: NewCompositeTimer(registry.NewTimer("time", "match"), matchingTimer),
+		// Deprecated: only time.save metric of attributedRegistry should be used.
+		SavingTimer: NewCompositeTimer(registry.NewTimer("time", "save"), savingTimer),
+		// Deprecated: only time.buildtree metric of attributedRegistry should be used.
+		BuildTreeTimer: NewCompositeTimer(registry.NewTimer("time", "buildtree"), buildTreeTimer),
+		// Deprecated: only channel.metric.to_save.len metric of attributedRegistry should be used.
+		MetricChannelLen: NewCompositeHistogram(registry.NewHistogram("metricsToSave"), metricChannelLen),
+		// Deprecated: only channel.lines.to_match.len metric of attributedRegistry should be used.
+		LineChannelLen: NewCompositeHistogram(registry.NewHistogram("linesToMatch"), linesToMatch),
 	}, nil
 }
 
