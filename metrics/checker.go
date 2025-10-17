@@ -100,9 +100,13 @@ func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry,
 	}
 
 	return &CheckMetrics{
-		CheckError:           NewCompositeMeter(registry.NewMeter(source, id, "errors", "check"), checkError),
-		HandleError:          NewCompositeMeter(registry.NewMeter(source, id, "errors", "handle"), handleError),
-		TriggersCheckTime:    NewCompositeTimer(registry.NewTimer(source, id, "triggers"), triggersCheckTime),
+		// Deprecated: only triggers.check.errors.count metric of metricRegistrySourced should be used.
+		CheckError: NewCompositeMeter(registry.NewMeter(source, id, "errors", "check"), checkError),
+		// Deprecated: only triggers.handle.errors.count metric of metricRegistrySourced should be used.
+		HandleError: NewCompositeMeter(registry.NewMeter(source, id, "errors", "handle"), handleError),
+		// Deprecated: only triggers.check.time metric of metricRegistrySourced should be used.
+		TriggersCheckTime: NewCompositeTimer(registry.NewTimer(source, id, "triggers"), triggersCheckTime),
+		// Deprecated: only triggers.to_check_count metric of metricRegistrySourced should be used.
 		TriggersToCheckCount: NewCompositeHistogram(registry.NewHistogram(source, id, "triggersToCheck"), triggersToCheckCount),
 	}, nil
 }
