@@ -1,9 +1,11 @@
 package index
 
 import (
+	"context"
 	"testing"
 
 	"github.com/moira-alert/moira/metrics"
+	"github.com/stretchr/testify/require"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -19,8 +21,10 @@ func TestIndex_SearchTriggers(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
+	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
 
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
@@ -385,8 +389,10 @@ func TestIndex_SearchErrors(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
+	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
 
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
