@@ -224,7 +224,7 @@ type LoggerConfig struct {
 
 // TelemetryConfig is settings for listener, pprof, graphite.
 type TelemetryConfig struct {
-	// Listen is the address to listen for telemetry.
+	// Listen is the address to listen for telemetry via prometheus and pprof.
 	Listen string `yaml:"listen"`
 	// Pprof holds profiler configuration.
 	Pprof ProfilerConfig `yaml:"pprof"`
