@@ -168,14 +168,21 @@ func configurePprofServer(serverMux *http.ServeMux) {
 	serverMux.HandleFunc("/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 }
 
+const (
+	hostnameTemplate string = "{hostname}"
+)
+
+func hostnameTemplateReplacer() string {
+	name, err := os.Hostname()
+	if err != nil {
+		return hostnameTemplate
+	}
+
+	return name
+}
+
 var templateItems map[string]string = map[string]string{
-	"{hostname}": func() string {
-		name, err := os.Hostname()
-		if err != nil {
-			return "{hostname}"
-		}
-		return name
-	}(),
+	hostnameTemplate: hostnameTemplateReplacer(),
 }
 
 func replaceStaticTemplate(input string) string {
