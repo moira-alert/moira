@@ -19,8 +19,8 @@ func ErrorMessageForSource(source moira.ClusterKey) string {
 
 // NotifierState represents state of notifier: <OK|ERROR>.
 type NotifierState struct {
-	Actor   string `json:"actor" example:"AUTO"`
-	State   string `json:"state" example:"ERROR"`
+	Actor   string `json:"actor" binding:"required" example:"AUTO"`
+	State   string `json:"state" binding:"required" example:"ERROR"`
 	Message string `json:"message,omitempty" example:"Moira has been turned off for maintenance"`
 }
 
@@ -44,14 +44,14 @@ func (state *NotifierState) Bind(r *http.Request) error {
 
 // NotifierState represents state of notifier for specific metric source: <OK|ERROR>.
 type NotifierStateForSource struct {
-	TriggerSource moira.TriggerSource `json:"trigger_source"`
-	ClusterId     moira.ClusterId     `json:"cluster_id"`
+	TriggerSource moira.TriggerSource `json:"trigger_source" binding:"required"`
+	ClusterId     moira.ClusterId     `json:"cluster_id" binding:"required"`
 	NotifierState
 }
 
 // NotifierState represents state of notifier for all metric sources: <OK|ERROR>.
 type NotifierStatesForSources struct {
-	Sources []NotifierStateForSource `json:"sources"`
+	Sources []NotifierStateForSource `json:"sources" binding:"required"`
 }
 
 func (*NotifierStatesForSources) Render(w http.ResponseWriter, r *http.Request) error {

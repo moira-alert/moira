@@ -42,10 +42,19 @@ func contactNotificationKeyWithID(contactID string) string {
 // GetNotificationsHistoryByContactID returns `size` (or all if `size` is -1) notification events with timestamp between `from` and `to`.
 // The offset for fetching events may be changed by using `page` parameter, it is calculated as page * size.
 func (connector *DbConnector) GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64,
-) ([]*moira.NotificationEventHistoryItem, error) {
+) ([]*moira.NotificationEventHistoryItem, int64, error) {
 	c := *connector.client
 
-	notificationStings, err := c.ZRangeByScore(
+	pipe := c.TxPipeline()
+
+	countCmd := pipe.ZCount(
+		connector.context,
+		contactNotificationKeyWithID(contactID),
+		strconv.FormatInt(from, 10),
+		strconv.FormatInt(to, 10),
+	)
+
+	rangeCmd := pipe.ZRangeByScore(
 		connector.context,
 		contactNotificationKeyWithID(contactID),
 		&redis.ZRangeBy{
@@ -53,23 +62,29 @@ func (connector *DbConnector) GetNotificationsHistoryByContactID(contactID strin
 			Max:    strconv.FormatInt(to, 10),
 			Offset: page * size,
 			Count:  size,
-		}).Result()
+		},
+	)
+
+	_, err := pipe.Exec(connector.context)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	notifications := make([]*moira.NotificationEventHistoryItem, 0, len(notificationStings))
+	total := countCmd.Val()
+	notificationStrings := rangeCmd.Val()
 
-	for _, notification := range notificationStings {
+	notifications := make([]*moira.NotificationEventHistoryItem, 0, len(notificationStrings))
+
+	for _, notification := range notificationStrings {
 		notificationObj, err := GetNotificationStruct(notification)
 		if err != nil {
-			return notifications, err
+			return notifications, total, err
 		}
 
 		notifications = append(notifications, &notificationObj)
 	}
 
-	return notifications, nil
+	return notifications, total, nil
 }
 
 // PushContactNotificationToHistory converts ScheduledNotification to NotificationEventHistoryItem and saves it,

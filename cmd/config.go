@@ -224,7 +224,7 @@ type LoggerConfig struct {
 
 // TelemetryConfig is settings for listener, pprof, graphite.
 type TelemetryConfig struct {
-	// Listen is the address to listen for telemetry.
+	// Listen is the address to listen for telemetry via prometheus and pprof.
 	Listen string `yaml:"listen"`
 	// Pprof holds profiler configuration.
 	Pprof ProfilerConfig `yaml:"pprof"`
@@ -236,7 +236,7 @@ type TelemetryConfig struct {
 	Prometheus PrometheusConfig `yaml:"prometheus"`
 	// Otel holds OpenTelemetry backend configuration.
 	Otel OtelConfig `yaml:"otel"`
-	// DefaultAttributes are default attributes for telemetry events.
+	// DefaultAttributes are the default attributes for telemetry events.
 	DefaultAttributes map[string]string `yaml:"attributes"`
 	// RuntimeStats enables runtime statistics collection.
 	RuntimeStats bool `yaml:"runtime_stats"`

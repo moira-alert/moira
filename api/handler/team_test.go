@@ -113,7 +113,7 @@ func Test_searchTeams(t *testing.T) {
 			testRequest.Header.Add("content-type", "application/json")
 
 			type errorResponse struct {
-				StatusText string `json:"status"`
+				StatusText string `json:"status" binding:"required"`
 				ErrorText  string `json:"error,omitempty"`
 			}
 
