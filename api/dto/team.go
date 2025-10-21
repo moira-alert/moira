@@ -15,8 +15,8 @@ var errEmptyTeamName = errors.New("team name cannot be empty")
 
 // TeamModel is a structure that represents team entity in HTTP transfer.
 type TeamModel struct {
-	ID          string `json:"id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
-	Name        string `json:"name" example:"Infrastructure Team"`
+	ID          string `json:"id" binding:"required" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
+	Name        string `json:"name" binding:"required" example:"Infrastructure Team"`
 	Description string `json:"description" example:"Team that holds all members of infrastructure division"`
 }
 
@@ -64,7 +64,7 @@ func (t TeamModel) ToMoiraTeam() moira.Team {
 
 // SaveTeamResponse is a structure to return team creation result in HTTP response.
 type SaveTeamResponse struct {
-	ID string `json:"id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
+	ID string `json:"id" binding:"required" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
 }
 
 // Render is a function that implements chi Renderer interface for SaveTeamResponse.
@@ -74,7 +74,7 @@ func (SaveTeamResponse) Render(w http.ResponseWriter, r *http.Request) error {
 
 // UserTeams is a structure that represents a set of teams of user.
 type UserTeams struct {
-	Teams []TeamModel `json:"teams"`
+	Teams []TeamModel `json:"teams" binding:"required"`
 }
 
 // Render is a function that implements chi Renderer interface for UserTeams.
@@ -84,7 +84,7 @@ func (UserTeams) Render(w http.ResponseWriter, r *http.Request) error {
 
 // TeamMembers is a structure that represents a team members in HTTP transfer.
 type TeamMembers struct {
-	Usernames []string `json:"usernames" example:"anonymous"`
+	Usernames []string `json:"usernames" binding:"required" example:"anonymous"`
 }
 
 // Bind is a method that implements Binder interface from chi and checks that validity of data in request.
@@ -103,9 +103,9 @@ func (TeamMembers) Render(w http.ResponseWriter, r *http.Request) error {
 
 // TeamSettings is a structure that contains info about team: contacts and subscriptions.
 type TeamSettings struct {
-	TeamID        string                   `json:"team_id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
-	Contacts      []TeamContactWithScore   `json:"contacts"`
-	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
+	TeamID        string                   `json:"team_id" binding:"required" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
+	Contacts      []TeamContactWithScore   `json:"contacts" binding:"required"`
+	Subscriptions []moira.SubscriptionData `json:"subscriptions" binding:"required"`
 }
 
 // Render is a function that implements chi Renderer interface for TeamSettings.
@@ -115,10 +115,10 @@ func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
 
 // TODO: Replace with dto.Contact after the next release.
 type TeamContact struct {
-	Type   string `json:"type" example:"mail"`
+	Type   string `json:"type" binding:"required" example:"mail"`
 	Name   string `json:"name,omitempty" example:"Mail Alerts"`
-	Value  string `json:"value" example:"devops@example.com"`
-	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	Value  string `json:"value" binding:"required" example:"devops@example.com"`
+	ID     string `json:"id" binding:"required" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
 	// This field is deprecated
@@ -152,10 +152,10 @@ func (TeamContact) Render(w http.ResponseWriter, r *http.Request) error {
 
 // TeamsList is a structure that represents a list of existing teams in db.
 type TeamsList struct {
-	List  []TeamModel `json:"list"`
-	Page  int64       `json:"page" example:"0" format:"int64"`
-	Size  int64       `json:"size" example:"100" format:"int64"`
-	Total int64       `json:"total" example:"10" format:"int64"`
+	List  []TeamModel `json:"list" binding:"required"`
+	Page  int64       `json:"page" binding:"required" example:"0" format:"int64"`
+	Size  int64       `json:"size" binding:"required" example:"100" format:"int64"`
+	Total int64       `json:"total" binding:"required" example:"10" format:"int64"`
 }
 
 // Render is a function that implements chi Renderer interface for TeamsList.

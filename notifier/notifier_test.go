@@ -8,13 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
-	. "github.com/smartystreets/goconvey/convey"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
@@ -55,14 +55,14 @@ var (
 )
 
 func TestGetMetricNames(t *testing.T) {
-	Convey("Test non-empty notification package", t, func() {
-		Convey("Test package with trigger events", func() {
+	t.Run("Test non-empty notification package", func(t *testing.T) {
+		t.Run("Test package with trigger events", func(t *testing.T) {
 			expected := []string{"metricName1", "metricName2", "metricName3", "metricName5"}
 			actual := notificationsPackage.GetMetricNames()
-			So(actual, ShouldResemble, expected)
+			require.Equal(t, expected, actual)
 		})
 
-		Convey("Test package with no trigger events", func() {
+		t.Run("Test package with no trigger events", func(t *testing.T) {
 			pkg := NotificationPackage{}
 
 			for _, event := range notificationsPackage.Events {
@@ -75,29 +75,29 @@ func TestGetMetricNames(t *testing.T) {
 
 			expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
 			actual := pkg.GetMetricNames()
-			So(actual, ShouldResemble, expected)
+			require.Equal(t, expected, actual)
 		})
 	})
 
-	Convey("Test empty notification package", t, func() {
+	t.Run("Test empty notification package", func(t *testing.T) {
 		emptyNotificationPackage := NotificationPackage{}
 		actual := emptyNotificationPackage.GetMetricNames()
-		So(actual, ShouldHaveLength, 0)
+		require.Empty(t, actual)
 	})
 }
 
 func TestGetWindow(t *testing.T) {
-	Convey("Test non-empty notification package", t, func() {
+	t.Run("Test non-empty notification package", func(t *testing.T) {
 		from, to, err := notificationsPackage.GetWindow()
-		So(err, ShouldBeNil)
-		So(from, ShouldEqual, 11)
-		So(to, ShouldEqual, 179)
+		require.NoError(t, err)
+		require.Equal(t, int64(11), from)
+		require.Equal(t, int64(179), to)
 	})
 
-	Convey("Test empty notification package", t, func() {
+	t.Run("Test empty notification package", func(t *testing.T) {
 		emptyNotificationPackage := NotificationPackage{}
 		_, _, err := emptyNotificationPackage.GetWindow()
-		So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
+		require.Equal(t, fmt.Errorf("not enough data to resolve package window"), err)
 	})
 }
 
@@ -472,9 +472,9 @@ func configureNotifier(t *testing.T, config Config) {
 
 	err = standardNotifier.RegisterSender(senderSettings, sender)
 
-	Convey("Should return one sender", t, func() {
-		So(err, ShouldBeNil)
-		So(standardNotifier.GetSenders(), ShouldResemble, map[string]bool{"test_contact_type": true})
+	t.Run("Should return one sender", func(t *testing.T) {
+		require.NoError(t, err)
+		require.Equal(t, map[string]bool{"test_contact_type": true}, standardNotifier.GetSenders())
 	})
 }
 
