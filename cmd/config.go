@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source/retries"
@@ -169,6 +170,40 @@ type GraphiteConfig struct {
 	Interval string `yaml:"interval"`
 }
 
+// PrometheusConfig holds configuration for Prometheus metrics.
+type PrometheusConfig struct {
+	// Enabled determines if Prometheus metrics are enabled.
+	Enabled bool `yaml:"enabled"`
+	// MetricsPath specifies the HTTP path for metrics exposure.
+	MetricsPath string `yaml:"metrics_path"`
+}
+
+// OtelTransportProtocol defines the transport protocol for OpenTelemetry.
+type OtelTransportProtocol string
+
+const (
+	// Grpc specifies gRPC transport protocol for OpenTelemetry.
+	Grpc OtelTransportProtocol = "grpc"
+	// Http specifies HTTP transport protocol for OpenTelemetry.
+	Http OtelTransportProtocol = "http"
+)
+
+// OtelConfig holds configuration for OpenTelemetry exporter.
+type OtelConfig struct {
+	// Enabled determines if OpenTelemetry exporter is enabled.
+	Enabled bool `yaml:"enabled"`
+	// Protocol specifies the transport protocol for OpenTelemetry.
+	Protocol OtelTransportProtocol `yaml:"protocol"`
+	// CollectorURI is the URI of the OpenTelemetry collector.
+	CollectorURI string `yaml:"collector_uri"`
+	// Insecure enables insecure connection to the collector.
+	Insecure bool `yaml:"insecure"`
+	// AdditionalHeaders are extra headers sent to the collector.
+	AdditionalHeaders map[string]string `yaml:"headers"`
+	// PushInterval is the interval for pushing metrics.
+	PushInterval time.Duration `yaml:"push_interval"`
+}
+
 // GetSettings returns graphite metrics config parsed from moira config files.
 func (graphiteConfig *GraphiteConfig) GetSettings() metrics.GraphiteRegistryConfig {
 	return metrics.GraphiteRegistryConfig{
@@ -189,9 +224,22 @@ type LoggerConfig struct {
 
 // TelemetryConfig is settings for listener, pprof, graphite.
 type TelemetryConfig struct {
-	Listen   string         `yaml:"listen"`
-	Pprof    ProfilerConfig `yaml:"pprof"`
+	// Listen is the address to listen for telemetry via prometheus and pprof.
+	Listen string `yaml:"listen"`
+	// Pprof holds profiler configuration.
+	Pprof ProfilerConfig `yaml:"pprof"`
+	// UseNewMetrics toggles usage of new metrics system.
+	UseNewMetrics bool `yaml:"use_new_metrics"`
+	// Graphite holds Graphite backend configuration.
 	Graphite GraphiteConfig `yaml:"graphite"`
+	// Prometheus holds Prometheus backend configuration.
+	Prometheus PrometheusConfig `yaml:"prometheus"`
+	// Otel holds OpenTelemetry backend configuration.
+	Otel OtelConfig `yaml:"otel"`
+	// DefaultAttributes are the default attributes for telemetry events.
+	DefaultAttributes map[string]string `yaml:"attributes"`
+	// RuntimeStats enables runtime statistics collection.
+	RuntimeStats bool `yaml:"runtime_stats"`
 }
 
 // ProfilerConfig is pprof settings structure that initialises at the start of moira.
