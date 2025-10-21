@@ -8,8 +8,8 @@ import (
 
 type UserSettings struct {
 	User
-	Contacts      []ContactWithScore      `json:"contacts"`
-	Subscriptions []Subscription `json:"subscriptions"`
+	Contacts      []ContactWithScore      `json:"contacts" binding:"required"`
+	Subscriptions []Subscription `json:"subscriptions" binding:"required"`
 }
 
 func (*UserSettings) Render(w http.ResponseWriter, r *http.Request) error {
@@ -17,7 +17,7 @@ func (*UserSettings) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type User struct {
-	Login       string   `json:"login" example:"john"`
+	Login       string   `json:"login" binding:"required" example:"john"`
 	Role        api.Role `json:"role,omitempty" example:"user"`
 	AuthEnabled bool     `json:"auth_enabled,omitempty" example:"true"`
 }

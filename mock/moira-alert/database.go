@@ -611,12 +611,13 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(start, end any) *gomock.Cal
 }
 
 // GetNotificationsHistoryByContactID mocks base method.
-func (m *MockDatabase) GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*moira.NotificationEventHistoryItem, error) {
+func (m *MockDatabase) GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*moira.NotificationEventHistoryItem, int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotificationsHistoryByContactID", contactID, from, to, page, size)
 	ret0, _ := ret[0].([]*moira.NotificationEventHistoryItem)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetNotificationsHistoryByContactID indicates an expected call of GetNotificationsHistoryByContactID.
