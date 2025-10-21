@@ -103,10 +103,10 @@ var (
 )
 
 type ProblemOfTarget struct {
-	Argument    string            `json:"argument" example:"consolidateBy"`
+	Argument    string            `json:"argument" example:"consolidateBy" binding:"required"`
 	Type        typeOfProblem     `json:"type,omitempty" example:"warn" swaggertype:"string"` //nolint:govet
 	Description string            `json:"description,omitempty" example:"This function affects only visual graph representation. It is meaningless in Moira"`
-	Position    int               `json:"position" example:"0"`
+	Position    int               `json:"position" example:"0" binding:"required"`
 	Problems    []ProblemOfTarget `json:"problems,omitempty"`
 }
 
@@ -129,7 +129,7 @@ func (p *ProblemOfTarget) hasError() bool {
 }
 
 type TreeOfProblems struct {
-	SyntaxOk       bool             `json:"syntax_ok" example:"true"`
+	SyntaxOk       bool             `json:"syntax_ok" example:"true" binding:"required"`
 	TreeOfProblems *ProblemOfTarget `json:"tree_of_problems,omitempty" extensions:"x-nullable"`
 }
 
