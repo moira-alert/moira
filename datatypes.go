@@ -46,28 +46,28 @@ const (
 // NotificationEvent represents trigger state changes event.
 type NotificationEvent struct {
 	IsTriggerEvent   bool               `json:"trigger_event,omitempty" example:"true"`
-	Timestamp        int64              `json:"timestamp" example:"1590741878" format:"int64"`
-	Metric           string             `json:"metric" example:"carbon.agents.*.metricsReceived"`
+	Timestamp        int64              `json:"timestamp" binding:"required" example:"1590741878" format:"int64"`
+	Metric           string             `json:"metric" binding:"required" example:"carbon.agents.*.metricsReceived"`
 	Value            *float64           `json:"value,omitempty" example:"70" extensions:"x-nullable"`
 	Values           map[string]float64 `json:"values,omitempty"`
-	State            State              `json:"state" example:"OK"`
-	TriggerID        string             `json:"trigger_id" example:"5ff37996-8927-4cab-8987-970e80d8e0a8"`
+	State            State              `json:"state" binding:"required" example:"OK"`
+	TriggerID        string             `json:"trigger_id" binding:"required" example:"5ff37996-8927-4cab-8987-970e80d8e0a8"`
 	SubscriptionID   *string            `json:"sub_id,omitempty" extensions:"x-nullable"`
 	ContactID        string             `json:"contact_id,omitempty"`
-	OldState         State              `json:"old_state" example:"ERROR"`
+	OldState         State              `json:"old_state" binding:"required" example:"ERROR"`
 	Message          *string            `json:"msg,omitempty" extensions:"x-nullable"`
-	MessageEventInfo *EventInfo         `json:"event_message" extensions:"x-nullable"`
+	MessageEventInfo *EventInfo         `json:"event_message" binding:"required" extensions:"x-nullable"`
 }
 
 // NotificationEventHistoryItem is in use to store notifications history of channel.
 // (See database/redis/contact_notifications_history.go.
 type NotificationEventHistoryItem struct {
-	TimeStamp int64  `json:"timestamp" format:"int64"`
-	Metric    string `json:"metric"`
-	State     State  `json:"state"`
-	OldState  State  `json:"old_state"`
-	TriggerID string `json:"trigger_id"`
-	ContactID string `json:"contact_id"`
+	TimeStamp int64  `json:"timestamp" format:"int64" binding:"required"`
+	Metric    string `json:"metric" binding:"required"`
+	State     State  `json:"state" binding:"required"`
+	OldState  State  `json:"old_state" binding:"required"`
+	TriggerID string `json:"trigger_id" binding:"required"`
+	ContactID string `json:"contact_id" binding:"required"`
 }
 
 // EventInfo - a base for creating messages.
@@ -171,16 +171,16 @@ func (events NotificationEvents) ToTemplateEvents() []templating.Event {
 
 // TriggerData represents trigger object.
 type TriggerData struct {
-	ID            string        `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
-	Name          string        `json:"name" example:"Not enough disk space left"`
-	Desc          string        `json:"desc" example:"check the size of /var/log"`
-	Targets       []string      `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
-	WarnValue     float64       `json:"warn_value" example:"5000"`
-	ErrorValue    float64       `json:"error_value" example:"1000"`
-	IsRemote      bool          `json:"is_remote" example:"false"`
+	ID            string        `json:"id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Name          string        `json:"name" binding:"required" example:"Not enough disk space left"`
+	Desc          string        `json:"desc" binding:"required" example:"check the size of /var/log"`
+	Targets       []string      `json:"targets" binding:"required" example:"devOps.my_server.hdd.freespace_mbytes"`
+	WarnValue     float64       `json:"warn_value" binding:"required" example:"5000"`
+	ErrorValue    float64       `json:"error_value" binding:"required" example:"1000"`
+	IsRemote      bool          `json:"is_remote" binding:"required" example:"false"`
 	TriggerSource TriggerSource `json:"trigger_source,omitempty" example:"graphite_local"`
 	ClusterId     ClusterId     `json:"cluster_id,omitempty" example:"default"`
-	Tags          []string      `json:"__notifier_trigger_tags" example:"server,disk"`
+	Tags          []string      `json:"__notifier_trigger_tags" binding:"required" example:"server,disk"`
 }
 
 // GetTriggerSource returns trigger source associated with the trigger.
@@ -216,12 +216,12 @@ type Team struct {
 
 // ContactData represents contact object.
 type ContactData struct {
-	Type         string `json:"type" example:"mail"`
+	Type         string `json:"type" binding:"required" example:"mail"`
 	Name         string `json:"name,omitempty" example:"Mail Alerts"`
-	Value        string `json:"value" example:"devops@example.com"`
-	ID           string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
-	User         string `json:"user" example:""`
-	Team         string `json:"team"`
+	Value        string `json:"value" binding:"required" example:"devops@example.com"`
+	ID           string `json:"id" binding:"required" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User         string `json:"user" binding:"required" example:""`
+	Team         string `json:"team" binding:"required"`
 	ExtraMessage string `json:"extra_message,omitempty"`
 }
 
@@ -245,37 +245,37 @@ type ContactIDWithNotificationCount IDWithCount
 
 // SubscriptionData represents user subscription.
 type SubscriptionData struct {
-	Contacts          []string     `json:"contacts" example:"acd2db98-1659-4a2f-b227-52d71f6e3ba1"`
-	Tags              []string     `json:"tags" example:"server,cpu"`
-	Schedule          ScheduleData `json:"sched"`
-	Plotting          PlottingData `json:"plotting"`
-	ID                string       `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
-	Enabled           bool         `json:"enabled" example:"true"`
-	AnyTags           bool         `json:"any_tags" example:"false"`
+	Contacts          []string     `json:"contacts" binding:"required" example:"acd2db98-1659-4a2f-b227-52d71f6e3ba1"`
+	Tags              []string     `json:"tags" binding:"required" example:"server,cpu"`
+	Schedule          ScheduleData `json:"sched" binding:"required"`
+	Plotting          PlottingData `json:"plotting" binding:"required"`
+	ID                string       `json:"id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Enabled           bool         `json:"enabled" binding:"required" example:"true"`
+	AnyTags           bool         `json:"any_tags" binding:"required" example:"false"`
 	IgnoreWarnings    bool         `json:"ignore_warnings,omitempty" example:"false"`
 	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty" example:"false"`
-	ThrottlingEnabled bool         `json:"throttling" example:"false"`
-	User              string       `json:"user" example:""`
-	TeamID            string       `json:"team_id" example:"324516ed-4924-4154-a62c-eb124234fce"`
+	ThrottlingEnabled bool         `json:"throttling" binding:"required" example:"false"`
+	User              string       `json:"user" binding:"required" example:""`
+	TeamID            string       `json:"team_id" binding:"required" example:"324516ed-4924-4154-a62c-eb124234fce"`
 }
 
 // PlottingData represents plotting settings.
 type PlottingData struct {
-	Enabled bool   `json:"enabled" example:"true"`
-	Theme   string `json:"theme" example:"dark"`
+	Enabled bool   `json:"enabled" binding:"required" example:"true"`
+	Theme   string `json:"theme" binding:"required" example:"dark"`
 }
 
 // ScheduleData represents subscription schedule.
 type ScheduleData struct {
-	Days           []ScheduleDataDay `json:"days" validate:"dive"`
-	TimezoneOffset int64             `json:"tzOffset" example:"-60" format:"int64"`
-	StartOffset    int64             `json:"startOffset" example:"0" format:"int64"`
-	EndOffset      int64             `json:"endOffset" example:"1439" format:"int64"`
+	Days           []ScheduleDataDay `json:"days" binding:"required" validate:"dive"`
+	TimezoneOffset int64             `json:"tzOffset" binding:"required" example:"-60" format:"int64"`
+	StartOffset    int64             `json:"startOffset" binding:"required" example:"0" format:"int64"`
+	EndOffset      int64             `json:"endOffset" binding:"required" example:"1439" format:"int64"`
 }
 
 // ScheduleDataDay represents week day of schedule.
 type ScheduleDataDay struct {
-	Enabled bool    `json:"enabled" example:"true"`
+	Enabled bool    `json:"enabled" binding:"required" example:"true"`
 	Name    DayName `json:"name,omitempty" example:"Mon" swaggertype:"string" validate:"oneof=Mon Tue Wed Thu Fri Sat Sun"`
 }
 
@@ -332,13 +332,13 @@ func NewDefaultScheduleData() *ScheduleData {
 
 // ScheduledNotification represent notification object.
 type ScheduledNotification struct {
-	Event     NotificationEvent `json:"event"`
-	Trigger   TriggerData       `json:"trigger"`
-	Contact   ContactData       `json:"contact"`
-	Plotting  PlottingData      `json:"plotting"`
-	Throttled bool              `json:"throttled" example:"false"`
-	SendFail  int               `json:"send_fail" example:"0"`
-	Timestamp int64             `json:"timestamp" example:"1594471927" format:"int64"`
+	Event     NotificationEvent `json:"event" binding:"required"`
+	Trigger   TriggerData       `json:"trigger" binding:"required"`
+	Contact   ContactData       `json:"contact" binding:"required"`
+	Plotting  PlottingData      `json:"plotting" binding:"required"`
+	Throttled bool              `json:"throttled" binding:"required" example:"false"`
+	SendFail  int               `json:"send_fail" binding:"required" example:"0"`
+	Timestamp int64             `json:"timestamp" binding:"required" example:"1594471927" format:"int64"`
 	CreatedAt int64             `json:"created_at,omitempty" example:"1594471900" format:"int64"`
 }
 
@@ -404,8 +404,8 @@ type MetricNameAndTimestamp struct {
 // MetricValue represents metric data.
 type MetricValue struct {
 	RetentionTimestamp int64   `json:"step,omitempty" format:"int64"`
-	Timestamp          int64   `json:"ts" format:"int64"`
-	Value              float64 `json:"value"`
+	Timestamp          int64   `json:"ts" format:"int64" binding:"required"`
+	Value              float64 `json:"value" binding:"required"`
 }
 
 const (
@@ -419,28 +419,28 @@ const (
 
 // Trigger represents trigger data object.
 type Trigger struct {
-	ID               string          `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
-	Name             string          `json:"name" example:"Not enough disk space left"`
+	ID               string          `json:"id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Name             string          `json:"name" binding:"required" example:"Not enough disk space left"`
 	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
-	Targets          []string        `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
-	WarnValue        *float64        `json:"warn_value" example:"5000" extensions:"x-nullable"`
-	ErrorValue       *float64        `json:"error_value" example:"1000" extensions:"x-nullable"`
-	TriggerType      string          `json:"trigger_type" example:"rising"`
-	Tags             []string        `json:"tags" example:"server,disk"`
+	Targets          []string        `json:"targets" binding:"required" example:"devOps.my_server.hdd.freespace_mbytes"`
+	WarnValue        *float64        `json:"warn_value" binding:"required" example:"5000" extensions:"x-nullable"`
+	ErrorValue       *float64        `json:"error_value" binding:"required" example:"1000" extensions:"x-nullable"`
+	TriggerType      string          `json:"trigger_type" binding:"required" example:"rising"`
+	Tags             []string        `json:"tags" binding:"required" example:"server,disk"`
 	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
 	TTL              int64           `json:"ttl,omitempty" example:"600" format:"int64"`
 	Schedule         *ScheduleData   `json:"sched,omitempty" extensions:"x-nullable"`
 	Expression       *string         `json:"expression,omitempty" example:"" extensions:"x-nullable"`
 	PythonExpression *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
-	Patterns         []string        `json:"patterns" example:""`
+	Patterns         []string        `json:"patterns" binding:"required" example:""`
 	TriggerSource    TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
 	ClusterId        ClusterId       `json:"cluster_id,omitempty" example:"default"`
-	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
-	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
-	CreatedAt        *int64          `json:"created_at" format:"int64" extensions:"x-nullable"`
-	UpdatedAt        *int64          `json:"updated_at" format:"int64" extensions:"x-nullable"`
-	CreatedBy        string          `json:"created_by"`
-	UpdatedBy        string          `json:"updated_by"`
+	MuteNewMetrics   bool            `json:"mute_new_metrics" binding:"required" example:"false"`
+	AloneMetrics     map[string]bool `json:"alone_metrics" binding:"required" example:"t1:true"`
+	CreatedAt        *int64          `json:"created_at" binding:"required" format:"int64" extensions:"x-nullable"`
+	UpdatedAt        *int64          `json:"updated_at" binding:"required" format:"int64" extensions:"x-nullable"`
+	CreatedBy        string          `json:"created_by" binding:"required"`
+	UpdatedBy        string          `json:"updated_by" binding:"required"`
 }
 
 const (
@@ -558,9 +558,9 @@ type ClusterList []ClusterKey
 // TriggerCheck represents trigger data with last check data and check timestamp.
 type TriggerCheck struct {
 	Trigger
-	Throttling int64             `json:"throttling" example:"0" format:"int64"`
-	LastCheck  CheckData         `json:"last_check"`
-	Highlights map[string]string `json:"highlights"`
+	Throttling int64             `json:"throttling" binding:"required" example:"0" format:"int64"`
+	LastCheck  CheckData         `json:"last_check" binding:"required"`
+	Highlights map[string]string `json:"highlights" binding:"required"`
 }
 
 // SearchOptions represents the options that can be selected when searching triggers.
@@ -585,20 +585,20 @@ type MaintenanceCheck interface {
 
 // CheckData represents last trigger check data.
 type CheckData struct {
-	Metrics map[string]MetricState `json:"metrics"`
+	Metrics map[string]MetricState `json:"metrics" binding:"required"`
 	// MetricsToTargetRelation is a map that holds relation between metric names that was alone during last
 	// check and targets that fetched this metric
 	//	{"t1": "metric.name.1", "t2": "metric.name.2"}
-	MetricsToTargetRelation map[string]string `json:"metrics_to_target_relation" example:"t1:metric.name.1,t2:metric.name.2"`
-	Score                   int64             `json:"score" example:"100" format:"int64"`
-	State                   State             `json:"state" example:"OK"`
+	MetricsToTargetRelation map[string]string `json:"metrics_to_target_relation" binding:"required" example:"t1:metric.name.1,t2:metric.name.2"`
+	Score                   int64             `json:"score" binding:"required" example:"100" format:"int64"`
+	State                   State             `json:"state" binding:"required" example:"OK"`
 	Maintenance             int64             `json:"maintenance,omitempty" example:"0" format:"int64"`
-	MaintenanceInfo         MaintenanceInfo   `json:"maintenance_info"`
+	MaintenanceInfo         MaintenanceInfo   `json:"maintenance_info" binding:"required"`
 	// Timestamp - time, which means when the checker last checked this trigger, this value stops updating if the trigger does not receive metrics
 	Timestamp      int64 `json:"timestamp,omitempty" example:"1590741916" format:"int64"`
 	EventTimestamp int64 `json:"event_timestamp,omitempty" example:"1590741878" format:"int64"`
 	// LastSuccessfulCheckTimestamp - time of the last check of the trigger, during which there were no errors
-	LastSuccessfulCheckTimestamp int64  `json:"last_successful_check_timestamp" example:"1590741916" format:"int64"`
+	LastSuccessfulCheckTimestamp int64  `json:"last_successful_check_timestamp" binding:"required" example:"1590741916" format:"int64"`
 	Suppressed                   bool   `json:"suppressed,omitempty" example:"true"`
 	SuppressedState              State  `json:"suppressed_state,omitempty"`
 	Message                      string `json:"msg,omitempty"`
@@ -646,15 +646,15 @@ func (checkData *CheckData) IsMetricOnMaintenance(metric string) bool {
 
 // MetricState represents metric state data for given timestamp.
 type MetricState struct {
-	EventTimestamp  int64              `json:"event_timestamp" example:"1590741878" format:"int64"`
-	State           State              `json:"state" example:"OK"`
-	Suppressed      bool               `json:"suppressed" example:"false"`
+	EventTimestamp  int64              `json:"event_timestamp" binding:"required" example:"1590741878" format:"int64"`
+	State           State              `json:"state" binding:"required" example:"OK"`
+	Suppressed      bool               `json:"suppressed" binding:"required" example:"false"`
 	SuppressedState State              `json:"suppressed_state,omitempty"`
-	Timestamp       int64              `json:"timestamp" example:"1590741878" format:"int64"`
+	Timestamp       int64              `json:"timestamp" binding:"required" example:"1590741878" format:"int64"`
 	Value           *float64           `json:"value,omitempty" example:"70" extensions:"x-nullable"`
 	Values          map[string]float64 `json:"values,omitempty"`
 	Maintenance     int64              `json:"maintenance,omitempty" example:"0" format:"int64"`
-	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
+	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info" binding:"required"`
 	// DeletedButKept controls whether the metric is shown to the user if the trigger has ttlState = Del
 	// and the metric is in Maintenance. The metric remains in the database
 	DeletedButKept bool `json:"deleted_but_kept,omitempty" example:"false"`
@@ -674,10 +674,10 @@ func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 
 // MaintenanceInfo represents user and time set/unset maintenance.
 type MaintenanceInfo struct {
-	StartUser *string `json:"setup_user" extensions:"x-nullable"`
-	StartTime *int64  `json:"setup_time" example:"0" format:"int64" extensions:"x-nullable"`
-	StopUser  *string `json:"remove_user" extensions:"x-nullable"`
-	StopTime  *int64  `json:"remove_time" example:"0" format:"int64" extensions:"x-nullable"`
+	StartUser *string `json:"setup_user" binding:"required" extensions:"x-nullable"`
+	StartTime *int64  `json:"setup_time" binding:"required" example:"0" format:"int64" extensions:"x-nullable"`
+	StopUser  *string `json:"remove_user" binding:"required" extensions:"x-nullable"`
+	StopTime  *int64  `json:"remove_time" binding:"required" example:"0" format:"int64" extensions:"x-nullable"`
 }
 
 // Set maintanace start and stop users and times.
@@ -690,8 +690,8 @@ func (maintenanceInfo *MaintenanceInfo) Set(startUser *string, startTime *int64,
 
 // MetricEvent represents filter metric event.
 type MetricEvent struct {
-	Metric  string `json:"metric"`
-	Pattern string `json:"pattern"`
+	Metric  string `json:"metric" binding:"required"`
+	Pattern string `json:"pattern" binding:"required"`
 }
 
 // SubscribeMetricEventsParams represents params of subscription.
@@ -1015,17 +1015,17 @@ type SchedulerParams struct {
 // ContactScore represents the score and transaction statistics for a contact over a specific time period.
 type ContactScore struct {
 	// ContactID is the unique identifier for the contact.
-	ContactID string `json:"contact_id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	ContactID string `json:"contact_id" binding:"required" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	// AllTXCount is the total number of transactions for the contact.
-	AllTXCount uint64 `json:"all_tx_count" example:"123"`
+	AllTXCount uint64 `json:"all_tx_count" binding:"required" example:"123"`
 	// SuccessTXCount is the number of successful transactions for the contact.
-	SuccessTXCount uint64 `json:"success_tx_count" example:"120"`
+	SuccessTXCount uint64 `json:"success_tx_count" binding:"required" example:"120"`
 	// LastErrorMsg provides the last error message encountered during transaction processing.
-	LastErrorMsg string `json:"last_error" example:"Invalid webhook URL"`
+	LastErrorMsg string `json:"last_error" binding:"required" example:"Invalid webhook URL"`
 	// LastErrorTimestamp is the timestamp of the last error encountered during transaction processing.
-	LastErrorTimestamp uint64 `json:"last_error_timestamp" example:"1750858559"`
+	LastErrorTimestamp uint64 `json:"last_error_timestamp" binding:"required" example:"1750858559"`
 	// Status indicates the current status of the contact.
-	Status ContactStatus `json:"status" example:"Success"`
+	Status ContactStatus `json:"status" binding:"required" example:"Success"`
 }
 
 // ContactStatus represents an actual contact status.
@@ -1051,9 +1051,9 @@ type DeliveryTypesCounter struct {
 // NotifierState represents the state of the notifier.
 type NotifierState struct {
 	// Actor represents the entity performing the notifier state mutation.
-	Actor string `json:"actor"`
+	Actor string `json:"actor" binding:"required"`
 	// State represents the current state of the notifier.
-	State string `json:"state"`
+	State string `json:"state" binding:"required"`
 }
 
 const (
