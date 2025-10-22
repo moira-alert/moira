@@ -92,7 +92,13 @@ func main() {
 			Msg("Failed to initialize metric sources")
 	}
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, clusterKeyList(metricSourceProvider))
+	checkerMetrics, err := metrics.ConfigureCheckerMetrics(telemetry.Metrics, telemetry.AttributedMetrics, clusterKeyList(metricSourceProvider))
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize checker metrics")
+	}
+
 	checkerSettings := config.getSettings(logger)
 
 	if triggerID != nil && *triggerID != "" {

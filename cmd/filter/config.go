@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/filter"
 )
@@ -80,6 +82,14 @@ func getDefault() config {
 				URI:          "localhost:2003",
 				Prefix:       "DevOps.Moira",
 				Interval:     "60s",
+			},
+			Otel: cmd.OtelConfig{
+				Enabled:      false,
+				Insecure:     true,
+				PushInterval: time.Minute,
+			},
+			Prometheus: cmd.PrometheusConfig{
+				Enabled: false,
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
