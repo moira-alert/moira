@@ -1,12 +1,14 @@
 package filter
 
 import (
+	"context"
 	"strings"
 	"testing"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 var testRetentions = `
@@ -170,7 +172,12 @@ var matchedMetrics = []moira.MatchedMetric{
 }
 
 func TestCacheStorage(t *testing.T) {
-	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
+	require.NoError(t, err)
+
 	storage, err := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 
 	Convey("Test good retentions", t, func() {
@@ -203,8 +210,14 @@ func TestCacheStorage(t *testing.T) {
 }
 
 func TestRetentions(t *testing.T) {
-	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
-	storage, _ := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
+	require.NoError(t, err)
+
+	storage, err := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
+	require.NoError(t, err)
 
 	Convey("Simple metric, should 60sec", t, func() {
 		buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
