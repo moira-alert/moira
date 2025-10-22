@@ -87,7 +87,13 @@ func main() {
 			Msg("MaxParallelMatches is not configured, set it to the number of CPU")
 	}
 
-	filterMetrics := metrics.ConfigureFilterMetrics(telemetry.Metrics)
+	filterMetrics, err := metrics.ConfigureFilterMetrics(telemetry.Metrics, telemetry.AttributedMetrics)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to configure filter telemetry")
+	}
+
 	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Filter, moira.ClusterList{})
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
