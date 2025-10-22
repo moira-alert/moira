@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"sync"
@@ -436,7 +437,10 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T, config Config) {
-	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+	notifierMetrics, err := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")
+	require.NoError(t, err)
 
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -466,7 +470,7 @@ func configureNotifier(t *testing.T, config Config) {
 
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
-	err := standardNotifier.RegisterSender(senderSettings, sender)
+	err = standardNotifier.RegisterSender(senderSettings, sender)
 
 	t.Run("Should return one sender", func(t *testing.T) {
 		require.NoError(t, err)
