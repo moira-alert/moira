@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -26,8 +28,12 @@ func TestInitTriggerChecker(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := local.Create(dataBase)
 	triggerID := "superId"
-	checkerMetrics := metrics.ConfigureCheckerMetrics(
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	checkerMetrics, _ := metrics.ConfigureCheckerMetrics(
 		metrics.NewDummyRegistry(),
+		metricRegistry,
 		[]moira.ClusterKey{moira.DefaultLocalCluster},
 	)
 
