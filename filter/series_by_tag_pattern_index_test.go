@@ -120,8 +120,6 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 
 	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 
-	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
-
 	t.Run("Given empty patterns with tagspecs, should build index and match patterns", func(t *testing.T) {
 		compatibility := Compatibility{
 			AllowRegexLooseStartMatch: true,
