@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -60,7 +62,10 @@ func TestThrottling(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	metrics2 := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	metrics2, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricRegistry, "notifier")
 
 	now := time.Now()
 	next := now.Add(10 * time.Minute)
@@ -221,7 +226,10 @@ func TestSubscriptionSchedule(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	notifierMetrics, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricRegistry, "notifier")
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	scheduler := NewScheduler(dataBase, logger, notifierMetrics, SchedulerConfig{ReschedulingDelay: time.Minute}, systemClock)
 

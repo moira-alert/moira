@@ -215,6 +215,12 @@ func TestRetentions(t *testing.T) {
 	storage, err := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 	require.NoError(t, err)
 
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
+	require.NoError(t, err)
+
+	storage, err := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
+	require.NoError(t, err)
+
 	t.Run("Simple metric, should 60sec", func(t *testing.T) {
 		buffer := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric)
 		matchedMetric := matchedMetrics[0]

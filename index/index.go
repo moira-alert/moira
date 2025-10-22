@@ -31,14 +31,19 @@ type Index struct {
 }
 
 // NewSearchIndex return new Index object.
-func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistry metrics.Registry) *Index {
+func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistry metrics.Registry, attributedRegistry metrics.MetricRegistry) *Index {
 	var err error
 
 	newIndex := Index{
 		logger:   logger,
 		database: database,
 	}
-	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry)
+
+	newIndex.metrics, err = metrics.ConfigureIndexMetrics(metricsRegistry, attributedRegistry)
+	if err != nil {
+		return nil
+	}
+
 	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
 	newIndex.triggerIndex, err = bleve.CreateTriggerIndex(indexMapping)
