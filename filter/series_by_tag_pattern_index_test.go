@@ -120,19 +120,19 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 
 	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 
-	Convey("Given empty patterns with tagspecs, should build index and match patterns", t, func(c C) {
+	t.Run("Given empty patterns with tagspecs, should build index and match patterns", func(t *testing.T) {
 		compatibility := Compatibility{
 			AllowRegexLooseStartMatch: true,
 		}
 
 		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{}, compatibility, patternMatchingCache, filterMetrics)
-		c.So(index.MatchPatterns("", nil), ShouldResemble, []string{})
+		require.Equal(t, []string{}, index.MatchPatterns("", nil))
 	})
 
-	Convey("Given simple patterns with tagspecs, should build index and match patterns", t, func(c C) {
+	t.Run("Given simple patterns with tagspecs, should build index and match patterns", func(t *testing.T) {
 		tagSpecsByPattern := map[string][]TagSpec{
 			"name=cpu1":        {{"name", EqualOperator, "cpu1"}},
 			"name!=cpu1":       {{"name", NotEqualOperator, "cpu1"}},
@@ -178,17 +178,17 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		}
 
 		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache, filterMetrics)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
-			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
+			require.Equal(t, testCase.MatchedPatterns, patterns, "failed for case: %+v", testCase)
 		}
 	})
 
-	Convey("Given related patterns with tagspecs, should build index and match patterns", t, func(c C) {
+	t.Run("Given related patterns with tagspecs, should build index and match patterns", func(t *testing.T) {
 		tagSpecsByPattern := map[string][]TagSpec{
 			"name=cpu.test1.test2": {{"name", EqualOperator, "cpu.test1.test2"}},
 			"name=cpu.*.test2":     {{"name", EqualOperator, "cpu.*.test2"}},
@@ -377,13 +377,13 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		}
 
 		patternMatchingCache, err := lrucache.New[string, *patternMatchingCacheItem](100)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern, compatibility, patternMatchingCache, filterMetrics)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)
-			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
+			require.Equal(t, testCase.MatchedPatterns, patterns, "failed for case: %+v", testCase)
 		}
 	})
 }
