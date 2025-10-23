@@ -2,18 +2,6 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
-selfstate_checks:
-  notifier:
-    default_tags: [ moira-system-fatal ]
-    source_tag_prefix: moira-system-notifications-disable
-  database:
-    tags: [ moira-system-fatal ]
-  filter:
-    tags: [ moira-system-fatal ]
-  local_checker:
-    tags: [ moira-system-fatal ]
-  remote_checker:
-    tags: [ moira-system-fatal ]
 telemetry:
   graphite:
     enabled: true
