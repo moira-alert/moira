@@ -132,8 +132,10 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 			RemoteChecker: HeartbeatConfig{
 				SystemTags: []string{"sys-tag-remote-checker", "moira-fatal"},
 			},
-			Notifier: HeartbeatConfig{
-				SystemTags: []string{"sys-tag-notifier", "moira-fatal"},
+			Notifier: NotifierHeartbeatConfig{
+				AnyClusterSourceTags:      []string{"sys-tag-notifier", "moira-fatal"},
+				LocalClusterSourceTags:    []string{"moira-fatal-local"},
+				TagPrefixForClusterSource: "moira-system-disable-source",
 			},
 		},
 	}
@@ -144,7 +146,7 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 	notif := mock_notifier.NewMockNotifier(mockCtrl)
 
 	return &selfCheckWorkerMock{
-		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 		database:        database,
 		notif:           notif,
 		conf:            conf,

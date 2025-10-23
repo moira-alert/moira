@@ -37,7 +37,16 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
-		mock.database.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
+		mock.database.EXPECT().GetNotifierStateForSource(defaultLocalCluster).Return(moira.NotifierState{
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateOK,
+		}, nil).Times(2)
+		mock.database.EXPECT().GetNotifierStateForSource(defaultRemoteCluster).Return(moira.NotifierState{
+			Actor: moira.SelfStateActorAutomatic,
+			State: moira.SelfStateOK,
+		}, nil).Times(1)
+
+		mock.database.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			Actor: moira.SelfStateActorAutomatic,
 			State: moira.SelfStateOK,
 		}, nil).Times(2)
@@ -49,7 +58,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Len(t, mock.selfCheckWorker.heartbeatsGraph[0], 1)
-		require.Len(t, mock.selfCheckWorker.heartbeatsGraph[1], 4)
+		require.Len(t, mock.selfCheckWorker.heartbeatsGraph[1], 5)
 
 		const oneTickDelay = time.Millisecond * 1500
 
@@ -330,7 +339,7 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 			notif := mock_notifier.NewMockNotifier(mockCtrl)
 
 			mock := &selfCheckWorkerMock{
-				selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}),
+				selfCheckWorker: NewSelfCheckWorker(logger, database, notif, Config{}, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 				mockCtrl:        mockCtrl,
 			}
 
@@ -448,7 +457,8 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 							SystemTags: []string{"sys-tag1", "sys-tag2", "sys-tag-common"},
 						},
 					},
-				}),
+				},
+					moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 				mockCtrl: mockCtrl,
 			}
 
@@ -874,7 +884,7 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 	}
 
 	return &selfCheckWorkerMock{
-		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 		database:        database,
 		notif:           notif,
 		conf:            conf,

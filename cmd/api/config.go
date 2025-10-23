@@ -38,8 +38,10 @@ func toCheckConfig(checksConfig cmd.ChecksConfig) *selfstate.ChecksConfig {
 		RemoteChecker: selfstate.HeartbeatConfig{
 			SystemTags: checksConfig.RemoteChecker.SystemTags,
 		},
-		Notifier: selfstate.HeartbeatConfig{
-			SystemTags: checksConfig.Notifier.SystemTags,
+		Notifier: selfstate.NotifierHeartbeatConfig{
+			AnyClusterSourceTags:      checksConfig.Notifier.AnyClusterSourceTags,
+			LocalClusterSourceTags:    checksConfig.Notifier.LocalClusterSourceTags,
+			TagPrefixForClusterSource: checksConfig.Notifier.TagPrefixForClusterSource,
 		},
 	}
 }
