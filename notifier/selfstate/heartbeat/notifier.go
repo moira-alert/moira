@@ -77,9 +77,11 @@ func (check notifier) GetErrorMessage() string {
 	state, _ := check.database.GetNotifierState()
 	if state.State == moira.SelfStateOK {
 		state, _ = check.database.GetNotifierStateForSource(check.clusterKey)
+	} else {
+		return fmt.Sprintf("Moira-Notifier does not send messages. State: %s", state.State)
 	}
 
-	return fmt.Sprintf("Moira-Notifier does not send messages. State: %v", state.State)
+	return fmt.Sprintf("Moira-Notifier does not send messages for metric source '%s'. State: %s", check.clusterKey.String(), state.State)
 }
 
 func (check *notifier) GetCheckTags() CheckTags {
