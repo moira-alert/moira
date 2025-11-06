@@ -5,6 +5,8 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -58,7 +60,10 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 	}
 
 	defaultAttributes := metrics.Attributes{}
+
 	for k, v := range config.DefaultAttributes {
+		k = replaceStaticTemplate(k)
+		v = replaceStaticTemplate(v)
 		defaultAttributes = append(defaultAttributes, metrics.Attribute{Key: k, Value: v})
 	}
 
@@ -161,4 +166,30 @@ func configurePprofServer(serverMux *http.ServeMux) {
 	serverMux.HandleFunc("/pprof/trace", pprof.Trace)
 	serverMux.HandleFunc("/pprof/heap", pprof.Handler("heap").ServeHTTP)
 	serverMux.HandleFunc("/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
+}
+
+const (
+	hostnameTemplate string = "{hostname}"
+)
+
+func hostnameTemplateReplacer() string {
+	name, err := os.Hostname()
+	if err != nil {
+		return hostnameTemplate
+	}
+
+	return name
+}
+
+var templateItems map[string]string = map[string]string{
+	hostnameTemplate: hostnameTemplateReplacer(),
+}
+
+func replaceStaticTemplate(input string) string {
+	res := input
+	for template, replacement := range templateItems {
+		res = strings.ReplaceAll(res, template, replacement)
+	}
+
+	return res
 }
