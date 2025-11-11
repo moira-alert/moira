@@ -5,9 +5,9 @@ import "context"
 // Attribute represents a key-value string pair for metric attributes.
 type Attribute struct {
 	// key is the attribute's key
-	key string
+	Key string
 	// value is the attribute's value
-	value string
+	Value string
 }
 
 // Attributes represents a set of key-value string pairs for metric attributes.
@@ -16,7 +16,7 @@ type Attributes []Attribute
 // MetricsContext provides methods to create a metric registry and shutdown the context.
 type MetricsContext interface {
 	// CreateRegistry creates and returns a new MetricRegistry.
-	CreateRegistry() MetricRegistry
+	CreateRegistry(attributes ...Attribute) (MetricRegistry, error)
 	// Shutdown gracefully shuts down the metrics context.
 	Shutdown(ctx context.Context) error
 }
@@ -33,4 +33,12 @@ type MetricRegistry interface {
 	NewHistogram(name string) (Histogram, error)
 	// NewTimer creates and returns a new Timer metric with the given name.
 	NewTimer(name string) (Timer, error)
+}
+
+// AttributedMetricCollection represents a collection of attributed meters.
+type AttributedMetricCollection interface {
+	// RegisterMeter registers a new Meter with the given name, metric and attributes.
+	RegisterMeter(name string, metric string, attributes Attributes) (Meter, error)
+	// GetRegisteredMeter retrieves a registered Meter by name.
+	GetRegisteredMeter(name string) (Meter, bool)
 }

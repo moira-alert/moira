@@ -102,7 +102,12 @@ func main() {
 		ReschedulingDelay: notifierConfig.ReschedulingDelay,
 	}
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+	notifierMetrics, err := metrics.ConfigureNotifierMetrics(telemetry.Metrics, telemetry.AttributedMetrics, serviceName)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize notifier telemetry")
+	}
 
 	sender := notifier.NewNotifier(
 		database,
@@ -124,7 +129,7 @@ func main() {
 
 	// Start moira self state checker
 	if config.Notifier.getSelfstateSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.getSelfstateSettings())
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.getSelfstateSettings(), clusterList)
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).

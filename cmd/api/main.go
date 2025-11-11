@@ -96,7 +96,7 @@ func main() {
 	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.NotificationConfig{}, redis.API, clusterList)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
-	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
+	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics, telemetry.AttributedMetrics)
 	if searchIndex == nil {
 		logger.Fatal().Msg("Failed to create search index")
 	}

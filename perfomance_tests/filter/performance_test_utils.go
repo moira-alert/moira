@@ -4,6 +4,7 @@ package filter
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"math/rand"
@@ -50,7 +51,14 @@ func createPatternsStorage(patterns *[]string, b *testing.B) (*filter.PatternSto
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	database.EXPECT().GetPatterns().Return(*patterns, nil)
 
-	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	if err != nil {
+		return nil, err
+	}
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
+	if err != nil {
+		return nil, err
+	}
 	logger, _ := logging.GetLogger("Benchmark")
 	compatibility := filter.Compatibility{AllowRegexLooseStartMatch: true}
 	patternStorageCfg := filter.PatternStorageConfig{

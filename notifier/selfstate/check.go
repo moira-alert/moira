@@ -208,7 +208,7 @@ func (selfCheck *SelfCheckWorker) buildTriggersTableForSubscription(subscription
 		return ""
 	}
 
-	triggersTable, err := selfCheck.constructTriggersTable(subscription, selfCheck.Config.Checks.GetUniqueSystemTags())
+	triggersTable, err := selfCheck.constructTriggersTable(subscription, selfCheck.Config.Checks.GetUniqueSystemTags(selfCheck.clusterList))
 	if err != nil {
 		selfCheck.Logger.Warning().
 			Error(err).

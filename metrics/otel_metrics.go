@@ -2,30 +2,35 @@ package metrics
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/moira-alert/moira"
+	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/attribute"
 	internalMetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 )
+
+type defaultMetricsContextModifier interface {
+	modify(*DefaultMetricsContext) error
+}
 
 // DefaultMetricsContext holds metric readers, providers, and attributes.
 type DefaultMetricsContext struct {
-	readers    []metric.Reader
-	providers  []*metric.MeterProvider
-	attributes Attributes
+	readers   []metric.Reader
+	provider  *metric.MeterProvider
+	modifiers []defaultMetricsContextModifier
 }
 
 // NewMetricContext creates a new DefaultMetricsContext.
 func NewMetricContext(ctx context.Context) *DefaultMetricsContext {
 	return &DefaultMetricsContext{
-		readers:    []metric.Reader{},
-		providers:  []*metric.MeterProvider{},
-		attributes: Attributes{},
+		readers:   []metric.Reader{},
+		provider:  &metric.MeterProvider{},
+		modifiers: []defaultMetricsContextModifier{},
 	}
 }
 
@@ -34,30 +39,56 @@ func (d *DefaultMetricsContext) AddReader(reader metric.Reader) {
 	d.readers = append(d.readers, reader)
 }
 
-// CreateRegistry creates a MetricRegistry from the context's readers.
-func (d *DefaultMetricsContext) CreateRegistry() MetricRegistry {
-	providers := moira.Map(d.readers, func(reader metric.Reader) *metric.MeterProvider {
-		return metric.NewMeterProvider(metric.WithReader(reader))
-	})
+type runtimeStatsModifier struct {
+	samplingInterval time.Duration
+}
 
-	return &DefaultMetricRegistry{providers, d.attributes}
+func (m *runtimeStatsModifier) modify(c *DefaultMetricsContext) error {
+	err := runtime.Start(
+		runtime.WithMeterProvider(c.provider),
+		runtime.WithMinimumReadMemStatsInterval(m.samplingInterval),
+	)
+
+	return err
+}
+
+// AddRuntimeStats appends runtime statistics collection to the metrics context.
+func (d *DefaultMetricsContext) AddRuntimeStats(samplingRate time.Duration) {
+	d.modifiers = append(d.modifiers, &runtimeStatsModifier{samplingRate})
+}
+
+// CreateRegistry creates a MetricRegistry from the context's readers.
+func (d *DefaultMetricsContext) CreateRegistry(attributes ...Attribute) (MetricRegistry, error) {
+	opts := make([]metric.Option, 0, len(d.readers))
+	for _, r := range d.readers {
+		opts = append(opts, metric.WithReader(r))
+	}
+
+	opts = append(opts, metric.WithResource(
+		resource.NewWithAttributes(semconv.SchemaURL, Attributes(attributes).toOtelAttributes()...),
+	))
+	provider := metric.NewMeterProvider(opts...)
+	d.provider = provider
+
+	for _, modifier := range d.modifiers {
+		err := modifier.modify(d)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &DefaultMetricRegistry{provider, Attributes{}}, nil
 }
 
 // Shutdown shuts down all readers and providers in the context.
 func (d *DefaultMetricsContext) Shutdown(ctx context.Context) error {
-	err := errors.Join(moira.Map(d.readers, func(exp metric.Reader) error { return exp.Shutdown(ctx) })...)
-	if err != nil {
-		return err
-	}
-
-	err = errors.Join(moira.Map(d.providers, func(exp *metric.MeterProvider) error { return exp.Shutdown(ctx) })...)
-
+	err := d.provider.Shutdown(ctx)
 	return err
 }
 
 // DefaultMetricRegistry implements MetricRegistry using MeterProviders and attributes.
 type DefaultMetricRegistry struct {
-	providers  []*metric.MeterProvider
+	provider   *metric.MeterProvider
 	attributes Attributes
 }
 
@@ -67,28 +98,18 @@ func (r *DefaultMetricRegistry) WithAttributes(attributes Attributes) MetricRegi
 	attrs = append(attrs, r.attributes...)
 	attrs = append(attrs, attributes...)
 
-	return &DefaultMetricRegistry{r.providers, attrs}
-}
-
-type metricWithErr[T any] struct {
-	metric T
-	err    error
+	return &DefaultMetricRegistry{r.provider, attrs}
 }
 
 // NewCounter creates a new Counter with the given name.
 func (r *DefaultMetricRegistry) NewCounter(name string) (Counter, error) {
-	counters := moira.Map(r.providers, func(provider *metric.MeterProvider) metricWithErr[internalMetric.Int64Counter] {
-		counter, err := provider.Meter("counter").Int64Counter(name)
-		return metricWithErr[internalMetric.Int64Counter]{counter, err}
-	})
-
-	err := errors.Join(moira.Map(counters, func(c metricWithErr[internalMetric.Int64Counter]) error { return c.err })...)
+	counter, err := r.provider.Meter("counter").Int64Counter(name)
 	if err != nil {
 		return nil, err
 	}
 
 	return &otelCounter{
-		moira.Map(counters, func(c metricWithErr[internalMetric.Int64Counter]) internalMetric.Int64Counter { return c.metric }),
+		counter,
 		0,
 		sync.Mutex{},
 		r.attributes.toOtelAttributes(),
@@ -97,55 +118,39 @@ func (r *DefaultMetricRegistry) NewCounter(name string) (Counter, error) {
 
 // NewGauge creates a new Gauge with the given name.
 func (r *DefaultMetricRegistry) NewGauge(name string) (Meter, error) {
-	gauges := moira.Map(r.providers, func(provider *metric.MeterProvider) metricWithErr[internalMetric.Int64Gauge] {
-		gauge, err := provider.Meter("gauge").Int64Gauge(name)
-		return metricWithErr[internalMetric.Int64Gauge]{gauge, err}
-	})
-
-	err := errors.Join(moira.Map(gauges, func(g metricWithErr[internalMetric.Int64Gauge]) error { return g.err })...)
+	gauge, err := r.provider.Meter("gauge").Int64Gauge(name)
 	if err != nil {
 		return nil, err
 	}
 
 	return &otelGauge{
-		moira.Map(gauges, func(g metricWithErr[internalMetric.Int64Gauge]) internalMetric.Int64Gauge { return g.metric }),
+		gauge,
 		r.attributes.toOtelAttributes(),
 	}, nil
 }
 
-// NewHistogram creates a new Histogram with the given name and bucket boundaries.
+// NewHistogram creates a new Histogram with the given name.
 func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
-	histograms := moira.Map(r.providers, func(provider *metric.MeterProvider) metricWithErr[internalMetric.Int64Histogram] {
-		histogram, err := provider.Meter("histogram").Int64Histogram(name)
-		return metricWithErr[internalMetric.Int64Histogram]{histogram, err}
-	})
-
-	err := errors.Join(moira.Map(histograms, func(c metricWithErr[internalMetric.Int64Histogram]) error { return c.err })...)
+	histogram, err := r.provider.Meter("histogram").Int64Histogram(name)
 	if err != nil {
 		return nil, err
 	}
 
 	return &otelHistogram{
-		moira.Map(histograms, func(c metricWithErr[internalMetric.Int64Histogram]) internalMetric.Int64Histogram { return c.metric }),
+		histogram,
 		r.attributes.toOtelAttributes(),
 	}, nil
 }
 
+// NewTimer creates a new Timer with the given name.
 func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
-	timers := moira.Map(r.providers, func(provider *metric.MeterProvider) metricWithErr[internalMetric.Float64Histogram] {
-		timer, err := provider.Meter("timer").Float64Histogram(name)
-		return metricWithErr[internalMetric.Float64Histogram]{timer, err}
-	})
-
-	err := errors.Join(moira.Map(timers, func(c metricWithErr[internalMetric.Float64Histogram]) error { return c.err })...)
+	timer, err := r.provider.Meter("timer").Float64Histogram(name)
 	if err != nil {
 		return nil, err
 	}
 
 	return &otelTimer{
-		moira.Map(timers, func(c metricWithErr[internalMetric.Float64Histogram]) internalMetric.Float64Histogram {
-			return c.metric
-		}),
+		timer,
 		r.attributes.toOtelAttributes(),
 		0,
 	}, nil
@@ -155,7 +160,7 @@ func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
 func (attributes Attributes) toOtelAttributes() []attribute.KeyValue {
 	attrs := make([]attribute.KeyValue, 0, len(attributes))
 	for _, attr := range attributes {
-		attrs = append(attrs, attribute.String(attr.key, attr.value))
+		attrs = append(attrs, attribute.String(attr.Key, attr.Value))
 	}
 
 	return attrs
@@ -163,7 +168,7 @@ func (attributes Attributes) toOtelAttributes() []attribute.KeyValue {
 
 // otelCounter implements Counter using OpenTelemetry Int64Counter.
 type otelCounter struct {
-	counters   []internalMetric.Int64Counter
+	counter    internalMetric.Int64Counter
 	count      int64
 	mu         sync.Mutex
 	attributes []attribute.KeyValue
@@ -171,9 +176,7 @@ type otelCounter struct {
 
 // Inc increments the counter by 1.
 func (c *otelCounter) Inc() {
-	for _, counter := range c.counters {
-		counter.Add(context.Background(), 1, internalMetric.WithAttributes(c.attributes...))
-	}
+	c.counter.Add(context.Background(), 1, internalMetric.WithAttributes(c.attributes...))
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -191,42 +194,36 @@ func (c *otelCounter) Count() int64 {
 
 // otelGauge implements Meter using OpenTelemetry Int64Gauge.
 type otelGauge struct {
-	gauges     []internalMetric.Int64Gauge
+	gauge      internalMetric.Int64Gauge
 	attributes []attribute.KeyValue
 }
 
 // Mark records a value for the gauge.
 func (c *otelGauge) Mark(mark int64) {
-	for _, gauge := range c.gauges {
-		gauge.Record(context.Background(), mark, internalMetric.WithAttributes(c.attributes...))
-	}
+	c.gauge.Record(context.Background(), mark, internalMetric.WithAttributes(c.attributes...))
 }
 
 // otelHistogram implements Histogram using OpenTelemetry Int64Histogram.
 type otelHistogram struct {
-	histograms []internalMetric.Int64Histogram
+	histogram  internalMetric.Int64Histogram
 	attributes []attribute.KeyValue
 }
 
 // Update records a value for the histogram.
 func (h *otelHistogram) Update(mark int64) {
-	for _, histogram := range h.histograms {
-		histogram.Record(context.Background(), mark, internalMetric.WithAttributes(h.attributes...))
-	}
+	h.histogram.Record(context.Background(), mark, internalMetric.WithAttributes(h.attributes...))
 }
 
 // otelTimer represents a timer that records durations in histograms with attributes.
 type otelTimer struct {
-	histogram  []internalMetric.Float64Histogram
+	histogram  internalMetric.Float64Histogram
 	attributes []attribute.KeyValue
 	count      int64
 }
 
 // UpdateSince records the duration since the given timestamp in all histograms and increments the count.
 func (t *otelTimer) UpdateSince(ts time.Time) {
-	for _, histogram := range t.histogram {
-		histogram.Record(context.Background(), float64(time.Since(ts)), internalMetric.WithAttributes(t.attributes...))
-	}
+	t.histogram.Record(context.Background(), float64(time.Since(ts)), internalMetric.WithAttributes(t.attributes...))
 
 	atomic.AddInt64(&t.count, 1)
 }
@@ -234,4 +231,36 @@ func (t *otelTimer) UpdateSince(ts time.Time) {
 // Count returns the number of times UpdateSince has been called.
 func (t *otelTimer) Count() int64 {
 	return atomic.LoadInt64(&t.count)
+}
+
+// DefaultAttributedMetricCollection represents a collection of attributed metrics with default behavior.
+type DefaultAttributedMetricCollection struct {
+	registry MetricRegistry
+	meters   map[string]Meter
+}
+
+// NewAttributedMetricCollection creates a new AttributedMetricCollection with the given registry.
+func NewAttributedMetricCollection(registry MetricRegistry) AttributedMetricCollection {
+	return &DefaultAttributedMetricCollection{
+		registry: registry,
+		meters:   map[string]Meter{},
+	}
+}
+
+// RegisterMeter registers a new meter with the specified name, metric, and attributes.
+func (r *DefaultAttributedMetricCollection) RegisterMeter(name string, metric string, attributes Attributes) (Meter, error) {
+	gauge, err := r.registry.WithAttributes(attributes).NewGauge(metric)
+	if err != nil {
+		return nil, err
+	}
+
+	r.meters[name] = gauge
+
+	return gauge, nil
+}
+
+// GetRegisteredMeter retrieves a registered meter by name.
+func (r *DefaultAttributedMetricCollection) GetRegisteredMeter(name string) (Meter, bool) {
+	gauge, ok := r.meters[name]
+	return gauge, ok
 }

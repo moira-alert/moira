@@ -22,6 +22,10 @@ func TestNotifierState(t *testing.T) {
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
 			}, nil)
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
+				State: moira.SelfStateOK,
+				Actor: moira.SelfStateActorManual,
+			}, nil)
 
 			value, needSend, errActual := check.Check(now)
 			require.NoError(t, errActual)
@@ -32,6 +36,10 @@ func TestNotifierState(t *testing.T) {
 		t.Run("Test get notification", func(t *testing.T) {
 			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateERROR,
+				Actor: moira.SelfStateActorManual,
+			}, nil).Times(2)
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
+				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
 			}, nil).Times(2)
 
@@ -46,10 +54,26 @@ func TestNotifierState(t *testing.T) {
 				State: moira.SelfStateERROR,
 				Actor: moira.SelfStateActorAutomatic,
 			}, nil)
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
+				State: moira.SelfStateOK,
+				Actor: moira.SelfStateActorManual,
+			}, nil)
 
 			value, hasError, err := check.Check(now)
 			require.NoError(t, err)
 			require.False(t, hasError)
+			require.EqualValues(t, 0, value)
+		})
+
+		t.Run("Should return ERROR if whole notifier is disabled", func(t *testing.T) {
+			check.database.(*mock_moira_alert.MockDatabase).EXPECT().GetNotifierState().Return(moira.NotifierState{
+				State: moira.SelfStateERROR,
+				Actor: moira.SelfStateActorManual,
+			}, nil).Times(2)
+
+			value, hasError, err := check.Check(now)
+			require.NoError(t, err)
+			require.True(t, hasError)
 			require.EqualValues(t, 0, value)
 		})
 
@@ -67,5 +91,5 @@ func createNotifierStateTest(t *testing.T) *notifier {
 	logger, _ := logging.GetLogger("MetricDelay")
 	checkTags := []string{}
 
-	return GetNotifier(checkTags, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*notifier)
+	return GetNotifier(checkTags, "moira-system-disable-notification", []string{"moira-local-fatal"}, moira.DefaultLocalCluster, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*notifier)
 }

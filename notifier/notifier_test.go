@@ -1,19 +1,19 @@
 package notifier
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
@@ -54,28 +54,26 @@ var (
 )
 
 func TestGetMetricNames(t *testing.T) {
-	t.Run("Test non-empty notification package", func(t *testing.T) {
-		t.Run("Test package with trigger events", func(t *testing.T) {
-			expected := []string{"metricName1", "metricName2", "metricName3", "metricName5"}
-			actual := notificationsPackage.GetMetricNames()
-			require.Equal(t, expected, actual)
-		})
+	t.Run("Test package with trigger events", func(t *testing.T) {
+		expected := []string{"metricName1", "metricName2", "metricName3", "metricName5"}
+		actual := notificationsPackage.GetMetricNames()
+		require.Equal(t, expected, actual)
+	})
 
-		t.Run("Test package with no trigger events", func(t *testing.T) {
-			pkg := NotificationPackage{}
+	t.Run("Test package with no trigger events", func(t *testing.T) {
+		pkg := NotificationPackage{}
 
-			for _, event := range notificationsPackage.Events {
-				if event.IsTriggerEvent {
-					event.IsTriggerEvent = false
-				}
-
-				pkg.Events = append(pkg.Events, event)
+		for _, event := range notificationsPackage.Events {
+			if event.IsTriggerEvent {
+				event.IsTriggerEvent = false
 			}
 
-			expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
-			actual := pkg.GetMetricNames()
-			require.Equal(t, expected, actual)
-		})
+			pkg.Events = append(pkg.Events, event)
+		}
+
+		expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
+		actual := pkg.GetMetricNames()
+		require.Equal(t, expected, actual)
 	})
 
 	t.Run("Test empty notification package", func(t *testing.T) {
@@ -96,7 +94,7 @@ func TestGetWindow(t *testing.T) {
 	t.Run("Test empty notification package", func(t *testing.T) {
 		emptyNotificationPackage := NotificationPackage{}
 		_, _, err := emptyNotificationPackage.GetWindow()
-		require.Equal(t, fmt.Errorf("not enough data to resolve package window"), err)
+		require.EqualError(t, err, "not enough data to resolve package window")
 	})
 }
 
@@ -106,7 +104,6 @@ func TestUnknownContactType(t *testing.T) {
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
-
 	pkg := NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
@@ -138,7 +135,6 @@ func TestFailSendEvent(t *testing.T) {
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
-
 	pkg := NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
@@ -192,7 +188,6 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
-
 	pkg := NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
@@ -201,7 +196,6 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 	}
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).
 		Return(moira.NewSenderBrokenContactError(fmt.Errorf("some sender reason")))
-
 	dataBase.EXPECT().UpdateContactScores([]string{pkg.Contact.ID}, gomock.Any()).DoAndReturn(func(contactIDs []string, updater func(moira.ContactScore) moira.ContactScore) error {
 		expected := moira.ContactScore{
 			ContactID:      pkg.Contact.ID,
@@ -379,7 +373,6 @@ func TestTimeout(t *testing.T) {
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
-
 	// Configure events with long sending time
 	pkg := NotificationPackage{
 		Events: eventsData,
@@ -436,9 +429,10 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T, config Config) {
-	t.Helper()
-
-	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+	notifierMetrics, err := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")
+	require.NoError(t, err)
 
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -468,12 +462,10 @@ func configureNotifier(t *testing.T, config Config) {
 
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 
-	err := standardNotifier.RegisterSender(senderSettings, sender)
+	err = standardNotifier.RegisterSender(senderSettings, sender)
 
-	t.Run("Should return one sender", func(t *testing.T) {
-		require.NoError(t, err)
-		require.Equal(t, map[string]bool{"test_contact_type": true}, standardNotifier.GetSenders())
-	})
+	require.NoError(t, err)
+	require.Equal(t, map[string]bool{"test_contact_type": true}, standardNotifier.GetSenders())
 }
 
 func afterTest() {
