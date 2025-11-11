@@ -107,7 +107,7 @@ func getEvaluationParameters(request *http.Request) (sourceProvider *metricSourc
 
 	realtime := urlValues.Get("realtime")
 	if realtime == "" {
-		return
+		return sourceProvider, targetName, from, to, triggerID, fetchRealtimeData, err
 	}
 
 	fetchRealtimeData, err = strconv.ParseBool(realtime)
@@ -115,7 +115,7 @@ func getEvaluationParameters(request *http.Request) (sourceProvider *metricSourc
 		return sourceProvider, "", 0, 0, "", false, fmt.Errorf("invalid realtime param: %s", err.Error())
 	}
 
-	return
+	return sourceProvider, targetName, from, to, triggerID, fetchRealtimeData, err
 }
 
 func evaluateTargetMetrics(metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) (map[string][]metricSource.MetricData, *moira.Trigger, error) {

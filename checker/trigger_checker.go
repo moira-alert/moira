@@ -11,15 +11,14 @@ import (
 	"github.com/moira-alert/moira/metrics"
 )
 
-var tenMinInSec = int64((10 * time.Minute).Seconds())
-
 // TriggerChecker represents data, used for handling new trigger state.
 type TriggerChecker struct {
-	database moira.Database
-	logger   moira.Logger
-	config   *Config
-	metrics  *metrics.CheckMetrics
-	source   metricSource.MetricSource
+	database         moira.Database
+	logger           moira.Logger
+	config           *Config
+	metrics          *metrics.CheckMetrics
+	source           metricSource.MetricSource
+	badStateReminder map[moira.State]int64
 
 	from  int64
 	until int64
@@ -59,7 +58,7 @@ func MakeTriggerChecker(
 		return nil, err
 	}
 
-	lastCheck, err := getLastCheck(dataBase, triggerID, until-3600) //nolint
+	lastCheck, err := getLastCheck(dataBase, triggerID, until-int64((1*time.Hour).Seconds()))
 	if err != nil {
 		return nil, err
 	}
@@ -79,11 +78,12 @@ func MakeTriggerChecker(
 	}
 
 	triggerChecker := &TriggerChecker{
-		database: dataBase,
-		logger:   triggerLogger,
-		config:   config,
-		metrics:  triggerMetrics,
-		source:   source,
+		database:         dataBase,
+		logger:           triggerLogger,
+		config:           config,
+		metrics:          triggerMetrics,
+		source:           source,
+		badStateReminder: config.BadStateReminder,
 
 		from:  calculateFrom(lastCheck.Timestamp, trigger.TTL),
 		until: until,
@@ -137,5 +137,5 @@ func calculateFrom(lastCheckTimestamp, triggerTTL int64) int64 {
 		return lastCheckTimestamp - triggerTTL
 	}
 
-	return lastCheckTimestamp - tenMinInSec
+	return lastCheckTimestamp - int64((10 * time.Minute).Seconds())
 }

@@ -245,7 +245,7 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 // ChunkSlice gets slice of strings and chunks it to a given size. It returns a batch of chunked lists.
 func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 	if chunkSize < 1 {
-		return
+		return divided
 	}
 
 	for i := 0; i < len(original); i += chunkSize {
@@ -258,7 +258,7 @@ func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 		divided = append(divided, original[i:end])
 	}
 
-	return
+	return divided
 }
 
 func RoundToNearestRetention(ts, retention int64) int64 {

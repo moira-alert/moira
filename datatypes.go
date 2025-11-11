@@ -1077,3 +1077,6 @@ var DeliveryStatesSet = map[string]struct{}{
 	DeliveryStateException:     {},
 	DeliveryStateUserException: {},
 }
+
+// DefaultBadStateReminder return in int64 count seconds in day (86400).
+var DefaultBadStateReminder = int64((24 * time.Hour).Seconds())

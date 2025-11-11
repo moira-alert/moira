@@ -94,7 +94,7 @@ func generateTriggerChecks(number int) []*moira.TriggerCheck {
 
 func chunkTriggerChecks(original []*moira.TriggerCheck, chunkSize int) (divided [][]*moira.TriggerCheck) {
 	if chunkSize < 1 {
-		return
+		return divided
 	}
 
 	for i := 0; i < len(original); i += chunkSize {
@@ -107,7 +107,7 @@ func chunkTriggerChecks(original []*moira.TriggerCheck, chunkSize int) (divided 
 		divided = append(divided, original[i:end])
 	}
 
-	return
+	return divided
 }
 
 func randStringBytes(n int) string {

@@ -28,7 +28,7 @@ linters:
     - misspell
 #    - mnd
     - nilerr
-    - noctx
+#    - noctx
     - nosprintfhostport
     - prealloc
     - predeclared
