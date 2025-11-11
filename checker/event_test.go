@@ -17,7 +17,7 @@ func newMocks(t *testing.T) (dataBase *mock_moira_alert.MockDatabase, mockCtrl *
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	return
+	return dataBase, mockCtrl
 }
 
 func TestCompareMetricStates(t *testing.T) {

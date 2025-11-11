@@ -18,7 +18,7 @@ type ErrNoPointsToRender struct {
 	triggerID string
 }
 
-// ErrNoPointsToRender implementation with detailed error message.
+// Error implementation with detailed error message.
 func (err ErrNoPointsToRender) Error() string {
 	return fmt.Sprintf("no points found to render trigger: %s", err.triggerID)
 }

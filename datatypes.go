@@ -480,7 +480,7 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Needed for backwards compatibility with moira versions that used only isRemote flag.
+// FillInIfNotSet Needed for backwards compatibility with moira versions that used only isRemote flag.
 func (triggerSource TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
 	if triggerSource == TriggerSourceNotSet {
 		if isRemote {
@@ -606,7 +606,7 @@ type CheckData struct {
 	Clock                        Clock  `json:"-"`
 }
 
-// Need to not show the user metrics that should have been deleted due to ttlState = Del,
+// RemoveDeadMetrics Need to not show the user metrics that should have been deleted due to ttlState = Del,
 // but remained in the database because their Maintenance did not expire.
 func (checkData *CheckData) RemoveDeadMetrics() {
 	for metricName, metricState := range checkData.Metrics {
@@ -740,7 +740,7 @@ func (events NotificationEvents) getLastState() State {
 	return StateNODATA
 }
 
-// Returns the current state depending on the throttled parameter.
+// GetCurrentState Returns the current state depending on the throttled parameter.
 func (events NotificationEvents) GetCurrentState(throttled bool) State {
 	if throttled {
 		return events.getLastState()

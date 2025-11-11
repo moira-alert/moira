@@ -18,6 +18,7 @@ import (
 const (
 	messageMaxCharacters = 4000
 
+	// ErrorTextChannelArchived, ErrorTextChannelNotFound, ErrorTextNotInChannel
 	// see errors https://api.slack.com/methods/chat.postMessage
 	ErrorTextChannelArchived = "is_archived"
 	ErrorTextChannelNotFound = "channel_not_found"

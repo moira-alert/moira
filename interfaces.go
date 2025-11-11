@@ -191,7 +191,7 @@ type SelfStateDatabase interface {
 	SetNotifierStateForSource(clusterKey ClusterKey, actor, state string) error
 }
 
-// ContactScore storing.
+// ContactScoreDatabase storing.
 type ContactScoreDatabase interface {
 	// UpdateContactScores updates the contact scores based on the provided updater function.
 	UpdateContactScores(contactIDs []string, updater func(ContactScore) ContactScore) error
