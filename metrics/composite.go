@@ -52,12 +52,10 @@ type compositeMeter struct {
 	meters []Meter
 }
 
-func (source *compositeMeter) Count() int64 {
-	if len(source.meters) == 0 {
-		return 0
+func NewCompositeMeter(meters ...Meter) Meter {
+	return &compositeMeter{
+		meters: meters,
 	}
-
-	return source.meters[0].Count()
 }
 
 func (source *compositeMeter) Mark(value int64) {
@@ -68,6 +66,12 @@ func (source *compositeMeter) Mark(value int64) {
 
 type compositeTimer struct {
 	timers []Timer
+}
+
+func NewCompositeTimer(timers ...Timer) Timer {
+	return &compositeTimer{
+		timers: timers,
+	}
 }
 
 func (source *compositeTimer) Count() int64 {
@@ -88,12 +92,10 @@ type compositeHistogram struct {
 	histograms []Histogram
 }
 
-func (source *compositeHistogram) Count() int64 {
-	if len(source.histograms) == 0 {
-		return 0
+func NewCompositeHistogram(histograms ...Histogram) Histogram {
+	return &compositeHistogram{
+		histograms: histograms,
 	}
-
-	return source.histograms[0].Count()
 }
 
 func (source *compositeHistogram) Update(value int64) {
@@ -104,6 +106,12 @@ func (source *compositeHistogram) Update(value int64) {
 
 type compositeCounter struct {
 	counters []Counter
+}
+
+func NewCompositeCounter(counters ...Counter) Counter {
+	return &compositeCounter{
+		counters: counters,
+	}
 }
 
 func (source *compositeCounter) Count() int64 {

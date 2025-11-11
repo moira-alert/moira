@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"github.com/moira-alert/moira"
@@ -42,63 +42,63 @@ func TestSender_SendEvents(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	sender := Sender{Database: dataBase, logger: logger}
 
-	Convey("Has connection to database", t, func() {
-		Convey("SelfState is OK", func() {
+	t.Run("Has connection to database", func(t *testing.T) {
+		t.Run("SelfState is OK", func(t *testing.T) {
 			selfStateInitial := moira.SelfStateOK
 			selfStateFinal := moira.SelfStateERROR
 
-			Convey("Should ignore events received", func() {
+			t.Run("Should ignore events received", func(t *testing.T) {
 				for _, subjectState := range ignorableSubjectStates {
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
-					dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+					dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 						State: selfStateInitial,
 					}, nil)
 
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
-					So(err, ShouldBeNil)
+					require.NoError(t, err)
 				}
 			})
 
-			Convey("Should disable notifications", func() {
+			t.Run("Should disable notifications", func(t *testing.T) {
 				for _, subjectState := range disablingSubjectStates {
-					dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+					dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 						State: selfStateInitial,
 					}, nil)
-					dataBase.EXPECT().SetNotifierState(moira.SelfStateActorTrigger, selfStateFinal).Return(nil)
+					dataBase.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorTrigger, selfStateFinal).Return(nil)
 
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
-					So(err, ShouldBeNil)
+					require.NoError(t, err)
 				}
 			})
 		})
 
-		Convey("SelfState is ERROR", func() {
+		t.Run("SelfState is ERROR", func(t *testing.T) {
 			selfStateInitial := moira.SelfStateERROR
 
 			for _, subjectState := range disablingSubjectStates {
 				testEvents := []moira.NotificationEvent{{State: subjectState}}
-				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 					State: selfStateInitial,
 				}, nil)
 
 				err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 			}
 		})
 	})
 
-	Convey("Has no connections to database", t, func() {
+	t.Run("Has no connections to database", func(t *testing.T) {
 		sender := Sender{Database: dataBase, logger: logger}
 
 		for _, subjectState := range disablingSubjectStates {
 			testEvents := []moira.NotificationEvent{{State: subjectState}}
 
-			dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{}, fmt.Errorf("redis is down"))
+			dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{}, fmt.Errorf("redis is down"))
 
 			err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
-			So(err, ShouldNotBeNil)
-			So(err.Error(), ShouldEqual, "failed to get notifier state: redis is down")
+			require.Error(t, err)
+			require.Error(t, err, "failed to get notifier state: redis is down")
 		}
 	})
 }

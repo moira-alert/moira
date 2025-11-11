@@ -29,11 +29,12 @@ type SelfCheckWorker struct {
 	heartbeatsGraph         heartbeatsGraph
 	lastSuccessChecksResult graphExecutionResult
 	lastChecksResult        graphExecutionResult
+	clusterList             moira.ClusterList
 }
 
 // NewSelfCheckWorker creates SelfCheckWorker.
-func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config) *SelfCheckWorker {
-	heartbeats := createStandardHeartbeats(logger, database, config)
+func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config, clusterList moira.ClusterList) *SelfCheckWorker {
+	heartbeats := createStandardHeartbeats(logger, database, config, clusterList)
 
 	return &SelfCheckWorker{
 		Logger:          logger,
@@ -71,7 +72,7 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config) heartbeatsGraph {
+func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config, clusterList moira.ClusterList) heartbeatsGraph {
 	nowTS := time.Now().Unix()
 
 	graph := heartbeatsGraph{
@@ -95,8 +96,18 @@ func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf
 		graph[1] = append(graph[1], hb)
 	}
 
-	if hb := heartbeat.GetNotifier(conf.Checks.Notifier.SystemTags, logger, database); hb != nil {
-		graph[1] = append(graph[1], hb)
+	for _, key := range clusterList {
+		hb := heartbeat.GetNotifier(
+			conf.Checks.Notifier.AnyClusterSourceTags,
+			conf.Checks.Notifier.TagPrefixForClusterSource,
+			conf.Checks.Notifier.LocalClusterSourceTags,
+			key,
+			logger,
+			database,
+		)
+		if hb != nil {
+			graph[1] = append(graph[1], hb)
+		}
 	}
 
 	return graph

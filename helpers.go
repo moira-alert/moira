@@ -149,6 +149,34 @@ func Intersect[T comparable](lists ...[]T) []T {
 	return result
 }
 
+// SymmetricDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
+func SymmetricDiff[T comparable](lists ...[]T) []T {
+	if len(lists) == 0 {
+		return []T{}
+	}
+
+	allElements := make(map[T]bool)
+
+	for _, list := range lists {
+		for _, value := range list {
+			allElements[value] = true
+		}
+	}
+
+	intersection := Intersect(lists...)
+
+	for _, value := range intersection {
+		delete(allElements, value)
+	}
+
+	result := make([]T, 0, len(allElements))
+	for value := range allElements {
+		result = append(result, value)
+	}
+
+	return result
+}
+
 // GetStringListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
 func GetStringListsDiff(stringLists ...[]string) []string {
 	if len(stringLists) == 0 {
@@ -347,4 +375,40 @@ func ValidateURL(requestUrl string) error {
 	}
 
 	return nil
+}
+
+// CalculatePercentage computes the percentage of 'part' relative to 'total' as a uint8 pointer, or returns nil if invalid.
+func CalculatePercentage(part, total uint64) *uint8 {
+	if total == 0 {
+		return nil
+	}
+
+	percentage := (float64(part) * float64(100)) / float64(total)
+	if percentage > math.MaxUint8 {
+		return nil
+	}
+
+	percentageValue := uint8(percentage)
+
+	return &percentageValue
+}
+
+// SafeAdd safely adds two uint64 numbers and returns an error if an overflow occurs.
+func SafeAdd(a, b uint64) (uint64, error) {
+	result := a + b
+	if result < a {
+		return 0, fmt.Errorf("integer overflow occurred during addition")
+	}
+
+	return result, nil
+}
+
+// MapToSlice converts a map's values into a slice.
+func MapToSlice[K, V comparable](input map[K]V) []V {
+	res := make([]V, 0, len(input))
+	for _, v := range input {
+		res = append(res, v)
+	}
+
+	return res
 }

@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -12,7 +13,7 @@ import (
 	"github.com/moira-alert/moira/metrics"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -60,7 +61,10 @@ func TestThrottling(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	metrics2 := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	metrics2, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricRegistry, "notifier")
 
 	now := time.Now()
 	next := now.Add(10 * time.Minute)
@@ -87,7 +91,7 @@ func TestThrottling(t *testing.T) {
 		CreatedAt: now.Unix(),
 	}
 
-	Convey("Test sendFail more than 0, and no throttling, should send message in one minute", t, func() {
+	t.Run("sendFail > 0, no throttling, should send message in one minute", func(t *testing.T) {
 		params2 := params
 		params2.ThrottledOld = false
 		params2.SendFail = 1
@@ -102,10 +106,10 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, strconv.FormatInt(now.Unix(), 10), allTimeTo).Return(int64(0))
 
 		notification := scheduler.ScheduleNotification(params2, logger)
-		So(notification, ShouldResemble, &expected2)
+		require.Equal(t, &expected2, notification)
 	})
 
-	Convey("Test sendFail more that 0, and no throttling, but subscription doesn't exists, should send message in one minute", t, func() {
+	t.Run("sendFail > 0, no throttling, but subscription doesn't exist, should send message in one minute", func(t *testing.T) {
 		params2 := params
 		params2.ThrottledOld = false
 		params2.SendFail = 1
@@ -119,10 +123,10 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*params2.Event.SubscriptionID).Return(moira.SubscriptionData{}, testErr)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
-		So(notification, ShouldResemble, &expected2)
+		require.Equal(t, &expected2, notification)
 	})
 
-	Convey("Test sendFail more that 0, and no throttling, but the subscription schedule postpones the dispatch time, should send message in one minute", t, func() {
+	t.Run("sendFail > 0, no throttling, but the subscription schedule postpones the dispatch time, should send message in one minute", func(t *testing.T) {
 		params2 := params
 		params2.ThrottledOld = false
 		params2.SendFail = 1
@@ -143,10 +147,10 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*params2.Event.SubscriptionID).Return(testSubscription, nil)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
-		So(notification, ShouldResemble, &expected2)
+		require.Equal(t, &expected2, notification)
 	})
 
-	Convey("Test sendFail more than 0, and has throttling, should send message in one minute", t, func() {
+	t.Run("sendFail > 0, has throttling, should send message in one minute", func(t *testing.T) {
 		params2 := params
 		params2.ThrottledOld = true
 		params2.SendFail = 3
@@ -161,10 +165,10 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(*params2.Event.SubscriptionID).Return(subscription, nil)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
-		So(notification, ShouldResemble, &expected2)
+		require.Equal(t, &expected2, notification)
 	})
 
-	Convey("Test event state is TEST and no send fails, should return now notification time", t, func() {
+	t.Run("event state is TEST and no send fails, should return now notification time", func(t *testing.T) {
 		subID := "SubscriptionID-000000000000001"
 		testEvent := moira.NotificationEvent{
 			Metric:         "generate.event.1",
@@ -183,10 +187,10 @@ func TestThrottling(t *testing.T) {
 		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
-		So(notification, ShouldResemble, &expected3)
+		require.Equal(t, &expected3, notification)
 	})
 
-	Convey("Test no throttling and no subscription, should return now notification time", t, func() {
+	t.Run("no throttling and no subscription, should return now notification time", func(t *testing.T) {
 		dataBase.EXPECT().GetTriggerThrottling(trigger.ID).Times(1).Return(time.Unix(0, 0), time.Unix(0, 0))
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(moira.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
 
@@ -195,7 +199,7 @@ func TestThrottling(t *testing.T) {
 		systemClock.EXPECT().NowUTC().Return(now).Times(1)
 
 		notification := scheduler.ScheduleNotification(params2, logger)
-		So(notification, ShouldResemble, &expected)
+		require.Equal(t, &expected, notification)
 	})
 }
 
@@ -221,76 +225,79 @@ func TestSubscriptionSchedule(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	notifierMetrics, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricRegistry, "notifier")
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	scheduler := NewScheduler(dataBase, logger, notifierMetrics, SchedulerConfig{ReschedulingDelay: time.Minute}, systemClock)
 
-	Convey("Throttling disabled", t, func() {
+	t.Run("Throttling disabled", func(t *testing.T) {
 		now := time.Unix(1441187115, 0)
 		subscription.ThrottlingEnabled = false
 
-		Convey("When current time is allowed, should send notification now", func() {
+		t.Run("When current time is allowed, should send notification now", func(t *testing.T) {
 			subscription.Schedule = schedule1
 
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			So(next, ShouldResemble, now)
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, now, next)
+			require.False(t, throttled)
 		})
 
-		Convey("When allowed time is today, should send notification at the beginning of allowed interval", func() {
+		t.Run("When allowed time is today, should send notification at the beginning of allowed interval", func(t *testing.T) {
 			subscription.Schedule = schedule2
 
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			So(next, ShouldResemble, time.Unix(1441191600, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441191600, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("When allowed time is in a future day, should send notification at the beginning of allowed interval", func() {
-			now = time.Unix(1441101600, 0)
+		t.Run("When allowed time is in a future day, should send notification at the beginning of allowed interval", func(t *testing.T) {
+			now := time.Unix(1441101600, 0)
 			subscription.Schedule = schedule1
 
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			So(next, ShouldResemble, time.Unix(1441134000, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441134000, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("Trigger already alarm fatigue, but now throttling disabled, should send notification now", func() {
+		t.Run("Trigger already alarm fatigue, but now throttling disabled, should send notification now", func(t *testing.T) {
 			subscription.Schedule = schedule1
 
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(1441187215, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			So(next, ShouldResemble, now)
-			So(throttled, ShouldBeTrue)
+			require.Equal(t, now, next)
+			require.True(t, throttled)
 		})
 	})
 
-	Convey("Throttling enabled", t, func() {
+	t.Run("Throttling enabled", func(t *testing.T) {
 		now := time.Unix(1441134000, 0)
 		subscription.ThrottlingEnabled = true
 
-		Convey("Has trigger events count slightly less than low throttling level, should next timestamp now minutes, but throttling", func() {
+		t.Run("Has trigger events count slightly less than low throttling level, should next timestamp now minutes, but throttling", func(t *testing.T) {
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, strconv.FormatInt(now.Add(-time.Hour*3).Unix(), 10), allTimeTo).Return(int64(13))
 			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, strconv.FormatInt(now.Add(-time.Hour).Unix(), 10), allTimeTo).Return(int64(9))
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			So(next, ShouldResemble, now)
-			So(throttled, ShouldBeTrue)
+			require.Equal(t, now, next)
+			require.True(t, throttled)
 		})
 
-		Convey("Has trigger events count event more than low throttling level, should next timestamp in 30 minutes", func() {
+		t.Run("Has trigger events count event more than low throttling level, should next timestamp in 30 minutes", func(t *testing.T) {
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, strconv.FormatInt(now.Add(-time.Hour*3).Unix(), 10), allTimeTo).Return(int64(10))
@@ -298,34 +305,34 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().SetTriggerThrottling(event.TriggerID, now.Add(time.Hour/2)).Return(nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			So(next, ShouldResemble, time.Unix(1441135800, 0))
-			So(throttled, ShouldBeTrue)
+			require.Equal(t, time.Unix(1441135800, 0), next)
+			require.True(t, throttled)
 		})
 
-		Convey("Has trigger event more than high throttling level, should next timestamp in 1 hour", func() {
+		t.Run("Has trigger event more than high throttling level, should next timestamp in 1 hour", func(t *testing.T) {
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, strconv.FormatInt(now.Add(-time.Hour*3).Unix(), 10), allTimeTo).Return(int64(20))
 			dataBase.EXPECT().SetTriggerThrottling(event.TriggerID, now.Add(time.Hour)).Return(nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			So(next, ShouldResemble, now.Add(time.Hour))
-			So(throttled, ShouldBeTrue)
+			require.Equal(t, now.Add(time.Hour), next)
+			require.True(t, throttled)
 		})
 
-		Convey("Trigger already alarm fatigue, should has old throttled value", func() {
+		t.Run("Trigger already alarm fatigue, should has old throttled value", func(t *testing.T) {
 			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(1441148000, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			So(next, ShouldResemble, time.Unix(1441148000, 0))
-			So(throttled, ShouldBeTrue)
+			require.Equal(t, time.Unix(1441148000, 0), next)
+			require.True(t, throttled)
 		})
 	})
 
-	Convey("Test advanced schedule during current day (e.g. 02:00 - 00:00)", t, func() {
+	t.Run("Test advanced schedule during current day (e.g. 02:00 - 00:00)", func(t *testing.T) {
 		// Schedule: 02:00 - 00:00 (GTM +3)
-		Convey("Time is out of range, nextTime should resemble now", func() {
+		t.Run("Time is out of range, nextTime should resemble now", func(t *testing.T) {
 			// 2015-09-02, 14:00:00 GMT+03:00
 			now := time.Unix(1441191600, 0)
 			subscription.ThrottlingEnabled = false
@@ -335,12 +342,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 14:00:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441191600, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441191600, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("Time is in range, nextTime should resemble start of new period", func() {
+		t.Run("Time is in range, nextTime should resemble start of new period", func(t *testing.T) {
 			// 2015-09-02, 01:00:00 GMT+03:00
 			now := time.Unix(1441144800, 0)
 			subscription.ThrottlingEnabled = false
@@ -350,12 +356,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 02:00:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441148400, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441148400, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("Up border case, nextTime should resemble now", func() {
+		t.Run("Up border case, nextTime should resemble now", func(t *testing.T) {
 			// 2015-09-02, 02:00:00 GMT+03:00
 			now := time.Unix(1441148400, 0)
 			subscription.ThrottlingEnabled = false
@@ -365,12 +370,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 02:00:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441148400, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441148400, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("Low border case, nextTime should resemble start of new period", func() {
+		t.Run("Low border case, nextTime should resemble start of new period", func(t *testing.T) {
 			// 2015-09-02, 00:00:00 GMT+03:00
 			now := time.Unix(1441141200, 0)
 			subscription.ThrottlingEnabled = false
@@ -380,12 +384,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 02:00:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441148400, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441148400, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("Low border case - 1 minute, nextTime should resemble now", func() {
+		t.Run("Low border case - 1 minute, nextTime should resemble now", func(t *testing.T) {
 			// 2015-09-01, 23:59:00 GMT+03:00
 			now := time.Unix(1441141140, 0)
 			subscription.ThrottlingEnabled = false
@@ -395,12 +398,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-01, 23:59:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441141140, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441141140, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("Up border case - 1 minute, nextTime should resemble start of new period", func() {
+		t.Run("Up border case - 1 minute, nextTime should resemble start of new period", func(t *testing.T) {
 			// 2015-09-02, 01:59:00 GMT+03:00
 			now := time.Unix(1441148340, 0)
 			subscription.ThrottlingEnabled = false
@@ -410,15 +412,14 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 02:00:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441148400, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441148400, 0), next)
+			require.False(t, throttled)
 		})
 	})
 
-	Convey("Test advanced schedule between different days (e.g. 23:30 - 18:00)", t, func() {
+	t.Run("Test advanced schedule between different days (e.g. 23:30 - 18:00)", func(t *testing.T) {
 		// Schedule: 23:30 - 18:00 (GTM +3)
-		Convey("Time is out of range within the current day, nextTime should resemble now", func() {
+		t.Run("Time is out of range within the current day, nextTime should resemble now", func(t *testing.T) {
 			// 2015-09-02, 23:45:00 GMT+03:00
 			now := time.Unix(1441140300, 0)
 			subscription.ThrottlingEnabled = false
@@ -428,12 +429,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 23:45:00 GMT+03:00
-			So(next, ShouldResemble, now)
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, now, next)
+			require.False(t, throttled)
 		})
 
-		Convey("Time is out of range on the next day, nextTime should resemble now", func() {
+		t.Run("Time is out of range on the next day, nextTime should resemble now", func(t *testing.T) {
 			// 2015-09-02, 00:35:00 GMT+03:00
 			now := time.Unix(1441143300, 0)
 			subscription.ThrottlingEnabled = false
@@ -443,12 +443,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 00:35:00 GMT+03:00
-			So(next, ShouldResemble, now)
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, now, next)
+			require.False(t, throttled)
 		})
 
-		Convey("Time is in range, nextTime should resemble start of new period", func() {
+		t.Run("Time is in range, nextTime should resemble start of new period", func(t *testing.T) {
 			// 2015-09-02, 20:00:00 GMT+03:00
 			now := time.Unix(1441213200, 0)
 			subscription.ThrottlingEnabled = false
@@ -458,12 +457,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 23:30:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441225800, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441225800, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("Up border case, nextTime should resemble now", func() {
+		t.Run("Up border case, nextTime should resemble now", func(t *testing.T) {
 			// 2015-09-02, 23:30:00 GMT+03:00
 			now := time.Unix(1441225800, 0)
 			subscription.ThrottlingEnabled = false
@@ -473,12 +471,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 23:30:00 GMT+03:00
-			So(next, ShouldResemble, now)
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, now, next)
+			require.False(t, throttled)
 		})
 
-		Convey("Low border case, nextTime should resemble start of new period", func() {
+		t.Run("Low border case, nextTime should resemble start of new period", func(t *testing.T) {
 			// 2015-09-02, 18:00:00 GMT+03:00
 			now := time.Unix(1441206000, 0)
 			subscription.ThrottlingEnabled = false
@@ -488,12 +485,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 23:30:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441225800, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441225800, 0), next)
+			require.False(t, throttled)
 		})
 
-		Convey("Low border case - 1 minute, nextTime should resemble now", func() {
+		t.Run("Low border case - 1 minute, nextTime should resemble now", func(t *testing.T) {
 			// 2015-09-01, 17:59:00 GMT+03:00
 			now := time.Unix(1441205940, 0)
 			subscription.ThrottlingEnabled = false
@@ -503,12 +499,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-01, 17:59:00 GMT+03:00
-			So(next, ShouldResemble, now)
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, now, next)
+			require.False(t, throttled)
 		})
 
-		Convey("Up border case - 1 minute, nextTime should resemble start of new period", func() {
+		t.Run("Up border case - 1 minute, nextTime should resemble start of new period", func(t *testing.T) {
 			// 2015-09-02, 23:29:00 GMT+03:00
 			now := time.Unix(1441225740, 0)
 			subscription.ThrottlingEnabled = false
@@ -518,9 +513,8 @@ func TestSubscriptionSchedule(t *testing.T) {
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event, logger)
-			// 2015-09-02, 23:30:00 GMT+03:00
-			So(next, ShouldResemble, time.Unix(1441225800, 0))
-			So(throttled, ShouldBeFalse)
+			require.Equal(t, time.Unix(1441225800, 0), next)
+			require.False(t, throttled)
 		})
 	})
 }

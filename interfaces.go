@@ -10,15 +10,6 @@ import (
 
 // Database implements DB functionality.
 type Database interface {
-	// SelfState
-	UpdateMetricsHeartbeat() error
-	GetMetricsUpdatesCount() (int64, error)
-	GetChecksUpdatesCount() (int64, error)
-	GetRemoteChecksUpdatesCount() (int64, error)
-	GetPrometheusChecksUpdatesCount() (int64, error)
-	GetNotifierState() (NotifierState, error)
-	SetNotifierState(actor, state string) error
-
 	// Tag storing
 	GetTagNames() ([]string, error)
 	CreateTags(tags []string) error
@@ -85,19 +76,6 @@ type Database interface {
 	GetTeamSubscriptionIDs(teamID string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 
-	// ScheduledNotification storing
-	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
-	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, error)
-	RemoveNotification(notificationKey string) (int64, error)
-	RemoveFilteredNotifications(start, end int64, ignoredTags []string) (int64, error)
-	RemoveAllNotifications() error
-	FetchNotifications(to int64, limit int64) ([]*ScheduledNotification, error)
-	AddNotification(notification *ScheduledNotification) error
-	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
-	PushContactNotificationToHistory(notification *ScheduledNotification) error
-	CleanUpOutdatedNotificationHistory(ttl int64) error
-	CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*ContactIDWithNotificationCount, error)
-
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
 	AddPatternMetric(pattern, metric string) error
@@ -163,6 +141,30 @@ type Database interface {
 
 	// Delivery checks
 	DeliveryCheckerDatabase
+
+	// Self State
+	SelfStateDatabase
+
+	// ContactScore storing
+	ContactScoreDatabase
+
+	// ScheduledNotification storing
+	ScheduledNotificationsDatabase
+}
+
+// ScheduledNotificationsDatabase is used to schedule and fetch notifications, as well as to view list of all notifications and delete some when needed.
+type ScheduledNotificationsDatabase interface {
+	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
+	GetNotificationsHistoryByContactID(contactID string, from, to, page, size int64) ([]*NotificationEventHistoryItem, int64, error)
+	RemoveNotification(notificationKey string) (int64, error)
+	RemoveFilteredNotifications(start, end int64, ignoredTags []string, sourceList []ClusterKey) (int64, error)
+	RemoveAllNotifications() error
+	FetchNotifications(custerKey ClusterKey, to int64, limit int64) ([]*ScheduledNotification, error)
+	AddNotification(notification *ScheduledNotification) error
+	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
+	PushContactNotificationToHistory(notification *ScheduledNotification) error
+	CleanUpOutdatedNotificationHistory(ttl int64) error
+	CountEventsInNotificationHistory(contactIDs []string, from, to string) ([]*ContactIDWithNotificationCount, error)
 }
 
 // DeliveryCheckerDatabase is used by senders that can track if the notification was delivered.
@@ -173,6 +175,30 @@ type DeliveryCheckerDatabase interface {
 	GetDeliveryChecksData(contactType string, from string, to string) ([]string, error)
 	// RemoveDeliveryChecksData must remove already used data for performing delivery checks.
 	RemoveDeliveryChecksData(contactType string, from string, to string) (int64, error)
+}
+
+// SelfStateDatabase is used to store notifier states and heartbeats.
+type SelfStateDatabase interface {
+	UpdateMetricsHeartbeat() error
+	GetMetricsUpdatesCount() (int64, error)
+	GetChecksUpdatesCount() (int64, error)
+	GetRemoteChecksUpdatesCount() (int64, error)
+	GetPrometheusChecksUpdatesCount() (int64, error)
+	GetNotifierState() (NotifierState, error)
+	SetNotifierState(actor, state string) error
+	GetNotifierStateForSources() (map[ClusterKey]NotifierState, error)
+	GetNotifierStateForSource(clusterKey ClusterKey) (NotifierState, error)
+	SetNotifierStateForSource(clusterKey ClusterKey, actor, state string) error
+}
+
+// ContactScore storing.
+type ContactScoreDatabase interface {
+	// UpdateContactScores updates the contact scores based on the provided updater function.
+	UpdateContactScores(contactIDs []string, updater func(ContactScore) ContactScore) error
+	// GetContactsScore must be used to get contact scores persisted in database by contact ids.
+	GetContactsScore(contactIDs []string) (map[string]*ContactScore, error)
+	// GetContactScore must be used to get contact score persisted in database by contact id.
+	GetContactScore(contactID string) (*ContactScore, error)
 }
 
 // Lock implements lock abstraction.

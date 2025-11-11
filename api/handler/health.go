@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -14,9 +15,12 @@ import (
 
 func health(router chi.Router) {
 	router.Get("/notifier", getNotifierState)
-
 	router.With(middleware.AdminOnlyMiddleware()).
 		Put("/notifier", setNotifierState)
+
+	router.Get("/notifier-sources", getNotifierStatesForSources)
+	router.With(middleware.AdminOnlyMiddleware()).
+		Put("/notifier-sources/{triggerSource}/{clusterId}", setNotifierStateForSource)
 
 	router.With(middleware.AdminOnlyMiddleware()).
 		Get("/system-subscriptions", getSystemSubscriptions)
@@ -62,7 +66,8 @@ func getSystemTags(request *http.Request) []string {
 	sysTags, queryFiltered := request.URL.Query()[sysTagsKey]
 	if !queryFiltered {
 		checksConfig := middleware.GetSelfStateChecksConfig(request)
-		sysTags = checksConfig.GetUniqueSystemTags()
+		metricSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
+		sysTags = checksConfig.GetUniqueSystemTags(metricSourceProvider.GetClusterList())
 	}
 
 	return sysTags
@@ -93,6 +98,29 @@ func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 
 // nolint: gofmt,goimports
 //
+//	@summary	Get notifier states for sources
+//	@id			get-notifier-state-for-sources
+//	@tags		health
+//	@produce	json
+//	@success	200	{object}	dto.NotifierStatesForSources	"Notifier state retrieved"
+//	@failure	422	{object}	api.ErrorResponse				"Render error"
+//	@failure	500	{object}	api.ErrorResponse				"Internal server error"
+//	@router		/health/notifier [get]
+func getNotifierStatesForSources(writer http.ResponseWriter, request *http.Request) {
+	state, err := controller.GetNotifierStatesForSources(database)
+	if err != nil {
+		render.Render(writer, request, err) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, state); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+// nolint: gofmt,goimports
+//
 //	@summary	Set notifier state
 //	@id			set-notifier-state
 //	@tags		health
@@ -110,6 +138,47 @@ func setNotifierState(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := controller.UpdateNotifierState(database, state); err != nil {
+		render.Render(writer, request, err) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, state); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Set notifier state
+//	@id			set-notifier-state
+//	@tags		health
+//	@produce	json
+//	@success	200	{object}	dto.NotifierState	"Notifier state retrieved"
+//	@failure	403	{object}	api.ErrorResponse	"Forbidden"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
+//	@router		/health/notifier [put]
+func setNotifierStateForSource(writer http.ResponseWriter, request *http.Request) {
+	state := &dto.NotifierState{}
+	if err := render.Bind(request, state); err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	triggerSource := chi.URLParam(request, "triggerSource")
+	clusterId := chi.URLParam(request, "clusterId")
+	clusterKey := moira.MakeClusterKey(moira.TriggerSource(triggerSource), moira.ClusterId(clusterId))
+
+	sourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
+	if _, err := sourceProvider.GetMetricSource(clusterKey); err != nil {
+		err := api.ErrorNotFound(fmt.Sprintf("Trigger source with cluster id '%s' does not exist", clusterKey.String()))
+		render.Render(writer, request, err) //nolint
+
+		return
+	}
+
+	if err := controller.UpdateNotifierStateForSource(database, clusterKey, state); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}

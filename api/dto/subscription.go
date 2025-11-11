@@ -42,7 +42,7 @@ func (err ErrProvidedContactsForbidden) Error() string {
 }
 
 type SubscriptionList struct {
-	List []moira.SubscriptionData `json:"list"`
+	List []moira.SubscriptionData `json:"list" binding:"required"`
 }
 
 func (*SubscriptionList) Render(w http.ResponseWriter, r *http.Request) error {

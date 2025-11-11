@@ -38,8 +38,10 @@ func toCheckConfig(checksConfig cmd.ChecksConfig) *selfstate.ChecksConfig {
 		RemoteChecker: selfstate.HeartbeatConfig{
 			SystemTags: checksConfig.RemoteChecker.SystemTags,
 		},
-		Notifier: selfstate.HeartbeatConfig{
-			SystemTags: checksConfig.Notifier.SystemTags,
+		Notifier: selfstate.NotifierHeartbeatConfig{
+			AnyClusterSourceTags:      checksConfig.Notifier.AnyClusterSourceTags,
+			LocalClusterSourceTags:    checksConfig.Notifier.LocalClusterSourceTags,
+			TagPrefixForClusterSource: checksConfig.Notifier.TagPrefixForClusterSource,
 		},
 	}
 }
@@ -82,6 +84,8 @@ type LimitsConfig struct {
 	Trigger TriggerLimitsConfig `yaml:"trigger"`
 	// Team contains the limits applied to teams.
 	Team TeamLimitsConfig `yaml:"team"`
+	// Contact contains the limits applied to contacts.
+	Contact ContactLimits `yaml:"contact"`
 }
 
 // PagerLimits represents the limits which will be applied to all pagers.
@@ -104,6 +108,12 @@ type TeamLimitsConfig struct {
 	MaxDescriptionSize int `yaml:"max_description_size"`
 }
 
+// ContactLimits defines limits for contact-related configurations.
+type ContactLimits struct {
+	// TestNotificationWaitTime specifies the duration to wait for test notifications.
+	TestNotificationWaitTime time.Duration `yaml:"test_notification_wait_time"`
+}
+
 // ToLimits converts LimitsConfig to api.LimitsConfig.
 func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 	return api.LimitsConfig{
@@ -116,6 +126,9 @@ func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 		Team: api.TeamLimits{
 			MaxNameSize:        conf.Team.MaxNameSize,
 			MaxDescriptionSize: conf.Team.MaxDescriptionSize,
+		},
+		Contact: api.ContactLimits{
+			TestNotificationWaitTime: conf.Contact.TestNotificationWaitTime,
 		},
 	}
 }
@@ -249,32 +262,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		webContacts = append(webContacts, contact)
 	}
 
-	clusters := []api.MetricSourceCluster{{
-		TriggerSource: moira.GraphiteLocal,
-		ClusterId:     moira.DefaultCluster,
-		ClusterName:   "Graphite Local",
-		MetricsTTL:    uint64(to.Duration(redisConfig.MetricsTTL).Seconds()),
-	}}
-
-	for _, remote := range remotes.Graphite {
-		cluster := api.MetricSourceCluster{
-			TriggerSource: moira.GraphiteRemote,
-			ClusterId:     remote.ClusterId,
-			ClusterName:   remote.ClusterName,
-			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
-		}
-		clusters = append(clusters, cluster)
-	}
-
-	for _, remote := range remotes.Prometheus {
-		cluster := api.MetricSourceCluster{
-			TriggerSource: moira.PrometheusRemote,
-			ClusterId:     remote.ClusterId,
-			ClusterName:   remote.ClusterName,
-			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
-		}
-		clusters = append(clusters, cluster)
-	}
+	clusters := cmd.MakeClustersWebConfig(redisConfig, remotes)
 
 	return &api.WebConfig{
 		SupportEmail:         config.SupportEmail,
@@ -329,6 +317,9 @@ func getDefault() config {
 				Team: TeamLimitsConfig{
 					MaxNameSize:        api.DefaultTeamNameMaxSize,
 					MaxDescriptionSize: api.DefaultTeamDescriptionMaxSize,
+				},
+				Contact: ContactLimits{
+					TestNotificationWaitTime: 10 * time.Second,
 				},
 			},
 		},

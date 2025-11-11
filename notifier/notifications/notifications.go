@@ -16,11 +16,12 @@ const sleepAfterNotifierBadState = time.Second * 10
 
 // FetchNotificationsWorker - check for new notifications and send it using notifier.
 type FetchNotificationsWorker struct {
-	Logger   moira.Logger
-	Database moira.Database
-	Notifier notifier.Notifier
-	Metrics  *metrics.NotifierMetrics
-	tomb     tomb.Tomb
+	Logger      moira.Logger
+	Database    moira.Database
+	Notifier    notifier.Notifier
+	Metrics     *metrics.NotifierMetrics
+	ClusterList moira.ClusterList
+	tomb        tomb.Tomb
 }
 
 func (worker *FetchNotificationsWorker) updateFetchNotificationsMetric(fetchNotificationsStartTime time.Time) {
@@ -34,34 +35,37 @@ func (worker *FetchNotificationsWorker) updateFetchNotificationsMetric(fetchNoti
 
 // Start is a cycle that fetches scheduled notifications from database.
 func (worker *FetchNotificationsWorker) Start() {
-	worker.tomb.Go(func() error {
-		checkTicker := time.NewTicker(time.Second)
+	for _, clusterKey := range worker.ClusterList {
+		worker.tomb.Go(func() error {
+			checkTicker := time.NewTicker(time.Second)
 
-		for {
-			select {
-			case <-worker.tomb.Dying():
-				worker.Logger.Info().Msg("Moira Notifier Fetching scheduled notifications stopped")
-				worker.Notifier.StopSenders()
+			for {
+				select {
+				case <-worker.tomb.Dying():
+					worker.Logger.Info().Msg("Moira Notifier Fetching scheduled notifications stopped")
+					worker.Notifier.StopSenders()
 
-				return nil
-			case <-checkTicker.C:
-				if err := worker.processScheduledNotifications(); err != nil {
-					switch err.(type) { // nolint:errorlint
-					case notifierInBadStateError:
-						worker.Logger.Warning().
-							String("stop_sending_notifications_for", sleepAfterNotifierBadState.String()).
-							Error(err).
-							Msg("Stop sending notifications for some time. Fix SelfState errors and turn on notifier in /notifications page")
-						<-time.After(sleepAfterNotifierBadState)
-					default:
-						worker.Logger.Warning().
-							Error(err).
-							Msg("Failed to fetch scheduled notifications")
+					return nil
+				case <-checkTicker.C:
+					if err := worker.processScheduledNotifications(clusterKey); err != nil {
+						switch err.(type) { // nolint:errorlint
+						case notifierInBadStateError:
+							worker.Logger.Warning().
+								String("stop_sending_notifications_for", sleepAfterNotifierBadState.String()).
+								Error(err).
+								Msg("Stop sending notifications for some time. Fix SelfState errors and turn on notifier in /notifications page")
+							<-time.After(sleepAfterNotifierBadState)
+						default:
+							worker.Logger.Warning().
+								Error(err).
+								Msg("Failed to fetch scheduled notifications")
+						}
 					}
 				}
 			}
-		}
-	})
+		})
+	}
+
 	worker.Logger.Info().Msg("Moira Notifier Fetching scheduled notifications started")
 }
 
@@ -71,7 +75,7 @@ func (worker *FetchNotificationsWorker) Stop() error {
 	return worker.tomb.Wait()
 }
 
-func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
+func (worker *FetchNotificationsWorker) processScheduledNotifications(clusterKey moira.ClusterKey) error {
 	state, err := worker.Database.GetNotifierState()
 	if err != nil {
 		return notifierInBadStateError("can't get current notifier state")
@@ -81,9 +85,18 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state.State))
 	}
 
+	sourceState, err := worker.Database.GetNotifierStateForSource(clusterKey)
+	if err != nil {
+		return notifierInBadStateError("can't get current notifier states for sources")
+	}
+
+	if sourceState.State != moira.SelfStateOK {
+		return notifierInBadStateError(fmt.Sprintf("notifier's source '%s' in a bad state: '%v'", clusterKey.String(), sourceState.State))
+	}
+
 	fetchNotificationsStartTime := time.Now()
 
-	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
+	notifications, err := worker.Database.FetchNotifications(clusterKey, time.Now().Unix(), worker.Notifier.GetReadBatchSize())
 	if err != nil {
 		return err
 	}

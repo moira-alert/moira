@@ -3,9 +3,12 @@ package redis
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"slices"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
@@ -68,10 +71,6 @@ func (connector *DbConnector) GetPrometheusChecksUpdatesCount() (int64, error) {
 // GetNotifierState return current notifier state: <OK|ERROR>.
 func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 	c := *connector.client
-	defaultState := moira.NotifierState{
-		State: moira.SelfStateERROR,
-		Actor: moira.SelfStateActorManual,
-	}
 
 	getResult := c.Get(connector.context, selfStateNotifierHealth)
 	if errors.Is(getResult.Err(), redis.Nil) {
@@ -82,7 +81,7 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 
 		err := connector.setNotifierState(state)
 		if err != nil {
-			return defaultState, err
+			return errorState, err
 		}
 
 		return state, err
@@ -130,10 +129,109 @@ func (connector *DbConnector) setNotifierState(dto moira.NotifierState) error {
 	return c.Set(connector.context, selfStateNotifierHealth, state, redis.KeepTTL).Err()
 }
 
+// GetNotifierStateForSource returns state for a given metric source cluster.
+func (connector *DbConnector) GetNotifierStateForSource(clusterKey moira.ClusterKey) (moira.NotifierState, error) {
+	if !slices.Contains(connector.clusterList, clusterKey) {
+		return errorState, fmt.Errorf("unknown cluster '%s'", clusterKey.String())
+	}
+
+	c := *connector.client
+
+	stateCmd := c.Get(connector.context, makeSelfStateNotifierStateForSource(clusterKey))
+
+	state, err := reply.NotifierState(stateCmd)
+	if err != nil && !errors.Is(err, database.ErrNil) {
+		return errorState, err
+	}
+
+	if errors.Is(err, database.ErrNil) {
+		// If state for cluster was never set, set OK by default
+		return okState, nil
+	}
+
+	return state, nil
+}
+
+// GetNotifierStateForSources returns state for all metric source clusters.
+func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey]moira.NotifierState, error) {
+	c := *connector.client
+
+	statesCmd := make([]*redis.StringCmd, 0, len(connector.clusterList))
+
+	_, _ = c.TxPipelined(connector.context, func(p redis.Pipeliner) error {
+		for _, cluster := range connector.clusterList {
+			statesCmd = append(statesCmd, p.Get(connector.context, makeSelfStateNotifierStateForSource(cluster)))
+		}
+
+		return nil
+	})
+
+	result := make(map[moira.ClusterKey]moira.NotifierState, len(connector.clusterList))
+
+	for i, cluster := range connector.clusterList {
+		state, err := reply.NotifierState(statesCmd[i])
+		if err != nil && !errors.Is(err, database.ErrNil) {
+			return nil, err
+		}
+
+		if errors.Is(err, database.ErrNil) {
+			// If state for cluster was never set, set OK by default
+			result[cluster] = okState
+		} else {
+			result[cluster] = state
+		}
+	}
+
+	return result, nil
+}
+
+// SetNotifierStateForSource saves state for given metric source cluster.
+func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.ClusterKey, actor, state string) error {
+	if !slices.Contains(connector.clusterList, clusterKey) {
+		return fmt.Errorf("unknown cluster '%s'", clusterKey.String())
+	}
+
+	c := *connector.client
+
+	currentState := moira.NotifierState{
+		State: state,
+		Actor: actor,
+	}
+
+	bytes, err := json.Marshal(currentState)
+	if err != nil {
+		return err
+	}
+
+	saveCmd := c.Set(connector.context, makeSelfStateNotifierStateForSource(clusterKey), bytes, redis.KeepTTL)
+
+	err = saveCmd.Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var errorState moira.NotifierState = moira.NotifierState{
+	State: moira.SelfStateERROR,
+	Actor: moira.SelfStateActorManual,
+}
+
+var okState moira.NotifierState = moira.NotifierState{
+	State: moira.SelfStateOK,
+	Actor: moira.SelfStateActorManual,
+}
+
+func makeSelfStateNotifierStateForSource(clusterKey moira.ClusterKey) string {
+	return selfStateNotifierStateForSource + ":" + clusterKey.String()
+}
+
 var (
 	selfStateMetricsHeartbeatKey        = "moira-selfstate:metrics-heartbeat"
 	selfStateChecksCounterKey           = "moira-selfstate:checks-counter"
 	selfStateRemoteChecksCounterKey     = "moira-selfstate:remote-checks-counter"
 	selfStatePrometheusChecksCounterKey = "moira-selfstate:prometheus-checks-counter"
 	selfStateNotifierHealth             = "moira-selfstate:notifier-health"
+	selfStateNotifierStateForSource     = "moira-selfstate:notifier-state-for-source"
 )

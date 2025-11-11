@@ -2,6 +2,7 @@ package main
 
 import (
 	"runtime"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
@@ -151,6 +152,14 @@ func getDefault() config {
 				URI:          "localhost:2003",
 				Prefix:       "DevOps.Moira",
 				Interval:     "60s",
+			},
+			Otel: cmd.OtelConfig{
+				Enabled:      false,
+				Insecure:     true,
+				PushInterval: time.Minute,
+			},
+			Prometheus: cmd.PrometheusConfig{
+				Enabled: false,
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},

@@ -8,22 +8,26 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
-	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_metrics "github.com/moira-alert/moira/mock/moira-alert/metrics"
 )
 
-func initAliveMeter(mockCtrl *gomock.Controller) (*mock_metrics.MockRegistry, *mock_metrics.MockMeter) {
+func initAliveMeter(mockCtrl *gomock.Controller) (*mock_metrics.MockRegistry, *mock_metrics.MockMetricRegistry, *mock_metrics.MockMeter) {
 	mockRegistry := mock_metrics.NewMockRegistry(mockCtrl)
+	mockAttributedRegistry := mock_metrics.NewMockMetricRegistry(mockCtrl)
 	mockAliveMeter := mock_metrics.NewMockMeter(mockCtrl)
 
 	mockRegistry.EXPECT().NewMeter(gomock.Any()).Times(5)
 	mockRegistry.EXPECT().NewHistogram(gomock.Any()).Times(3)
 	mockRegistry.EXPECT().NewMeter("", "alive").Return(mockAliveMeter)
 
-	return mockRegistry, mockAliveMeter
+	mockAttributedRegistry.EXPECT().NewGauge(gomock.Any()).Times(5)
+	mockAttributedRegistry.EXPECT().NewHistogram(gomock.Any()).Times(3)
+	mockAttributedRegistry.EXPECT().NewGauge("alive").Return(mockAliveMeter, nil)
+
+	return mockRegistry, mockAttributedRegistry, mockAliveMeter
 }
 
 func TestAliveWatcher_checkNotifierState(t *testing.T) {
@@ -32,37 +36,37 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	mockRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
-	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, "")
+	mockRegistry, mockAttributedRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
+	testNotifierMetrics, _ := metrics.ConfigureNotifierMetrics(mockRegistry, mockAttributedRegistry, "")
 
 	aliveWatcher := NewAliveWatcher(nil, dataBase, 0, testNotifierMetrics)
 
-	Convey("checkNotifierState", t, func() {
-		Convey("when OK", func() {
-			dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+	t.Run("checkNotifierState", func(t *testing.T) {
+		t.Run("when OK", func(t *testing.T) {
+			dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
 			}, nil)
-			mockAliveMeter.EXPECT().Mark(int64(1))
+			mockAliveMeter.EXPECT().Mark(int64(1)).Times(2)
 
 			aliveWatcher.checkNotifierState()
 		})
 
-		Convey("when not OK state and no errors", func() {
+		t.Run("when not OK state and no errors", func(t *testing.T) {
 			notOKStates := []string{moira.SelfStateERROR, "err", "bad", "", "1"}
 
 			for _, badState := range notOKStates {
-				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 					State: badState,
 					Actor: moira.SelfStateActorManual,
 				}, nil)
-				mockAliveMeter.EXPECT().Mark(int64(0))
+				mockAliveMeter.EXPECT().Mark(int64(0)).Times(2)
 
 				aliveWatcher.checkNotifierState()
 			}
 		})
 
-		Convey("when not OK state and errors", func() {
+		t.Run("when not OK state and errors", func(t *testing.T) {
 			notOKState := ""
 			givenErrors := []error{
 				errors.New("one error"),
@@ -70,10 +74,10 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 			}
 
 			for _, err := range givenErrors {
-				dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 					State: notOKState,
 				}, err)
-				mockAliveMeter.EXPECT().Mark(int64(0))
+				mockAliveMeter.EXPECT().Mark(int64(0)).Times(2)
 
 				aliveWatcher.checkNotifierState()
 			}
@@ -95,19 +99,19 @@ func TestAliveWatcher_Start(t *testing.T) {
 		testCheckNotifierStateTimeout = time.Second
 	)
 
-	mockRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
-	testNotifierMetrics := metrics.ConfigureNotifierMetrics(mockRegistry, "")
+	mockRegistry, mockAttributedRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
+	testNotifierMetrics, _ := metrics.ConfigureNotifierMetrics(mockRegistry, mockAttributedRegistry, "")
 
 	aliveWatcher := NewAliveWatcher(logger, dataBase, testCheckNotifierStateTimeout, testNotifierMetrics)
 
-	Convey("AliveWatcher stops on cancel", t, func() {
+	t.Run("AliveWatcher stops on cancel", func(t *testing.T) {
 		eventsBuilder.EXPECT().
 			Interface("check_timeout_seconds", testCheckNotifierStateTimeout.Seconds()).
 			Return(eventsBuilder)
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher started")
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher stopped")
 
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil).AnyTimes()

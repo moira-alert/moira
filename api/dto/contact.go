@@ -9,7 +9,7 @@ import (
 )
 
 type ContactList struct {
-	List []TeamContact `json:"list"`
+	List []TeamContact `json:"list" binding:"required"`
 }
 
 func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {
@@ -17,10 +17,10 @@ func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type Contact struct {
-	Type         string `json:"type" example:"mail"`
+	Type         string `json:"type" binding:"required" example:"mail"`
 	Name         string `json:"name,omitempty" example:"Mail Alerts"`
-	Value        string `json:"value" example:"devops@example.com"`
-	ID           string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	Value        string `json:"value" binding:"required" example:"devops@example.com"`
+	ID           string `json:"id" binding:"required" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
 	User         string `json:"user,omitempty" example:""`
 	TeamID       string `json:"team_id,omitempty"`
 	ExtraMessage string `json:"extra_message,omitempty"`
@@ -65,7 +65,7 @@ func (contact *Contact) Bind(r *http.Request) error {
 type ContactNoisiness struct {
 	Contact
 	// EventsCount for the contact.
-	EventsCount uint64 `json:"events_count"`
+	EventsCount uint64 `json:"events_count" binding:"required"`
 }
 
 func (*ContactNoisiness) Render(w http.ResponseWriter, r *http.Request) error {
@@ -77,4 +77,35 @@ type ContactNoisinessList ListDTO[*ContactNoisiness]
 
 func (*ContactNoisinessList) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+// ContactScore represents the score details of a contact.
+type ContactScore struct {
+	// ScorePercent is the percentage score of successful transactions.
+	ScorePercent *uint8 `json:"score_percent,omitempty"`
+	// LastErrMessage is the last error message encountered.
+	LastErrMessage string `json:"last_err,omitempty"`
+	// LastErrTimestamp is the timestamp of the last error.
+	LastErrTimestamp uint64 `json:"last_err_timestamp,omitempty"`
+	// Status is the current status of the contact.
+	Status string `json:"status,omitempty"`
+}
+
+func NewContactScore(data *moira.ContactScore) *ContactScore {
+	if data == nil {
+		return nil
+	}
+
+	return &ContactScore{
+		Status: string(data.Status),
+		LastErrMessage: data.LastErrorMsg,
+		LastErrTimestamp: data.LastErrorTimestamp,
+		ScorePercent: moira.CalculatePercentage(data.SuccessTXCount, data.AllTXCount),
+	}
+}
+
+// ContactWithScore represents a contact with an associated score.
+type ContactWithScore struct {
+	Contact
+	Score *ContactScore `json:"score,omitempty" extensions:"x-nullable"`
 }

@@ -3,15 +3,13 @@ package dto
 
 import (
 	"net/http"
-
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 )
 
 type UserSettings struct {
 	User
-	Contacts      []moira.ContactData      `json:"contacts"`
-	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
+	Contacts      []ContactWithScore      `json:"contacts" binding:"required"`
+	Subscriptions []Subscription `json:"subscriptions" binding:"required"`
 }
 
 func (*UserSettings) Render(w http.ResponseWriter, r *http.Request) error {
@@ -19,7 +17,7 @@ func (*UserSettings) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type User struct {
-	Login       string   `json:"login" example:"john"`
+	Login       string   `json:"login" binding:"required" example:"john"`
 	Role        api.Role `json:"role,omitempty" example:"user"`
 	AuthEnabled bool     `json:"auth_enabled,omitempty" example:"true"`
 }

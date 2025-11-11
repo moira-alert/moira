@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -26,15 +27,19 @@ func TestInitTriggerChecker(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := local.Create(dataBase)
 	triggerID := "superId"
-	checkerMetrics := metrics.ConfigureCheckerMetrics(
+	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	checkerMetrics, _ := metrics.ConfigureCheckerMetrics(
 		metrics.NewDummyRegistry(),
+		metricRegistry,
 		[]moira.ClusterKey{moira.DefaultLocalCluster},
 	)
 
 	defer mockCtrl.Finish()
 
-	Convey("Test errors", t, func() {
-		Convey("Get trigger error", func() {
+	t.Run("Test errors", func(t *testing.T) {
+		t.Run("Get trigger error", func(t *testing.T) {
 			getTriggerError := fmt.Errorf("Oppps! Can't read trigger")
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
 				TriggerSource: moira.GraphiteLocal,
@@ -42,22 +47,22 @@ func TestInitTriggerChecker(t *testing.T) {
 			}, getTriggerError)
 
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, getTriggerError)
+			require.Error(t, err)
+			require.Equal(t, getTriggerError, err)
 		})
 
-		Convey("No trigger error", func() {
+		t.Run("No trigger error", func(t *testing.T) {
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
 				TriggerSource: moira.GraphiteLocal,
 				ClusterId:     moira.DefaultCluster,
 			}, database.ErrNil)
 
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, ErrTriggerNotExists)
+			require.Error(t, err)
+			require.Equal(t, ErrTriggerNotExists, err)
 		})
 
-		Convey("Get lastCheck error", func() {
+		t.Run("Get lastCheck error", func(t *testing.T) {
 			readLastCheckError := fmt.Errorf("Oppps! Can't read last check")
 
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
@@ -67,8 +72,8 @@ func TestInitTriggerChecker(t *testing.T) {
 			}, nil)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, readLastCheckError)
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, readLastCheckError)
+			require.Error(t, err)
+			require.Equal(t, readLastCheckError, err)
 		})
 	})
 
@@ -126,11 +131,11 @@ func TestInitTriggerChecker(t *testing.T) {
 		},
 	}
 
-	Convey("Test trigger checker with lastCheck", t, func() {
+	t.Run("Test trigger checker with lastCheck", func(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
 		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		expectedLastCheck := lastCheck
 		expectedLastCheck.Clock = clock.NewSystemClock()
@@ -148,14 +153,14 @@ func TestInitTriggerChecker(t *testing.T) {
 			until:     actual.until,
 			metrics:   metrics,
 		}
-		So(actual, ShouldResemble, &expected)
+		require.Equal(t, &expected, actual)
 	})
 
-	Convey("Test trigger checker without lastCheck", t, func() {
+	t.Run("Test trigger checker without lastCheck", func(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		expected := TriggerChecker{
 			triggerID: triggerID,
@@ -177,17 +182,17 @@ func TestInitTriggerChecker(t *testing.T) {
 			metrics: metrics,
 		}
 
-		So(*actual, ShouldResemble, expected)
+		require.Equal(t, expected, *actual)
 	})
 
 	trigger.TTL = 0
 	trigger.TTLState = nil
 
-	Convey("Test trigger checker without lastCheck and ttl", t, func() {
+	t.Run("Test trigger checker without lastCheck and ttl", func(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		expected := TriggerChecker{
 			triggerID: triggerID,
@@ -208,15 +213,15 @@ func TestInitTriggerChecker(t *testing.T) {
 			until:   actual.until,
 			metrics: metrics,
 		}
-		So(*actual, ShouldResemble, expected)
+		require.Equal(t, expected, *actual)
 	})
 
-	Convey("Test trigger checker with lastCheck and without ttl", t, func() {
+	t.Run("Test trigger checker with lastCheck and without ttl", func(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
 		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateTestMetricSourceProvider(localSource, nil, nil), checkerMetrics)
 
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		expectedLastCheck := lastCheck
 		expectedLastCheck.Clock = clock.NewSystemClock()
@@ -234,6 +239,6 @@ func TestInitTriggerChecker(t *testing.T) {
 			until:     actual.until,
 			metrics:   metrics,
 		}
-		So(*actual, ShouldResemble, expected)
+		require.Equal(t, expected, *actual)
 	})
 }

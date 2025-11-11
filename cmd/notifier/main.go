@@ -78,10 +78,12 @@ func main() {
 	}
 	defer telemetry.Stop()
 
+	clusterList := cmd.MakeClusterList(config.Remotes)
+
 	databaseSettings := config.Redis.GetSettings()
 	notificationHistorySettings := config.NotificationHistory.GetSettings()
 	notificationSettings := config.Notification.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier)
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier, clusterList)
 
 	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
 	if err != nil {
@@ -100,7 +102,12 @@ func main() {
 		ReschedulingDelay: notifierConfig.ReschedulingDelay,
 	}
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
+	notifierMetrics, err := metrics.ConfigureNotifierMetrics(telemetry.Metrics, telemetry.AttributedMetrics, serviceName)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize notifier telemetry")
+	}
 
 	sender := notifier.NewNotifier(
 		database,
@@ -121,8 +128,8 @@ func main() {
 	}
 
 	// Start moira self state checker
-	if config.Notifier.SelfState.getSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
+	if config.Notifier.getSelfstateSettings().Enabled {
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.getSelfstateSettings(), clusterList)
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).
@@ -135,10 +142,11 @@ func main() {
 
 	// Start moira notification fetcher
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
-		Logger:   logger,
-		Database: database,
-		Notifier: sender,
-		Metrics:  notifierMetrics,
+		Logger:      logger,
+		Database:    database,
+		Notifier:    sender,
+		Metrics:     notifierMetrics,
+		ClusterList: clusterList,
 	}
 	fetchNotificationsWorker.Start()
 	defer stopNotificationsFetcher(fetchNotificationsWorker)

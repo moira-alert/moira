@@ -59,6 +59,7 @@ func NewHandler(
 	router.Use(middleware.NoCache)
 	router.Use(moiramiddle.LimitsContext(apiConfig.Limits))
 	router.Use(moiramiddle.SelfStateChecksContext(checksConfig))
+	router.Use(moiramiddle.MetricSourceProvider(metricSourceProvider))
 
 	router.NotFound(notFoundHandler)
 	router.MethodNotAllowed(methodNotAllowedHandler)
@@ -123,7 +124,7 @@ func NewHandler(
 			router.Route("/user", user)
 			router.With(moiramiddle.Triggers(
 				apiConfig.MetricsTTL,
-			)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
+			)).Route("/trigger", triggers(searchIndex))
 			router.Route("/tag", tag)
 			router.Route("/system-tag", systemTag)
 			router.Route("/pattern", pattern)

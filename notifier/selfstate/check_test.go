@@ -11,17 +11,16 @@ import (
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_notifier "github.com/moira-alert/moira/mock/notifier"
 	notifier2 "github.com/moira-alert/moira/notifier"
-	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
 
 func TestSelfCheckWorker_check(t *testing.T) {
-	Convey("Check should", t, func() {
-		Convey("Send notifications to admins only on database error", func() {
+	t.Run("Check should", func(t *testing.T) {
+		t.Run("Send notifications to admins only on database error", func(t *testing.T) {
 			worker := createWorker(t)
 			redisError := fmt.Errorf("Redis connection timeout")
 			worker.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), redisError)
-			worker.database.EXPECT().SetNotifierState(gomock.Any(), gomock.Any()).Return(redisError)
+			worker.database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any(), gomock.Any()).Return(redisError)
 			worker.database.EXPECT().GetTagsSubscriptions(gomock.Any()).Return(nil, redisError)
 
 			var sendingWG sync.WaitGroup
@@ -35,7 +34,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			worker.selfCheckWorker.check(nowTS)
 		})
 
-		Convey("Send notifications to admins and users on single heartbeat error", func() {
+		t.Run("Send notifications to admins and users on single heartbeat error", func(t *testing.T) {
 			var timeDelta int64 = 100
 			nowTS := time.Now().Unix() + timeDelta
 			worker := createWorker(t)
@@ -133,8 +132,10 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 			RemoteChecker: HeartbeatConfig{
 				SystemTags: []string{"sys-tag-remote-checker", "moira-fatal"},
 			},
-			Notifier: HeartbeatConfig{
-				SystemTags: []string{"sys-tag-notifier", "moira-fatal"},
+			Notifier: NotifierHeartbeatConfig{
+				AnyClusterSourceTags:      []string{"sys-tag-notifier", "moira-fatal"},
+				LocalClusterSourceTags:    []string{"moira-fatal-local"},
+				TagPrefixForClusterSource: "moira-system-disable-source",
 			},
 		},
 	}
@@ -145,7 +146,7 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 	notif := mock_notifier.NewMockNotifier(mockCtrl)
 
 	return &selfCheckWorkerMock{
-		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 		database:        database,
 		notif:           notif,
 		conf:            conf,
@@ -162,7 +163,7 @@ func fillDatabase(database *mock_moira_alert.MockDatabase) {
 		},
 	}
 	database.EXPECT().GetContacts(moira.Map(contacts, func(c *moira.ContactData) string { return c.ID })).Return(contacts, nil)
-	database.EXPECT().SetNotifierState(gomock.Any(), gomock.Any()).Return(nil)
+	database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any(), gomock.Any()).Return(nil)
 	database.EXPECT().GetTagsSubscriptions([]string{"sys-tag-database", "moira-fatal"}).Return([]*moira.SubscriptionData{
 		{
 			Contacts: []string{"contact1"},
