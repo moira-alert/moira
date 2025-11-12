@@ -550,8 +550,8 @@ func (*MetricsMaintenance) Bind(*http.Request) error {
 }
 
 type TriggerMaintenance struct {
-	Trigger *int64           `json:"trigger" example:"1594225165" format:"int64" extensions:"x-nullable"`
-	Metrics map[string]int64 `json:"metrics" binding:"required"`
+	Trigger *int64             `json:"trigger" example:"1594225165" format:"int64" extensions:"x-nullable"`
+	Metrics MetricsMaintenance `json:"metrics" binding:"required"`
 }
 
 func (*TriggerMaintenance) Bind(*http.Request) error {
