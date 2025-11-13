@@ -34,6 +34,7 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 				logger.Error().
 					Error(err).
 					Msg("Failed to get tag's subscriptions")
+
 				rch <- nil
 			}
 
@@ -48,8 +49,10 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 				logger.Error().
 					Error(err).
 					Msg("Failed to get tag trigger IDs")
+
 				rch <- nil
 			}
+
 			rch <- tagStat
 		}(tagName)
 	}

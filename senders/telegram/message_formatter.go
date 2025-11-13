@@ -155,6 +155,7 @@ func (formatter *messageFormatter) buildEventsString(events moira.NotificationEv
 	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var eventsString string
+
 	eventsString += eventsBlockStart
 
 	var tailString string

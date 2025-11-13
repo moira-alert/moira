@@ -16,6 +16,7 @@ import (
 type heartbeatNotificationEvent struct {
 	moira.NotificationEvent
 	heartbeat.CheckTags
+
 	NotifyAboutEnabledNotifier bool
 }
 
@@ -83,8 +84,8 @@ func (selfCheck *SelfCheckWorker) handleGraphExecutionResult(nowTS int64, graphR
 	} else {
 		selfCheck.updateState(moira.SelfStateWorkerOK)
 		selfCheck.lastSuccessChecksResult = graphResult
-		notifierEnabled, err := selfCheck.enableNotifierIfPossible()
 
+		notifierEnabled, err := selfCheck.enableNotifierIfPossible()
 		if err != nil {
 			selfCheck.Logger.Error().
 				Error(err).
@@ -328,6 +329,7 @@ func (selfCheck *SelfCheckWorker) constructTriggersTable(subscription *moira.Sub
 						Interface("panic", r).
 						String("subscriptionId", subId).
 						Msg("Panic in goroutine")
+
 					tableRows <- linkResult{"", []string{}, fmt.Errorf("panic: %v", r)}
 				}
 			}()

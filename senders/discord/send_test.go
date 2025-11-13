@@ -67,6 +67,7 @@ http://moira.url/trigger/TriggerID
 
 		Convey("Print moira message with one event and message", func() {
 			var interval int64 = 24
+
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			event.TriggerID = ""
 			trigger.ID = ""

@@ -353,6 +353,7 @@ func (config RetriesConfig) getRetriesSettings() retries.Config {
 // GraphiteRemoteConfig is remote graphite settings structure.
 type GraphiteRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
+
 	// Timeout for remote requests.
 	Timeout string `yaml:"timeout"`
 	// Username for basic auth.
@@ -389,6 +390,7 @@ func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSou
 // PrometheusRemoteConfig is remote prometheus settings structure.
 type PrometheusRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
+
 	// Timeout for prometheus api requests
 	Timeout string `yaml:"timeout"`
 	// Number of retries for prometheus api requests

@@ -8,6 +8,7 @@ import (
 
 type notifier struct {
 	heartbeat
+
 	clusterKey moira.ClusterKey
 }
 

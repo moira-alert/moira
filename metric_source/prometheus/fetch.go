@@ -19,8 +19,8 @@ func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealT
 
 	for i := 1; ; i++ {
 		var res metricSource.FetchResult
-		res, err = prometheus.fetch(target, from, until, allowRealTimeAlerting)
 
+		res, err = prometheus.fetch(target, from, until, allowRealTimeAlerting)
 		if err == nil {
 			return res, nil
 		}

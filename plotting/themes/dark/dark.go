@@ -60,6 +60,7 @@ func (theme *PlotTheme) GetCanvasStyle() chart.Style {
 // GetBackgroundStyle returns background style.
 func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
 	verticalShift := 40
+
 	horizontalShift := 20
 	if maxMarkLen > 4 { //nolint
 		horizontalShift = horizontalShift / 2 //nolint

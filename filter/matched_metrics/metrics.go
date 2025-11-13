@@ -57,6 +57,7 @@ func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetri
 			matcher.metrics.SavingTimer.UpdateSince(timer)
 		}
 	}()
+
 	matcher.logger.Info().
 		Int("cached_metrics_count", matcher.cacheCapacity).
 		String("cooldown", fmt.Sprintf("%.4f", time.Second.Seconds())).
@@ -74,6 +75,7 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 
 		for {
 			batch := make(map[moira.MetricNameAndTimestamp]*moira.MatchedMetric, matcher.cacheCapacity)
+
 		retry:
 			select {
 			case <-matcher.closeRequest:
@@ -84,14 +86,18 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 					batchedMetrics <- batch
 					return
 				}
+
 				matcher.cacheStorage.EnrichMatchedMetric(batch, metric)
+
 				if len(batch) < matcher.cacheCapacity {
 					goto retry
 				}
+
 				batchedMetrics <- batch
 			case <-batchTimer.C:
 				batchedMetrics <- batch
 			}
+
 			batchTimer.Reset(matcher.batchForcedSaveTimeout)
 		}
 	}()

@@ -25,13 +25,13 @@ func (index *TriggerIndex) Search(options moira.SearchOptions) (searchResults []
 
 	searchResult, err := index.index.Search(req)
 	if err != nil {
-		return
+		return searchResults, total, err
 	}
 
 	total = int64(searchResult.Total)
 
 	if searchResult.Hits.Len() == 0 {
-		return
+		return searchResults, total, err
 	}
 
 	for _, result := range searchResult.Hits {
@@ -43,7 +43,7 @@ func (index *TriggerIndex) Search(options moira.SearchOptions) (searchResults []
 		searchResults = append(searchResults, &triggerSearchResult)
 	}
 
-	return
+	return searchResults, total, err
 }
 
 func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mapping.FieldData) []moira.SearchHighlight {

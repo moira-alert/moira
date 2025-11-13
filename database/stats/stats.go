@@ -24,8 +24,6 @@ func NewStatsManager(reporters ...StatsReporter) *statsManager {
 // Start starts reporting statistics for all registered StatsReporters.
 func (manager *statsManager) Start() {
 	for _, reporter := range manager.reporters {
-		reporter := reporter
-
 		manager.tomb.Go(func() error {
 			reporter.StartReport(manager.tomb.Dying())
 			return nil

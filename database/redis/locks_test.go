@@ -40,6 +40,7 @@ func Test(t *testing.T) {
 		_, err := lock.Acquire(nil)
 
 		defer lock.Release()
+
 		So(err, ShouldBeNil)
 
 		time.Sleep(2 * time.Second)
@@ -52,6 +53,7 @@ func Test(t *testing.T) {
 		lost, err := lock.Acquire(nil)
 
 		defer lock.Release()
+
 		So(err, ShouldBeNil)
 
 		db.delete(lockName)
@@ -73,6 +75,7 @@ func Test(t *testing.T) {
 		_, err := lock.Acquire(nil)
 
 		defer lock.Release()
+
 		So(err, ShouldBeNil)
 
 		_, err = lock.Acquire(nil)
@@ -97,6 +100,7 @@ func Test(t *testing.T) {
 
 			_, err := lock.Acquire(nil)
 			defer lock.Release()
+
 			So(err, ShouldBeNil)
 		})
 
@@ -110,6 +114,7 @@ func Test(t *testing.T) {
 
 			_, err := lock.Acquire(nil)
 			defer lock.Release()
+
 			So(err.Error(), ShouldEqual, "lock was not acquired: another error")
 		})
 	})

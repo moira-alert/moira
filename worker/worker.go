@@ -49,6 +49,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 					String("worker_name", worker.name).
 					Error(err).
 					Msg("Worker failed to acquire the lock")
+
 				select {
 				case <-stop:
 					return
@@ -91,6 +92,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			worker.logger.Info().
 				String("worker_name", worker.name).
 				Msg("Worker released the lock")
+
 			select {
 			case <-stop:
 				return

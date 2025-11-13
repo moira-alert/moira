@@ -4,13 +4,13 @@ import "regexp"
 
 var nonAllowedMetricCharsRegex = regexp.MustCompile("[^a-zA-Z0-9_]")
 
-// Collection of metrics for contacts counting.
+// ContactsMetrics Collection of metrics for contacts counting.
 type ContactsMetrics struct {
 	contactsCount map[string]Meter
 	registry      Registry
 }
 
-// Creates and configurates the instance of ContactsMetrics.
+// NewContactsMetrics Creates and configurates the instance of ContactsMetrics.
 func NewContactsMetrics(registry Registry) *ContactsMetrics {
 	meters := make(map[string]Meter)
 
@@ -25,7 +25,7 @@ func (metrics *ContactsMetrics) replaceNonAllowedMetricCharacters(metric string)
 	return nonAllowedMetricCharsRegex.ReplaceAllString(metric, "_")
 }
 
-// Marks the number of contacts of different types.
+// Mark Marks the number of contacts of different types.
 func (metrics *ContactsMetrics) Mark(contact string, count int64) {
 	if _, ok := metrics.contactsCount[contact]; !ok {
 		metric := metrics.replaceNonAllowedMetricCharacters(contact)

@@ -91,6 +91,7 @@ func Test_searchTeams(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			var gotDTO dto.TeamsList
+
 			err = json.Unmarshal(content, &gotDTO)
 			So(err, ShouldBeNil)
 			So(gotDTO, ShouldResemble, expectedDTO)
@@ -134,6 +135,7 @@ func Test_searchTeams(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			var gotDTO errorResponse
+
 			err = json.Unmarshal(content, &gotDTO)
 			So(err, ShouldBeNil)
 			So(gotDTO, ShouldResemble, expectedDTO)

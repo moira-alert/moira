@@ -20,6 +20,7 @@ func TestSubscriptions(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	client := *dataBase.client
 
 	sub := subscriptions[0]
@@ -369,6 +370,7 @@ func TestSubscriptionErrorConnection(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetSubscription("123")
 		So(actual1, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})

@@ -77,7 +77,9 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 		AttributedMetrics: attributedRegistry,
 		stopFunc: func() {
 			err := attributedMetrics.Shutdown(context.Background())
+
 			stopServer()
+
 			if err != nil {
 				logger.Error().Error(err).Msg("error due to shutdown metric context")
 			}

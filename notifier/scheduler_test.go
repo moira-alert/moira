@@ -59,6 +59,7 @@ func TestThrottling(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
@@ -223,6 +224,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()

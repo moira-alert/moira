@@ -59,6 +59,7 @@ func TestSetHealthWithAuth(t *testing.T) {
 
 		response := responseWriter.Result()
 		defer response.Body.Close()
+
 		require.Equal(t, http.StatusOK, response.StatusCode)
 	})
 
@@ -123,6 +124,7 @@ func TestSetHealthForSourceWithAuth(t *testing.T) {
 
 		response := responseWriter.Result()
 		defer response.Body.Close()
+
 		require.Equal(t, http.StatusOK, response.StatusCode)
 	})
 
@@ -198,6 +200,7 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				require.Equal(t, http.StatusOK, response.StatusCode)
 			})
 			t.Run("With filter", func(t *testing.T) {
@@ -212,6 +215,7 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				require.Equal(t, http.StatusOK, response.StatusCode)
 			})
 		})
@@ -225,6 +229,7 @@ func TestGetSysSubscriptionsWithAuth(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			require.Equal(t, http.StatusForbidden, response.StatusCode)
 		})
 	})

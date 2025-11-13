@@ -16,6 +16,7 @@ import (
 func TestGetUserSettings(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	login := "user"
 	auth := &api.Authorization{}

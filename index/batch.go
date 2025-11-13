@@ -46,7 +46,7 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 		close(errors)
 	}()
 
-	return
+	return triggerChecksChan, errors
 }
 
 func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.TriggerCheck, error) {
