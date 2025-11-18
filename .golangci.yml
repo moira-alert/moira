@@ -28,7 +28,6 @@ linters:
     - ireturn
     - lll
     - maintidx
-#    - mirror
     - mnd
     - musttag
     - nakedret
