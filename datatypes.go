@@ -95,7 +95,7 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 		return ""
 	}
 
-	messageBuffer := bytes.NewBuffer([]byte(""))
+	messageBuffer := bytes.NewBufferString("")
 	messageBuffer.WriteString("This metric changed its state during maintenance interval.")
 
 	if location == nil {
