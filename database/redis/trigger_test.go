@@ -540,6 +540,7 @@ func TestRemoteTrigger(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	dataBase.clock = systemClock
 	pattern := "test.pattern.remote1"
@@ -557,6 +558,7 @@ func TestRemoteTrigger(t *testing.T) {
 	dataBase.Flush()
 
 	defer dataBase.Flush()
+
 	client := *dataBase.client
 
 	Convey("Saving remote trigger", t, func() {
@@ -737,6 +739,7 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	systemClock.EXPECT().NowUnix().Return(testTime.Unix()).Times(6)
 	connector := &DbConnector{clock: systemClock}
@@ -821,6 +824,7 @@ func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
 
 	Convey("Given 3 triggers in DB", t, func() {
 		const prefix = "prefix"
+
 		triggerWithPrefix1 := moira.Trigger{
 			ID:            prefix + "1",
 			TriggerSource: moira.GraphiteLocal,

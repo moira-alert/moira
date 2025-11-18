@@ -150,6 +150,7 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 	logger, _ := logging.GetLogger("dataBase")
 
 	dataBase := NewTestDatabase(logger)
+
 	dataBase.Flush()
 	defer dataBase.Flush()
 

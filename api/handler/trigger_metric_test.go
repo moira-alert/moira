@@ -37,6 +37,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 
@@ -53,6 +54,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"status":"Invalid request","error":"invalid URL escape \"%na\""}

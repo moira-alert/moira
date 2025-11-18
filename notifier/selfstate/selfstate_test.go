@@ -322,6 +322,7 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 			database.EXPECT().GetTagsSubscriptions(baseSystemSubscription1.Tags).Return([]*moira.SubscriptionData{
@@ -417,6 +418,7 @@ func TestSelfCheckWorker_constructUserNotification(t *testing.T) {
 
 			mockCtrl := gomock.NewController(t)
 			defer mockCtrl.Finish()
+
 			database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 			database.EXPECT().GetTagsSubscriptions(systemSubscription1.Tags).Return([]*moira.SubscriptionData{
@@ -848,6 +850,8 @@ func TestSelfCheckWorker(t *testing.T) {
 }
 
 func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
+	t.Helper()
+
 	adminContact := map[string]string{
 		"type":  "admin-mail",
 		"value": "admin@company.com",

@@ -35,7 +35,7 @@ type NotificationHistoryConfig struct {
 	NotificationHistoryTTL time.Duration
 }
 
-// Notifier configuration in redis.
+// NotificationConfig configuration in redis.
 type NotificationConfig struct {
 	// Need to determine if notification is delayed - the difference between creation time and sending time
 	// is greater than DelayedTime

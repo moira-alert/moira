@@ -135,6 +135,7 @@ func main() {
 
 	// Start Filter heartbeat
 	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, filterMetrics, logger)
+
 	heartbeatWorker.Start()
 	defer stopHeartbeatWorker(heartbeatWorker)
 

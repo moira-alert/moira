@@ -209,6 +209,7 @@ func TestGetAllTeams(t *testing.T) {
 		Convey("with some teams returns all", func() {
 			type expectedTeamCase struct {
 				moira.Team
+
 				count int
 			}
 

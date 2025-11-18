@@ -26,6 +26,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 				logger.Error().
 					Error(err).
 					Msg("Failed to get pattern trigger IDs")
+
 				rch <- nil
 			}
 
@@ -34,6 +35,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 				logger.Error().
 					Error(err).
 					Msg("Failed to get trigger")
+
 				rch <- nil
 			}
 
@@ -42,6 +44,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 				logger.Error().
 					Error(err).
 					Msg("Failed to get pattern metrics")
+
 				rch <- nil
 			}
 
@@ -56,6 +59,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 					patternData.Triggers = append(patternData.Triggers, dto.CreateTriggerModel(trigger))
 				}
 			}
+
 			rch <- &patternData
 		}(pattern)
 	}

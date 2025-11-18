@@ -13,7 +13,7 @@ type HeartbeatConfig struct {
 	SystemTags []string
 }
 
-// HeartbeatConfig represents a heartbeat-specific settings.
+// NotifierHeartbeatConfig represents a heartbeat-specific settings.
 type NotifierHeartbeatConfig struct {
 	AnyClusterSourceTags      []string
 	LocalClusterSourceTags    []string
@@ -65,7 +65,7 @@ func (config *Config) checkConfig(senders map[string]bool) error {
 	return nil
 }
 
-// Value of this function could have been cached, but cache should not be a part of ChecksConfig structure.
+// GetUniqueSystemTags Value of this function could have been cached, but cache should not be a part of ChecksConfig structure.
 // It could have been cached at place of usage, which would be more complicated.
 // This function is not very compute/allocation heavy, so we've decided to omit caching for now.
 func (checksConfig *ChecksConfig) GetUniqueSystemTags(clusterList moira.ClusterList) []string {

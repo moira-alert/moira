@@ -104,6 +104,7 @@ func TestUnknownContactType(t *testing.T) {
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
+
 	pkg := NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
@@ -135,6 +136,7 @@ func TestFailSendEvent(t *testing.T) {
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
+
 	pkg := NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
@@ -188,6 +190,7 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
+
 	pkg := NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
@@ -429,6 +432,8 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T, config Config) {
+	t.Helper()
+
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 	notifierMetrics, err := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")

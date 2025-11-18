@@ -98,6 +98,7 @@ func TestCreateNewTeamContact(t *testing.T) {
 
 		Convey("Correctly create team contact without given id", func() {
 			newContactDto.ID = ""
+
 			defer func() {
 				newContactDto.ID = defaultContact
 			}()
@@ -257,6 +258,7 @@ func TestCreateNewTeamContact(t *testing.T) {
 
 		Convey("Trying to create a team contact when both userLogin and teamID specified", func() {
 			newContactDto.User = defaultLogin
+
 			defer func() {
 				newContactDto.User = ""
 			}()

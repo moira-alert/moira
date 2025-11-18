@@ -295,7 +295,7 @@ type Comparable interface {
 	Less(other Comparable) (bool, error)
 }
 
-// Merge is a generic function that performs a merge of two sorted arrays into one sorted array.
+// MergeToSorted Merge is a generic function that performs a merge of two sorted arrays into one sorted array.
 func MergeToSorted[T Comparable](arr1, arr2 []T) ([]T, error) {
 	merged := make([]T, 0, len(arr1)+len(arr2))
 	i, j := 0, 0

@@ -30,6 +30,7 @@ func TestAloneMetrics_Populate(t *testing.T) {
 			const from = 0
 
 			const to = 3600
+
 			populated, err := m.Populate(lastCheckMetricsToTargetRelation, declaredAloneMetrics, from, to)
 			So(err, ShouldBeNil)
 			// We assume alone metrics to be like this

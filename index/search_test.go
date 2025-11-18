@@ -19,6 +19,7 @@ import (
 func TestIndex_SearchTriggers(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
@@ -387,6 +388,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 func TestIndex_SearchErrors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()

@@ -36,7 +36,6 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 				return connector.saveTeamNameInTx(tx, teamID, team.Name, existedTeam.Name)
 			},
 			teamsByNamesKey)
-
 		if err == nil {
 			break
 		}

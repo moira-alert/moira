@@ -4,6 +4,7 @@ import "github.com/moira-alert/moira"
 
 type localChecker struct {
 	heartbeat
+
 	count int64
 }
 

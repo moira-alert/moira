@@ -13,6 +13,8 @@ import (
 )
 
 func newMocks(t *testing.T) (dataBase *mock_moira_alert.MockDatabase, mockCtrl *gomock.Controller) {
+	t.Helper()
+
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
 
@@ -92,6 +94,7 @@ func TestCompareMetricStates(t *testing.T) {
 			t.Run("Status NODATA and remind interval, need to send", func(t *testing.T) {
 				dataBase, mockCtrl := newMocks(t)
 				triggerChecker.database = dataBase
+
 				defer mockCtrl.Finish()
 
 				lastState := lastStateExample
@@ -126,6 +129,7 @@ func TestCompareMetricStates(t *testing.T) {
 			t.Run("Status ERROR and remind interval, need to send", func(t *testing.T) {
 				dataBase, mockCtrl := newMocks(t)
 				triggerChecker.database = dataBase
+
 				defer mockCtrl.Finish()
 
 				lastState := lastStateExample
@@ -345,6 +349,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 	t.Run("Test SuppressedState remembered properly", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		triggerChecker := TriggerChecker{

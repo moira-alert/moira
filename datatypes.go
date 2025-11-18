@@ -480,7 +480,7 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Needed for backwards compatibility with moira versions that used only isRemote flag.
+// FillInIfNotSet Needed for backwards compatibility with moira versions that used only isRemote flag.
 func (triggerSource TriggerSource) FillInIfNotSet(isRemote bool) TriggerSource {
 	if triggerSource == TriggerSourceNotSet {
 		if isRemote {
@@ -558,6 +558,7 @@ type ClusterList []ClusterKey
 // TriggerCheck represents trigger data with last check data and check timestamp.
 type TriggerCheck struct {
 	Trigger
+
 	Throttling int64             `json:"throttling" binding:"required" example:"0" format:"int64"`
 	LastCheck  CheckData         `json:"last_check" binding:"required"`
 	Highlights map[string]string `json:"highlights" binding:"required"`
@@ -605,7 +606,7 @@ type CheckData struct {
 	Clock                        Clock  `json:"-"`
 }
 
-// Need to not show the user metrics that should have been deleted due to ttlState = Del,
+// RemoveDeadMetrics Need to not show the user metrics that should have been deleted due to ttlState = Del,
 // but remained in the database because their Maintenance did not expire.
 func (checkData *CheckData) RemoveDeadMetrics() {
 	for metricName, metricState := range checkData.Metrics {
@@ -739,7 +740,7 @@ func (events NotificationEvents) getLastState() State {
 	return StateNODATA
 }
 
-// Returns the current state depending on the throttled parameter.
+// GetCurrentState Returns the current state depending on the throttled parameter.
 func (events NotificationEvents) GetCurrentState(throttled bool) State {
 	if throttled {
 		return events.getLastState()
@@ -775,6 +776,7 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 		endOffset = schedule.EndOffset + 24*60 //nolint
 	}
 	timestamp := ts - ts%60 - schedule.TimezoneOffset*60 //nolint
+
 	date := time.Unix(timestamp, 0).UTC()
 	if !schedule.Days[int(date.Weekday()+6)%7].Enabled { //nolint
 		return false

@@ -233,6 +233,7 @@ const maxParallelSendsPerSender = 16
 func (notifier *StandardNotifier) runSenders(sender moira.Sender, eventsChannel chan NotificationPackage) {
 	for i := 0; i < maxParallelSendsPerSender; i++ {
 		notifier.waitGroup.Add(1)
+
 		go notifier.runSender(sender, eventsChannel)
 	}
 }

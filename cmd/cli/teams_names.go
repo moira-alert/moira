@@ -243,6 +243,7 @@ type teamStorageElement struct {
 
 type teamWithID struct {
 	teamStorageElement
+
 	ID string
 }
 
