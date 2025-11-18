@@ -163,7 +163,11 @@ func (triggerChecker *TriggerChecker) isStateChanged(currentStateValue moira.Sta
 	}
 
 	remindInterval, ok := triggerChecker.badStateReminder[currentStateValue]
-	if ok && needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
+	if !ok {
+		remindInterval = moira.DefaultBadStateReminder
+	}
+
+	if needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
 		interval := remindInterval / int64((1 * time.Hour).Seconds())
 		return &moira.EventInfo{Interval: &interval}, true
 	}
