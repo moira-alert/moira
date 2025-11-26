@@ -40,6 +40,21 @@ func (m *MockAttributedMetricCollection) EXPECT() *MockAttributedMetricCollectio
 	return m.recorder
 }
 
+// GetRegisteredCounter mocks base method.
+func (m *MockAttributedMetricCollection) GetRegisteredCounter(name string) (metrics.Counter, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRegisteredCounter", name)
+	ret0, _ := ret[0].(metrics.Counter)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetRegisteredCounter indicates an expected call of GetRegisteredCounter.
+func (mr *MockAttributedMetricCollectionMockRecorder) GetRegisteredCounter(name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRegisteredCounter", reflect.TypeOf((*MockAttributedMetricCollection)(nil).GetRegisteredCounter), name)
+}
+
 // GetRegisteredMeter mocks base method.
 func (m *MockAttributedMetricCollection) GetRegisteredMeter(name string) (metrics.Meter, bool) {
 	m.ctrl.T.Helper()
@@ -53,6 +68,21 @@ func (m *MockAttributedMetricCollection) GetRegisteredMeter(name string) (metric
 func (mr *MockAttributedMetricCollectionMockRecorder) GetRegisteredMeter(name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRegisteredMeter", reflect.TypeOf((*MockAttributedMetricCollection)(nil).GetRegisteredMeter), name)
+}
+
+// RegisterCounter mocks base method.
+func (m *MockAttributedMetricCollection) RegisterCounter(name, metric string, attributes metrics.Attributes) (metrics.Counter, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterCounter", name, metric, attributes)
+	ret0, _ := ret[0].(metrics.Counter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RegisterCounter indicates an expected call of RegisterCounter.
+func (mr *MockAttributedMetricCollectionMockRecorder) RegisterCounter(name, metric, attributes any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterCounter", reflect.TypeOf((*MockAttributedMetricCollection)(nil).RegisterCounter), name, metric, attributes)
 }
 
 // RegisterMeter mocks base method.
