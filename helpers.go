@@ -249,11 +249,7 @@ func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 	}
 
 	for i := 0; i < len(original); i += chunkSize {
-		end := i + chunkSize
-
-		if end > len(original) {
-			end = len(original)
-		}
+		end := min(i+chunkSize, len(original))
 
 		divided = append(divided, original[i:end])
 	}
