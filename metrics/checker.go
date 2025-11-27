@@ -30,9 +30,11 @@ func (metrics *CheckerMetrics) GetCheckMetricsBySource(clusterKey moira.ClusterK
 
 // CheckMetrics is a collection of metrics for trigger checks.
 type CheckMetrics struct {
+	// TODO: Remove after v2.17.0 release
 	// Deprecated: use counter instead
 	CheckError        Meter
 	CheckErrorCounter Counter
+	// TODO: Remove after v2.17.0 release
 	// Deprecated: use counter instead
 	HandleError          Meter
 	HandleErrorCounter   Counter
