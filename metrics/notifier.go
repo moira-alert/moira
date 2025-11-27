@@ -6,20 +6,25 @@ import (
 
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
+	// TODO: Remove after v2.17.0 release
 	// Depricated: use counter instead
 	SubsMalformed        Meter
 	SubsMalformedCounter Counter
+	// TODO: Remove after v2.17.0 release
 	// Depricated: use counter instead
 	EventsReceived        Meter
 	EventsReceivedCounter Counter
+	// TODO: Remove after v2.17.0 release
 	// Depricated: use counter instead
 	EventsMalformed        Meter
 	EventsMalformedCounter Counter
+	// TODO: Remove after v2.17.0 release
 	// Depricated: use counter instead
 	EventsProcessingFailed        Meter
 	EventsProcessingFailedCounter Counter
 	EventsByState                 MetersCollection
 	EventsByStateAttributed       AttributedMetricCollection
+	// TODO: Remove after v2.17.0 release
 	// Depricated: use counter instead
 	SendingFailed                                        Meter
 	SendingFailedCounter                                 Counter
