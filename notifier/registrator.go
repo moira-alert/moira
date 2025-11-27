@@ -139,7 +139,7 @@ func (notifier *StandardNotifier) registerMetrics(senderContactType string) erro
 
 	notifier.metrics.ContactsSendingNotificationsOK.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok")
 
-	_, err := notifier.metrics.ContactsSendingNotificationsOKAttributed.RegisterMeter(senderContactType, "sends_ok", metrics.Attributes{
+	_, err := notifier.metrics.ContactsSendingNotificationsOKAttributed.RegisterCounter(senderContactType, "sends_ok", metrics.Attributes{
 		metrics.Attribute{Key: senderContactTypeAttribute, Value: getGraphiteSenderIdent(senderContactType)},
 	})
 	if err != nil {
@@ -148,7 +148,7 @@ func (notifier *StandardNotifier) registerMetrics(senderContactType string) erro
 
 	notifier.metrics.ContactsSendingNotificationsFailed.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed")
 
-	_, err = notifier.metrics.ContactsSendingNotificationsFailedAttributed.RegisterMeter(senderContactType, "sends_failed", metrics.Attributes{
+	_, err = notifier.metrics.ContactsSendingNotificationsFailedAttributed.RegisterCounter(senderContactType, "sends_failed", metrics.Attributes{
 		metrics.Attribute{Key: senderContactTypeAttribute, Value: getGraphiteSenderIdent(senderContactType)},
 	})
 	if err != nil {
@@ -157,7 +157,7 @@ func (notifier *StandardNotifier) registerMetrics(senderContactType string) erro
 
 	notifier.metrics.ContactsDroppedNotifications.RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped")
 
-	_, err = notifier.metrics.ContactsDroppedNotificationsAttributed.RegisterMeter(senderContactType, "notifications_dropped", metrics.Attributes{
+	_, err = notifier.metrics.ContactsDroppedNotificationsAttributed.RegisterCounter(senderContactType, "notifications_dropped", metrics.Attributes{
 		metrics.Attribute{Key: senderContactTypeAttribute, Value: getGraphiteSenderIdent(senderContactType)},
 	})
 	if err != nil {
