@@ -23,6 +23,7 @@ func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan strin
 
 		err := manager.handleTrigger(triggerID, metrics)
 		if err != nil {
+			//nolint:staticcheck
 			metrics.HandleError.Mark(1)
 			metrics.HandleErrorCounter.Inc()
 

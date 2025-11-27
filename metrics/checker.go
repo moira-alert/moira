@@ -31,11 +31,11 @@ func (metrics *CheckerMetrics) GetCheckMetricsBySource(clusterKey moira.ClusterK
 // CheckMetrics is a collection of metrics for trigger checks.
 type CheckMetrics struct {
 	// Deprecated: use counter instead
-	CheckError           Meter
+	CheckError        Meter
 	CheckErrorCounter Counter
 	// Deprecated: use counter instead
 	HandleError          Meter
-	HandleErrorCounter Counter
+	HandleErrorCounter   Counter
 	TriggersCheckTime    Timer
 	TriggersToCheckCount Histogram
 }
@@ -105,10 +105,10 @@ func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry,
 
 	return &CheckMetrics{
 		// Deprecated: only triggers.check.errors.count metric of metricRegistrySourced should be used.
-		CheckError: registry.NewMeter(source, id, "errors", "check"),
+		CheckError:        registry.NewMeter(source, id, "errors", "check"),
 		CheckErrorCounter: checkError,
 		// Deprecated: only triggers.handle.errors.count metric of metricRegistrySourced should be used.
-		HandleError: registry.NewMeter(source, id, "errors", "handle"),
+		HandleError:        registry.NewMeter(source, id, "errors", "handle"),
 		HandleErrorCounter: handleError,
 		// Deprecated: only triggers.check.time metric of metricRegistrySourced should be used.
 		TriggersCheckTime: NewCompositeTimer(registry.NewTimer(source, id, "triggers"), triggersCheckTime),
