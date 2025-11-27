@@ -7,22 +7,22 @@ import (
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
 	// Depricated: use counter instead
-	SubsMalformed                                        Meter
+	SubsMalformed        Meter
 	SubsMalformedCounter Counter
 	// Depricated: use counter instead
-	EventsReceived                                       Meter
+	EventsReceived        Meter
 	EventsReceivedCounter Counter
 	// Depricated: use counter instead
-	EventsMalformed                                      Meter
+	EventsMalformed        Meter
 	EventsMalformedCounter Counter
 	// Depricated: use counter instead
-	EventsProcessingFailed                               Meter
+	EventsProcessingFailed        Meter
 	EventsProcessingFailedCounter Counter
-	EventsByState                                        MetersCollection
-	EventsByStateAttributed                              AttributedMetricCollection
+	EventsByState                 MetersCollection
+	EventsByStateAttributed       AttributedMetricCollection
 	// Depricated: use counter instead
 	SendingFailed                                        Meter
-	SendingFailedCounter Counter
+	SendingFailedCounter                                 Counter
 	ContactsSendingNotificationsOK                       MetersCollection
 	ContactsSendingNotificationsOKAttributed             AttributedMetricCollection
 	ContactsSendingNotificationsFailed                   MetersCollection
@@ -90,17 +90,17 @@ func ConfigureNotifierMetrics(registry Registry, attributedRegistry MetricRegist
 
 	return &NotifierMetrics{
 		SubsMalformed:                                        registry.NewMeter("subs", "malformed"),
-		SubsMalformedCounter: subsMalformed,
+		SubsMalformedCounter:                                 subsMalformed,
 		EventsReceived:                                       registry.NewMeter("events", "received"),
-		EventsReceivedCounter: eventsReceived,
+		EventsReceivedCounter:                                eventsReceived,
 		EventsMalformed:                                      registry.NewMeter("events", "malformed"),
-		EventsMalformedCounter: eventsMalformed,
+		EventsMalformedCounter:                               eventsMalformed,
 		EventsProcessingFailed:                               registry.NewMeter("events", "failed"),
-		EventsProcessingFailedCounter: eventsProcessingFailed,
+		EventsProcessingFailedCounter:                        eventsProcessingFailed,
 		EventsByState:                                        NewMetersCollection(registry),
 		EventsByStateAttributed:                              NewAttributedMetricCollection(attributedRegistry),
 		SendingFailed:                                        registry.NewMeter("sending", "failed"),
-		SendingFailedCounter: sendingFailed,
+		SendingFailedCounter:                                 sendingFailed,
 		ContactsSendingNotificationsOK:                       NewMetersCollection(registry),
 		ContactsSendingNotificationsOKAttributed:             NewAttributedMetricCollection(attributedRegistry),
 		ContactsSendingNotificationsFailed:                   NewMetersCollection(registry),
