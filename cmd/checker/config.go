@@ -49,6 +49,8 @@ type checkerConfig struct {
 	MetricEventPopDelay string `yaml:"metric_event_pop_delay"`
 	// Duration of check that is considered critical and must be logged
 	CriticalTimeOfCheck string `yaml:"critical_time_of_check"`
+	// Map for bad state remind.
+	BadStateReminder map[string]int64 `yaml:"bad_state_reminder"`
 }
 
 func handleParallelChecks(parallelChecks *int) bool {
@@ -118,6 +120,11 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 		sourceCheckConfigs[moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterId)] = checkConfig
 	}
 
+	badStateReminder := make(map[moira.State]int64, len(config.Checker.BadStateReminder))
+	for state, interval := range config.Checker.BadStateReminder {
+		badStateReminder[moira.State(state)] = interval
+	}
+
 	return &checker.Config{
 		SourceCheckConfigs:              sourceCheckConfigs,
 		LazyTriggersCheckInterval:       to.Duration(config.Checker.LazyTriggersCheckInterval),
@@ -127,6 +134,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 		MetricEventPopDelay:             to.Duration(config.Checker.MetricEventPopDelay),
 		CriticalTimeOfCheck:             to.Duration(config.Checker.CriticalTimeOfCheck),
 		MetricEventTriggerCheckInterval: to.Duration(config.Checker.MetricEventTriggerCheckInterval),
+		BadStateReminder:                badStateReminder,
 	}
 }
 
@@ -143,6 +151,11 @@ func getDefault() config {
 			StopCheckingInterval:            "30s",
 			CriticalTimeOfCheck:             "1h",
 			MetricEventTriggerCheckInterval: "30s",
+			BadStateReminder: map[string]int64{
+				moira.StateERROR.String():     moira.DefaultBadStateReminder,
+				moira.StateNODATA.String():    moira.DefaultBadStateReminder,
+				moira.StateEXCEPTION.String(): moira.DefaultBadStateReminder,
+			},
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8092",

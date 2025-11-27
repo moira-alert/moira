@@ -95,7 +95,7 @@ func (event *NotificationEvent) CreateMessage(location *time.Location) string { 
 		return ""
 	}
 
-	messageBuffer := bytes.NewBuffer([]byte(""))
+	messageBuffer := bytes.NewBufferString("")
 	messageBuffer.WriteString("This metric changed its state during maintenance interval.")
 
 	if location == nil {
@@ -1079,3 +1079,6 @@ var DeliveryStatesSet = map[string]struct{}{
 	DeliveryStateException:     {},
 	DeliveryStateUserException: {},
 }
+
+// DefaultBadStateReminder return in int64 count seconds in day (86400).
+var DefaultBadStateReminder = int64((24 * time.Hour).Seconds())
