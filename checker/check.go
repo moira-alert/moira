@@ -172,6 +172,7 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 // handleUndefinedError is a function that check error with undefined type.
 func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.CheckData, err error) error {
 	triggerChecker.metrics.CheckError.Mark(1)
+	triggerChecker.metrics.CheckErrorCounter.Inc()
 
 	checkData.State = moira.StateEXCEPTION
 	checkData.Message = err.Error()

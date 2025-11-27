@@ -24,6 +24,7 @@ func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan strin
 		err := manager.handleTrigger(triggerID, metrics)
 		if err != nil {
 			metrics.HandleError.Mark(1)
+			metrics.HandleErrorCounter.Inc()
 
 			manager.Logger.Error().
 				String(moira.LogFieldNameTriggerID, triggerID).

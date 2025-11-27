@@ -30,8 +30,12 @@ func (metrics *CheckerMetrics) GetCheckMetricsBySource(clusterKey moira.ClusterK
 
 // CheckMetrics is a collection of metrics for trigger checks.
 type CheckMetrics struct {
+	// Deprecated: use counter instead
 	CheckError           Meter
+	CheckErrorCounter Counter
+	// Deprecated: use counter instead
 	HandleError          Meter
+	HandleErrorCounter Counter
 	TriggersCheckTime    Timer
 	TriggersToCheckCount Histogram
 }
@@ -79,12 +83,12 @@ func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry,
 		Attribute{"metric.source.id", id},
 	})
 
-	checkError, err := metricRegistrySourced.NewGauge("triggers.check.errors.count")
+	checkError, err := metricRegistrySourced.NewCounter("triggers.check.errors.count")
 	if err != nil {
 		return nil, err
 	}
 
-	handleError, err := metricRegistrySourced.NewGauge("triggers.handle.errors.count")
+	handleError, err := metricRegistrySourced.NewCounter("triggers.handle.errors.count")
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +105,11 @@ func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry,
 
 	return &CheckMetrics{
 		// Deprecated: only triggers.check.errors.count metric of metricRegistrySourced should be used.
-		CheckError: NewCompositeMeter(registry.NewMeter(source, id, "errors", "check"), checkError),
+		CheckError: registry.NewMeter(source, id, "errors", "check"),
+		CheckErrorCounter: checkError,
 		// Deprecated: only triggers.handle.errors.count metric of metricRegistrySourced should be used.
-		HandleError: NewCompositeMeter(registry.NewMeter(source, id, "errors", "handle"), handleError),
+		HandleError: registry.NewMeter(source, id, "errors", "handle"),
+		HandleErrorCounter: handleError,
 		// Deprecated: only triggers.check.time metric of metricRegistrySourced should be used.
 		TriggersCheckTime: NewCompositeTimer(registry.NewTimer(source, id, "triggers"), triggersCheckTime),
 		// Deprecated: only triggers.to_check_count metric of metricRegistrySourced should be used.
