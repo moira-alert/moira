@@ -516,12 +516,14 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 
 	if err := cmd.ReadConfig(*configFileName, &config); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Can't read settings: %v\n", err)
+
 		os.Exit(1)
 	}
 
 	logger, err := logging.ConfigureLog(config.LogFile, config.LogLevel, "cli", config.LogPrettyFormat)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Can't configure main logger: %v\n", err)
+
 		os.Exit(1)
 	}
 

@@ -46,6 +46,7 @@ func TestTriggersToReindex(t *testing.T) {
 
 		// current time ≈ startTime + 2
 		time.Sleep(time.Second)
+
 		actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix())
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)

@@ -226,7 +226,7 @@ type Logger interface {
 	String(key, value string) Logger
 	Int(key string, value int) Logger
 	Int64(key string, value int64) Logger
-	Fields(fields map[string]interface{}) Logger
+	Fields(fields map[string]any) Logger
 
 	// Get child logger with the minimum accepted level
 	Level(string) (Logger, error)
@@ -238,7 +238,7 @@ type Logger interface {
 type Sender interface {
 	// TODO refactor: https://github.com/moira-alert/moira/issues/794
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot [][]byte, throttled bool) error
-	Init(senderSettings interface{}, logger Logger, location *time.Location, dateTimeFormat string) error
+	Init(senderSettings any, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
 // ImageStore is the interface for image storage providers.
