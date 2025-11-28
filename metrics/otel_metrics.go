@@ -243,8 +243,8 @@ func (t *otelTimer) UpdateSince(ts time.Time) {
 	ctx := context.Background()
 	attrs := internalMetric.WithAttributes(t.attributes...)
 	val := float64(time.Since(ts))
-	t.histogram.Record(ctx, float64(val), attrs)
-	t.last_value_observer.Record(ctx, val)
+	t.histogram.Record(ctx, val, attrs)
+	t.last_value_observer.Record(ctx, val, attrs)
 
 	atomic.AddInt64(&t.count, 1)
 }
