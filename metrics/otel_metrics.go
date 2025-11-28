@@ -136,7 +136,7 @@ func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
 		return nil, err
 	}
 
-	last_value_observer, err := r.provider.Meter("histogram_last_value_observer").Float64Gauge(name + "_last_observed")
+	last_value_observer, err := r.provider.Meter("histogram_last_value_observer").Int64Gauge(name + "_last_observed")
 	if err != nil {
 		return nil, err
 	}
@@ -218,13 +218,16 @@ func (c *otelGauge) Mark(mark int64) {
 // otelHistogram implements Histogram using OpenTelemetry Int64Histogram.
 type otelHistogram struct {
 	histogram           internalMetric.Int64Histogram
-	last_value_observer internalMetric.Float64Gauge
+	last_value_observer internalMetric.Int64Gauge
 	attributes          []attribute.KeyValue
 }
 
 // Update records a value for the histogram.
 func (h *otelHistogram) Update(mark int64) {
-	h.histogram.Record(context.Background(), mark, internalMetric.WithAttributes(h.attributes...))
+	ctx := context.Background()
+	attrs := internalMetric.WithAttributes(h.attributes...)
+	h.histogram.Record(ctx, mark, attrs)
+	h.last_value_observer.Record(ctx, mark, attrs)
 }
 
 // otelTimer represents a timer that records durations in histograms with attributes.
@@ -237,7 +240,11 @@ type otelTimer struct {
 
 // UpdateSince records the duration since the given timestamp in all histograms and increments the count.
 func (t *otelTimer) UpdateSince(ts time.Time) {
-	t.histogram.Record(context.Background(), float64(time.Since(ts)), internalMetric.WithAttributes(t.attributes...))
+	ctx := context.Background()
+	attrs := internalMetric.WithAttributes(t.attributes...)
+	val := float64(time.Since(ts))
+	t.histogram.Record(ctx, float64(val), attrs)
+	t.last_value_observer.Record(ctx, val)
 
 	atomic.AddInt64(&t.count, 1)
 }
