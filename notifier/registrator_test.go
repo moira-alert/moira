@@ -89,17 +89,17 @@ func TestRegisterSender(t *testing.T) {
 		}
 
 		contactsSendingNotificationsOKMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
-		contactsSendingNotificationsOKMetricsAttributed.EXPECT().RegisterMeter(senderContactType, "sends_ok", metrics.Attributes{
+		contactsSendingNotificationsOKMetricsAttributed.EXPECT().RegisterCounter(senderContactType, "sends_ok", metrics.Attributes{
 			metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
 		})
 
 		contactsSendingNotificationsFailedMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed").Times(1)
-		contactsSendingNotificationsFailedMetricsAttributed.EXPECT().RegisterMeter(senderContactType, "sends_failed", metrics.Attributes{
+		contactsSendingNotificationsFailedMetricsAttributed.EXPECT().RegisterCounter(senderContactType, "sends_failed", metrics.Attributes{
 			metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
 		})
 
 		contactsDroppedNotifications.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped").Times(1)
-		contactsDroppedNotificationsAttributed.EXPECT().RegisterMeter(senderContactType, "notifications_dropped", metrics.Attributes{
+		contactsDroppedNotificationsAttributed.EXPECT().RegisterCounter(senderContactType, "notifications_dropped", metrics.Attributes{
 			metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
 		})
 
@@ -147,17 +147,17 @@ func TestRegisterSender(t *testing.T) {
 		}
 
 		contactsSendingNotificationsOKMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_ok").Times(1)
-		contactsSendingNotificationsOKMetricsAttributed.EXPECT().RegisterMeter(senderContactType, "sends_ok", metrics.Attributes{
+		contactsSendingNotificationsOKMetricsAttributed.EXPECT().RegisterCounter(senderContactType, "sends_ok", metrics.Attributes{
 			metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
 		})
 
 		contactsSendingNotificationsFailedMetrics.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "sends_failed").Times(1)
-		contactsSendingNotificationsFailedMetricsAttributed.EXPECT().RegisterMeter(senderContactType, "sends_failed", metrics.Attributes{
+		contactsSendingNotificationsFailedMetricsAttributed.EXPECT().RegisterCounter(senderContactType, "sends_failed", metrics.Attributes{
 			metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
 		})
 
 		contactsDroppedNotifications.EXPECT().RegisterMeter(senderContactType, getGraphiteSenderIdent(senderContactType), "notifications_dropped").Times(1)
-		contactsDroppedNotificationsAttributed.EXPECT().RegisterMeter(senderContactType, "notifications_dropped", metrics.Attributes{
+		contactsDroppedNotificationsAttributed.EXPECT().RegisterCounter(senderContactType, "notifications_dropped", metrics.Attributes{
 			metrics.Attribute{Key: "sender_contact_type", Value: getGraphiteSenderIdent(senderContactType)},
 		})
 

@@ -6,13 +6,28 @@ import (
 
 // NotifierMetrics is a collection of metrics used in notifier.
 type NotifierMetrics struct {
-	SubsMalformed                                        Meter
-	EventsReceived                                       Meter
-	EventsMalformed                                      Meter
-	EventsProcessingFailed                               Meter
-	EventsByState                                        MetersCollection
-	EventsByStateAttributed                              AttributedMetricCollection
+	// TODO: Remove after v2.17.0 release
+	// Depricated: use counter instead
+	SubsMalformed        Meter
+	SubsMalformedCounter Counter
+	// TODO: Remove after v2.17.0 release
+	// Depricated: use counter instead
+	EventsReceived        Meter
+	EventsReceivedCounter Counter
+	// TODO: Remove after v2.17.0 release
+	// Depricated: use counter instead
+	EventsMalformed        Meter
+	EventsMalformedCounter Counter
+	// TODO: Remove after v2.17.0 release
+	// Depricated: use counter instead
+	EventsProcessingFailed        Meter
+	EventsProcessingFailedCounter Counter
+	EventsByState                 MetersCollection
+	EventsByStateAttributed       AttributedMetricCollection
+	// TODO: Remove after v2.17.0 release
+	// Depricated: use counter instead
 	SendingFailed                                        Meter
+	SendingFailedCounter                                 Counter
 	ContactsSendingNotificationsOK                       MetersCollection
 	ContactsSendingNotificationsOKAttributed             AttributedMetricCollection
 	ContactsSendingNotificationsFailed                   MetersCollection
@@ -33,27 +48,27 @@ type NotifierMetrics struct {
 
 // ConfigureNotifierMetrics is notifier metrics configurator.
 func ConfigureNotifierMetrics(registry Registry, attributedRegistry MetricRegistry, prefix string) (*NotifierMetrics, error) {
-	subsMalformed, err := attributedRegistry.NewGauge("subs.malformed")
+	subsMalformed, err := attributedRegistry.NewCounter("subs.malformed")
 	if err != nil {
 		return nil, err
 	}
 
-	eventsMalformed, err := attributedRegistry.NewGauge("events.malformed")
+	eventsMalformed, err := attributedRegistry.NewCounter("events.malformed")
 	if err != nil {
 		return nil, err
 	}
 
-	eventsReceived, err := attributedRegistry.NewGauge("events.received")
+	eventsReceived, err := attributedRegistry.NewCounter("events.received")
 	if err != nil {
 		return nil, err
 	}
 
-	eventsProcessingFailed, err := attributedRegistry.NewGauge("events.failed_processing")
+	eventsProcessingFailed, err := attributedRegistry.NewCounter("events.failed_processing")
 	if err != nil {
 		return nil, err
 	}
 
-	sendingFailed, err := attributedRegistry.NewGauge("notifications.sending.failed")
+	sendingFailed, err := attributedRegistry.NewCounter("notifications.sending.failed")
 	if err != nil {
 		return nil, err
 	}
@@ -79,13 +94,18 @@ func ConfigureNotifierMetrics(registry Registry, attributedRegistry MetricRegist
 	}
 
 	return &NotifierMetrics{
-		SubsMalformed:                                        NewCompositeMeter(registry.NewMeter("subs", "malformed"), subsMalformed),
-		EventsReceived:                                       NewCompositeMeter(registry.NewMeter("events", "received"), eventsReceived),
-		EventsMalformed:                                      NewCompositeMeter(registry.NewMeter("events", "malformed"), eventsMalformed),
-		EventsProcessingFailed:                               NewCompositeMeter(registry.NewMeter("events", "failed"), eventsProcessingFailed),
+		SubsMalformed:                                        registry.NewMeter("subs", "malformed"),
+		SubsMalformedCounter:                                 subsMalformed,
+		EventsReceived:                                       registry.NewMeter("events", "received"),
+		EventsReceivedCounter:                                eventsReceived,
+		EventsMalformed:                                      registry.NewMeter("events", "malformed"),
+		EventsMalformedCounter:                               eventsMalformed,
+		EventsProcessingFailed:                               registry.NewMeter("events", "failed"),
+		EventsProcessingFailedCounter:                        eventsProcessingFailed,
 		EventsByState:                                        NewMetersCollection(registry),
 		EventsByStateAttributed:                              NewAttributedMetricCollection(attributedRegistry),
-		SendingFailed:                                        NewCompositeMeter(registry.NewMeter("sending", "failed"), sendingFailed),
+		SendingFailed:                                        registry.NewMeter("sending", "failed"),
+		SendingFailedCounter:                                 sendingFailed,
 		ContactsSendingNotificationsOK:                       NewMetersCollection(registry),
 		ContactsSendingNotificationsOKAttributed:             NewAttributedMetricCollection(attributedRegistry),
 		ContactsSendingNotificationsFailed:                   NewMetersCollection(registry),
@@ -116,8 +136,8 @@ func (metrics *NotifierMetrics) MarkContactDroppedNotifications(contactType stri
 		metric.Mark(1)
 	}
 
-	if metric, found := metrics.ContactsDroppedNotificationsAttributed.GetRegisteredMeter(contactType); found {
-		metric.Mark(1)
+	if metric, found := metrics.ContactsDroppedNotificationsAttributed.GetRegisteredCounter(contactType); found {
+		metric.Inc()
 	}
 }
 
@@ -127,8 +147,8 @@ func (metrics *NotifierMetrics) MarkContactSendingNotificationOK(contactType str
 		metric.Mark(1)
 	}
 
-	if metric, found := metrics.ContactsSendingNotificationsOKAttributed.GetRegisteredMeter(contactType); found {
-		metric.Mark(1)
+	if metric, found := metrics.ContactsSendingNotificationsOKAttributed.GetRegisteredCounter(contactType); found {
+		metric.Inc()
 	}
 }
 
@@ -138,14 +158,15 @@ func (metrics *NotifierMetrics) MarkContactSendingNotificationFailed(contactType
 		metric.Mark(1)
 	}
 
-	if metric, found := metrics.ContactsSendingNotificationsFailedAttributed.GetRegisteredMeter(contactType); found {
-		metric.Mark(1)
+	if metric, found := metrics.ContactsSendingNotificationsFailedAttributed.GetRegisteredCounter(contactType); found {
+		metric.Inc()
 	}
 }
 
 // MarkSendingFailed marks metrics when notifications were unsuccessfully sent.
 func (metrics *NotifierMetrics) MarkSendingFailed() {
 	metrics.SendingFailed.Mark(1)
+	metrics.SendingFailedCounter.Inc()
 }
 
 // MarkNotifierIsAlive marks metric value.

@@ -23,7 +23,7 @@ func initAliveMeter(mockCtrl *gomock.Controller) (*mock_metrics.MockRegistry, *m
 	mockRegistry.EXPECT().NewHistogram(gomock.Any()).Times(3)
 	mockRegistry.EXPECT().NewMeter("", "alive").Return(mockAliveMeter)
 
-	mockAttributedRegistry.EXPECT().NewGauge(gomock.Any()).Times(5)
+	mockAttributedRegistry.EXPECT().NewCounter(gomock.Any()).Times(5)
 	mockAttributedRegistry.EXPECT().NewHistogram(gomock.Any()).Times(3)
 	mockAttributedRegistry.EXPECT().NewGauge("alive").Return(mockAliveMeter, nil)
 
