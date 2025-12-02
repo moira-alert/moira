@@ -41,4 +41,8 @@ type AttributedMetricCollection interface {
 	RegisterMeter(name string, metric string, attributes Attributes) (Meter, error)
 	// GetRegisteredMeter retrieves a registered Meter by name.
 	GetRegisteredMeter(name string) (Meter, bool)
+	// RegisterCounter registers a new Counter with the given name, metric and attributes.
+	RegisterCounter(name string, metric string, attributes Attributes) (Counter, error)
+	// GetRegisteredCounter retrieves a registered Counter by name.
+	GetRegisteredCounter(name string) (Counter, bool)
 }

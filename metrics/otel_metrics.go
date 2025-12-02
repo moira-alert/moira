@@ -237,6 +237,7 @@ func (t *otelTimer) Count() int64 {
 type DefaultAttributedMetricCollection struct {
 	registry MetricRegistry
 	meters   map[string]Meter
+	counters map[string]Counter
 }
 
 // NewAttributedMetricCollection creates a new AttributedMetricCollection with the given registry.
@@ -244,6 +245,7 @@ func NewAttributedMetricCollection(registry MetricRegistry) AttributedMetricColl
 	return &DefaultAttributedMetricCollection{
 		registry: registry,
 		meters:   map[string]Meter{},
+		counters: map[string]Counter{},
 	}
 }
 
@@ -259,8 +261,26 @@ func (r *DefaultAttributedMetricCollection) RegisterMeter(name string, metric st
 	return gauge, nil
 }
 
+// RegisterCounter registers a new counter with the specified name, metric, and attributes.
+func (r *DefaultAttributedMetricCollection) RegisterCounter(name string, metric string, attributes Attributes) (Counter, error) {
+	counter, err := r.registry.WithAttributes(attributes).NewCounter(metric)
+	if err != nil {
+		return nil, err
+	}
+
+	r.counters[name] = counter
+
+	return counter, nil
+}
+
 // GetRegisteredMeter retrieves a registered meter by name.
 func (r *DefaultAttributedMetricCollection) GetRegisteredMeter(name string) (Meter, bool) {
 	gauge, ok := r.meters[name]
+	return gauge, ok
+}
+
+// GetRegisteredCounter retrieves a registered counter by name.
+func (r *DefaultAttributedMetricCollection) GetRegisteredCounter(name string) (Counter, bool) {
+	gauge, ok := r.counters[name]
 	return gauge, ok
 }
