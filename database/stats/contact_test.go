@@ -42,14 +42,15 @@ func TestNewContactsStats(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	registry := mock_metrics.NewMockRegistry(mockCtrl)
+	attributedRegistry := mock_metrics.NewMockMetricRegistry(mockCtrl)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 
 	Convey("Successfully created new contacts stats", t, func() {
-		stats := NewContactStats(registry, database, logger)
+		stats := NewContactStats(registry, attributedRegistry, database, logger)
 
 		So(stats, ShouldResemble, &contactStats{
-			metrics:  metrics.NewContactsMetrics(registry),
+			metrics:  metrics.NewContactsMetrics(registry, attributedRegistry),
 			database: database,
 			logger:   logger,
 		})
@@ -57,10 +58,13 @@ func TestNewContactsStats(t *testing.T) {
 }
 
 func TestCheckingContactsCount(t *testing.T) {
+	const contactTypeAttribute string = "contact_type"
+
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
 	registry := mock_metrics.NewMockRegistry(mockCtrl)
+	attributedRegistry := mock_metrics.NewMockMetricRegistry(mockCtrl)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 	eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
@@ -86,12 +90,24 @@ func TestCheckingContactsCount(t *testing.T) {
 			registry.EXPECT().NewMeter(metricPrefix, test1ContactType).Return(test1Meter).Times(1)
 			registry.EXPECT().NewMeter(metricPrefix, test2ContactType).Return(test2Meter).Times(1)
 			registry.EXPECT().NewMeter(metricPrefix, test3ContactType).Return(test3Meter).Times(1)
+			attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
+				metrics.Attribute{Key: contactTypeAttribute, Value: test1ContactType},
+			}).Return(attributedRegistry)
+			attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
+				metrics.Attribute{Key: contactTypeAttribute, Value: test2ContactType},
+			}).Return(attributedRegistry)
+			attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
+				metrics.Attribute{Key: contactTypeAttribute, Value: test3ContactType},
+			}).Return(attributedRegistry)
+			attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test1Meter, nil).Times(1)
+			attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test2Meter, nil).Times(1)
+			attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test3Meter, nil).Times(1)
 
-			test1Meter.EXPECT().Mark(test1ContactCount)
-			test2Meter.EXPECT().Mark(test2ContactCount)
-			test3Meter.EXPECT().Mark(test3ContactCount)
+			test1Meter.EXPECT().Mark(test1ContactCount).Times(2)
+			test2Meter.EXPECT().Mark(test2ContactCount).Times(2)
+			test3Meter.EXPECT().Mark(test3ContactCount).Times(2)
 
-			stats := NewContactStats(registry, database, logger)
+			stats := NewContactStats(registry, attributedRegistry, database, logger)
 			stats.checkContactsCount()
 		})
 
@@ -102,7 +118,7 @@ func TestCheckingContactsCount(t *testing.T) {
 			eventBuilder.EXPECT().Error(getAllContactsErr).Return(eventBuilder).Times(1)
 			eventBuilder.EXPECT().Msg("Failed to get all contacts").Times(1)
 
-			stats := NewContactStats(registry, database, logger)
+			stats := NewContactStats(registry, attributedRegistry, database, logger)
 			stats.checkContactsCount()
 		})
 	})

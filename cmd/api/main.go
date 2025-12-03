@@ -133,9 +133,16 @@ func main() {
 	}
 
 	// Start stats manager
+	triggerStats, err := stats.NewTriggerStats(telemetry.Metrics, telemetry.AttributedMetrics, database, logger, metricSourceProvider.GetClusterList())
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize trigger stats")
+	}
+
 	statsManager := stats.NewStatsManager(
-		stats.NewTriggerStats(telemetry.Metrics, database, logger, metricSourceProvider.GetClusterList()),
-		stats.NewContactStats(telemetry.Metrics, database, logger),
+		triggerStats,
+		stats.NewContactStats(telemetry.Metrics, telemetry.AttributedMetrics, database, logger),
 	)
 
 	statsManager.Start()

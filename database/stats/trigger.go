@@ -17,16 +17,22 @@ type triggerStats struct {
 // NewTriggerStats creates and initializes a new triggerStats object.
 func NewTriggerStats(
 	metricsRegistry metrics.Registry,
+	attributedRegistry metrics.MetricRegistry,
 	database moira.Database,
 	logger moira.Logger,
 	clusters []moira.ClusterKey,
-) *triggerStats {
+) (*triggerStats, error) {
+	metrics, err := metrics.NewTriggersMetrics(metricsRegistry, attributedRegistry, clusters)
+	if err != nil {
+		return nil, err
+	}
+
 	return &triggerStats{
 		logger:   logger,
 		database: database,
-		metrics:  metrics.NewTriggersMetrics(metricsRegistry, clusters),
+		metrics:  metrics,
 		clusters: clusters,
-	}
+	}, nil
 }
 
 // StartReport starts reporting statistics about triggers.
