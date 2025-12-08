@@ -108,8 +108,8 @@ func TestCheckingContactsCount(t *testing.T) {
 		test3Meter.EXPECT().Mark(test3ContactCount).Times(2)
 
 		stats := NewContactStats(registry, attributedRegistry, database, logger)
-		stats.checkContactsCount()
 		// No assertion here since all expectations are on mocks
+		stats.checkContactsCount()
 	})
 
 	t.Run("Get error from get all contacts", func(t *testing.T) {
@@ -120,7 +120,7 @@ func TestCheckingContactsCount(t *testing.T) {
 		eventBuilder.EXPECT().Msg("Failed to get all contacts").Times(1)
 
 		stats := NewContactStats(registry, attributedRegistry, database, logger)
-		stats.checkContactsCount()
 		// No assertion here since all expectations are on mocks
+		stats.checkContactsCount()
 	})
 }
