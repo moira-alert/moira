@@ -15,7 +15,7 @@ import (
 func TestTriggerStatsCheckTriggerCount(t *testing.T) {
 	const (
 		triggersSourceAttribute string = "trigger_source"
-		clusterIdAttribute     string = "cluster_id"
+		clusterIdAttribute      string = "cluster_id"
 	)
 
 	mockCtrl := gomock.NewController(t)

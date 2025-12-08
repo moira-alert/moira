@@ -73,8 +73,11 @@ func TestCheckingContactsCount(t *testing.T) {
 	test2Meter := mock_metrics.NewMockMeter(mockCtrl)
 	test3Meter := mock_metrics.NewMockMeter(mockCtrl)
 
-	var test1ContactCount, test2ContactCount, test3ContactCount int64
-	var test1ContactType, test2ContactType, test3ContactType string
+	var (
+		test1ContactCount, test2ContactCount, test3ContactCount int64
+		test1ContactType, test2ContactType, test3ContactType    string
+	)
+
 	test1ContactCount, test1ContactType = 3, "test1"
 	test2ContactCount, test2ContactType = 2, "test2"
 	test3ContactCount, test3ContactType = 1, "test3"
@@ -121,4 +124,3 @@ func TestCheckingContactsCount(t *testing.T) {
 		// No assertion here since all expectations are on mocks
 	})
 }
-

@@ -65,6 +65,11 @@ func (stats *contactStats) checkContactsCount() {
 	}
 
 	for contact, count := range contactsCounter {
-		stats.metrics.Mark(contact, count)
+		err := stats.metrics.Mark(contact, count)
+		if err != nil {
+			stats.logger.Warning().
+				Error(err).
+				Msg("Failed to mark contacts count")
+		}
 	}
 }
