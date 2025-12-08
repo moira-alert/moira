@@ -74,52 +74,51 @@ func TestCheckingContactsCount(t *testing.T) {
 	test3Meter := mock_metrics.NewMockMeter(mockCtrl)
 
 	var test1ContactCount, test2ContactCount, test3ContactCount int64
-
 	var test1ContactType, test2ContactType, test3ContactType string
-
 	test1ContactCount, test1ContactType = 3, "test1"
 	test2ContactCount, test2ContactType = 2, "test2"
 	test3ContactCount, test3ContactType = 1, "test3"
 
 	getAllContactsErr := errors.New("failed to get all contacts")
 
-	Convey("Test checking contacts count", t, func() {
-		Convey("Successfully checking contacts count", func() {
-			database.EXPECT().GetAllContacts().Return(testContacts, nil).Times(1)
+	t.Run("Successfully checking contacts count", func(t *testing.T) {
+		database.EXPECT().GetAllContacts().Return(testContacts, nil).Times(1)
 
-			registry.EXPECT().NewMeter(metricPrefix, test1ContactType).Return(test1Meter).Times(1)
-			registry.EXPECT().NewMeter(metricPrefix, test2ContactType).Return(test2Meter).Times(1)
-			registry.EXPECT().NewMeter(metricPrefix, test3ContactType).Return(test3Meter).Times(1)
-			attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
-				metrics.Attribute{Key: contactTypeAttribute, Value: test1ContactType},
-			}).Return(attributedRegistry)
-			attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
-				metrics.Attribute{Key: contactTypeAttribute, Value: test2ContactType},
-			}).Return(attributedRegistry)
-			attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
-				metrics.Attribute{Key: contactTypeAttribute, Value: test3ContactType},
-			}).Return(attributedRegistry)
-			attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test1Meter, nil).Times(1)
-			attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test2Meter, nil).Times(1)
-			attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test3Meter, nil).Times(1)
+		registry.EXPECT().NewMeter(metricPrefix, test1ContactType).Return(test1Meter).Times(1)
+		registry.EXPECT().NewMeter(metricPrefix, test2ContactType).Return(test2Meter).Times(1)
+		registry.EXPECT().NewMeter(metricPrefix, test3ContactType).Return(test3Meter).Times(1)
+		attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
+			metrics.Attribute{Key: contactTypeAttribute, Value: test1ContactType},
+		}).Return(attributedRegistry)
+		attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
+			metrics.Attribute{Key: contactTypeAttribute, Value: test2ContactType},
+		}).Return(attributedRegistry)
+		attributedRegistry.EXPECT().WithAttributes(metrics.Attributes{
+			metrics.Attribute{Key: contactTypeAttribute, Value: test3ContactType},
+		}).Return(attributedRegistry)
+		attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test1Meter, nil).Times(1)
+		attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test2Meter, nil).Times(1)
+		attributedRegistry.EXPECT().NewGauge(metricPrefix).Return(test3Meter, nil).Times(1)
 
-			test1Meter.EXPECT().Mark(test1ContactCount).Times(2)
-			test2Meter.EXPECT().Mark(test2ContactCount).Times(2)
-			test3Meter.EXPECT().Mark(test3ContactCount).Times(2)
+		test1Meter.EXPECT().Mark(test1ContactCount).Times(2)
+		test2Meter.EXPECT().Mark(test2ContactCount).Times(2)
+		test3Meter.EXPECT().Mark(test3ContactCount).Times(2)
 
-			stats := NewContactStats(registry, attributedRegistry, database, logger)
-			stats.checkContactsCount()
-		})
+		stats := NewContactStats(registry, attributedRegistry, database, logger)
+		stats.checkContactsCount()
+		// No assertion here since all expectations are on mocks
+	})
 
-		Convey("Get error from get all contacts", func() {
-			database.EXPECT().GetAllContacts().Return(nil, getAllContactsErr).Times(1)
+	t.Run("Get error from get all contacts", func(t *testing.T) {
+		database.EXPECT().GetAllContacts().Return(nil, getAllContactsErr).Times(1)
 
-			logger.EXPECT().Warning().Return(eventBuilder).Times(1)
-			eventBuilder.EXPECT().Error(getAllContactsErr).Return(eventBuilder).Times(1)
-			eventBuilder.EXPECT().Msg("Failed to get all contacts").Times(1)
+		logger.EXPECT().Warning().Return(eventBuilder).Times(1)
+		eventBuilder.EXPECT().Error(getAllContactsErr).Return(eventBuilder).Times(1)
+		eventBuilder.EXPECT().Msg("Failed to get all contacts").Times(1)
 
-			stats := NewContactStats(registry, attributedRegistry, database, logger)
-			stats.checkContactsCount()
-		})
+		stats := NewContactStats(registry, attributedRegistry, database, logger)
+		stats.checkContactsCount()
+		// No assertion here since all expectations are on mocks
 	})
 }
+
