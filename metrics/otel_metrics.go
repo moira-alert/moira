@@ -226,7 +226,7 @@ type otelTimer struct {
 
 // UpdateSince records the duration since the given timestamp in all histograms and increments the count.
 func (t *otelTimer) UpdateSince(ts time.Time) {
-	t.histogram.Record(context.Background(), float64(time.Since(ts).Seconds()), internalMetric.WithAttributes(t.attributes...))
+	t.histogram.Record(context.Background(), time.Since(ts).Seconds(), internalMetric.WithAttributes(t.attributes...))
 
 	atomic.AddInt64(&t.count, 1)
 }
