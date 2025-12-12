@@ -146,7 +146,7 @@ func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
 func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
 	timer, err := r.provider.Meter("timer").Float64Histogram(
 		name,
-		internalMetric.WithExplicitBucketBoundaries(0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 20, 100, 1000),
+		internalMetric.WithExplicitBucketBoundaries(0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 2, 2.5, 5, 7.5, 10, 20, 100, 1000),
 	)
 	if err != nil {
 		return nil, err
