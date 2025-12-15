@@ -144,7 +144,10 @@ func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
 
 // NewTimer creates a new Timer with the given name.
 func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
-	timer, err := r.provider.Meter("timer").Float64Histogram(name)
+	timer, err := r.provider.Meter("timer").Float64Histogram(
+		name,
+		internalMetric.WithExplicitBucketBoundaries(0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 2, 2.5, 5, 7.5, 10, 20, 100, 1000),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +226,7 @@ type otelTimer struct {
 
 // UpdateSince records the duration since the given timestamp in all histograms and increments the count.
 func (t *otelTimer) UpdateSince(ts time.Time) {
-	t.histogram.Record(context.Background(), float64(time.Since(ts)), internalMetric.WithAttributes(t.attributes...))
+	t.histogram.Record(context.Background(), time.Since(ts).Seconds(), internalMetric.WithAttributes(t.attributes...))
 
 	atomic.AddInt64(&t.count, 1)
 }
