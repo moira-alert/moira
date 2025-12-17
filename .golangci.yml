@@ -49,7 +49,6 @@ linters:
     - varnamelen
     - wrapcheck
     - zerologlint
-    - modernize
   settings:
     gocyclo:
       min-complexity: 15
