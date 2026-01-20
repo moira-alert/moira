@@ -292,26 +292,30 @@ func (r *DefaultAttributedMetricCollection) GetRegisteredCounter(name string) (C
 	return gauge, ok
 }
 
+// NewEmptySettings creates an empty settings.
 func NewEmptySettings() Settings {
 	return Settings{
 		HistogramBuckets: Buckets[int64]{},
-		TimerBuckets: Buckets[float64]{},
+		TimerBuckets:     Buckets[float64]{},
 	}
 }
 
-func (s *Settings) GetHistogramBacketOr(histogramName string, def []int64) []int64 {
+// GetHistogramBucketOr gets histogram buckets or default.
+func (s *Settings) GetHistogramBucketOr(histogramName string, def []int64) []int64 {
 	backets, ok := s.HistogramBuckets[histogramName]
 	if !ok {
 		return def
 	}
+
 	return backets
 }
 
-func (s *Settings) GetTimerBacketOr(timerName string, def []float64) []float64 {
+// GetTimerBucketOr gets timer buckets or default.
+func (s *Settings) GetTimerBucketOr(timerName string, def []float64) []float64 {
 	backets, ok := s.TimerBuckets[timerName]
 	if !ok {
 		return def
 	}
+
 	return backets
 }
-

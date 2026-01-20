@@ -104,8 +104,9 @@ func main() {
 
 	metricsSettings := metrics.Settings{
 		HistogramBuckets: config.Telemetry.HistogramBuckets,
-		TimerBuckets: config.Telemetry.TimerBuckets,
+		TimerBuckets:     config.Telemetry.TimerBuckets,
 	}
+
 	notifierMetrics, err := metrics.ConfigureNotifierMetrics(telemetry.Metrics, telemetry.AttributedMetrics, serviceName, metricsSettings)
 	if err != nil {
 		logger.Fatal().

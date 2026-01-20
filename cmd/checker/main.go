@@ -94,8 +94,9 @@ func main() {
 
 	metricsSettings := metrics.Settings{
 		HistogramBuckets: config.Telemetry.HistogramBuckets,
-		TimerBuckets: config.Telemetry.TimerBuckets,
+		TimerBuckets:     config.Telemetry.TimerBuckets,
 	}
+
 	checkerMetrics, err := metrics.ConfigureCheckerMetrics(telemetry.Metrics, telemetry.AttributedMetrics, clusterKeyList(metricSourceProvider), metricsSettings)
 	if err != nil {
 		logger.Fatal().

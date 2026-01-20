@@ -98,7 +98,7 @@ func main() {
 
 	metricsSettings := metrics.Settings{
 		HistogramBuckets: applicationConfig.Telemetry.HistogramBuckets,
-		TimerBuckets: applicationConfig.Telemetry.TimerBuckets,
+		TimerBuckets:     applicationConfig.Telemetry.TimerBuckets,
 	}
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics, telemetry.AttributedMetrics, metricsSettings)

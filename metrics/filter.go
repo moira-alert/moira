@@ -36,31 +36,36 @@ func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry
 	}
 
 	const matchingTimerMetric string = "time.match"
-	matchingTimer, err := attributedRegistry.NewTimer(matchingTimerMetric, settings.GetTimerBacketOr(matchingTimerMetric, DefaultTimerBackets))
+
+	matchingTimer, err := attributedRegistry.NewTimer(matchingTimerMetric, settings.GetTimerBucketOr(matchingTimerMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
 	const savingTimerMetric string = "time.save"
-	savingTimer, err := attributedRegistry.NewTimer(savingTimerMetric, settings.GetTimerBacketOr(savingTimerMetric, DefaultTimerBackets))
+
+	savingTimer, err := attributedRegistry.NewTimer(savingTimerMetric, settings.GetTimerBucketOr(savingTimerMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
 	const buildTreeTimerMetric string = "time.buildtree"
-	buildTreeTimer, err := attributedRegistry.NewTimer(buildTreeTimerMetric, settings.GetTimerBacketOr(buildTreeTimerMetric, DefaultTimerBackets))
+
+	buildTreeTimer, err := attributedRegistry.NewTimer(buildTreeTimerMetric, settings.GetTimerBucketOr(buildTreeTimerMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
 	const metricChannelLenMetric string = "channel.metric.to_save.len"
-	metricChannelLen, err := attributedRegistry.NewHistogram(metricChannelLenMetric, settings.GetHistogramBacketOr(metricChannelLenMetric, DefaultHistogramBackets))
+
+	metricChannelLen, err := attributedRegistry.NewHistogram(metricChannelLenMetric, settings.GetHistogramBucketOr(metricChannelLenMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
 
 	const linesToMatchMetric string = "channel.lines.to_match.len"
-	linesToMatch, err := attributedRegistry.NewHistogram(linesToMatchMetric, settings.GetHistogramBacketOr(linesToMatchMetric, DefaultHistogramBackets))
+
+	linesToMatch, err := attributedRegistry.NewHistogram(linesToMatchMetric, settings.GetHistogramBucketOr(linesToMatchMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}

@@ -45,18 +45,21 @@ type CheckMetrics struct {
 // ConfigureCheckerMetrics is checker metrics configurator.
 func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistry, sources []moira.ClusterKey, settings Settings) (*CheckerMetrics, error) {
 	const metricEventsChannelLenMetric string = "metric.events.count"
-	metricEventsChannelLen, err := attributedRegistry.NewHistogram(metricEventsChannelLenMetric, settings.GetHistogramBacketOr(metricEventsChannelLenMetric, DefaultHistogramBackets))
+
+	metricEventsChannelLen, err := attributedRegistry.NewHistogram(metricEventsChannelLenMetric, settings.GetHistogramBucketOr(metricEventsChannelLenMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
 
 	const metricEventsHandleTimeMetric string = "metric.events.handle_time"
-	metricEventsHandleTime, err := attributedRegistry.NewTimer(metricEventsHandleTimeMetric, settings.GetTimerBacketOr(metricEventsHandleTimeMetric, DefaultTimerBackets))
+
+	metricEventsHandleTime, err := attributedRegistry.NewTimer(metricEventsHandleTimeMetric, settings.GetTimerBucketOr(metricEventsHandleTimeMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
 	const unusedTriggersCountMetric string = "triggers.unused.count"
+
 	unusedTriggersCount, err := attributedRegistry.NewHistogram(unusedTriggersCountMetric, DefaultHistogramBackets)
 	if err != nil {
 		return nil, err
@@ -99,13 +102,15 @@ func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry,
 	}
 
 	const triggersCheckTimeMetric string = "triggers.check.time"
-	triggersCheckTime, err := metricRegistrySourced.NewTimer(triggersCheckTimeMetric, settings.GetTimerBacketOr(triggersCheckTimeMetric, DefaultTimerBackets))
+
+	triggersCheckTime, err := metricRegistrySourced.NewTimer(triggersCheckTimeMetric, settings.GetTimerBucketOr(triggersCheckTimeMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
 	const triggersToCheckCountMetric string = "triggers.to_check.count"
-	triggersToCheckCount, err := metricRegistrySourced.NewHistogram("triggers.to_check.count", settings.GetHistogramBacketOr(triggersToCheckCountMetric, DefaultHistogramBackets))
+
+	triggersToCheckCount, err := metricRegistrySourced.NewHistogram("triggers.to_check.count", settings.GetHistogramBucketOr(triggersToCheckCountMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
