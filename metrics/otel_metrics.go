@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/moira-alert/moira"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/attribute"
 	internalMetric "go.opentelemetry.io/otel/metric"
@@ -130,8 +131,11 @@ func (r *DefaultMetricRegistry) NewGauge(name string) (Meter, error) {
 }
 
 // NewHistogram creates a new Histogram with the given name.
-func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
-	histogram, err := r.provider.Meter("histogram").Int64Histogram(name)
+func (r *DefaultMetricRegistry) NewHistogram(name string, buckets []int64) (Histogram, error) {
+	histogram, err := r.provider.Meter("histogram").Int64Histogram(
+		name,
+		internalMetric.WithExplicitBucketBoundaries(moira.Map(buckets, func(b int64) float64 { return float64(b) })...),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -143,10 +147,10 @@ func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
 }
 
 // NewTimer creates a new Timer with the given name.
-func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
+func (r *DefaultMetricRegistry) NewTimer(name string, buckets []float64) (Timer, error) {
 	timer, err := r.provider.Meter("timer").Float64Histogram(
 		name,
-		internalMetric.WithExplicitBucketBoundaries(0.00002, 0.00005, 0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.015, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 2, 2.5, 5, 7.5, 10, 20, 100, 1000),
+		internalMetric.WithExplicitBucketBoundaries(buckets...),
 	)
 	if err != nil {
 		return nil, err
@@ -287,3 +291,27 @@ func (r *DefaultAttributedMetricCollection) GetRegisteredCounter(name string) (C
 	gauge, ok := r.counters[name]
 	return gauge, ok
 }
+
+func NewEmptySettings() Settings {
+	return Settings{
+		HistogramBuckets: Buckets[int64]{},
+		TimerBuckets: Buckets[float64]{},
+	}
+}
+
+func (s *Settings) GetHistogramBacketOr(histogramName string, def []int64) []int64 {
+	backets, ok := s.HistogramBuckets[histogramName]
+	if !ok {
+		return def
+	}
+	return backets
+}
+
+func (s *Settings) GetTimerBacketOr(timerName string, def []float64) []float64 {
+	backets, ok := s.TimerBuckets[timerName]
+	if !ok {
+		return def
+	}
+	return backets
+}
+

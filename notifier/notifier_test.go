@@ -436,7 +436,7 @@ func configureNotifier(t *testing.T, config Config) {
 
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
-	notifierMetrics, err := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")
+	notifierMetrics, err := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier", metrics.NewEmptySettings())
 	require.NoError(t, err)
 
 	mockCtrl = gomock.NewController(t)

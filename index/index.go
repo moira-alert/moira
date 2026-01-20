@@ -31,7 +31,7 @@ type Index struct {
 }
 
 // NewSearchIndex return new Index object.
-func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistry metrics.Registry, attributedRegistry metrics.MetricRegistry) *Index {
+func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistry metrics.Registry, attributedRegistry metrics.MetricRegistry, metricsSetting metrics.Settings) *Index {
 	var err error
 
 	newIndex := Index{
@@ -39,7 +39,7 @@ func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistr
 		database: database,
 	}
 
-	newIndex.metrics, err = metrics.ConfigureIndexMetrics(metricsRegistry, attributedRegistry)
+	newIndex.metrics, err = metrics.ConfigureIndexMetrics(metricsRegistry, attributedRegistry, metricsSetting)
 	if err != nil {
 		return nil
 	}

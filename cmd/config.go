@@ -238,6 +238,8 @@ type TelemetryConfig struct {
 	Otel OtelConfig `yaml:"otel"`
 	// DefaultAttributes are the default attributes for telemetry events.
 	DefaultAttributes map[string]string `yaml:"attributes"`
+	HistogramBuckets map[string][]int64 `yaml:"histogram_buckets"`
+	TimerBuckets map[string][]float64 `yaml:"timer_buckets"`
 	// RuntimeStats enables runtime statistics collection.
 	RuntimeStats bool `yaml:"runtime_stats"`
 }

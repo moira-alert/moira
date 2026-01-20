@@ -55,7 +55,7 @@ func createPatternsStorage(patterns *[]string, b *testing.B) (*filter.PatternSto
 	if err != nil {
 		return nil, err
 	}
-	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry, metrics.NewEmptySettings())
 	if err != nil {
 		return nil, err
 	}

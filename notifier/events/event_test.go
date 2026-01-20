@@ -21,7 +21,7 @@ import (
 
 var (
 	metricContext, _   = metrics.NewMetricContext(context.Background()).CreateRegistry()
-	notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricContext, "notifier")
+	notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricContext, "notifier", metrics.NewEmptySettings())
 )
 
 func TestEvent(t *testing.T) {

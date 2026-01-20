@@ -92,7 +92,11 @@ func main() {
 			Msg("Failed to initialize metric sources")
 	}
 
-	checkerMetrics, err := metrics.ConfigureCheckerMetrics(telemetry.Metrics, telemetry.AttributedMetrics, clusterKeyList(metricSourceProvider))
+	metricsSettings := metrics.Settings{
+		HistogramBuckets: config.Telemetry.HistogramBuckets,
+		TimerBuckets: config.Telemetry.TimerBuckets,
+	}
+	checkerMetrics, err := metrics.ConfigureCheckerMetrics(telemetry.Metrics, telemetry.AttributedMetrics, clusterKeyList(metricSourceProvider), metricsSettings)
 	if err != nil {
 		logger.Fatal().
 			Error(err).

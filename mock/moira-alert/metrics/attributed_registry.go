@@ -71,33 +71,33 @@ func (mr *MockMetricRegistryMockRecorder) NewGauge(name any) *gomock.Call {
 }
 
 // NewHistogram mocks base method.
-func (m *MockMetricRegistry) NewHistogram(name string) (metrics.Histogram, error) {
+func (m *MockMetricRegistry) NewHistogram(name string, buckets []int64) (metrics.Histogram, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewHistogram", name)
+	ret := m.ctrl.Call(m, "NewHistogram", name, buckets)
 	ret0, _ := ret[0].(metrics.Histogram)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // NewHistogram indicates an expected call of NewHistogram.
-func (mr *MockMetricRegistryMockRecorder) NewHistogram(name any) *gomock.Call {
+func (mr *MockMetricRegistryMockRecorder) NewHistogram(name, buckets any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewHistogram", reflect.TypeOf((*MockMetricRegistry)(nil).NewHistogram), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewHistogram", reflect.TypeOf((*MockMetricRegistry)(nil).NewHistogram), name, buckets)
 }
 
 // NewTimer mocks base method.
-func (m *MockMetricRegistry) NewTimer(name string) (metrics.Timer, error) {
+func (m *MockMetricRegistry) NewTimer(name string, buckets []float64) (metrics.Timer, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NewTimer", name)
+	ret := m.ctrl.Call(m, "NewTimer", name, buckets)
 	ret0, _ := ret[0].(metrics.Timer)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // NewTimer indicates an expected call of NewTimer.
-func (mr *MockMetricRegistryMockRecorder) NewTimer(name any) *gomock.Call {
+func (mr *MockMetricRegistryMockRecorder) NewTimer(name, buckets any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTimer", reflect.TypeOf((*MockMetricRegistry)(nil).NewTimer), name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewTimer", reflect.TypeOf((*MockMetricRegistry)(nil).NewTimer), name, buckets)
 }
 
 // WithAttributes mocks base method.

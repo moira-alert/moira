@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira/index"
+	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
@@ -95,8 +96,12 @@ func main() {
 	notificationHistorySettings := applicationConfig.NotificationHistory.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.NotificationConfig{}, redis.API, clusterList)
 
+	metricsSettings := metrics.Settings{
+		HistogramBuckets: applicationConfig.Telemetry.HistogramBuckets,
+		TimerBuckets: applicationConfig.Telemetry.TimerBuckets,
+	}
 	// Start Index right before HTTP listener. Fail if index cannot start
-	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics, telemetry.AttributedMetrics)
+	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics, telemetry.AttributedMetrics, metricsSettings)
 	if searchIndex == nil {
 		logger.Fatal().Msg("Failed to create search index")
 	}

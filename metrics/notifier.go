@@ -46,8 +46,14 @@ type NotifierMetrics struct {
 	notifierIsAlive                                      Meter
 }
 
+const (
+	plotsBuildDurationMsMetrics string = "plots.build.duration_ms"
+	plotsEvaluateTriggerDurationMsMetric string = "plots.evaluate_trigger.duration_ms"
+	fetchNotificationsDurationMsMetric string = "notifications.fetch.duration_ms"
+)
+
 // ConfigureNotifierMetrics is notifier metrics configurator.
-func ConfigureNotifierMetrics(registry Registry, attributedRegistry MetricRegistry, prefix string) (*NotifierMetrics, error) {
+func ConfigureNotifierMetrics(registry Registry, attributedRegistry MetricRegistry, prefix string, settings Settings) (*NotifierMetrics, error) {
 	subsMalformed, err := attributedRegistry.NewCounter("subs.malformed")
 	if err != nil {
 		return nil, err
@@ -73,17 +79,17 @@ func ConfigureNotifierMetrics(registry Registry, attributedRegistry MetricRegist
 		return nil, err
 	}
 
-	plotsBuildDurationMs, err := attributedRegistry.NewHistogram("plots.build.duration_ms")
+	plotsBuildDurationMs, err := attributedRegistry.NewHistogram(plotsBuildDurationMsMetrics, settings.GetHistogramBacketOr(plotsBuildDurationMsMetrics, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	plotsEvaluateTriggerDurationMs, err := attributedRegistry.NewHistogram("plots.evaluate_trigger.duration_ms")
+	plotsEvaluateTriggerDurationMs, err := attributedRegistry.NewHistogram(plotsEvaluateTriggerDurationMsMetric, settings.GetHistogramBacketOr(plotsEvaluateTriggerDurationMsMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	fetchNotificationsDurationMs, err := attributedRegistry.NewHistogram("notifications.fetch.duration_ms")
+	fetchNotificationsDurationMs, err := attributedRegistry.NewHistogram(fetchNotificationsDurationMsMetric, settings.GetHistogramBacketOr(fetchNotificationsDurationMsMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}

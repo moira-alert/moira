@@ -43,18 +43,21 @@ type CheckMetrics struct {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator.
-func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistry, sources []moira.ClusterKey) (*CheckerMetrics, error) {
-	metricEventsChannelLen, err := attributedRegistry.NewHistogram("metric.events.count")
+func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistry, sources []moira.ClusterKey, settings Settings) (*CheckerMetrics, error) {
+	const metricEventsChannelLenMetric string = "metric.events.count"
+	metricEventsChannelLen, err := attributedRegistry.NewHistogram(metricEventsChannelLenMetric, settings.GetHistogramBacketOr(metricEventsChannelLenMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	metricEventsHandleTime, err := attributedRegistry.NewTimer("metric.events.handle_time")
+	const metricEventsHandleTimeMetric string = "metric.events.handle_time"
+	metricEventsHandleTime, err := attributedRegistry.NewTimer(metricEventsHandleTimeMetric, settings.GetTimerBacketOr(metricEventsHandleTimeMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	unusedTriggersCount, err := attributedRegistry.NewHistogram("triggers.unused.count")
+	const unusedTriggersCountMetric string = "triggers.unused.count"
+	unusedTriggersCount, err := attributedRegistry.NewHistogram(unusedTriggersCountMetric, DefaultHistogramBackets)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +70,7 @@ func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistr
 	}
 
 	for _, clusterKey := range sources {
-		checkMetrics, err := configureCheckMetrics(registry, attributedRegistry, clusterKey)
+		checkMetrics, err := configureCheckMetrics(registry, attributedRegistry, clusterKey, settings)
 		if err != nil {
 			return nil, err
 		}
@@ -78,7 +81,7 @@ func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistr
 	return metrics, nil
 }
 
-func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry, clusterKey moira.ClusterKey) (*CheckMetrics, error) {
+func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry, clusterKey moira.ClusterKey, settings Settings) (*CheckMetrics, error) {
 	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId.String()
 	metricRegistrySourced := attributedRegistry.WithAttributes(Attributes{
 		Attribute{"metric.source.name", source},
@@ -95,12 +98,14 @@ func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry,
 		return nil, err
 	}
 
-	triggersCheckTime, err := metricRegistrySourced.NewTimer("triggers.check.time")
+	const triggersCheckTimeMetric string = "triggers.check.time"
+	triggersCheckTime, err := metricRegistrySourced.NewTimer(triggersCheckTimeMetric, settings.GetTimerBacketOr(triggersCheckTimeMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	triggersToCheckCount, err := metricRegistrySourced.NewHistogram("triggers.to_check.count")
+	const triggersToCheckCountMetric string = "triggers.to_check.count"
+	triggersToCheckCount, err := metricRegistrySourced.NewHistogram("triggers.to_check.count", settings.GetHistogramBacketOr(triggersToCheckCountMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}

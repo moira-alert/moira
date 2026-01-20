@@ -14,7 +14,7 @@ type FilterMetrics struct {
 }
 
 // ConfigureFilterMetrics initialize metrics.
-func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry) (*FilterMetrics, error) {
+func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry, settings Settings) (*FilterMetrics, error) {
 	totalMetricsReceived, err := attributedRegistry.NewCounter("received.total")
 	if err != nil {
 		return nil, err
@@ -35,27 +35,32 @@ func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry
 		return nil, err
 	}
 
-	matchingTimer, err := attributedRegistry.NewTimer("time.match")
+	const matchingTimerMetric string = "time.match"
+	matchingTimer, err := attributedRegistry.NewTimer(matchingTimerMetric, settings.GetTimerBacketOr(matchingTimerMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	savingTimer, err := attributedRegistry.NewTimer("time.save")
+	const savingTimerMetric string = "time.save"
+	savingTimer, err := attributedRegistry.NewTimer(savingTimerMetric, settings.GetTimerBacketOr(savingTimerMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	buildTreeTimer, err := attributedRegistry.NewTimer("time.buildtree")
+	const buildTreeTimerMetric string = "time.buildtree"
+	buildTreeTimer, err := attributedRegistry.NewTimer(buildTreeTimerMetric, settings.GetTimerBacketOr(buildTreeTimerMetric, DefaultTimerBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	metricChannelLen, err := attributedRegistry.NewHistogram("channel.metric.to_save.len")
+	const metricChannelLenMetric string = "channel.metric.to_save.len"
+	metricChannelLen, err := attributedRegistry.NewHistogram(metricChannelLenMetric, settings.GetHistogramBacketOr(metricChannelLenMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	linesToMatch, err := attributedRegistry.NewHistogram("channel.lines.to_match.len")
+	const linesToMatchMetric string = "channel.lines.to_match.len"
+	linesToMatch, err := attributedRegistry.NewHistogram(linesToMatchMetric, settings.GetHistogramBacketOr(linesToMatchMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}

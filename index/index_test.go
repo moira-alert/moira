@@ -30,7 +30,7 @@ func TestGetTriggerChecksWithRetries(t *testing.T) {
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 	randomBatch := []string{"123", "123"}
 	expectedData := []*moira.TriggerCheck{{Throttling: 123}}
 	expectedError := fmt.Errorf("random error")
@@ -74,7 +74,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 		require.NoError(t, err)
 
-		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 		emptyIndex, _ := bleve.CreateTriggerIndex(bleveOriginal.NewIndexMapping())
 		So(index.triggerIndex, ShouldHaveSameTypeAs, emptyIndex)
 	})
@@ -83,7 +83,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 		require.NoError(t, err)
 
-		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 
@@ -98,7 +98,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 		require.NoError(t, err)
 
-		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err = index.writeByBatches(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
@@ -116,7 +116,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 		require.NoError(t, err)
 
-		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 		err = index.writeByBatches(triggerIDs, batchSize)
 		So(err, ShouldBeNil)
 
@@ -128,7 +128,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 		require.NoError(t, err)
 
-		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 		expectedError := fmt.Errorf("test")
 
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggerChecksPointers[:20], nil)
@@ -141,7 +141,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 		require.NoError(t, err)
 
-		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 
 		// first time
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
@@ -170,7 +170,7 @@ func TestIndex_Start(t *testing.T) {
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
@@ -212,7 +212,7 @@ func TestIndex_Errors(t *testing.T) {
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
 
 	Convey("Test Start index error", t, func() {
 		dataBase.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), fmt.Errorf("very bad error"))

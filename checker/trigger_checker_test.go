@@ -34,6 +34,7 @@ func TestInitTriggerChecker(t *testing.T) {
 		metrics.NewDummyRegistry(),
 		metricRegistry,
 		[]moira.ClusterKey{moira.DefaultLocalCluster},
+		metrics.NewEmptySettings(),
 	)
 
 	defer mockCtrl.Finish()
