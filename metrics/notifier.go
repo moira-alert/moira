@@ -73,19 +73,22 @@ func ConfigureNotifierMetrics(registry Registry, attributedRegistry MetricRegist
 		return nil, err
 	}
 
-	const plotsBuildDurationMsMetrics          string = "plots.build.duration_ms"
+	const plotsBuildDurationMsMetrics string = "plots.build.duration_ms"
+
 	plotsBuildDurationMs, err := attributedRegistry.NewHistogram(plotsBuildDurationMsMetrics, settings.GetHistogramBucketOr(plotsBuildDurationMsMetrics, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
 
 	const plotsEvaluateTriggerDurationMsMetric string = "plots.evaluate_trigger.duration_ms"
+
 	plotsEvaluateTriggerDurationMs, err := attributedRegistry.NewHistogram(plotsEvaluateTriggerDurationMsMetric, settings.GetHistogramBucketOr(plotsEvaluateTriggerDurationMsMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
 	}
 
-	const fetchNotificationsDurationMsMetric   string = "notifications.fetch.duration_ms"
+	const fetchNotificationsDurationMsMetric string = "notifications.fetch.duration_ms"
+
 	fetchNotificationsDurationMs, err := attributedRegistry.NewHistogram(fetchNotificationsDurationMsMetric, settings.GetHistogramBucketOr(fetchNotificationsDurationMsMetric, DefaultHistogramBackets))
 	if err != nil {
 		return nil, err
