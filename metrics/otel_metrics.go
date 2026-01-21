@@ -95,10 +95,10 @@ func (d *DefaultMetricsContext) Shutdown(ctx context.Context) error {
 
 // DefaultMetricRegistry implements MetricRegistry using MeterProviders and attributes.
 type DefaultMetricRegistry struct {
-	provider   *metric.MeterProvider
-	attributes Attributes
+	provider         *metric.MeterProvider
+	attributes       Attributes
 	histogramBuckets Buckets[int64]
-	timerBuckets Buckets[float64]
+	timerBuckets     Buckets[float64]
 }
 
 // WithAttributes returns a new MetricRegistry with merged attributes.
@@ -114,6 +114,7 @@ func (r *DefaultMetricRegistry) WithAttributes(attributes Attributes) MetricRegi
 func (r *DefaultMetricRegistry) WithHistogramBuckets(buckets Buckets[int64]) MetricRegistry {
 	histogramBuckets := maps.Clone(r.histogramBuckets)
 	maps.Copy(histogramBuckets, buckets)
+
 	return &DefaultMetricRegistry{r.provider, r.attributes, histogramBuckets, r.timerBuckets}
 }
 
@@ -121,6 +122,7 @@ func (r *DefaultMetricRegistry) WithHistogramBuckets(buckets Buckets[int64]) Met
 func (r *DefaultMetricRegistry) WithTimerBuckets(buckets Buckets[float64]) MetricRegistry {
 	timerBuckets := maps.Clone(r.timerBuckets)
 	maps.Copy(timerBuckets, buckets)
+
 	return &DefaultMetricRegistry{r.provider, r.attributes, r.histogramBuckets, timerBuckets}
 }
 
@@ -158,6 +160,7 @@ func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
 	if !ok {
 		buckets = DefaultHistogramBackets
 	}
+
 	histogram, err := r.provider.Meter("histogram").Int64Histogram(
 		name,
 		internalMetric.WithExplicitBucketBoundaries(moira.Map(buckets, func(b int64) float64 { return float64(b) })...),
@@ -178,6 +181,7 @@ func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
 	if !ok {
 		buckets = DefaultTimerBackets
 	}
+
 	timer, err := r.provider.Meter("timer").Float64Histogram(
 		name,
 		internalMetric.WithExplicitBucketBoundaries(buckets...),
