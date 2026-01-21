@@ -72,6 +72,10 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 		return nil, err
 	}
 
+	attributedRegistry = attributedRegistry.
+		WithHistogramBuckets(config.HistogramBuckets).
+		WithTimerBuckets(config.TimerBuckets)
+
 	return &Telemetry{
 		Metrics:           metricsRegistry,
 		AttributedMetrics: attributedRegistry,

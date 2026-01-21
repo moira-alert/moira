@@ -9,17 +9,13 @@ type IndexMetrics struct {
 }
 
 // ConfigureIndexMetrics in full-text search index metrics configurator.
-func ConfigureIndexMetrics(registry Registry, attributedRegistry MetricRegistry, settings Settings) (*IndexMetrics, error) {
-	const indexedTriggersCountMetric string = "index.triggers.count"
-
-	indexedTriggersCount, err := attributedRegistry.NewHistogram(indexedTriggersCountMetric, settings.GetHistogramBucketOr(indexedTriggersCountMetric, DefaultHistogramBackets))
+func ConfigureIndexMetrics(registry Registry, attributedRegistry MetricRegistry) (*IndexMetrics, error) {
+	indexedTriggersCount, err := attributedRegistry.NewHistogram("index.triggers.count")
 	if err != nil {
 		return nil, err
 	}
 
-	const actualizationLagMetric string = "index.actualization_lag"
-
-	actualizationLag, err := attributedRegistry.NewTimer(actualizationLagMetric, settings.GetTimerBucketOr(actualizationLagMetric, DefaultTimerBackets))
+	actualizationLag, err := attributedRegistry.NewTimer("index.actualization_lag")
 	if err != nil {
 		return nil, err
 	}

@@ -65,7 +65,7 @@ func TestThrottling(t *testing.T) {
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	metrics2, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricRegistry, "notifier", metrics.NewEmptySettings())
+	metrics2, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricRegistry, "notifier")
 
 	now := time.Now()
 	next := now.Add(10 * time.Minute)
@@ -230,7 +230,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	notifierMetrics, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricRegistry, "notifier", metrics.NewEmptySettings())
+	notifierMetrics, _ := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricRegistry, "notifier")
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	scheduler := NewScheduler(dataBase, logger, notifierMetrics, SchedulerConfig{ReschedulingDelay: time.Minute}, systemClock)
 

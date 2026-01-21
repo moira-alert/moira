@@ -102,12 +102,7 @@ func main() {
 		ReschedulingDelay: notifierConfig.ReschedulingDelay,
 	}
 
-	metricsSettings := metrics.Settings{
-		HistogramBuckets: config.Telemetry.HistogramBuckets,
-		TimerBuckets:     config.Telemetry.TimerBuckets,
-	}
-
-	notifierMetrics, err := metrics.ConfigureNotifierMetrics(telemetry.Metrics, telemetry.AttributedMetrics, serviceName, metricsSettings)
+	notifierMetrics, err := metrics.ConfigureNotifierMetrics(telemetry.Metrics, telemetry.AttributedMetrics, serviceName)
 	if err != nil {
 		logger.Fatal().
 			Error(err).

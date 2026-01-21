@@ -25,7 +25,7 @@ func shufflePatterns(patterns []string) []string {
 func BenchmarkPatternStorageRefresh(b *testing.B) {
 	mockCtrl := gomock.NewController(b)
 	metricRegistry, _ := metrics.NewMetricContext(context.Background()).CreateRegistry()
-	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry, metrics.NewEmptySettings())
+	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 	logger, _ := logging.GetLogger("Benchmark")
 	compatibility := filter.Compatibility{AllowRegexLooseStartMatch: true}
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)

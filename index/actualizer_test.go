@@ -27,7 +27,7 @@ func TestIndex_actualize(t *testing.T) {
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()

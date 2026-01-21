@@ -174,7 +174,7 @@ func TestCacheStorage(t *testing.T) {
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry, metrics.NewEmptySettings())
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 	require.NoError(t, err)
 
 	storage, err := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
@@ -209,7 +209,7 @@ func TestRetentions(t *testing.T) {
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry, metrics.NewEmptySettings())
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 	require.NoError(t, err)
 
 	storage, err := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))

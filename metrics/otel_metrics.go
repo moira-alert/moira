@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"context"
+	"maps"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -78,7 +79,12 @@ func (d *DefaultMetricsContext) CreateRegistry(attributes ...Attribute) (MetricR
 		}
 	}
 
-	return &DefaultMetricRegistry{provider, Attributes{}}, nil
+	return &DefaultMetricRegistry{
+		provider,
+		Attributes{},
+		Buckets[int64]{},
+		Buckets[float64]{},
+	}, nil
 }
 
 // Shutdown shuts down all readers and providers in the context.
@@ -91,6 +97,8 @@ func (d *DefaultMetricsContext) Shutdown(ctx context.Context) error {
 type DefaultMetricRegistry struct {
 	provider   *metric.MeterProvider
 	attributes Attributes
+	histogramBuckets Buckets[int64]
+	timerBuckets Buckets[float64]
 }
 
 // WithAttributes returns a new MetricRegistry with merged attributes.
@@ -99,7 +107,21 @@ func (r *DefaultMetricRegistry) WithAttributes(attributes Attributes) MetricRegi
 	attrs = append(attrs, r.attributes...)
 	attrs = append(attrs, attributes...)
 
-	return &DefaultMetricRegistry{r.provider, attrs}
+	return &DefaultMetricRegistry{r.provider, attrs, r.histogramBuckets, r.timerBuckets}
+}
+
+// WithHistogramBuckets sets the histogram buckets for int64 metrics.
+func (r *DefaultMetricRegistry) WithHistogramBuckets(buckets Buckets[int64]) MetricRegistry {
+	histogramBuckets := maps.Clone(r.histogramBuckets)
+	maps.Copy(histogramBuckets, buckets)
+	return &DefaultMetricRegistry{r.provider, r.attributes, histogramBuckets, r.timerBuckets}
+}
+
+// WithTimerBuckets sets the timer buckets for float64 metrics.
+func (r *DefaultMetricRegistry) WithTimerBuckets(buckets Buckets[float64]) MetricRegistry {
+	timerBuckets := maps.Clone(r.timerBuckets)
+	maps.Copy(timerBuckets, buckets)
+	return &DefaultMetricRegistry{r.provider, r.attributes, r.histogramBuckets, timerBuckets}
 }
 
 // NewCounter creates a new Counter with the given name.
@@ -131,7 +153,11 @@ func (r *DefaultMetricRegistry) NewGauge(name string) (Meter, error) {
 }
 
 // NewHistogram creates a new Histogram with the given name.
-func (r *DefaultMetricRegistry) NewHistogram(name string, buckets []int64) (Histogram, error) {
+func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
+	buckets, ok := r.histogramBuckets[name]
+	if !ok {
+		buckets = DefaultHistogramBackets
+	}
 	histogram, err := r.provider.Meter("histogram").Int64Histogram(
 		name,
 		internalMetric.WithExplicitBucketBoundaries(moira.Map(buckets, func(b int64) float64 { return float64(b) })...),
@@ -147,7 +173,11 @@ func (r *DefaultMetricRegistry) NewHistogram(name string, buckets []int64) (Hist
 }
 
 // NewTimer creates a new Timer with the given name.
-func (r *DefaultMetricRegistry) NewTimer(name string, buckets []float64) (Timer, error) {
+func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
+	buckets, ok := r.timerBuckets[name]
+	if !ok {
+		buckets = DefaultTimerBackets
+	}
 	timer, err := r.provider.Meter("timer").Float64Histogram(
 		name,
 		internalMetric.WithExplicitBucketBoundaries(buckets...),
@@ -290,32 +320,4 @@ func (r *DefaultAttributedMetricCollection) GetRegisteredMeter(name string) (Met
 func (r *DefaultAttributedMetricCollection) GetRegisteredCounter(name string) (Counter, bool) {
 	gauge, ok := r.counters[name]
 	return gauge, ok
-}
-
-// NewEmptySettings creates an empty settings.
-func NewEmptySettings() Settings {
-	return Settings{
-		HistogramBuckets: Buckets[int64]{},
-		TimerBuckets:     Buckets[float64]{},
-	}
-}
-
-// GetHistogramBucketOr gets histogram buckets or default.
-func (s *Settings) GetHistogramBucketOr(histogramName string, def []int64) []int64 {
-	backets, ok := s.HistogramBuckets[histogramName]
-	if !ok {
-		return def
-	}
-
-	return backets
-}
-
-// GetTimerBucketOr gets timer buckets or default.
-func (s *Settings) GetTimerBucketOr(timerName string, def []float64) []float64 {
-	backets, ok := s.TimerBuckets[timerName]
-	if !ok {
-		return def
-	}
-
-	return backets
 }

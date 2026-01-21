@@ -25,7 +25,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
 
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
@@ -394,7 +394,7 @@ func TestIndex_SearchErrors(t *testing.T) {
 	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry, metrics.NewEmptySettings())
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
 
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 

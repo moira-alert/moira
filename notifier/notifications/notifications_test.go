@@ -20,7 +20,7 @@ import (
 
 var (
 	metricsRegistry, _ = metrics.NewMetricContext(context.Background()).CreateRegistry()
-	notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier", metrics.NewEmptySettings())
+	notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")
 )
 
 func TestProcessScheduledEvent(t *testing.T) {

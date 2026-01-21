@@ -24,7 +24,7 @@ func initAliveMeter(mockCtrl *gomock.Controller) (*mock_metrics.MockRegistry, *m
 	mockRegistry.EXPECT().NewMeter("", "alive").Return(mockAliveMeter)
 
 	mockAttributedRegistry.EXPECT().NewCounter(gomock.Any()).Times(5)
-	mockAttributedRegistry.EXPECT().NewHistogram(gomock.Any(), gomock.Any()).Times(3)
+	mockAttributedRegistry.EXPECT().NewHistogram(gomock.Any()).Times(3)
 	mockAttributedRegistry.EXPECT().NewGauge("alive").Return(mockAliveMeter, nil)
 
 	return mockRegistry, mockAttributedRegistry, mockAliveMeter
@@ -37,7 +37,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	mockRegistry, mockAttributedRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
-	testNotifierMetrics, _ := metrics.ConfigureNotifierMetrics(mockRegistry, mockAttributedRegistry, "", metrics.NewEmptySettings())
+	testNotifierMetrics, _ := metrics.ConfigureNotifierMetrics(mockRegistry, mockAttributedRegistry, "")
 
 	aliveWatcher := NewAliveWatcher(nil, dataBase, 0, testNotifierMetrics)
 
@@ -100,7 +100,7 @@ func TestAliveWatcher_Start(t *testing.T) {
 	)
 
 	mockRegistry, mockAttributedRegistry, mockAliveMeter := initAliveMeter(mockCtrl)
-	testNotifierMetrics, _ := metrics.ConfigureNotifierMetrics(mockRegistry, mockAttributedRegistry, "", metrics.NewEmptySettings())
+	testNotifierMetrics, _ := metrics.ConfigureNotifierMetrics(mockRegistry, mockAttributedRegistry, "")
 
 	aliveWatcher := NewAliveWatcher(logger, dataBase, testCheckNotifierStateTimeout, testNotifierMetrics)
 

@@ -118,7 +118,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry, metrics.NewEmptySettings())
+	filterMetrics, _ := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 
 	t.Run("Given empty patterns with tagspecs, should build index and match patterns", func(t *testing.T) {
 		compatibility := Compatibility{
@@ -393,7 +393,7 @@ func TestSeriesByTagPatternIndexCarbonCompatibility(t *testing.T) {
 	require.NoError(t, err)
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
-	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry, metrics.NewEmptySettings())
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 	require.NoError(t, err)
 
 	Convey("Given related patterns with tagspecs, should build index and match patterns", t, func(c C) {

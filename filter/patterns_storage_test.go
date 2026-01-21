@@ -37,7 +37,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	metricRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
 	require.NoError(t, err)
 
-	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry, metrics.NewEmptySettings())
+	filterMetrics, err := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 	require.NoError(t, err)
 
 	_, err = NewPatternStorage(patternStorageCfg, database, filterMetrics, logger, Compatibility{AllowRegexLooseStartMatch: true})
@@ -49,7 +49,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 		metricRegistry, err = metrics.NewMetricContext(context.Background()).CreateRegistry()
 		require.NoError(t, err)
 
-		filterMetrics, err = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry, metrics.NewEmptySettings())
+		filterMetrics, err = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), metricRegistry)
 		require.NoError(t, err)
 
 		patternsStorage, err := NewPatternStorage(

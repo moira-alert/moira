@@ -14,7 +14,7 @@ type FilterMetrics struct {
 }
 
 // ConfigureFilterMetrics initialize metrics.
-func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry, settings Settings) (*FilterMetrics, error) {
+func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry) (*FilterMetrics, error) {
 	totalMetricsReceived, err := attributedRegistry.NewCounter("received.total")
 	if err != nil {
 		return nil, err
@@ -35,37 +35,27 @@ func ConfigureFilterMetrics(registry Registry, attributedRegistry MetricRegistry
 		return nil, err
 	}
 
-	const matchingTimerMetric string = "time.match"
-
-	matchingTimer, err := attributedRegistry.NewTimer(matchingTimerMetric, settings.GetTimerBucketOr(matchingTimerMetric, DefaultTimerBackets))
+	matchingTimer, err := attributedRegistry.NewTimer("time.match")
 	if err != nil {
 		return nil, err
 	}
 
-	const savingTimerMetric string = "time.save"
-
-	savingTimer, err := attributedRegistry.NewTimer(savingTimerMetric, settings.GetTimerBucketOr(savingTimerMetric, DefaultTimerBackets))
+	savingTimer, err := attributedRegistry.NewTimer("time.save")
 	if err != nil {
 		return nil, err
 	}
 
-	const buildTreeTimerMetric string = "time.buildtree"
-
-	buildTreeTimer, err := attributedRegistry.NewTimer(buildTreeTimerMetric, settings.GetTimerBucketOr(buildTreeTimerMetric, DefaultTimerBackets))
+	buildTreeTimer, err := attributedRegistry.NewTimer("time.buildtree")
 	if err != nil {
 		return nil, err
 	}
 
-	const metricChannelLenMetric string = "channel.metric.to_save.len"
-
-	metricChannelLen, err := attributedRegistry.NewHistogram(metricChannelLenMetric, settings.GetHistogramBucketOr(metricChannelLenMetric, DefaultHistogramBackets))
+	metricChannelLen, err := attributedRegistry.NewHistogram("channel.metric.to_save.len")
 	if err != nil {
 		return nil, err
 	}
 
-	const linesToMatchMetric string = "channel.lines.to_match.len"
-
-	linesToMatch, err := attributedRegistry.NewHistogram(linesToMatchMetric, settings.GetHistogramBucketOr(linesToMatchMetric, DefaultHistogramBackets))
+	linesToMatch, err := attributedRegistry.NewHistogram("channel.lines.to_match.len")
 	if err != nil {
 		return nil, err
 	}

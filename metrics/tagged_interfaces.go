@@ -19,10 +19,6 @@ type Attribute struct {
 type (
 	Attributes     []Attribute
 	Buckets[T any] map[string][]T
-	Settings       struct {
-		HistogramBuckets Buckets[int64]
-		TimerBuckets     Buckets[float64]
-	}
 )
 
 // MetricsContext provides methods to create a metric registry and shutdown the context.
@@ -37,14 +33,18 @@ type MetricsContext interface {
 type MetricRegistry interface {
 	// WithAttributes returns a new MetricRegistry with the given attributes.
 	WithAttributes(attributes Attributes) MetricRegistry
+	// WithHistogramBuckets sets the histogram buckets for int64 metrics.
+	WithHistogramBuckets(buckets Buckets[int64]) MetricRegistry
+	// WithTimerBuckets sets the timer buckets for float64 metrics.
+	WithTimerBuckets(buckets Buckets[float64]) MetricRegistry
 	// NewCounter creates and returns a new Counter metric with the given name.
 	NewCounter(name string) (Counter, error)
 	// NewGauge creates and returns a new Meter gauge metric with the given name.
 	NewGauge(name string) (Meter, error)
 	// NewHistogram creates and returns a new Histogram metric with the given name and buckets.
-	NewHistogram(name string, buckets []int64) (Histogram, error)
+	NewHistogram(name string) (Histogram, error)
 	// NewTimer creates and returns a new Timer metric with the given name and buckets.
-	NewTimer(name string, buckets []float64) (Timer, error)
+	NewTimer(name string) (Timer, error)
 }
 
 // AttributedMetricCollection represents a collection of attributed meters.

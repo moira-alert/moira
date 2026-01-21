@@ -42,7 +42,6 @@ func TestGetMetricDataState(t *testing.T) {
 			metrics.NewDummyRegistry(),
 			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey},
-			metrics.NewEmptySettings(),
 		)
 
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
@@ -604,7 +603,6 @@ func TestCheckForNODATA(t *testing.T) {
 			metrics.NewDummyRegistry(),
 			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey},
-			metrics.NewEmptySettings(),
 		)
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker = TriggerChecker{
@@ -731,7 +729,6 @@ func TestCheck(t *testing.T) {
 			metrics.NewDummyRegistry(),
 			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey},
-			metrics.NewEmptySettings(),
 		)
 		checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 		triggerChecker := TriggerChecker{
@@ -1657,7 +1654,6 @@ func TestTriggerChecker_Check(t *testing.T) {
 			metrics.NewDummyRegistry(),
 			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey},
-			metrics.NewEmptySettings(),
 		)
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
@@ -1756,7 +1752,6 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 			metrics.NewDummyRegistry(),
 			metricRegistry,
 			[]moira.ClusterKey{defaultLocalClusterKey},
-			metrics.NewEmptySettings(),
 		)
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
@@ -2245,7 +2240,6 @@ func TestTriggerChecker_handleFetchError(t *testing.T) {
 			metrics.NewDummyRegistry(),
 			metricRegistry,
 			[]moira.ClusterKey{moira.DefaultLocalCluster},
-			metrics.NewEmptySettings(),
 		)
 		require.NoError(t, err)
 		checksMetrics, err := checkerMetrics.GetCheckMetricsBySource(moira.DefaultLocalCluster)

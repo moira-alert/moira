@@ -45,7 +45,7 @@ var shutdown = make(chan struct{})
 
 var (
 	metricsRegistry, _ = metrics.NewMetricContext(context.Background()).CreateRegistry()
-	notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier", metrics.NewEmptySettings())
+	notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")
 	logger, _          = logging.GetLogger("Notifier_Test")
 	mockCtrl           *gomock.Controller
 )

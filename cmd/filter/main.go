@@ -87,12 +87,7 @@ func main() {
 			Msg("MaxParallelMatches is not configured, set it to the number of CPU")
 	}
 
-	metricsSettings := metrics.Settings{
-		HistogramBuckets: config.Telemetry.HistogramBuckets,
-		TimerBuckets:     config.Telemetry.TimerBuckets,
-	}
-
-	filterMetrics, err := metrics.ConfigureFilterMetrics(telemetry.Metrics, telemetry.AttributedMetrics, metricsSettings)
+	filterMetrics, err := metrics.ConfigureFilterMetrics(telemetry.Metrics, telemetry.AttributedMetrics)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
