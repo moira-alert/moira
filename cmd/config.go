@@ -245,11 +245,11 @@ type TelemetryConfig struct {
 // MetricsSettings holds configuration for metrics.
 type MetricsSettings struct {
 	// DefaultAttributes are the default attributes for telemetry events.
-	DefaultAttributes map[string]string    `yaml:"attributes"`
+	DefaultAttributes map[string]string `yaml:"attributes"`
 	// HistogramBuckets defines the buckets for histogram metrics.
-	HistogramBuckets  []int64   `yaml:"histogram_buckets"`
+	HistogramBuckets []int64 `yaml:"histogram_buckets"`
 	// TimerBuckets defines the buckets for timer metrics.
-	TimerBuckets      []float64 `yaml:"timer_buckets"`
+	TimerBuckets []float64 `yaml:"timer_buckets"`
 }
 
 // ProfilerConfig is pprof settings structure that initialises at the start of moira.
