@@ -61,7 +61,7 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 
 	defaultAttributes := metrics.Attributes{}
 
-	for k, v := range config.DefaultAttributes {
+	for k, v := range config.MetricsSettings.DefaultAttributes {
 		k = replaceStaticTemplate(k)
 		v = replaceStaticTemplate(v)
 		defaultAttributes = append(defaultAttributes, metrics.Attribute{Key: k, Value: v})
@@ -73,8 +73,8 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 	}
 
 	attributedRegistry = attributedRegistry.
-		WithHistogramBuckets(config.HistogramBuckets).
-		WithTimerBuckets(config.TimerBuckets)
+		WithHistogramBuckets(config.MetricsSettings.HistogramBuckets).
+		WithTimerBuckets(config.MetricsSettings.TimerBuckets)
 
 	return &Telemetry{
 		Metrics:           metricsRegistry,

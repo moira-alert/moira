@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"maps"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -112,18 +111,12 @@ func (r *DefaultMetricRegistry) WithAttributes(attributes Attributes) MetricRegi
 
 // WithHistogramBuckets sets the histogram buckets for int64 metrics.
 func (r *DefaultMetricRegistry) WithHistogramBuckets(buckets Buckets[int64]) MetricRegistry {
-	histogramBuckets := maps.Clone(r.histogramBuckets)
-	maps.Copy(histogramBuckets, buckets)
-
-	return &DefaultMetricRegistry{r.provider, r.attributes, histogramBuckets, r.timerBuckets}
+	return &DefaultMetricRegistry{r.provider, r.attributes, buckets, r.timerBuckets}
 }
 
 // WithTimerBuckets sets the timer buckets for float64 metrics.
 func (r *DefaultMetricRegistry) WithTimerBuckets(buckets Buckets[float64]) MetricRegistry {
-	timerBuckets := maps.Clone(r.timerBuckets)
-	maps.Copy(timerBuckets, buckets)
-
-	return &DefaultMetricRegistry{r.provider, r.attributes, r.histogramBuckets, timerBuckets}
+	return &DefaultMetricRegistry{r.provider, r.attributes, r.histogramBuckets, buckets}
 }
 
 // NewCounter creates a new Counter with the given name.
@@ -156,9 +149,9 @@ func (r *DefaultMetricRegistry) NewGauge(name string) (Meter, error) {
 
 // NewHistogram creates a new Histogram with the given name.
 func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
-	buckets, ok := r.histogramBuckets[name]
-	if !ok {
-		buckets = DefaultHistogramBackets
+	buckets := r.histogramBuckets
+	if len(buckets) == 0 {
+		buckets = DefaultHistogramBuckets
 	}
 
 	histogram, err := r.provider.Meter("histogram").Int64Histogram(
@@ -177,9 +170,9 @@ func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
 
 // NewTimer creates a new Timer with the given name.
 func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
-	buckets, ok := r.timerBuckets[name]
-	if !ok {
-		buckets = DefaultTimerBackets
+	buckets := r.timerBuckets
+	if len(buckets) == 0 {
+		buckets = DefaultTimerBuckets
 	}
 
 	timer, err := r.provider.Meter("timer").Float64Histogram(

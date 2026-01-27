@@ -236,12 +236,20 @@ type TelemetryConfig struct {
 	Prometheus PrometheusConfig `yaml:"prometheus"`
 	// Otel holds OpenTelemetry backend configuration.
 	Otel OtelConfig `yaml:"otel"`
-	// DefaultAttributes are the default attributes for telemetry events.
-	DefaultAttributes map[string]string    `yaml:"attributes"`
-	HistogramBuckets  map[string][]int64   `yaml:"histogram_buckets"`
-	TimerBuckets      map[string][]float64 `yaml:"timer_buckets"`
+	// MetricsSettings holds configuration for metrics settings.
+	MetricsSettings MetricsSettings `yaml:"metrics_settings"`
 	// RuntimeStats enables runtime statistics collection.
 	RuntimeStats bool `yaml:"runtime_stats"`
+}
+
+// MetricsSettings holds configuration for metrics.
+type MetricsSettings struct {
+	// DefaultAttributes are the default attributes for telemetry events.
+	DefaultAttributes map[string]string    `yaml:"attributes"`
+	// HistogramBuckets defines the buckets for histogram metrics.
+	HistogramBuckets  []int64   `yaml:"histogram_buckets"`
+	// TimerBuckets defines the buckets for timer metrics.
+	TimerBuckets      []float64 `yaml:"timer_buckets"`
 }
 
 // ProfilerConfig is pprof settings structure that initialises at the start of moira.
