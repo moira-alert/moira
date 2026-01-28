@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/moira-alert/moira"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/attribute"
 	internalMetric "go.opentelemetry.io/otel/metric"
@@ -77,7 +78,12 @@ func (d *DefaultMetricsContext) CreateRegistry(attributes ...Attribute) (MetricR
 		}
 	}
 
-	return &DefaultMetricRegistry{provider, Attributes{}}, nil
+	return &DefaultMetricRegistry{
+		provider,
+		Attributes{},
+		Buckets[int64]{},
+		Buckets[float64]{},
+	}, nil
 }
 
 // Shutdown shuts down all readers and providers in the context.
@@ -88,8 +94,10 @@ func (d *DefaultMetricsContext) Shutdown(ctx context.Context) error {
 
 // DefaultMetricRegistry implements MetricRegistry using MeterProviders and attributes.
 type DefaultMetricRegistry struct {
-	provider   *metric.MeterProvider
-	attributes Attributes
+	provider         *metric.MeterProvider
+	attributes       Attributes
+	histogramBuckets Buckets[int64]
+	timerBuckets     Buckets[float64]
 }
 
 // WithAttributes returns a new MetricRegistry with merged attributes.
@@ -98,7 +106,17 @@ func (r *DefaultMetricRegistry) WithAttributes(attributes Attributes) MetricRegi
 	attrs = append(attrs, r.attributes...)
 	attrs = append(attrs, attributes...)
 
-	return &DefaultMetricRegistry{r.provider, attrs}
+	return &DefaultMetricRegistry{r.provider, attrs, r.histogramBuckets, r.timerBuckets}
+}
+
+// WithHistogramBuckets sets the histogram buckets for int64 metrics.
+func (r *DefaultMetricRegistry) WithHistogramBuckets(buckets Buckets[int64]) MetricRegistry {
+	return &DefaultMetricRegistry{r.provider, r.attributes, buckets, r.timerBuckets}
+}
+
+// WithTimerBuckets sets the timer buckets for float64 metrics.
+func (r *DefaultMetricRegistry) WithTimerBuckets(buckets Buckets[float64]) MetricRegistry {
+	return &DefaultMetricRegistry{r.provider, r.attributes, r.histogramBuckets, buckets}
 }
 
 // NewCounter creates a new Counter with the given name.
@@ -131,7 +149,15 @@ func (r *DefaultMetricRegistry) NewGauge(name string) (Meter, error) {
 
 // NewHistogram creates a new Histogram with the given name.
 func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
-	histogram, err := r.provider.Meter("histogram").Int64Histogram(name)
+	buckets := r.histogramBuckets
+	if len(buckets) == 0 {
+		buckets = DefaultHistogramBuckets
+	}
+
+	histogram, err := r.provider.Meter("histogram").Int64Histogram(
+		name,
+		internalMetric.WithExplicitBucketBoundaries(moira.Map(buckets, func(b int64) float64 { return float64(b) })...),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -144,9 +170,14 @@ func (r *DefaultMetricRegistry) NewHistogram(name string) (Histogram, error) {
 
 // NewTimer creates a new Timer with the given name.
 func (r *DefaultMetricRegistry) NewTimer(name string) (Timer, error) {
+	buckets := r.timerBuckets
+	if len(buckets) == 0 {
+		buckets = DefaultTimerBuckets
+	}
+
 	timer, err := r.provider.Meter("timer").Float64Histogram(
 		name,
-		internalMetric.WithExplicitBucketBoundaries(0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 2, 2.5, 5, 7.5, 10, 20, 100, 1000),
+		internalMetric.WithExplicitBucketBoundaries(buckets...),
 	)
 	if err != nil {
 		return nil, err

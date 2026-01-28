@@ -113,3 +113,31 @@ func (mr *MockMetricRegistryMockRecorder) WithAttributes(attributes any) *gomock
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithAttributes", reflect.TypeOf((*MockMetricRegistry)(nil).WithAttributes), attributes)
 }
+
+// WithHistogramBuckets mocks base method.
+func (m *MockMetricRegistry) WithHistogramBuckets(buckets metrics.Buckets[int64]) metrics.MetricRegistry {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithHistogramBuckets", buckets)
+	ret0, _ := ret[0].(metrics.MetricRegistry)
+	return ret0
+}
+
+// WithHistogramBuckets indicates an expected call of WithHistogramBuckets.
+func (mr *MockMetricRegistryMockRecorder) WithHistogramBuckets(buckets any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithHistogramBuckets", reflect.TypeOf((*MockMetricRegistry)(nil).WithHistogramBuckets), buckets)
+}
+
+// WithTimerBuckets mocks base method.
+func (m *MockMetricRegistry) WithTimerBuckets(buckets metrics.Buckets[float64]) metrics.MetricRegistry {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WithTimerBuckets", buckets)
+	ret0, _ := ret[0].(metrics.MetricRegistry)
+	return ret0
+}
+
+// WithTimerBuckets indicates an expected call of WithTimerBuckets.
+func (mr *MockMetricRegistryMockRecorder) WithTimerBuckets(buckets any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithTimerBuckets", reflect.TypeOf((*MockMetricRegistry)(nil).WithTimerBuckets), buckets)
+}

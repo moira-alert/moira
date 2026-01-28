@@ -1653,7 +1653,8 @@ func TestTriggerChecker_Check(t *testing.T) {
 		ConfigureCheckerMetrics(
 			metrics.NewDummyRegistry(),
 			metricRegistry,
-			[]moira.ClusterKey{defaultLocalClusterKey})
+			[]moira.ClusterKey{defaultLocalClusterKey},
+		)
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
@@ -1750,7 +1751,8 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 		ConfigureCheckerMetrics(
 			metrics.NewDummyRegistry(),
 			metricRegistry,
-			[]moira.ClusterKey{defaultLocalClusterKey})
+			[]moira.ClusterKey{defaultLocalClusterKey},
+		)
 	checksMetrics, _ := checkerMetrics.GetCheckMetricsBySource(defaultLocalClusterKey)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
