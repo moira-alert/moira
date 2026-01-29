@@ -126,11 +126,14 @@ func (r *DefaultMetricRegistry) NewCounter(name string) (Counter, error) {
 		return nil, err
 	}
 
+	attrs := r.attributes.toOtelAttributes()
+	counter.Add(context.Background(), 0, internalMetric.WithAttributes(attrs...))
+
 	return &otelCounter{
 		counter,
 		0,
 		sync.Mutex{},
-		r.attributes.toOtelAttributes(),
+		attrs,
 	}, nil
 }
 
