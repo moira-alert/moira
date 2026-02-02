@@ -105,11 +105,11 @@ func TestProcessScheduledEvent(t *testing.T) {
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
-		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
@@ -139,11 +139,11 @@ func TestProcessScheduledEvent(t *testing.T) {
 		dataBase.EXPECT().PushContactNotificationToHistory(&notification2).Return(nil).AnyTimes()
 		dataBase.EXPECT().PushContactNotificationToHistory(&notification3).Return(nil).AnyTimes()
 		notifier.EXPECT().Send(&pkg, gomock.Any())
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
-		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
@@ -242,16 +242,16 @@ func TestGoRoutine(t *testing.T) {
 	notifier.EXPECT().StopSenders().AnyTimes()
 
 	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited).AnyTimes()
-	dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
+	dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{
 		State: moira.SelfStateOK,
 		Actor: moira.SelfStateActorManual,
 	}, nil).AnyTimes()
 
-	dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
+	dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
 		State: moira.SelfStateOK,
 		Actor: moira.SelfStateActorManual,
 	}, nil).AnyTimes()
-	dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster).Return(moira.NotifierState{
+	dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster, gomock.Any()).Return(moira.NotifierState{
 		State: moira.SelfStateOK,
 		Actor: moira.SelfStateActorManual,
 	}, nil).AnyTimes()

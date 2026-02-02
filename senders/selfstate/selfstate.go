@@ -11,6 +11,7 @@ import (
 type Sender struct {
 	Database moira.Database
 	logger   moira.Logger
+	clock moira.Clock
 }
 
 // Init read yaml config.
@@ -21,7 +22,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 
 // SendEvents implements Sender interface Send.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	selfState, err := sender.Database.GetNotifierStateForSource(moira.DefaultLocalCluster)
+	selfState, err := sender.Database.GetNotifierStateForSource(moira.DefaultLocalCluster, sender.clock)
 	if err != nil {
 		return fmt.Errorf("failed to get notifier state: %s", err.Error())
 	}
@@ -44,7 +45,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return nil
 	default:
 		if selfState.State != state.ToSelfState() {
-			err := sender.Database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorTrigger, moira.SelfStateERROR)
+			err := sender.Database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorTrigger, moira.SelfStateERROR, sender.clock)
 			if err != nil {
 				return fmt.Errorf("failed to disable notifications: %s", err.Error())
 			}

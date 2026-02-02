@@ -451,7 +451,7 @@ func generateNotificationEvent(message string, lastSuccessCheckElapsedTime, time
 }
 
 func (selfCheck *SelfCheckWorker) enableNotifierIfPossible() (bool, error) {
-	currentNotifierState, err := selfCheck.Database.GetNotifierStateForSource(moira.DefaultLocalCluster)
+	currentNotifierState, err := selfCheck.Database.GetNotifierStateForSource(moira.DefaultLocalCluster, selfCheck.clock)
 	if err != nil {
 		selfCheck.Logger.Error().
 			Error(err).
@@ -473,7 +473,7 @@ func (selfCheck *SelfCheckWorker) enableNotifierIfPossible() (bool, error) {
 }
 
 func (selfCheck *SelfCheckWorker) setNotifierState(state string) error {
-	err := selfCheck.Database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorAutomatic, state)
+	err := selfCheck.Database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorAutomatic, state, selfCheck.clock)
 	if err != nil {
 		selfCheck.Logger.Error().
 			Error(err).

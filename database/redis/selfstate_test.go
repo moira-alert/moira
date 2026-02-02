@@ -6,8 +6,10 @@ import (
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestSelfCheckWithWritesInChecker(t *testing.T) {
@@ -124,6 +126,7 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 }
 
 func TestNotifierState(t *testing.T) {
+	mock := gomock.NewController(t)
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	emptyDataBase := NewTestDatabaseWithIncorrectConfig(logger)
@@ -134,7 +137,9 @@ func TestNotifierState(t *testing.T) {
 
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
 		Convey("On empty database should return ERROR", func() {
-			notifierState, err := emptyDataBase.GetNotifierState()
+			clock := mock_clock.NewMockClock(mock)
+			clock.EXPECT().NowUnix().Return(int64(0)).Times(2)
+			notifierState, err := emptyDataBase.GetNotifierState(clock)
 			So(notifierState, ShouldResemble, moira.NotifierState{
 				State: moira.SelfStateERROR,
 				Actor: moira.SelfStateActorAutomatic,
@@ -142,7 +147,9 @@ func TestNotifierState(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		})
 		Convey("On real database should return OK", func() {
-			notifierState, err := dataBase.GetNotifierState()
+			clock := mock_clock.NewMockClock(mock)
+			clock.EXPECT().NowUnix().Return(int64(0))
+			notifierState, err := dataBase.GetNotifierState(clock)
 			So(notifierState, ShouldResemble, moira.NotifierState{
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
@@ -153,8 +160,10 @@ func TestNotifierState(t *testing.T) {
 
 	Convey(fmt.Sprintf("Test setting '%v' and reading it back", selfStateNotifierHealth), t, func() {
 		Convey("Switch notifier to OK", func() {
-			err := dataBase.SetNotifierState(moira.SelfStateActorManual, moira.SelfStateOK)
-			actualNotifierState, err2 := dataBase.GetNotifierState()
+			clock := mock_clock.NewMockClock(mock)
+			clock.EXPECT().NowUnix().Return(int64(0))
+			err := dataBase.SetNotifierState(moira.SelfStateActorManual, moira.SelfStateOK, clock)
+			actualNotifierState, err2 := dataBase.GetNotifierState(clock)
 
 			So(actualNotifierState.State, ShouldEqual, moira.SelfStateOK)
 			So(err, ShouldBeNil)
@@ -162,8 +171,10 @@ func TestNotifierState(t *testing.T) {
 		})
 
 		Convey("Switch notifier to ERROR", func() {
-			err := dataBase.SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR)
-			actualNotifierState, err2 := dataBase.GetNotifierState()
+			clock := mock_clock.NewMockClock(mock)
+			clock.EXPECT().NowUnix().Return(int64(0))
+			err := dataBase.SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR, clock)
+			actualNotifierState, err2 := dataBase.GetNotifierState(clock)
 
 			So(actualNotifierState.State, ShouldEqual, moira.SelfStateERROR)
 			So(err, ShouldBeNil)
@@ -173,6 +184,7 @@ func TestNotifierState(t *testing.T) {
 }
 
 func TestSetNotifierStateForSource(t *testing.T) {
+	mock := gomock.NewController(t)
 	logger, _ := logging.GetLogger("dataBase")
 	database := NewTestDatabase(logger)
 
@@ -181,7 +193,10 @@ func TestSetNotifierStateForSource(t *testing.T) {
 	t.Run("Test set no states was set fot sources", func(t *testing.T) {
 		defer database.Flush()
 
-		state, err := database.GetNotifierStateForSources()
+		clock := mock_clock.NewMockClock(mock)
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
+
+		state, err := database.GetNotifierStateForSources(clock)
 		require.NoError(t, err)
 		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
@@ -201,11 +216,13 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Test set ERROR for a single source", func(t *testing.T) {
 		defer database.Flush()
+		clock := mock_clock.NewMockClock(mock)
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
 
-		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR, clock)
 		require.NoError(t, err)
 
-		state, err := database.GetNotifierStateForSources()
+		state, err := database.GetNotifierStateForSources(clock)
 		require.NoError(t, err)
 		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
@@ -226,12 +243,15 @@ func TestSetNotifierStateForSource(t *testing.T) {
 	t.Run("Test set ERROR for a several sources", func(t *testing.T) {
 		defer database.Flush()
 
-		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		clock := mock_clock.NewMockClock(mock)
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
+
+		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR, clock)
 		require.NoError(t, err)
-		err = database.SetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		err = database.SetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster, moira.SelfStateActorManual, moira.SelfStateERROR, clock)
 		require.NoError(t, err)
 
-		state, err := database.GetNotifierStateForSources()
+		state, err := database.GetNotifierStateForSources(clock)
 		require.NoError(t, err)
 		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
@@ -252,12 +272,15 @@ func TestSetNotifierStateForSource(t *testing.T) {
 	t.Run("Set source state to ERROR and then to OK", func(t *testing.T) {
 		defer database.Flush()
 
-		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		clock := mock_clock.NewMockClock(mock)
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(4)
+
+		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR, clock)
 		require.NoError(t, err)
-		err = database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateOK)
+		err = database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateOK, clock)
 		require.NoError(t, err)
 
-		state, err := database.GetNotifierStateForSources()
+		state, err := database.GetNotifierStateForSources(clock)
 		require.NoError(t, err)
 		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
 			moira.DefaultLocalCluster: {
@@ -277,13 +300,14 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Set nonexisting source must return err", func(t *testing.T) {
 		defer database.Flush()
+		clock := mock_clock.NewMockClock(mock)
 
 		clusterKey := moira.ClusterKey{
 			TriggerSource: moira.PrometheusRemote,
 			ClusterId:     moira.ClusterId("cluster_that_does_not_exist"),
 		}
 
-		err := database.SetNotifierStateForSource(clusterKey, moira.SelfStateActorManual, moira.SelfStateERROR)
+		err := database.SetNotifierStateForSource(clusterKey, moira.SelfStateActorManual, moira.SelfStateERROR, clock)
 		require.Error(t, err, "unknown cluster 'prometheus_remote.cluster_that_does_not_exist'")
 	})
 }
@@ -292,28 +316,32 @@ func TestGetNotifierStateForSource(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	database := NewTestDatabase(logger)
 	database.Flush()
+	mock := gomock.NewController(t)
+
+	clock := mock_clock.NewMockClock(mock)
+	clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
 
 	defer database.Flush()
 
 	t.Run("Get state for all sources one by one", func(t *testing.T) {
-		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
+		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR, clock)
 		require.NoError(t, err)
 
-		state, err := database.GetNotifierStateForSource(moira.DefaultLocalCluster)
+		state, err := database.GetNotifierStateForSource(moira.DefaultLocalCluster, clock)
 		require.NoError(t, err)
 		require.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,
 			State: moira.SelfStateERROR,
 		}, state)
 
-		state, err = database.GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster)
+		state, err = database.GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster, clock)
 		require.NoError(t, err)
 		require.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,
 			State: moira.SelfStateOK,
 		}, state)
 
-		state, err = database.GetNotifierStateForSource(moira.DefaultPrometheusRemoteCluster)
+		state, err = database.GetNotifierStateForSource(moira.DefaultPrometheusRemoteCluster, clock)
 		require.NoError(t, err)
 		require.Equal(t, moira.NotifierState{
 			Actor: moira.SelfStateActorManual,

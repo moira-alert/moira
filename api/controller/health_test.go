@@ -5,6 +5,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/dto"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
@@ -14,12 +15,13 @@ func TestGetNotifierState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	clock := mock_clock.NewMockClock(mockCtrl)
 	defer mockCtrl.Finish()
 
 	Convey("On startup should return OK", t, func() {
 		expectedState := dto.NotifierState{State: moira.SelfStateOK}
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{State: moira.SelfStateOK}, nil)
-		actualState, err := GetNotifierState(dataBase)
+		dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{State: moira.SelfStateOK}, nil)
+		actualState, err := GetNotifierState(dataBase, clock)
 
 		So(*actualState, ShouldResemble, expectedState)
 		So(err, ShouldBeNil)
@@ -30,17 +32,18 @@ func TestUpdateNotifierState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	clock := mock_clock.NewMockClock(mockCtrl)
 	defer mockCtrl.Finish()
 
 	Convey("Setting OK notifier state", t, func() {
 		expectedState := dto.NotifierState{State: moira.SelfStateOK}
-		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateOK).Return(nil)
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{State: moira.SelfStateOK}, nil)
+		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateOK, gomock.Any()).Return(nil)
+		dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{State: moira.SelfStateOK}, nil)
 
-		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateOK})
+		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateOK}, clock)
 		So(err, ShouldBeNil)
 
-		actualState, err := GetNotifierState(dataBase)
+		actualState, err := GetNotifierState(dataBase, clock)
 
 		So(*actualState, ShouldResemble, expectedState)
 		So(err, ShouldBeNil)
@@ -48,13 +51,13 @@ func TestUpdateNotifierState(t *testing.T) {
 
 	Convey("Setting ERROR notifier state", t, func() {
 		expectedState := dto.NotifierState{State: moira.SelfStateERROR, Message: dto.ErrorMessage}
-		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR).Return(nil)
-		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{State: moira.SelfStateERROR}, nil)
+		dataBase.EXPECT().SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR, gomock.Any()).Return(nil)
+		dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{State: moira.SelfStateERROR}, nil)
 
-		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateERROR})
+		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateERROR}, clock)
 		So(err, ShouldBeNil)
 
-		actualState, err := GetNotifierState(dataBase)
+		actualState, err := GetNotifierState(dataBase, clock)
 
 		So(*actualState, ShouldResemble, expectedState)
 		So(err, ShouldBeNil)

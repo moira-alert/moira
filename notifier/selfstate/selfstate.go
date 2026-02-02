@@ -30,6 +30,7 @@ type SelfCheckWorker struct {
 	lastSuccessChecksResult graphExecutionResult
 	lastChecksResult        graphExecutionResult
 	clusterList             moira.ClusterList
+	clock moira.Clock
 }
 
 // NewSelfCheckWorker creates SelfCheckWorker.

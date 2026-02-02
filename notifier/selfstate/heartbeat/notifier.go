@@ -10,6 +10,7 @@ type notifier struct {
 	heartbeat
 
 	clusterKey moira.ClusterKey
+	clock moira.Clock
 }
 
 // GetNotifier returns new Heartbeater that checks notifier state for given cluster key.
@@ -40,7 +41,7 @@ func MakeNotifierTags(defaultTags []string, tagPrefix string, localTags []string
 }
 
 func (check notifier) Check(int64) (int64, bool, error) {
-	state, _ := check.database.GetNotifierState()
+	state, _ := check.database.GetNotifierState(check.clock)
 	if state.State != moira.SelfStateOK && state.Actor != moira.SelfStateActorAutomatic {
 		check.logger.Error().
 			String("error", check.GetErrorMessage()).
@@ -49,7 +50,7 @@ func (check notifier) Check(int64) (int64, bool, error) {
 		return 0, true, nil
 	}
 
-	state, _ = check.database.GetNotifierStateForSource(check.clusterKey)
+	state, _ = check.database.GetNotifierStateForSource(check.clusterKey, check.clock)
 	if state.State != moira.SelfStateOK && state.Actor != moira.SelfStateActorAutomatic {
 		check.logger.Error().
 			String("metric_source", check.clusterKey.String()).
@@ -75,9 +76,9 @@ func (notifier) NeedToCheckOthers() bool {
 }
 
 func (check notifier) GetErrorMessage() string {
-	state, _ := check.database.GetNotifierState()
+	state, _ := check.database.GetNotifierState(check.clock)
 	if state.State == moira.SelfStateOK {
-		state, _ = check.database.GetNotifierStateForSource(check.clusterKey)
+		state, _ = check.database.GetNotifierStateForSource(check.clusterKey, check.clock)
 	} else {
 		return fmt.Sprintf("Moira-Notifier does not send messages. State: %s", state.State)
 	}

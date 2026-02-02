@@ -11,6 +11,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	moiramiddle "github.com/moira-alert/moira/api/middleware"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/docs"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/notifier/selfstate"
@@ -39,6 +40,8 @@ func NewHandler(
 ) http.Handler {
 	database = db
 	searchIndex = index
+
+	clock := clock.NewSystemClock()
 
 	var contactsTemplate []api.WebContact
 	if webConfig != nil {
@@ -117,7 +120,7 @@ func NewHandler(
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Use(moiramiddle.AuthorizationContext(&apiConfig.Authorization))
-		router.Route("/health", health)
+		router.Route("/health", func(r chi.Router) { health(r, clock) })
 		router.Route("/", func(router chi.Router) {
 			router.Use(moiramiddle.ReadOnlyMiddleware(apiConfig))
 			router.Get("/config", getWebConfig(webConfig))

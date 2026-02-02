@@ -13,14 +13,14 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-func health(router chi.Router) {
-	router.Get("/notifier", getNotifierState)
+func health(router chi.Router, clock moira.Clock) {
+	router.Get("/notifier", func(w http.ResponseWriter, r *http.Request) { getNotifierState(w, r, clock) })
 	router.With(middleware.AdminOnlyMiddleware()).
-		Put("/notifier", setNotifierState)
+		Put("/notifier", func(w http.ResponseWriter, r *http.Request) { setNotifierState(w, r, clock) })
 
-	router.Get("/notifier-sources", getNotifierStatesForSources)
+	router.Get("/notifier-sources", func(w http.ResponseWriter, r *http.Request) { getNotifierStatesForSources(w, r, clock) })
 	router.With(middleware.AdminOnlyMiddleware()).
-		Put("/notifier-sources/{triggerSource}/{clusterId}", setNotifierStateForSource)
+		Put("/notifier-sources/{triggerSource}/{clusterId}", func(w http.ResponseWriter, r *http.Request) { setNotifierStateForSource(w, r, clock) })
 
 	router.With(middleware.AdminOnlyMiddleware()).
 		Get("/system-subscriptions", getSystemSubscriptions)
@@ -83,8 +83,8 @@ func getSystemTags(request *http.Request) []string {
 //	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/health/notifier [get]
-func getNotifierState(writer http.ResponseWriter, request *http.Request) {
-	state, err := controller.GetNotifierState(database)
+func getNotifierState(writer http.ResponseWriter, request *http.Request, clock moira.Clock) {
+	state, err := controller.GetNotifierState(database, clock)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
@@ -106,8 +106,8 @@ func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 //	@failure	422	{object}	api.ErrorResponse				"Render error"
 //	@failure	500	{object}	api.ErrorResponse				"Internal server error"
 //	@router		/health/notifier [get]
-func getNotifierStatesForSources(writer http.ResponseWriter, request *http.Request) {
-	state, err := controller.GetNotifierStatesForSources(database)
+func getNotifierStatesForSources(writer http.ResponseWriter, request *http.Request, clock moira.Clock) {
+	state, err := controller.GetNotifierStatesForSources(database, clock)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
@@ -130,14 +130,14 @@ func getNotifierStatesForSources(writer http.ResponseWriter, request *http.Reque
 //	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/health/notifier [put]
-func setNotifierState(writer http.ResponseWriter, request *http.Request) {
+func setNotifierState(writer http.ResponseWriter, request *http.Request, clock moira.Clock) {
 	state := &dto.NotifierState{}
 	if err := render.Bind(request, state); err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
 
-	if err := controller.UpdateNotifierState(database, state); err != nil {
+	if err := controller.UpdateNotifierState(database, state, clock); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
@@ -159,7 +159,7 @@ func setNotifierState(writer http.ResponseWriter, request *http.Request) {
 //	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@router		/health/notifier [put]
-func setNotifierStateForSource(writer http.ResponseWriter, request *http.Request) {
+func setNotifierStateForSource(writer http.ResponseWriter, request *http.Request, clock moira.Clock) {
 	state := &dto.NotifierState{}
 	if err := render.Bind(request, state); err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
@@ -178,7 +178,7 @@ func setNotifierStateForSource(writer http.ResponseWriter, request *http.Request
 		return
 	}
 
-	if err := controller.UpdateNotifierStateForSource(database, clusterKey, state); err != nil {
+	if err := controller.UpdateNotifierStateForSource(database, clusterKey, state, clock); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
