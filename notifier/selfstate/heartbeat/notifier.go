@@ -10,7 +10,7 @@ type notifier struct {
 	heartbeat
 
 	clusterKey moira.ClusterKey
-	clock moira.Clock
+	clock      moira.Clock
 }
 
 // GetNotifier returns new Heartbeater that checks notifier state for given cluster key.

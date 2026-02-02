@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/senders/delivery"
 	"github.com/moira-alert/moira/senders/discord"
@@ -124,7 +125,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			"sender_type":  selfStateSender,
 			"contact_type": selfStateSender,
 		}
-		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
+		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector, Clock: clock.NewSystemClock()}); err != nil {
 			notifier.logger.Warning().
 				Error(err).
 				Msg("Failed to register selfstate sender")

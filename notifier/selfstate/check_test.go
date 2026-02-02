@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_notifier "github.com/moira-alert/moira/mock/notifier"
@@ -148,9 +149,10 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("SelfState")
 	notif := mock_notifier.NewMockNotifier(mockCtrl)
+	clock := clock.NewSystemClock()
 
 	return &selfCheckWorkerMock{
-		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}, clock),
 		database:        database,
 		notif:           notif,
 		conf:            conf,

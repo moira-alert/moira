@@ -75,8 +75,8 @@ func (connector *DbConnector) GetNotifierState(clock moira.Clock) (moira.Notifie
 	getResult := c.Get(connector.context, selfStateNotifierHealth)
 	if errors.Is(getResult.Err(), redis.Nil) {
 		state := moira.NotifierState{
-			State: moira.SelfStateOK,
-			Actor: moira.SelfStateActorManual,
+			State:     moira.SelfStateOK,
+			Actor:     moira.SelfStateActorManual,
 			Timestamp: clock.NowUnix(),
 		}
 
@@ -91,16 +91,16 @@ func (connector *DbConnector) GetNotifierState(clock moira.Clock) (moira.Notifie
 	state, err := reply.NotifierState(getResult)
 	if err != nil {
 		state := moira.NotifierState{
-			State: moira.SelfStateOK,
-			Actor: moira.SelfStateActorManual,
+			State:     moira.SelfStateOK,
+			Actor:     moira.SelfStateActorManual,
 			Timestamp: clock.NowUnix(),
 		}
 
 		err = connector.setNotifierState(state) // NOTE: It's used to migrate from old dto to new
 		if err != nil {
 			return moira.NotifierState{
-				State: moira.SelfStateERROR,
-				Actor: moira.SelfStateActorAutomatic,
+				State:     moira.SelfStateERROR,
+				Actor:     moira.SelfStateActorAutomatic,
 				Timestamp: clock.NowUnix(),
 			}, err
 		}
@@ -114,8 +114,8 @@ func (connector *DbConnector) GetNotifierState(clock moira.Clock) (moira.Notifie
 // SetNotifierState update current notifier state: <OK|ERROR>.
 func (connector *DbConnector) SetNotifierState(actor, state string, clock moira.Clock) error {
 	err := connector.setNotifierState(moira.NotifierState{
-		State: state,
-		Actor: actor,
+		State:     state,
+		Actor:     actor,
 		Timestamp: clock.NowUnix(),
 	})
 
@@ -198,8 +198,8 @@ func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.Cluster
 	c := *connector.client
 
 	currentState := moira.NotifierState{
-		State: state,
-		Actor: actor,
+		State:     state,
+		Actor:     actor,
 		Timestamp: clock.NowUnix(),
 	}
 
@@ -220,16 +220,16 @@ func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.Cluster
 
 func errorState(clock moira.Clock) moira.NotifierState {
 	return moira.NotifierState{
-		State: moira.SelfStateERROR,
-		Actor: moira.SelfStateActorManual,
+		State:     moira.SelfStateERROR,
+		Actor:     moira.SelfStateActorManual,
 		Timestamp: clock.NowUnix(),
 	}
 }
 
 func okState(clock moira.Clock) moira.NotifierState {
 	return moira.NotifierState{
-		State: moira.SelfStateOK,
-		Actor: moira.SelfStateActorManual,
+		State:     moira.SelfStateOK,
+		Actor:     moira.SelfStateActorManual,
 		Timestamp: clock.NowUnix(),
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/stretchr/testify/require"
@@ -66,9 +67,11 @@ func TestProcessScheduledEvent(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
+	clock := clock.NewSystemClock()
 	worker := &FetchNotificationsWorker{
 		Database: dataBase,
 		Logger:   logger,
+		Clock:    clock,
 		Notifier: notifier,
 		Metrics:  notifierMetrics,
 	}
@@ -215,9 +218,11 @@ func TestGoRoutine(t *testing.T) {
 	logger, _ := logging.GetLogger("Notification")
 
 	clusterList := moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}
+	clock := clock.NewSystemClock()
 	worker := &FetchNotificationsWorker{
 		Database:    dataBase,
 		Logger:      logger,
+		Clock:       clock,
 		Notifier:    notifier,
 		Metrics:     notifierMetrics,
 		ClusterList: clusterList,

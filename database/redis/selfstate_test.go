@@ -216,6 +216,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Test set ERROR for a single source", func(t *testing.T) {
 		defer database.Flush()
+
 		clock := mock_clock.NewMockClock(mock)
 		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
 
@@ -300,6 +301,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Set nonexisting source must return err", func(t *testing.T) {
 		defer database.Flush()
+
 		clock := mock_clock.NewMockClock(mock)
 
 		clusterKey := moira.ClusterKey{
@@ -316,6 +318,7 @@ func TestGetNotifierStateForSource(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	database := NewTestDatabase(logger)
 	database.Flush()
+
 	mock := gomock.NewController(t)
 
 	clock := mock_clock.NewMockClock(mock)

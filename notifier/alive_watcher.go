@@ -14,7 +14,7 @@ type AliveWatcher struct {
 	database                  moira.Database
 	checkNotifierStateTimeout time.Duration
 	notifierMetrics           *metrics.NotifierMetrics
-	clock moira.Clock
+	clock                     moira.Clock
 }
 
 // NewAliveWatcher is an initializer for AliveWatcher.

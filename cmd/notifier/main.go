@@ -129,7 +129,7 @@ func main() {
 
 	// Start moira self state checker
 	if config.Notifier.getSelfstateSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.getSelfstateSettings(), clusterList)
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.getSelfstateSettings(), clusterList, systemClock)
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).
@@ -144,6 +144,7 @@ func main() {
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
 		Logger:      logger,
 		Database:    database,
+		Clock:       systemClock,
 		Notifier:    sender,
 		Metrics:     notifierMetrics,
 		ClusterList: clusterList,

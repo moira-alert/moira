@@ -175,6 +175,7 @@ func TestNotifier(t *testing.T) {
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
 		Database:    database,
 		Logger:      logger,
+		Clock:       systemClock,
 		Metrics:     notifierMetrics,
 		Notifier:    notifierInstance,
 		ClusterList: moira.ClusterList{moira.DefaultLocalCluster},

@@ -15,6 +15,7 @@ func TestGetNotifierState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	clock := mock_clock.NewMockClock(mockCtrl)
 	defer mockCtrl.Finish()
 
@@ -32,6 +33,7 @@ func TestUpdateNotifierState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	clock := mock_clock.NewMockClock(mockCtrl)
 	defer mockCtrl.Finish()
 
