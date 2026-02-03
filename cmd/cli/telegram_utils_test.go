@@ -8,7 +8,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
 	goredis "github.com/go-redis/redis/v8"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUpdateTelegramUsersRecords(t *testing.T) {
@@ -19,42 +19,39 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 	conf := getDefault()
 
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	database := redis.NewTestDatabase(logger)
-
+	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
 	database.Flush()
 	defer database.Flush()
 
 	client := database.Client()
 	ctx := database.Context()
 
-	Convey("Test data migration forwards", t, func() {
-		Convey("Given old database", func() {
+	t.Run("Test data migration forwards", func(t *testing.T) {
+		t.Run("Given old database", func(t *testing.T) {
 			createOldTelegramUserRecords(database)
 
-			Convey("When migration was applied", func() {
+			t.Run("When migration was applied", func(t *testing.T) {
 				err := updateTelegramUsersRecords(logger, database)
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 
-				Convey("Database should be new", func() {
+				t.Run("Database should be new", func(t *testing.T) {
 					result, err := client.Get(ctx, "moira-telegram-users:some telegram group").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, `{"chat_id":-1001494975744}`)
+					require.NoError(t, err)
+					require.Equal(t, `{"chat_id":-1001494975744}`, result)
 
 					result, err = client.Get(ctx, "moira-telegram-users:some telegram group failed migration").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, `{"chat_id":-1001494975755}`)
+					require.NoError(t, err)
+					require.Equal(t, `{"chat_id":-1001494975755}`, result)
 
 					result, err = client.Get(ctx, "moira-telegram-users:@durov").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, `{"chat_id":1}`)
+					require.NoError(t, err)
+					require.Equal(t, `{"chat_id":1}`, result)
 
 					result, err = client.Get(ctx, "moira-telegram-users:moira-bot-host:123").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, "D4VdnzZDTS/xXF87THARWw==")
+					require.NoError(t, err)
+					require.Equal(t, "D4VdnzZDTS/xXF87THARWw==", result)
 				})
 			})
 		})
@@ -69,46 +66,43 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 	conf := getDefault()
 
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	database := redis.NewTestDatabase(logger)
 	database.Flush()
-
 	defer database.Flush()
 
 	client := database.Client()
 	ctx := database.Context()
 
-	Convey("Test data migration backwards", t, func() {
-		Convey("Given new database", func() {
+	t.Run("Test data migration backwards", func(t *testing.T) {
+		t.Run("Given new database", func(t *testing.T) {
 			createNewTelegramUserRecords(database)
 
-			Convey("When migration was applied", func() {
+			t.Run("When migration was applied", func(t *testing.T) {
 				err := downgradeTelegramUsersRecords(logger, database)
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 
-				Convey("Database should be old", func() {
+				t.Run("Database should be old", func(t *testing.T) {
 					result, err := client.Get(ctx, "moira-telegram-users:some telegram group").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, "-1001494975744")
+					require.NoError(t, err)
+					require.Equal(t, "-1001494975744", result)
 
 					result, err = client.Get(ctx, "moira-telegram-users:some telegram group with topic").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, `{"chat_id":-1001494975766,"thread_id":1}`)
+					require.NoError(t, err)
+					require.Equal(t, `{"chat_id":-1001494975766,"thread_id":1}`, result)
 
 					result, err = client.Get(ctx, "moira-telegram-users:@durov").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, "1")
+					require.NoError(t, err)
+					require.Equal(t, "1", result)
 
 					result, err = client.Get(ctx, "moira-telegram-users:@failed_migration").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, "2")
+					require.NoError(t, err)
+					require.Equal(t, "2", result)
 
 					result, err = client.Get(ctx, "moira-telegram-users:moira-bot-host:123").Result()
-					So(err, ShouldBeNil)
-					So(result, ShouldEqual, "D4VdnzZDTS/xXF87THARWw==")
+					require.NoError(t, err)
+					require.Equal(t, "D4VdnzZDTS/xXF87THARWw==", result)
 				})
 			})
 		})

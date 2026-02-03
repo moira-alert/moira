@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira"
 
 	rds "github.com/go-redis/redis/v8"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCluster(t *testing.T) {
@@ -20,201 +20,310 @@ func TestCluster(t *testing.T) {
 	conf := getDefault()
 
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	database := redis.NewTestDatabase(logger)
 	database.Flush()
-
 	defer database.Flush()
 
 	client := database.Client()
 	ctx := database.Context()
 
-	Convey("Test data migration forwards", t, func() {
-		Convey("Given old database", func() {
+	t.Run("Test data migration forwards", func(t *testing.T) {
+		t.Run("Given old database", func(t *testing.T) {
 			createDataWithOldKeys(database)
 
 			valueStoredAtKey := client.SMembers(ctx, "moira-any-tags-subscriptions").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 
 			valueStoredAtKey = client.SMembers(ctx, "moira-triggers-list").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-triggers-list}:moira-triggers-list").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 
 			valueStoredAtKey = client.SMembers(ctx, "moira-remote-triggers-list").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-triggers-list}:moira-remote-triggers-list").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 
 			valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag1").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag1").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 			valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag2").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag2").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 			valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag3").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag3").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 
 			valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag1").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag1").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 			valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag2").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag2").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 			valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag3").Val()
-			So(len(valueStoredAtKey), ShouldResemble, 3)
+			require.Len(t, valueStoredAtKey, 3)
 			valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag3").Val()
-			So(valueStoredAtKey, ShouldBeEmpty)
+			require.Empty(t, valueStoredAtKey)
 
-			Convey("When migration was applied", func() {
+			t.Run("When migration was applied", func(t *testing.T) {
 				err := addRedisClusterSupport(logger, database)
-				So(err, ShouldBeNil)
+				require.NoError(t, err)
 
-				Convey("Database should be new", func() {
+				t.Run("Database should be new", func(t *testing.T) {
 					valueStoredAtKey = client.SMembers(ctx, "moira-any-tags-subscriptions").Val()
-					So(valueStoredAtKey, ShouldBeEmpty)
+					require.Empty(t, valueStoredAtKey)
 					valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
-					So(len(valueStoredAtKey), ShouldResemble, 3)
+					require.Len(t, valueStoredAtKey, 3)
 
 					valueStoredAtKey = client.SMembers(ctx, "moira-triggers-list").Val()
-					So(valueStoredAtKey, ShouldBeEmpty)
+					require.Empty(t, valueStoredAtKey)
 					valueStoredAtKey = client.SMembers(ctx, "{moira-triggers-list}:moira-triggers-list").Val()
-					So(len(valueStoredAtKey), ShouldResemble, 3)
+					require.Len(t, valueStoredAtKey, 3)
 
 					valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag1").Val()
-					So(valueStoredAtKey, ShouldBeEmpty)
+					require.Empty(t, valueStoredAtKey)
 					valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag1").Val()
-					So(len(valueStoredAtKey), ShouldResemble, 3)
+					require.Len(t, valueStoredAtKey, 3)
 					valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag2").Val()
-					So(valueStoredAtKey, ShouldBeEmpty)
+					require.Empty(t, valueStoredAtKey)
 					valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag2").Val()
-					So(len(valueStoredAtKey), ShouldResemble, 3)
+					require.Len(t, valueStoredAtKey, 3)
 					valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag3").Val()
-					So(valueStoredAtKey, ShouldBeEmpty)
+					require.Empty(t, valueStoredAtKey)
 					valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag3").Val()
-					So(len(valueStoredAtKey), ShouldResemble, 3)
+					require.Len(t, valueStoredAtKey, 3)
 
 					valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag1").Val()
-					So(valueStoredAtKey, ShouldBeEmpty)
+					require.Empty(t, valueStoredAtKey)
 					valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag1").Val()
-					So(len(valueStoredAtKey), ShouldResemble, 3)
+					require.Len(t, valueStoredAtKey, 3)
 					valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag2").Val()
-					So(valueStoredAtKey, ShouldBeEmpty)
+					require.Empty(t, valueStoredAtKey)
 					valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag2").Val()
-					So(len(valueStoredAtKey), ShouldResemble, 3)
+					require.Len(t, valueStoredAtKey, 3)
 					valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag3").Val()
-					So(valueStoredAtKey, ShouldBeEmpty)
+					require.Empty(t, valueStoredAtKey)
 					valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag3").Val()
-					So(len(valueStoredAtKey), ShouldResemble, 3)
+					require.Len(t, valueStoredAtKey, 3)
 				})
 			})
 		})
 
-		Convey("Test data migration reverse", func() {
-			Convey("Given new database", func() {
+		t.Run("Test data migration reverse", func(t *testing.T) {
+			t.Run("Given new database", func(t *testing.T) {
 				createDataWithNewKeys(database)
 
 				valueStoredAtKey := client.SMembers(ctx, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-any-tags-subscriptions").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 
 				valueStoredAtKey = client.SMembers(ctx, "{moira-triggers-list}:moira-triggers-list").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-triggers-list").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 
 				valueStoredAtKey = client.SMembers(ctx, "{moira-triggers-list}:moira-remote-triggers-list").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-remote-triggers-list").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 
 				valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag1").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag1").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 				valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag2").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag2").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 				valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag3").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag3").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 
 				valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag1").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag1").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 				valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag2").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag2").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 				valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag3").Val()
-				So(len(valueStoredAtKey), ShouldResemble, 3)
+				require.Len(t, valueStoredAtKey, 3)
 				valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag3").Val()
-				So(valueStoredAtKey, ShouldBeEmpty)
+				require.Empty(t, valueStoredAtKey)
 
-				Convey("When migration was reversed", func() {
+				t.Run("When migration was reversed", func(t *testing.T) {
 					err := removeRedisClusterSupport(logger, database)
-					So(err, ShouldBeNil)
+					require.NoError(t, err)
 
-					Convey("Database should be old", func() {
+					t.Run("Database should be old", func(t *testing.T) {
 						valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-any-tags-subscriptions").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 
 						valueStoredAtKey = client.SMembers(ctx, "{moira-triggers-list}:moira-triggers-list").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-triggers-list").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 
 						valueStoredAtKey = client.SMembers(ctx, "{moira-triggers-list}:moira-remote-triggers-list").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-remote-triggers-list").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 
 						valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag1").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag1").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 						valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag2").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag2").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 						valueStoredAtKey = client.SMembers(ctx, "{moira-tag-subscriptions}:tag3").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-tag-subscriptions:tag3").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 
 						valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag1").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag1").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 						valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag2").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag2").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 						valueStoredAtKey = client.SMembers(ctx, "{moira-tag-triggers}:tag3").Val()
-						So(valueStoredAtKey, ShouldBeEmpty)
+						require.Empty(t, valueStoredAtKey)
 						valueStoredAtKey = client.SMembers(ctx, "moira-tag-triggers:tag3").Val()
-						So(len(valueStoredAtKey), ShouldResemble, 3)
+						require.Len(t, valueStoredAtKey, 3)
 					})
 				})
 			})
 		})
+	})
+}
+
+func Test_renameKey(t *testing.T) {
+	logger, _ := logging.GetLogger("Test Worker")
+	oldKey := "my_test_key"
+	newKey := "my_new_test_key"
+
+	t.Run("Something was renamed", func(t *testing.T) {
+		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database.Flush()
+		defer database.Flush()
+
+		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
+		require.NoError(t, err)
+
+		err = renameKey(database, oldKey, newKey)
+		require.NoError(t, err)
+
+		res, err := database.Client().Get(database.Context(), newKey).Result()
+		require.NoError(t, err)
+		require.Equal(t, "123", res)
+
+		err = database.Client().Get(database.Context(), oldKey).Err()
+		require.Equal(t, rds.Nil, err)
+	})
+
+	t.Run("Nothing was renamed", func(t *testing.T) {
+		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database.Flush()
+		defer database.Flush()
+
+		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
+		require.NoError(t, err)
+
+		err = renameKey(database, "no_exist_key", newKey)
+		require.NoError(t, err)
+
+		err = database.Client().Get(database.Context(), newKey).Err()
+		require.Equal(t, rds.Nil, err)
+
+		res, err := database.Client().Get(database.Context(), oldKey).Result()
+		require.NoError(t, err)
+		require.Equal(t, "123", res)
+	})
+}
+
+func Test_changeKeysPrefix(t *testing.T) {
+	logger, _ := logging.GetLogger("Test Worker")
+	oldKey := "my_test_key"
+	newKey := "my_new_test_key"
+
+	t.Run("Something was renamed", func(t *testing.T) {
+		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database.Flush()
+		defer database.Flush()
+
+		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
+		require.NoError(t, err)
+		err = database.Client().Set(database.Context(), oldKey+"2", "2", 0).Err()
+		require.NoError(t, err)
+		err = database.Client().Set(database.Context(), oldKey+"3", "3", 0).Err()
+		require.NoError(t, err)
+
+		err = changeKeysPrefix(database, oldKey, newKey)
+		require.NoError(t, err)
+
+		res, err := database.Client().Get(database.Context(), newKey+"1").Result()
+		require.NoError(t, err)
+		require.Equal(t, "1", res)
+		res, err = database.Client().Get(database.Context(), newKey+"2").Result()
+		require.NoError(t, err)
+		require.Equal(t, "2", res)
+		res, err = database.Client().Get(database.Context(), newKey+"3").Result()
+		require.NoError(t, err)
+		require.Equal(t, "3", res)
+
+		err = database.Client().Get(database.Context(), oldKey+"1").Err()
+		require.Equal(t, rds.Nil, err)
+		err = database.Client().Get(database.Context(), oldKey+"2").Err()
+		require.Equal(t, rds.Nil, err)
+		err = database.Client().Get(database.Context(), oldKey+"3").Err()
+		require.Equal(t, rds.Nil, err)
+	})
+
+	t.Run("Nothing was renamed", func(t *testing.T) {
+		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database.Flush()
+		defer database.Flush()
+
+		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
+		require.NoError(t, err)
+		err = database.Client().Set(database.Context(), oldKey+"2", "2", 0).Err()
+		require.NoError(t, err)
+		err = database.Client().Set(database.Context(), oldKey+"3", "3", 0).Err()
+		require.NoError(t, err)
+
+		err = renameKey(database, "no_exist_key", newKey)
+		require.NoError(t, err)
+
+		err = database.Client().Get(database.Context(), newKey).Err()
+		require.Equal(t, rds.Nil, err)
+
+		res, err := database.Client().Get(database.Context(), oldKey+"1").Result()
+		require.NoError(t, err)
+		require.Equal(t, "1", res)
+		res, err = database.Client().Get(database.Context(), oldKey+"2").Result()
+		require.NoError(t, err)
+		require.Equal(t, "2", res)
+		res, err = database.Client().Get(database.Context(), oldKey+"3").Result()
+		require.NoError(t, err)
+		require.Equal(t, "3", res)
 	})
 }
 
@@ -298,120 +407,4 @@ func createDataWithNewKeys(database moira.Database) {
 		client.SAdd(ctx, "{moira-tag-triggers}:tag3", "triggerID-0000000000002")
 		client.SAdd(ctx, "{moira-tag-triggers}:tag3", "triggerID-0000000000003")
 	}
-}
-
-func Test_renameKey(t *testing.T) {
-	logger, _ := logging.GetLogger("Test Worker")
-	oldKey := "my_test_key"
-	newKey := "my_new_test_key"
-
-	Convey("Something was renamed", t, func() {
-		database := redis.NewTestDatabase(logger)
-		database.Flush()
-
-		defer database.Flush()
-
-		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
-		So(err, ShouldBeNil)
-
-		err = renameKey(database, oldKey, newKey)
-		So(err, ShouldBeNil)
-
-		res, err := database.Client().Get(database.Context(), newKey).Result()
-		So(err, ShouldBeNil)
-		So(res, ShouldResemble, "123")
-
-		err = database.Client().Get(database.Context(), oldKey).Err()
-		So(err, ShouldEqual, rds.Nil)
-	})
-
-	Convey("Nothing was renamed", t, func() {
-		database := redis.NewTestDatabase(logger)
-		database.Flush()
-
-		defer database.Flush()
-
-		err := database.Client().Set(database.Context(), oldKey, "123", 0).Err()
-		So(err, ShouldBeNil)
-
-		err = renameKey(database, "no_exist_key", newKey)
-		So(err, ShouldBeNil)
-
-		err = database.Client().Get(database.Context(), newKey).Err()
-		So(err, ShouldEqual, rds.Nil)
-
-		res, err := database.Client().Get(database.Context(), oldKey).Result()
-		So(err, ShouldBeNil)
-		So(res, ShouldResemble, "123")
-	})
-}
-
-func Test_changeKeysPrefix(t *testing.T) {
-	logger, _ := logging.GetLogger("Test Worker")
-	oldKey := "my_test_key"
-	newKey := "my_new_test_key"
-
-	Convey("Something was renamed", t, func() {
-		database := redis.NewTestDatabase(logger)
-		database.Flush()
-
-		defer database.Flush()
-
-		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
-		So(err, ShouldBeNil)
-		err = database.Client().Set(database.Context(), oldKey+"2", "2", 0).Err()
-		So(err, ShouldBeNil)
-		err = database.Client().Set(database.Context(), oldKey+"3", "3", 0).Err()
-		So(err, ShouldBeNil)
-
-		err = changeKeysPrefix(database, oldKey, newKey)
-		So(err, ShouldBeNil)
-
-		res, err := database.Client().Get(database.Context(), newKey+"1").Result()
-		So(err, ShouldBeNil)
-		So(res, ShouldResemble, "1")
-		res, err = database.Client().Get(database.Context(), newKey+"2").Result()
-		So(err, ShouldBeNil)
-		So(res, ShouldResemble, "2")
-		res, err = database.Client().Get(database.Context(), newKey+"3").Result()
-		So(err, ShouldBeNil)
-		So(res, ShouldResemble, "3")
-
-		err = database.Client().Get(database.Context(), oldKey+"1").Err()
-		So(err, ShouldEqual, rds.Nil)
-		err = database.Client().Get(database.Context(), oldKey+"2").Err()
-		So(err, ShouldEqual, rds.Nil)
-		err = database.Client().Get(database.Context(), oldKey+"3").Err()
-		So(err, ShouldEqual, rds.Nil)
-	})
-
-	Convey("Nothing was renamed", t, func() {
-		database := redis.NewTestDatabase(logger)
-		database.Flush()
-
-		defer database.Flush()
-
-		err := database.Client().Set(database.Context(), oldKey+"1", "1", 0).Err()
-		So(err, ShouldBeNil)
-		err = database.Client().Set(database.Context(), oldKey+"2", "2", 0).Err()
-		So(err, ShouldBeNil)
-		err = database.Client().Set(database.Context(), oldKey+"3", "3", 0).Err()
-		So(err, ShouldBeNil)
-
-		err = renameKey(database, "no_exist_key", newKey)
-		So(err, ShouldBeNil)
-
-		err = database.Client().Get(database.Context(), newKey).Err()
-		So(err, ShouldEqual, rds.Nil)
-
-		res, err := database.Client().Get(database.Context(), oldKey+"1").Result()
-		So(err, ShouldBeNil)
-		So(res, ShouldResemble, "1")
-		res, err = database.Client().Get(database.Context(), oldKey+"2").Result()
-		So(err, ShouldBeNil)
-		So(res, ShouldResemble, "2")
-		res, err = database.Client().Get(database.Context(), oldKey+"3").Result()
-		So(err, ShouldBeNil)
-		So(res, ShouldResemble, "3")
-	})
 }
