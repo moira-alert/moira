@@ -169,6 +169,7 @@ func TestNotifierState(t *testing.T) {
 
 		Convey("Switch notifier to ERROR", func() {
 			clock.EXPECT().NowUnix().Return(int64(0))
+
 			err := dataBase.SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR)
 			actualNotifierState, err2 := dataBase.GetNotifierState()
 
@@ -191,6 +192,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		defer database.Flush()
 
 		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
+
 		state, err := database.GetNotifierStateForSources()
 		require.NoError(t, err)
 		require.Equal(t, map[moira.ClusterKey]moira.NotifierState{
@@ -213,6 +215,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		defer database.Flush()
 
 		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
+
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
 		require.NoError(t, err)
 
@@ -238,6 +241,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		defer database.Flush()
 
 		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
+
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
 		require.NoError(t, err)
 		err = database.SetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
@@ -265,6 +269,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 		defer database.Flush()
 
 		clock.EXPECT().NowUnix().Return(int64(0)).Times(4)
+
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
 		require.NoError(t, err)
 		err = database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateOK)
@@ -311,6 +316,7 @@ func TestGetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Get state for all sources one by one", func(t *testing.T) {
 		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
+
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
 		require.NoError(t, err)
 
