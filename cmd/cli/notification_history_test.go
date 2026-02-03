@@ -163,6 +163,8 @@ func testSplitNotificationHistory(
 	logger moira.Logger,
 	eventsMap map[string][]*moira.NotificationEventHistoryItem,
 ) {
+	t.Helper()
+
 	client := db.Client()
 
 	errExists := splitNotificationHistoryByContactID(ctx, logger, db)
@@ -354,6 +356,8 @@ func testMergeNotificationHistory(
 	logger moira.Logger,
 	eventsList []*moira.NotificationEventHistoryItem,
 ) {
+	t.Helper()
+
 	client := db.Client()
 
 	err := mergeNotificationHistory(logger, db)
