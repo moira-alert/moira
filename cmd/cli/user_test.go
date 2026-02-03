@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/stretchr/testify/require"

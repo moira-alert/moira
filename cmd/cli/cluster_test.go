@@ -221,7 +221,7 @@ func Test_renameKey(t *testing.T) {
 	newKey := "my_new_test_key"
 
 	t.Run("Something was renamed", func(t *testing.T) {
-		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database := redis.NewTestDatabase(logger)
 		database.Flush()
 		defer database.Flush()
 
@@ -240,7 +240,7 @@ func Test_renameKey(t *testing.T) {
 	})
 
 	t.Run("Nothing was renamed", func(t *testing.T) {
-		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database := redis.NewTestDatabase(logger)
 		database.Flush()
 		defer database.Flush()
 
@@ -265,7 +265,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 	newKey := "my_new_test_key"
 
 	t.Run("Something was renamed", func(t *testing.T) {
-		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database := redis.NewTestDatabase(logger)
 		database.Flush()
 		defer database.Flush()
 
@@ -298,7 +298,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 	})
 
 	t.Run("Nothing was renamed", func(t *testing.T) {
-		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database := redis.NewTestDatabase(logger)
 		database.Flush()
 		defer database.Flush()
 

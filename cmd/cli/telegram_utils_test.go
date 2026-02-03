@@ -21,7 +21,7 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 	logger, err := logging.ConfigureLog(conf.LogFile, "error", "cli", conf.LogPrettyFormat)
 	require.NoError(t, err)
 
-	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+	database := redis.NewTestDatabase(logger)
 	database.Flush()
 	defer database.Flush()
 

@@ -48,7 +48,7 @@ func Test_fillTeamNamesHash(t *testing.T) {
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
 	require.NoError(t, err)
 
-	db := redis.NewTestDatabase(logger, clock.NewSystemClock())
+	db := redis.NewTestDatabase(logger)
 	db.Flush()
 	defer db.Flush()
 
@@ -185,7 +185,7 @@ func Test_removeTeamNamesHash(t *testing.T) {
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
 	require.NoError(t, err)
 
-	db := redis.NewTestDatabase(logger, clock.NewSystemClock())
+	db := redis.NewTestDatabase(logger)
 	db.Flush()
 	defer db.Flush()
 
