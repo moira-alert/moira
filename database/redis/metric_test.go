@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	"github.com/patrickmn/go-cache"
@@ -24,7 +25,7 @@ const (
 
 func TestMetricsStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 	metric1 := "my.test.super.metric" //nolint
 	metric2 := "my.test.super.metric2"
@@ -196,7 +197,7 @@ func TestMetricsStoring(t *testing.T) {
 
 func TestRemoveMetricRetention(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -243,7 +244,7 @@ func TestRemoveMetricRetention(t *testing.T) {
 
 func TestRemoveMetricValues(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.metricsCache = cache.New(time.Second*2, time.Minute*60)
 	dataBase.Flush()
 
@@ -624,7 +625,7 @@ func TestRemoveMetricValues(t *testing.T) {
 
 func TestMetricSubscription(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 
 	dataBase.Flush()
 	defer dataBase.Flush()
@@ -704,7 +705,7 @@ func TestMetricSubscription(t *testing.T) {
 
 func TestMetricsStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -763,7 +764,7 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 
 func TestCleanupOutdatedMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -914,7 +915,7 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 
 func TestCleanupFutureMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -1092,7 +1093,7 @@ func TestCleanupFutureMetrics(t *testing.T) {
 
 func TestCleanupOutdatedPatternMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -1232,7 +1233,7 @@ func TestCleanupOutdatedPatternMetrics(t *testing.T) {
 
 func TestGetNonExistentPatternMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -1364,7 +1365,7 @@ func TestGetNonExistentPatternMetrics(t *testing.T) {
 
 func TestCleanupAbandonedRetention(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -1446,7 +1447,7 @@ func TestCleanupAbandonedRetention(t *testing.T) {
 
 func TestRemoveMetricsByPrefix(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -1517,7 +1518,7 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 
 func TestRemoveAllMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()

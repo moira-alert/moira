@@ -43,7 +43,7 @@ func TestSetHealthWithAuth(t *testing.T) {
 	t.Run("Admin tries to set notifier state", func(t *testing.T) {
 		responseWriter := httptest.NewRecorder()
 
-		mockDb.EXPECT().SetNotifierState(moira.SelfStateActorManual, "OK", gomock.Any()).Return(nil).Times(1)
+		mockDb.EXPECT().SetNotifierState(moira.SelfStateActorManual, "OK").Return(nil).Times(1)
 
 		state := &dto.NotifierState{
 			State: "OK",
@@ -108,7 +108,7 @@ func TestSetHealthForSourceWithAuth(t *testing.T) {
 	t.Run("Admin tries to set notifier state", func(t *testing.T) {
 		responseWriter := httptest.NewRecorder()
 
-		mockDb.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, "OK", gomock.Any()).Return(nil).Times(1)
+		mockDb.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, "OK").Return(nil).Times(1)
 
 		state := &dto.NotifierState{
 			State: "OK",

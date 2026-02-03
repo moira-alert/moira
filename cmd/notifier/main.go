@@ -83,7 +83,7 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	notificationHistorySettings := config.NotificationHistory.GetSettings()
 	notificationSettings := config.Notification.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier, clusterList)
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier, clusterList, clock.NewSystemClock())
 
 	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
 	if err != nil {
@@ -129,7 +129,7 @@ func main() {
 
 	// Start moira self state checker
 	if config.Notifier.getSelfstateSettings().Enabled {
-		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.getSelfstateSettings(), clusterList, systemClock)
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.getSelfstateSettings(), clusterList)
 		if err := selfState.Start(); err != nil {
 			logger.Fatal().
 				Error(err).
@@ -144,7 +144,6 @@ func main() {
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
 		Logger:      logger,
 		Database:    database,
-		Clock:       systemClock,
 		Notifier:    sender,
 		Metrics:     notifierMetrics,
 		ClusterList: clusterList,

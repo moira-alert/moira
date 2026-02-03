@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
@@ -23,7 +24,7 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	database := redis.NewTestDatabase(logger)
+	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
 
 	database.Flush()
 	defer database.Flush()
@@ -73,7 +74,7 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	database := redis.NewTestDatabase(logger)
+	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
 	database.Flush()
 
 	defer database.Flush()

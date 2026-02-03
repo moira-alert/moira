@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-redsync/redsync/v4"
 
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
@@ -19,7 +20,7 @@ import (
 
 func Test(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	db := NewTestDatabase(logger)
+	db := NewTestDatabase(logger, clock.NewSystemClock())
 	db.Flush()
 
 	defer db.Flush()

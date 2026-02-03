@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
@@ -28,7 +29,7 @@ func TestUpdateUsers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	database := redis.NewTestDatabase(logger)
+	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
 	conf.Cleanup.Whitelist = []string{"Nikolay", ""}
 
 	users := []string{"Aleksey", "Arkadiy", "Emil"}

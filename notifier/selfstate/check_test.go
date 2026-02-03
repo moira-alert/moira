@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_notifier "github.com/moira-alert/moira/mock/notifier"
@@ -21,7 +20,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			worker := createWorker(t)
 			redisError := fmt.Errorf("Redis connection timeout")
 			worker.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), redisError)
-			worker.database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any(), gomock.Any(), gomock.Any()).Return(redisError)
+			worker.database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any(), gomock.Any()).Return(redisError)
 			worker.database.EXPECT().GetTagsSubscriptions(gomock.Any()).Return(nil, redisError)
 
 			var sendingWG sync.WaitGroup
@@ -149,10 +148,9 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("SelfState")
 	notif := mock_notifier.NewMockNotifier(mockCtrl)
-	clock := clock.NewSystemClock()
 
 	return &selfCheckWorkerMock{
-		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}, clock),
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 		database:        database,
 		notif:           notif,
 		conf:            conf,
@@ -169,7 +167,7 @@ func fillDatabase(database *mock_moira_alert.MockDatabase) {
 		},
 	}
 	database.EXPECT().GetContacts(moira.Map(contacts, func(c *moira.ContactData) string { return c.ID })).Return(contacts, nil)
-	database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	database.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any(), gomock.Any()).Return(nil)
 	database.EXPECT().GetTagsSubscriptions([]string{"sys-tag-database", "moira-fatal"}).Return([]*moira.SubscriptionData{
 		{
 			Contacts: []string{"contact1"},

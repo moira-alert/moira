@@ -184,11 +184,11 @@ type SelfStateDatabase interface {
 	GetChecksUpdatesCount() (int64, error)
 	GetRemoteChecksUpdatesCount() (int64, error)
 	GetPrometheusChecksUpdatesCount() (int64, error)
-	GetNotifierState(clock Clock) (NotifierState, error)
-	SetNotifierState(actor, state string, clock Clock) error
-	GetNotifierStateForSources(clock Clock) (map[ClusterKey]NotifierState, error)
-	GetNotifierStateForSource(clusterKey ClusterKey, clock Clock) (NotifierState, error)
-	SetNotifierStateForSource(clusterKey ClusterKey, actor, state string, clock Clock) error
+	GetNotifierState() (NotifierState, error)
+	SetNotifierState(actor, state string) error
+	GetNotifierStateForSources() (map[ClusterKey]NotifierState, error)
+	GetNotifierStateForSource(clusterKey ClusterKey) (NotifierState, error)
+	SetNotifierStateForSource(clusterKey ClusterKey, actor, state string) error
 }
 
 // ContactScoreDatabase storing.

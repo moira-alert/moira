@@ -9,6 +9,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -528,7 +529,7 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	dataBase := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Cli, moira.ClusterList{})
+	dataBase := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Cli, moira.ClusterList{}, clock.NewSystemClock())
 
 	return config.Cleanup, logger, dataBase
 }

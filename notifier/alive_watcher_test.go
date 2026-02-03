@@ -43,7 +43,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 
 	t.Run("checkNotifierState", func(t *testing.T) {
 		t.Run("when OK", func(t *testing.T) {
-			dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+			dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 				State: moira.SelfStateOK,
 				Actor: moira.SelfStateActorManual,
 			}, nil)
@@ -56,7 +56,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 			notOKStates := []string{moira.SelfStateERROR, "err", "bad", "", "1"}
 
 			for _, badState := range notOKStates {
-				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 					State: badState,
 					Actor: moira.SelfStateActorManual,
 				}, nil)
@@ -74,7 +74,7 @@ func TestAliveWatcher_checkNotifierState(t *testing.T) {
 			}
 
 			for _, err := range givenErrors {
-				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 					State: notOKState,
 				}, err)
 				mockAliveMeter.EXPECT().Mark(int64(0)).Times(2)
@@ -111,7 +111,7 @@ func TestAliveWatcher_Start(t *testing.T) {
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher started")
 		eventsBuilder.EXPECT().Msg("Moira Notifier alive watcher stopped")
 
-		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil).AnyTimes()

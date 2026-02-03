@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira/checker/worker"
+	"github.com/moira-alert/moira/clock"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/patrickmn/go-cache"
 
@@ -83,7 +84,7 @@ func main() {
 	clusterList := cmd.MakeClusterList(config.Remotes)
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Checker, clusterList)
+	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Checker, clusterList, clock.NewSystemClock())
 
 	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
 	if err != nil {

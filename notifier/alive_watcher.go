@@ -14,7 +14,6 @@ type AliveWatcher struct {
 	database                  moira.Database
 	checkNotifierStateTimeout time.Duration
 	notifierMetrics           *metrics.NotifierMetrics
-	clock                     moira.Clock
 }
 
 // NewAliveWatcher is an initializer for AliveWatcher.
@@ -57,7 +56,7 @@ func (watcher *AliveWatcher) stateChecker(ctx context.Context) {
 }
 
 func (watcher *AliveWatcher) checkNotifierState() {
-	state, _ := watcher.database.GetNotifierStateForSource(moira.DefaultLocalCluster, watcher.clock)
+	state, _ := watcher.database.GetNotifierStateForSource(moira.DefaultLocalCluster)
 	if state.State != moira.SelfStateOK {
 		watcher.notifierMetrics.MarkNotifierIsAlive(false)
 		return

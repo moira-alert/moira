@@ -51,7 +51,7 @@ func TestSender_SendEvents(t *testing.T) {
 			t.Run("Should ignore events received", func(t *testing.T) {
 				for _, subjectState := range ignorableSubjectStates {
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
-					dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+					dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 						State: selfStateInitial,
 					}, nil)
 
@@ -62,10 +62,10 @@ func TestSender_SendEvents(t *testing.T) {
 
 			t.Run("Should disable notifications", func(t *testing.T) {
 				for _, subjectState := range disablingSubjectStates {
-					dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+					dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 						State: selfStateInitial,
 					}, nil)
-					dataBase.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorTrigger, selfStateFinal, gomock.Any()).Return(nil)
+					dataBase.EXPECT().SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorTrigger, selfStateFinal).Return(nil)
 
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
 					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
@@ -79,7 +79,7 @@ func TestSender_SendEvents(t *testing.T) {
 
 			for _, subjectState := range disablingSubjectStates {
 				testEvents := []moira.NotificationEvent{{State: subjectState}}
-				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+				dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 					State: selfStateInitial,
 				}, nil)
 
@@ -95,7 +95,7 @@ func TestSender_SendEvents(t *testing.T) {
 		for _, subjectState := range disablingSubjectStates {
 			testEvents := []moira.NotificationEvent{{State: subjectState}}
 
-			dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{}, fmt.Errorf("redis is down"))
+			dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{}, fmt.Errorf("redis is down"))
 
 			err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 			require.Error(t, err)

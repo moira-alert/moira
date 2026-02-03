@@ -30,11 +30,10 @@ type SelfCheckWorker struct {
 	lastSuccessChecksResult graphExecutionResult
 	lastChecksResult        graphExecutionResult
 	clusterList             moira.ClusterList
-	clock                   moira.Clock
 }
 
 // NewSelfCheckWorker creates SelfCheckWorker.
-func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config, clusterList moira.ClusterList, clock moira.Clock) *SelfCheckWorker {
+func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config, clusterList moira.ClusterList) *SelfCheckWorker {
 	heartbeats := createStandardHeartbeats(logger, database, config, clusterList)
 
 	return &SelfCheckWorker{
@@ -43,7 +42,6 @@ func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier n
 		Notifier:        notifier,
 		Config:          config,
 		heartbeatsGraph: heartbeats,
-		clock:           clock,
 	}
 }
 

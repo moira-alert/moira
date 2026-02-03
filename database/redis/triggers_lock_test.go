@@ -3,6 +3,7 @@ package redis
 import (
 	"testing"
 
+	"github.com/moira-alert/moira/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"go.uber.org/mock/gomock"
 
@@ -12,7 +13,7 @@ import (
 
 func TestLock(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -48,7 +49,7 @@ func TestLock(t *testing.T) {
 
 func TestLockErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -70,7 +71,7 @@ func TestLockErrorLogging(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 	eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
 
 	dataBase.Flush()
 	defer dataBase.Flush()

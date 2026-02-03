@@ -7,8 +7,8 @@ import (
 )
 
 // GetNotifierState return current notifier state.
-func GetNotifierState(database moira.Database, clock moira.Clock) (*dto.NotifierState, *api.ErrorResponse) {
-	state, err := database.GetNotifierState(clock)
+func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorResponse) {
+	state, err := database.GetNotifierState()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -25,8 +25,8 @@ func GetNotifierState(database moira.Database, clock moira.Clock) (*dto.Notifier
 }
 
 // GetNotifierStatesForSources return current notifier state for all metric sources.
-func GetNotifierStatesForSources(database moira.Database, clock moira.Clock) (*dto.NotifierStatesForSources, *api.ErrorResponse) {
-	states, err := database.GetNotifierStateForSources(clock)
+func GetNotifierStatesForSources(database moira.Database) (*dto.NotifierStatesForSources, *api.ErrorResponse) {
+	states, err := database.GetNotifierStateForSources()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -55,8 +55,8 @@ func GetNotifierStatesForSources(database moira.Database, clock moira.Clock) (*d
 }
 
 // UpdateNotifierState update current notifier state.
-func UpdateNotifierState(database moira.Database, state *dto.NotifierState, clock moira.Clock) *api.ErrorResponse {
-	err := database.SetNotifierState(moira.SelfStateActorManual, state.State, clock)
+func UpdateNotifierState(database moira.Database, state *dto.NotifierState) *api.ErrorResponse {
+	err := database.SetNotifierState(moira.SelfStateActorManual, state.State)
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}
@@ -65,8 +65,8 @@ func UpdateNotifierState(database moira.Database, state *dto.NotifierState, cloc
 }
 
 // UpdateNotifierStateForSource update current notifier state for a given source.
-func UpdateNotifierStateForSource(database moira.Database, clusterKey moira.ClusterKey, state *dto.NotifierState, clock moira.Clock) *api.ErrorResponse {
-	err := database.SetNotifierStateForSource(clusterKey, moira.SelfStateActorManual, state.State, clock)
+func UpdateNotifierStateForSource(database moira.Database, clusterKey moira.ClusterKey, state *dto.NotifierState) *api.ErrorResponse {
+	err := database.SetNotifierStateForSource(clusterKey, moira.SelfStateActorManual, state.State)
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}

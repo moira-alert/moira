@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -13,7 +14,7 @@ import (
 func TestNewDatabase(t *testing.T) {
 	Convey("NewDatabase should return correct DBConnector", t, func() {
 		logger, _ := logging.ConfigureLog("stdout", "info", "test", true) // nolint: govet
-		database := NewTestDatabase(logger)
+		database := NewTestDatabase(logger, clock.NewSystemClock())
 		So(database, ShouldNotBeEmpty)
 		So(database.source, ShouldEqual, "test")
 		So(database.logger, ShouldEqual, logger)

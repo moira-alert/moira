@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -32,7 +33,7 @@ var (
 // nolint
 func TestNotificationEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 	defer dataBase.Flush()
 
@@ -357,7 +358,7 @@ func TestNotificationEvents(t *testing.T) {
 
 func TestNotificationEventErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()

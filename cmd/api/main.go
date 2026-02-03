@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/index"
 
 	"github.com/moira-alert/moira"
@@ -93,7 +94,7 @@ func main() {
 
 	databaseSettings := applicationConfig.Redis.GetSettings()
 	notificationHistorySettings := applicationConfig.NotificationHistory.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.NotificationConfig{}, redis.API, clusterList)
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.NotificationConfig{}, redis.API, clusterList, clock.NewSystemClock())
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics, telemetry.AttributedMetrics)

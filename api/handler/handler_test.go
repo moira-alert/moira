@@ -36,7 +36,7 @@ func TestReadonlyMode(t *testing.T) {
 		handler := NewHandler(mockDb, logger, nil, config, nil, webConfig, nil)
 
 		Convey("Get notifier health", func() {
-			mockDb.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{State: "OK"}, nil).Times(1)
+			mockDb.EXPECT().GetNotifierState().Return(moira.NotifierState{State: "OK"}, nil).Times(1)
 
 			expected := &dto.NotifierState{
 				State: "OK",
@@ -59,7 +59,7 @@ func TestReadonlyMode(t *testing.T) {
 		})
 
 		Convey("Put notifier health", func() {
-			mockDb.EXPECT().SetNotifierState(moira.SelfStateActorManual, "OK", gomock.Any()).Return(nil).Times(1)
+			mockDb.EXPECT().SetNotifierState(moira.SelfStateActorManual, "OK").Return(nil).Times(1)
 
 			state := &dto.NotifierState{
 				State: "OK",

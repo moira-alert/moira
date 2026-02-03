@@ -3,13 +3,14 @@ package redis
 import (
 	"testing"
 
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestTagStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -61,7 +62,7 @@ func TestTagStoring(t *testing.T) {
 
 func TestCreateTags(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -92,7 +93,7 @@ func TestCreateTags(t *testing.T) {
 
 func TestTagErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -113,7 +114,7 @@ func TestTagErrorConnection(t *testing.T) {
 
 func TestCleanUpAbandonedTags(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()

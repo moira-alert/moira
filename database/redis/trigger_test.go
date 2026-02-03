@@ -6,6 +6,7 @@ import (
 
 	"go.uber.org/mock/gomock"
 
+	"github.com/moira-alert/moira/clock"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 
 	"github.com/gofrs/uuid"
@@ -19,7 +20,7 @@ import (
 
 func TestTriggerStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -536,7 +537,7 @@ func TestTriggerStoring(t *testing.T) {
 
 func TestRemoteTrigger(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -695,7 +696,7 @@ func TestRemoteTrigger(t *testing.T) {
 
 func TestTriggerErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -817,7 +818,7 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 
 func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	db := NewTestDatabase(logger)
+	db := NewTestDatabase(logger, clock.NewSystemClock())
 	db.Flush()
 
 	defer db.Flush()

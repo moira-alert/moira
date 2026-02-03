@@ -7,13 +7,14 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gofrs/uuid"
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestTriggersToReindex(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -125,7 +126,7 @@ func TestTriggersToReindex(t *testing.T) {
 
 func TestTriggerToReindexConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()

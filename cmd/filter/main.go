@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/filter"
@@ -94,7 +95,7 @@ func main() {
 			Msg("Failed to configure filter telemetry")
 	}
 
-	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Filter, moira.ClusterList{})
+	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.NotificationHistoryConfig{}, redis.NotificationConfig{}, redis.Filter, moira.ClusterList{}, clock.NewSystemClock())
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
 	if err != nil {

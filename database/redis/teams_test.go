@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -17,7 +18,7 @@ func TestTeamStoring(t *testing.T) {
 	}
 
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -172,7 +173,7 @@ func TestTeamStoring(t *testing.T) {
 func TestGetAllTeams(t *testing.T) {
 	Convey("Test getting all teams", t, func() {
 		logger, _ := logging.GetLogger("dataBase")
-		dataBase := NewTestDatabase(logger)
+		dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 		dataBase.Flush()
 
 		defer dataBase.Flush()
@@ -251,7 +252,7 @@ func TestGetAllTeams(t *testing.T) {
 func TestSaveAndGetTeam(t *testing.T) {
 	Convey("Test saving team", t, func() {
 		logger, _ := logging.GetLogger("dataBase")
-		dataBase := NewTestDatabase(logger)
+		dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 		dataBase.Flush()
 
 		defer dataBase.Flush()

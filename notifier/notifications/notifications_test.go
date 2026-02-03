@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/stretchr/testify/require"
@@ -67,11 +66,9 @@ func TestProcessScheduledEvent(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
-	clock := clock.NewSystemClock()
 	worker := &FetchNotificationsWorker{
 		Database: dataBase,
 		Logger:   logger,
-		Clock:    clock,
 		Notifier: notifier,
 		Metrics:  notifierMetrics,
 	}
@@ -108,11 +105,11 @@ func TestProcessScheduledEvent(t *testing.T) {
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
-		dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
-		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
@@ -142,11 +139,11 @@ func TestProcessScheduledEvent(t *testing.T) {
 		dataBase.EXPECT().PushContactNotificationToHistory(&notification2).Return(nil).AnyTimes()
 		dataBase.EXPECT().PushContactNotificationToHistory(&notification3).Return(nil).AnyTimes()
 		notifier.EXPECT().Send(&pkg, gomock.Any())
-		dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
-		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+		dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 			State: moira.SelfStateOK,
 			Actor: moira.SelfStateActorManual,
 		}, nil)
@@ -218,11 +215,9 @@ func TestGoRoutine(t *testing.T) {
 	logger, _ := logging.GetLogger("Notification")
 
 	clusterList := moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}
-	clock := clock.NewSystemClock()
 	worker := &FetchNotificationsWorker{
 		Database:    dataBase,
 		Logger:      logger,
-		Clock:       clock,
 		Notifier:    notifier,
 		Metrics:     notifierMetrics,
 		ClusterList: clusterList,
@@ -247,16 +242,16 @@ func TestGoRoutine(t *testing.T) {
 	notifier.EXPECT().StopSenders().AnyTimes()
 
 	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited).AnyTimes()
-	dataBase.EXPECT().GetNotifierState(gomock.Any()).Return(moira.NotifierState{
+	dataBase.EXPECT().GetNotifierState().Return(moira.NotifierState{
 		State: moira.SelfStateOK,
 		Actor: moira.SelfStateActorManual,
 	}, nil).AnyTimes()
 
-	dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster, gomock.Any()).Return(moira.NotifierState{
+	dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultLocalCluster).Return(moira.NotifierState{
 		State: moira.SelfStateOK,
 		Actor: moira.SelfStateActorManual,
 	}, nil).AnyTimes()
-	dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster, gomock.Any()).Return(moira.NotifierState{
+	dataBase.EXPECT().GetNotifierStateForSource(moira.DefaultGraphiteRemoteCluster).Return(moira.NotifierState{
 		State: moira.SelfStateOK,
 		Actor: moira.SelfStateActorManual,
 	}, nil).AnyTimes()

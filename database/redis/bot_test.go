@@ -5,13 +5,14 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 func TestBotDataStoring(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -61,7 +62,7 @@ func TestBotDataStoring(t *testing.T) {
 
 func TestBotDataStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()

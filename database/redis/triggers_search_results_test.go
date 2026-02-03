@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -93,7 +94,7 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 	}
 
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -149,7 +150,7 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 	logger, _ := logging.GetLogger("dataBase")
 
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 
 	dataBase.Flush()
 	defer dataBase.Flush()

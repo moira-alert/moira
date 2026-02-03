@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/moira-alert/moira/clock"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
@@ -59,6 +58,7 @@ func NewDatabase(
 	n NotificationConfig,
 	source DBSource,
 	clusterList moira.ClusterList,
+	clock moira.Clock,
 ) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs: config.Addrs,
@@ -101,7 +101,7 @@ func NewDatabase(
 		sync:                 redsync.New(syncPool),
 		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		source:               source,
-		clock:                clock.NewSystemClock(),
+		clock:                clock,
 		notificationHistory:  nh,
 		notification:         n,
 		clusterList:          clusterList,
@@ -111,7 +111,7 @@ func NewDatabase(
 }
 
 // NewTestDatabase use it only for tests.
-func NewTestDatabase(logger moira.Logger) *DbConnector {
+func NewTestDatabase(logger moira.Logger, clock moira.Clock) *DbConnector {
 	return NewDatabase(
 		logger, DatabaseConfig{
 			Addrs:      []string{"0.0.0.0:6379"},
@@ -129,11 +129,12 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 		},
 		testSource,
 		moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster, moira.DefaultPrometheusRemoteCluster},
+		clock,
 	)
 }
 
 // NewTestDatabaseWithIncorrectConfig use it only for tests.
-func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
+func NewTestDatabaseWithIncorrectConfig(logger moira.Logger, clock moira.Clock) *DbConnector {
 	return NewDatabase(logger,
 		DatabaseConfig{Addrs: []string{"0.0.0.0:0000"}},
 		NotificationHistoryConfig{
@@ -147,7 +148,9 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 			ResaveTime:                30 * time.Second,
 		},
 		testSource,
-		moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster, moira.DefaultPrometheusRemoteCluster})
+		moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster, moira.DefaultPrometheusRemoteCluster},
+		clock,
+	)
 }
 
 // Flush deletes all the keys of the DB, use it only for tests.

@@ -8,6 +8,7 @@ import (
 
 	goredis "github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -105,7 +106,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db := redis.NewTestDatabase(logger)
+	db := redis.NewTestDatabase(logger, clock.NewSystemClock())
 	db.Flush()
 
 	defer db.Flush()
@@ -206,7 +207,7 @@ func TestMergeNotificationHistory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db := redis.NewTestDatabase(logger)
+	db := redis.NewTestDatabase(logger, clock.NewSystemClock())
 	db.Flush()
 
 	defer db.Flush()

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -12,7 +13,7 @@ import (
 
 func TestDeliveryChecksDataManipulation(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
+	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
 	dataBase.Flush()
 
 	defer dataBase.Flush()

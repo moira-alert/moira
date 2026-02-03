@@ -93,7 +93,7 @@ func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	database := redis.NewTestDatabase(logger)
+	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
 
 	database.Flush()
 	defer database.Flush()
@@ -175,7 +175,6 @@ func TestNotifier(t *testing.T) {
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
 		Database:    database,
 		Logger:      logger,
-		Clock:       systemClock,
 		Metrics:     notifierMetrics,
 		Notifier:    notifierInstance,
 		ClusterList: moira.ClusterList{moira.DefaultLocalCluster},

@@ -19,7 +19,6 @@ type FetchNotificationsWorker struct {
 	Logger      moira.Logger
 	Database    moira.Database
 	Notifier    notifier.Notifier
-	Clock       moira.Clock
 	Metrics     *metrics.NotifierMetrics
 	ClusterList moira.ClusterList
 	tomb        tomb.Tomb
@@ -77,7 +76,7 @@ func (worker *FetchNotificationsWorker) Stop() error {
 }
 
 func (worker *FetchNotificationsWorker) processScheduledNotifications(clusterKey moira.ClusterKey) error {
-	state, err := worker.Database.GetNotifierState(worker.Clock)
+	state, err := worker.Database.GetNotifierState()
 	if err != nil {
 		return notifierInBadStateError("can't get current notifier state")
 	}
@@ -86,7 +85,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications(clusterKey
 		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state.State))
 	}
 
-	sourceState, err := worker.Database.GetNotifierStateForSource(clusterKey, worker.Clock)
+	sourceState, err := worker.Database.GetNotifierStateForSource(clusterKey)
 	if err != nil {
 		return notifierInBadStateError("can't get current notifier states for sources")
 	}
