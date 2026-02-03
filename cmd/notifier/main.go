@@ -83,7 +83,7 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	notificationHistorySettings := config.NotificationHistory.GetSettings()
 	notificationSettings := config.Notification.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier, clusterList, clock.NewSystemClock())
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, notificationSettings, redis.Notifier, clusterList)
 
 	metricSourceProvider, err := cmd.InitMetricSources(config.Remotes, database, logger)
 	if err != nil {

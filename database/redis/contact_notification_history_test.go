@@ -10,7 +10,6 @@ import (
 
 	"github.com/moira-alert/moira"
 
-	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -69,7 +68,7 @@ var eventsShouldBeInDb = []*moira.NotificationEventHistoryItem{
 
 func TestGetNotificationsHistoryByContactID(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 
 	var defaultPage int64 = 0
 
@@ -240,7 +239,7 @@ func TestGetNotificationsHistoryByContactID(t *testing.T) {
 
 func TestPushNotificationToHistory(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 
 	Convey("Ensure that event would not have duplicates", t, func() {
 		dataBase.Flush()
@@ -334,7 +333,7 @@ var notOutdatedEvents = []*moira.NotificationEventHistoryItem{
 
 func TestCleanUpOutdatedNotificationHistory(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -413,7 +412,7 @@ func toEventsMap(events []*moira.NotificationEventHistoryItem) map[string][]*moi
 func TestDbConnector_CountEventsInNotificationHistory(t *testing.T) {
 	Convey("Test counting events in notification history", t, func() {
 		logger, _ := logging.GetLogger("dataBase")
-		dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+		dataBase := NewTestDatabase(logger)
 		dataBase.Flush()
 
 		defer dataBase.Flush()

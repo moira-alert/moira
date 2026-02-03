@@ -15,7 +15,7 @@ import (
 
 func TestScheduledNotification(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -192,7 +192,7 @@ func addNotifications(t *testing.T, database *DbConnector, notifications []moira
 
 func TestScheduledNotificationErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
+	database := NewTestDatabaseWithIncorrectConfig(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -225,7 +225,7 @@ func TestScheduledNotificationErrorConnection(t *testing.T) {
 
 func TestFetchNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -315,7 +315,7 @@ func TestFetchNotifications(t *testing.T) {
 
 func TestGetNotificationsInTxWithLimit(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -420,7 +420,7 @@ func TestGetNotificationsInTxWithLimit(t *testing.T) {
 
 func TestGetLimitedNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -539,7 +539,7 @@ func TestGetLimitedNotifications(t *testing.T) {
 
 func TestFilterNotificationsByState(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -659,7 +659,7 @@ func TestFilterNotificationsByState(t *testing.T) {
 
 func TestHandleNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -808,7 +808,7 @@ func TestHandleNotifications(t *testing.T) {
 
 func TestNotificationsCount(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -901,7 +901,7 @@ func TestNotificationsCount(t *testing.T) {
 
 func TestFetchNotificationsDo(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -1314,7 +1314,7 @@ func TestFilterNotificationsByDelay(t *testing.T) {
 
 func TestGetNotificationsTriggerChecks(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -1416,7 +1416,7 @@ func TestGetNotificationsTriggerChecks(t *testing.T) {
 
 func TestResaveNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -1546,7 +1546,7 @@ func TestResaveNotifications(t *testing.T) {
 
 func TestRemoveNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -1654,7 +1654,7 @@ func TestRemoveNotifications(t *testing.T) {
 
 func TestRemoveFilteredNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("database")
-	database := NewTestDatabase(logger, clock.NewSystemClock())
+	database := NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()

@@ -3,7 +3,6 @@ package main
 import (
 	"testing"
 
-	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
@@ -25,7 +24,7 @@ func TestCluster(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+	database := redis.NewTestDatabase(logger)
 	database.Flush()
 
 	defer database.Flush()
@@ -307,7 +306,7 @@ func Test_renameKey(t *testing.T) {
 	newKey := "my_new_test_key"
 
 	Convey("Something was renamed", t, func() {
-		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database := redis.NewTestDatabase(logger)
 		database.Flush()
 
 		defer database.Flush()
@@ -327,7 +326,7 @@ func Test_renameKey(t *testing.T) {
 	})
 
 	Convey("Nothing was renamed", t, func() {
-		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database := redis.NewTestDatabase(logger)
 		database.Flush()
 
 		defer database.Flush()
@@ -353,7 +352,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 	newKey := "my_new_test_key"
 
 	Convey("Something was renamed", t, func() {
-		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database := redis.NewTestDatabase(logger)
 		database.Flush()
 
 		defer database.Flush()
@@ -387,7 +386,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 	})
 
 	Convey("Nothing was renamed", t, func() {
-		database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		database := redis.NewTestDatabase(logger)
 		database.Flush()
 
 		defer database.Flush()

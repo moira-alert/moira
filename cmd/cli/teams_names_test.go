@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
@@ -53,7 +52,7 @@ func Test_fillTeamNamesHash(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		db := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		db := redis.NewTestDatabase(logger)
 
 		db.Flush()
 		defer db.Flush()
@@ -216,7 +215,7 @@ func Test_removeTeamNamesHash(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		db := redis.NewTestDatabase(logger, clock.NewSystemClock())
+		db := redis.NewTestDatabase(logger)
 
 		db.Flush()
 		defer db.Flush()

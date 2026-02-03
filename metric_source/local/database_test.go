@@ -8,7 +8,6 @@ import (
 
 	"github.com/moira-alert/moira"
 
-	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database/redis"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -70,7 +69,7 @@ func saveMetrics(database moira.Database, metrics map[string]metricMock, now, re
 
 func TestLocalSourceWithDatabaseWildcards(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true) // nolint: govet
-	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+	database := redis.NewTestDatabase(logger)
 	localSource := Create(database)
 
 	defer database.Flush()
@@ -154,7 +153,7 @@ func TestLocalSourceWithDatabaseWildcards(t *testing.T) {
 
 func TestLocalSourceWithDatabase(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true) // nolint: govet
-	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+	database := redis.NewTestDatabase(logger)
 	localSource := Create(database)
 
 	defer database.Flush()

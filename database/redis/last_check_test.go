@@ -15,7 +15,7 @@ import (
 
 func TestLastCheck(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -320,7 +320,7 @@ func TestLastCheck(t *testing.T) {
 
 func TestCleanUpAbandonedTriggerLastCheck(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -377,7 +377,7 @@ func TestCleanUpAbandonedTriggerLastCheck(t *testing.T) {
 
 func TestRemoteLastCheck(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -469,7 +469,7 @@ func TestRemoteLastCheck(t *testing.T) {
 
 func TestLastCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -500,7 +500,7 @@ func TestLastCheckErrorConnection(t *testing.T) {
 
 func TestGetTriggersLastCheck(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -614,7 +614,7 @@ func TestGetTriggersLastCheck(t *testing.T) {
 
 func TestMaintenanceUserSave(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()

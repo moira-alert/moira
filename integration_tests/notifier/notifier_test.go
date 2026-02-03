@@ -93,7 +93,7 @@ func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	database := redis.NewTestDatabase(logger, clock.NewSystemClock())
+	database := redis.NewTestDatabase(logger)
 
 	database.Flush()
 	defer database.Flush()

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/clock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	. "github.com/smartystreets/goconvey/convey"
@@ -15,7 +14,7 @@ import (
 
 func TestSelfCheckWithWritesInChecker(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 	dataBase.source = Checker
 	dataBase.Flush()
 
@@ -77,7 +76,7 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	t.Helper()
 
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 	dataBase.source = dbSource
 	dataBase.Flush()
 
@@ -107,7 +106,7 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 
 func TestSelfCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()
@@ -130,8 +129,8 @@ func TestNotifierState(t *testing.T) {
 	mock := gomock.NewController(t)
 	logger, _ := logging.GetLogger("dataBase")
 	clock := mock_clock.NewMockClock(mock)
-	dataBase := NewTestDatabase(logger, clock)
-	emptyDataBase := NewTestDatabaseWithIncorrectConfig(logger, clock)
+	dataBase := NewTestDatabaseWithClock(logger, clock)
+	emptyDataBase := NewTestDatabaseWithIncorrectConfigAndClock(logger, clock)
 
 	dataBase.Flush()
 
@@ -184,7 +183,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 	mock := gomock.NewController(t)
 	logger, _ := logging.GetLogger("dataBase")
 	clock := mock_clock.NewMockClock(mock)
-	database := NewTestDatabase(logger, clock)
+	database := NewTestDatabaseWithClock(logger, clock)
 
 	database.Flush()
 
@@ -309,7 +308,7 @@ func TestSetNotifierStateForSource(t *testing.T) {
 func TestGetNotifierStateForSource(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	clock := mock_clock.NewMockClock(gomock.NewController(t))
-	database := NewTestDatabase(logger, clock)
+	database := NewTestDatabaseWithClock(logger, clock)
 	database.Flush()
 
 	defer database.Flush()

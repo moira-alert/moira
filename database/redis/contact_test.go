@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/moira-alert/moira/clock"
 	"github.com/moira-alert/moira/database"
 
 	"github.com/moira-alert/moira"
@@ -22,7 +21,7 @@ const (
 
 func TestContacts(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabase(logger)
 
 	Convey("Contacts manipulation", t, func() {
 		dataBase.Flush()
@@ -487,7 +486,7 @@ func TestContacts(t *testing.T) {
 
 func TestErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabaseWithIncorrectConfig(logger, clock.NewSystemClock())
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.Flush()
 
 	defer dataBase.Flush()

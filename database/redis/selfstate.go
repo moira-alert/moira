@@ -77,12 +77,12 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 		state := moira.NotifierState{
 			State:     moira.SelfStateOK,
 			Actor:     moira.SelfStateActorManual,
-			Timestamp: connector.clock.NowUnix(),
+			Timestamp: connector.Clock.NowUnix(),
 		}
 
 		err := connector.setNotifierState(state)
 		if err != nil {
-			return errorState(connector.clock), err
+			return errorState(connector.Clock), err
 		}
 
 		return state, err
@@ -93,7 +93,7 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 		state := moira.NotifierState{
 			State:     moira.SelfStateOK,
 			Actor:     moira.SelfStateActorManual,
-			Timestamp: connector.clock.NowUnix(),
+			Timestamp: connector.Clock.NowUnix(),
 		}
 
 		err = connector.setNotifierState(state) // NOTE: It's used to migrate from old dto to new
@@ -101,7 +101,7 @@ func (connector *DbConnector) GetNotifierState() (moira.NotifierState, error) {
 			return moira.NotifierState{
 				State:     moira.SelfStateERROR,
 				Actor:     moira.SelfStateActorAutomatic,
-				Timestamp: connector.clock.NowUnix(),
+				Timestamp: connector.Clock.NowUnix(),
 			}, err
 		}
 
@@ -116,7 +116,7 @@ func (connector *DbConnector) SetNotifierState(actor, state string) error {
 	err := connector.setNotifierState(moira.NotifierState{
 		State:     state,
 		Actor:     actor,
-		Timestamp: connector.clock.NowUnix(),
+		Timestamp: connector.Clock.NowUnix(),
 	})
 
 	return err
@@ -136,7 +136,7 @@ func (connector *DbConnector) setNotifierState(dto moira.NotifierState) error {
 // GetNotifierStateForSource returns state for a given metric source cluster.
 func (connector *DbConnector) GetNotifierStateForSource(clusterKey moira.ClusterKey) (moira.NotifierState, error) {
 	if !slices.Contains(connector.clusterList, clusterKey) {
-		return errorState(connector.clock), fmt.Errorf("unknown cluster '%s'", clusterKey.String())
+		return errorState(connector.Clock), fmt.Errorf("unknown cluster '%s'", clusterKey.String())
 	}
 
 	c := *connector.client
@@ -145,12 +145,12 @@ func (connector *DbConnector) GetNotifierStateForSource(clusterKey moira.Cluster
 
 	state, err := reply.NotifierState(stateCmd)
 	if err != nil && !errors.Is(err, database.ErrNil) {
-		return errorState(connector.clock), err
+		return errorState(connector.Clock), err
 	}
 
 	if errors.Is(err, database.ErrNil) {
 		// If state for cluster was never set, set OK by default
-		return okState(connector.clock), nil
+		return okState(connector.Clock), nil
 	}
 
 	return state, nil
@@ -180,7 +180,7 @@ func (connector *DbConnector) GetNotifierStateForSources() (map[moira.ClusterKey
 
 		if errors.Is(err, database.ErrNil) {
 			// If state for cluster was never set, set OK by default
-			result[cluster] = okState(connector.clock)
+			result[cluster] = okState(connector.Clock)
 		} else {
 			result[cluster] = state
 		}
@@ -200,7 +200,7 @@ func (connector *DbConnector) SetNotifierStateForSource(clusterKey moira.Cluster
 	currentState := moira.NotifierState{
 		State:     state,
 		Actor:     actor,
-		Timestamp: connector.clock.NowUnix(),
+		Timestamp: connector.Clock.NowUnix(),
 	}
 
 	bytes, err := json.Marshal(currentState)
