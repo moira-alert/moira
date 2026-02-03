@@ -104,6 +104,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 	require.NoError(t, err)
 
 	db := redis.NewTestDatabase(logger)
+
 	db.Flush()
 	defer db.Flush()
 
@@ -117,7 +118,7 @@ func TestSplitNotificationHistory(t *testing.T) {
 
 			keys, err := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
 			require.NoError(t, err)
-			require.Len(t, keys, 0)
+			require.Empty(t, keys)
 		})
 
 		t.Run("with empty split history", func(t *testing.T) {
@@ -201,6 +202,7 @@ func TestMergeNotificationHistory(t *testing.T) {
 	require.NoError(t, err)
 
 	db := redis.NewTestDatabase(logger)
+
 	db.Flush()
 	defer db.Flush()
 
@@ -214,7 +216,7 @@ func TestMergeNotificationHistory(t *testing.T) {
 
 			keys, err := client.Keys(ctx, contactNotificationKey).Result()
 			require.NoError(t, err)
-			require.Len(t, keys, 0)
+			require.Empty(t, keys)
 		})
 
 		t.Run("with empty history by single key", func(t *testing.T) {
@@ -377,5 +379,5 @@ func testMergeNotificationHistory(
 
 	contactKeys, errAfterKeys := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
 	require.NoError(t, errAfterKeys)
-	require.Len(t, contactKeys, 0)
+	require.Empty(t, contactKeys)
 }

@@ -49,6 +49,7 @@ func Test_fillTeamNamesHash(t *testing.T) {
 	require.NoError(t, err)
 
 	db := redis.NewTestDatabase(logger)
+
 	db.Flush()
 	defer db.Flush()
 
@@ -186,6 +187,7 @@ func Test_removeTeamNamesHash(t *testing.T) {
 	require.NoError(t, err)
 
 	db := redis.NewTestDatabase(logger)
+
 	db.Flush()
 	defer db.Flush()
 

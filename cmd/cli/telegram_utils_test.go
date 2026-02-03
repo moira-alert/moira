@@ -22,6 +22,7 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 	require.NoError(t, err)
 
 	database := redis.NewTestDatabase(logger)
+
 	database.Flush()
 	defer database.Flush()
 
@@ -69,6 +70,7 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 	require.NoError(t, err)
 
 	database := redis.NewTestDatabase(logger)
+
 	database.Flush()
 	defer database.Flush()
 

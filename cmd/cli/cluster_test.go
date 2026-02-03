@@ -23,6 +23,7 @@ func TestCluster(t *testing.T) {
 	require.NoError(t, err)
 
 	database := redis.NewTestDatabase(logger)
+
 	database.Flush()
 	defer database.Flush()
 
@@ -222,6 +223,7 @@ func Test_renameKey(t *testing.T) {
 
 	t.Run("Something was renamed", func(t *testing.T) {
 		database := redis.NewTestDatabase(logger)
+
 		database.Flush()
 		defer database.Flush()
 
@@ -241,6 +243,7 @@ func Test_renameKey(t *testing.T) {
 
 	t.Run("Nothing was renamed", func(t *testing.T) {
 		database := redis.NewTestDatabase(logger)
+
 		database.Flush()
 		defer database.Flush()
 
@@ -266,6 +269,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 
 	t.Run("Something was renamed", func(t *testing.T) {
 		database := redis.NewTestDatabase(logger)
+
 		database.Flush()
 		defer database.Flush()
 
@@ -299,6 +303,7 @@ func Test_changeKeysPrefix(t *testing.T) {
 
 	t.Run("Nothing was renamed", func(t *testing.T) {
 		database := redis.NewTestDatabase(logger)
+
 		database.Flush()
 		defer database.Flush()
 
