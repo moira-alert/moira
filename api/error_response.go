@@ -70,6 +70,15 @@ func ErrorForbidden(errorText string) *ErrorResponse {
 	}
 }
 
+// ErrorTeapot return 418 with given error text.
+func ErrorTeapot(errorText string) *ErrorResponse {
+	return &ErrorResponse{
+		HTTPStatusCode: http.StatusTeapot,
+		StatusText:     "I'm a Teapot",
+		ErrorText:      errorText,
+	}
+}
+
 // ErrorRemoteServerUnavailable return 503 when remote trigger check failed.
 func ErrorRemoteServerUnavailable(err error) *ErrorResponse {
 	return &ErrorResponse{
