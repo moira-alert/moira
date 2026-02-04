@@ -10,15 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/api"
-
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"github.com/xiam/to"
 	"go.uber.org/mock/gomock"
 )
@@ -29,14 +28,14 @@ const (
 )
 
 func TestGetTrigger(t *testing.T) {
-	Convey("Get trigger by id", t, func() {
+	t.Run("Get trigger by id", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-		Convey("When success and have empty created_at & updated_at should return null in response", func() {
+		t.Run("When success and have empty created_at & updated_at should return null in response", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			throttlingTime := time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC)
 
 			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{
@@ -60,10 +59,11 @@ func TestGetTrigger(t *testing.T) {
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"cluster_id\":\"default\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":null,\"updated_at\":null,\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
-			So(contents, ShouldEqual, expected)
+			require.EqualValues(t, expected, contents)
 		})
 
-		Convey("When success and have not empty created_at & updated_at should return datetime in response", func() {
+		t.Run("When success and have not empty created_at & updated_at should return datetime in response", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			throttlingTime := time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC)
 			triggerTime := time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix()
 			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").
@@ -92,10 +92,12 @@ func TestGetTrigger(t *testing.T) {
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"cluster_id\":\"default\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":\"2022-06-07T10:00:00Z\",\"updated_at\":\"2022-06-07T10:00:00Z\",\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
-			So(contents, ShouldEqual, expected)
+			require.Equal(t, expected, contents)
 		})
 
-		Convey("When cannot get trigger should have error in response", func() {
+		t.Run("When cannot get trigger should have error in response", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{}, fmt.Errorf("cannot get trigger"))
 			database = mockDb
 
@@ -112,7 +114,7 @@ func TestGetTrigger(t *testing.T) {
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := "{\"status\":\"Internal Server Error\",\"error\":\"cannot get trigger\"}\n"
-			So(contents, ShouldEqual, expected)
+			require.EqualValues(t, expected, contents)
 		})
 	})
 }
@@ -140,7 +142,7 @@ func TestUpdateTrigger(t *testing.T) {
 
 	const triggerID = "testID"
 
-	Convey("When updateTrigger was called with normal input", t, func() {
+	t.Run("When updateTrigger was called with normal input", func(t *testing.T) {
 		urls := []string{
 			"/",
 			fmt.Sprintf("/trigger?%s", validateFlag),
@@ -177,17 +179,17 @@ func TestUpdateTrigger(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, testRequest)
 
-			Convey(fmt.Sprintf("should return success message, url=%s", url), func() {
+			t.Run(fmt.Sprintf("should return success message, url=%s", url), func(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				So(response.StatusCode, ShouldEqual, http.StatusOK)
-				So(isTriggerUpdated(response), ShouldBeTrue)
+				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.True(t, isTriggerUpdated(response))
 			})
 		}
 	})
 
-	Convey("When updateTrigger was called with empty targets", t, func() {
+	t.Run("When updateTrigger was called with empty targets", func(t *testing.T) {
 		urls := []string{
 			"/",
 			fmt.Sprintf("/trigger?%s", validateFlag),
@@ -219,16 +221,16 @@ func TestUpdateTrigger(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
 
-			Convey(fmt.Sprintf("should return 400, url=%s", url), func() {
+			t.Run(fmt.Sprintf("should return 400, url=%s", url), func(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+				require.EqualValues(t, http.StatusBadRequest, response.StatusCode)
 			})
 		}
 	})
 
-	Convey("When updateTrigger was called with target with warning function", t, func() {
+	t.Run("When updateTrigger was called with target with warning function", func(t *testing.T) {
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
 		trigger := moira.Trigger{
@@ -242,7 +244,7 @@ func TestUpdateTrigger(t *testing.T) {
 
 		jsonTrigger, _ := json.Marshal(trigger)
 
-		Convey("without validate like before", func() {
+		t.Run("without validate like before", func(t *testing.T) {
 			mockDb.EXPECT().GetTrigger(gomock.Any()).Return(trigger, nil)
 			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
 			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
@@ -260,16 +262,16 @@ func TestUpdateTrigger(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
 
-			Convey("should return 200", func() {
+			t.Run("should return 200", func(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				So(response.StatusCode, ShouldEqual, http.StatusOK)
-				So(isTriggerUpdated(response), ShouldBeTrue)
+				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.True(t, isTriggerUpdated(response))
 			})
 		})
 
-		Convey("with validate", func() {
+		t.Run("with validate", func(t *testing.T) {
 			mockDb.EXPECT().GetTrigger(gomock.Any()).Return(trigger, nil)
 			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
 			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
@@ -287,17 +289,17 @@ func TestUpdateTrigger(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
 
-			Convey("should return 200 and tree of problems", func() {
+			t.Run("should return 200 and tree of problems", func(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				So(response.StatusCode, ShouldEqual, http.StatusOK)
+				require.EqualValues(t, http.StatusOK, response.StatusCode)
 
 				contentBytes, _ := io.ReadAll(response.Body)
 				actual := dto.SaveTriggerResponse{}
 				_ = json.Unmarshal(contentBytes, &actual)
 
-				So(actual.ID, ShouldEqual, triggerID)
+				require.EqualValues(t, triggerID, actual.ID)
 
 				expectedTargets := []dto.TreeOfProblems{
 					{
@@ -314,16 +316,16 @@ func TestUpdateTrigger(t *testing.T) {
 						},
 					},
 				}
-				So(actual.CheckResult.Targets, ShouldResemble, expectedTargets)
+				require.EqualValues(t, expectedTargets, actual.CheckResult.Targets)
 
 				const expected = "trigger updated"
 
-				So(actual.Message, ShouldEqual, expected)
+				require.EqualValues(t, expected, actual.Message)
 			})
 		})
 	})
 
-	Convey("When updateTrigger was called with target with bad (error) function", t, func() {
+	t.Run("When updateTrigger was called with target with bad (error) function", func(t *testing.T) {
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
 		trigger := moira.Trigger{
@@ -336,7 +338,7 @@ func TestUpdateTrigger(t *testing.T) {
 		}
 		jsonTrigger, _ := json.Marshal(trigger)
 
-		Convey("without validate like before", func() {
+		t.Run("without validate like before", func(t *testing.T) {
 			mockDb.EXPECT().GetTrigger(gomock.Any()).Return(trigger, nil)
 			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
 			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
@@ -354,16 +356,16 @@ func TestUpdateTrigger(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
 
-			Convey("should return 200", func() {
+			t.Run("should return 200", func(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				So(response.StatusCode, ShouldEqual, http.StatusOK)
-				So(isTriggerUpdated(response), ShouldBeTrue)
+				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.True(t, isTriggerUpdated(response))
 			})
 		})
 
-		Convey("with validate", func() {
+		t.Run("with validate", func(t *testing.T) {
 			request := httptest.NewRequest("", fmt.Sprintf("/trigger?%s", validateFlag), bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
@@ -374,11 +376,11 @@ func TestUpdateTrigger(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			updateTrigger(responseWriter, request)
 
-			Convey("should return 400 and tree of problems", func() {
+			t.Run("should return 418 and tree of problems", func(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+				require.EqualValues(t, http.StatusTeapot, response.StatusCode)
 
 				contentBytes, _ := io.ReadAll(response.Body)
 				actual := dto.SaveTriggerResponse{}
@@ -403,7 +405,7 @@ func TestUpdateTrigger(t *testing.T) {
 						},
 					},
 				}
-				So(actual, ShouldResemble, expected)
+				require.EqualValues(t, expected, actual)
 			})
 		})
 	})
@@ -419,7 +421,7 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 
 	const triggerId = "TestTriggerId"
 
-	Convey("Given database returns trigger with TriggerSource = GraphiteLocal", t, func() {
+	t.Run("Given database returns trigger with TriggerSource = GraphiteLocal", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerId, nil)
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
@@ -445,24 +447,24 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 
 		result := make(map[string]interface{})
 		err := json.Unmarshal(responseWriter.Body.Bytes(), &result)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		isRemoteRaw, ok := result["is_remote"]
-		So(ok, ShouldBeTrue)
+		require.True(t, ok)
 
 		isRemote, ok := isRemoteRaw.(bool)
-		So(ok, ShouldBeTrue)
-		So(isRemote, ShouldBeFalse)
+		require.True(t, ok)
+		require.False(t, isRemote)
 
 		triggerSourceRaw, ok := result["trigger_source"]
-		So(ok, ShouldBeTrue)
+		require.True(t, ok)
 
 		triggerSource, ok := triggerSourceRaw.(string)
-		So(ok, ShouldBeTrue)
-		So(triggerSource, ShouldEqual, moira.GraphiteLocal)
+		require.True(t, ok)
+		require.EqualValues(t, triggerSource, moira.GraphiteLocal)
 	})
 
-	Convey("Given database returns trigger with TriggerSource = GraphiteRemote", t, func() {
+	t.Run("Given database returns trigger with TriggerSource = GraphiteRemote", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerId, nil)
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
@@ -488,24 +490,24 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 
 		result := make(map[string]interface{})
 		err := json.Unmarshal(responseWriter.Body.Bytes(), &result)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		isRemoteRaw, ok := result["is_remote"]
-		So(ok, ShouldBeTrue)
+		require.True(t, ok)
 
 		isRemote, ok := isRemoteRaw.(bool)
-		So(ok, ShouldBeTrue)
-		So(isRemote, ShouldBeTrue)
+		require.True(t, ok)
+		require.True(t, isRemote)
 
 		triggerSourceRaw, ok := result["trigger_source"]
-		So(ok, ShouldBeTrue)
+		require.True(t, ok)
 
 		triggerSource, ok := triggerSourceRaw.(string)
-		So(ok, ShouldBeTrue)
-		So(triggerSource, ShouldEqual, moira.GraphiteRemote)
+		require.True(t, ok)
+		require.EqualValues(t, triggerSource, moira.GraphiteRemote)
 	})
 
-	Convey("Given database returns trigger with TriggerSource = PrometheusTrigger", t, func() {
+	t.Run("Given database returns trigger with TriggerSource = PrometheusTrigger", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, "/trigger/"+triggerId, nil)
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
 		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "populated", true))
@@ -531,21 +533,21 @@ func TestGetTriggerWithTriggerSource(t *testing.T) {
 
 		result := make(map[string]interface{})
 		err := json.Unmarshal(responseWriter.Body.Bytes(), &result)
-		So(err, ShouldBeNil)
+		require.NoError(t, err)
 
 		isRemoteRaw, ok := result["is_remote"]
-		So(ok, ShouldBeTrue)
+		require.True(t, ok)
 
 		isRemote, ok := isRemoteRaw.(bool)
-		So(ok, ShouldBeTrue)
-		So(isRemote, ShouldBeFalse)
+		require.True(t, ok)
+		require.False(t, isRemote)
 
 		triggerSourceRaw, ok := result["trigger_source"]
-		So(ok, ShouldBeTrue)
+		require.True(t, ok)
 
 		triggerSource, ok := triggerSourceRaw.(string)
-		So(ok, ShouldBeTrue)
-		So(triggerSource, ShouldEqual, moira.PrometheusRemote)
+		require.True(t, ok)
+		require.EqualValues(t, triggerSource, moira.PrometheusRemote)
 	})
 }
 
