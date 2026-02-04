@@ -59,7 +59,7 @@ func TestGetTrigger(t *testing.T) {
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"cluster_id\":\"default\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":null,\"updated_at\":null,\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
-			require.EqualValues(t, expected, contents)
+			require.Equal(t, expected, contents)
 		})
 
 		t.Run("When success and have not empty created_at & updated_at should return datetime in response", func(t *testing.T) {
@@ -114,7 +114,7 @@ func TestGetTrigger(t *testing.T) {
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := "{\"status\":\"Internal Server Error\",\"error\":\"cannot get trigger\"}\n"
-			require.EqualValues(t, expected, contents)
+			require.Equal(t, expected, contents)
 		})
 	})
 }
@@ -183,7 +183,7 @@ func TestUpdateTrigger(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.Equal(t, http.StatusOK, response.StatusCode)
 				require.True(t, isTriggerUpdated(response))
 			})
 		}
@@ -225,7 +225,7 @@ func TestUpdateTrigger(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusBadRequest, response.StatusCode)
+				require.Equal(t, http.StatusBadRequest, response.StatusCode)
 			})
 		}
 	})
@@ -266,7 +266,7 @@ func TestUpdateTrigger(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.Equal(t, http.StatusOK, response.StatusCode)
 				require.True(t, isTriggerUpdated(response))
 			})
 		})
@@ -293,13 +293,13 @@ func TestUpdateTrigger(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.Equal(t, http.StatusOK, response.StatusCode)
 
 				contentBytes, _ := io.ReadAll(response.Body)
 				actual := dto.SaveTriggerResponse{}
 				_ = json.Unmarshal(contentBytes, &actual)
 
-				require.EqualValues(t, triggerID, actual.ID)
+				require.Equal(t, triggerID, actual.ID)
 
 				expectedTargets := []dto.TreeOfProblems{
 					{
@@ -316,11 +316,11 @@ func TestUpdateTrigger(t *testing.T) {
 						},
 					},
 				}
-				require.EqualValues(t, expectedTargets, actual.CheckResult.Targets)
+				require.Equal(t, expectedTargets, actual.CheckResult.Targets)
 
 				const expected = "trigger updated"
 
-				require.EqualValues(t, expected, actual.Message)
+				require.Equal(t, expected, actual.Message)
 			})
 		})
 	})
@@ -360,7 +360,7 @@ func TestUpdateTrigger(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.Equal(t, http.StatusOK, response.StatusCode)
 				require.True(t, isTriggerUpdated(response))
 			})
 		})
@@ -380,7 +380,7 @@ func TestUpdateTrigger(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusTeapot, response.StatusCode)
+				require.Equal(t, http.StatusTeapot, response.StatusCode)
 
 				contentBytes, _ := io.ReadAll(response.Body)
 				actual := dto.SaveTriggerResponse{}
@@ -405,7 +405,7 @@ func TestUpdateTrigger(t *testing.T) {
 						},
 					},
 				}
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 			})
 		})
 	})

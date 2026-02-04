@@ -48,7 +48,7 @@ func TestGetSearchRequestString(t *testing.T) {
 			for _, testCase := range testCases {
 				req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("/api/trigger/search?onlyProblems=false&p=0&size=20&text=%s", testCase.text), nil)
 				searchRequest := getSearchRequestString(req)
-				require.EqualValues(t, testCase.expectedSearchRequest, searchRequest)
+				require.Equal(t, testCase.expectedSearchRequest, searchRequest)
 			}
 		})
 	})
@@ -310,7 +310,7 @@ func TestGetMetricTTLByTrigger(t *testing.T) {
 		t.Run("It's metric ttl should be equal to local", func(t *testing.T) {
 			ttl, err := getMetricTTLByTrigger(request, &trigger)
 			require.NoError(t, err)
-			require.EqualValues(t, 65*time.Minute, ttl)
+			require.Equal(t, 65*time.Minute, ttl)
 		})
 	})
 
@@ -323,7 +323,7 @@ func TestGetMetricTTLByTrigger(t *testing.T) {
 		t.Run("It's metric ttl should be equal to remote", func(t *testing.T) {
 			ttl, err := getMetricTTLByTrigger(request, &trigger)
 			require.NoError(t, err)
-			require.EqualValues(t, 168*time.Hour, ttl)
+			require.Equal(t, 168*time.Hour, ttl)
 		})
 	})
 }
@@ -417,7 +417,7 @@ func TestTriggerCheckHandler(t *testing.T) {
 					contentBytes, _ := io.ReadAll(response.Body)
 					contents := string(contentBytes)
 
-					require.EqualValues(t, testCase.expectedResponse, contents)
+					require.Equal(t, testCase.expectedResponse, contents)
 				})
 			}
 		})
@@ -495,7 +495,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 						response := responseWriter.Result()
 						defer response.Body.Close()
 
-						require.EqualValues(t, http.StatusServiceUnavailable, response.StatusCode)
+						require.Equal(t, http.StatusServiceUnavailable, response.StatusCode)
 						require.False(t, isTriggerCreated(response))
 					})
 				}
@@ -532,7 +532,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 					response := responseWriter.Result()
 					defer response.Body.Close()
 
-					require.EqualValues(t, http.StatusOK, response.StatusCode)
+					require.Equal(t, http.StatusOK, response.StatusCode)
 					require.True(t, isTriggerCreated(response))
 				})
 			}
@@ -573,7 +573,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusBadRequest, response.StatusCode)
+				require.Equal(t, http.StatusBadRequest, response.StatusCode)
 			})
 		}
 	})
@@ -608,7 +608,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.Equal(t, http.StatusOK, response.StatusCode)
 				require.True(t, isTriggerCreated(response))
 			})
 		})
@@ -627,7 +627,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.Equal(t, http.StatusOK, response.StatusCode)
 
 				contentBytes, _ := io.ReadAll(response.Body)
 				actual := dto.SaveTriggerResponse{}
@@ -648,11 +648,11 @@ func TestCreateTriggerHandler(t *testing.T) {
 						},
 					},
 				}
-				require.EqualValues(t, expectedTargets, actual.CheckResult.Targets)
+				require.Equal(t, expectedTargets, actual.CheckResult.Targets)
 
 				const expected = "trigger created"
 
-				require.EqualValues(t, expected, actual.Message)
+				require.Equal(t, expected, actual.Message)
 			})
 		})
 	})
@@ -687,7 +687,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, http.StatusOK, response.StatusCode)
+				require.Equal(t, http.StatusOK, response.StatusCode)
 				require.True(t, isTriggerCreated(response))
 			})
 		})
@@ -706,8 +706,8 @@ func TestCreateTriggerHandler(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				require.EqualValues(t, "application/json; charset=utf-8", response.Header.Get("Content-Type"))
-				require.EqualValues(t, http.StatusTeapot, response.StatusCode)
+				require.Equal(t, "application/json; charset=utf-8", response.Header.Get("Content-Type"))
+				require.Equal(t, http.StatusTeapot, response.StatusCode)
 
 				contentBytes, _ := io.ReadAll(response.Body)
 				actual := dto.SaveTriggerResponse{}
@@ -732,7 +732,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 						},
 					},
 				}
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 			})
 		})
 	})
@@ -765,7 +765,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
 
-			require.EqualValues(t, 200, responseWriter.Code)
+			require.Equal(t, 200, responseWriter.Code)
 		})
 	})
 
@@ -779,7 +779,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
 
-			require.EqualValues(t, 200, responseWriter.Code)
+			require.Equal(t, 200, responseWriter.Code)
 		})
 	})
 
@@ -793,7 +793,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
 
-			require.EqualValues(t, 200, responseWriter.Code)
+			require.Equal(t, 200, responseWriter.Code)
 		})
 	})
 
@@ -807,7 +807,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
 
-			require.EqualValues(t, 200, responseWriter.Code)
+			require.Equal(t, 200, responseWriter.Code)
 		})
 	})
 
@@ -821,7 +821,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
 
-			require.EqualValues(t, 200, responseWriter.Code)
+			require.Equal(t, 200, responseWriter.Code)
 		})
 	})
 
@@ -835,7 +835,7 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
 
-			require.EqualValues(t, 200, responseWriter.Code)
+			require.Equal(t, 200, responseWriter.Code)
 		})
 	})
 }
@@ -870,7 +870,7 @@ func TestTriggersCreatedWithNonDefaultClusterId(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
 
-			require.EqualValues(t, 200, responseWriter.Code)
+			require.Equal(t, 200, responseWriter.Code)
 		})
 	})
 }
@@ -979,7 +979,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusOK, response.StatusCode)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 
 			contentBytes, err := io.ReadAll(response.Body)
 			require.NoError(t, err)
@@ -1014,7 +1014,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusInternalServerError, response.StatusCode)
+			require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 
 			contentBytes, err := io.ReadAll(response.Body)
 			require.NoError(t, err)
@@ -1072,7 +1072,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusOK, response.StatusCode)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
 		t.Run("And when error while removing from DB, should return error", func(t *testing.T) {
@@ -1092,7 +1092,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusInternalServerError, response.StatusCode)
+			require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		})
 	})
 
@@ -1133,7 +1133,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusOK, response.StatusCode)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
 		t.Run("When request from trigger-owner, should be ok", func(t *testing.T) {
@@ -1153,7 +1153,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusOK, response.StatusCode)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
 		t.Run("When request from other-user, should be forbidden", func(t *testing.T) {
@@ -1172,7 +1172,7 @@ func TestRemoveTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusForbidden, response.StatusCode)
+			require.Equal(t, http.StatusForbidden, response.StatusCode)
 		})
 	})
 }
@@ -1260,7 +1260,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusOK, response.StatusCode)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
 		t.Run("And when error while save from DB, should return error", func(t *testing.T) {
@@ -1284,7 +1284,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusInternalServerError, response.StatusCode)
+			require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 		})
 	})
 
@@ -1349,7 +1349,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusOK, response.StatusCode)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
 		t.Run("When request from trigger-owner, should be ok", func(t *testing.T) {
@@ -1373,7 +1373,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusOK, response.StatusCode)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 		})
 
 		t.Run("When request from other-user, should be forbidden", func(t *testing.T) {
@@ -1392,7 +1392,7 @@ func TestUpdateTriggerHandler(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			require.EqualValues(t, http.StatusForbidden, response.StatusCode)
+			require.Equal(t, http.StatusForbidden, response.StatusCode)
 		})
 	})
 }
