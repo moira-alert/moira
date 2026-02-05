@@ -8,8 +8,7 @@ import (
 
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 var testTeams = []teamWithID{
@@ -44,216 +43,185 @@ var testTeams = []teamWithID{
 }
 
 func Test_fillTeamNamesHash(t *testing.T) {
-	Convey("Test filling \"moira-teams-by-names\" redis hash", t, func() {
-		conf := getDefault()
+	conf := getDefault()
 
-		logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
-		if err != nil {
-			t.Fatal(err)
-		}
+	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
+	require.NoError(t, err)
 
-		db := redis.NewTestDatabase(logger)
+	db := redis.NewTestDatabase(logger)
 
-		db.Flush()
+	db.Flush()
+	defer db.Flush()
+
+	ctx := context.Background()
+	client := db.Client()
+
+	t.Run("with empty database", func(t *testing.T) {
+		err = fillTeamNamesHash(logger, db)
+		require.NoError(t, err)
+
+		res, existErr := client.Exists(ctx, teamsByNamesKey).Result()
+		require.NoError(t, existErr)
+		require.Equal(t, int64(0), res)
+	})
+
+	t.Run("with teams which have unique names", func(t *testing.T) {
 		defer db.Flush()
 
-		ctx := context.Background()
-		client := db.Client()
+		teamNames := make(map[string]string, len(testTeams))
 
-		Convey("with empty database", func() {
-			err = fillTeamNamesHash(logger, db)
-			So(err, ShouldBeNil)
+		for _, team := range testTeams {
+			teamBytes, err := getTeamBytes(team)
+			require.NoError(t, err)
 
-			res, existErr := client.Exists(ctx, teamsByNamesKey).Result()
-			So(existErr, ShouldBeNil)
-			So(res, ShouldEqual, 0)
-		})
+			err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
+			require.NoError(t, err)
 
-		Convey("with teams which have unique names", func() {
-			defer db.Flush()
+			teamNames[strings.ToLower(team.Name)] = team.ID
+		}
 
-			var teamNames, actualTeamNames map[string]string
+		err = fillTeamNamesHash(logger, db)
+		require.NoError(t, err)
 
-			teamNames = make(map[string]string, len(testTeams))
+		actualTeamNames, err := client.HGetAll(ctx, teamsByNamesKey).Result()
+		require.NoError(t, err)
+		require.Equal(t, teamNames, actualTeamNames)
+	})
 
-			for _, team := range testTeams {
-				var teamBytes []byte
+	t.Run("with teams no unique names", func(t *testing.T) {
+		defer db.Flush()
 
-				teamBytes, err = getTeamBytes(team)
-				So(err, ShouldBeNil)
+		testTeams[0].Name = "Team name"
+		testTeams[1].Name = "teaM name"
+		testTeams[2].Name = "Team name"
 
-				err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
-				So(err, ShouldBeNil)
+		for _, team := range testTeams {
+			teamBytes, err := getTeamBytes(team)
+			require.NoError(t, err)
 
-				teamNames[strings.ToLower(team.Name)] = team.ID
-			}
+			err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
+			require.NoError(t, err)
+		}
 
-			err = fillTeamNamesHash(logger, db)
-			So(err, ShouldBeNil)
+		err = fillTeamNamesHash(logger, db)
+		require.NoError(t, err)
 
-			actualTeamNames, err = client.HGetAll(ctx, teamsByNamesKey).Result()
-			So(err, ShouldBeNil)
-			So(actualTeamNames, ShouldResemble, teamNames)
-		})
+		actualTeamNames, err := client.HGetAll(ctx, teamsByNamesKey).Result()
+		require.NoError(t, err)
+		require.Len(t, actualTeamNames, len(testTeams))
 
-		Convey("with teams no unique names", func() {
-			defer db.Flush()
+		expectedLowercasedTeamNames := []string{"team name", "team name1", "team name2", strings.ToLower(testTeams[3].Name)}
+		for _, name := range expectedLowercasedTeamNames {
+			_, ok := actualTeamNames[name]
+			require.True(t, ok)
+		}
 
-			testTeams[0].Name = "Team name"
-			testTeams[1].Name = "teaM name"
-			testTeams[2].Name = "Team name"
+		for i, team := range testTeams {
+			t.Run(fmt.Sprintf("for team %v fields ok", i), func(t *testing.T) {
+				marshaledTeam, err := client.HGet(ctx, teamsKey, team.ID).Result()
+				require.NoError(t, err)
 
-			for _, team := range testTeams {
-				var teamBytes []byte
+				actualTeam, err := unmarshalTeam(team.ID, []byte(marshaledTeam))
+				require.NoError(t, err)
+				require.Equal(t, team.ID, actualTeam.ID)
+				require.Equal(t, team.Description, actualTeam.Description)
 
-				teamBytes, err = getTeamBytes(team)
-				So(err, ShouldBeNil)
+				if i < 3 {
+					require.Contains(t, []string{team.Name, team.Name + "1", team.Name + "2"}, actualTeam.Name)
+				} else {
+					require.Equal(t, team.Name, actualTeam.Name)
+				}
+			})
+		}
+	})
 
-				err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
-				So(err, ShouldBeNil)
-			}
+	t.Run("with teams has no unique names and adding one number does not help", func(t *testing.T) {
+		testTeams[0].Name = "Team name"
+		testTeams[1].Name = "teaM name"
+		testTeams[2].Name = "Team name1"
 
-			err = fillTeamNamesHash(logger, db)
-			So(err, ShouldBeNil)
+		for _, team := range testTeams {
+			teamBytes, err := getTeamBytes(team)
+			require.NoError(t, err)
 
-			var actualTeamNames map[string]string
+			err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
+			require.NoError(t, err)
+		}
 
-			actualTeamNames, err = client.HGetAll(ctx, teamsByNamesKey).Result()
-			So(err, ShouldBeNil)
-			So(actualTeamNames, ShouldHaveLength, len(testTeams))
+		err = fillTeamNamesHash(logger, db)
+		require.NoError(t, err)
 
-			expectedLowercasedTeamNames := []string{"team name", "team name1", "team name2", strings.ToLower(testTeams[3].Name)}
-			for _, name := range expectedLowercasedTeamNames {
-				_, ok := actualTeamNames[name]
-				So(ok, ShouldBeTrue)
-			}
+		actualTeamNames, err := client.HGetAll(ctx, teamsByNamesKey).Result()
+		require.NoError(t, err)
+		require.Len(t, actualTeamNames, len(testTeams))
 
-			for i, team := range testTeams {
-				Convey(fmt.Sprintf("for team %v fields ok", i), func() {
-					var marshaledTeam string
+		expectedLowercasedTeamNames := []string{"team name", "team name1", "team name1_0", "team name1_1", strings.ToLower(testTeams[3].Name)}
+		for name := range actualTeamNames {
+			require.Contains(t, expectedLowercasedTeamNames, name)
+		}
 
-					marshaledTeam, err = client.HGet(ctx, teamsKey, team.ID).Result()
-					So(err, ShouldBeNil)
+		for i, team := range testTeams {
+			t.Run(fmt.Sprintf("for team %v fields ok", i), func(t *testing.T) {
+				marshaledTeam, err := client.HGet(ctx, teamsKey, team.ID).Result()
+				require.NoError(t, err)
 
-					var actualTeam teamWithID
+				actualTeam, err := unmarshalTeam(team.ID, []byte(marshaledTeam))
+				require.NoError(t, err)
+				require.Equal(t, team.ID, actualTeam.ID)
+				require.Equal(t, team.Description, actualTeam.Description)
 
-					actualTeam, err = unmarshalTeam(team.ID, []byte(marshaledTeam))
-					So(err, ShouldBeNil)
-					So(actualTeam.ID, ShouldEqual, team.ID)
-					So(actualTeam.Description, ShouldEqual, team.Description)
-
-					if i < 3 {
-						So(actualTeam.Name, ShouldBeIn, []string{team.Name, team.Name + "1", team.Name + "2"})
-					} else {
-						So(actualTeam.Name, ShouldEqual, team.Name)
-					}
-				})
-			}
-		})
-
-		Convey("with teams has no unique names and adding one number does not help", func() {
-			testTeams[0].Name = "Team name"
-			testTeams[1].Name = "teaM name"
-			testTeams[2].Name = "Team name1"
-
-			for _, team := range testTeams {
-				var teamBytes []byte
-
-				teamBytes, err = getTeamBytes(team)
-				So(err, ShouldBeNil)
-
-				err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
-				So(err, ShouldBeNil)
-			}
-
-			err = fillTeamNamesHash(logger, db)
-			So(err, ShouldBeNil)
-
-			var actualTeamNames map[string]string
-
-			actualTeamNames, err = client.HGetAll(ctx, teamsByNamesKey).Result()
-			So(err, ShouldBeNil)
-			So(actualTeamNames, ShouldHaveLength, len(testTeams))
-
-			// depends on order of map iteration
-			expectedLowercasedTeamNames := []string{"team name", "team name1", "team name1_0", "team name1_1", strings.ToLower(testTeams[3].Name)}
-			for name := range actualTeamNames {
-				So(name, ShouldBeIn, expectedLowercasedTeamNames)
-			}
-
-			for i, team := range testTeams {
-				Convey(fmt.Sprintf("for team %v fields ok", i), func() {
-					var marshaledTeam string
-
-					marshaledTeam, err = client.HGet(ctx, teamsKey, team.ID).Result()
-					So(err, ShouldBeNil)
-
-					var actualTeam teamWithID
-
-					actualTeam, err = unmarshalTeam(team.ID, []byte(marshaledTeam))
-					So(err, ShouldBeNil)
-					So(actualTeam.ID, ShouldEqual, team.ID)
-					So(actualTeam.Description, ShouldEqual, team.Description)
-
-					if i < 3 {
-						So(actualTeam.Name, ShouldBeIn, []string{team.Name, team.Name + "1", team.Name + "1_1", team.Name + "_0"})
-					} else {
-						So(actualTeam.Name, ShouldEqual, team.Name)
-					}
-				})
-			}
-		})
+				if i < 3 {
+					require.Contains(t, []string{team.Name, team.Name + "1", team.Name + "1_1", team.Name + "_0"}, actualTeam.Name)
+				} else {
+					require.Equal(t, team.Name, actualTeam.Name)
+				}
+			})
+		}
 	})
 }
 
 func Test_removeTeamNamesHash(t *testing.T) {
-	Convey("Test removing \"moira-teams-by-names\" hash", t, func() {
-		conf := getDefault()
+	conf := getDefault()
 
-		logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
-		if err != nil {
-			t.Fatal(err)
-		}
+	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
+	require.NoError(t, err)
 
-		db := redis.NewTestDatabase(logger)
+	db := redis.NewTestDatabase(logger)
 
-		db.Flush()
+	db.Flush()
+	defer db.Flush()
+
+	ctx := context.Background()
+	client := db.Client()
+
+	t.Run("with empty database", func(t *testing.T) {
+		err = removeTeamNamesHash(logger, db)
+		require.NoError(t, err)
+
+		res, existErr := client.Exists(ctx, teamsByNamesKey).Result()
+		require.NoError(t, existErr)
+		require.Equal(t, int64(0), res)
+	})
+
+	t.Run("with filled teams and teams by names hashes", func(t *testing.T) {
 		defer db.Flush()
 
-		ctx := context.Background()
-		client := db.Client()
+		for _, team := range testTeams {
+			teamBytes, err := getTeamBytes(team)
+			require.NoError(t, err)
 
-		Convey("with empty database", func() {
-			err = removeTeamNamesHash(logger, db)
-			So(err, ShouldBeNil)
+			err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
+			require.NoError(t, err)
 
-			res, existErr := client.Exists(ctx, teamsByNamesKey).Result()
-			So(existErr, ShouldBeNil)
-			So(res, ShouldEqual, 0)
-		})
+			err = client.HSet(ctx, teamsByNamesKey, strings.ToLower(team.Name), team.ID).Err()
+			require.NoError(t, err)
+		}
 
-		Convey("with filled teams and teams by names hashes", func() {
-			defer db.Flush()
+		err = removeTeamNamesHash(logger, db)
+		require.NoError(t, err)
 
-			for _, team := range testTeams {
-				var teamBytes []byte
-
-				teamBytes, err = getTeamBytes(team)
-				So(err, ShouldBeNil)
-
-				err = client.HSet(ctx, teamsKey, team.ID, teamBytes).Err()
-				So(err, ShouldBeNil)
-
-				err = client.HSet(ctx, teamsByNamesKey, strings.ToLower(team.Name), team.ID).Err()
-				So(err, ShouldBeNil)
-			}
-
-			err = removeTeamNamesHash(logger, db)
-			So(err, ShouldBeNil)
-
-			res, existErr := client.Exists(ctx, teamsByNamesKey).Result()
-			So(existErr, ShouldBeNil)
-			So(res, ShouldEqual, 0)
-		})
+		res, existErr := client.Exists(ctx, teamsByNamesKey).Result()
+		require.NoError(t, existErr)
+		require.Equal(t, int64(0), res)
 	})
 }
