@@ -26,6 +26,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 			var sendingWG sync.WaitGroup
 
 			var timeDelta int64 = 100
+
 			nowTS := time.Now().Unix() + timeDelta
 			val := float64(timeDelta)
 
@@ -36,6 +37,7 @@ func TestSelfCheckWorker_check(t *testing.T) {
 
 		t.Run("Send notifications to admins and users on single heartbeat error", func(t *testing.T) {
 			var timeDelta int64 = 100
+
 			nowTS := time.Now().Unix() + timeDelta
 			worker := createWorker(t)
 
@@ -105,6 +107,8 @@ func registerAdminNotification(worker *selfCheckWorkerMock, nowTS int64, eventMe
 }
 
 func createWorker(t *testing.T) *selfCheckWorkerMock {
+	t.Helper()
+
 	adminContact := map[string]string{
 		"type":  "admin-mail",
 		"value": "admin@company.com",
@@ -132,8 +136,10 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 			RemoteChecker: HeartbeatConfig{
 				SystemTags: []string{"sys-tag-remote-checker", "moira-fatal"},
 			},
-			Notifier: HeartbeatConfig{
-				SystemTags: []string{"sys-tag-notifier", "moira-fatal"},
+			Notifier: NotifierHeartbeatConfig{
+				AnyClusterSourceTags:      []string{"sys-tag-notifier", "moira-fatal"},
+				LocalClusterSourceTags:    []string{"moira-fatal-local"},
+				TagPrefixForClusterSource: "moira-system-disable-source",
 			},
 		},
 	}
@@ -144,7 +150,7 @@ func createWorker(t *testing.T) *selfCheckWorkerMock {
 	notif := mock_notifier.NewMockNotifier(mockCtrl)
 
 	return &selfCheckWorkerMock{
-		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf, moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster}),
 		database:        database,
 		notif:           notif,
 		conf:            conf,

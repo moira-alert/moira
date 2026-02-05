@@ -34,6 +34,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 	}
 
 	const shortDesc = `My description`
+
 	trigger := moira.TriggerData{
 		Tags: []string{"tag1", "tag2"},
 		Name: "Name",

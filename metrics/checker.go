@@ -30,34 +30,91 @@ func (metrics *CheckerMetrics) GetCheckMetricsBySource(clusterKey moira.ClusterK
 
 // CheckMetrics is a collection of metrics for trigger checks.
 type CheckMetrics struct {
-	CheckError           Meter
+	// TODO: Remove after v2.17.0 release
+	// Deprecated: use counter instead
+	CheckError        Meter
+	CheckErrorCounter Counter
+	// TODO: Remove after v2.17.0 release
+	// Deprecated: use counter instead
 	HandleError          Meter
+	HandleErrorCounter   Counter
 	TriggersCheckTime    Timer
 	TriggersToCheckCount Histogram
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator.
-func ConfigureCheckerMetrics(registry Registry, sources []moira.ClusterKey) *CheckerMetrics {
+func ConfigureCheckerMetrics(registry Registry, attributedRegistry MetricRegistry, sources []moira.ClusterKey) (*CheckerMetrics, error) {
+	metricEventsChannelLen, err := attributedRegistry.NewHistogram("metric.events.count")
+	if err != nil {
+		return nil, err
+	}
+
+	metricEventsHandleTime, err := attributedRegistry.NewTimer("metric.events.handle_time")
+	if err != nil {
+		return nil, err
+	}
+
+	unusedTriggersCount, err := attributedRegistry.NewHistogram("triggers.unused.count")
+	if err != nil {
+		return nil, err
+	}
+
 	metrics := &CheckerMetrics{
 		MetricsBySource:        make(map[moira.ClusterKey]*CheckMetrics),
-		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
-		MetricEventsHandleTime: registry.NewTimer("metricEventsHandle"),
-		UnusedTriggersCount:    registry.NewHistogram("triggers", "unused"),
-	}
-	for _, clusterKey := range sources {
-		metrics.MetricsBySource[clusterKey] = configureCheckMetrics(registry, clusterKey)
+		MetricEventsChannelLen: NewCompositeHistogram(registry.NewHistogram("metricEvents"), metricEventsChannelLen),
+		MetricEventsHandleTime: NewCompositeTimer(registry.NewTimer("metricEventsHandle"), metricEventsHandleTime),
+		UnusedTriggersCount:    NewCompositeHistogram(registry.NewHistogram("triggers", "unused"), unusedTriggersCount),
 	}
 
-	return metrics
+	for _, clusterKey := range sources {
+		checkMetrics, err := configureCheckMetrics(registry, attributedRegistry, clusterKey)
+		if err != nil {
+			return nil, err
+		}
+
+		metrics.MetricsBySource[clusterKey] = checkMetrics
+	}
+
+	return metrics, nil
 }
 
-func configureCheckMetrics(registry Registry, clusterKey moira.ClusterKey) *CheckMetrics {
+func configureCheckMetrics(registry Registry, attributedRegistry MetricRegistry, clusterKey moira.ClusterKey) (*CheckMetrics, error) {
 	source, id := clusterKey.TriggerSource.String(), clusterKey.ClusterId.String()
+	metricRegistrySourced := attributedRegistry.WithAttributes(Attributes{
+		Attribute{"metric.source.name", source},
+		Attribute{"metric.source.id", id},
+	})
+
+	checkError, err := metricRegistrySourced.NewCounter("triggers.check.errors.count")
+	if err != nil {
+		return nil, err
+	}
+
+	handleError, err := metricRegistrySourced.NewCounter("triggers.handle.errors.count")
+	if err != nil {
+		return nil, err
+	}
+
+	triggersCheckTime, err := metricRegistrySourced.NewTimer("triggers.check.time")
+	if err != nil {
+		return nil, err
+	}
+
+	triggersToCheckCount, err := metricRegistrySourced.NewHistogram("triggers.to_check.count")
+	if err != nil {
+		return nil, err
+	}
 
 	return &CheckMetrics{
-		CheckError:           registry.NewMeter(source, id, "errors", "check"),
-		HandleError:          registry.NewMeter(source, id, "errors", "handle"),
-		TriggersCheckTime:    registry.NewTimer(source, id, "triggers"),
-		TriggersToCheckCount: registry.NewHistogram(source, id, "triggersToCheck"),
-	}
+		// Deprecated: only triggers.check.errors.count metric of metricRegistrySourced should be used.
+		CheckError:        registry.NewMeter(source, id, "errors", "check"),
+		CheckErrorCounter: checkError,
+		// Deprecated: only triggers.handle.errors.count metric of metricRegistrySourced should be used.
+		HandleError:        registry.NewMeter(source, id, "errors", "handle"),
+		HandleErrorCounter: handleError,
+		// Deprecated: only triggers.check.time metric of metricRegistrySourced should be used.
+		TriggersCheckTime: NewCompositeTimer(registry.NewTimer(source, id, "triggers"), triggersCheckTime),
+		// Deprecated: only triggers.to_check_count metric of metricRegistrySourced should be used.
+		TriggersToCheckCount: NewCompositeHistogram(registry.NewHistogram(source, id, "triggersToCheck"), triggersToCheckCount),
+	}, nil
 }

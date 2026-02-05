@@ -465,7 +465,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "Brobern Hawte: Male Half-elf Monk, N. Str 12, Dex 10, Con 8, Int 14, Wis 12, Cha 12",
 			},
 			triggerDesc: fixtureIndexedField{
-				content: "24: Scaramouche, Scaramouche, will you do the Fandango?",
+				content: "24: Scaramouche, will you do the Fandango?",
 			},
 			triggerTags:      []string{"Male", "DND-generator", "Half-elf", "Monk", "NPCs"},
 			triggerCreatedBy: "internship2023",
@@ -545,16 +545,16 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				},
 			},
 			triggerDesc: fixtureIndexedField{
-				content: `30: Easy come, easy go, will you let me go?
-				Bismillah! No, we will not let you go
-				(Let him go!) Bismillah! We will not let you go
-				(Let him go!) Bismillah! We will not let you go
-				(Let me go) Will not let you go
-				(Let me go) Will not let you go
-				(Let me go) Ah
-				No, no, no, no, no, no, no
-				(Oh mamma mia, mamma mia) Mamma mia, let me go
-				Beelzebub has a devil put aside for me, for me, for me!`,
+				content: "30: Easy come, easy go, will you let me go?\n\t\t\t\t" +
+					"Bismillah! No, we will not let you go\n\t\t\t\t" +
+					"(Let him go!) Bismillah! We will not let you go\n\t\t\t\t" +
+					"(Let him go!) Bismillah! We will not let you go\n\t\t\t\t" +
+					"(Let me go) Will not let you go\n\t\t\t\t" +
+					"(Let me go) Will not let you go\n\t\t\t\t" +
+					"(Let me go) Ah\n\t\t\t\t" +
+					"No, no, no\n\t\t\t\t" +
+					"(Oh mamma mia, mamma mia) Mamma mia, let me go\n\t\t\t\t" +
+					"Beelzebub has a devil put aside for me, for me, for me!",
 				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
@@ -574,16 +574,16 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "Surprise!",
 			},
 			triggerDesc: fixtureIndexedField{
-				content: `30: Easy come, easy go, will you let me go?
-				Bismillah! No, we will not let you go
-				(Let him go!) Bismillah! We will not let you go
-				(Let him go!) Bismillah! We will not let you go
-				(Let me go) Will not let you go
-				(Let me go) Will not let you go
-				(Let me go) Ah
-				No, no, no, no, no, no, no
-				(Oh mamma mia, mamma mia) Mamma mia, let me go
-				Beelzebub has a devil put aside for me, for me, for me!`,
+				content: "30: Easy come, easy go, will you let me go?\n\t\t\t\t" +
+					"Bismillah! No, we will not let you go\n\t\t\t\t" +
+					"(Let him go!) Bismillah! We will not let you go\n\t\t\t\t" +
+					"(Let him go!) Bismillah! We will not let you go\n\t\t\t\t" +
+					"(Let me go) Will not let you go\n\t\t\t\t" +
+					"(Let me go) Will not let you go\n\t\t\t\t" +
+					"(Let me go) Ah\n\t\t\t\t" +
+					"No, no, no\n\t\t\t\t" +
+					"(Oh mamma mia, mamma mia) Mamma mia, let me go\n\t\t\t\t" +
+					"Beelzebub has a devil put aside for me, for me, for me!",
 				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{

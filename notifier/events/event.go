@@ -40,6 +40,7 @@ func (worker *FetchEventsWorker) Start() {
 					if err != nil {
 						if !errors.Is(err, database.ErrNil) {
 							worker.Metrics.EventsMalformed.Mark(1)
+							worker.Metrics.EventsMalformedCounter.Inc()
 							worker.Logger.Warning().
 								Error(err).
 								Msg("Failed to fetch notification event")
@@ -50,6 +51,7 @@ func (worker *FetchEventsWorker) Start() {
 					}
 
 					worker.Metrics.EventsReceived.Mark(1)
+					worker.Metrics.EventsReceivedCounter.Inc()
 
 					stateMeterName := event.OldState.String() + "_to_" + event.State.String()
 					stateMeter, found := worker.Metrics.EventsByState.GetRegisteredMeter(stateMeterName)
@@ -58,10 +60,27 @@ func (worker *FetchEventsWorker) Start() {
 						stateMeter = worker.Metrics.EventsByState.RegisterMeter(stateMeterName, "events", "bystate", stateMeterName)
 					}
 
+					stateCounter, found := worker.Metrics.EventsByStateAttributed.GetRegisteredCounter(stateMeterName)
+					if !found {
+						stateCounter, err = worker.Metrics.EventsByStateAttributed.RegisterCounter(stateMeterName, "events.bystate", metrics.Attributes{
+							metrics.Attribute{Key: "from_state", Value: event.OldState.String()},
+							metrics.Attribute{Key: "to_state", Value: event.State.String()},
+						})
+						if err != nil {
+							worker.Logger.Error().
+								Error(err).
+								Msg("Failed to create stateCounter")
+
+							stateCounter = metrics.NewDummyRegistry().NewCounter()
+						}
+					}
+
 					stateMeter.Mark(1)
+					stateCounter.Inc()
 
 					if err := worker.processEvent(event); err != nil {
 						worker.Metrics.EventsProcessingFailed.Mark(1)
+						worker.Metrics.EventsProcessingFailedCounter.Inc()
 						worker.Logger.Error().
 							Error(err).
 							String("trigger_id", event.TriggerID).
@@ -204,6 +223,8 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
+			worker.Metrics.SubsMalformedCounter.Inc()
+
 			return nil, fmt.Errorf("error while read subscription %s: %w", *event.SubscriptionID, err)
 		}
 

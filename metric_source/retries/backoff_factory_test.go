@@ -29,6 +29,7 @@ func TestExponentialBackoffFactory(t *testing.T) {
 		Convey("with MaxRetriesCount != 0 and MaxElapsedTime = 0", func() {
 			Convey("with retry interval always lower then config.MaxInterval", func() {
 				conf.MaxRetriesCount = 3
+
 				defer func() {
 					conf.MaxRetriesCount = 0
 				}()
@@ -53,6 +54,7 @@ func TestExponentialBackoffFactory(t *testing.T) {
 
 			Convey("with retry interval becomes config.MaxInterval", func() {
 				conf.MaxRetriesCount = 6
+
 				defer func() {
 					conf.MaxRetriesCount = 0
 				}()
@@ -81,6 +83,7 @@ func TestExponentialBackoffFactory(t *testing.T) {
 
 		Convey("with MaxRetriesCount = 0 and MaxElapsedTime != 0", func() {
 			conf.MaxElapsedTime = time.Second
+
 			defer func() {
 				conf.MaxElapsedTime = 0
 			}()

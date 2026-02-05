@@ -19,6 +19,7 @@ import (
 func TestCreateTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success with trigger.ID empty", t, func() {
@@ -112,6 +113,7 @@ func TestCreateTrigger(t *testing.T) {
 func TestGetAllTriggers(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Has triggers", t, func() {
@@ -225,6 +227,7 @@ func TestGetAllTriggers(t *testing.T) {
 func TestSearchTriggers(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	mockIndex := mock_moira_alert.NewMockSearcher(mockCtrl)
 
@@ -1063,6 +1066,7 @@ func TestDeleteTriggersPager(t *testing.T) {
 	Convey("DeleteTriggersPager", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		const pagerID = "pagerID"
@@ -1105,6 +1109,7 @@ func TestDeleteTriggersPager(t *testing.T) {
 func TestGetUnusedTriggerIDs(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Has triggers", t, func() {
@@ -1218,6 +1223,7 @@ func TestGetUnusedTriggerIDs(t *testing.T) {
 func TestGetTriggerNoisiness(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	const (

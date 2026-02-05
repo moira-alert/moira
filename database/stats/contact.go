@@ -16,11 +16,12 @@ type contactStats struct {
 // NewContactStats creates and initializes a new contactStats object.
 func NewContactStats(
 	metricsRegistry metrics.Registry,
+	attributedRegistry metrics.MetricRegistry,
 	database moira.Database,
 	logger moira.Logger,
 ) *contactStats {
 	return &contactStats{
-		metrics:  metrics.NewContactsMetrics(metricsRegistry),
+		metrics:  metrics.NewContactsMetrics(metricsRegistry, attributedRegistry),
 		database: database,
 		logger:   logger,
 	}
@@ -64,6 +65,11 @@ func (stats *contactStats) checkContactsCount() {
 	}
 
 	for contact, count := range contactsCounter {
-		stats.metrics.Mark(contact, count)
+		err := stats.metrics.Mark(contact, count)
+		if err != nil {
+			stats.logger.Warning().
+				Error(err).
+				Msg("Failed to mark contacts count")
+		}
 	}
 }

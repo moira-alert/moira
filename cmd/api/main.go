@@ -96,7 +96,7 @@ func main() {
 	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.NotificationConfig{}, redis.API, clusterList)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
-	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
+	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics, telemetry.AttributedMetrics)
 	if searchIndex == nil {
 		logger.Fatal().Msg("Failed to create search index")
 	}
@@ -133,10 +133,18 @@ func main() {
 	}
 
 	// Start stats manager
+	triggerStats, err := stats.NewTriggerStats(telemetry.Metrics, telemetry.AttributedMetrics, database, logger, metricSourceProvider.GetClusterList())
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize trigger stats")
+	}
+
 	statsManager := stats.NewStatsManager(
-		stats.NewTriggerStats(telemetry.Metrics, database, logger, metricSourceProvider.GetClusterList()),
-		stats.NewContactStats(telemetry.Metrics, database, logger),
+		triggerStats,
+		stats.NewContactStats(telemetry.Metrics, telemetry.AttributedMetrics, database, logger),
 	)
+
 	statsManager.Start()
 	defer statsManager.Stop() //nolint
 

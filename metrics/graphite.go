@@ -41,6 +41,7 @@ func NewGraphiteRegistry(config GraphiteRegistryConfig, serviceName string) (*Gr
 
 		if config.RuntimeStats {
 			goMetrics.RegisterRuntimeMemStats(registry)
+
 			go goMetrics.CaptureRuntimeMemStats(registry, config.Interval)
 		}
 

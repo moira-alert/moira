@@ -214,6 +214,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 
 				continue
 			}
+
 			metricChannel <- metricEvent
 		}
 	}()

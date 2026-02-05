@@ -21,6 +21,7 @@ func TestInit(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	Convey("Init tests", t, func() {

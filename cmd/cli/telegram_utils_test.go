@@ -24,6 +24,7 @@ func TestUpdateTelegramUsersRecords(t *testing.T) {
 	}
 
 	database := redis.NewTestDatabase(logger)
+
 	database.Flush()
 	defer database.Flush()
 
@@ -76,6 +77,7 @@ func TestDowngradeTelegramUsersRecords(t *testing.T) {
 	database.Flush()
 
 	defer database.Flush()
+
 	client := database.Client()
 	ctx := database.Context()
 

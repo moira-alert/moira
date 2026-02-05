@@ -1,55 +1,55 @@
 version: "2"
 linters:
-  default: none
-  enable:
-    - asasalint
-    - asciicheck
-    - bidichk
-    - bodyclose
-    - contextcheck
-    - decorder
-    - dogsled
-    - durationcheck
-    - errcheck
-    - errorlint
-    - fatcontext
-    - ginkgolinter
-    - gocheckcompilerdirectives
-    - gochecksumtype
-    - goconst
-    - gocyclo
-    - godot
-    - goheader
-    - govet
-    - grouper
-    - ineffassign
-    - loggercheck
-    - makezero
-    - misspell
-#    - mnd
-    - nilerr
+  default: all
+  disable:
+    - canonicalheader
+    - containedctx
+    - cyclop
+    - depguard
+    - err113
+    - errchkjson
+    - errname
+    - exhaustruct
+    - exhaustive
+    - forbidigo
+    - forcetypeassert
+    - funcorder
+    - funlen
+    - gochecknoglobals
+    - gochecknoinits
+    - gocritic
+    - gocognit
+    - godox
+    - gosec
+    - gosmopolitan
+    - inamedparam
+    - interfacebloat
+    - intrange
+    - ireturn
+    - lll
+    - maintidx
+    - mirror
+    - mnd
+    - musttag
+    - nakedret
+    - nestif
+    - nilnil
     - noctx
-    - nosprintfhostport
-    - prealloc
-    - predeclared
-    - promlinter
-    - protogetter
-    - reassign
-#    - revive
-    - rowserrcheck
-    - sloglint
-    - spancheck
-    - sqlclosecheck
-    - staticcheck
-    - testifylint
-    - tparallel
-    - unconvert
-    - unparam
-    - unused
-    - usestdlibvars
-    - wastedassign
-    - whitespace
-    - wsl
+    - nolintlint
+    - noinlineerr
+    - nonamedreturns
+    - nlreturn
+    - paralleltest
+    - tagalign
+    - tagliatelle
+    - testpackage
+    - recvcheck
+    - revive
+    - perfsprint
+    - varnamelen
+    - wrapcheck
+    - zerologlint
+    - modernize
   settings:
     gocyclo:
       min-complexity: 15
@@ -76,10 +76,14 @@ linters:
           - contextcheck
           - goconst
           - mnd
+          - dupl
         path: _test\.go
       - linters:
           - godot
         path: notifier/registrator.go
+      - linters:
+          - dupl
+        path: cmd/cli/main.go
     paths:
       - third_party$
       - builtin$

@@ -4,19 +4,21 @@ import "regexp"
 
 var nonAllowedMetricCharsRegex = regexp.MustCompile("[^a-zA-Z0-9_]")
 
-// Collection of metrics for contacts counting.
+// ContactsMetrics Collection of metrics for contacts counting.
 type ContactsMetrics struct {
-	contactsCount map[string]Meter
-	registry      Registry
+	contactsCount      map[string]Meter
+	registry           Registry
+	attributedRegistry MetricRegistry
 }
 
-// Creates and configurates the instance of ContactsMetrics.
-func NewContactsMetrics(registry Registry) *ContactsMetrics {
+// NewContactsMetrics Creates and configurates the instance of ContactsMetrics.
+func NewContactsMetrics(registry Registry, attributedRegistry MetricRegistry) *ContactsMetrics {
 	meters := make(map[string]Meter)
 
 	return &ContactsMetrics{
-		contactsCount: meters,
-		registry:      registry,
+		contactsCount:      meters,
+		registry:           registry,
+		attributedRegistry: attributedRegistry,
 	}
 }
 
@@ -25,12 +27,23 @@ func (metrics *ContactsMetrics) replaceNonAllowedMetricCharacters(metric string)
 	return nonAllowedMetricCharsRegex.ReplaceAllString(metric, "_")
 }
 
-// Marks the number of contacts of different types.
-func (metrics *ContactsMetrics) Mark(contact string, count int64) {
+// Mark Marks the number of contacts of different types.
+func (metrics *ContactsMetrics) Mark(contact string, count int64) error {
 	if _, ok := metrics.contactsCount[contact]; !ok {
 		metric := metrics.replaceNonAllowedMetricCharacters(contact)
-		metrics.contactsCount[contact] = metrics.registry.NewMeter("contacts", metric)
+		attributedRegistry := metrics.attributedRegistry.WithAttributes(Attributes{
+			Attribute{Key: "contact_type", Value: metric},
+		})
+
+		attributedGauge, err := attributedRegistry.NewGauge("contacts")
+		if err != nil {
+			return err
+		}
+
+		metrics.contactsCount[contact] = NewCompositeMeter(metrics.registry.NewMeter("contacts", metric), attributedGauge)
 	}
 
 	metrics.contactsCount[contact].Mark(count)
+
+	return nil
 }

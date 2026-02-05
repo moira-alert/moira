@@ -18,6 +18,7 @@ func TestBuildEvent(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	Convey("Build pagerduty event tests", t, func() {

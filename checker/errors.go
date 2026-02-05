@@ -11,7 +11,7 @@ var ErrTriggerNotExists = fmt.Errorf("trigger does not exists")
 // ErrTriggerHasOnlyWildcards used if trigger has only wildcard metrics.
 type ErrTriggerHasOnlyWildcards struct{}
 
-// ErrTriggerHasOnlyWildcards implementation with constant error message.
+// Error implementation with constant error message.
 func (err ErrTriggerHasOnlyWildcards) Error() string {
 	return "Trigger never received metrics"
 }
@@ -28,7 +28,7 @@ func NewErrTriggerHasSameMetricNames(duplicates map[string][]string) ErrTriggerH
 	}
 }
 
-// ErrTriggerHasSameMetricNames implementation with constant error message.
+// Error implementation with constant error message.
 func (err ErrTriggerHasSameMetricNames) Error() string {
 	var builder strings.Builder
 
@@ -49,7 +49,7 @@ type ErrTriggerHasEmptyTargets struct {
 	targets []string
 }
 
-// ErrTriggerHasEmptyTargets implementation with error message.
+// Error implementation with error message.
 func (err ErrTriggerHasEmptyTargets) Error() string {
 	return fmt.Sprintf("target %v has no metrics", strings.Join(err.targets, ", "))
 }

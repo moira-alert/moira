@@ -39,6 +39,7 @@ func TestRenderTrigger(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"status":"Invalid request","error":"invalid realtime param: strconv.ParseBool: parsing \"test\": invalid syntax"}
@@ -73,6 +74,7 @@ func TestRenderTrigger(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"status":"Internal Server Error","error":"failed to load test timezone: unknown time zone test"}
@@ -107,6 +109,7 @@ func TestRenderTrigger(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"status":"Invalid request","error":"no points found to render trigger: triggerID-0000000000001"}
@@ -128,6 +131,7 @@ func TestRenderTrigger(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"status":"Invalid request","error":"failed to parse query string: invalid URL escape \"%rt\""}

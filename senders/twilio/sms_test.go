@@ -35,6 +35,7 @@ func TestBuildMoiraMessage(t *testing.T) {
 
 		Convey("Print moira message with one event and message", func() {
 			var interval int64 = 24
+
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
 			expected := "NODATA Name [tag1] (1)\n\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix."

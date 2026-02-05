@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
-	internalMetric "go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 )
@@ -18,6 +18,7 @@ func TestOtelCounter(t *testing.T) {
 	exporter := &FakeExporter{
 		testExport: func(rm *metricdata.ResourceMetrics) {
 			exportCalled = true
+
 			require.NotNil(t, rm)
 			require.Len(t, rm.ScopeMetrics, 1)
 			scopeMetrics := rm.ScopeMetrics[0]
@@ -33,6 +34,7 @@ func TestOtelCounter(t *testing.T) {
 			dp := sum.DataPoints[0]
 			require.Equal(t, int64(10), dp.Value)
 			require.Equal(t, 1, dp.Attributes.Len())
+
 			attrSlice := dp.Attributes.ToSlice()
 			for _, attr := range attrSlice {
 				require.Equal(t, "custom_label", string(attr.Key))
@@ -51,10 +53,13 @@ func TestOtelCounter(t *testing.T) {
 		require.True(t, exportCalled, "export should be called")
 	}()
 
-	registry := metricContext.CreateRegistry().WithAttributes(Attributes{
+	registry, err := metricContext.CreateRegistry()
+	require.NoError(t, err)
+
+	registry = registry.WithAttributes(Attributes{
 		{
-			key:   "custom_label",
-			value: "test_counter",
+			Key:   "custom_label",
+			Value: "test_counter",
 		},
 	})
 
@@ -68,7 +73,7 @@ func TestOtelCounter(t *testing.T) {
 
 func TestCounterShouldBeAtomic(t *testing.T) {
 	counter := &otelCounter{
-		counters:   []internalMetric.Int64Counter{},
+		counter:    noop.Int64Counter{},
 		count:      0,
 		mu:         sync.Mutex{},
 		attributes: []attribute.KeyValue{},

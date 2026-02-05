@@ -110,6 +110,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	subscription, err := scheduler.database.GetSubscription(moira.UseString(event.SubscriptionID))
 	if err != nil {
 		scheduler.metrics.SubsMalformed.Mark(1)
+		scheduler.metrics.SubsMalformedCounter.Inc()
 		logger.Debug().
 			Error(err).
 			Msg("Failed get subscription")

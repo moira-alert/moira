@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -43,9 +44,10 @@ var notifierConfig = notifier.Config{
 var shutdown = make(chan struct{})
 
 var (
-	notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
-	logger, _       = logging.GetLogger("Notifier_Test")
-	mockCtrl        *gomock.Controller
+	metricsRegistry, _ = metrics.NewMetricContext(context.Background()).CreateRegistry()
+	notifierMetrics, _ = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), metricsRegistry, "notifier")
+	logger, _          = logging.GetLogger("Notifier_Test")
+	mockCtrl           *gomock.Controller
 )
 
 var contact = moira.ContactData{
@@ -92,6 +94,7 @@ func TestNotifier(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	database := redis.NewTestDatabase(logger)
+
 	database.Flush()
 	defer database.Flush()
 

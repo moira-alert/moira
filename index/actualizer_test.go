@@ -1,10 +1,12 @@
 package index
 
 import (
+	"context"
 	"errors"
 	"testing"
 
 	"github.com/moira-alert/moira/metrics"
+	"github.com/stretchr/testify/require"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -18,10 +20,14 @@ import (
 func TestIndex_actualize(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 
-	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
+	metricsRegistry, err := metrics.NewMetricContext(context.Background()).CreateRegistry()
+	require.NoError(t, err)
+
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry(), metricsRegistry)
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()

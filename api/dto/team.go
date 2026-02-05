@@ -113,7 +113,7 @@ func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// TODO: Replace with dto.Contact after the next release.
+// nolint TODO: Replace with dto.Contact after the next release.
 type TeamContact struct {
 	Type   string `json:"type" binding:"required" example:"mail"`
 	Name   string `json:"name,omitempty" example:"Mail Alerts"`
@@ -142,6 +142,7 @@ func MakeTeamContact(contact *moira.ContactData) TeamContact {
 
 type TeamContactWithScore struct {
 	TeamContact
+
 	Score *ContactScore `json:"score,omitempty" extensions:"x-nullable"`
 }
 

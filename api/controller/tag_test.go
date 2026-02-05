@@ -18,6 +18,7 @@ import (
 func TestGetAllTags(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success", t, func() {
@@ -39,6 +40,7 @@ func TestGetAllTags(t *testing.T) {
 func TestCreateTags(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	emptyTags := &dto.TagsData{
@@ -97,6 +99,7 @@ func TestCreateTags(t *testing.T) {
 func TestDeleteTag(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	tag := "MyTag"
 
@@ -159,6 +162,7 @@ func TestDeleteTag(t *testing.T) {
 func TestGetAllTagsAndSubscriptions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 

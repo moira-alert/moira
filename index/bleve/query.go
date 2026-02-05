@@ -33,19 +33,19 @@ func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 		searchQueries = append(searchQueries, qr)
 	}
 
-	return
+	return searchQueries
 }
 
 func buildQueryForCreatedBy(createdBy string, needSearchByCreatedBy bool) (searchQueries []query.Query) {
 	if !needSearchByCreatedBy {
-		return
+		return searchQueries
 	}
 
 	qr := bleve.NewTermQuery(createdBy)
 	qr.FieldVal = mapping.TriggerCreatedBy.GetName()
 	searchQueries = append(searchQueries, qr)
 
-	return
+	return searchQueries
 }
 
 func buildQueryForTerms(searchTerms []string) (searchQueries []query.Query) {
@@ -60,12 +60,12 @@ func buildQueryForTerms(searchTerms []string) (searchQueries []query.Query) {
 		searchQueries = append(searchQueries, bleve.NewDisjunctionQuery(nameQuery, descQuery))
 	}
 
-	return
+	return searchQueries
 }
 
 func buildQueryForOnlyErrors(onlyErrors bool) (searchQueries []query.Query) {
 	if !onlyErrors {
-		return
+		return searchQueries
 	}
 
 	minScore := float64(1)

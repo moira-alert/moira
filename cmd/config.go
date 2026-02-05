@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source/retries"
@@ -169,6 +170,40 @@ type GraphiteConfig struct {
 	Interval string `yaml:"interval"`
 }
 
+// PrometheusConfig holds configuration for Prometheus metrics.
+type PrometheusConfig struct {
+	// Enabled determines if Prometheus metrics are enabled.
+	Enabled bool `yaml:"enabled"`
+	// MetricsPath specifies the HTTP path for metrics exposure.
+	MetricsPath string `yaml:"metrics_path"`
+}
+
+// OtelTransportProtocol defines the transport protocol for OpenTelemetry.
+type OtelTransportProtocol string
+
+const (
+	// Grpc specifies gRPC transport protocol for OpenTelemetry.
+	Grpc OtelTransportProtocol = "grpc"
+	// Http specifies HTTP transport protocol for OpenTelemetry.
+	Http OtelTransportProtocol = "http"
+)
+
+// OtelConfig holds configuration for OpenTelemetry exporter.
+type OtelConfig struct {
+	// Enabled determines if OpenTelemetry exporter is enabled.
+	Enabled bool `yaml:"enabled"`
+	// Protocol specifies the transport protocol for OpenTelemetry.
+	Protocol OtelTransportProtocol `yaml:"protocol"`
+	// CollectorURI is the URI of the OpenTelemetry collector.
+	CollectorURI string `yaml:"collector_uri"`
+	// Insecure enables insecure connection to the collector.
+	Insecure bool `yaml:"insecure"`
+	// AdditionalHeaders are extra headers sent to the collector.
+	AdditionalHeaders map[string]string `yaml:"headers"`
+	// PushInterval is the interval for pushing metrics.
+	PushInterval time.Duration `yaml:"push_interval"`
+}
+
 // GetSettings returns graphite metrics config parsed from moira config files.
 func (graphiteConfig *GraphiteConfig) GetSettings() metrics.GraphiteRegistryConfig {
 	return metrics.GraphiteRegistryConfig{
@@ -189,9 +224,32 @@ type LoggerConfig struct {
 
 // TelemetryConfig is settings for listener, pprof, graphite.
 type TelemetryConfig struct {
-	Listen   string         `yaml:"listen"`
-	Pprof    ProfilerConfig `yaml:"pprof"`
+	// Listen is the address to listen for telemetry via prometheus and pprof.
+	Listen string `yaml:"listen"`
+	// Pprof holds profiler configuration.
+	Pprof ProfilerConfig `yaml:"pprof"`
+	// UseNewMetrics toggles usage of new metrics system.
+	UseNewMetrics bool `yaml:"use_new_metrics"`
+	// Graphite holds Graphite backend configuration.
 	Graphite GraphiteConfig `yaml:"graphite"`
+	// Prometheus holds Prometheus backend configuration.
+	Prometheus PrometheusConfig `yaml:"prometheus"`
+	// Otel holds OpenTelemetry backend configuration.
+	Otel OtelConfig `yaml:"otel"`
+	// MetricsSettings holds configuration for metrics settings.
+	MetricsSettings MetricsSettings `yaml:"metrics_settings"`
+	// RuntimeStats enables runtime statistics collection.
+	RuntimeStats bool `yaml:"runtime_stats"`
+}
+
+// MetricsSettings holds configuration for metrics.
+type MetricsSettings struct {
+	// DefaultAttributes are the default attributes for telemetry events.
+	DefaultAttributes map[string]string `yaml:"attributes"`
+	// HistogramBuckets defines the buckets for histogram metrics.
+	HistogramBuckets []int64 `yaml:"histogram_buckets"`
+	// TimerBuckets defines the buckets for timer metrics.
+	TimerBuckets []float64 `yaml:"timer_buckets"`
 }
 
 // ProfilerConfig is pprof settings structure that initialises at the start of moira.
@@ -305,6 +363,7 @@ func (config RetriesConfig) getRetriesSettings() retries.Config {
 // GraphiteRemoteConfig is remote graphite settings structure.
 type GraphiteRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
+
 	// Timeout for remote requests.
 	Timeout string `yaml:"timeout"`
 	// Username for basic auth.
@@ -341,6 +400,7 @@ func (config *GraphiteRemoteConfig) GetRemoteSourceSettings() *graphiteRemoteSou
 // PrometheusRemoteConfig is remote prometheus settings structure.
 type PrometheusRemoteConfig struct {
 	RemoteCommonConfig `yaml:",inline"`
+
 	// Timeout for prometheus api requests
 	Timeout string `yaml:"timeout"`
 	// Number of retries for prometheus api requests
@@ -380,16 +440,20 @@ type heartbeatConfig struct {
 	SystemTags []string `yaml:"tags"`
 }
 
-type ChecksConfig struct {
-	Database      heartbeatConfig `yaml:"database"`
-	Filter        heartbeatConfig `yaml:"filter"`
-	LocalChecker  heartbeatConfig `yaml:"local_checker"`
-	RemoteChecker heartbeatConfig `yaml:"remote_checker"`
-	Notifier      heartbeatConfig `yaml:"notifier"`
+type notifierHeartbeatConfig struct {
+	AnyClusterSourceTags      []string `yaml:"any_cluster_source_tags"`
+	TagPrefixForClusterSource string   `yaml:"tag_prefix_for_cluster_source"`
+	// Kept for backwards compatibility with previous version
+	LocalClusterSourceTags []string `yaml:"local_cluster_source_tags"`
 }
 
-type SelfStateChecksConfig struct {
-	Heartbeats ChecksConfig `yaml:"heartbeats"`
+// ChecksConfig contains configuration for all Heartbeaters.
+type ChecksConfig struct {
+	Database      heartbeatConfig         `yaml:"database"`
+	Filter        heartbeatConfig         `yaml:"filter"`
+	LocalChecker  heartbeatConfig         `yaml:"local_checker"`
+	RemoteChecker heartbeatConfig         `yaml:"remote_checker"`
+	Notifier      notifierHeartbeatConfig `yaml:"notifier"`
 }
 
 // ReadConfig parses config file by the given path into Moira-used type.

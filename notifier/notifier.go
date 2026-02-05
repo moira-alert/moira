@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/moira-alert/go-chart"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/logging"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -123,6 +122,7 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 
 	go func(pkg *NotificationPackage) {
 		defer waitGroup.Done()
+
 		getLogWithPackageContext(&notifier.logger, pkg, &notifier.config).
 			Debug().
 			Interface("package", pkg).

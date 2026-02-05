@@ -97,8 +97,10 @@ func toCheckConfig(checksConfig cmd.ChecksConfig) selfstate.ChecksConfig {
 		RemoteChecker: selfstate.HeartbeatConfig{
 			SystemTags: checksConfig.RemoteChecker.SystemTags,
 		},
-		Notifier: selfstate.HeartbeatConfig{
-			SystemTags: checksConfig.Notifier.SystemTags,
+		Notifier: selfstate.NotifierHeartbeatConfig{
+			AnyClusterSourceTags:      checksConfig.Notifier.AnyClusterSourceTags,
+			LocalClusterSourceTags:    checksConfig.Notifier.LocalClusterSourceTags,
+			TagPrefixForClusterSource: checksConfig.Notifier.TagPrefixForClusterSource,
 		},
 	}
 }
@@ -146,6 +148,15 @@ func getDefault() config {
 				URI:          "localhost:2003",
 				Prefix:       "DevOps.Moira",
 				Interval:     "60s",
+			},
+			Otel: cmd.OtelConfig{
+				Enabled:      false,
+				Insecure:     true,
+				PushInterval: time.Minute,
+			},
+			Prometheus: cmd.PrometheusConfig{
+				Enabled:     false,
+				MetricsPath: "/metrics",
 			},
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},

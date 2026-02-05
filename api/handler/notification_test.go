@@ -53,6 +53,7 @@ func TestGetNotifications(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"status":"Invalid request","error":"invalid URL escape \"%\""}
@@ -79,6 +80,7 @@ func TestDeleteNotifications(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"status":"Invalid request","error":"notification id can not be empty"}
@@ -100,6 +102,7 @@ func TestDeleteNotifications(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"result":0}
@@ -117,6 +120,7 @@ func TestDeleteNotifications(t *testing.T) {
 
 			response := responseWriter.Result()
 			defer response.Body.Close()
+
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
 			expected := `{"status":"Invalid request","error":"invalid URL escape \"%\""}
