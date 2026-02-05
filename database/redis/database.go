@@ -4,12 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/moira-alert/moira/clock"
-
 	"github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/clock"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -35,6 +34,7 @@ const (
 
 // DbConnector contains redis client.
 type DbConnector struct {
+	Clock                moira.Clock
 	client               *redis.UniversalClient
 	logger               moira.Logger
 	retentionCache       *cache.Cache
@@ -44,7 +44,6 @@ type DbConnector struct {
 	metricsTTLSeconds    int64
 	context              context.Context
 	source               DBSource
-	clock                moira.Clock
 	notificationHistory  NotificationHistoryConfig
 	// Notifier configuration in redis
 	notification NotificationConfig
@@ -92,6 +91,7 @@ func NewDatabase(
 	syncPool := goredis.NewPool(client)
 
 	connector := DbConnector{
+		Clock:                clock.NewSystemClock(),
 		client:               &client,
 		logger:               logger,
 		context:              ctx,
@@ -101,7 +101,6 @@ func NewDatabase(
 		sync:                 redsync.New(syncPool),
 		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		source:               source,
-		clock:                clock.NewSystemClock(),
 		notificationHistory:  nh,
 		notification:         n,
 		clusterList:          clusterList,
@@ -132,6 +131,16 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 	)
 }
 
+// NewTestDatabaseWithClock creates a new test database connector with the provided logger and clock.
+func NewTestDatabaseWithClock(logger moira.Logger, clock moira.Clock) *DbConnector {
+	db := NewTestDatabase(logger)
+	if db != nil {
+		db.Clock = clock
+	}
+
+	return db
+}
+
 // NewTestDatabaseWithIncorrectConfig use it only for tests.
 func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger,
@@ -147,7 +156,18 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 			ResaveTime:                30 * time.Second,
 		},
 		testSource,
-		moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster, moira.DefaultPrometheusRemoteCluster})
+		moira.ClusterList{moira.DefaultLocalCluster, moira.DefaultGraphiteRemoteCluster, moira.DefaultPrometheusRemoteCluster},
+	)
+}
+
+// NewTestDatabaseWithIncorrectConfigAndClock creates a new DbConnector with an incorrect config and custom clock.
+func NewTestDatabaseWithIncorrectConfigAndClock(logger moira.Logger, clock moira.Clock) *DbConnector {
+	db := NewTestDatabaseWithIncorrectConfig(logger)
+	if db != nil {
+		db.Clock = clock
+	}
+
+	return db
 }
 
 // Flush deletes all the keys of the DB, use it only for tests.

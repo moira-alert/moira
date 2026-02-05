@@ -1056,6 +1056,8 @@ type NotifierState struct {
 	Actor string `json:"actor" binding:"required"`
 	// State represents the current state of the notifier.
 	State string `json:"state" binding:"required"`
+	// Timestamp represents the time of state last change.
+	Timestamp int64 `json:"timestamp" binding:"required"`
 }
 
 const (

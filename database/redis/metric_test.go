@@ -924,7 +924,7 @@ func TestCleanupFutureMetrics(t *testing.T) {
 
 	mockClock := mock_clock.NewMockClock(mockCtrl)
 
-	dataBase.clock = mockClock
+	dataBase.Clock = mockClock
 
 	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC)
 	testTimeUnix := testTime.Unix()

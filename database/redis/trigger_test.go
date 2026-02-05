@@ -542,7 +542,7 @@ func TestRemoteTrigger(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	systemClock := mock_clock.NewMockClock(mockCtrl)
-	dataBase.clock = systemClock
+	dataBase.Clock = systemClock
 	pattern := "test.pattern.remote1"
 	trigger := &moira.Trigger{
 		ID:            "triggerID-0000000000010",
@@ -742,7 +742,7 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	systemClock.EXPECT().NowUnix().Return(testTime.Unix()).Times(6)
-	connector := &DbConnector{clock: systemClock}
+	connector := &DbConnector{Clock: systemClock}
 	patterns := []string{"pattern-1", "pattern-2"}
 
 	Convey("When a local trigger", t, func() {

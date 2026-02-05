@@ -14,6 +14,7 @@ func TestGetNotifierState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	defer mockCtrl.Finish()
 
 	Convey("On startup should return OK", t, func() {
@@ -30,6 +31,7 @@ func TestUpdateNotifierState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
 	defer mockCtrl.Finish()
 
 	Convey("Setting OK notifier state", t, func() {

@@ -6,8 +6,10 @@ import (
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock_clock "github.com/moira-alert/moira/mock/clock"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestSelfCheckWithWritesInChecker(t *testing.T) {
@@ -124,15 +126,18 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 }
 
 func TestNotifierState(t *testing.T) {
+	mock := gomock.NewController(t)
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewTestDatabase(logger)
-	emptyDataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	clock := mock_clock.NewMockClock(mock)
+	dataBase := NewTestDatabaseWithClock(logger, clock)
+	emptyDataBase := NewTestDatabaseWithIncorrectConfigAndClock(logger, clock)
 
 	dataBase.Flush()
 
 	defer dataBase.Flush()
 
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(2)
 		Convey("On empty database should return ERROR", func() {
 			notifierState, err := emptyDataBase.GetNotifierState()
 			So(notifierState, ShouldResemble, moira.NotifierState{
@@ -162,6 +167,8 @@ func TestNotifierState(t *testing.T) {
 		})
 
 		Convey("Switch notifier to ERROR", func() {
+			clock.EXPECT().NowUnix().Return(int64(0))
+
 			err := dataBase.SetNotifierState(moira.SelfStateActorManual, moira.SelfStateERROR)
 			actualNotifierState, err2 := dataBase.GetNotifierState()
 
@@ -173,13 +180,17 @@ func TestNotifierState(t *testing.T) {
 }
 
 func TestSetNotifierStateForSource(t *testing.T) {
+	mock := gomock.NewController(t)
 	logger, _ := logging.GetLogger("dataBase")
-	database := NewTestDatabase(logger)
+	clock := mock_clock.NewMockClock(mock)
+	database := NewTestDatabaseWithClock(logger, clock)
 
 	database.Flush()
 
 	t.Run("Test set no states was set fot sources", func(t *testing.T) {
 		defer database.Flush()
+
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
 
 		state, err := database.GetNotifierStateForSources()
 		require.NoError(t, err)
@@ -201,6 +212,8 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Test set ERROR for a single source", func(t *testing.T) {
 		defer database.Flush()
+
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
 
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
 		require.NoError(t, err)
@@ -225,6 +238,8 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Test set ERROR for a several sources", func(t *testing.T) {
 		defer database.Flush()
+
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
 
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
 		require.NoError(t, err)
@@ -251,6 +266,8 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 	t.Run("Set source state to ERROR and then to OK", func(t *testing.T) {
 		defer database.Flush()
+
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(4)
 
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
 		require.NoError(t, err)
@@ -290,12 +307,15 @@ func TestSetNotifierStateForSource(t *testing.T) {
 
 func TestGetNotifierStateForSource(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	database := NewTestDatabase(logger)
+	clock := mock_clock.NewMockClock(gomock.NewController(t))
+	database := NewTestDatabaseWithClock(logger, clock)
 	database.Flush()
 
 	defer database.Flush()
 
 	t.Run("Get state for all sources one by one", func(t *testing.T) {
+		clock.EXPECT().NowUnix().Return(int64(0)).Times(3)
+
 		err := database.SetNotifierStateForSource(moira.DefaultLocalCluster, moira.SelfStateActorManual, moira.SelfStateERROR)
 		require.NoError(t, err)
 
