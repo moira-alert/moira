@@ -53,6 +53,7 @@ func trigger(router chi.Router) {
 //	@success	200			{object}	dto.SaveTriggerResponse	"Updated trigger"
 //	@failure	400			{object}	api.ErrorResponse		"Bad request from client"
 //	@failure	404			{object}	api.ErrorResponse		"Resource not found"
+//	@failure	418			{object}	dto.SaveTriggerResponse	"Target Validation failed"
 //	@failure	422			{object}	api.ErrorResponse		"Render error"
 //	@failure	500			{object}	api.ErrorResponse		"Internal server error"
 //	@failure	503			{object}	api.ErrorResponse		"Remote server unavailable"
@@ -126,7 +127,7 @@ func validateTargets(request *http.Request, trigger *dto.Trigger) ([]dto.TreeOfP
 }
 
 func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, treesOfProblems []dto.TreeOfProblems) {
-	render.Status(request, http.StatusBadRequest)
+	render.Status(request, http.StatusTeapot)
 
 	response := dto.SaveTriggerResponse{
 		CheckResult: dto.TriggerCheckResponse{
