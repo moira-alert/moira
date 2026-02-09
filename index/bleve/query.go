@@ -22,6 +22,7 @@ func buildSearchQuery(options moira.SearchOptions) query.Query {
 	searchQueries = append(searchQueries, buildQueryForTerms(searchTerms)...)
 	searchQueries = append(searchQueries, buildQueryForOnlyErrors(options.OnlyProblems)...)
 	searchQueries = append(searchQueries, buildQueryForCreatedBy(options.CreatedBy, options.NeedSearchByCreatedBy)...)
+	searchQueries = append(searchQueries, buildQueryForTeamID(options.TeamID)...)
 
 	return bleve.NewConjunctionQuery(searchQueries...)
 }
@@ -59,6 +60,14 @@ func buildQueryForTerms(searchTerms []string) (searchQueries []query.Query) {
 		descQuery.SetBoost(descField.GetPriority())
 		searchQueries = append(searchQueries, bleve.NewDisjunctionQuery(nameQuery, descQuery))
 	}
+
+	return searchQueries
+}
+
+func buildQueryForTeamID(teamID string) (searchQueries []query.Query) {
+	qr := bleve.NewTermQuery(teamID)
+	qr.FieldVal = mapping.TriggerTeamID.GetName()
+	searchQueries = append(searchQueries, qr)
 
 	return searchQueries
 }

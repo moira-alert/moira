@@ -565,6 +565,25 @@ func TestSearchTriggers(t *testing.T) {
 					Size:  &searchOptions.Size,
 				})
 			})
+
+			Convey("Only triggers that match TeamID", func() {
+				searchOptions.TeamID = "e3c9bc96-7d3b-4ee8-b244-a4c9e7284d13"
+				searchOptions.CreatedBy = ""
+				searchOptions.NeedSearchByCreatedBy = false
+				searchOptions.Tags = []string{}
+				searchOptions.SearchString = ""
+				exp = 2
+				mockIndex.EXPECT().SearchTriggers(searchOptions).Return(triggerSearchResults[1:3], exp, nil)
+				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[1:3]).Return(triggersPointers[1:3], nil)
+				list, err := SearchTriggers(mockDatabase, mockIndex, searchOptions)
+				So(err, ShouldBeNil)
+				So(list, ShouldResemble, &dto.TriggersList{
+					List:  triggerChecks[1:3],
+					Total: &exp,
+					Page:  &searchOptions.Page,
+					Size:  &searchOptions.Size,
+				})
+			})
 		})
 	})
 
@@ -704,6 +723,7 @@ var triggerChecks = []moira.TriggerCheck{
 	{
 		Trigger: moira.Trigger{
 			ID:        "SuperTrigger2",
+			TeamID:    "e3c9bc96-7d3b-4ee8-b244-a4c9e7284d13",
 			Name:      "Kobold Scale Sorcerer (cr 1, vgm 167) and 1 x Kobold (cr 1/8, mm 195); medium, 225 xp",
 			Tags:      []string{"DND-generator", "Kobold", "Sorcerer", "encounters"},
 			CreatedBy: "test",
@@ -716,6 +736,7 @@ var triggerChecks = []moira.TriggerCheck{
 	{
 		Trigger: moira.Trigger{
 			ID:        "SuperTrigger3",
+			TeamID:    "e3c9bc96-7d3b-4ee8-b244-a4c9e7284d13",
 			Name:      "Kobold Dragonshield (cr 1, vgm 165) and 1 x Kobold (cr 1/8, mm 195); medium, 225 xp",
 			Tags:      []string{"DND-generator", "Kobold", "Dragonshield", "encounters"},
 			CreatedBy: "test",
@@ -821,6 +842,7 @@ var triggerChecks = []moira.TriggerCheck{
 	{
 		Trigger: moira.Trigger{
 			ID:        "SuperTrigger12",
+			TeamID:    "2cf84542-d5dd-426b-b5a0-52882b3de8d4",
 			Name:      "Falling Block: DC 10 to find, DC 10 to disable; affects all targets within a 10 ft. square area, DC 12 save or take 2d10 damage; apprentice tier, dangerous",
 			Tags:      []string{"Falling-Block", "DND-generator", "traps"},
 			CreatedBy: "monster",
@@ -893,6 +915,7 @@ var triggerChecks = []moira.TriggerCheck{
 	{
 		Trigger: moira.Trigger{
 			ID:        "SuperTrigger18",
+			TeamID:    "2cf84542-d5dd-426b-b5a0-52882b3de8d4",
 			Name:      "Earthmaw Trap: DC 15 to find, DC 10 to disable; +7 to hit against one target, 2d10 piercing damage; apprentice tier, dangerous",
 			Tags:      []string{"Earthmaw-Trap", "DND-generator", "traps"},
 			CreatedBy: "tarasov.da",

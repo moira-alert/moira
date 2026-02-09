@@ -16,6 +16,12 @@ const maxTriggerLockAttempts = 30
 
 // UpdateTrigger update trigger data and trigger metrics in last state.
 func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+	if trigger.TeamID != "" {
+		if !TeamIDValidationPattern.MatchString(trigger.TeamID) {
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger's Team ID contains invalid characters and/or has invalid format"))
+		}
+	}
+
 	existedTrigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if errors.Is(err, database.ErrNil) {
