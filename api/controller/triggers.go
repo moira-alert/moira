@@ -18,8 +18,10 @@ import (
 
 const pageSizeUnlimited int64 = -1
 
-var idValidationPattern = regexp.MustCompile(`^[A-Za-z0-9._~-]+$`)
-var TeamIDValidationPattern = regexp.MustCompile(`^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$`)
+var (
+	idValidationPattern     = regexp.MustCompile(`^[A-Za-z0-9._~-]+$`)
+	TeamIDValidationPattern = regexp.MustCompile(`^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$`)
+)
 
 // CreateTrigger creates new trigger.
 func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
