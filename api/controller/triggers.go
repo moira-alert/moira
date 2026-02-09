@@ -19,6 +19,7 @@ import (
 const pageSizeUnlimited int64 = -1
 
 var idValidationPattern = regexp.MustCompile(`^[A-Za-z0-9._~-]+$`)
+var TeamIDValidationPattern = regexp.MustCompile(`^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$`)
 
 // CreateTrigger creates new trigger.
 func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
@@ -41,6 +42,12 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 
 		if exists {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID (%s) already exists", trigger.ID))
+		}
+	}
+
+	if trigger.TeamID != "" {
+		if !TeamIDValidationPattern.MatchString(trigger.TeamID) {
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger's Team ID contains invalid characters and/or has invalid format"))
 		}
 	}
 

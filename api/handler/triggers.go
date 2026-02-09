@@ -318,6 +318,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@param			createPager		query		boolean				false	"Create pager"			default(false)
 //	@param			pagerID			query		string				false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param			createdBy		query		string				false	"Created By"			default(moira.team)
+//	@param			teamID			query		string				true	"Search for triggers with this team ID"
 //	@success		200				{object}	dto.TriggersList	"Successfully fetched matching triggers"
 //	@failure		400				{object}	api.ErrorResponse	"Bad request from client"
 //	@failure		404				{object}	api.ErrorResponse	"Resource not found"
@@ -333,8 +334,9 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 		Size:                  middleware.GetSize(request),
 		OnlyProblems:          getOnlyProblemsFlag(request),
 		Tags:                  getRequestQueryList(request, "tags"),
-		SearchString:          getSearchRequestString(request),
+		SearchString:          getStringParam(request, "text"),
 		CreatedBy:             createdBy,
+		TeamID:                getStringParam(request, "teamID"),
 		NeedSearchByCreatedBy: ok,
 		CreatePager:           middleware.GetCreatePager(request),
 		PagerID:               middleware.GetPagerID(request),
@@ -426,8 +428,8 @@ func getTriggerCreatedBy(request *http.Request) (string, bool) {
 	return "", false
 }
 
-func getSearchRequestString(request *http.Request) string {
-	searchText := request.FormValue("text")
+func getStringParam(request *http.Request, paramName string) string {
+	searchText := request.FormValue(paramName)
 	searchText = strings.ToLower(searchText)
 	searchText, _ = url.PathUnescape(searchText)
 

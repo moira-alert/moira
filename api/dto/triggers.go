@@ -71,6 +71,8 @@ type Trigger struct {
 type TriggerModel struct {
 	// Trigger unique ID
 	ID string `json:"id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	// ID of a Team that owns this trigger
+	TeamID string `json:"team_id,omitempty" example:"d844f26b-4646-4fca-b43c-a871cc21169a" extensions:"x-nullable"`
 	// Trigger name
 	Name string `json:"name" binding:"required" example:"Not enough disk space left"`
 	// Description string
@@ -126,6 +128,7 @@ func (model *TriggerModel) ClusterKey() moira.ClusterKey {
 func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 	return &moira.Trigger{
 		ID:             model.ID,
+		TeamID:         model.TeamID,
 		Name:           model.Name,
 		Desc:           model.Desc,
 		Targets:        model.Targets,
