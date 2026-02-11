@@ -420,6 +420,7 @@ const (
 // Trigger represents trigger data object.
 type Trigger struct {
 	ID               string          `json:"id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	TeamID           string          `json:"team_id,omitempty" example:"d844f26b-4646-4fca-b43c-a871cc21169a" extensions:"x-nullable"`
 	Name             string          `json:"name" binding:"required" example:"Not enough disk space left"`
 	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
 	Targets          []string        `json:"targets" binding:"required" example:"devOps.my_server.hdd.freespace_mbytes"`
@@ -566,16 +567,16 @@ type TriggerCheck struct {
 
 // SearchOptions represents the options that can be selected when searching triggers.
 type SearchOptions struct {
-	Page                  int64
-	Size                  int64
-	OnlyProblems          bool
-	SearchString          string
-	Tags                  []string
-	CreatedBy             string
-	NeedSearchByCreatedBy bool
-	CreatePager           bool
-	PagerID               string
-	PagerTTL              time.Duration
+	Page         int64
+	Size         int64
+	OnlyProblems bool
+	SearchString string
+	Tags         []string
+	CreatedBy    string
+	TeamID       string
+	CreatePager  bool
+	PagerID      string
+	PagerTTL     time.Duration
 }
 
 // MaintenanceCheck set maintenance user, time.

@@ -33,7 +33,7 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-func TestGetSearchRequestString(t *testing.T) {
+func TestGetStringParam(t *testing.T) {
 	t.Run("Given a search request string", func(t *testing.T) {
 		t.Run("The value should be converted into lower case", func(t *testing.T) {
 			testCases := []struct {
@@ -47,7 +47,7 @@ func TestGetSearchRequestString(t *testing.T) {
 			}
 			for _, testCase := range testCases {
 				req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf("/api/trigger/search?onlyProblems=false&p=0&size=20&text=%s", testCase.text), nil)
-				searchRequest := getSearchRequestString(req)
+				searchRequest := getStringParam(req, "text")
 				require.Equal(t, testCase.expectedSearchRequest, searchRequest)
 			}
 		})
