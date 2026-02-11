@@ -579,15 +579,6 @@ type SearchOptions struct {
 	PagerTTL     time.Duration
 }
 
-type SearchByTeamOptions struct {
-	Page        int64
-	Size        int64
-	TeamID      string
-	CreatePager bool
-	PagerID     string
-	PagerTTL    time.Duration
-}
-
 // MaintenanceCheck set maintenance user, time.
 type MaintenanceCheck interface {
 	SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64)
