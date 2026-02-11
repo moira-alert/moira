@@ -287,8 +287,8 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.CreatedBy = ""
 
 			searchResults, count, err := index.SearchTriggers(searchOptions)
-			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[0:2])
-			So(count, ShouldEqual, 3)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[0:3])
+			So(count, ShouldEqual, 32)
 			So(err, ShouldBeNil)
 		})
 	})
