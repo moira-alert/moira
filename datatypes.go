@@ -567,17 +567,16 @@ type TriggerCheck struct {
 
 // SearchOptions represents the options that can be selected when searching triggers.
 type SearchOptions struct {
-	Page                  int64
-	Size                  int64
-	OnlyProblems          bool
-	SearchString          string
-	Tags                  []string
-	CreatedBy             string
-	NeedSearchByCreatedBy bool
-	TeamID                string
-	CreatePager           bool
-	PagerID               string
-	PagerTTL              time.Duration
+	Page         int64
+	Size         int64
+	OnlyProblems bool
+	SearchString string
+	Tags         []string
+	CreatedBy    string
+	TeamID       string
+	CreatePager  bool
+	PagerID      string
+	PagerTTL     time.Duration
 }
 
 type SearchByTeamOptions struct {

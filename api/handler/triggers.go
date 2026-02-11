@@ -328,19 +328,17 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
 
-	createdBy, ok := getTriggerCreatedBy(request)
 	searchOptions := moira.SearchOptions{
-		Page:                  middleware.GetPage(request),
-		Size:                  middleware.GetSize(request),
-		OnlyProblems:          getOnlyProblemsFlag(request),
-		Tags:                  getRequestQueryList(request, "tags"),
-		SearchString:          getStringParam(request, "text"),
-		CreatedBy:             createdBy,
-		TeamID:                getStringParam(request, "teamID"),
-		NeedSearchByCreatedBy: ok,
-		CreatePager:           middleware.GetCreatePager(request),
-		PagerID:               middleware.GetPagerID(request),
-		PagerTTL:              middleware.GetLimits(request).Pager.TTL,
+		Page:         middleware.GetPage(request),
+		Size:         middleware.GetSize(request),
+		OnlyProblems: getOnlyProblemsFlag(request),
+		Tags:         getRequestQueryList(request, "tags"),
+		SearchString: getStringParam(request, "text"),
+		CreatedBy:    getStringParam(request, "createdBy"),
+		TeamID:       getStringParam(request, "teamID"),
+		CreatePager:  middleware.GetCreatePager(request),
+		PagerID:      middleware.GetPagerID(request),
+		PagerTTL:     middleware.GetLimits(request).Pager.TTL,
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
@@ -415,17 +413,6 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 	}
 
 	return false
-}
-
-// Checks if the createdBy field has been set.
-// If the field has been set, searches for triggers with a specific author createdBy.
-// If the field has not been set, searches for triggers with any author.
-func getTriggerCreatedBy(request *http.Request) (string, bool) {
-	if createdBy, ok := request.Form["createdBy"]; ok {
-		return createdBy[0], true
-	}
-
-	return "", false
 }
 
 func getStringParam(request *http.Request, paramName string) string {
