@@ -318,7 +318,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@param			createPager		query		boolean				false	"Create pager"			default(false)
 //	@param			pagerID			query		string				false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param			createdBy		query		string				false	"Created By"			default(moira.team)
-//	@param			teamID			query		string				true	"Search for triggers with this team ID"
+//	@param			teamID			query		string				false	"Search for triggers with this team ID"
 //	@success		200				{object}	dto.TriggersList	"Successfully fetched matching triggers"
 //	@failure		400				{object}	api.ErrorResponse	"Bad request from client"
 //	@failure		404				{object}	api.ErrorResponse	"Resource not found"
