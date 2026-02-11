@@ -11,7 +11,6 @@ import (
 )
 
 func buildSearchQuery(options moira.SearchOptions) query.Query {
-
 	searchQueries := make([]query.Query, 0)
 
 	searchQueries = append(searchQueries, buildQueryForTags(options.Tags)...)
