@@ -9,8 +9,6 @@ import (
 var (
 	// TriggerID represents field data for moira.Trigger.ID.
 	TriggerID = FieldData{"ID", "id", 5}
-	// TriggerTeamID represents field data for moira.Trigger.TeamID.
-	TriggerTeamID = FieldData{"TeamID", "team_id", 0}
 	// TriggerName represents field data for moira.Trigger.Name.
 	TriggerName = FieldData{"Name", "name", 3}
 	// TriggerDesc represents field data for moira.Trigger.Desc.
@@ -19,6 +17,8 @@ var (
 	TriggerTags = FieldData{"Tags", "tags", 0}
 	// TriggerCreatedBy represents field data for moira.Trigger.CreatedBy.
 	TriggerCreatedBy = FieldData{"CreatedBy", "created_by", 0}
+	// TriggerTeamID represents field data for moira.Trigger.TeamID.
+	TriggerTeamID = FieldData{"TeamID", "team_id", 0}
 	// TriggerLastCheckScore represents field data for moira.CheckData score.
 	TriggerLastCheckScore = FieldData{"LastCheckScore", "", 0}
 )

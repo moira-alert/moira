@@ -11,18 +11,18 @@ import (
 )
 
 func buildSearchQuery(options moira.SearchOptions) query.Query {
-	searchTerms := splitStringToTerms(options.SearchString)
-	if !options.OnlyProblems && len(options.Tags) == 0 && len(searchTerms) == 0 && !options.NeedSearchByCreatedBy {
-		return bleve.NewMatchAllQuery()
-	}
 
 	searchQueries := make([]query.Query, 0)
 
 	searchQueries = append(searchQueries, buildQueryForTags(options.Tags)...)
-	searchQueries = append(searchQueries, buildQueryForTerms(searchTerms)...)
+	searchQueries = append(searchQueries, buildQueryForTerms(splitStringToTerms(options.SearchString))...)
 	searchQueries = append(searchQueries, buildQueryForOnlyErrors(options.OnlyProblems)...)
-	searchQueries = append(searchQueries, buildQueryForCreatedBy(options.CreatedBy, options.NeedSearchByCreatedBy)...)
+	searchQueries = append(searchQueries, buildQueryForCreatedBy(options.CreatedBy)...)
 	searchQueries = append(searchQueries, buildQueryForTeamID(options.TeamID)...)
+
+	if len(searchQueries) == 0 {
+		return bleve.NewMatchAllQuery()
+	}
 
 	return bleve.NewConjunctionQuery(searchQueries...)
 }
@@ -37,9 +37,9 @@ func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 	return searchQueries
 }
 
-func buildQueryForCreatedBy(createdBy string, needSearchByCreatedBy bool) (searchQueries []query.Query) {
-	if !needSearchByCreatedBy {
-		return searchQueries
+func buildQueryForCreatedBy(createdBy string) (searchQueries []query.Query) {
+	if createdBy == "" {
+		return
 	}
 
 	qr := bleve.NewTermQuery(createdBy)
@@ -65,6 +65,10 @@ func buildQueryForTerms(searchTerms []string) (searchQueries []query.Query) {
 }
 
 func buildQueryForTeamID(teamID string) (searchQueries []query.Query) {
+	if teamID == "" {
+		return
+	}
+
 	qr := bleve.NewTermQuery(teamID)
 	qr.FieldVal = mapping.TriggerTeamID.GetName()
 	searchQueries = append(searchQueries, qr)

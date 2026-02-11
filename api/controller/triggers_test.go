@@ -260,15 +260,14 @@ func TestSearchTriggers(t *testing.T) {
 	}
 
 	searchOptions := moira.SearchOptions{
-		Page:                  0,
-		Size:                  50,
-		OnlyProblems:          false,
-		Tags:                  make([]string, 0),
-		SearchString:          "",
-		CreatedBy:             "",
-		NeedSearchByCreatedBy: false,
-		CreatePager:           false,
-		PagerID:               "",
+		Page:         0,
+		Size:         50,
+		OnlyProblems: false,
+		Tags:         make([]string, 0),
+		SearchString: "",
+		CreatedBy:    "",
+		CreatePager:  false,
+		PagerID:      "",
 	}
 
 	Convey("No tags, no text, onlyErrors = false, ", t, func() {
@@ -499,7 +498,6 @@ func TestSearchTriggers(t *testing.T) {
 
 			Convey("Only errors with createdBy", func() {
 				searchOptions.CreatedBy = "monster"
-				searchOptions.NeedSearchByCreatedBy = true
 				exp = 7
 				mockIndex.EXPECT().SearchTriggers(searchOptions).Return(triggerSearchResults[9:16], exp, nil)
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[9:16]).Return(triggersPointers[9:16], nil)
@@ -515,7 +513,6 @@ func TestSearchTriggers(t *testing.T) {
 
 			Convey("Only errors with createdBy and tags", func() {
 				searchOptions.CreatedBy = "tarasov.da"
-				searchOptions.NeedSearchByCreatedBy = true
 				searchOptions.Tags = []string{"Human", "NPCs"}
 				exp = 2
 				mockIndex.EXPECT().SearchTriggers(searchOptions).Return(triggerSearchResults[22:24], exp, nil)
@@ -532,7 +529,6 @@ func TestSearchTriggers(t *testing.T) {
 
 			Convey("Only errors with createdBy, tags and text terms", func() {
 				searchOptions.CreatedBy = "internship2023"
-				searchOptions.NeedSearchByCreatedBy = true
 				searchOptions.Tags = []string{"Female", "NPCs"}
 				searchOptions.SearchString = "Music"
 				exp = 2
@@ -550,7 +546,6 @@ func TestSearchTriggers(t *testing.T) {
 
 			Convey("Only errors with EMPTY createdBy", func() {
 				searchOptions.CreatedBy = ""
-				searchOptions.NeedSearchByCreatedBy = true
 				searchOptions.Tags = []string{}
 				searchOptions.SearchString = ""
 				exp = 3
@@ -569,7 +564,6 @@ func TestSearchTriggers(t *testing.T) {
 			Convey("Only triggers that match TeamID", func() {
 				searchOptions.TeamID = "e3c9bc96-7d3b-4ee8-b244-a4c9e7284d13"
 				searchOptions.CreatedBy = ""
-				searchOptions.NeedSearchByCreatedBy = false
 				searchOptions.Tags = []string{}
 				searchOptions.SearchString = ""
 				exp = 2
@@ -589,13 +583,12 @@ func TestSearchTriggers(t *testing.T) {
 
 	Convey("Find triggers errors", t, func() {
 		searchOptions = moira.SearchOptions{
-			Page:                  0,
-			Size:                  50,
-			OnlyProblems:          false,
-			Tags:                  make([]string, 0),
-			SearchString:          "",
-			CreatedBy:             "",
-			NeedSearchByCreatedBy: false,
+			Page:         0,
+			Size:         50,
+			OnlyProblems: false,
+			Tags:         make([]string, 0),
+			SearchString: "",
+			CreatedBy:    "",
 		}
 
 		Convey("Error from searcher", func() {
