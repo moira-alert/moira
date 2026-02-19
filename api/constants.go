@@ -11,3 +11,5 @@ const (
 	// DescSortOrder means that entities should be ordered descending (example: from 9 to 1).
 	DescSortOrder SortOrder = "desc"
 )
+
+const TeamIDVaildationErrorMsg string = "team ID contains invalid characters (allowed: 0-9, a-z, A-Z, -, ~, _, .)"
