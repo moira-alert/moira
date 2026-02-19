@@ -17,6 +17,8 @@ var (
 	TriggerTags = FieldData{"Tags", "tags", 0}
 	// TriggerCreatedBy represents field data for moira.Trigger.CreatedBy.
 	TriggerCreatedBy = FieldData{"CreatedBy", "created_by", 0}
+	// TriggerTeamID represents field data for moira.Trigger.TeamID.
+	TriggerTeamID = FieldData{"TeamID", "team_id", 0}
 	// TriggerLastCheckScore represents field data for moira.CheckData score.
 	TriggerLastCheckScore = FieldData{"LastCheckScore", "", 0}
 )
@@ -24,6 +26,7 @@ var (
 // Trigger represents Moira.Trigger type for full-text search index. It includes only indexed fields.
 type Trigger struct {
 	ID             string
+	TeamID         string
 	Name           string
 	Desc           string
 	Tags           []string
@@ -41,6 +44,7 @@ func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
 	triggerMapping := bleve.NewDocumentStaticMapping()
 
 	triggerMapping.AddFieldMappingsAt(TriggerName.GetName(), getStandardMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerName.GetName(), getStandardMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerTags.GetName(), getKeywordMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerDesc.GetName(), getStandardMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerCreatedBy.GetName(), getKeywordMapping())
@@ -53,6 +57,7 @@ func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
 func CreateIndexedTrigger(triggerCheck *moira.TriggerCheck) Trigger {
 	return Trigger{
 		ID:             triggerCheck.ID,
+		TeamID:         triggerCheck.TeamID,
 		Name:           triggerCheck.Name,
 		Desc:           moira.UseString(triggerCheck.Desc),
 		Tags:           triggerCheck.Tags,

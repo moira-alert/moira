@@ -18,7 +18,12 @@ import (
 
 const pageSizeUnlimited int64 = -1
 
-var idValidationPattern = regexp.MustCompile(`^[A-Za-z0-9._~-]+$`)
+var idValidationPattern *regexp.Regexp = regexp.MustCompile(idValidationPatternString)
+
+const (
+	idValidationPatternString string = `^[A-Za-z0-9._~-]*$`
+	teamIDVaildationErrorMsg  string = "team ID contains invalid characters that do not match the pattern: " + idValidationPatternString
+)
 
 // CreateTrigger creates new trigger.
 func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
@@ -42,6 +47,10 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 		if exists {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID (%s) already exists", trigger.ID))
 		}
+	}
+
+	if !isTeamIDValid(trigger.TeamID) {
+		return nil, api.ErrorInvalidRequest(errors.New(teamIDVaildationErrorMsg))
 	}
 
 	resp, err := saveTrigger(dataBase, nil, trigger.ToMoiraTrigger(), trigger.ID, timeSeriesNames)
@@ -343,4 +352,8 @@ func onlyTriggerIDs(idsWithCount []triggerIDWithEventsCount) []string {
 	}
 
 	return triggerIDs
+}
+
+func isTeamIDValid(teamID string) bool {
+	return teamID == "" || idValidationPattern.MatchString(teamID)
 }

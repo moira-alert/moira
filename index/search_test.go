@@ -47,13 +47,12 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 	Convey("Search for triggers without pagination", t, func() {
 		searchOptions := moira.SearchOptions{
-			Page:                  0,
-			Size:                  50,
-			OnlyProblems:          false,
-			Tags:                  make([]string, 0),
-			SearchString:          "",
-			CreatedBy:             "",
-			NeedSearchByCreatedBy: false,
+			Page:         0,
+			Size:         50,
+			OnlyProblems: false,
+			Tags:         make([]string, 0),
+			SearchString: "",
+			CreatedBy:    "",
 		}
 
 		Convey("No tags, no searchString, onlyErrors = false", func() {
@@ -140,7 +139,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.Tags = make([]string, 0)
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = "test"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := index.SearchTriggers(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[0:4])
@@ -153,7 +151,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.Tags = []string{"shadows"}
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = "tarasov.da"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := index.SearchTriggers(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[14:16])
@@ -166,7 +163,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.Tags = []string{"Coldness", "Dark"}
 			searchOptions.SearchString = "deadly"
 			searchOptions.CreatedBy = "tarasov.da"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := index.SearchTriggers(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[18:19])
@@ -179,7 +175,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.SearchString = ""
 			searchOptions.Tags = []string{"Darkness", "DND-generator"}
 			searchOptions.CreatedBy = ""
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := index.SearchTriggers(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[5:7])
@@ -190,13 +185,12 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 	Convey("Search for triggers with pagination", t, func() {
 		searchOptions := moira.SearchOptions{
-			Page:                  0,
-			Size:                  10,
-			OnlyProblems:          false,
-			Tags:                  make([]string, 0),
-			SearchString:          "",
-			CreatedBy:             "",
-			NeedSearchByCreatedBy: false,
+			Page:         0,
+			Size:         10,
+			OnlyProblems: false,
+			Tags:         make([]string, 0),
+			SearchString: "",
+			CreatedBy:    "",
 		}
 
 		Convey("No tags, no searchString, onlyErrors = false, page -> 0, size -> 10", func() {
@@ -263,7 +257,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.Tags = []string{"Human", "NPCs"}
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = "internship2023"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := index.SearchTriggers(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[22:24])
@@ -278,7 +271,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.Tags = []string{"Something-extremely-new"}
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = "internship2023"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := index.SearchTriggers(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[30:32])
@@ -293,24 +285,22 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.Tags = []string{}
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = ""
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := index.SearchTriggers(searchOptions)
-			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[4:7])
-			So(count, ShouldEqual, 3)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[0:3])
+			So(count, ShouldEqual, 32)
 			So(err, ShouldBeNil)
 		})
 	})
 
 	Convey("Search for triggers by description", t, func() {
 		searchOptions := moira.SearchOptions{
-			Page:                  0,
-			Size:                  50,
-			OnlyProblems:          false,
-			Tags:                  make([]string, 0),
-			SearchString:          "",
-			CreatedBy:             "",
-			NeedSearchByCreatedBy: false,
+			Page:         0,
+			Size:         50,
+			OnlyProblems: false,
+			Tags:         make([]string, 0),
+			SearchString: "",
+			CreatedBy:    "",
 		}
 
 		Convey("OnlyErrors = false, search by name and description, 0 results", func() {
@@ -365,7 +355,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.SearchString = "mama"
 			searchOptions.Tags = make([]string, 0)
 			searchOptions.CreatedBy = "monster"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			_, count, err := index.SearchTriggers(searchOptions)
 			So(count, ShouldEqual, 3)
@@ -376,7 +365,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			searchOptions.SearchString = "little monster"
 			searchOptions.Tags = make([]string, 0)
 			searchOptions.CreatedBy = ""
-			searchOptions.NeedSearchByCreatedBy = true
 
 			_, count, err := index.SearchTriggers(searchOptions)
 			So(count, ShouldEqual, 1)
@@ -418,13 +406,12 @@ func TestIndex_SearchErrors(t *testing.T) {
 
 	Convey("Test search on non-ready index", t, func() {
 		searchOptions := moira.SearchOptions{
-			Page:                  0,
-			Size:                  50,
-			OnlyProblems:          false,
-			Tags:                  make([]string, 0),
-			SearchString:          "",
-			CreatedBy:             "",
-			NeedSearchByCreatedBy: false,
+			Page:         0,
+			Size:         50,
+			OnlyProblems: false,
+			Tags:         make([]string, 0),
+			SearchString: "",
+			CreatedBy:    "",
 		}
 
 		actualTriggerIDs, total, err := index.SearchTriggers(searchOptions)
