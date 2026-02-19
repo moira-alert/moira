@@ -153,6 +153,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 	return TriggerModel{
 		ID:             trigger.ID,
+		TeamID:         trigger.TeamID,
 		Name:           trigger.Name,
 		Desc:           trigger.Desc,
 		Targets:        trigger.Targets,
