@@ -13,11 +13,10 @@ const defaultSearchString = "123 456"
 
 func TestIndex_BuildSearchQuery(t *testing.T) {
 	searchOptions := moira.SearchOptions{
-		OnlyProblems:          false,
-		Tags:                  make([]string, 0),
-		SearchString:          "",
-		CreatedBy:             "",
-		NeedSearchByCreatedBy: false,
+		OnlyProblems: false,
+		Tags:         make([]string, 0),
+		SearchString: "",
+		CreatedBy:    "",
 	}
 
 	Convey("Test build search query", t, func() {
@@ -79,9 +78,8 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				searchOptions.Tags = make([]string, 0)
 				searchOptions.SearchString = ""
 				searchOptions.CreatedBy = "test"
-				searchOptions.NeedSearchByCreatedBy = true
 
-				qr := buildQueryForCreatedBy(searchOptions.CreatedBy, searchOptions.NeedSearchByCreatedBy)
+				qr := buildQueryForCreatedBy(searchOptions.CreatedBy)
 				expected := bleve.NewConjunctionQuery(qr...)
 
 				actual := buildSearchQuery(searchOptions)
@@ -99,7 +97,7 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				searchQueries = append(searchQueries, buildQueryForTags(searchOptions.Tags)...)
 				searchQueries = append(searchQueries, buildQueryForTerms(searchTerms)...)
 				searchQueries = append(searchQueries, buildQueryForOnlyErrors(searchOptions.OnlyProblems)...)
-				searchQueries = append(searchQueries, buildQueryForCreatedBy(searchOptions.CreatedBy, searchOptions.NeedSearchByCreatedBy)...)
+				searchQueries = append(searchQueries, buildQueryForCreatedBy(searchOptions.CreatedBy)...)
 				expected := bleve.NewConjunctionQuery(searchQueries...)
 
 				actual := buildSearchQuery(searchOptions)
