@@ -48,6 +48,7 @@ func TestTriggerIndex_Search(t *testing.T) {
 			Tags:         make([]string, 0),
 			SearchString: "",
 			CreatedBy:    "",
+			TeamID:       "",
 		}
 
 		Convey("No tags, no searchString, onlyErrors = false, without createdBy", func() {
@@ -176,6 +177,32 @@ func TestTriggerIndex_Search(t *testing.T) {
 			So(count, ShouldEqual, 2)
 			So(err, ShouldBeNil)
 		})
+
+		Convey("OnlyErrors = false, no tags, no text, with EMPTY createdBy, with teamID", func() {
+			searchOptions.OnlyProblems = false
+			searchOptions.SearchString = ""
+			searchOptions.Tags = make([]string, 0)
+			searchOptions.CreatedBy = ""
+			searchOptions.TeamID = "SuperTeam1"
+
+			searchResults, count, err := newIndex.Search(searchOptions)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[2:4])
+			So(count, ShouldEqual, 2)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, with tags, no text, with EMPTY createdBy, with teamID", func() {
+			searchOptions.OnlyProblems = false
+			searchOptions.SearchString = ""
+			searchOptions.Tags = []string{"Kobold"}
+			searchOptions.CreatedBy = ""
+			searchOptions.TeamID = "SuperTeam1"
+
+			searchResults, count, err := newIndex.Search(searchOptions)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[2:3])
+			So(count, ShouldEqual, 1)
+			So(err, ShouldBeNil)
+		})
 	})
 
 	Convey("Search for triggers with pagination", t, func() {
@@ -284,6 +311,36 @@ func TestTriggerIndex_Search(t *testing.T) {
 			searchResults, count, err := newIndex.Search(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[0:3])
 			So(count, ShouldEqual, 32)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, no tags, no text, with EMPTY createdBy, with teamID, page -> 0, size 3", func() {
+			searchOptions.Page = 0
+			searchOptions.Size = 3
+			searchOptions.OnlyProblems = false
+			searchOptions.SearchString = ""
+			searchOptions.Tags = make([]string, 0)
+			searchOptions.CreatedBy = ""
+			searchOptions.TeamID = "SuperTeam1"
+
+			searchResults, count, err := newIndex.Search(searchOptions)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[2:4])
+			So(count, ShouldEqual, 2)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, with tags, no text, with EMPTY createdBy, with teamID, page -> 0, size 3", func() {
+			searchOptions.Page = 0
+			searchOptions.Size = 3
+			searchOptions.OnlyProblems = false
+			searchOptions.SearchString = ""
+			searchOptions.Tags = []string{"Kobold"}
+			searchOptions.CreatedBy = ""
+			searchOptions.TeamID = "SuperTeam1"
+
+			searchResults, count, err := newIndex.Search(searchOptions)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[2:3])
+			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
 		})
 	})
