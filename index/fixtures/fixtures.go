@@ -13,6 +13,7 @@ type fixtureIndexedTriggers struct {
 
 type fixtureIndexedTrigger struct {
 	triggerID        string
+	triggerTeamID    string
 	triggerName      fixtureIndexedField
 	triggerDesc      fixtureIndexedField
 	triggerTags      []string
@@ -40,6 +41,7 @@ func (its *fixtureIndexedTriggers) ToTriggerChecks() []*moira.TriggerCheck {
 		triggerCheck := moira.TriggerCheck{
 			Trigger: moira.Trigger{
 				ID:        indexedTrigger.triggerID,
+				TeamID:    indexedTrigger.triggerTeamID,
 				Name:      indexedTrigger.triggerName.content,
 				Tags:      indexedTrigger.triggerTags,
 				CreatedBy: indexedTrigger.triggerCreatedBy,
@@ -107,7 +109,8 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerScore:     29, //nolint
 		},
 		{
-			triggerID: "SuperTrigger3",
+			triggerID:     "SuperTrigger3",
+			triggerTeamID: "SuperTeam1",
 			triggerName: fixtureIndexedField{
 				content: "Kobold Dragonshield (cr 1, vgm 165) and 1 x Kobold (cr 1/8, mm 195); medium, 225 xp",
 				highlights: map[string][]moira.SearchHighlight{
@@ -127,7 +130,8 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerScore:     28, //nolint
 		},
 		{
-			triggerID: "SuperTrigger4",
+			triggerID:     "SuperTrigger4",
+			triggerTeamID: "SuperTeam1",
 			triggerName: fixtureIndexedField{
 				content: "Orc Nurtured One of Yurtrus (cr 1/2, vgm 184) and 1 x Orc (cr 1/2, mm 246); hard, 200 xp",
 			},
@@ -139,7 +143,8 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerScore:     27, //nolint
 		},
 		{
-			triggerID: "SuperTrigger5",
+			triggerID:     "SuperTrigger5",
+			triggerTeamID: "SuperTeam2",
 			triggerName: fixtureIndexedField{
 				content: "Rust Monster (cr 1/2, mm 262); easy, 100 xp",
 				highlights: map[string][]moira.SearchHighlight{
