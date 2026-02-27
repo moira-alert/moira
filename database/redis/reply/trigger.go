@@ -40,18 +40,6 @@ type triggerStorageElement struct {
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
-	// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
-	if storageElement.AloneMetrics == nil {
-		aloneMetricsLen := len(storageElement.Targets)
-		storageElement.AloneMetrics = make(map[string]bool, aloneMetricsLen)
-
-		for i := 2; i <= aloneMetricsLen; i++ {
-			targetName := fmt.Sprintf("t%d", i)
-			storageElement.AloneMetrics[targetName] = true
-		}
-	}
-	// TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
-
 	triggerSource := storageElement.TriggerSource.FillInIfNotSet(storageElement.IsRemote)
 	clusterId := storageElement.ClusterId.FillInIfNotSet()
 
