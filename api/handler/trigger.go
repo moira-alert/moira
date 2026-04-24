@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -101,6 +102,13 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 func needValidate(request *http.Request) bool {
 	const validateFlag = "validate"
 	return request.URL.Query().Has(validateFlag)
+}
+
+func getMaxMetricsCount(request *http.Request) int {
+	const maxMetricsCountFlag = "maxMetricsCount"
+	maxMetricsCount, _ := strconv.Atoi(request.URL.Query().Get(maxMetricsCountFlag))
+
+	return maxMetricsCount
 }
 
 // validateTargets checks targets of trigger.

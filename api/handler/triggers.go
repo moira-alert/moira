@@ -37,6 +37,13 @@ func triggers(searcher moira.Searcher) func(chi.Router) {
 			middleware.SortOrderContext(api.DescSortOrder),
 		).Get("/noisiness", getTriggerNoisiness)
 
+		router.With(
+			middleware.AdminOnlyMiddleware(),
+			middleware.Paginate(getTriggerNoisinessDefaultPage, getTriggerNoisinessDefaultSize),
+			middleware.DateRange(getTriggerNoisinessDefaultFrom, getTriggerNoisinessDefaultTo),
+			middleware.SortOrderContext(api.DescSortOrder),
+		).Get("/heavy", getAllHeavyTriggers)
+
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
@@ -59,6 +66,34 @@ func triggers(searcher moira.Searcher) func(chi.Router) {
 //	@router		/trigger [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, triggersList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	Get all heavy triggers
+//	@id			get-all-heavy-triggers
+//	@tags		trigger
+//	@produce	json
+//	@success	200	{object}	dto.TriggersList	"Fetched all heavy triggers"
+//	@failure	422	{object}	api.ErrorResponse	"Render error"
+//	@failure	500	{object}	api.ErrorResponse	"Internal server error"
+//	@router		/trigger [get]
+func getAllHeavyTriggers(writer http.ResponseWriter, request *http.Request) {
+	maxMetricsCount := getMaxMetricsCount(request)
+	if maxMetricsCount <= 0 {
+
+	}
+
+	triggersList, errorResponse := controller.GetAllHeavyTriggers(database, maxMetricsCount)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
@@ -157,7 +192,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 }
 
 func is4xxCode(statusCode int64) bool {
-	return statusCode >= 400 && statusCode < 500
+	return statusCode >= http.StatusBadRequest && statusCode < http.StatusInternalServerError
 }
 
 func errorResponseOnPrometheusError(promErr *prometheus.Error) *api.ErrorResponse {
