@@ -11,8 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
@@ -575,7 +573,7 @@ func MakeTestTTLs() map[moira.ClusterKey]time.Duration {
 	}
 }
 
-// TestGetMaxMetricsCount tests getMaxMetricsCount function with all possible scenarios
+// TestGetMaxMetricsCount tests getMaxMetricsCount function with all possible scenarios.
 func Test_getMaxMetricsCount(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -672,10 +670,10 @@ func Test_getMaxMetricsCount(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req, err := http.NewRequest(http.MethodGet, tt.rawURL, nil)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			result := getMaxMetricsCount(req)
-			assert.Equal(t, tt.expectedResult, result)
+			require.Equal(t, tt.expectedResult, result)
 		})
 	}
 }
