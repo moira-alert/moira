@@ -13,8 +13,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/moira-alert/moira/api"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
