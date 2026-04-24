@@ -743,7 +743,7 @@ var triggerChecks = []moira.TriggerCheck{
 	{
 		Trigger: moira.Trigger{
 			ID:        "SuperTrigger5",
-			Name:      "Rust Monster (cr 1/2, mm 262); easy, 10 xp",
+			Name:      "Rust Monster (cr 1/2, mm 262); easy, 100 xp",
 			Tags:      []string{"DND-generator", "Rust-Monster", "encounters"},
 			CreatedBy: "test",
 		},
@@ -778,7 +778,7 @@ var triggerChecks = []moira.TriggerCheck{
 	{
 		Trigger: moira.Trigger{
 			ID:   "SuperTrigger8",
-			Name: "Ghost (cr 4, mm 147); hard, 110 xp",
+			Name: "Ghost (cr 4, mm 147); hard, 1100 xp",
 			Tags: []string{"Ghost", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
