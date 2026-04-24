@@ -1488,7 +1488,7 @@ func TestGetTriggerNoisiness(t *testing.T) {
 	})
 }
 
-// TestGetAllHeavyTriggers tests GetAllHeavyTriggers function with all possible scenarios
+// TestGetAllHeavyTriggers tests GetAllHeavyTriggers function with all possible scenarios.
 func TestGetAllHeavyTriggers(t *testing.T) {
 	tests := []struct {
 		name             string
@@ -1613,16 +1613,18 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 			mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
 			mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
 
-			returnedChecks := make([]*moira.TriggerCheck, len(tt.mockTriggersList.List))
+			returnedChecks := make([]*moira.TriggerCheck, 0)
 			for _, check := range tt.mockTriggersList.List {
 				returnedChecks = append(returnedChecks, &check)
 			}
+
 			mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
 			if tt.expectPanic {
 				assert.Panics(t, func() {
 					GetAllHeavyTriggers(mockDB, tt.maxMetricsCount)
 				}, "Expected panic but got none")
+
 				return
 			}
 
@@ -1638,5 +1640,6 @@ func makeMetricChecks(n int) map[string]moira.MetricState {
 	for i := 0; i < n; i++ {
 		metricsChecks[strconv.Itoa(i)] = moira.MetricState{}
 	}
+
 	return metricsChecks
 }

@@ -106,6 +106,7 @@ func needValidate(request *http.Request) bool {
 
 func getMaxMetricsCount(request *http.Request) int {
 	const maxMetricsCountFlag = "maxMetricsCount"
+
 	maxMetricsCount, _ := strconv.Atoi(request.URL.Query().Get(maxMetricsCountFlag))
 
 	return maxMetricsCount
