@@ -20,7 +20,7 @@ func health(router chi.Router) {
 
 	router.Get("/notifier-sources", getNotifierStatesForSources)
 	router.With(middleware.AdminOnlyMiddleware()).
-		Put("/notifier-sources/{triggerSource}/{clusterId}", setNotifierStateForSource)
+		Put("/notifier-sources/{triggerSource}/{clusterId}", func(w http.ResponseWriter, r *http.Request) { setNotifierStateForSource(w, r) })
 
 	router.With(middleware.AdminOnlyMiddleware()).
 		Get("/system-subscriptions", getSystemSubscriptions)

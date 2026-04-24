@@ -42,13 +42,13 @@ func TestTriggerIndex_Search(t *testing.T) {
 
 	Convey("Search for triggers without pagination", t, func() {
 		searchOptions := moira.SearchOptions{
-			Page:                  0,
-			Size:                  50,
-			OnlyProblems:          false,
-			Tags:                  make([]string, 0),
-			SearchString:          "",
-			CreatedBy:             "",
-			NeedSearchByCreatedBy: false,
+			Page:         0,
+			Size:         50,
+			OnlyProblems: false,
+			Tags:         make([]string, 0),
+			SearchString: "",
+			CreatedBy:    "",
+			TeamID:       "",
 		}
 
 		Convey("No tags, no searchString, onlyErrors = false, without createdBy", func() {
@@ -135,7 +135,6 @@ func TestTriggerIndex_Search(t *testing.T) {
 			searchOptions.Tags = make([]string, 0)
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = "test"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := newIndex.Search(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[0:4])
@@ -172,24 +171,48 @@ func TestTriggerIndex_Search(t *testing.T) {
 			searchOptions.SearchString = ""
 			searchOptions.Tags = []string{"Darkness", "DND-generator"}
 			searchOptions.CreatedBy = ""
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := newIndex.Search(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[5:7])
 			So(count, ShouldEqual, 2)
 			So(err, ShouldBeNil)
 		})
+
+		Convey("OnlyErrors = false, no tags, no text, with EMPTY createdBy, with teamID", func() {
+			searchOptions.OnlyProblems = false
+			searchOptions.SearchString = ""
+			searchOptions.Tags = make([]string, 0)
+			searchOptions.CreatedBy = ""
+			searchOptions.TeamID = "SuperTeam1"
+
+			searchResults, count, err := newIndex.Search(searchOptions)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[2:4])
+			So(count, ShouldEqual, 2)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, with tags, no text, with EMPTY createdBy, with teamID", func() {
+			searchOptions.OnlyProblems = false
+			searchOptions.SearchString = ""
+			searchOptions.Tags = []string{"Kobold"}
+			searchOptions.CreatedBy = ""
+			searchOptions.TeamID = "SuperTeam1"
+
+			searchResults, count, err := newIndex.Search(searchOptions)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[2:3])
+			So(count, ShouldEqual, 1)
+			So(err, ShouldBeNil)
+		})
 	})
 
 	Convey("Search for triggers with pagination", t, func() {
 		searchOptions := moira.SearchOptions{
-			Page:                  0,
-			Size:                  10,
-			OnlyProblems:          false,
-			Tags:                  make([]string, 0),
-			SearchString:          "",
-			CreatedBy:             "",
-			NeedSearchByCreatedBy: false,
+			Page:         0,
+			Size:         10,
+			OnlyProblems: false,
+			Tags:         make([]string, 0),
+			SearchString: "",
+			CreatedBy:    "",
 		}
 
 		Convey("No tags, no searchString, onlyErrors = false, page -> 0, size -> 10", func() {
@@ -256,7 +279,6 @@ func TestTriggerIndex_Search(t *testing.T) {
 			searchOptions.Tags = []string{"Human", "NPCs"}
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = "internship2023"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := newIndex.Search(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[22:24])
@@ -271,7 +293,6 @@ func TestTriggerIndex_Search(t *testing.T) {
 			searchOptions.Tags = []string{"Something-extremely-new"}
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = "internship2023"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := newIndex.Search(searchOptions)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[30:32])
@@ -286,24 +307,52 @@ func TestTriggerIndex_Search(t *testing.T) {
 			searchOptions.Tags = []string{}
 			searchOptions.SearchString = ""
 			searchOptions.CreatedBy = ""
-			searchOptions.NeedSearchByCreatedBy = true
 
 			searchResults, count, err := newIndex.Search(searchOptions)
-			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[4:7])
-			So(count, ShouldEqual, 3)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[0:3])
+			So(count, ShouldEqual, 32)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, no tags, no text, with EMPTY createdBy, with teamID, page -> 0, size 3", func() {
+			searchOptions.Page = 0
+			searchOptions.Size = 3
+			searchOptions.OnlyProblems = false
+			searchOptions.SearchString = ""
+			searchOptions.Tags = make([]string, 0)
+			searchOptions.CreatedBy = ""
+			searchOptions.TeamID = "SuperTeam1"
+
+			searchResults, count, err := newIndex.Search(searchOptions)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[2:4])
+			So(count, ShouldEqual, 2)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, with tags, no text, with EMPTY createdBy, with teamID, page -> 0, size 3", func() {
+			searchOptions.Page = 0
+			searchOptions.Size = 3
+			searchOptions.OnlyProblems = false
+			searchOptions.SearchString = ""
+			searchOptions.Tags = []string{"Kobold"}
+			searchOptions.CreatedBy = ""
+			searchOptions.TeamID = "SuperTeam1"
+
+			searchResults, count, err := newIndex.Search(searchOptions)
+			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchOptions.SearchString)[2:3])
+			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
 		})
 	})
 
 	Convey("Search for triggers by description", t, func() {
 		searchOptions := moira.SearchOptions{
-			Page:                  0,
-			Size:                  50,
-			OnlyProblems:          false,
-			Tags:                  make([]string, 0),
-			SearchString:          "",
-			CreatedBy:             "",
-			NeedSearchByCreatedBy: false,
+			Page:         0,
+			Size:         50,
+			OnlyProblems: false,
+			Tags:         make([]string, 0),
+			SearchString: "",
+			CreatedBy:    "",
 		}
 
 		Convey("OnlyErrors = false, search by name and description, 0 results", func() {
@@ -358,7 +407,6 @@ func TestTriggerIndex_Search(t *testing.T) {
 			searchOptions.SearchString = "mama"
 			searchOptions.Tags = make([]string, 0)
 			searchOptions.CreatedBy = "monster"
-			searchOptions.NeedSearchByCreatedBy = true
 
 			_, count, err := newIndex.Search(searchOptions)
 			So(count, ShouldEqual, 3)
@@ -369,7 +417,6 @@ func TestTriggerIndex_Search(t *testing.T) {
 			searchOptions.SearchString = "little monster"
 			searchOptions.Tags = make([]string, 0)
 			searchOptions.CreatedBy = ""
-			searchOptions.NeedSearchByCreatedBy = true
 
 			_, count, err := newIndex.Search(searchOptions)
 			So(count, ShouldEqual, 1)

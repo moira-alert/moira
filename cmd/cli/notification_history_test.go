@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 var testTimestamp = time.Now().Unix()
@@ -101,57 +101,55 @@ func TestSplitNotificationHistory(t *testing.T) {
 	conf := getDefault()
 
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	db := redis.NewTestDatabase(logger)
-	db.Flush()
 
+	db.Flush()
 	defer db.Flush()
 
 	ctx := context.Background()
 	client := db.Client()
 
-	Convey("Test split notification history", t, func() {
-		Convey("with empty contactNotificationKey", func() {
+	t.Run("Test split notification history", func(t *testing.T) {
+		t.Run("with empty contactNotificationKey", func(t *testing.T) {
 			err = splitNotificationHistoryByContactID(ctx, logger, db)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			keys, err := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
-			So(err, ShouldBeNil)
-			So(keys, ShouldHaveLength, 0)
+			require.NoError(t, err)
+			require.Empty(t, keys)
 		})
 
-		Convey("with empty split history", func() {
+		t.Run("with empty split history", func(t *testing.T) {
 			toInsert, err := prepareNotSplitItemsToInsert(testNotificationHistoryEvents)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = storeNotificationHistoryBySingleKey(ctx, db, toInsert)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			eventsMap := eventsByKey(testNotificationHistoryEvents)
 
-			testSplitNotificationHistory(ctx, db, logger, eventsMap)
+			testSplitNotificationHistory(t, ctx, db, logger, eventsMap)
 
 			db.Flush()
 		})
 
-		Convey("with not empty split history", func() {
+		t.Run("with not empty split history", func(t *testing.T) {
 			toInsert, err := prepareNotSplitItemsToInsert(testNotificationHistoryEvents)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = storeNotificationHistoryBySingleKey(ctx, db, toInsert)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			toInsertMap, err := prepareSplitItemsToInsert(eventsByKey(additionalTestNotificationHistoryEvents))
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = storeSplitNotifications(ctx, db, toInsertMap)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			testSplitNotificationHistory(
-				ctx, db, logger, eventsByKey(append(testNotificationHistoryEvents, additionalTestNotificationHistoryEvents...)))
+				t, ctx, db, logger, eventsByKey(append(testNotificationHistoryEvents, additionalTestNotificationHistoryEvents...)))
 
 			db.Flush()
 		})
@@ -159,141 +157,104 @@ func TestSplitNotificationHistory(t *testing.T) {
 }
 
 func testSplitNotificationHistory(
+	t *testing.T,
 	ctx context.Context,
 	db *redis.DbConnector,
 	logger moira.Logger,
 	eventsMap map[string][]*moira.NotificationEventHistoryItem,
 ) {
+	t.Helper()
+
 	client := db.Client()
 
-	Convey("with prepared history", func() {
-		errExists := splitNotificationHistoryByContactID(ctx, logger, db)
-		So(errExists, ShouldBeNil)
+	errExists := splitNotificationHistoryByContactID(ctx, logger, db)
+	require.NoError(t, errExists)
 
-		for contactID, expectedEvents := range eventsMap {
-			Convey(fmt.Sprintf("check contact with id: %s", contactID), func() {
-				gotEvents, errAfterZRange := client.ZRangeByScore(
-					ctx,
-					contactNotificationKeyWithID(contactID),
-					&goredis.ZRangeBy{
-						Min:    "-inf",
-						Max:    "+inf",
-						Offset: 0,
-						Count:  -1,
-					}).Result()
-				So(errAfterZRange, ShouldBeNil)
-				So(gotEvents, ShouldHaveLength, len(expectedEvents))
+	for contactID, expectedEvents := range eventsMap {
+		t.Run(fmt.Sprintf("check contact with id: %s", contactID), func(t *testing.T) {
+			gotEvents, errAfterZRange := client.ZRangeByScore(
+				ctx,
+				contactNotificationKeyWithID(contactID),
+				&goredis.ZRangeBy{
+					Min:    "-inf",
+					Max:    "+inf",
+					Offset: 0,
+					Count:  -1,
+				}).Result()
+			require.NoError(t, errAfterZRange)
+			require.Len(t, gotEvents, len(expectedEvents))
 
-				for i, gotEventStr := range gotEvents {
-					notificationEvent, err := redis.GetNotificationStruct(gotEventStr)
-					So(err, ShouldBeNil)
-					So(notificationEvent, ShouldResemble, *expectedEvents[i])
-				}
-			})
-		}
+			for i, gotEventStr := range gotEvents {
+				notificationEvent, err := redis.GetNotificationStruct(gotEventStr)
+				require.NoError(t, err)
+				require.Equal(t, *expectedEvents[i], notificationEvent)
+			}
+		})
+	}
 
-		res, errExists := client.Exists(ctx, contactNotificationKey).Result()
-		So(errExists, ShouldBeNil)
-		So(res, ShouldEqual, 0)
-	})
+	res, errExists := client.Exists(ctx, contactNotificationKey).Result()
+	require.NoError(t, errExists)
+	require.Equal(t, int64(0), res)
 }
 
 func TestMergeNotificationHistory(t *testing.T) {
 	conf := getDefault()
 
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "test", conf.LogPrettyFormat)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	db := redis.NewTestDatabase(logger)
-	db.Flush()
 
+	db.Flush()
 	defer db.Flush()
 
 	ctx := context.Background()
 	client := db.Client()
 
-	Convey("Test merge notification history", t, func() {
-		Convey("with empty database", func() {
+	t.Run("Test merge notification history", func(t *testing.T) {
+		t.Run("with empty database", func(t *testing.T) {
 			err = mergeNotificationHistory(logger, db)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			keys, err := client.Keys(ctx, contactNotificationKey).Result()
-			So(err, ShouldBeNil)
-			So(keys, ShouldHaveLength, 0)
+			require.NoError(t, err)
+			require.Empty(t, keys)
 		})
 
-		Convey("with empty history by single key", func() {
+		t.Run("with empty history by single key", func(t *testing.T) {
 			eventsMap := eventsByKey(testNotificationHistoryEvents)
 
 			toInsertMap, err := prepareSplitItemsToInsert(eventsMap)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = storeSplitNotifications(ctx, db, toInsertMap)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
-			testMergeNotificationHistory(ctx, db, logger, testNotificationHistoryEvents)
+			testMergeNotificationHistory(t, ctx, db, logger, testNotificationHistoryEvents)
 
 			db.Flush()
 		})
 
-		Convey("with not empty history by single key", func() {
+		t.Run("with not empty history by single key", func(t *testing.T) {
 			eventsMap := eventsByKey(testNotificationHistoryEvents)
 
 			toInsertMap, err := prepareSplitItemsToInsert(eventsMap)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = storeSplitNotifications(ctx, db, toInsertMap)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			toInsert, err := prepareNotSplitItemsToInsert(additionalTestNotificationHistoryEvents)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			err = storeNotificationHistoryBySingleKey(ctx, db, toInsert)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			testMergeNotificationHistory(
-				ctx, db, logger, append(testNotificationHistoryEvents, additionalTestNotificationHistoryEvents...))
+				t, ctx, db, logger, append(testNotificationHistoryEvents, additionalTestNotificationHistoryEvents...))
 
 			db.Flush()
 		})
-	})
-}
-
-func testMergeNotificationHistory(
-	ctx context.Context,
-	db *redis.DbConnector,
-	logger moira.Logger,
-	eventsList []*moira.NotificationEventHistoryItem,
-) {
-	client := db.Client()
-
-	Convey("with split history", func() {
-		err := mergeNotificationHistory(logger, db)
-		So(err, ShouldBeNil)
-
-		gotEventsStrs, errAfterZRange := client.ZRangeByScore(
-			ctx,
-			contactNotificationKey,
-			&goredis.ZRangeBy{
-				Min:    "-inf",
-				Max:    "+inf",
-				Offset: 0,
-				Count:  -1,
-			}).Result()
-		So(errAfterZRange, ShouldBeNil)
-		So(gotEventsStrs, ShouldHaveLength, len(eventsList))
-
-		for i, gotEventStr := range gotEventsStrs {
-			notificationEvent, errDeserialize := redis.GetNotificationStruct(gotEventStr)
-			So(errDeserialize, ShouldBeNil)
-			So(notificationEvent, ShouldResemble, *eventsList[i])
-		}
-
-		contactKeys, errAfterKeys := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
-		So(errAfterKeys, ShouldBeNil)
-		So(contactKeys, ShouldHaveLength, 0)
 	})
 }
 
@@ -386,4 +347,41 @@ func storeSplitNotifications(ctx context.Context, database moira.Database, toIns
 	}
 
 	return nil
+}
+
+func testMergeNotificationHistory(
+	t *testing.T,
+	ctx context.Context,
+	db *redis.DbConnector,
+	logger moira.Logger,
+	eventsList []*moira.NotificationEventHistoryItem,
+) {
+	t.Helper()
+
+	client := db.Client()
+
+	err := mergeNotificationHistory(logger, db)
+	require.NoError(t, err)
+
+	gotEventsStrs, errAfterZRange := client.ZRangeByScore(
+		ctx,
+		contactNotificationKey,
+		&goredis.ZRangeBy{
+			Min:    "-inf",
+			Max:    "+inf",
+			Offset: 0,
+			Count:  -1,
+		}).Result()
+	require.NoError(t, errAfterZRange)
+	require.Len(t, gotEventsStrs, len(eventsList))
+
+	for i, gotEventStr := range gotEventsStrs {
+		notificationEvent, errDeserialize := redis.GetNotificationStruct(gotEventStr)
+		require.NoError(t, errDeserialize)
+		require.Equal(t, *eventsList[i], notificationEvent)
+	}
+
+	contactKeys, errAfterKeys := client.Keys(ctx, contactNotificationKeyWithID("*")).Result()
+	require.NoError(t, errAfterKeys)
+	require.Empty(t, contactKeys)
 }

@@ -74,7 +74,7 @@ func NewHandler(
 	//	@license.name				MIT
 	//	@license.url				https://opensource.org/licenses/MIT
 	//	@license.identifier			MIT
-	//	@servers					/api
+	//	@BasePath					/api
 	//
 	//	@tag.name					contact
 	//	@tag.description			APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>

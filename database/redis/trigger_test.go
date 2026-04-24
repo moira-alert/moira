@@ -542,7 +542,7 @@ func TestRemoteTrigger(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	systemClock := mock_clock.NewMockClock(mockCtrl)
-	dataBase.clock = systemClock
+	dataBase.Clock = systemClock
 	pattern := "test.pattern.remote1"
 	trigger := &moira.Trigger{
 		ID:            "triggerID-0000000000010",
@@ -742,7 +742,7 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 
 	systemClock := mock_clock.NewMockClock(mockCtrl)
 	systemClock.EXPECT().NowUnix().Return(testTime.Unix()).Times(6)
-	connector := &DbConnector{clock: systemClock}
+	connector := &DbConnector{Clock: systemClock}
 	patterns := []string{"pattern-1", "pattern-2"}
 
 	Convey("When a local trigger", t, func() {
@@ -872,6 +872,7 @@ func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
 var testTriggers = []moira.Trigger{
 	{
 		ID:           "triggerID-0000000000001",
+		TeamID:       "teamID-0000000000001",
 		Name:         "test trigger 1 v1.0",
 		Targets:      []string{"test.target.1"},
 		Tags:         []string{"test-tag-1"},
@@ -885,6 +886,7 @@ var testTriggers = []moira.Trigger{
 	},
 	{
 		ID:            "triggerID-0000000000001",
+		TeamID:        "teamID-0000000000001",
 		Name:          "test trigger 1 v2.0",
 		Targets:       []string{"test.target.1", "test.target.2"},
 		Tags:          []string{"test-tag-2", "test-tag-1"},
@@ -896,6 +898,7 @@ var testTriggers = []moira.Trigger{
 	},
 	{
 		ID:            "triggerID-0000000000001",
+		TeamID:        "teamID-0000000000001",
 		Name:          "test trigger 1 v3.0",
 		Targets:       []string{"test.target.3"},
 		Tags:          []string{"test-tag-2", "test-tag-3"},
@@ -907,6 +910,7 @@ var testTriggers = []moira.Trigger{
 	},
 	{
 		ID:            "triggerID-0000000000004",
+		TeamID:        "teamID-0000000000001",
 		Name:          "test trigger 4",
 		Targets:       []string{"test.target.4"},
 		Tags:          []string{"test-tag-4"},
@@ -917,6 +921,7 @@ var testTriggers = []moira.Trigger{
 	},
 	{
 		ID:            "triggerID-0000000000005",
+		TeamID:        "teamID-0000000000001",
 		Name:          "test trigger 5 (nobody is subscribed)",
 		Targets:       []string{"test.target.5"},
 		Tags:          []string{"test-tag-nosub"},
@@ -927,6 +932,7 @@ var testTriggers = []moira.Trigger{
 	},
 	{
 		ID:            "triggerID-0000000000006",
+		TeamID:        "teamID-0000000000001",
 		Name:          "test trigger 6 (throttling disabled)",
 		Targets:       []string{"test.target.6"},
 		Tags:          []string{"test-tag-throttling-disabled"},
@@ -937,6 +943,7 @@ var testTriggers = []moira.Trigger{
 	},
 	{
 		ID:            "triggerID-0000000000007",
+		TeamID:        "teamID-0000000000001",
 		Name:          "test trigger 7 (multiple subscribers)",
 		Targets:       []string{"test.target.7"},
 		Tags:          []string{"test-tag-multiple-subs"},
@@ -947,6 +954,7 @@ var testTriggers = []moira.Trigger{
 	},
 	{
 		ID:            "triggerID-0000000000008",
+		TeamID:        "teamID-0000000000001",
 		Name:          "test trigger 8 (duplicated contacts)",
 		Targets:       []string{"test.target.8"},
 		Tags:          []string{"test-tag-dup-contacts"},
@@ -957,6 +965,7 @@ var testTriggers = []moira.Trigger{
 	},
 	{
 		ID:            "triggerID-0000000000009",
+		TeamID:        "teamID-0000000000001",
 		Name:          "test trigger 9 (pseudo tag)",
 		Targets:       []string{"test.target.9"},
 		Tags:          []string{"test-degradation"},

@@ -141,7 +141,8 @@ func getUnusedTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@param		validate	query		bool					false	"For validating targets"
 //	@param		trigger		body		dto.Trigger				true	"Trigger data"
 //	@success	200			{object}	dto.SaveTriggerResponse	"Trigger created successfully"
-//	@failure	400			{object}	interface{}				"Bad request from client. Could be api.ErrorInvalidRequestExample or dto.SaveTriggerResponse"
+//	@failure	400			{object}	api.ErrorResponse		"Bad request from client"
+//	@failure	418			{object}	dto.SaveTriggerResponse	"Target Validation failed"
 //	@failure	422			{object}	api.ErrorResponse		"Render error"
 //	@failure	500			{object}	api.ErrorResponse		"Internal server error"
 //	@failure	503			{object}	api.ErrorResponse		"Remote server unavailable"
@@ -354,6 +355,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //	@param			createPager		query		boolean				false	"Create pager"			default(false)
 //	@param			pagerID			query		string				false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param			createdBy		query		string				false	"Created By"			default(moira.team)
+//	@param			teamID			query		string				false	"Search for triggers with this team ID"
 //	@success		200				{object}	dto.TriggersList	"Successfully fetched matching triggers"
 //	@failure		400				{object}	api.ErrorResponse	"Bad request from client"
 //	@failure		404				{object}	api.ErrorResponse	"Resource not found"
@@ -363,18 +365,17 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
 
-	createdBy, ok := getTriggerCreatedBy(request)
 	searchOptions := moira.SearchOptions{
-		Page:                  middleware.GetPage(request),
-		Size:                  middleware.GetSize(request),
-		OnlyProblems:          getOnlyProblemsFlag(request),
-		Tags:                  getRequestQueryList(request, "tags"),
-		SearchString:          getSearchRequestString(request),
-		CreatedBy:             createdBy,
-		NeedSearchByCreatedBy: ok,
-		CreatePager:           middleware.GetCreatePager(request),
-		PagerID:               middleware.GetPagerID(request),
-		PagerTTL:              middleware.GetLimits(request).Pager.TTL,
+		Page:         middleware.GetPage(request),
+		Size:         middleware.GetSize(request),
+		OnlyProblems: getOnlyProblemsFlag(request),
+		Tags:         getRequestQueryList(request, "tags"),
+		SearchString: getStringParam(request, "text"),
+		CreatedBy:    getStringParam(request, "createdBy"),
+		TeamID:       getStringParam(request, "teamID"),
+		CreatePager:  middleware.GetCreatePager(request),
+		PagerID:      middleware.GetPagerID(request),
+		PagerTTL:     middleware.GetLimits(request).Pager.TTL,
 	}
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, searchOptions)
@@ -451,19 +452,8 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 	return false
 }
 
-// Checks if the createdBy field has been set.
-// If the field has been set, searches for triggers with a specific author createdBy.
-// If the field has not been set, searches for triggers with any author.
-func getTriggerCreatedBy(request *http.Request) (string, bool) {
-	if createdBy, ok := request.Form["createdBy"]; ok {
-		return createdBy[0], true
-	}
-
-	return "", false
-}
-
-func getSearchRequestString(request *http.Request) string {
-	searchText := request.FormValue("text")
+func getStringParam(request *http.Request, paramName string) string {
+	searchText := request.FormValue(paramName)
 	searchText = strings.ToLower(searchText)
 	searchText, _ = url.PathUnescape(searchText)
 

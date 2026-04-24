@@ -14,6 +14,7 @@ import (
 // Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility.
 type triggerStorageElement struct {
 	ID               string              `json:"id"`
+	TeamID           string              `json:"team_id,omitempty"`
 	Name             string              `json:"name"`
 	Desc             *string             `json:"desc,omitempty"`
 	Targets          []string            `json:"targets"`
@@ -56,6 +57,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 
 	return moira.Trigger{
 		ID:               storageElement.ID,
+		TeamID:           storageElement.TeamID,
 		Name:             storageElement.Name,
 		Desc:             storageElement.Desc,
 		Targets:          storageElement.Targets,
@@ -83,6 +85,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerStorageElement {
 	return &triggerStorageElement{
 		ID:               triggerID,
+		TeamID:           trigger.TeamID,
 		Name:             trigger.Name,
 		Desc:             trigger.Desc,
 		Targets:          trigger.Targets,
