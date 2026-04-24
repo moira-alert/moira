@@ -90,7 +90,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@router		/trigger [get]
 func getAllHeavyTriggers(writer http.ResponseWriter, request *http.Request) {
 	maxMetricsCount := getMaxMetricsCount(request)
-	if maxMetricsCount < 0 {
+	if maxMetricsCount <= 0 {
 		render.Render(writer, request, api.ErrorRender(errors.New("maxMetricsCount should be grater then zero"))) //nolint
 		return
 	}

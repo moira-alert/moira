@@ -7,8 +7,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/moira-alert/moira/api"
 
@@ -567,5 +570,110 @@ func MakeTestTTLs() map[moira.ClusterKey]time.Duration {
 	return map[moira.ClusterKey]time.Duration{
 		moira.MakeClusterKey(moira.GraphiteLocal, moira.DefaultCluster): to.Duration("65m"),
 		moira.DefaultGraphiteRemoteCluster:                              to.Duration("168h"),
+	}
+}
+
+// TestGetMaxMetricsCount tests getMaxMetricsCount function with all possible scenarios
+func Test_getMaxMetricsCount(t *testing.T) {
+	tests := []struct {
+		name           string
+		rawURL         string
+		expectedResult int
+	}{
+		{
+			name:           "valid positive integer",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=100",
+			expectedResult: 100,
+		},
+		{
+			name:           "valid zero",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=0",
+			expectedResult: 0,
+		},
+		{
+			name:           "valid negative integer",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=-5",
+			expectedResult: -5,
+		},
+		{
+			name:           "large number",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=999999999",
+			expectedResult: 999999999,
+		},
+		{
+			name:           "parameter missing",
+			rawURL:         "http://localhost:8080/api?someOtherParam=100",
+			expectedResult: 0,
+		},
+		{
+			name:           "empty query string",
+			rawURL:         "http://localhost:8080/api",
+			expectedResult: 0,
+		},
+		{
+			name:           "parameter exists but empty value",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=",
+			expectedResult: 0,
+		},
+		{
+			name:           "invalid integer (non-numeric)",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=abc",
+			expectedResult: 0,
+		},
+		{
+			name:           "invalid integer (decimal)",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=10.5",
+			expectedResult: 0,
+		},
+		{
+			name:           "invalid integer (mixed)",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=123abc",
+			expectedResult: 0,
+		},
+		{
+			name:           "parameter with leading zeros",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=00100",
+			expectedResult: 100,
+		},
+		{
+			name:           "max int value",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=" + strconv.Itoa(^0>>1),
+			expectedResult: ^0 >> 1,
+		},
+		{
+			name:           "min int value",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=" + strconv.Itoa(^0),
+			expectedResult: ^0,
+		},
+		{
+			name:           "Case insensitive - parameter name is case sensitive",
+			rawURL:         "http://localhost:8080/api?MaxMetricsCount=100",
+			expectedResult: 0,
+		},
+		{
+			name:           "Multiple parameters with same name - gets first value",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=50&maxMetricsCount=75",
+			expectedResult: 50,
+		},
+		{
+			name:           "URL with encoded characters",
+			rawURL:         "http://localhost:8080/api?maxMetricsCount=%31%30%30",
+			expectedResult: 100,
+		},
+		{
+			name:           "Multiple different parameters",
+			rawURL:         "http://localhost:8080/api?page=1&maxMetricsCount=10&sort=asc",
+			expectedResult: 10,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodGet, tt.rawURL, nil)
+			assert.NoError(t, err)
+
+			result := getMaxMetricsCount(req)
+			assert.Equal(t, tt.expectedResult, result)
+		})
 	}
 }
