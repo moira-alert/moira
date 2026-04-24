@@ -78,7 +78,7 @@ func GetAllHeavyTriggers(database moira.Database, maxMetricsCount int) (*dto.Tri
 		return nil, err
 	}
 
-	heavyTriggersList := &dto.TriggersList{}
+	heavyTriggersList := &dto.TriggersList{List: []moira.TriggerCheck{}}
 
 	for _, trigger := range triggersList.List {
 		if len(trigger.LastCheck.Metrics) > maxMetricsCount {
