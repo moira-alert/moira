@@ -68,10 +68,11 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 		tagsLen = calcRunesCountWithoutHTML(tags)
 	}
 
-	var desc = ""
+	desc := ""
 	if !formatter.dropDescription {
 		desc = descriptionFormatter(params.Trigger, params.Contact)
 	}
+
 	descLen := calcRunesCountWithoutHTML(desc)
 
 	events := formatter.buildEventsString(params.Events, -1, params.Throttled)
