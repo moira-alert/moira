@@ -142,7 +142,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
@@ -160,7 +160,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
@@ -179,7 +179,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
@@ -197,7 +197,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
@@ -216,7 +216,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
@@ -235,7 +235,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
@@ -255,7 +255,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				require.EqualValues(t, expected, actual)
+				require.Equal(t, expected, actual)
 				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
