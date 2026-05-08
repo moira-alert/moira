@@ -22,10 +22,11 @@ const (
 
 type messageFormatter struct {
 	// emojiGetter used in titles for better description.
-	emojiGetter emoji_provider.StateEmojiGetter
-	frontURI    string
-	location    *time.Location
-	useEmoji    bool
+	emojiGetter     emoji_provider.StateEmojiGetter
+	frontURI        string
+	location        *time.Location
+	useEmoji        bool
+	dropDescription bool
 }
 
 // NewTelegramMessageFormatter returns message formatter which is used in telegram sender.
@@ -35,12 +36,14 @@ func NewTelegramMessageFormatter(
 	useEmoji bool,
 	frontURI string,
 	location *time.Location,
+	dropDescription bool,
 ) msgformat.MessageFormatter {
 	return &messageFormatter{
-		emojiGetter: emojiGetter,
-		frontURI:    frontURI,
-		location:    location,
-		useEmoji:    useEmoji,
+		emojiGetter:     emojiGetter,
+		frontURI:        frontURI,
+		location:        location,
+		useEmoji:        useEmoji,
+		dropDescription: dropDescription,
 	}
 }
 
@@ -65,7 +68,10 @@ func (formatter *messageFormatter) Format(params msgformat.MessageFormatterParam
 		tagsLen = calcRunesCountWithoutHTML(tags)
 	}
 
-	desc := descriptionFormatter(params.Trigger, params.Contact)
+	var desc = ""
+	if !formatter.dropDescription {
+		desc = descriptionFormatter(params.Trigger, params.Contact)
+	}
 	descLen := calcRunesCountWithoutHTML(desc)
 
 	events := formatter.buildEventsString(params.Events, -1, params.Throttled)

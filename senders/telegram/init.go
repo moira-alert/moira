@@ -28,10 +28,11 @@ var pollerTimeout = 10 * time.Second
 
 // Structure that represents the Telegram configuration in the YAML file.
 type config struct {
-	ContactType string `mapstructure:"contact_type"`
-	APIToken    string `mapstructure:"api_token" validate:"required"`
-	FrontURI    string `mapstructure:"front_uri"`
-	ProxyURL    string `mapstructure:"proxy_url"`
+	ContactType     string `mapstructure:"contact_type"`
+	APIToken        string `mapstructure:"api_token" validate:"required"`
+	FrontURI        string `mapstructure:"front_uri"`
+	ProxyURL        string `mapstructure:"proxy_url"`
+	DropDescription bool   `mapstructure:"drop_description"`
 }
 
 // Bot is abstraction over gopkg.in/telebot.v3#Bot.
@@ -82,7 +83,9 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		emojiProvider,
 		true,
 		cfg.FrontURI,
-		location)
+		location,
+		cfg.DropDescription,
+	)
 
 	sender.logger = logger
 	botSettings := telebot.Settings{
