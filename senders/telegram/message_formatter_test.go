@@ -59,7 +59,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 			msg := formatter.Format(getParams(events, trigger, throttled))
 
-			require.EqualValues(t, expected, msg)
+			require.Equal(t, expected, msg)
 		})
 
 		t.Run("message with one event and throttled", func(t *testing.T) {
@@ -72,7 +72,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 				eventStr +
 				eventsBlockEnd +
 				throttleMsg
-			require.EqualValues(t, expected, msg)
+			require.Equal(t, expected, msg)
 		})
 
 		t.Run("message with 3 events", func(t *testing.T) {
@@ -85,7 +85,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 			msg := formatter.Format(getParams(events, trigger, throttled))
 
-			require.EqualValues(t, expected, msg)
+			require.Equal(t, expected, msg)
 		})
 
 		t.Run("message with complex description", func(t *testing.T) {
@@ -105,7 +105,7 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 			msg := formatter.Format(getParams(events, trigger, throttled))
 
-			require.EqualValues(t, expected, msg)
+			require.Equal(t, expected, msg)
 		})
 
 		t.Run("with long messages", func(t *testing.T) {
