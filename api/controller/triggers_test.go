@@ -1533,6 +1533,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		for _, check := range mockTriggersList.List {
 			returnedChecks = append(returnedChecks, &check)
 		}
+
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
 		result, err := GetAllHeavyTriggers(mockDB, 5)
@@ -1566,6 +1567,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		for _, check := range mockTriggersList.List {
 			returnedChecks = append(returnedChecks, &check)
 		}
+
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
 		result, err := GetAllHeavyTriggers(mockDB, 5)
@@ -1593,6 +1595,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		for _, check := range mockTriggersList.List {
 			returnedChecks = append(returnedChecks, &check)
 		}
+
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
 		result, err := GetAllHeavyTriggers(mockDB, 10)
@@ -1614,6 +1617,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		for _, check := range mockTriggersList.List {
 			returnedChecks = append(returnedChecks, &check)
 		}
+
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
 		result, err := GetAllHeavyTriggers(mockDB, 5)
@@ -1644,6 +1648,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		for _, check := range mockTriggersList.List {
 			returnedChecks = append(returnedChecks, &check)
 		}
+
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
 		result, err := GetAllHeavyTriggers(mockDB, 5)
@@ -1674,6 +1679,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		for _, check := range mockTriggersList.List {
 			returnedChecks = append(returnedChecks, &check)
 		}
+
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
 		result, err := GetAllHeavyTriggers(mockDB, 0)

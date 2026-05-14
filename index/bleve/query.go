@@ -38,7 +38,7 @@ func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 
 func buildQueryForCreatedBy(createdBy string) (searchQueries []query.Query) {
 	if createdBy == "" {
-		return
+		return searchQueries
 	}
 
 	qr := bleve.NewTermQuery(createdBy)
@@ -65,7 +65,7 @@ func buildQueryForTerms(searchTerms []string) (searchQueries []query.Query) {
 
 func buildQueryForTeamID(teamID string) (searchQueries []query.Query) {
 	if teamID == "" {
-		return
+		return searchQueries
 	}
 
 	qr := bleve.NewTermQuery(teamID)
