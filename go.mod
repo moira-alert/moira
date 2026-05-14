@@ -1,6 +1,6 @@
 module github.com/moira-alert/moira
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
@@ -34,7 +34,7 @@ require (
 	github.com/rs/cors v1.11.0
 	github.com/rs/zerolog v1.29.0
 	github.com/russross/blackfriday/v2 v2.1.0
-	github.com/slack-go/slack v0.12.1
+	github.com/slack-go/slack v0.23.1
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	github.com/xiam/to v0.0.0-20200126224905-d60d31e03561
