@@ -54,6 +54,7 @@ require (
 	github.com/mattermost/mattermost/server/public v0.1.9
 	github.com/moira-alert/blackfriday-slack v0.1.2
 	github.com/swaggo/http-swagger v1.3.4
+	github.com/swaggo/swag v1.16.4
 	github.com/swaggo/swag/v2 v2.0.0-rc4
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.63.0
 	go.opentelemetry.io/otel v1.38.0
@@ -215,7 +216,6 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/sv-tools/openapi v0.2.1 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
-	github.com/swaggo/swag v1.16.4 // indirect
 	github.com/tebeka/strftime v0.1.5 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect

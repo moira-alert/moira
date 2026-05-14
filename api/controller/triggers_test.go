@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"testing"
 	"time"
@@ -1506,149 +1507,218 @@ func TestGetTriggerNoisiness(t *testing.T) {
 
 // TestGetAllHeavyTriggers tests GetAllHeavyTriggers function with all possible scenarios.
 func TestGetAllHeavyTriggers(t *testing.T) {
-	tests := []struct {
-		name             string
-		maxMetricsCount  int
-		mockTriggersList *dto.TriggersList
-		mockError        *api.ErrorResponse
-		expectedResult   *dto.TriggersList
-		expectedError    *api.ErrorResponse
-		expectPanic      bool
-	}{
-		{
-			name:            "Success - all triggers are heavy",
-			maxMetricsCount: 5,
-			mockTriggersList: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}},
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
-				},
-			},
-			mockError: nil,
-			expectedResult: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}},
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
-				},
-			},
-			expectedError: nil,
-			expectPanic:   false,
-		},
-		{
-			name:            "Success - partially heavy triggers",
-			maxMetricsCount: 5,
-			mockTriggersList: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}}, // heavy
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(3)}},  // light
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},  // heavy
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(2)}},  // light
-				},
-			},
-			mockError: nil,
-			expectedResult: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}},
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},
-				},
-			},
-			expectedError: nil,
-			expectPanic:   false,
-		},
-		{
-			name:            "Success - no heavy triggers",
-			maxMetricsCount: 10,
-			mockTriggersList: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(3)}},
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(8)}},
-				},
-			},
-			mockError:      nil,
-			expectedResult: &dto.TriggersList{List: []moira.TriggerCheck{}},
-			expectedError:  nil,
-			expectPanic:    false,
-		},
-		{
-			name:            "Success - empty triggers list",
-			maxMetricsCount: 5,
-			mockTriggersList: &dto.TriggersList{
-				List: []moira.TriggerCheck{},
-			},
-			mockError:      nil,
-			expectedResult: &dto.TriggersList{List: []moira.TriggerCheck{}},
-			expectedError:  nil,
-			expectPanic:    false,
-		},
-		{
-			name:            "Edge case - metrics count equals maxMetricsCount",
-			maxMetricsCount: 5,
-			mockTriggersList: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(5)}}, // not included (equal)
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}}, // included (greater)
-				},
-			},
-			mockError: nil,
-			expectedResult: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
-				},
-			},
-			expectedError: nil,
-			expectPanic:   false,
-		},
-		{
-			name:            "Edge case - zero maxMetricsCount",
-			maxMetricsCount: 0,
-			mockTriggersList: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(0)}}, // not included (0 > 0 is false)
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(1)}}, // included
-				},
-			},
-			mockError: nil,
-			expectedResult: &dto.TriggersList{
-				List: []moira.TriggerCheck{
-					{LastCheck: moira.CheckData{Metrics: makeMetricChecks(1)}},
-				},
-			},
-			expectedError: nil,
-			expectPanic:   false,
-		},
-	}
+	t.Run("Success - all triggers are heavy", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockCtrl := gomock.NewController(t)
-			defer mockCtrl.Finish()
+		mockTriggersList := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}},
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
+			},
+		}
+		expectedResult := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}},
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
+			},
+		}
 
-			mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
-			mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
+		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
 
-			returnedChecks := make([]*moira.TriggerCheck, 0)
-			for _, check := range tt.mockTriggersList.List {
-				returnedChecks = append(returnedChecks, &check)
-			}
+		returnedChecks := make([]*moira.TriggerCheck, 0)
+		for _, check := range mockTriggersList.List {
+			returnedChecks = append(returnedChecks, &check)
+		}
+		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
-			mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
+		result, err := GetAllHeavyTriggers(mockDB, 5)
+		assert.Equal(t, expectedResult, result)
+		assert.Nil(t, err)
+	})
 
-			if tt.expectPanic {
-				assert.Panics(t, func() {
-					GetAllHeavyTriggers(mockDB, tt.maxMetricsCount)
-				}, "Expected panic but got none")
+	t.Run("Success - partially heavy triggers", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 
-				return
-			}
+		mockTriggersList := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}}, // heavy
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(3)}},  // light
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},  // heavy
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(2)}},  // light
+			},
+		}
+		expectedResult := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}},
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},
+			},
+		}
 
-			result, err := GetAllHeavyTriggers(mockDB, tt.maxMetricsCount)
-			assert.Equal(t, tt.expectedResult, result)
-			assert.Equal(t, tt.expectedError, err)
-		})
-	}
+		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
+
+		returnedChecks := make([]*moira.TriggerCheck, 0)
+		for _, check := range mockTriggersList.List {
+			returnedChecks = append(returnedChecks, &check)
+		}
+		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
+
+		result, err := GetAllHeavyTriggers(mockDB, 5)
+		assert.Equal(t, expectedResult, result)
+		assert.Nil(t, err)
+	})
+
+	t.Run("Success - no heavy triggers", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		mockTriggersList := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(3)}},
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(8)}},
+			},
+		}
+		expectedResult := &dto.TriggersList{List: []moira.TriggerCheck{}}
+
+		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
+
+		returnedChecks := make([]*moira.TriggerCheck, 0)
+		for _, check := range mockTriggersList.List {
+			returnedChecks = append(returnedChecks, &check)
+		}
+		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
+
+		result, err := GetAllHeavyTriggers(mockDB, 10)
+		assert.Equal(t, expectedResult, result)
+		assert.Nil(t, err)
+	})
+
+	t.Run("Success - empty triggers list", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		mockTriggersList := &dto.TriggersList{List: []moira.TriggerCheck{}}
+		expectedResult := &dto.TriggersList{List: []moira.TriggerCheck{}}
+
+		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
+
+		returnedChecks := make([]*moira.TriggerCheck, 0)
+		for _, check := range mockTriggersList.List {
+			returnedChecks = append(returnedChecks, &check)
+		}
+		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
+
+		result, err := GetAllHeavyTriggers(mockDB, 5)
+		assert.Equal(t, expectedResult, result)
+		assert.Nil(t, err)
+	})
+
+	t.Run("Edge case - metrics count equals maxMetricsCount", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		mockTriggersList := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(5)}}, // not included (equal)
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}}, // included (greater)
+			},
+		}
+		expectedResult := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
+			},
+		}
+
+		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
+
+		returnedChecks := make([]*moira.TriggerCheck, 0)
+		for _, check := range mockTriggersList.List {
+			returnedChecks = append(returnedChecks, &check)
+		}
+		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
+
+		result, err := GetAllHeavyTriggers(mockDB, 5)
+		assert.Equal(t, expectedResult, result)
+		assert.Nil(t, err)
+	})
+
+	t.Run("Edge case - zero maxMetricsCount", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		mockTriggersList := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(0)}}, // not included (0 > 0 is false)
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(1)}}, // included
+			},
+		}
+		expectedResult := &dto.TriggersList{
+			List: []moira.TriggerCheck{
+				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(1)}},
+			},
+		}
+
+		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
+
+		returnedChecks := make([]*moira.TriggerCheck, 0)
+		for _, check := range mockTriggersList.List {
+			returnedChecks = append(returnedChecks, &check)
+		}
+		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
+
+		result, err := GetAllHeavyTriggers(mockDB, 0)
+		assert.Equal(t, expectedResult, result)
+		assert.Nil(t, err)
+	})
+
+	t.Run("Error - GetAllTriggerIDs fails", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		expectedError := &api.ErrorResponse{
+			Err:            errors.New("GetAllTriggerIDs error"),
+			HTTPStatusCode: http.StatusInternalServerError,
+			StatusText:     "Internal Server Error",
+			ErrorText:      "GetAllTriggerIDs error",
+		}
+
+		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, errors.New("GetAllTriggerIDs error"))
+
+		result, err := GetAllHeavyTriggers(mockDB, 5)
+		assert.Nil(t, result)
+		assert.Equal(t, expectedError, err)
+	})
+
+	t.Run("Error - GetAllTriggerIDs fails", func(t *testing.T) {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		expectedError := &api.ErrorResponse{
+			Err:            errors.New("GetTriggerChecks error"),
+			HTTPStatusCode: http.StatusInternalServerError,
+			StatusText:     "Internal Server Error",
+			ErrorText:      "GetTriggerChecks error",
+		}
+
+		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
+		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
+		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(nil, errors.New("GetTriggerChecks error"))
+
+		result, err := GetAllHeavyTriggers(mockDB, 5)
+		assert.Nil(t, result)
+		assert.Equal(t, expectedError, err)
+	})
 }
 
 func makeMetricChecks(n int) map[string]moira.MetricState {
