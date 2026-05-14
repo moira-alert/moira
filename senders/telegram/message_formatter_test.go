@@ -8,8 +8,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/msgformat"
-
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 )
 
 const testFrontURI = "https://moira.uri"
@@ -22,7 +21,9 @@ func TestMessageFormatter_Format(t *testing.T) {
 		emojiProvider,
 		true,
 		testFrontURI,
-		location)
+		location,
+		false,
+	)
 
 	event := moira.NotificationEvent{
 		TriggerID: "TriggerID",
@@ -47,8 +48,8 @@ func TestMessageFormatter_Format(t *testing.T) {
 	eventStr := "02:40 (GMT+00:00): <code>Metric</code> = 123 (OK to NODATA)\n"
 	lenEventStr := utf8.RuneCountInString(eventStr) - utf8.RuneCountInString("<code></code>") // 60 - 13 = 47
 
-	Convey("TelegramMessageFormatter", t, func() {
-		Convey("message with one event", func() {
+	t.Run("TelegramMessageFormatter", func(t *testing.T) {
+		t.Run("message with one event", func(t *testing.T) {
 			events, throttled := moira.NotificationEvents{event}, false
 			expected := expectedFirstLine +
 				shortDesc + "\n" +
@@ -58,10 +59,10 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 			msg := formatter.Format(getParams(events, trigger, throttled))
 
-			So(msg, ShouldEqual, expected)
+			require.Equal(t, expected, msg)
 		})
 
-		Convey("message with one event and throttled", func() {
+		t.Run("message with one event and throttled", func(t *testing.T) {
 			events, throttled := moira.NotificationEvents{event}, true
 			msg := formatter.Format(getParams(events, trigger, throttled))
 
@@ -71,10 +72,10 @@ func TestMessageFormatter_Format(t *testing.T) {
 				eventStr +
 				eventsBlockEnd +
 				throttleMsg
-			So(msg, ShouldEqual, expected)
+			require.Equal(t, expected, msg)
 		})
 
-		Convey("message with 3 events", func() {
+		t.Run("message with 3 events", func(t *testing.T) {
 			events, throttled := moira.NotificationEvents{event, event, event}, false
 			expected := expectedFirstLine +
 				shortDesc + "\n" +
@@ -84,10 +85,11 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 			msg := formatter.Format(getParams(events, trigger, throttled))
 
-			So(msg, ShouldEqual, expected)
+			require.Equal(t, expected, msg)
 		})
 
-		Convey("message with complex description", func() {
+		t.Run("message with complex description", func(t *testing.T) {
+			trigger := trigger
 			trigger.Desc = "# Моё описание\n\nсписок:\n- **жирный**\n- *курсив*\n- `код`\n- <u>подчёркнутый</u>\n- ~~зачёркнутый~~\n" +
 				"\n------\nif a > b do smth\nif c < d do another thing\ntrue && false = false\ntrue || false = true\n" +
 				"\"Hello everybody!\", 'another quots'\nif I use something like <custom_tag> nothing happens, also if i use allowed <b> tag"
@@ -103,10 +105,10 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 			msg := formatter.Format(getParams(events, trigger, throttled))
 
-			So(msg, ShouldEqual, expected)
+			require.Equal(t, expected, msg)
 		})
 
-		Convey("with long messages", func() {
+		t.Run("with long messages", func(t *testing.T) {
 			const (
 				titleWithoutTags = "💣 <b>NODATA</b> <a href=\"https://moira.uri/trigger/TriggerID\">Name</a>"
 			)
@@ -125,7 +127,8 @@ func TestMessageFormatter_Format(t *testing.T) {
 				symbolAtEndOfDescription = "i"
 			}
 
-			Convey("with tags > msgLimit/3, desc and events < msgLimit/3", func() {
+			t.Run("with tags > msgLimit/3, desc and events < msgLimit/3", func(t *testing.T) {
+				trigger := trigger
 				trigger.Tags = genTagsByLimit(greaterThanThird + 200)
 				trigger.Desc = genDescByLimit(lessThanThird)
 				events := genEventsByLimit(event, lenEventStr, lessThanThird)
@@ -139,11 +142,12 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(actual, ShouldResemble, expected)
-				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				require.Equal(t, expected, actual)
+				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
-			Convey("with desc > msgLimit/3, tags and events < msgLimit/3", func() {
+			t.Run("with desc > msgLimit/3, tags and events < msgLimit/3", func(t *testing.T) {
+				trigger := trigger
 				trigger.Tags = genTagsByLimit(lessThanThird)
 				trigger.Desc = genDescByLimit(greaterThanThird + 200)
 				events := genEventsByLimit(event, lenEventStr, lessThanThird)
@@ -156,11 +160,12 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(actual, ShouldResemble, expected)
-				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				require.Equal(t, expected, actual)
+				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
-			Convey("with events > msgLimit/3, tags and desc < msgLimit/3", func() {
+			t.Run("with events > msgLimit/3, tags and desc < msgLimit/3", func(t *testing.T) {
+				trigger := trigger
 				trigger.Tags = genTagsByLimit(lessThanThird)
 				trigger.Desc = genDescByLimit(lessThanThird)
 				events := genEventsByLimit(event, lenEventStr, greaterThanThird+200)
@@ -174,11 +179,12 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(actual, ShouldResemble, expected)
-				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				require.Equal(t, expected, actual)
+				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
-			Convey("with tags and desc > msgLimit/3, events < msgLimit/3", func() {
+			t.Run("with tags and desc > msgLimit/3, events < msgLimit/3", func(t *testing.T) {
+				trigger := trigger
 				trigger.Tags = genTagsByLimit(greaterThanThird)
 				trigger.Desc = genDescByLimit(greaterThanThird)
 				events := genEventsByLimit(event, lenEventStr, lessThanThird)
@@ -191,11 +197,12 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(actual, ShouldResemble, expected)
-				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				require.Equal(t, expected, actual)
+				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
-			Convey("with tags and events > msgLimit / 3, desc < msgLimit/3", func() {
+			t.Run("with tags and events > msgLimit / 3, desc < msgLimit/3", func(t *testing.T) {
+				trigger := trigger
 				trigger.Tags = genTagsByLimit(greaterThanThird)
 				trigger.Desc = genDescByLimit(lessThanThird)
 				events := genEventsByLimit(event, lenEventStr, greaterThanThird)
@@ -209,11 +216,12 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(actual, ShouldResemble, expected)
-				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				require.Equal(t, expected, actual)
+				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
-			Convey("with desc and events > msgLimit / 3, tags < msgLimit/3", func() {
+			t.Run("with desc and events > msgLimit / 3, tags < msgLimit/3", func(t *testing.T) {
+				trigger := trigger
 				trigger.Tags = genTagsByLimit(lessThanThird)
 				trigger.Desc = genDescByLimit(greaterThanThird)
 				events := genEventsByLimit(event, lenEventStr, greaterThanThird)
@@ -227,11 +235,12 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(actual, ShouldResemble, expected)
-				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				require.Equal(t, expected, actual)
+				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 
-			Convey("with tags, desc, events > msgLimit/3", func() {
+			t.Run("with tags, desc, events > msgLimit/3", func(t *testing.T) {
+				trigger := trigger
 				trigger.Tags = genTagsByLimit(greaterThanThird)
 				trigger.Desc = genDescByLimit(greaterThanThird)
 				events := genEventsByLimit(event, lenEventStr, greaterThanThird)
@@ -246,8 +255,29 @@ func TestMessageFormatter_Format(t *testing.T) {
 
 				actual := formatter.Format(getParams(events, trigger, false))
 
-				So(actual, ShouldResemble, expected)
-				So(calcRunesCountWithoutHTML(actual), ShouldBeLessThanOrEqualTo, albumCaptionMaxCharacters)
+				require.Equal(t, expected, actual)
+				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
+			})
+
+			t.Run("with drop description", func(t *testing.T) {
+				formatter := NewTelegramMessageFormatter(
+					emojiProvider,
+					true,
+					testFrontURI,
+					location,
+					true,
+				)
+
+				events := moira.NotificationEvents{event}
+				expected := expectedFirstLine +
+					eventsBlockStart + "\n" +
+					eventStr +
+					eventsBlockEnd
+
+				actual := formatter.Format(getParams(events, trigger, false))
+
+				require.Equal(t, expected, actual)
+				require.LessOrEqual(t, calcRunesCountWithoutHTML(actual), albumCaptionMaxCharacters)
 			})
 		})
 	})
