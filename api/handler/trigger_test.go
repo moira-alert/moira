@@ -573,8 +573,8 @@ func MakeTestTTLs() map[moira.ClusterKey]time.Duration {
 	}
 }
 
-// TestGetMaxMetricsCount tests getMaxMetricsCount function with all possible scenarios.
-func Test_getMaxMetricsCount(t *testing.T) {
+// TestGetMaxMetricsCount tests getFrom function with all possible scenarios.
+func Test_getFrom(t *testing.T) {
 	tests := []struct {
 		name           string
 		rawURL         string
@@ -672,7 +672,7 @@ func Test_getMaxMetricsCount(t *testing.T) {
 			req, err := http.NewRequest(http.MethodGet, tt.rawURL, nil)
 			require.NoError(t, err)
 
-			result := getMaxMetricsCount(req)
+			result := getFrom(req)
 			require.Equal(t, tt.expectedResult, result)
 		})
 	}

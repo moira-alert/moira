@@ -85,10 +85,10 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@success	200	{object}	dto.TriggersList	"Fetched all heavy triggers"
 //	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
-//	@param		maxMetricsCount		query		int	 false	"Defines the number of metrics in trigger."
+//	@param		from		query		int	 false	"Defines the number of metrics in trigger."
 //	@router		/trigger/heavy [get]
 func getAllHeavyTriggers(writer http.ResponseWriter, request *http.Request) {
-	maxMetricsCount := getMaxMetricsCount(request)
+	maxMetricsCount := getFrom(request)
 	if maxMetricsCount <= 0 {
 		render.Render(writer, request, api.ErrorRender(errors.New("maxMetricsCount should be grater then zero"))) //nolint
 		return
