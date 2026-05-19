@@ -97,7 +97,7 @@ func getAllHeavyTriggers(writer http.ResponseWriter, request *http.Request) {
 	size := middleware.GetSize(request)
 	page := middleware.GetPage(request)
 
-	triggersList, errorResponse := controller.GetAllHeavyTriggers(database, size, page, maxMetricsCount)
+	triggersList, errorResponse := controller.GetAllHeavyTriggers(database, page, size, maxMetricsCount)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
