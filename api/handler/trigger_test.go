@@ -573,7 +573,7 @@ func MakeTestTTLs() map[moira.ClusterKey]time.Duration {
 	}
 }
 
-// TestGetMaxMetricsCount tests getFrom function with all possible scenarios.
+// TestGetfrom tests getFrom function with all possible scenarios.
 func Test_getFrom(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -582,22 +582,22 @@ func Test_getFrom(t *testing.T) {
 	}{
 		{
 			name:           "valid positive integer",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=100",
+			rawURL:         "http://localhost:8080/api?from=100",
 			expectedResult: 100,
 		},
 		{
 			name:           "valid zero",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=0",
+			rawURL:         "http://localhost:8080/api?from=0",
 			expectedResult: 0,
 		},
 		{
 			name:           "valid negative integer",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=-5",
+			rawURL:         "http://localhost:8080/api?from=-5",
 			expectedResult: -5,
 		},
 		{
 			name:           "large number",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=999999999",
+			rawURL:         "http://localhost:8080/api?from=999999999",
 			expectedResult: 999999999,
 		},
 		{
@@ -612,57 +612,57 @@ func Test_getFrom(t *testing.T) {
 		},
 		{
 			name:           "parameter exists but empty value",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=",
+			rawURL:         "http://localhost:8080/api?from=",
 			expectedResult: 0,
 		},
 		{
 			name:           "invalid integer (non-numeric)",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=abc",
+			rawURL:         "http://localhost:8080/api?from=abc",
 			expectedResult: 0,
 		},
 		{
 			name:           "invalid integer (decimal)",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=10.5",
+			rawURL:         "http://localhost:8080/api?from=10.5",
 			expectedResult: 0,
 		},
 		{
 			name:           "invalid integer (mixed)",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=123abc",
+			rawURL:         "http://localhost:8080/api?from=123abc",
 			expectedResult: 0,
 		},
 		{
 			name:           "parameter with leading zeros",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=00100",
+			rawURL:         "http://localhost:8080/api?from=00100",
 			expectedResult: 100,
 		},
 		{
 			name:           "max int value",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=" + strconv.Itoa(^0>>1),
+			rawURL:         "http://localhost:8080/api?from=" + strconv.Itoa(^0>>1),
 			expectedResult: ^0 >> 1,
 		},
 		{
 			name:           "min int value",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=" + strconv.Itoa(^0),
+			rawURL:         "http://localhost:8080/api?from=" + strconv.Itoa(^0),
 			expectedResult: ^0,
 		},
 		{
 			name:           "Case insensitive - parameter name is case sensitive",
-			rawURL:         "http://localhost:8080/api?MaxMetricsCount=100",
+			rawURL:         "http://localhost:8080/api?from=100",
 			expectedResult: 0,
 		},
 		{
 			name:           "Multiple parameters with same name - gets first value",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=50&maxMetricsCount=75",
+			rawURL:         "http://localhost:8080/api?from=50&from=75",
 			expectedResult: 50,
 		},
 		{
 			name:           "URL with encoded characters",
-			rawURL:         "http://localhost:8080/api?maxMetricsCount=%31%30%30",
+			rawURL:         "http://localhost:8080/api?from=%31%30%30",
 			expectedResult: 100,
 		},
 		{
 			name:           "Multiple different parameters",
-			rawURL:         "http://localhost:8080/api?page=1&maxMetricsCount=10&sort=asc",
+			rawURL:         "http://localhost:8080/api?page=1&from=10&sort=asc",
 			expectedResult: 10,
 		},
 	}
