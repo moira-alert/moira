@@ -40,9 +40,7 @@ func triggers(searcher moira.Searcher) func(chi.Router) {
 
 		router.With(
 			middleware.AdminOnlyMiddleware(),
-			middleware.Paginate(getTriggerNoisinessDefaultPage, getTriggerNoisinessDefaultSize),
-			middleware.DateRange(getTriggerNoisinessDefaultFrom, getTriggerNoisinessDefaultTo),
-			middleware.SortOrderContext(api.DescSortOrder),
+			middleware.Paginate(0, 10),
 		).Get("/heavy", getAllHeavyTriggers)
 
 		router.Put("/", createTrigger)
@@ -87,15 +85,19 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@success	200	{object}	dto.TriggersList	"Fetched all heavy triggers"
 //	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
-//	@router		/trigger [get]
+//	@param		from		query		int	 false	"Defines the number of metrics in trigger."
+//	@router		/trigger/heavy [get]
 func getAllHeavyTriggers(writer http.ResponseWriter, request *http.Request) {
-	maxMetricsCount := getMaxMetricsCount(request)
+	maxMetricsCount := getFrom(request)
 	if maxMetricsCount <= 0 {
 		render.Render(writer, request, api.ErrorRender(errors.New("maxMetricsCount should be grater then zero"))) //nolint
 		return
 	}
 
-	triggersList, errorResponse := controller.GetAllHeavyTriggers(database, maxMetricsCount)
+	size := middleware.GetSize(request)
+	page := middleware.GetPage(request)
+
+	triggersList, errorResponse := controller.GetAllHeavyTriggers(database, page, size, maxMetricsCount)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return
