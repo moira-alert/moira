@@ -187,7 +187,7 @@ func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, trig
 
 	for _, plot := range plots {
 		reader := bytes.NewReader(plot)
-		uploadParameters := slack_client.UploadFileV2Parameters{
+		uploadParameters := slack_client.UploadFileParameters{
 			FileSize:        len(plot),
 			Reader:          reader,
 			Title:           filename,
@@ -196,7 +196,7 @@ func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, trig
 			ThreadTimestamp: threadTimestamp,
 		}
 
-		_, err := sender.client.UploadFileV2(uploadParameters)
+		_, err := sender.client.UploadFile(uploadParameters)
 		if err != nil {
 			return err
 		}
