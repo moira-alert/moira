@@ -1507,6 +1507,9 @@ func TestGetTriggerNoisiness(t *testing.T) {
 
 // TestGetAllHeavyTriggers tests GetAllHeavyTriggers function with all possible scenarios.
 func TestGetAllHeavyTriggers(t *testing.T) {
+	defaultPage := int64(0)
+	defaultSize := int64(10)
+
 	t.Run("Success - all triggers are heavy", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -1518,12 +1521,16 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
 			},
 		}
+		expectedCount := int64(3)
 		expectedResult := &dto.TriggersList{
 			List: []moira.TriggerCheck{
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}},
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
 			},
+			Size:  &defaultSize,
+			Page:  &defaultPage,
+			Total: &expectedCount,
 		}
 
 		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -1536,7 +1543,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
-		result, err := GetAllHeavyTriggers(mockDB, 5)
+		result, err := GetAllHeavyTriggers(mockDB, 0, 10, 5)
 		assert.Equal(t, expectedResult, result)
 		assert.Nil(t, err)
 	})
@@ -1553,11 +1560,15 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(2)}},  // light
 			},
 		}
+		expectedCount := int64(2)
 		expectedResult := &dto.TriggersList{
 			List: []moira.TriggerCheck{
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(10)}},
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(7)}},
 			},
+			Size:  &defaultSize,
+			Page:  &defaultPage,
+			Total: &expectedCount,
 		}
 
 		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -1570,7 +1581,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
-		result, err := GetAllHeavyTriggers(mockDB, 5)
+		result, err := GetAllHeavyTriggers(mockDB, 0, 10, 5)
 		assert.Equal(t, expectedResult, result)
 		assert.Nil(t, err)
 	})
@@ -1586,7 +1597,13 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(8)}},
 			},
 		}
-		expectedResult := &dto.TriggersList{List: []moira.TriggerCheck{}}
+		expectedCount := int64(0)
+		expectedResult := &dto.TriggersList{
+			List:  []moira.TriggerCheck{},
+			Size:  &defaultSize,
+			Page:  &defaultPage,
+			Total: &expectedCount,
+		}
 
 		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
 		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
@@ -1598,7 +1615,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
-		result, err := GetAllHeavyTriggers(mockDB, 10)
+		result, err := GetAllHeavyTriggers(mockDB, 0, 10, 10)
 		assert.Equal(t, expectedResult, result)
 		assert.Nil(t, err)
 	})
@@ -1608,7 +1625,13 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		mockTriggersList := &dto.TriggersList{List: []moira.TriggerCheck{}}
-		expectedResult := &dto.TriggersList{List: []moira.TriggerCheck{}}
+		expectedCount := int64(0)
+		expectedResult := &dto.TriggersList{
+			List:  []moira.TriggerCheck{},
+			Size:  &defaultSize,
+			Page:  &defaultPage,
+			Total: &expectedCount,
+		}
 
 		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
 		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
@@ -1620,7 +1643,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
-		result, err := GetAllHeavyTriggers(mockDB, 5)
+		result, err := GetAllHeavyTriggers(mockDB, 0, 10, 5)
 		assert.Equal(t, expectedResult, result)
 		assert.Nil(t, err)
 	})
@@ -1635,10 +1658,12 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}}, // included (greater)
 			},
 		}
+		expectedCount := int64(1)
 		expectedResult := &dto.TriggersList{
-			List: []moira.TriggerCheck{
-				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}},
-			},
+			Size:  &defaultSize,
+			Page:  &defaultPage,
+			Total: &expectedCount,
+			List:  []moira.TriggerCheck{{LastCheck: moira.CheckData{Metrics: makeMetricChecks(6)}}},
 		}
 
 		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -1651,7 +1676,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
-		result, err := GetAllHeavyTriggers(mockDB, 5)
+		result, err := GetAllHeavyTriggers(mockDB, 0, 10, 5)
 		assert.Equal(t, expectedResult, result)
 		assert.Nil(t, err)
 	})
@@ -1666,10 +1691,14 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(1)}}, // included
 			},
 		}
+		expectedCount := int64(1)
 		expectedResult := &dto.TriggersList{
 			List: []moira.TriggerCheck{
 				{LastCheck: moira.CheckData{Metrics: makeMetricChecks(1)}},
 			},
+			Size:  &defaultSize,
+			Page:  &defaultPage,
+			Total: &expectedCount,
 		}
 
 		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -1682,7 +1711,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(returnedChecks, nil)
 
-		result, err := GetAllHeavyTriggers(mockDB, 0)
+		result, err := GetAllHeavyTriggers(mockDB, 0, 10, 0)
 		assert.Equal(t, expectedResult, result)
 		assert.Nil(t, err)
 	})
@@ -1701,7 +1730,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		mockDB := mock_moira_alert.NewMockDatabase(mockCtrl)
 		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, errors.New("GetAllTriggerIDs error"))
 
-		result, err := GetAllHeavyTriggers(mockDB, 5)
+		result, err := GetAllHeavyTriggers(mockDB, 0, 10, 5)
 		assert.Nil(t, result)
 		assert.Equal(t, expectedError, err)
 	})
@@ -1721,7 +1750,7 @@ func TestGetAllHeavyTriggers(t *testing.T) {
 		mockDB.EXPECT().GetAllTriggerIDs().Return([]string{"triggerID"}, nil)
 		mockDB.EXPECT().GetTriggerChecks(gomock.Any()).Return(nil, errors.New("GetTriggerChecks error"))
 
-		result, err := GetAllHeavyTriggers(mockDB, 5)
+		result, err := GetAllHeavyTriggers(mockDB, 0, 10, 5)
 		assert.Nil(t, result)
 		assert.Equal(t, expectedError, err)
 	})

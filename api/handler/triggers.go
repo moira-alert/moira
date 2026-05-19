@@ -40,9 +40,7 @@ func triggers(searcher moira.Searcher) func(chi.Router) {
 
 		router.With(
 			middleware.AdminOnlyMiddleware(),
-			middleware.Paginate(getTriggerNoisinessDefaultPage, getTriggerNoisinessDefaultSize),
-			middleware.DateRange(getTriggerNoisinessDefaultFrom, getTriggerNoisinessDefaultTo),
-			middleware.SortOrderContext(api.DescSortOrder),
+			middleware.Paginate(0, 10),
 		).Get("/heavy", getAllHeavyTriggers)
 
 		router.Put("/", createTrigger)
@@ -96,7 +94,10 @@ func getAllHeavyTriggers(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	triggersList, errorResponse := controller.GetAllHeavyTriggers(database, maxMetricsCount)
+	size := middleware.GetSize(request)
+	page := middleware.GetPage(request)
+
+	triggersList, errorResponse := controller.GetAllHeavyTriggers(database, size, page, maxMetricsCount)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint
 		return

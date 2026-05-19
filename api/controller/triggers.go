@@ -81,7 +81,7 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 }
 
 // GetAllHeavyTriggers gets all moira triggers.
-func GetAllHeavyTriggers(database moira.Database, maxMetricsCount int) (*dto.TriggersList, *api.ErrorResponse) {
+func GetAllHeavyTriggers(database moira.Database, page, size int64, maxMetricsCount int) (*dto.TriggersList, *api.ErrorResponse) {
 	triggersList, err := GetAllTriggers(database)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,16 @@ func GetAllHeavyTriggers(database moira.Database, maxMetricsCount int) (*dto.Tri
 		}
 	}
 
-	return heavyTriggersList, nil
+	total := int64(len(heavyTriggersList.List))
+
+	resDto := &dto.TriggersList{
+		List:  applyPagination[moira.TriggerCheck](page, size, total, heavyTriggersList.List),
+		Page:  &page,
+		Size:  &size,
+		Total: &total,
+	}
+
+	return resDto, nil
 }
 
 // SearchTriggers gets trigger page and filter trigger by tags and search request terms.
