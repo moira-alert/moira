@@ -647,7 +647,7 @@ func Test_getFrom(t *testing.T) {
 		},
 		{
 			name:           "Case insensitive - parameter name is case sensitive",
-			rawURL:         "http://localhost:8080/api?from=100",
+			rawURL:         "http://localhost:8080/api?From=100",
 			expectedResult: 0,
 		},
 		{
