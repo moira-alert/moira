@@ -62,7 +62,7 @@ func triggers(searcher moira.Searcher) func(chi.Router) {
 //	@success	200	{object}	dto.TriggersList	"Fetched all triggers"
 //	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
-//	@router		/trigger/heavy [get]
+//	@router		/trigger [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
 	if errorResponse != nil {
@@ -86,7 +86,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@failure	422	{object}	api.ErrorResponse	"Render error"
 //	@failure	500	{object}	api.ErrorResponse	"Internal server error"
 //	@param		maxMetricsCount		query		int	 false	"Defines the number of metrics in trigger."
-//	@router		/trigger [get]
+//	@router		/trigger/heavy [get]
 func getAllHeavyTriggers(writer http.ResponseWriter, request *http.Request) {
 	maxMetricsCount := getMaxMetricsCount(request)
 	if maxMetricsCount <= 0 {
