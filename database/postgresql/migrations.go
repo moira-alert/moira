@@ -12,7 +12,7 @@ import (
 
 func (conn *DbConnector) ApplyMigrations(ctx context.Context) error {
 	migrationsToApply := []migrations.Migration{
-		migrations.Init_01(),
+		migrations.UsersAndTeams_01(),
 	}
 
 	if err := conn.createMigrationsIfNeeded(ctx); err != nil {
