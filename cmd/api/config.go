@@ -228,6 +228,9 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 		AdminList:                  adminList,
 		AllowedContactTypes:        allowedContactTypes,
 		LimitedChangeTriggerOwners: canChangeTriggersList,
+		AllowedExtraAdminContactTypes: map[string]struct{}{
+			moira.SelfStateSender: {},
+		},
 	}
 }
 

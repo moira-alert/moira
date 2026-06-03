@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -769,40 +771,46 @@ func TestIsAllowedContactType(t *testing.T) {
 		AllowedContactTypes: map[string]struct{}{
 			allowedContactType: {},
 		},
+		AllowedExtraAdminContactTypes: map[string]struct{}{
+			moira.SelfStateSender: {},
+		},
 	}
 
-	Convey("Test isAllowedContactType", t, func() {
-		Convey("Test with user and allowed contact type", func() {
-			isAllowed := isAllowedToUseContactType(auth, user, allowedContactType)
-			So(isAllowed, ShouldBeTrue)
-		})
+	t.Run("Test with user and allowed contact type", func(t *testing.T) {
+		isAllowed := isAllowedToUseContactType(auth, user, allowedContactType)
+		require.True(t, isAllowed)
+	})
 
-		Convey("Test with user and not allowed contact type", func() {
-			isAllowed := isAllowedToUseContactType(auth, user, notAllowedContactType)
-			So(isAllowed, ShouldBeFalse)
-		})
+	t.Run("Test with user and not allowed contact type", func(t *testing.T) {
+		isAllowed := isAllowedToUseContactType(auth, user, notAllowedContactType)
+		require.False(t, isAllowed)
+	})
 
-		Convey("Test with admin and allowed contact type", func() {
-			isAllowed := isAllowedToUseContactType(auth, admin, allowedContactType)
-			So(isAllowed, ShouldBeTrue)
-		})
+	t.Run("Test with admin and allowed contact type", func(t *testing.T) {
+		isAllowed := isAllowedToUseContactType(auth, admin, allowedContactType)
+		require.True(t, isAllowed)
+	})
 
-		Convey("Test with admin and not allowed contact type", func() {
-			isAllowed := isAllowedToUseContactType(auth, admin, notAllowedContactType)
-			So(isAllowed, ShouldBeTrue)
-		})
+	t.Run("Test with admin and not allowed contact type at all", func(t *testing.T) {
+		isAllowed := isAllowedToUseContactType(auth, admin, notAllowedContactType)
+		require.False(t, isAllowed)
+	})
 
-		Convey("Test with disabled auth and not allowed contact type", func() {
-			auth.Enabled = false
-			isAllowed := isAllowedToUseContactType(auth, admin, notAllowedContactType)
-			So(isAllowed, ShouldBeTrue)
-		})
+	t.Run("Test with admin and allowed contact type only for admins", func(t *testing.T) {
+		isAllowed := isAllowedToUseContactType(auth, admin, moira.SelfStateSender)
+		require.True(t, isAllowed)
+	})
 
-		Convey("Test with disabled auth and allowed contact type", func() {
-			auth.Enabled = false
-			isAllowed := isAllowedToUseContactType(auth, admin, allowedContactType)
-			So(isAllowed, ShouldBeTrue)
-		})
+	t.Run("Test with disabled auth and not allowed contact type", func(t *testing.T) {
+		auth.Enabled = false
+		isAllowed := isAllowedToUseContactType(auth, admin, notAllowedContactType)
+		require.True(t, isAllowed)
+	})
+
+	t.Run("Test with disabled auth and allowed contact type", func(t *testing.T) {
+		auth.Enabled = false
+		isAllowed := isAllowedToUseContactType(auth, admin, allowedContactType)
+		require.True(t, isAllowed)
 	})
 }
 

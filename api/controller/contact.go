@@ -324,7 +324,13 @@ func isAllowedToUseContactType(auth *api.Authorization, userLogin string, contac
 	isAdmin := auth.IsAdmin(userLogin)
 	_, isAllowedContactType := auth.AllowedContactTypes[contactType]
 
-	return isAllowedContactType || isAdmin || !isAuthEnabled
+	if !isAuthEnabled || isAllowedContactType {
+		return true
+	}
+
+	_, isAllowedForAdmin := auth.AllowedExtraAdminContactTypes[contactType]
+
+	return isAdmin && isAllowedForAdmin
 }
 
 func validateContact(contactsTemplate []api.WebContact, contact moira.ContactData) error {
