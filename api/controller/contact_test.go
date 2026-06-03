@@ -454,7 +454,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 			contactType: {},
 		},
 		AllowedExtraAdminContactTypes: map[string]struct{}{
-			moira.SelfStateSender: {},
+			"selfstate": {},
 		},
 	}
 
@@ -535,7 +535,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 		t.Run("Admin can create allowed for admins contact", func(t *testing.T) {
 			contact := &dto.Contact{
 				Value: contactValue,
-				Type:  moira.SelfStateSender,
+				Type:  "selfstate",
 				User:  userLogin,
 			}
 
@@ -548,7 +548,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 		t.Run("User cannot create allowed for admins contact", func(t *testing.T) {
 			contact := &dto.Contact{
 				Value: contactValue,
-				Type:  moira.SelfStateSender,
+				Type:  "selfstate",
 				User:  userLogin,
 			}
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, userLogin, "")
@@ -812,7 +812,7 @@ func TestIsAllowedContactType(t *testing.T) {
 			allowedContactType: {},
 		},
 		AllowedExtraAdminContactTypes: map[string]struct{}{
-			moira.SelfStateSender: {},
+			"selfstate": {},
 		},
 	}
 
@@ -837,7 +837,7 @@ func TestIsAllowedContactType(t *testing.T) {
 	})
 
 	t.Run("Test with admin and allowed contact type only for admins", func(t *testing.T) {
-		isAllowed := isAllowedToUseContactType(auth, admin, moira.SelfStateSender)
+		isAllowed := isAllowedToUseContactType(auth, admin, "selfstate")
 		require.True(t, isAllowed)
 	})
 

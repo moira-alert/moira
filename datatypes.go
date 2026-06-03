@@ -14,8 +14,6 @@ import (
 	"github.com/moira-alert/moira/templating"
 )
 
-const SelfStateSender = "selfstate"
-
 const (
 	// VariableContactID is used to render template with contact.ID.
 	VariableContactID = "${contact_id}"

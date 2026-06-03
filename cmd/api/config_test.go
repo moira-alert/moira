@@ -22,6 +22,7 @@ func Test_apiConfig_getSettings(t *testing.T) {
 		}
 
 		webConfig := &webConfig{
+			AllowedExtraAdminContactTypes: []string{"selfstate"},
 			ContactsTemplate: []webContact{
 				{
 					ContactType: "test",
@@ -45,7 +46,7 @@ func Test_apiConfig_getSettings(t *testing.T) {
 					"test": {},
 				},
 				AllowedExtraAdminContactTypes: map[string]struct{}{
-					moira.SelfStateSender: {},
+					"selfstate": {},
 				},
 				LimitedChangeTriggerOwners: make(map[string]struct{}),
 			},

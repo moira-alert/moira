@@ -161,6 +161,8 @@ type webConfig struct {
 	RemoteAllowed bool
 	// List of enabled contacts template.
 	ContactsTemplate []webContact `yaml:"contacts_template"`
+	// List of extra admin contact types
+	AllowedExtraAdminContactTypes []string `yaml:"extra_admin_contact_types"`
 	// Struct to manage feature flags.
 	FeatureFlags featureFlags `yaml:"feature_flags"`
 	// Returns the sentry configuration for the frontend.
@@ -223,14 +225,17 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 		canChangeTriggersList[login] = struct{}{}
 	}
 
+	extraAdminsContactTypes := make(map[string]struct{}, len(webConfig.AllowedExtraAdminContactTypes))
+	for _, contactType := range webConfig.AllowedExtraAdminContactTypes {
+		extraAdminsContactTypes[contactType] = struct{}{}
+	}
+
 	return api.Authorization{
-		Enabled:                    auth.Enabled,
-		AdminList:                  adminList,
-		AllowedContactTypes:        allowedContactTypes,
-		LimitedChangeTriggerOwners: canChangeTriggersList,
-		AllowedExtraAdminContactTypes: map[string]struct{}{
-			moira.SelfStateSender: {},
-		},
+		Enabled:                       auth.Enabled,
+		AdminList:                     adminList,
+		AllowedContactTypes:           allowedContactTypes,
+		LimitedChangeTriggerOwners:    canChangeTriggersList,
+		AllowedExtraAdminContactTypes: extraAdminsContactTypes,
 	}
 }
 

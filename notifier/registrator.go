@@ -31,6 +31,7 @@ const (
 	pushoverSender    = "pushover"
 	discordSender     = "discord"
 	scriptSender      = "script"
+	selfStateSender   = "selfstate"
 	slackSender       = "slack"
 	telegramSender    = "telegram"
 	twilioSmsSender   = "twilio sms"
@@ -120,8 +121,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 
 	if notifier.config.SelfStateEnabled {
 		selfStateSettings := map[string]interface{}{
-			"sender_type":  moira.SelfStateSender,
-			"contact_type": moira.SelfStateSender,
+			"sender_type":  selfStateSender,
+			"contact_type": selfStateSender,
 		}
 		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
 			notifier.logger.Warning().
