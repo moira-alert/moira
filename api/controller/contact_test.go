@@ -538,6 +538,7 @@ func TestAdminsCreatesContact(t *testing.T) {
 				Type:  moira.SelfStateSender,
 				User:  userLogin,
 			}
+
 			dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 			err := CreateContact(dataBase, auth, contactsTemplate, contact, adminLogin, "")
 			require.Nil(t, err)
