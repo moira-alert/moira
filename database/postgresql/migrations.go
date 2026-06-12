@@ -28,15 +28,17 @@ func (conn *DbConnector) ApplyMigrations(ctx context.Context) error {
 		return int(a.Number - b.Number)
 	})
 
-	lastMigrationIndex := slices.IndexFunc(migrationsToApply, func(m migrations.Migration) bool {
-		// NOTE: If lastMigrationNumber == 0 then none of migrations were applied yet, so took the first one.
-		return lastMigrationNumber == 0 || m.Number == lastMigrationNumber
-	})
-	if lastMigrationIndex == -1 {
-		return fmt.Errorf("last applied migration in database with number %d not found", lastMigrationNumber)
+	lastAppliedMigrationIndex := -1
+	if lastMigrationNumber != 0 {
+		lastAppliedMigrationIndex = slices.IndexFunc(migrationsToApply, func(m migrations.Migration) bool {
+			return m.Number == lastMigrationNumber
+		})
+		if lastAppliedMigrationIndex == -1 {
+			return fmt.Errorf("last applied migration in database with number %d not found", lastMigrationNumber)
+		}
 	}
 
-	for i := range migrationsToApply[lastMigrationIndex:] {
+	for i := range migrationsToApply[lastAppliedMigrationIndex + 1:] {
 		// TODO: add logging
 		migration := migrationsToApply[i]
 
@@ -51,6 +53,15 @@ func (conn *DbConnector) ApplyMigrations(ctx context.Context) error {
 
 func (conn *DbConnector) applyMigration(ctx context.Context, migration migrations.Migration) error {
 	_, err := conn.db.Master().ExecContext(ctx, migration.ForwardSQL)
+	if err != nil {
+		return err
+	}
+
+	query := `
+INSERT INTO migrations (number, applied_at)
+VALUES ($1, NOW())
+	`
+	_, err = conn.db.Master().ExecContext(ctx, query, migration.Number)
 	return err
 }
 
@@ -70,7 +81,7 @@ func (conn *DbConnector) getLastMigrationNumber(ctx context.Context) (int64, err
 func (conn *DbConnector) createMigrationsIfNeeded(ctx context.Context) error {
 	query := `
 CREATE TABLE IF NOT EXISTS migrations (
-	id INTEGER PRIMARY KEY,
+	id SERIAL PRIMARY KEY,
 	number INTEGER NOT NULL,
 	applied_at TIMESTAMPTZ NOT NULL
 )
