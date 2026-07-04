@@ -18,6 +18,8 @@ type RDB interface {
 type RWDB interface {
 	RDB
 	ExecContext(context.Context, string, ...any) (sql.Result, error)
+	BeginTx(context.Context, *sql.TxOptions) (*sql.Tx, error)
+	PrepareContext(context.Context, string) (*sql.Stmt, error)
 }
 
 type Database interface {
