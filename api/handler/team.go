@@ -14,7 +14,6 @@ import (
 
 func teams(router chi.Router) {
 	router.With(
-		middleware.AdminOnlyMiddleware(),
 		middleware.Paginate(getAllTeamsDefaultPage, getAllTeamsDefaultSize),
 		middleware.SearchTextContext(regexp.MustCompile(getAllTeamsDefaultRegexTemplate)),
 		middleware.SortOrderContext(api.AscSortOrder),
