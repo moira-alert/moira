@@ -266,6 +266,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				Error(e).
 				Msg("Cannot send to broken contact")
 			notifier.metrics.MarkContactDroppedNotifications(pkg.Contact.Type)
+			notifier.disableSubscription(pkg, log)
 		default:
 			if pkg.FailCount > notifier.config.MaxFailAttemptToSendAvailable {
 				log.Error().
@@ -279,6 +280,29 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			}
 
 			notifier.reschedule(&pkg, err.Error())
+		}
+	}
+}
+
+func (notifier *StandardNotifier) disableSubscription(pkg NotificationPackage, log moira.Logger) {
+	if len(pkg.Events) > 0 && pkg.Events[0].SubscriptionID != nil {
+		isSubscriptionTotalDisabled, err := notifier.database.DisableSubscription(*pkg.Events[0].SubscriptionID, pkg.Contact.ID)
+		if err != nil {
+			log.Error().
+				Error(err).
+				String("contact_id", pkg.Contact.ID).
+				String("subscription_id", *pkg.Events[0].SubscriptionID).
+				Msg("Cannot disable subscription")
+		} else if isSubscriptionTotalDisabled {
+			log.Info().
+				String("contact_id", pkg.Contact.ID).
+				String("subscription_id", *pkg.Events[0].SubscriptionID).
+				Msg("Moira successfully disabled subscription")
+		} else {
+			log.Info().
+				String("contact_id", pkg.Contact.ID).
+				String("subscription_id", *pkg.Events[0].SubscriptionID).
+				Msg("Moira successfully changed subscription")
 		}
 	}
 }
