@@ -250,6 +250,7 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 // DisableSubscription make subscription disable or drop broken contact.
 func (connector *DbConnector) DisableSubscription(subscriptionID, brokenContactID string) (bool, error) {
 	isSubscriptionDisabled := false
+
 	subscription, err := connector.GetSubscription(subscriptionID)
 	if err != nil {
 		return false, err
