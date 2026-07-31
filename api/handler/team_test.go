@@ -40,6 +40,7 @@ func Test_searchTeams(t *testing.T) {
 	t.Run("Test searching teams", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
+
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 		database = mockDb
 
@@ -64,6 +65,7 @@ func Test_searchTeams(t *testing.T) {
 
 		t.Run("when everything ok returns ok", func(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
+
 			mockDb.EXPECT().GetAllTeams().Return(testTeams, nil)
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/api/teams/all", nil)
@@ -163,7 +165,8 @@ func TestAdminOnlyTeamEditingFeatureFlag(t *testing.T) {
 		Limits: api.GetTestLimitsConfig(),
 		Authorization: api.Authorization{
 			Enabled: true,
-		}}, provider, nil, nil)
+		},
+	}, provider, nil, nil)
 
 	adminLogin := "superman"
 	nonAdminLogin := "batman"
@@ -175,7 +178,8 @@ func TestAdminOnlyTeamEditingFeatureFlag(t *testing.T) {
 			FeatureFlags: api.AuthorizationFeatureFlags{
 				ForbidNonAdminsCreateSubscriptions: true,
 			},
-		}}, provider, nil, nil)
+		},
+	}, provider, nil, nil)
 
 	t.Run("when auth is disabled, everything is allowed", func(t *testing.T) {
 		responseWriter := httptest.NewRecorder()
@@ -185,7 +189,7 @@ func TestAdminOnlyTeamEditingFeatureFlag(t *testing.T) {
 		mockDb.EXPECT().GetUserTeams("anonymous").Return([]string{}, nil)
 		mockDb.EXPECT().SaveTeamsAndUsers("team1", gomock.Any(), gomock.Any()).Return(nil)
 
-		url := fmt.Sprintf("/api/teams")
+		url := "/api/teams"
 		body := `{"id":"team1","name":"Team 1","description":"Team 1 Desc"}`
 		testRequest := httptest.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
 
@@ -205,7 +209,7 @@ func TestAdminOnlyTeamEditingFeatureFlag(t *testing.T) {
 		mockDb.EXPECT().GetUserTeams("anonymous").Return([]string{}, nil)
 		mockDb.EXPECT().SaveTeamsAndUsers("team1", gomock.Any(), gomock.Any()).Return(nil)
 
-		url := fmt.Sprintf("/api/teams")
+		url := "/api/teams"
 		body := `{"id":"team1","name":"Team 1","description":"Team 1 Desc"}`
 		testRequest := httptest.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
 
@@ -225,7 +229,7 @@ func TestAdminOnlyTeamEditingFeatureFlag(t *testing.T) {
 		mockDb.EXPECT().GetUserTeams(adminLogin).Return([]string{}, nil)
 		mockDb.EXPECT().SaveTeamsAndUsers("team1", gomock.Any(), gomock.Any()).Return(nil)
 
-		url := fmt.Sprintf("/api/teams")
+		url := "/api/teams"
 		body := `{"id":"team1","name":"Team 1","description":"Team 1 Desc"}`
 		testRequest := httptest.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
 		testRequest.Header.Add("x-webauth-user", adminLogin)
@@ -241,7 +245,7 @@ func TestAdminOnlyTeamEditingFeatureFlag(t *testing.T) {
 	t.Run("when auth is enabled, and feature flag is up, nothing is allowed for non admin", func(t *testing.T) {
 		responseWriter := httptest.NewRecorder()
 
-		url := fmt.Sprintf("/api/teams")
+		url := "/api/teams"
 		body := `{"id":"team1","name":"Team 1","description":"Team 1 Desc"}`
 		testRequest := httptest.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
 		testRequest.Header.Add("x-webauth-user", nonAdminLogin)
