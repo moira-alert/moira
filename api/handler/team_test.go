@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,9 +17,13 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
+	db "github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	metricsource "github.com/moira-alert/moira/metric_source"
+	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/stretchr/testify/require"
 
-	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
 
@@ -32,11 +37,9 @@ func fillContextForTestSearchTeams(ctx context.Context, testPage, testSize int64
 }
 
 func Test_searchTeams(t *testing.T) {
-	Convey("Test searching teams", t, func() {
+	t.Run("Test searching teams", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
-
-		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 		database = mockDb
 
@@ -59,7 +62,8 @@ func Test_searchTeams(t *testing.T) {
 			})
 		}
 
-		Convey("when everything ok returns ok", func() {
+		t.Run("when everything ok returns ok", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			mockDb.EXPECT().GetAllTeams().Return(testTeams, nil)
 
 			testRequest := httptest.NewRequest(http.MethodGet, "/api/teams/all", nil)
@@ -85,19 +89,20 @@ func Test_searchTeams(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
+			require.Equal(t, http.StatusOK, response.StatusCode)
 
 			content, err := io.ReadAll(response.Body)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			var gotDTO dto.TeamsList
 
 			err = json.Unmarshal(content, &gotDTO)
-			So(err, ShouldBeNil)
-			So(gotDTO, ShouldResemble, expectedDTO)
+			require.NoError(t, err)
+			require.Equal(t, expectedDTO, gotDTO)
 		})
 
-		Convey("when db returns error returns internal server error", func() {
+		t.Run("when db returns error returns internal server error", func(t *testing.T) {
+			responseWriter := httptest.NewRecorder()
 			dbErr := errors.New("some error from db")
 
 			mockDb.EXPECT().GetAllTeams().Return(nil, dbErr)
@@ -129,16 +134,123 @@ func Test_searchTeams(t *testing.T) {
 			response := responseWriter.Result()
 			defer response.Body.Close()
 
-			So(response.StatusCode, ShouldEqual, http.StatusInternalServerError)
+			require.Equal(t, http.StatusInternalServerError, response.StatusCode)
 
 			content, err := io.ReadAll(response.Body)
-			So(err, ShouldBeNil)
+			require.NoError(t, err)
 
 			var gotDTO errorResponse
 
 			err = json.Unmarshal(content, &gotDTO)
-			So(err, ShouldBeNil)
-			So(gotDTO, ShouldResemble, expectedDTO)
+			require.NoError(t, err)
+			require.Equal(t, expectedDTO, gotDTO)
 		})
+	})
+}
+
+func TestAdminOnlyTeamEditingFeatureFlag(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	logger, _ := zerolog_adapter.GetLogger("Test")
+	mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
+	mockSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	provider := metricsource.CreateTestMetricSourceProvider(mockSource, mockSource, mockSource)
+
+	handlerNoAuth := NewHandler(mockDb, logger, nil, &api.Config{Limits: api.GetTestLimitsConfig()}, provider, nil, nil)
+
+	handlerNoFf := NewHandler(mockDb, logger, nil, &api.Config{
+		Limits: api.GetTestLimitsConfig(),
+		Authorization: api.Authorization{
+			Enabled: true,
+		}}, provider, nil, nil)
+
+	adminLogin := "superman"
+	nonAdminLogin := "batman"
+	handlerWithFf := NewHandler(mockDb, logger, nil, &api.Config{
+		Limits: api.GetTestLimitsConfig(),
+		Authorization: api.Authorization{
+			Enabled:   true,
+			AdminList: map[string]struct{}{adminLogin: {}},
+			FeatureFlags: api.AuthorizationFeatureFlags{
+				ForbidNonAdminsCreateSubscriptions: true,
+			},
+		}}, provider, nil, nil)
+
+	t.Run("when auth is disabled, everything is allowed", func(t *testing.T) {
+		responseWriter := httptest.NewRecorder()
+
+		mockDb.EXPECT().GetTeam("team1").Return(moira.Team{}, db.ErrNil)
+		mockDb.EXPECT().SaveTeam("team1", gomock.Any()).Return(nil)
+		mockDb.EXPECT().GetUserTeams("anonymous").Return([]string{}, nil)
+		mockDb.EXPECT().SaveTeamsAndUsers("team1", gomock.Any(), gomock.Any()).Return(nil)
+
+		url := fmt.Sprintf("/api/teams")
+		body := `{"id":"team1","name":"Team 1","description":"Team 1 Desc"}`
+		testRequest := httptest.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
+
+		handlerNoAuth.ServeHTTP(responseWriter, testRequest)
+
+		response := responseWriter.Result()
+		defer response.Body.Close()
+
+		require.Equal(t, http.StatusOK, response.StatusCode)
+	})
+
+	t.Run("when auth is enabled, and feature flag is down, everything is allowed", func(t *testing.T) {
+		responseWriter := httptest.NewRecorder()
+
+		mockDb.EXPECT().GetTeam("team1").Return(moira.Team{}, db.ErrNil)
+		mockDb.EXPECT().SaveTeam("team1", gomock.Any()).Return(nil)
+		mockDb.EXPECT().GetUserTeams("anonymous").Return([]string{}, nil)
+		mockDb.EXPECT().SaveTeamsAndUsers("team1", gomock.Any(), gomock.Any()).Return(nil)
+
+		url := fmt.Sprintf("/api/teams")
+		body := `{"id":"team1","name":"Team 1","description":"Team 1 Desc"}`
+		testRequest := httptest.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
+
+		handlerNoFf.ServeHTTP(responseWriter, testRequest)
+
+		response := responseWriter.Result()
+		defer response.Body.Close()
+
+		require.Equal(t, http.StatusOK, response.StatusCode)
+	})
+
+	t.Run("when auth is enabled, and feature flag is up, everything is allowed for admin", func(t *testing.T) {
+		responseWriter := httptest.NewRecorder()
+
+		mockDb.EXPECT().GetTeam("team1").Return(moira.Team{}, db.ErrNil)
+		mockDb.EXPECT().SaveTeam("team1", gomock.Any()).Return(nil)
+		mockDb.EXPECT().GetUserTeams(adminLogin).Return([]string{}, nil)
+		mockDb.EXPECT().SaveTeamsAndUsers("team1", gomock.Any(), gomock.Any()).Return(nil)
+
+		url := fmt.Sprintf("/api/teams")
+		body := `{"id":"team1","name":"Team 1","description":"Team 1 Desc"}`
+		testRequest := httptest.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
+		testRequest.Header.Add("x-webauth-user", adminLogin)
+
+		handlerWithFf.ServeHTTP(responseWriter, testRequest)
+
+		response := responseWriter.Result()
+		defer response.Body.Close()
+
+		require.Equal(t, http.StatusOK, response.StatusCode)
+	})
+
+	t.Run("when auth is enabled, and feature flag is up, nothing is allowed for non admin", func(t *testing.T) {
+		responseWriter := httptest.NewRecorder()
+
+		url := fmt.Sprintf("/api/teams")
+		body := `{"id":"team1","name":"Team 1","description":"Team 1 Desc"}`
+		testRequest := httptest.NewRequest(http.MethodPost, url, bytes.NewReader([]byte(body)))
+		testRequest.Header.Add("x-webauth-user", nonAdminLogin)
+
+		handlerWithFf.ServeHTTP(responseWriter, testRequest)
+
+		response := responseWriter.Result()
+		defer response.Body.Close()
+
+		require.Equal(t, http.StatusForbidden, response.StatusCode)
 	})
 }

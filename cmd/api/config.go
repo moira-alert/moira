@@ -140,6 +140,13 @@ type authorization struct {
 	AdminList []string `yaml:"admin_list"`
 	// List for control trigger deletion and editing, if createdBy fit in this list: only who create trigger can delete it.
 	LimitedChangeTriggerOwners []string `yaml:"limited_change_trigger_owners"`
+	// List of feature flags that can be enabled for authorization in moira
+	FeatureFlags AuthorizationFeatureFlags `yaml:"feature_flags"`
+}
+
+type AuthorizationFeatureFlags struct {
+	// Disabled by default. If enabled, only admins will be able to create new teams.
+	ForbidNonAdminsCreateSubscriptions bool `yaml:"forbid_non_admins_to_create_subscriptions"`
 }
 
 type sentryConfig struct {
@@ -236,6 +243,9 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 		AllowedContactTypes:           allowedContactTypes,
 		LimitedChangeTriggerOwners:    canChangeTriggersList,
 		AllowedExtraAdminContactTypes: extraAdminsContactTypes,
+		FeatureFlags: api.AuthorizationFeatureFlags{
+			ForbidNonAdminsCreateSubscriptions: auth.FeatureFlags.ForbidNonAdminsCreateSubscriptions,
+		},
 	}
 }
 

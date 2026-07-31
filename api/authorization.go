@@ -7,6 +7,7 @@ type Authorization struct {
 	AllowedContactTypes           map[string]struct{}
 	AllowedExtraAdminContactTypes map[string]struct{}
 	LimitedChangeTriggerOwners    map[string]struct{}
+	FeatureFlags                  AuthorizationFeatureFlags
 }
 
 // IsEnabled returns true if auth is enabled and false otherwise.
@@ -45,4 +46,8 @@ func (auth *Authorization) GetRole(login string) Role {
 	}
 
 	return RoleUser
+}
+
+type AuthorizationFeatureFlags struct {
+	ForbidNonAdminsCreateSubscriptions bool
 }
