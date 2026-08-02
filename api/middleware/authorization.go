@@ -26,7 +26,7 @@ func AdminOnlyMiddleware() func(next http.Handler) http.Handler {
 	}
 }
 
-// AdminOnlyMiddleware returns 403 if request for made by non-admin user.
+// AdminOnlyByFeatureFlagMiddleware returns 403 if request for made by non-admin user if featureFlag is enabled, otherwise does nothing.
 func AdminOnlyByFeatureFlagMiddleware(featureFlag bool) func(next http.Handler) http.Handler {
 	if featureFlag {
 		return AdminOnlyMiddleware()
