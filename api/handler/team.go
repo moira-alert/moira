@@ -13,7 +13,7 @@ import (
 )
 
 func teams(router chi.Router, auth *api.Authorization) {
-	teamCreateMiddleware := middleware.AdminOnlyByFeatureFlagMiddleware(auth.FeatureFlags.ForbidNonAdminsCreateSubscriptions)
+	teamCreateMiddleware := middleware.AdminOnlyByFeatureFlagMiddleware(auth.FeatureFlags.ForbidNonAdminsCreateTeams)
 
 	router.With(
 		middleware.Paginate(getAllTeamsDefaultPage, getAllTeamsDefaultSize),

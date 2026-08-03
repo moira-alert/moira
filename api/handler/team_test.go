@@ -176,7 +176,7 @@ func TestAdminOnlyTeamEditingFeatureFlag(t *testing.T) {
 			Enabled:   true,
 			AdminList: map[string]struct{}{adminLogin: {}},
 			FeatureFlags: api.AuthorizationFeatureFlags{
-				ForbidNonAdminsCreateSubscriptions: true,
+				ForbidNonAdminsCreateTeams: true,
 			},
 		},
 	}, provider, nil, nil)

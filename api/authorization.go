@@ -49,5 +49,5 @@ func (auth *Authorization) GetRole(login string) Role {
 }
 
 type AuthorizationFeatureFlags struct {
-	ForbidNonAdminsCreateSubscriptions bool
+	ForbidNonAdminsCreateTeams bool
 }

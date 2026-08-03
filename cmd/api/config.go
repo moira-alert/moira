@@ -146,7 +146,7 @@ type authorization struct {
 
 type AuthorizationFeatureFlags struct {
 	// Disabled by default. If enabled, only admins will be able to create new teams.
-	ForbidNonAdminsCreateSubscriptions bool `yaml:"forbid_non_admins_to_create_subscriptions"`
+	ForbidNonAdminsCreateTeams bool `yaml:"forbid_non_admins_to_create_teams"`
 }
 
 type sentryConfig struct {
@@ -244,7 +244,7 @@ func (auth *authorization) toApiConfig(webConfig *webConfig) api.Authorization {
 		LimitedChangeTriggerOwners:    canChangeTriggersList,
 		AllowedExtraAdminContactTypes: extraAdminsContactTypes,
 		FeatureFlags: api.AuthorizationFeatureFlags{
-			ForbidNonAdminsCreateSubscriptions: auth.FeatureFlags.ForbidNonAdminsCreateSubscriptions,
+			ForbidNonAdminsCreateTeams: auth.FeatureFlags.ForbidNonAdminsCreateTeams,
 		},
 	}
 }
