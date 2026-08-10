@@ -50,6 +50,13 @@ func Test_apiConfig_getSettings(t *testing.T) {
 				},
 				LimitedChangeTriggerOwners: make(map[string]struct{}),
 			},
+			Limits: api.LimitsConfig{
+				Team: api.TeamLimits{
+					MaxNameSize:        api.DefaultTeamNameMaxSize,
+					MaxDescriptionSize: api.DefaultTeamDescriptionMaxSize,
+					MaxMetadataSize:    api.DefaultTeamMetadataMaxSize,
+				},
+			},
 		}
 
 		result := apiConf.getSettings(metricTTLs, api.FeatureFlags{IsReadonlyEnabled: true}, webConfig)
