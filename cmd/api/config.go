@@ -121,12 +121,15 @@ func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 	if conf.Team.MaxNameSize == 0 {
 		conf.Team.MaxNameSize = api.DefaultTeamNameMaxSize
 	}
+
 	if conf.Team.MaxDescriptionSize == 0 {
 		conf.Team.MaxDescriptionSize = api.DefaultTeamDescriptionMaxSize
 	}
+
 	if conf.Team.MaxMetadataSize == 0 {
 		conf.Team.MaxMetadataSize = api.DefaultTeamMetadataMaxSize
 	}
+
 	return api.LimitsConfig{
 		Pager: api.PagerLimits{
 			TTL: conf.Pager.TTL,
