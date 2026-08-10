@@ -14,12 +14,14 @@ import (
 type teamStorageElement struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Metadata    string `json:"metadata"`
 }
 
 func newTeamStorageElement(team moira.Team) teamStorageElement {
 	return teamStorageElement{
 		Name:        team.Name,
 		Description: team.Description,
+		Metadata:    team.Metadata,
 	}
 }
 
@@ -27,6 +29,7 @@ func (t *teamStorageElement) toTeam() moira.Team {
 	return moira.Team{
 		Name:        t.Name,
 		Description: t.Description,
+		Metadata:    t.Metadata,
 	}
 }
 

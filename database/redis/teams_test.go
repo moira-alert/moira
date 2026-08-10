@@ -31,6 +31,7 @@ func TestTeamStoring(t *testing.T) {
 		ID:          teamID,
 		Name:        "Test team",
 		Description: "Test team description",
+		Metadata:    "Test team metadata",
 	}
 
 	Convey("Teams Manipulation", t, func() {
@@ -260,6 +261,7 @@ func TestSaveAndGetTeam(t *testing.T) {
 			ID:          "someTeamID",
 			Name:        "Test team name",
 			Description: "Test description",
+			Metadata:    "Test metadata",
 		}
 
 		Convey("when no team, get returns database.ErrNil", func() {

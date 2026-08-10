@@ -124,6 +124,7 @@ func GetTestLimitsConfig() LimitsConfig {
 		Team: TeamLimits{
 			MaxNameSize:        DefaultTeamNameMaxSize,
 			MaxDescriptionSize: DefaultTeamDescriptionMaxSize,
+			MaxMetadataSize:    DefaultTeamMetadataMaxSize,
 		},
 	}
 }
@@ -131,6 +132,7 @@ func GetTestLimitsConfig() LimitsConfig {
 const (
 	DefaultTeamNameMaxSize        = 100
 	DefaultTeamDescriptionMaxSize = 1000
+	DefaultTeamMetadataMaxSize    = 200
 )
 
 // TeamLimits contains all limits applied for triggers.
@@ -139,6 +141,8 @@ type TeamLimits struct {
 	MaxNameSize int
 	// MaxNameSize is the amount of characters allowed in team description.
 	MaxDescriptionSize int
+	// MaxMetadataSize is the amount of characters allowed in team metadata.
+	MaxMetadataSize int
 }
 
 // ContactLimits defines limits for contact-related configurations.

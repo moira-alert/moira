@@ -212,6 +212,7 @@ type Team struct {
 	ID          string
 	Name        string
 	Description string
+	Metadata    string
 }
 
 // ContactData represents contact object.

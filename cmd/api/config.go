@@ -106,6 +106,8 @@ type TeamLimitsConfig struct {
 	MaxNameSize int `yaml:"max_name_size"`
 	// MaxDescriptionSize is the max amount of characters allowed in team description.
 	MaxDescriptionSize int `yaml:"max_description_size"`
+	// MaxMetadataSize is the max amount of characters allowed in team metadata.
+	MaxMetadataSize int `yaml:"max_metadata_size"`
 }
 
 // ContactLimits defines limits for contact-related configurations.
@@ -116,6 +118,15 @@ type ContactLimits struct {
 
 // ToLimits converts LimitsConfig to api.LimitsConfig.
 func (conf LimitsConfig) ToLimits() api.LimitsConfig {
+	if conf.Team.MaxNameSize == 0 {
+		conf.Team.MaxNameSize = api.DefaultTeamNameMaxSize
+	}
+	if conf.Team.MaxDescriptionSize == 0 {
+		conf.Team.MaxDescriptionSize = api.DefaultTeamDescriptionMaxSize
+	}
+	if conf.Team.MaxMetadataSize == 0 {
+		conf.Team.MaxMetadataSize = api.DefaultTeamMetadataMaxSize
+	}
 	return api.LimitsConfig{
 		Pager: api.PagerLimits{
 			TTL: conf.Pager.TTL,
@@ -126,6 +137,7 @@ func (conf LimitsConfig) ToLimits() api.LimitsConfig {
 		Team: api.TeamLimits{
 			MaxNameSize:        conf.Team.MaxNameSize,
 			MaxDescriptionSize: conf.Team.MaxDescriptionSize,
+			MaxMetadataSize:    conf.Team.MaxMetadataSize,
 		},
 		Contact: api.ContactLimits{
 			TestNotificationWaitTime: conf.Contact.TestNotificationWaitTime,
