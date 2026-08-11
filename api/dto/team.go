@@ -18,7 +18,7 @@ type TeamModel struct {
 	ID          string `json:"id" binding:"required" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
 	Name        string `json:"name" binding:"required" example:"Infrastructure Team"`
 	Description string `json:"description" example:"Team that holds all members of infrastructure division"`
-	Metadata    string `json:"metadata" example:"test_team"`
+	Metadata    string `json:"metadata" example:"{\"meta_id\":\"example_id\"}"`
 }
 
 // NewTeamModel is a constructor function that creates a new TeamModel using moira.Team.
