@@ -132,7 +132,9 @@ func NewHandler(
 			router.Route("/subscription", subscription)
 			router.Route("/notification", notification)
 			router.With(contactsTemplateMiddleware).
-				Route("/teams", teams)
+				Route("/teams", func(router chi.Router) {
+					teams(router, &apiConfig.Authorization)
+				})
 			router.With(contactsTemplateMiddleware).
 				Route("/contact", func(router chi.Router) {
 					contact(router)

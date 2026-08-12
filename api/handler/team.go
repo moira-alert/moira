@@ -12,20 +12,22 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-func teams(router chi.Router) {
+func teams(router chi.Router, auth *api.Authorization) {
+	teamCreateMiddleware := middleware.AdminOnlyByFeatureFlagMiddleware(auth.FeatureFlags.ForbidNonAdminsCreateTeams)
+
 	router.With(
 		middleware.Paginate(getAllTeamsDefaultPage, getAllTeamsDefaultSize),
 		middleware.SearchTextContext(regexp.MustCompile(getAllTeamsDefaultRegexTemplate)),
 		middleware.SortOrderContext(api.AscSortOrder),
 	).Get("/all", searchTeams)
 	router.Get("/", getAllTeamsForUser)
-	router.Post("/", createTeam)
+	router.With(teamCreateMiddleware).Post("/", createTeam)
 	router.Route("/{teamId}", func(router chi.Router) {
 		router.Use(middleware.TeamContext)
 		router.Use(usersFilterForTeams)
 		router.Get("/", getTeam)
-		router.Patch("/", updateTeam)
-		router.Delete("/", deleteTeam)
+		router.With(teamCreateMiddleware).Patch("/", updateTeam)
+		router.With(teamCreateMiddleware).Delete("/", deleteTeam)
 		router.Route("/users", func(router chi.Router) {
 			router.Get("/", getTeamUsers)
 			router.Put("/", setTeamUsers)
