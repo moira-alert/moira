@@ -18,6 +18,7 @@ type TeamModel struct {
 	ID          string `json:"id" binding:"required" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
 	Name        string `json:"name" binding:"required" example:"Infrastructure Team"`
 	Description string `json:"description" example:"Team that holds all members of infrastructure division"`
+	Metadata    string `json:"metadata" example:"{\"meta_id\":\"example_id\"}"`
 }
 
 // NewTeamModel is a constructor function that creates a new TeamModel using moira.Team.
@@ -26,6 +27,7 @@ func NewTeamModel(team moira.Team) TeamModel {
 		ID:          team.ID,
 		Name:        team.Name,
 		Description: team.Description,
+		Metadata:    team.Metadata,
 	}
 }
 
@@ -45,6 +47,10 @@ func (t TeamModel) Bind(request *http.Request) error {
 		return fmt.Errorf("team description cannot be longer than %d characters", limits.Team.MaxDescriptionSize)
 	}
 
+	if utf8.RuneCountInString(t.Metadata) > limits.Team.MaxMetadataSize {
+		return fmt.Errorf("team metadata cannot be longer than %d characters", limits.Team.MaxMetadataSize)
+	}
+
 	return nil
 }
 
@@ -59,6 +65,7 @@ func (t TeamModel) ToMoiraTeam() moira.Team {
 		ID:          t.ID,
 		Name:        t.Name,
 		Description: t.Description,
+		Metadata:    t.Metadata,
 	}
 }
 
