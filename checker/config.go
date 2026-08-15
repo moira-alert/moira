@@ -19,6 +19,7 @@ type Config struct {
 	MetricEventPopDelay             time.Duration
 	CriticalTimeOfCheck             time.Duration
 	MetricEventTriggerCheckInterval time.Duration
+	BadStateReminder                map[moira.State]int64
 }
 
 // SourceCheckConfig represents check parameters for a single metric source.
