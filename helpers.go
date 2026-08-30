@@ -408,3 +408,16 @@ func MapToSlice[K, V comparable](input map[K]V) []V {
 
 	return res
 }
+
+// Remove value from array.
+func Remove[T comparable](slice []T, value T) []T {
+	result := slice[:0]
+
+	for _, v := range slice {
+		if v != value {
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
