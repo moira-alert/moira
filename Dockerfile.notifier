@@ -1,7 +1,9 @@
 FROM golang:1.25 as builder
 
 COPY go.mod go.sum /go/src/github.com/moira-alert/moira/
+
 WORKDIR /go/src/github.com/moira-alert/moira
+
 RUN go mod download
 
 COPY . /go/src/github.com/moira-alert/moira/
@@ -15,11 +17,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Mo
 
 FROM alpine:3.18.0
 
-RUN apk add --no-cache ca-certificates && update-ca-certificates
+RUN apk add --no-cache ca-certificates
+&& update-ca-certificates
+&& addgroup -S moira
+&& adduser -S -G moira moira
 
 COPY pkg/notifier/notifier.yml /etc/moira/notifier.yml
-
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/notifier /usr/bin/notifier
 COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/
+
+USER moira
 
 ENTRYPOINT ["/usr/bin/notifier"]
