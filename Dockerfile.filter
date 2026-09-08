@@ -1,7 +1,9 @@
 FROM golang:1.25 as builder
 
 COPY go.mod go.sum /go/src/github.com/moira-alert/moira/
+
 WORKDIR /go/src/github.com/moira-alert/moira
+
 RUN go mod download
 
 COPY . /go/src/github.com/moira-alert/moira/
@@ -15,13 +17,17 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Mo
 
 FROM alpine:3.18.0
 
-RUN apk add --no-cache ca-certificates && update-ca-certificates
+RUN apk add --no-cache ca-certificates \
+    && update-ca-certificates \
+    && addgroup -S moira \
+    && adduser -S -G moira moira
 
 COPY pkg/filter/filter.yml /etc/moira/filter.yml
 COPY pkg/filter/storage-schemas.conf /etc/moira/storage-schemas.conf
-
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/filter /usr/bin/filter
 
-EXPOSE 2003 2003
+USER moira
+
+EXPOSE 2003
 
 ENTRYPOINT ["/usr/bin/filter"]
