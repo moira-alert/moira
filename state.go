@@ -79,6 +79,12 @@ func (state State) ToSelfState() string {
 	return SelfStateOK
 }
 
+// TracksDuration reports whether duration-threshold bookkeeping (WarnFor/ErrorFor timers) is
+// meaningful for this state. Only OK/WARN/ERROR carry it; NODATA/EXCEPTION/TEST interrupt tracking.
+func (state State) TracksDuration() bool {
+	return state == StateOK || state == StateWARN || state == StateERROR
+}
+
 // IsValid checks if  valid State.
 func (state State) IsValid() bool {
 	for _, allowedState := range eventStatesPriority {

@@ -420,29 +420,33 @@ const (
 
 // Trigger represents trigger data object.
 type Trigger struct {
-	ID               string          `json:"id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
-	TeamID           string          `json:"team_id,omitempty" example:"d844f26b-4646-4fca-b43c-a871cc21169a" extensions:"x-nullable"`
-	Name             string          `json:"name" binding:"required" example:"Not enough disk space left"`
-	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
-	Targets          []string        `json:"targets" binding:"required" example:"devOps.my_server.hdd.freespace_mbytes"`
-	WarnValue        *float64        `json:"warn_value" binding:"required" example:"5000" extensions:"x-nullable"`
-	ErrorValue       *float64        `json:"error_value" binding:"required" example:"1000" extensions:"x-nullable"`
-	TriggerType      string          `json:"trigger_type" binding:"required" example:"rising"`
-	Tags             []string        `json:"tags" binding:"required" example:"server,disk"`
-	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
-	TTL              int64           `json:"ttl,omitempty" example:"600" format:"int64"`
-	Schedule         *ScheduleData   `json:"sched,omitempty" extensions:"x-nullable"`
-	Expression       *string         `json:"expression,omitempty" example:"" extensions:"x-nullable"`
-	PythonExpression *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
-	Patterns         []string        `json:"patterns" binding:"required" example:""`
-	TriggerSource    TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
-	ClusterId        ClusterId       `json:"cluster_id,omitempty" example:"default"`
-	MuteNewMetrics   bool            `json:"mute_new_metrics" binding:"required" example:"false"`
-	AloneMetrics     map[string]bool `json:"alone_metrics" binding:"required" example:"t1:true"`
-	CreatedAt        *int64          `json:"created_at" binding:"required" format:"int64" extensions:"x-nullable"`
-	UpdatedAt        *int64          `json:"updated_at" binding:"required" format:"int64" extensions:"x-nullable"`
-	CreatedBy        string          `json:"created_by" binding:"required"`
-	UpdatedBy        string          `json:"updated_by" binding:"required"`
+	ID                 string          `json:"id" binding:"required" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	TeamID             string          `json:"team_id,omitempty" example:"d844f26b-4646-4fca-b43c-a871cc21169a" extensions:"x-nullable"`
+	Name               string          `json:"name" binding:"required" example:"Not enough disk space left"`
+	Desc               *string         `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
+	Targets            []string        `json:"targets" binding:"required" example:"devOps.my_server.hdd.freespace_mbytes"`
+	WarnValue          *float64        `json:"warn_value" binding:"required" example:"5000" extensions:"x-nullable"`
+	ErrorValue         *float64        `json:"error_value" binding:"required" example:"1000" extensions:"x-nullable"`
+	WarnFor            int64           `json:"warn_for,omitempty" example:"0" format:"int64"`
+	ErrorFor           int64           `json:"error_for,omitempty" example:"0" format:"int64"`
+	WarnKeepFiringFor  int64           `json:"warn_keep_firing_for,omitempty" example:"0" format:"int64"`
+	ErrorKeepFiringFor int64           `json:"error_keep_firing_for,omitempty" example:"0" format:"int64"`
+	TriggerType        string          `json:"trigger_type" binding:"required" example:"rising"`
+	Tags               []string        `json:"tags" binding:"required" example:"server,disk"`
+	TTLState           *TTLState       `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
+	TTL                int64           `json:"ttl,omitempty" example:"600" format:"int64"`
+	Schedule           *ScheduleData   `json:"sched,omitempty" extensions:"x-nullable"`
+	Expression         *string         `json:"expression,omitempty" example:"" extensions:"x-nullable"`
+	PythonExpression   *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
+	Patterns           []string        `json:"patterns" binding:"required" example:""`
+	TriggerSource      TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
+	ClusterId          ClusterId       `json:"cluster_id,omitempty" example:"default"`
+	MuteNewMetrics     bool            `json:"mute_new_metrics" binding:"required" example:"false"`
+	AloneMetrics       map[string]bool `json:"alone_metrics" binding:"required" example:"t1:true"`
+	CreatedAt          *int64          `json:"created_at" binding:"required" format:"int64" extensions:"x-nullable"`
+	UpdatedAt          *int64          `json:"updated_at" binding:"required" format:"int64" extensions:"x-nullable"`
+	CreatedBy          string          `json:"created_by" binding:"required"`
+	UpdatedBy          string          `json:"updated_by" binding:"required"`
 }
 
 const (
@@ -662,6 +666,14 @@ type MetricState struct {
 	// and the metric is in Maintenance. The metric remains in the database
 	DeletedButKept bool `json:"deleted_but_kept,omitempty" example:"false"`
 	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
+	// WarnSince is the unix timestamp when the metric first became continuously >= WarnValue, 0 if not currently tracked.
+	WarnSince int64 `json:"warn_since,omitempty" example:"0" format:"int64"`
+	// WarnRecoverSince is the unix timestamp when the metric first dropped below WarnValue after WARN had fired, 0 if not currently tracked.
+	WarnRecoverSince int64 `json:"warn_recover_since,omitempty" example:"0" format:"int64"`
+	// ErrorSince is the unix timestamp when the metric first became continuously >= ErrorValue, 0 if not currently tracked.
+	ErrorSince int64 `json:"error_since,omitempty" example:"0" format:"int64"`
+	// ErrorRecoverSince is the unix timestamp when the metric first dropped below ErrorValue after ERROR had fired, 0 if not currently tracked.
+	ErrorRecoverSince int64 `json:"error_recover_since,omitempty" example:"0" format:"int64"`
 }
 
 // SetMaintenance set maintenance user, time for MetricState.
@@ -673,6 +685,16 @@ func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo,
 // GetMaintenance return metricState MaintenanceInfo.
 func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 	return metricState.MaintenanceInfo, metricState.Maintenance
+}
+
+// ClearDurationState zeroes the four duration-threshold bookkeeping fields (WarnSince,
+// WarnRecoverSince, ErrorSince, ErrorRecoverSince), used whenever a metric's raw state resolves
+// to NODATA/EXCEPTION or a data gap (TTL expiry) interrupts duration-threshold tracking.
+func (metricState *MetricState) ClearDurationState() {
+	metricState.WarnSince = 0
+	metricState.WarnRecoverSince = 0
+	metricState.ErrorSince = 0
+	metricState.ErrorRecoverSince = 0
 }
 
 // MaintenanceInfo represents user and time set/unset maintenance.
