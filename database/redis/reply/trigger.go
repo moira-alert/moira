@@ -13,30 +13,34 @@ import (
 
 // Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility.
 type triggerStorageElement struct {
-	ID               string              `json:"id"`
-	TeamID           string              `json:"team_id,omitempty"`
-	Name             string              `json:"name"`
-	Desc             *string             `json:"desc,omitempty"`
-	Targets          []string            `json:"targets"`
-	WarnValue        *float64            `json:"warn_value"`
-	ErrorValue       *float64            `json:"error_value"`
-	TriggerType      string              `json:"trigger_type,omitempty"`
-	Tags             []string            `json:"tags"`
-	TTLState         *moira.TTLState     `json:"ttl_state,omitempty"`
-	Schedule         *moira.ScheduleData `json:"sched,omitempty"`
-	Expression       *string             `json:"expr,omitempty"`
-	PythonExpression *string             `json:"expression,omitempty"`
-	Patterns         []string            `json:"patterns"`
-	TTL              string              `json:"ttl,omitempty"`
-	IsRemote         bool                `json:"is_remote"`
-	TriggerSource    moira.TriggerSource `json:"trigger_source,omitempty"`
-	ClusterId        moira.ClusterId     `json:"cluster_id,omitempty"`
-	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
-	AloneMetrics     map[string]bool     `json:"alone_metrics"`
-	CreatedAt        *int64              `json:"created_at"`
-	UpdatedAt        *int64              `json:"updated_at"`
-	CreatedBy        string              `json:"created_by"`
-	UpdatedBy        string              `json:"updated_by"`
+	ID                 string              `json:"id"`
+	TeamID             string              `json:"team_id,omitempty"`
+	Name               string              `json:"name"`
+	Desc               *string             `json:"desc,omitempty"`
+	Targets            []string            `json:"targets"`
+	WarnValue          *float64            `json:"warn_value"`
+	ErrorValue         *float64            `json:"error_value"`
+	WarnFor            int64               `json:"warn_for,omitempty"`
+	ErrorFor           int64               `json:"error_for,omitempty"`
+	WarnKeepFiringFor  int64               `json:"warn_keep_firing_for,omitempty"`
+	ErrorKeepFiringFor int64               `json:"error_keep_firing_for,omitempty"`
+	TriggerType        string              `json:"trigger_type,omitempty"`
+	Tags               []string            `json:"tags"`
+	TTLState           *moira.TTLState     `json:"ttl_state,omitempty"`
+	Schedule           *moira.ScheduleData `json:"sched,omitempty"`
+	Expression         *string             `json:"expr,omitempty"`
+	PythonExpression   *string             `json:"expression,omitempty"`
+	Patterns           []string            `json:"patterns"`
+	TTL                string              `json:"ttl,omitempty"`
+	IsRemote           bool                `json:"is_remote"`
+	TriggerSource      moira.TriggerSource `json:"trigger_source,omitempty"`
+	ClusterId          moira.ClusterId     `json:"cluster_id,omitempty"`
+	MuteNewMetrics     bool                `json:"mute_new_metrics,omitempty"`
+	AloneMetrics       map[string]bool     `json:"alone_metrics"`
+	CreatedAt          *int64              `json:"created_at"`
+	UpdatedAt          *int64              `json:"updated_at"`
+	CreatedBy          string              `json:"created_by"`
+	UpdatedBy          string              `json:"updated_by"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
@@ -56,58 +60,66 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 	clusterId := storageElement.ClusterId.FillInIfNotSet()
 
 	return moira.Trigger{
-		ID:               storageElement.ID,
-		TeamID:           storageElement.TeamID,
-		Name:             storageElement.Name,
-		Desc:             storageElement.Desc,
-		Targets:          storageElement.Targets,
-		WarnValue:        storageElement.WarnValue,
-		ErrorValue:       storageElement.ErrorValue,
-		TriggerType:      storageElement.TriggerType,
-		Tags:             storageElement.Tags,
-		TTLState:         storageElement.TTLState,
-		Schedule:         storageElement.Schedule,
-		Expression:       storageElement.Expression,
-		PythonExpression: storageElement.PythonExpression,
-		Patterns:         storageElement.Patterns,
-		TTL:              getTriggerTTL(storageElement.TTL),
-		TriggerSource:    triggerSource,
-		ClusterId:        clusterId,
-		MuteNewMetrics:   storageElement.MuteNewMetrics,
-		AloneMetrics:     storageElement.AloneMetrics,
-		CreatedAt:        storageElement.CreatedAt,
-		UpdatedAt:        storageElement.UpdatedAt,
-		CreatedBy:        storageElement.CreatedBy,
-		UpdatedBy:        storageElement.UpdatedBy,
+		ID:                 storageElement.ID,
+		TeamID:             storageElement.TeamID,
+		Name:               storageElement.Name,
+		Desc:               storageElement.Desc,
+		Targets:            storageElement.Targets,
+		WarnValue:          storageElement.WarnValue,
+		ErrorValue:         storageElement.ErrorValue,
+		WarnFor:            storageElement.WarnFor,
+		ErrorFor:           storageElement.ErrorFor,
+		WarnKeepFiringFor:  storageElement.WarnKeepFiringFor,
+		ErrorKeepFiringFor: storageElement.ErrorKeepFiringFor,
+		TriggerType:        storageElement.TriggerType,
+		Tags:               storageElement.Tags,
+		TTLState:           storageElement.TTLState,
+		Schedule:           storageElement.Schedule,
+		Expression:         storageElement.Expression,
+		PythonExpression:   storageElement.PythonExpression,
+		Patterns:           storageElement.Patterns,
+		TTL:                getTriggerTTL(storageElement.TTL),
+		TriggerSource:      triggerSource,
+		ClusterId:          clusterId,
+		MuteNewMetrics:     storageElement.MuteNewMetrics,
+		AloneMetrics:       storageElement.AloneMetrics,
+		CreatedAt:          storageElement.CreatedAt,
+		UpdatedAt:          storageElement.UpdatedAt,
+		CreatedBy:          storageElement.CreatedBy,
+		UpdatedBy:          storageElement.UpdatedBy,
 	}
 }
 
 func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerStorageElement {
 	return &triggerStorageElement{
-		ID:               triggerID,
-		TeamID:           trigger.TeamID,
-		Name:             trigger.Name,
-		Desc:             trigger.Desc,
-		Targets:          trigger.Targets,
-		WarnValue:        trigger.WarnValue,
-		ErrorValue:       trigger.ErrorValue,
-		TriggerType:      trigger.TriggerType,
-		Tags:             trigger.Tags,
-		TTLState:         trigger.TTLState,
-		Schedule:         trigger.Schedule,
-		Expression:       trigger.Expression,
-		PythonExpression: trigger.PythonExpression,
-		Patterns:         trigger.Patterns,
-		TTL:              getTriggerTTLString(trigger.TTL),
-		IsRemote:         trigger.TriggerSource == moira.GraphiteRemote,
-		TriggerSource:    trigger.TriggerSource,
-		ClusterId:        trigger.ClusterId,
-		MuteNewMetrics:   trigger.MuteNewMetrics,
-		AloneMetrics:     trigger.AloneMetrics,
-		CreatedAt:        trigger.CreatedAt,
-		UpdatedAt:        trigger.UpdatedAt,
-		CreatedBy:        trigger.CreatedBy,
-		UpdatedBy:        trigger.UpdatedBy,
+		ID:                 triggerID,
+		TeamID:             trigger.TeamID,
+		Name:               trigger.Name,
+		Desc:               trigger.Desc,
+		Targets:            trigger.Targets,
+		WarnValue:          trigger.WarnValue,
+		ErrorValue:         trigger.ErrorValue,
+		WarnFor:            trigger.WarnFor,
+		ErrorFor:           trigger.ErrorFor,
+		WarnKeepFiringFor:  trigger.WarnKeepFiringFor,
+		ErrorKeepFiringFor: trigger.ErrorKeepFiringFor,
+		TriggerType:        trigger.TriggerType,
+		Tags:               trigger.Tags,
+		TTLState:           trigger.TTLState,
+		Schedule:           trigger.Schedule,
+		Expression:         trigger.Expression,
+		PythonExpression:   trigger.PythonExpression,
+		Patterns:           trigger.Patterns,
+		TTL:                getTriggerTTLString(trigger.TTL),
+		IsRemote:           trigger.TriggerSource == moira.GraphiteRemote,
+		TriggerSource:      trigger.TriggerSource,
+		ClusterId:          trigger.ClusterId,
+		MuteNewMetrics:     trigger.MuteNewMetrics,
+		AloneMetrics:       trigger.AloneMetrics,
+		CreatedAt:          trigger.CreatedAt,
+		UpdatedAt:          trigger.UpdatedAt,
+		CreatedBy:          trigger.CreatedBy,
+		UpdatedBy:          trigger.UpdatedBy,
 	}
 }
 
