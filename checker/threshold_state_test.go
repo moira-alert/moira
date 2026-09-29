@@ -186,6 +186,18 @@ func TestEvaluateThresholds(t *testing.T) {
 		require.Equal(t, moira.StateERROR, state)
 	})
 
+	t.Run("Only ErrorValue + ErrorFor: stays OK (not WARN) while ErrorFor is ticking", func(t *testing.T) {
+		trigger := baseTrigger()
+		trigger.WarnValue = nil
+		trigger.ErrorFor = 10
+
+		state, _, errorThreshold := evaluateThresholds(trigger, moira.StateERROR, 100, moira.MetricState{})
+		require.Equal(t, moira.StateOK, state)
+
+		state, _, _ = evaluateThresholds(trigger, moira.StateERROR, 110, moira.MetricState{ErrorSince: errorThreshold.since})
+		require.Equal(t, moira.StateERROR, state)
+	})
+
 	t.Run("Full reset when the metric returns to OK before its threshold's for elapses", func(t *testing.T) {
 		trigger := baseTrigger()
 		trigger.WarnFor = 10

@@ -65,7 +65,7 @@ func evaluateThresholds(
 	timestamp int64,
 	prev moira.MetricState,
 ) (state moira.State, warnThreshold, errorThreshold thresholdState) {
-	isWarnFired := rawState == moira.StateWARN || rawState == moira.StateERROR
+	isWarnFired := rawState == moira.StateWARN || (rawState == moira.StateERROR && trigger.WarnValue != nil)
 	if trigger.WarnFor != 0 || trigger.WarnKeepFiringFor != 0 {
 		warnThreshold = thresholdState{
 			forDuration:   trigger.WarnFor,
