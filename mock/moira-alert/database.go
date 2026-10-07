@@ -311,6 +311,21 @@ func (mr *MockDatabaseMockRecorder) DeleteTriggersSearchResults(pagerID any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggersSearchResults), pagerID)
 }
 
+// DisableSubscription mocks base method.
+func (m *MockDatabase) DisableSubscription(subscriptionID, brokenContact string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DisableSubscription", subscriptionID, brokenContact)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DisableSubscription indicates an expected call of DisableSubscription.
+func (mr *MockDatabaseMockRecorder) DisableSubscription(subscriptionID, brokenContact any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisableSubscription", reflect.TypeOf((*MockDatabase)(nil).DisableSubscription), subscriptionID, brokenContact)
+}
+
 // FetchNotificationEvent mocks base method.
 func (m *MockDatabase) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	m.ctrl.T.Helper()

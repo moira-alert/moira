@@ -5,6 +5,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/gofrs/uuid"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -544,4 +546,92 @@ func getCountOfTagSubscriptionsKeys(ctx context.Context, client redis.UniversalC
 	}
 
 	return len(keys)
+}
+
+func TestDb_DisableSubscription(t *testing.T) {
+	t.Run("disable subscription when has one contact", func(t *testing.T) {
+		logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
+		dataBase := NewTestDatabase(logger)
+
+		defer dataBase.Flush()
+
+		subscription := moira.SubscriptionData{
+			ID:      "sub-1",
+			Enabled: true,
+			Contacts: []string{
+				"contact-1",
+			},
+		}
+
+		err := dataBase.SaveSubscription(&subscription)
+		require.NoError(t, err)
+
+		disabled, err := dataBase.DisableSubscription(
+			"sub-1",
+			"contact-1",
+		)
+
+		require.NoError(t, err)
+		require.True(t, disabled)
+
+		updated, err := dataBase.GetSubscription("sub-1")
+		require.NoError(t, err)
+
+		require.False(t, updated.Enabled)
+		require.Len(t, updated.Contacts, 1)
+		require.Equal(t, "contact-1", updated.Contacts[0])
+	})
+
+	t.Run("remove broken contact when has multiple contacts", func(t *testing.T) {
+		logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
+		dataBase := NewTestDatabase(logger)
+
+		defer dataBase.Flush()
+
+		subscription := moira.SubscriptionData{
+			ID:      "sub-2",
+			Enabled: true,
+			Contacts: []string{
+				"contact-1",
+				"broken-contact",
+				"contact-2",
+			},
+		}
+
+		err := dataBase.SaveSubscription(&subscription)
+		require.NoError(t, err)
+
+		disabled, err := dataBase.DisableSubscription(
+			"sub-2",
+			"broken-contact",
+		)
+
+		require.NoError(t, err)
+		require.False(t, disabled)
+
+		updated, err := dataBase.GetSubscription("sub-2")
+		require.NoError(t, err)
+
+		require.True(t, updated.Enabled)
+		require.Equal(
+			t,
+			[]string{"contact-1", "contact-2"},
+			updated.Contacts,
+		)
+	})
+
+	t.Run("return error when subscription not found", func(t *testing.T) {
+		logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
+		dataBase := NewTestDatabase(logger)
+
+		defer dataBase.Flush()
+
+		disabled, err := dataBase.DisableSubscription(
+			"unknown-subscription",
+			"contact-1",
+		)
+
+		require.Error(t, err)
+		require.False(t, disabled)
+	})
 }
