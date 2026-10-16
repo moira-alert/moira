@@ -48,12 +48,14 @@ func InitMetricSources(remotes RemotesConfig, database moira.Database, logger mo
 }
 
 // MakeClustersWebConfig initializes cluster list for api web config.
-func MakeClustersWebConfig(redisConfig RedisConfig, remotes RemotesConfig) []api.MetricSourceCluster {
+func MakeClustersWebConfig(redisConfig RedisConfig, remotes RemotesConfig, local LocalConfig) []api.MetricSourceCluster {
 	clusters := []api.MetricSourceCluster{{
 		TriggerSource: moira.GraphiteLocal,
 		ClusterId:     moira.DefaultCluster,
 		ClusterName:   "Graphite Local",
 		MetricsTTL:    uint64(to.Duration(redisConfig.MetricsTTL).Seconds()),
+		GrafanaUrl: local.GrafanaUrl,
+		GrafanaDatasourceId: local.GrafanaDatasourceId,
 	}}
 
 	for _, remote := range remotes.Graphite {
@@ -62,6 +64,8 @@ func MakeClustersWebConfig(redisConfig RedisConfig, remotes RemotesConfig) []api
 			ClusterId:     remote.ClusterId,
 			ClusterName:   remote.ClusterName,
 			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
+			GrafanaUrl: remote.GrafanaUrl,
+			GrafanaDatasourceId: remote.GrafanaDatasourceId,
 		}
 		clusters = append(clusters, cluster)
 	}
@@ -72,6 +76,8 @@ func MakeClustersWebConfig(redisConfig RedisConfig, remotes RemotesConfig) []api
 			ClusterId:     remote.ClusterId,
 			ClusterName:   remote.ClusterName,
 			MetricsTTL:    uint64(to.Duration(remote.MetricsTTL).Seconds()),
+			GrafanaUrl: remote.GrafanaUrl,
+			GrafanaDatasourceId: remote.GrafanaDatasourceId,
 		}
 		clusters = append(clusters, cluster)
 	}

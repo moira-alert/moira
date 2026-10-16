@@ -160,13 +160,14 @@ func Test_webConfig_getSettings(t *testing.T) {
 		ClusterId:     moira.DefaultCluster,
 		ClusterName:   "Graphite Local",
 	}}
+    localDefault := cmd.LocalConfig{}
 	remotesDefault := cmd.RemotesConfig{}
 	redisDefault := cmd.RedisConfig{}
 
 	Convey("Empty config, fill it", t, func() {
 		config := webConfig{}
 
-		settings := config.getSettings(true, remotesDefault, redisDefault)
+		settings := config.getSettings(true, remotesDefault, redisDefault, localDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed:        true,
 			Contacts:             []api.WebContact{},
@@ -177,7 +178,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 	Convey("Default config, fill it", t, func() {
 		config := getDefault()
 
-		settings := config.Web.getSettings(true, remotesDefault, redisDefault)
+		settings := config.Web.getSettings(true, remotesDefault, redisDefault, config.Local)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},
@@ -216,7 +217,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			},
 		}
 
-		settings := config.getSettings(true, remotesDefault, redisDefault)
+		settings := config.getSettings(true, remotesDefault, redisDefault, localDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			SupportEmail:  "lalal@mail.la",
 			RemoteAllowed: true,
@@ -260,7 +261,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			}},
 		}
 
-		settings := config.getSettings(true, remotes, redisDefault)
+		settings := config.getSettings(true, remotes, redisDefault, localDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},

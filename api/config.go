@@ -71,10 +71,12 @@ type WebConfig struct {
 
 // MetricSourceCluster contains data about supported metric source cluster.
 type MetricSourceCluster struct {
-	TriggerSource moira.TriggerSource `json:"trigger_source" binding:"required" example:"graphite_remote"`
-	ClusterId     moira.ClusterId     `json:"cluster_id" binding:"required" example:"default"`
-	MetricsTTL    uint64              `json:"metrics_ttl" binding:"required" example:"604800"`
-	ClusterName   string              `json:"cluster_name" binding:"required" example:"Graphite Remote Prod"`
+	TriggerSource       moira.TriggerSource `json:"trigger_source" binding:"required" example:"graphite_remote"`
+	ClusterId           moira.ClusterId     `json:"cluster_id" binding:"required" example:"default"`
+	MetricsTTL          uint64              `json:"metrics_ttl" binding:"required" example:"604800"`
+	ClusterName         string              `json:"cluster_name" binding:"required" example:"Graphite Remote Prod"`
+	GrafanaUrl          string              `json:"grafana_url,omitempty" example:"https://grafana.example.com"`
+	GrafanaDatasourceId string              `json:"grafana_datasource_id,omitempty" example:"graphite-prod"`
 }
 
 func (WebConfig) Render(http.ResponseWriter, *http.Request) error {
