@@ -160,7 +160,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 		ClusterId:     moira.DefaultCluster,
 		ClusterName:   "Graphite Local",
 	}}
-    localDefault := cmd.LocalConfig{}
+	localDefault := cmd.LocalConfig{}
 	remotesDefault := cmd.RemotesConfig{}
 	redisDefault := cmd.RedisConfig{}
 
