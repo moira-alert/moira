@@ -319,6 +319,8 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 
 // RemoteCommonConfig is designed to be embedded in remote configs, It contains fields that are similar for all remotes.
 type RemoteCommonConfig struct {
+	GrafanaConfig `yaml:",inline"`
+
 	// Unique id of the cluster
 	ClusterId moira.ClusterId `yaml:"cluster_id"`
 	// Human-readable name of the cluster
@@ -334,8 +336,6 @@ type RemoteCommonConfig struct {
 	// remote storage. Large values will lead to OOM problems in checker.
 	// See https://github.com/moira-alert/moira/pull/519
 	MetricsTTL string `yaml:"metrics_ttl"`
-
-	GrafanaConfig `yaml:",inline"`
 }
 
 type remoteCommon interface {
