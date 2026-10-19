@@ -17,6 +17,7 @@ import (
 
 func TestGrafanaSourceSettings(t *testing.T) {
 	var conf config
+
 	err := yaml.Unmarshal([]byte(`
 local:
   grafana_url: https://grafana.example.com/local
