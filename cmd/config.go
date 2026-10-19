@@ -257,12 +257,17 @@ type ProfilerConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-// LocalConfig contains settings for the local Graphite metric source.
-type LocalConfig struct {
+// GrafanaConfig contains Grafana settings shared by metric sources.
+type GrafanaConfig struct {
 	// Grafana URL for the local Graphite source, exposed the web ui.
 	GrafanaUrl string `yaml:"grafana_url"`
 	// Grafana datasource identifier for the local Graphite source, exposed the web ui.
 	GrafanaDatasourceId string `yaml:"grafana_datasource_id"`
+}
+
+// LocalConfig contains settings for the local Graphite metric source.
+type LocalConfig struct {
+	GrafanaConfig `yaml:",inline"`
 }
 
 // RemotesConfig is designed to be embedded in config files to configure all remote sources.
@@ -329,10 +334,8 @@ type RemoteCommonConfig struct {
 	// remote storage. Large values will lead to OOM problems in checker.
 	// See https://github.com/moira-alert/moira/pull/519
 	MetricsTTL string `yaml:"metrics_ttl"`
-	// Grafana URL for this source, exposed the web ui.
-	GrafanaUrl string `yaml:"grafana_url"`
-	// Grafana datasource identifier for this source source, exposed the web ui.
-	GrafanaDatasourceId string `yaml:"grafana_datasource_id"`
+
+	GrafanaConfig `yaml:",inline"`
 }
 
 type remoteCommon interface {
