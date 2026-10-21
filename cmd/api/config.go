@@ -19,6 +19,7 @@ type config struct {
 	API                 apiConfig                     `yaml:"api"`
 	Web                 webConfig                     `yaml:"web"`
 	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
+	Local               cmd.LocalConfig               `yaml:"local"`
 	Remotes             cmd.RemotesConfig             `yaml:",inline"`
 	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 	Checks              cmd.ChecksConfig              `yaml:"selfstate_checks"`
@@ -279,7 +280,7 @@ func (config *webConfig) validate() error {
 	return nil
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig, redisConfig cmd.RedisConfig) *api.WebConfig {
+func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig, redisConfig cmd.RedisConfig, local cmd.LocalConfig) *api.WebConfig {
 	webContacts := make([]api.WebContact, 0, len(config.ContactsTemplate))
 
 	for _, contactTemplate := range config.ContactsTemplate {
@@ -295,7 +296,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		webContacts = append(webContacts, contact)
 	}
 
-	clusters := cmd.MakeClustersWebConfig(redisConfig, remotes)
+	clusters := cmd.MakeClustersWebConfig(redisConfig, remotes, local)
 
 	return &api.WebConfig{
 		SupportEmail:         config.SupportEmail,

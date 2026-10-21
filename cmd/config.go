@@ -257,6 +257,19 @@ type ProfilerConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
+// GrafanaConfig contains Grafana settings shared by metric sources.
+type GrafanaConfig struct {
+	// Grafana URL for the local Graphite source, exposed the web ui.
+	GrafanaUrl string `yaml:"grafana_url"`
+	// Grafana datasource identifier for the local Graphite source, exposed the web ui.
+	GrafanaDatasourceId string `yaml:"grafana_datasource_id"`
+}
+
+// LocalConfig contains settings for the local Graphite metric source.
+type LocalConfig struct {
+	GrafanaConfig `yaml:",inline"`
+}
+
 // RemotesConfig is designed to be embedded in config files to configure all remote sources.
 type RemotesConfig struct {
 	Graphite   []GraphiteRemoteConfig   `yaml:"graphite_remote"`
@@ -306,6 +319,8 @@ func validateRemotes[T remoteCommon](remotes []T) []error {
 
 // RemoteCommonConfig is designed to be embedded in remote configs, It contains fields that are similar for all remotes.
 type RemoteCommonConfig struct {
+	GrafanaConfig `yaml:",inline"`
+
 	// Unique id of the cluster
 	ClusterId moira.ClusterId `yaml:"cluster_id"`
 	// Human-readable name of the cluster

@@ -148,7 +148,7 @@ func main() {
 	statsManager.Start()
 	defer statsManager.Stop() //nolint
 
-	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes, applicationConfig.Redis)
+	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes, applicationConfig.Redis, applicationConfig.Local)
 	selfStateChecksConfig := toCheckConfig(applicationConfig.Checks)
 
 	httpHandler := handler.NewHandler(

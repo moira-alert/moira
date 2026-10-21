@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
@@ -13,6 +14,71 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func TestGrafanaSourceSettings(t *testing.T) {
+	var conf config
+
+	err := yaml.Unmarshal([]byte(`
+local:
+  grafana_url: https://grafana.example.com/local
+  grafana_datasource_id: graphite-local
+graphite_remote:
+  - cluster_id: default
+    grafana_url: https://grafana.example.com/graphite
+    grafana_datasource_id: "42"
+prometheus_remote:
+  - cluster_id: default
+    grafana_url: https://grafana.example.com/prometheus
+    grafana_datasource_id: prometheus-prod
+  - cluster_id: staging
+`), &conf)
+	require.NoError(t, err)
+
+	settings := conf.Web.getSettings(true, conf.Remotes, conf.Redis, conf.Local)
+	clustersByKey := make(map[moira.ClusterKey]api.MetricSourceCluster, len(settings.MetricSourceClusters))
+
+	for _, cluster := range settings.MetricSourceClusters {
+		key := moira.MakeClusterKey(cluster.TriggerSource, cluster.ClusterId)
+		clustersByKey[key] = cluster
+	}
+
+	expected := []api.MetricSourceCluster{
+		{
+			TriggerSource:       moira.GraphiteLocal,
+			ClusterId:           moira.DefaultCluster,
+			GrafanaUrl:          "https://grafana.example.com/local",
+			GrafanaDatasourceId: "graphite-local",
+		},
+		{
+			TriggerSource:       moira.GraphiteRemote,
+			ClusterId:           moira.DefaultCluster,
+			GrafanaUrl:          "https://grafana.example.com/graphite",
+			GrafanaDatasourceId: "42",
+		},
+		{
+			TriggerSource:       moira.PrometheusRemote,
+			ClusterId:           moira.DefaultCluster,
+			GrafanaUrl:          "https://grafana.example.com/prometheus",
+			GrafanaDatasourceId: "prometheus-prod",
+		},
+		{
+			TriggerSource: moira.PrometheusRemote,
+			ClusterId:     "staging",
+		},
+	}
+	require.Len(t, settings.MetricSourceClusters, len(expected))
+
+	for _, cluster := range expected {
+		key := moira.MakeClusterKey(cluster.TriggerSource, cluster.ClusterId)
+
+		t.Run(key.String(), func(t *testing.T) {
+			require.Contains(t, clustersByKey, key)
+			actual := clustersByKey[key]
+			require.Equal(t, cluster.GrafanaUrl, actual.GrafanaUrl)
+			require.Equal(t, cluster.GrafanaDatasourceId, actual.GrafanaDatasourceId)
+		})
+	}
+}
 
 func Test_apiConfig_getSettings(t *testing.T) {
 	t.Run("Settings successfully filled", func(t *testing.T) {
@@ -160,13 +226,14 @@ func Test_webConfig_getSettings(t *testing.T) {
 		ClusterId:     moira.DefaultCluster,
 		ClusterName:   "Graphite Local",
 	}}
+	localDefault := cmd.LocalConfig{}
 	remotesDefault := cmd.RemotesConfig{}
 	redisDefault := cmd.RedisConfig{}
 
 	Convey("Empty config, fill it", t, func() {
 		config := webConfig{}
 
-		settings := config.getSettings(true, remotesDefault, redisDefault)
+		settings := config.getSettings(true, remotesDefault, redisDefault, localDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed:        true,
 			Contacts:             []api.WebContact{},
@@ -177,7 +244,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 	Convey("Default config, fill it", t, func() {
 		config := getDefault()
 
-		settings := config.Web.getSettings(true, remotesDefault, redisDefault)
+		settings := config.Web.getSettings(true, remotesDefault, redisDefault, config.Local)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},
@@ -216,7 +283,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			},
 		}
 
-		settings := config.getSettings(true, remotesDefault, redisDefault)
+		settings := config.getSettings(true, remotesDefault, redisDefault, localDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			SupportEmail:  "lalal@mail.la",
 			RemoteAllowed: true,
@@ -260,7 +327,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			}},
 		}
 
-		settings := config.getSettings(true, remotes, redisDefault)
+		settings := config.getSettings(true, remotes, redisDefault, localDefault)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},
