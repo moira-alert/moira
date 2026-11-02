@@ -41,6 +41,7 @@ type triggerStorageElement struct {
 	UpdatedAt          *int64              `json:"updated_at"`
 	CreatedBy          string              `json:"created_by"`
 	UpdatedBy          string              `json:"updated_by"`
+	MuteOnHolidays     bool                `json:"mute_on_holidays,omitempty"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
@@ -87,6 +88,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		UpdatedAt:          storageElement.UpdatedAt,
 		CreatedBy:          storageElement.CreatedBy,
 		UpdatedBy:          storageElement.UpdatedBy,
+		MuteOnHolidays:     storageElement.MuteOnHolidays,
 	}
 }
 
@@ -120,6 +122,7 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		UpdatedAt:          trigger.UpdatedAt,
 		CreatedBy:          trigger.CreatedBy,
 		UpdatedBy:          trigger.UpdatedBy,
+		MuteOnHolidays:     trigger.MuteOnHolidays,
 	}
 }
 

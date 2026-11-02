@@ -16,6 +16,7 @@ import (
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/holidayCalendar"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	_ "go.uber.org/automaxprocs"
@@ -70,6 +71,11 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira Checker stopped")
 
+	holidayCalendar, err := holidayCalendar.New(config.HolidayCalendar)
+	if err != nil {
+		logger.Fatal().Error(err).Msg("Can`t configure holiday calendar")
+	}
+
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().
@@ -100,6 +106,7 @@ func main() {
 	}
 
 	checkerSettings := config.getSettings(logger)
+	checkerSettings.HolidayCalendar = holidayCalendar
 
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)

@@ -258,6 +258,7 @@ type SubscriptionData struct {
 	ThrottlingEnabled bool         `json:"throttling" binding:"required" example:"false"`
 	User              string       `json:"user" binding:"required" example:""`
 	TeamID            string       `json:"team_id" binding:"required" example:"324516ed-4924-4154-a62c-eb124234fce"`
+	MuteOnHolidays    bool         `json:"mute_on_holidays,omitempty" example:"false"`
 }
 
 // PlottingData represents plotting settings.
@@ -447,6 +448,7 @@ type Trigger struct {
 	UpdatedAt          *int64          `json:"updated_at" binding:"required" format:"int64" extensions:"x-nullable"`
 	CreatedBy          string          `json:"created_by" binding:"required"`
 	UpdatedBy          string          `json:"updated_by" binding:"required"`
+	MuteOnHolidays     bool            `json:"mute_on_holidays,omitempty" example:"false"`
 }
 
 const (

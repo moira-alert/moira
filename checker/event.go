@@ -1,6 +1,8 @@
 package checker
 
 import (
+	"time"
+
 	"github.com/moira-alert/moira"
 )
 
@@ -154,7 +156,19 @@ func getEventOldState(lastCheckState moira.State, lastCheckSuppressedState moira
 }
 
 func (triggerChecker *TriggerChecker) isTriggerSuppressed(timestamp int64, maintenanceTimestamp int64) bool {
-	return !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) || maintenanceTimestamp >= timestamp
+	return !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) || maintenanceTimestamp >= timestamp || triggerChecker.isMutedOnHoliday(timestamp)
+}
+
+func (triggerChecker *TriggerChecker) isMutedOnHoliday(timestamp int64) bool {
+	if !triggerChecker.trigger.MuteOnHolidays {
+		return false
+	}
+
+	if triggerChecker.config == nil {
+		return false
+	}
+
+	return triggerChecker.config.HolidayCalendar.IsHoliday(time.Unix(timestamp, 0))
 }
 
 func isStateChanged(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenanceInfo moira.MaintenanceInfo) (*moira.EventInfo, bool) {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/holidayCalendar"
 	"github.com/moira-alert/moira/metrics"
 )
 
@@ -16,6 +17,7 @@ type Scheduler interface {
 
 // SchedulerConfig is a list of immutable params for Scheduler.
 type SchedulerConfig struct {
+	HolidayCalendar   *holidayCalendar.Calendar
 	ReschedulingDelay time.Duration
 }
 
@@ -157,7 +159,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 		next = now
 	}
 
-	next, err = calculateNextDelivery(&subscription.Schedule, next)
+	next, err = scheduler.applySubscriptionSchedule(&subscription, next)
 	if err != nil {
 		logger.Error().
 			Error(err).
@@ -165,6 +167,34 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	}
 
 	return next, alarmFatigue
+}
+
+func (scheduler *StandardScheduler) applySubscriptionSchedule(
+	subscription *moira.SubscriptionData,
+	next time.Time,
+) (time.Time, error) {
+	calendar := scheduler.config.HolidayCalendar
+	if calendar == nil || !subscription.MuteOnHolidays {
+		return calculateNextDelivery(&subscription.Schedule, next)
+	}
+
+	const maxIterations = 1000
+
+	for range maxIterations {
+		next = calendar.NextNonHoliday(next)
+
+		delivery, err := calculateNextDelivery(&subscription.Schedule, next)
+		if err != nil || !calendar.IsHoliday(delivery) {
+			return delivery, err
+		}
+
+		next = delivery
+	}
+
+	return time.Time{}, fmt.Errorf(
+		"scheduler: failed to find non-holiday delivery after %d iterations",
+		maxIterations,
+	)
 }
 
 func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (time.Time, error) {
