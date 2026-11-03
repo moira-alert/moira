@@ -178,13 +178,15 @@ func (scheduler *StandardScheduler) applySubscriptionSchedule(
 		return calculateNextDelivery(&subscription.Schedule, next)
 	}
 
+	tzOffset := subscription.Schedule.TimezoneOffset
+
 	const maxIterations = 1000
 
 	for range maxIterations {
-		next = calendar.NextNonHoliday(next)
+		next = calendar.NextNonHoliday(next, tzOffset)
 
 		delivery, err := calculateNextDelivery(&subscription.Schedule, next)
-		if err != nil || !calendar.IsHoliday(delivery) {
+		if err != nil || !calendar.IsHoliday(delivery, tzOffset) {
 			return delivery, err
 		}
 

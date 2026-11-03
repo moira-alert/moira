@@ -13,15 +13,13 @@ import (
 // Config defines optional top-level holiday_calendar configuration section.
 type Config struct {
 	Enabled          bool     `yaml:"enabled"`
-	Timezone         string   `yaml:"timezone"`
 	File             string   `yaml:"file"`
 	ExcludeSummaries []string `yaml:"exclude_summaries,omitempty"`
 }
 
 // Calendar checks holidays in a fixed timezone.
 type Calendar struct {
-	days     map[string]struct{}
-	location *time.Location
+	days map[string]struct{}
 }
 
 // New creates a holiday calendar.
@@ -30,39 +28,17 @@ func New(config Config) (*Calendar, error) {
 		return nil, nil
 	}
 
-	if config.Timezone == "" {
-		return nil, fmt.Errorf("holiday_calendar: timezone is required")
-	}
-
-	location, err := loadLocation(config.Timezone)
-	if err != nil {
-		return nil, err
-	}
-
 	data, err := readCalendarFile(config.File)
 	if err != nil {
 		return nil, err
 	}
 
-	calendar, err := parseCalendar(data, location, config.ExcludeSummaries)
+	calendar, err := parseCalendar(data, config.ExcludeSummaries)
 	if err != nil {
 		return nil, fmt.Errorf("holiday_calendar: parse %s: %w", config.File, err)
 	}
 
 	return calendar, nil
-}
-
-func loadLocation(timezone string) (*time.Location, error) {
-	if timezone == "" {
-		return nil, fmt.Errorf("holiday_calendar: timezone is required")
-	}
-
-	location, err := time.LoadLocation(timezone)
-	if err != nil {
-		return nil, fmt.Errorf("holiday_calendar: invalid timezone %s: %w", timezone, err)
-	}
-
-	return location, nil
 }
 
 func readCalendarFile(path string) ([]byte, error) {
@@ -78,15 +54,14 @@ func readCalendarFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func parseCalendar(data []byte, location *time.Location, excludeSummaries []string) (*Calendar, error) {
+func parseCalendar(data []byte, excludeSummaries []string) (*Calendar, error) {
 	parsed, err := parseICS(data)
 	if err != nil {
 		return nil, err
 	}
 
 	calendar := &Calendar{
-		days:     make(map[string]struct{}),
-		location: location,
+		days: make(map[string]struct{}),
 	}
 
 	if err := calendar.loadEvents(parsed.Events(), excludeSummaries); err != nil {
@@ -231,29 +206,34 @@ func readDateValue(event *ics.VEvent, name ics.ComponentProperty) (string, error
 	return property.Value, nil
 }
 
-func (calendar *Calendar) IsHoliday(timestamp time.Time) bool {
+func scheduleLocation(tzOffset int64) *time.Location {
+	return time.FixedZone("", int(-tzOffset*60))
+}
+
+func (calendar *Calendar) IsHoliday(timestamp time.Time, tzOffset int64) bool {
 	if calendar == nil {
 		return false
 	}
 
-	local := timestamp.In(calendar.location)
+	local := timestamp.In(scheduleLocation(tzOffset))
 	key := local.Format(time.DateOnly)
 	_, holiday := calendar.days[key]
 
 	return holiday
 }
 
-func (calendar *Calendar) NextNonHoliday(timestamp time.Time) time.Time {
-	for calendar.IsHoliday(timestamp) {
-		timestamp = calendar.nextLocalMidnight(timestamp)
+func (calendar *Calendar) NextNonHoliday(timestamp time.Time, tzOffset int64) time.Time {
+	for calendar.IsHoliday(timestamp, tzOffset) {
+		timestamp = nextLocalMidnight(timestamp, tzOffset)
 	}
 
 	return timestamp.UTC()
 }
 
-func (calendar *Calendar) nextLocalMidnight(timestamp time.Time) time.Time {
-	local := timestamp.In(calendar.location)
+func nextLocalMidnight(timestamp time.Time, tzOffset int64) time.Time {
+	location := scheduleLocation(tzOffset)
+	local := timestamp.In(location)
 	year, month, day := local.Date()
 
-	return time.Date(year, month, day+1, 0, 0, 0, 0, calendar.location)
+	return time.Date(year, month, day+1, 0, 0, 0, 0, location)
 }

@@ -168,7 +168,9 @@ func (triggerChecker *TriggerChecker) isMutedOnHoliday(timestamp int64) bool {
 		return false
 	}
 
-	return triggerChecker.config.HolidayCalendar.IsHoliday(time.Unix(timestamp, 0))
+	schedule := triggerChecker.trigger.Schedule
+
+	return triggerChecker.config.HolidayCalendar.IsHoliday(time.Unix(timestamp, 0), schedule.TimezoneOffset)
 }
 
 func isStateChanged(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenanceInfo moira.MaintenanceInfo) (*moira.EventInfo, bool) {
