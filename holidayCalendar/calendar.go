@@ -17,7 +17,7 @@ type Config struct {
 	ExcludeSummaries []string `yaml:"exclude_summaries,omitempty"`
 }
 
-// Calendar checks holidays in a fixed timezone.
+// Calendar contains holidays as set.
 type Calendar struct {
 	days map[string]struct{}
 }
@@ -41,6 +41,7 @@ func New(config Config) (*Calendar, error) {
 	return calendar, nil
 }
 
+// readCalendarFile reads calendar file via forwarded path.
 func readCalendarFile(path string) ([]byte, error) {
 	if path == "" {
 		return nil, fmt.Errorf("holiday_calendar: file path required")
@@ -54,6 +55,7 @@ func readCalendarFile(path string) ([]byte, error) {
 	return data, nil
 }
 
+// parseCalendar parses raw ics calendar data into a Calendar, skipping excludeSummaries slice.
 func parseCalendar(data []byte, excludeSummaries []string) (*Calendar, error) {
 	parsed, err := parseICS(data)
 	if err != nil {
@@ -71,6 +73,7 @@ func parseCalendar(data []byte, excludeSummaries []string) (*Calendar, error) {
 	return calendar, nil
 }
 
+// parseICS parses ics calendar data via third-party parser with validation.
 func parseICS(data []byte) (*ics.Calendar, error) {
 	if err := validateCalendarEnvelope(data); err != nil {
 		return nil, err
@@ -79,6 +82,7 @@ func parseICS(data []byte) (*ics.Calendar, error) {
 	return ics.ParseCalendar(bytes.NewReader(data))
 }
 
+// validateCalendarEnvelope checks if ics is valid and complete.
 func validateCalendarEnvelope(data []byte) error {
 	data = bytes.TrimSpace(data)
 
@@ -92,6 +96,7 @@ func validateCalendarEnvelope(data []byte) error {
 	return nil
 }
 
+// loadEvents adds every non-excluded event to the calendar.
 func (calendar *Calendar) loadEvents(events []*ics.VEvent, excludeSummaries []string) error {
 	for _, event := range events {
 		if isExcludedEvent(event, excludeSummaries) {
@@ -109,6 +114,7 @@ func (calendar *Calendar) loadEvents(events []*ics.VEvent, excludeSummaries []st
 	return nil
 }
 
+// isExcludedEvent excludes events with certain SUMMARY.
 func isExcludedEvent(event *ics.VEvent, excludeSummaries []string) bool {
 	summary := event.GetProperty(ics.ComponentPropertySummary)
 
@@ -121,6 +127,7 @@ func isExcludedEvent(event *ics.VEvent, excludeSummaries []string) bool {
 	return slices.Contains(excludeSummaries, title)
 }
 
+// addDateRange adds every day in half-open interval [start, end) to rhe calendar.
 func (calendar *Calendar) addDateRange(start, end time.Time) {
 	for day := start; day.Before(end); day = day.AddDate(0, 0, 1) {
 		key := day.Format(time.DateOnly)
@@ -128,6 +135,7 @@ func (calendar *Calendar) addDateRange(start, end time.Time) {
 	}
 }
 
+// eventDates returns the start and end dates of event.
 func eventDates(event *ics.VEvent) (time.Time, time.Time, error) {
 	if err := validateEventProperties(event); err != nil {
 		return time.Time{}, time.Time{}, err
@@ -150,6 +158,7 @@ func eventDates(event *ics.VEvent) (time.Time, time.Time, error) {
 	return start, end, nil
 }
 
+// validateEventProperties rejects properties that imply recurrence or duration, expects only explicit DTSTART, DTEND events.
 func validateEventProperties(event *ics.VEvent) error {
 	unsupported := []ics.ComponentProperty{
 		ics.ComponentPropertyRrule,
@@ -169,6 +178,7 @@ func validateEventProperties(event *ics.VEvent) error {
 	return nil
 }
 
+// readEventEnd returns DTEND or start+1 day if DTEND absent.
 func readEventEnd(event *ics.VEvent, start time.Time) (time.Time, error) {
 	if event.GetProperty(ics.ComponentPropertyDtEnd) == nil {
 		return start.AddDate(0, 0, 1), nil
@@ -177,6 +187,7 @@ func readEventEnd(event *ics.VEvent, start time.Time) (time.Time, error) {
 	return readDate(event, ics.ComponentPropertyDtEnd)
 }
 
+// readDate parses an all-day date property into a UTC time. only VALUE=DATE without TZID are accepted.
 func readDate(event *ics.VEvent, name ics.ComponentProperty) (time.Time, error) {
 	value, err := readDateValue(event, name)
 	if err != nil {
@@ -191,6 +202,7 @@ func readDate(event *ics.VEvent, name ics.ComponentProperty) (time.Time, error) 
 	return date, nil
 }
 
+// readDateValue returns raw value of single VALUE=DATE property named name. rejects multiple occurances and TZID parametr.
 func readDateValue(event *ics.VEvent, name ics.ComponentProperty) (string, error) {
 	properties := event.GetProperties(name)
 
@@ -206,10 +218,12 @@ func readDateValue(event *ics.VEvent, name ics.ComponentProperty) (string, error
 	return property.Value, nil
 }
 
+// scheduleLocation returns a fixed timezone for given schedule offset. converts tzOffset in minutes and the converts the sign, cause in schedule it is stored with "-" for eastern regions and "+" for western.
 func scheduleLocation(tzOffset int64) *time.Location {
 	return time.FixedZone("", int(-tzOffset*60))
 }
 
+// IsHoliday return true if timestamp falls on a holiday in calendar, using tzOffset to resolve to the local calendar date.
 func (calendar *Calendar) IsHoliday(timestamp time.Time, tzOffset int64) bool {
 	if calendar == nil {
 		return false
@@ -222,6 +236,7 @@ func (calendar *Calendar) IsHoliday(timestamp time.Time, tzOffset int64) bool {
 	return holiday
 }
 
+// NextNonHoliday returns the earliest moment at or after timestamp that does not fall an a holiday.
 func (calendar *Calendar) NextNonHoliday(timestamp time.Time, tzOffset int64) time.Time {
 	for calendar.IsHoliday(timestamp, tzOffset) {
 		timestamp = nextLocalMidnight(timestamp, tzOffset)
@@ -230,6 +245,7 @@ func (calendar *Calendar) NextNonHoliday(timestamp time.Time, tzOffset int64) ti
 	return timestamp.UTC()
 }
 
+// nextLocalMidnight returns the start of the next local day relative to timestamp in the zone difined by tzOffset.
 func nextLocalMidnight(timestamp time.Time, tzOffset int64) time.Time {
 	location := scheduleLocation(tzOffset)
 	local := timestamp.In(location)

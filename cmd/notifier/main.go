@@ -75,12 +75,14 @@ func main() {
 	if err != nil {
 		logger.Fatal().Error(err).Msg("Can`t configure holiday calendar")
 	}
+
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
 			Msg("Can not configure telemetry")
 	}
+
 	defer telemetry.Stop()
 
 	clusterList := cmd.MakeClusterList(config.Remotes)
