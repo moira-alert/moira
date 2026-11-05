@@ -102,6 +102,7 @@ func (manager *WorkerManager) checkTrigger(triggerID string, triggerSource moira
 		if err != nil {
 			return fmt.Errorf("failed to get substitution source for trigger %s: %w", triggerID, err)
 		}
+
 		triggerChecker.SetSource(source)
 		triggerChecker.SetCheckedBy(manager.getSubstitutionCheckedBy())
 	} else {

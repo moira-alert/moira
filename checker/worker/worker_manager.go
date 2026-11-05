@@ -87,11 +87,13 @@ func (manager *WorkerManager) initSubstitutionSet() error {
 			break
 		}
 	}
+
 	if !sourceExists {
 		return fmt.Errorf("target cluster key %s not found in SourceCheckConfigs", targetClusterKey.String())
 	}
 
 	localClusterKey := cfg.ClusterKey
+
 	triggerIDs, err := manager.Database.GetTriggerIDs(localClusterKey)
 	if err != nil {
 		return fmt.Errorf("failed to get local trigger IDs: %w", err)
@@ -127,7 +129,9 @@ func (manager *WorkerManager) initSubstitutionSet() error {
 func (manager *WorkerManager) isInSubstitutionSet(triggerID string) bool {
 	manager.substitutionMutex.RLock()
 	defer manager.substitutionMutex.RUnlock()
+
 	_, ok := manager.substitutionSet[triggerID]
+
 	return ok
 }
 
@@ -136,6 +140,7 @@ func (manager *WorkerManager) getSubstitutionCheckedBy() string {
 	if cfg == nil {
 		return ""
 	}
+
 	return cfg.TargetClusterKey.String()
 }
 

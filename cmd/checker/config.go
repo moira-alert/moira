@@ -126,9 +126,11 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 	}
 
 	var substitutionConfig *checker.SourceSubstitutionConfig
+
 	if config.Checker.SourceSubstitutionCount > 0 && config.Checker.SourceSubstitutionTargetClusterKey != "" && config.Checker.SourceSubstitutionClusterKey != "" {
 		sourceParts := strings.SplitN(config.Checker.SourceSubstitutionClusterKey, ".", 2)
 		targetParts := strings.SplitN(config.Checker.SourceSubstitutionTargetClusterKey, ".", 2)
+
 		if len(sourceParts) == 2 && len(targetParts) == 2 {
 			substitutionConfig = &checker.SourceSubstitutionConfig{
 				Count:            config.Checker.SourceSubstitutionCount,
