@@ -81,6 +81,7 @@ func (manager *WorkerManager) initSubstitutionSet() error {
 	targetClusterKey := cfg.TargetClusterKey
 
 	sourceExists := false
+
 	for ck := range manager.Config.SourceCheckConfigs {
 		if ck == targetClusterKey {
 			sourceExists = true
