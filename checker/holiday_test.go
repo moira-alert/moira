@@ -46,7 +46,9 @@ func TestHolidayTriggerSuppression(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			schedule := moira.NewDefaultScheduleData()
+
 			schedule.TimezoneOffset = test.offset
+
 			if test.weekdaysOnly {
 				schedule.Days[5].Enabled = false
 				schedule.Days[6].Enabled = false
@@ -59,12 +61,15 @@ func TestHolidayTriggerSuppression(t *testing.T) {
 			if test.disabledCalendar {
 				checker.config.HolidayCalendar = nil
 			}
+
 			if test.missingConfig {
 				checker.config = nil
 			}
 
 			timestamp := parseHolidayCheckTime(t, test.timestamp)
+
 			maintenance := int64(0)
+
 			if test.maintenance {
 				maintenance = timestamp + 60
 			}
@@ -142,6 +147,7 @@ func TestHolidayEventStateTransitions(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					ctrl := gomock.NewController(t)
 					db := mock_moira_alert.NewMockDatabase(ctrl)
+
 					var events []moira.NotificationEvent
 
 					db.EXPECT().PushNotificationEvent(gomock.Any(), true).
@@ -183,14 +189,17 @@ func TestHolidayEventStateTransitions(t *testing.T) {
 						actual := compareHolidayState(t, checker, triggerEvent, previous, step.state, timestamp)
 						require.Equal(t, step.state, actual.State, step.timestamp)
 						require.Equal(t, step.suppressed, actual.Suppressed, step.timestamp)
+
 						if step.suppressed {
 							require.Equal(t, test.initialState, actual.SuppressedState, step.timestamp)
 						}
+
 						if step.sendEvent {
 							wantEvents++
 						}
 
 						require.Len(t, events, wantEvents, step.timestamp)
+
 						if step.sendEvent {
 							event := events[len(events)-1]
 							require.Equal(t, checker.triggerID, event.TriggerID)

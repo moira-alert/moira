@@ -202,7 +202,7 @@ func readDate(event *ics.VEvent, name ics.ComponentProperty) (time.Time, error) 
 	return date, nil
 }
 
-// readDateValue returns raw value of single VALUE=DATE property named name. rejects multiple occurances and TZID parametr.
+// readDateValue returns raw value of single VALUE=DATE property named name. rejects multiple occurrences and TZID parametr.
 func readDateValue(event *ics.VEvent, name ics.ComponentProperty) (string, error) {
 	properties := event.GetProperties(name)
 

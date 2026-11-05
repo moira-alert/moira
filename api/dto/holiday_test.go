@@ -20,6 +20,7 @@ func TestTriggerMuteOnHolidaysMapping(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var request TriggerModel
+
 			require.NoError(t, json.Unmarshal([]byte(test.body), &request))
 			require.Equal(t, test.want, request.ToMoiraTrigger().MuteOnHolidays)
 
@@ -29,7 +30,9 @@ func TestTriggerMuteOnHolidaysMapping(t *testing.T) {
 			require.NoError(t, err)
 
 			var fields map[string]json.RawMessage
+
 			require.NoError(t, json.Unmarshal(encoded, &fields))
+
 			if test.want {
 				require.JSONEq(t, "true", string(fields["mute_on_holidays"]))
 			} else {
@@ -51,6 +54,7 @@ func TestSubscriptionMuteOnHolidaysMapping(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var request Subscription
+
 			require.NoError(t, json.Unmarshal([]byte(test.body), &request))
 			subscription := moira.SubscriptionData(request)
 			require.Equal(t, test.want, subscription.MuteOnHolidays)
@@ -58,14 +62,19 @@ func TestSubscriptionMuteOnHolidaysMapping(t *testing.T) {
 			// Subscription storage uses the JSON representation of SubscriptionData.
 			stored, err := json.Marshal(subscription)
 			require.NoError(t, err)
+
 			var loaded moira.SubscriptionData
+
 			require.NoError(t, json.Unmarshal(stored, &loaded))
 			require.Equal(t, test.want, loaded.MuteOnHolidays)
 
 			encoded, err := json.Marshal(Subscription(loaded))
 			require.NoError(t, err)
+
 			var fields map[string]json.RawMessage
+
 			require.NoError(t, json.Unmarshal(encoded, &fields))
+
 			if test.want {
 				require.JSONEq(t, "true", string(fields["mute_on_holidays"]))
 			} else {

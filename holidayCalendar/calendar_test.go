@@ -89,6 +89,7 @@ func TestCalendarConfig(t *testing.T) {
 			}
 
 			require.NoError(t, err)
+
 			if test.config.Enabled {
 				require.NotNil(t, calendar)
 			} else {
@@ -213,6 +214,7 @@ func TestCalendarLoadsSnapshotOfFile(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, os.WriteFile(path, []byte(calendarDocument("DTSTART;VALUE=DATE:20260112")), 0o600))
+
 	reloaded, err := New(config)
 	require.NoError(t, err)
 
