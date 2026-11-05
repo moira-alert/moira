@@ -28,8 +28,11 @@ func TestTriggerMuteOnHolidaysStorage(t *testing.T) {
 
 			encoded, err := GetTriggerBytes("holiday-trigger", &moira.Trigger{MuteOnHolidays: test.want})
 			require.NoError(t, err)
+
 			var fields map[string]json.RawMessage
+
 			require.NoError(t, json.Unmarshal(encoded, &fields))
+
 			if test.want {
 				require.JSONEq(t, "true", string(fields["mute_on_holidays"]))
 			} else {
