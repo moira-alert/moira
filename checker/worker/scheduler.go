@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -103,9 +104,45 @@ func (ch *scheduler) scheduleTriggersToCheck() error {
 		return err
 	}
 
+	if ch.manager.Config.SourceSubstitution != nil && ch.clusterKey == ch.manager.Config.SourceSubstitution.ClusterKey {
+		return ch.scheduleWithSubstitution(triggerIds)
+	}
+
 	err = ch.scheduleTriggerIDsIfNeeded(ch.clusterKey, triggerIds)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (ch *scheduler) scheduleWithSubstitution(triggerIDs []string) error {
+	substitutionTriggerIDs := make([]string, 0, len(triggerIDs))
+	normalTriggerIDs := make([]string, 0, len(triggerIDs))
+
+	for _, triggerID := range triggerIDs {
+		if ch.manager.isInSubstitutionSet(triggerID) {
+			substitutionTriggerIDs = append(substitutionTriggerIDs, triggerID)
+		} else {
+			normalTriggerIDs = append(normalTriggerIDs, triggerID)
+		}
+	}
+
+	substitutionTriggerIDs = ch.manager.filterOutLazyTriggerIDs(substitutionTriggerIDs)
+	normalTriggerIDs = ch.manager.filterOutLazyTriggerIDs(normalTriggerIDs)
+
+	targetClusterKey := ch.manager.Config.SourceSubstitution.TargetClusterKey
+
+	if len(substitutionTriggerIDs) > 0 {
+		if err := ch.manager.Database.AddTriggersToCheck(targetClusterKey, substitutionTriggerIDs); err != nil {
+			return fmt.Errorf("failed to add substitution triggers to check: %w", err)
+		}
+	}
+
+	if len(normalTriggerIDs) > 0 {
+		if err := ch.manager.Database.AddTriggersToCheck(ch.clusterKey, normalTriggerIDs); err != nil {
+			return fmt.Errorf("failed to add normal triggers to check: %w", err)
+		}
 	}
 
 	return nil

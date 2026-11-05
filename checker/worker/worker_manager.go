@@ -3,6 +3,7 @@ package worker
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -30,7 +31,9 @@ type WorkerManager struct {
 	PatternCache      *cache.Cache
 	lazyTriggerIDs    atomic.Value
 	lastData          int64
+	substitutionSet   map[string]struct{}
 	tomb              tomb.Tomb
+	substitutionMutex sync.RWMutex
 }
 
 // StartWorkers start schedule new MetricEvents and check for NODATA triggers.
@@ -45,6 +48,12 @@ func (manager *WorkerManager) StartWorkers() error {
 	err = manager.startLocalMetricEvents()
 	if err != nil {
 		return err
+	}
+
+	if manager.Config.SourceSubstitution != nil {
+		if err := manager.initSubstitutionSet(); err != nil {
+			return fmt.Errorf("failed to initialize substitution set: %w", err)
+		}
 	}
 
 	for clusterKey := range manager.Config.SourceCheckConfigs {
@@ -65,6 +74,69 @@ func (manager *WorkerManager) StartWorkers() error {
 	}
 
 	return nil
+}
+
+func (manager *WorkerManager) initSubstitutionSet() error {
+	cfg := manager.Config.SourceSubstitution
+	targetClusterKey := cfg.TargetClusterKey
+
+	sourceExists := false
+	for ck := range manager.Config.SourceCheckConfigs {
+		if ck == targetClusterKey {
+			sourceExists = true
+			break
+		}
+	}
+	if !sourceExists {
+		return fmt.Errorf("target cluster key %s not found in SourceCheckConfigs", targetClusterKey.String())
+	}
+
+	localClusterKey := cfg.ClusterKey
+	triggerIDs, err := manager.Database.GetTriggerIDs(localClusterKey)
+	if err != nil {
+		return fmt.Errorf("failed to get local trigger IDs: %w", err)
+	}
+
+	if len(triggerIDs) == 0 {
+		manager.Logger.Info().Msg("No local triggers found for substitution")
+		return nil
+	}
+
+	count := cfg.Count
+	if count > len(triggerIDs) {
+		count = len(triggerIDs)
+	}
+
+	substitutionSet := make(map[string]struct{})
+	for _, id := range triggerIDs[:count] {
+		substitutionSet[id] = struct{}{}
+	}
+
+	manager.substitutionMutex.Lock()
+	manager.substitutionSet = substitutionSet
+	manager.substitutionMutex.Unlock()
+
+	manager.Logger.Info().
+		Int("count", count).
+		String("target_cluster_key", targetClusterKey.String()).
+		Msg("Substitution set initialized")
+
+	return nil
+}
+
+func (manager *WorkerManager) isInSubstitutionSet(triggerID string) bool {
+	manager.substitutionMutex.RLock()
+	defer manager.substitutionMutex.RUnlock()
+	_, ok := manager.substitutionSet[triggerID]
+	return ok
+}
+
+func (manager *WorkerManager) getSubstitutionCheckedBy() string {
+	cfg := manager.Config.SourceSubstitution
+	if cfg == nil {
+		return ""
+	}
+	return cfg.TargetClusterKey.String()
 }
 
 func (manager *WorkerManager) makeSourceValidator(clusterKey moira.ClusterKey) (func() error, error) {
@@ -115,6 +187,7 @@ func (manager *WorkerManager) startCheckerWorker(w *scheduler) error {
 			return manager.startTriggerHandler(
 				triggerIdsToCheckChan,
 				w.metrics,
+				w.clusterKey,
 			)
 		})
 	}
