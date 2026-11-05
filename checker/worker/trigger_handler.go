@@ -96,9 +96,10 @@ func (manager *WorkerManager) checkTrigger(triggerID string, triggerSource moira
 		return err
 	}
 
-	isSubstituted := triggerSource == manager.Config.SourceSubstitution.ClusterKey && manager.isInSubstitutionSet(triggerID)
+	substitutionConfig := manager.Config.SourceSubstitution
+	isSubstituted := substitutionConfig != nil && triggerSource == substitutionConfig.ClusterKey && manager.isInSubstitutionSet(triggerID)
 	if isSubstituted {
-		source, err := manager.SourceProvider.GetMetricSource(manager.Config.SourceSubstitution.TargetClusterKey)
+		source, err := manager.SourceProvider.GetMetricSource(substitutionConfig.TargetClusterKey)
 		if err != nil {
 			return fmt.Errorf("failed to get substitution source for trigger %s: %w", triggerID, err)
 		}
