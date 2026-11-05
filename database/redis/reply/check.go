@@ -28,6 +28,7 @@ type checkDataStorageElement struct {
 	Suppressed                   bool                         `json:"suppressed,omitempty"`
 	SuppressedState              moira.State                  `json:"suppressed_state,omitempty"`
 	Message                      string                       `json:"msg,omitempty"`
+	CheckedBy                    string                       `json:"checked_by,omitempty"`
 }
 
 func toCheckDataStorageElement(check moira.CheckData) checkDataStorageElement {
@@ -54,6 +55,7 @@ func toCheckDataStorageElement(check moira.CheckData) checkDataStorageElement {
 		Suppressed:                   check.Suppressed,
 		SuppressedState:              check.SuppressedState,
 		Message:                      check.Message,
+		CheckedBy:                    check.CheckedBy,
 	}
 }
 
@@ -89,6 +91,7 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 		Suppressed:                   d.Suppressed,
 		SuppressedState:              d.SuppressedState,
 		Message:                      d.Message,
+		CheckedBy:                    d.CheckedBy,
 		Clock:                        clock.NewSystemClock(),
 	}
 }

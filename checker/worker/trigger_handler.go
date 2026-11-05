@@ -14,14 +14,14 @@ import (
 const sleepAfterCheckingError = time.Second * 2
 
 // startTriggerHandler is a blocking func.
-func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics) error {
+func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics, clusterKey moira.ClusterKey) error {
 	for {
 		triggerID, ok := <-triggerIDsToCheck
 		if !ok {
 			return nil
 		}
 
-		err := manager.handleTrigger(triggerID, metrics)
+		err := manager.handleTrigger(triggerID, metrics, clusterKey)
 		if err != nil {
 			//nolint:staticcheck
 			metrics.HandleError.Mark(1)
@@ -37,19 +37,19 @@ func (manager *WorkerManager) startTriggerHandler(triggerIDsToCheck <-chan strin
 	}
 }
 
-func (manager *WorkerManager) handleTrigger(triggerID string, metrics *metrics.CheckMetrics) (err error) {
+func (manager *WorkerManager) handleTrigger(triggerID string, metrics *metrics.CheckMetrics, clusterKey moira.ClusterKey) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: '%s' stack: %s", r, debug.Stack())
 		}
 	}()
 
-	err = manager.handleTriggerInLock(triggerID, metrics)
+	err = manager.handleTriggerInLock(triggerID, metrics, clusterKey)
 
 	return err
 }
 
-func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics) error {
+func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics, clusterKey moira.ClusterKey) error {
 	acquired, err := manager.Database.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *met
 	startedAt := time.Now()
 	defer metrics.TriggersCheckTime.UpdateSince(startedAt)
 
-	err = manager.checkTrigger(triggerID)
+	err = manager.checkTrigger(triggerID, clusterKey)
 
 	timeSince := time.Since(startedAt)
 	if timeSince > manager.Config.CriticalTimeOfCheck {
@@ -78,7 +78,7 @@ func (manager *WorkerManager) handleTriggerInLock(triggerID string, metrics *met
 	return err
 }
 
-func (manager *WorkerManager) checkTrigger(triggerID string) error {
+func (manager *WorkerManager) checkTrigger(triggerID string, triggerSource moira.ClusterKey) error {
 	triggerChecker, err := checker.MakeTriggerChecker(
 		triggerID,
 		manager.Database,
@@ -94,6 +94,21 @@ func (manager *WorkerManager) checkTrigger(triggerID string) error {
 
 	if err != nil {
 		return err
+	}
+
+	substitutionConfig := manager.Config.SourceSubstitution
+	isSubstituted := substitutionConfig != nil && triggerSource == substitutionConfig.ClusterKey && manager.isInSubstitutionSet(triggerID)
+
+	if isSubstituted {
+		source, err := manager.SourceProvider.GetMetricSource(substitutionConfig.TargetClusterKey)
+		if err != nil {
+			return fmt.Errorf("failed to get substitution source for trigger %s: %w", triggerID, err)
+		}
+
+		triggerChecker.SetSource(source)
+		triggerChecker.SetCheckedBy(manager.getSubstitutionCheckedBy())
+	} else {
+		triggerChecker.SetCheckedBy(triggerSource.String())
 	}
 
 	return triggerChecker.Check()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -49,6 +50,12 @@ type checkerConfig struct {
 	MetricEventPopDelay string `yaml:"metric_event_pop_delay"`
 	// Duration of check that is considered critical and must be logged
 	CriticalTimeOfCheck string `yaml:"critical_time_of_check"`
+	// Number of triggers to substitute from local to remote source
+	SourceSubstitutionCount int `yaml:"source_substitution_count"`
+	// Source cluster key for substitution (e.g. "graphite_local.default")
+	SourceSubstitutionClusterKey string `yaml:"source_substitution_cluster_key"`
+	// Target cluster key for substitution (e.g. "graphite_remote.prod")
+	SourceSubstitutionTargetClusterKey string `yaml:"source_substitution_target_cluster_key"`
 }
 
 func handleParallelChecks(parallelChecks *int) bool {
@@ -118,6 +125,21 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 		sourceCheckConfigs[moira.MakeClusterKey(moira.PrometheusRemote, remote.ClusterId)] = checkConfig
 	}
 
+	var substitutionConfig *checker.SourceSubstitutionConfig
+
+	if config.Checker.SourceSubstitutionCount > 0 && config.Checker.SourceSubstitutionTargetClusterKey != "" && config.Checker.SourceSubstitutionClusterKey != "" {
+		sourceParts := strings.SplitN(config.Checker.SourceSubstitutionClusterKey, ".", 2)
+		targetParts := strings.SplitN(config.Checker.SourceSubstitutionTargetClusterKey, ".", 2)
+
+		if len(sourceParts) == 2 && len(targetParts) == 2 {
+			substitutionConfig = &checker.SourceSubstitutionConfig{
+				Count:            config.Checker.SourceSubstitutionCount,
+				ClusterKey:       moira.MakeClusterKey(moira.TriggerSource(sourceParts[0]), moira.ClusterId(sourceParts[1])),
+				TargetClusterKey: moira.MakeClusterKey(moira.TriggerSource(targetParts[0]), moira.ClusterId(targetParts[1])),
+			}
+		}
+	}
+
 	return &checker.Config{
 		SourceCheckConfigs:              sourceCheckConfigs,
 		LazyTriggersCheckInterval:       to.Duration(config.Checker.LazyTriggersCheckInterval),
@@ -127,6 +149,7 @@ func (config *config) getSettings(logger moira.Logger) *checker.Config {
 		MetricEventPopDelay:             to.Duration(config.Checker.MetricEventPopDelay),
 		CriticalTimeOfCheck:             to.Duration(config.Checker.CriticalTimeOfCheck),
 		MetricEventTriggerCheckInterval: to.Duration(config.Checker.MetricEventTriggerCheckInterval),
+		SourceSubstitution:              substitutionConfig,
 	}
 }
 
