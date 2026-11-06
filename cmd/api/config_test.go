@@ -34,7 +34,7 @@ prometheus_remote:
 `), &conf)
 	require.NoError(t, err)
 
-	settings := conf.Web.getSettings(true, conf.Remotes, conf.Redis, conf.Local)
+	settings := conf.Web.getSettings(true, conf.Remotes, conf.Redis, conf.Local, conf.HolidayCalendar.Enabled)
 	clustersByKey := make(map[moira.ClusterKey]api.MetricSourceCluster, len(settings.MetricSourceClusters))
 
 	for _, cluster := range settings.MetricSourceClusters {
@@ -146,7 +146,7 @@ func Test_webConfig_getFeatureFlags(t *testing.T) {
 			IsSubscriptionToAllTagsAvailable: true,
 		}
 
-		result := webConf.getFeatureFlags()
+		result := webConf.getFeatureFlags(false)
 		So(result, ShouldResemble, expectedResult)
 	})
 }
@@ -233,7 +233,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 	Convey("Empty config, fill it", t, func() {
 		config := webConfig{}
 
-		settings := config.getSettings(true, remotesDefault, redisDefault, localDefault)
+		settings := config.getSettings(true, remotesDefault, redisDefault, localDefault, false)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed:        true,
 			Contacts:             []api.WebContact{},
@@ -244,7 +244,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 	Convey("Default config, fill it", t, func() {
 		config := getDefault()
 
-		settings := config.Web.getSettings(true, remotesDefault, redisDefault, config.Local)
+		settings := config.Web.getSettings(true, remotesDefault, redisDefault, config.Local, config.HolidayCalendar.Enabled)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},
@@ -283,7 +283,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			},
 		}
 
-		settings := config.getSettings(true, remotesDefault, redisDefault, localDefault)
+		settings := config.getSettings(true, remotesDefault, redisDefault, localDefault, false)
 		So(settings, ShouldResemble, &api.WebConfig{
 			SupportEmail:  "lalal@mail.la",
 			RemoteAllowed: true,
@@ -327,7 +327,7 @@ func Test_webConfig_getSettings(t *testing.T) {
 			}},
 		}
 
-		settings := config.getSettings(true, remotes, redisDefault, localDefault)
+		settings := config.getSettings(true, remotes, redisDefault, localDefault, false)
 		So(settings, ShouldResemble, &api.WebConfig{
 			RemoteAllowed: true,
 			Contacts:      []api.WebContact{},

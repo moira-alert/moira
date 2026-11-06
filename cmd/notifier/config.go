@@ -13,6 +13,7 @@ import (
 )
 
 type config struct {
+	HolidayCalendar     cmd.HolidayCalendarConfig     `yaml:"holiday_calendar,omitempty"`
 	Redis               cmd.RedisConfig               `yaml:"redis"`
 	Logger              cmd.LoggerConfig              `yaml:"log"`
 	Notifier            notifierConfig                `yaml:"notifier"`
