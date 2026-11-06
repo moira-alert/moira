@@ -14,6 +14,7 @@ import (
 )
 
 type config struct {
+	HolidayCalendar     cmd.HolidayCalendarConfig     `yaml:"holiday_calendar,omitempty"`
 	Redis               cmd.RedisConfig               `yaml:"redis"`
 	Logger              cmd.LoggerConfig              `yaml:"log"`
 	API                 apiConfig                     `yaml:"api"`
@@ -280,7 +281,7 @@ func (config *webConfig) validate() error {
 	return nil
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig, redisConfig cmd.RedisConfig, local cmd.LocalConfig) *api.WebConfig {
+func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesConfig, redisConfig cmd.RedisConfig, local cmd.LocalConfig, holidayCalendarEnabled bool) *api.WebConfig {
 	webContacts := make([]api.WebContact, 0, len(config.ContactsTemplate))
 
 	for _, contactTemplate := range config.ContactsTemplate {
@@ -303,18 +304,19 @@ func (config *webConfig) getSettings(isRemoteEnabled bool, remotes cmd.RemotesCo
 		RemoteAllowed:        isRemoteEnabled,
 		MetricSourceClusters: clusters,
 		Contacts:             webContacts,
-		FeatureFlags:         config.getFeatureFlags(),
+		FeatureFlags:         config.getFeatureFlags(holidayCalendarEnabled),
 		Sentry:               config.Sentry.getSettings(),
 	}
 }
 
-func (config *webConfig) getFeatureFlags() api.FeatureFlags {
+func (config *webConfig) getFeatureFlags(holidayCalendarEnabled bool) api.FeatureFlags {
 	return api.FeatureFlags{
 		IsPlottingDefaultOn:              config.FeatureFlags.IsPlottingDefaultOn,
 		IsPlottingAvailable:              config.FeatureFlags.IsPlottingAvailable,
 		IsSubscriptionToAllTagsAvailable: config.FeatureFlags.IsSubscriptionToAllTagsAvailable,
 		IsReadonlyEnabled:                config.FeatureFlags.IsReadonlyEnabled,
 		CelebrationMode:                  getCelebrationMode(config.FeatureFlags.CelebrationMode),
+		IsHolidayCalendarEnabled:         holidayCalendarEnabled,
 	}
 }
 

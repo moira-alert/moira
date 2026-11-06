@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/holidayCalendar"
+	"github.com/moira-alert/moira/holiday_calendar"
 	"github.com/moira-alert/moira/metrics"
 )
 
@@ -17,7 +17,7 @@ type Scheduler interface {
 
 // SchedulerConfig is a list of immutable params for Scheduler.
 type SchedulerConfig struct {
-	HolidayCalendar   *holidayCalendar.Calendar
+	HolidayCalendar   *holiday_calendar.Calendar
 	ReschedulingDelay time.Duration
 }
 

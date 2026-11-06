@@ -1,4 +1,4 @@
-package holidayCalendar
+package holiday_calendar
 
 import (
 	"bytes"
@@ -10,32 +10,21 @@ import (
 	ics "github.com/arran4/golang-ical"
 )
 
-// Config defines optional top-level holiday_calendar configuration section.
-type Config struct {
-	Enabled          bool     `yaml:"enabled"`
-	File             string   `yaml:"file"`
-	ExcludeSummaries []string `yaml:"exclude_summaries,omitempty"`
-}
-
 // Calendar contains holidays as set.
 type Calendar struct {
 	days map[string]struct{}
 }
 
 // New creates a holiday calendar.
-func New(config Config) (*Calendar, error) {
-	if !config.Enabled {
-		return nil, nil
-	}
-
-	data, err := readCalendarFile(config.File)
+func New(file string, excludeSummaries []string) (*Calendar, error) {
+	data, err := readCalendarFile(file)
 	if err != nil {
 		return nil, err
 	}
 
-	calendar, err := parseCalendar(data, config.ExcludeSummaries)
+	calendar, err := parseCalendar(data, excludeSummaries)
 	if err != nil {
-		return nil, fmt.Errorf("holiday_calendar: parse %s: %w", config.File, err)
+		return nil, fmt.Errorf("holiday_calendar: parse %s: %w", file, err)
 	}
 
 	return calendar, nil

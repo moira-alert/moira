@@ -7,18 +7,17 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/holidayCalendar"
 	"github.com/xiam/to"
 )
 
 type config struct {
-	HolidayCalendar holidayCalendar.Config `yaml:"holiday_calendar,omitempty"`
-	Redis           cmd.RedisConfig        `yaml:"redis"`
-	Logger          cmd.LoggerConfig       `yaml:"log"`
-	Checker         checkerConfig          `yaml:"checker"`
-	Telemetry       cmd.TelemetryConfig    `yaml:"telemetry"`
-	Local           localCheckConfig       `yaml:"local"`
-	Remotes         cmd.RemotesConfig      `yaml:",inline"`
+	HolidayCalendar cmd.HolidayCalendarConfig `yaml:"holiday_calendar,omitempty"`
+	Redis           cmd.RedisConfig           `yaml:"redis"`
+	Logger          cmd.LoggerConfig          `yaml:"log"`
+	Checker         checkerConfig             `yaml:"checker"`
+	Telemetry       cmd.TelemetryConfig       `yaml:"telemetry"`
+	Local           localCheckConfig          `yaml:"local"`
+	Remotes         cmd.RemotesConfig         `yaml:",inline"`
 }
 
 type triggerLogConfig struct {

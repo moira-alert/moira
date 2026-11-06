@@ -8,13 +8,12 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/holidayCalendar"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
 type config struct {
-	HolidayCalendar     holidayCalendar.Config        `yaml:"holiday_calendar,omitempty"`
+	HolidayCalendar     cmd.HolidayCalendarConfig     `yaml:"holiday_calendar,omitempty"`
 	Redis               cmd.RedisConfig               `yaml:"redis"`
 	Logger              cmd.LoggerConfig              `yaml:"log"`
 	Notifier            notifierConfig                `yaml:"notifier"`

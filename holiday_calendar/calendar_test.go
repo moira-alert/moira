@@ -1,4 +1,4 @@
-package holidayCalendar
+package holiday_calendar
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 )
 
 func TestCalendarDatesAndOffsets(t *testing.T) {
-	calendar, err := New(Config{Enabled: true, File: "testdata/holidays.ics"})
+	calendar, err := New("testdata/holidays.ics", nil)
 	require.NoError(t, err)
 
 	for _, test := range []struct {
@@ -53,7 +53,7 @@ func TestCalendarDatesAndOffsets(t *testing.T) {
 }
 
 func TestCalendarUsesScheduleOffsetInsteadOfTimestampLocation(t *testing.T) {
-	calendar, err := New(Config{Enabled: true, File: "testdata/holidays.ics"})
+	calendar, err := New("testdata/holidays.ics", nil)
 	require.NoError(t, err)
 
 	now := parseCalendarTime(t, "2026-04-30T21:00:00Z").In(time.FixedZone("input", -7*60*60))
@@ -65,41 +65,30 @@ func TestCalendarUsesScheduleOffsetInsteadOfTimestampLocation(t *testing.T) {
 	require.True(t, calendar.IsHoliday(now, -180))
 }
 
-func TestCalendarConfig(t *testing.T) {
-	missingFile := filepath.Join(t.TempDir(), "missing.ics")
-
+func TestCalendarFileErrors(t *testing.T) {
 	for _, test := range []struct {
-		name   string
-		config Config
-		err    string
+		name string
+		file string
+		err  string
 	}{
-		{"disabled", Config{}, ""},
-		{"disabled does not read file", Config{File: missingFile}, ""},
-		{"enabled without timezone", Config{Enabled: true, File: "testdata/holidays.ics"}, ""},
-		{"missing file setting", Config{Enabled: true}, "file path required"},
-		{"unreadable file", Config{Enabled: true, File: missingFile}, "read"},
+		{name: "missing file setting", err: "file path required"},
+		{name: "unreadable file", file: filepath.Join(t.TempDir(), "missing.ics"), err: "read"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			calendar, err := New(test.config)
-			if test.err != "" {
-				require.ErrorContains(t, err, test.err)
-				require.Nil(t, calendar)
-
-				return
-			}
-
-			require.NoError(t, err)
-
-			if test.config.Enabled {
-				require.NotNil(t, calendar)
-			} else {
-				require.Nil(t, calendar)
-				now := parseCalendarTime(t, "2026-01-09T12:00:00Z")
-				require.False(t, calendar.IsHoliday(now, -180))
-				require.Equal(t, now, calendar.NextNonHoliday(now, -180))
-			}
+			calendar, err := New(test.file, nil)
+			require.ErrorContains(t, err, test.err)
+			require.Nil(t, calendar)
 		})
 	}
+}
+
+func TestNilCalendarAllowsEveryDate(t *testing.T) {
+	var calendar *Calendar
+
+	now := parseCalendarTime(t, "2026-01-09T12:00:00Z").In(time.FixedZone("input", 3*60*60))
+
+	require.False(t, calendar.IsHoliday(now, -180))
+	require.Equal(t, now.UTC(), calendar.NextNonHoliday(now, -180))
 }
 
 func TestCalendarLineEndings(t *testing.T) {
@@ -107,7 +96,7 @@ func TestCalendarLineEndings(t *testing.T) {
 		t.Run(fmt.Sprintf("%q", separator), func(t *testing.T) {
 			contents := strings.ReplaceAll(calendarDocument("DTSTART;VALUE=DATE:20260109"), "\n", separator)
 			path := writeCalendarFile(t, contents)
-			calendar, err := New(Config{Enabled: true, File: path})
+			calendar, err := New(path, nil)
 			require.NoError(t, err)
 			require.True(t, calendar.IsHoliday(parseCalendarTime(t, "2026-01-09T12:00:00Z"), 0))
 		})
@@ -127,7 +116,7 @@ func TestCalendarRejectsInvalidDocuments(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			path := writeCalendarFile(t, test.contents)
-			calendar, err := New(Config{Enabled: true, File: path})
+			calendar, err := New(path, nil)
 			require.ErrorContains(t, err, test.err)
 			require.ErrorContains(t, err, path)
 			require.Nil(t, calendar)
@@ -156,7 +145,7 @@ func TestCalendarRejectsInvalidEventDates(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			path := writeCalendarFile(t, calendarDocument(test.properties))
-			calendar, err := New(Config{Enabled: true, File: path})
+			calendar, err := New(path, nil)
 			require.ErrorContains(t, err, test.err)
 			require.ErrorContains(t, err, "event test-0")
 			require.Nil(t, calendar)
@@ -175,7 +164,7 @@ func TestCalendarRejectsUnsupportedEventProperties(t *testing.T) {
 	} {
 		t.Run(property, func(t *testing.T) {
 			path := writeCalendarFile(t, calendarDocument("DTSTART;VALUE=DATE:20260109\n"+property))
-			calendar, err := New(Config{Enabled: true, File: path})
+			calendar, err := New(path, nil)
 			require.ErrorContains(t, err, "unsupported")
 			require.Nil(t, calendar)
 		})
@@ -191,31 +180,26 @@ func TestCalendarExcludedSummaries(t *testing.T) {
 		"DTSTART;VALUE=DATE:20260105",
 		"DTSTART;VALUE=DATE:20260106\nSUMMARY:* Shortened day",
 	))
-	calendar, err := New(Config{
-		Enabled:          true,
-		File:             path,
-		ExcludeSummaries: []string{"Shortened, day", "* Shortened day"},
-	})
+	calendar, err := New(path, []string{"Shortened, day", "* Shortened day"})
 	require.NoError(t, err)
 
 	for day, want := range map[int]bool{2: false, 3: true, 4: true, 5: true, 6: false} {
 		require.Equal(t, want, calendar.IsHoliday(time.Date(2026, time.January, day, 12, 0, 0, 0, time.UTC), 0), "day %d", day)
 	}
 
-	unfiltered, err := New(Config{Enabled: true, File: path})
+	unfiltered, err := New(path, nil)
 	require.NoError(t, err)
 	require.True(t, unfiltered.IsHoliday(parseCalendarTime(t, "2026-01-02T12:00:00Z"), 0))
 }
 
 func TestCalendarLoadsSnapshotOfFile(t *testing.T) {
 	path := writeCalendarFile(t, calendarDocument("DTSTART;VALUE=DATE:20260109"))
-	config := Config{Enabled: true, File: path}
-	calendar, err := New(config)
+	calendar, err := New(path, nil)
 	require.NoError(t, err)
 
 	require.NoError(t, os.WriteFile(path, []byte(calendarDocument("DTSTART;VALUE=DATE:20260112")), 0o600))
 
-	reloaded, err := New(config)
+	reloaded, err := New(path, nil)
 	require.NoError(t, err)
 
 	january9 := parseCalendarTime(t, "2026-01-09T12:00:00Z")
@@ -228,7 +212,7 @@ func TestCalendarLoadsSnapshotOfFile(t *testing.T) {
 
 func TestEmptyCalendarAllowsEveryDate(t *testing.T) {
 	path := writeCalendarFile(t, calendarDocument())
-	calendar, err := New(Config{Enabled: true, File: path})
+	calendar, err := New(path, nil)
 	require.NoError(t, err)
 
 	now := parseCalendarTime(t, "2026-01-09T12:00:00Z")

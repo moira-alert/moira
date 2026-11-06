@@ -13,7 +13,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/holidayCalendar"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
@@ -71,7 +70,7 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira Notifier stopped.")
 
-	holidayCalendar, err := holidayCalendar.New(config.HolidayCalendar)
+	holidayCalendar, err := config.HolidayCalendar.LoadCalendar()
 	if err != nil {
 		logger.Fatal().Error(err).Msg("Can`t configure holiday calendar")
 	}

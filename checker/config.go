@@ -4,12 +4,12 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/holidayCalendar"
+	"github.com/moira-alert/moira/holiday_calendar"
 )
 
 // Config represent checker config.
 type Config struct {
-	HolidayCalendar                 *holidayCalendar.Calendar
+	HolidayCalendar                 *holiday_calendar.Calendar
 	Enabled                         bool
 	LazyTriggersCheckInterval       time.Duration
 	SourceCheckConfigs              map[moira.ClusterKey]SourceCheckConfig

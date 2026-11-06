@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/holidayCalendar"
+	"github.com/moira-alert/moira/holiday_calendar"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_clock "github.com/moira-alert/moira/mock/clock"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -14,10 +14,7 @@ import (
 )
 
 func TestHolidayNotificationDelivery(t *testing.T) {
-	calendar, err := holidayCalendar.New(holidayCalendar.Config{
-		Enabled: true,
-		File:    "../holidayCalendar/testdata/holidays.ics",
-	})
+	calendar, err := holiday_calendar.New("../holiday_calendar/testdata/holidays.ics", nil)
 	require.NoError(t, err)
 
 	logger, err := logging.GetLogger("HolidaySchedulerTest")
@@ -140,10 +137,7 @@ func TestHolidayNotificationDelivery(t *testing.T) {
 }
 
 func TestHolidaySubscriptionRejectsInvalidSchedule(t *testing.T) {
-	calendar, err := holidayCalendar.New(holidayCalendar.Config{
-		Enabled: true,
-		File:    "../holidayCalendar/testdata/holidays.ics",
-	})
+	calendar, err := holiday_calendar.New("../holiday_calendar/testdata/holidays.ics", nil)
 	require.NoError(t, err)
 
 	for _, test := range []struct {
