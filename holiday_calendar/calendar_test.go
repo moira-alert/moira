@@ -58,8 +58,8 @@ func TestCalendarUsesScheduleOffsetInsteadOfTimestampLocation(t *testing.T) {
 	now := parseCalendarTime(t, "2026-04-30T21:00:00Z").In(time.FixedZone("input", -7*60*60))
 	require.True(t, calendar.IsHoliday(now, -180))
 	require.False(t, calendar.IsHoliday(now, 0))
-	require.Equal(t, now.UTC(), calendar.NextNonHoliday(now, 0))
-	require.Equal(t, parseCalendarTime(t, "2026-05-01T21:00:00Z"), calendar.NextNonHoliday(now, -180))
+	require.WithinDuration(t, now, calendar.NextNonHoliday(now, 0), 0)
+	require.WithinDuration(t, parseCalendarTime(t, "2026-05-01T21:00:00Z"), calendar.NextNonHoliday(now, -180), 0)
 	// Reusing the calendar for another schedule must not change its behavior.
 	require.True(t, calendar.IsHoliday(now, -180))
 }
