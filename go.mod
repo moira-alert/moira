@@ -181,6 +181,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/RoaringBitmap/roaring/v2 v2.4.5 // indirect
+	github.com/arran4/golang-ical v0.3.8 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/blevesearch/go-faiss v1.0.25 // indirect
 	github.com/blevesearch/zapx/v16 v16.2.2 // indirect

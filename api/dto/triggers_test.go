@@ -2,6 +2,7 @@ package dto
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -740,6 +742,40 @@ func Test_checkScheduleFilling(t *testing.T) {
 			So(gotSchedule, ShouldBeNil)
 		})
 	})
+}
+
+func TestTriggerMuteOnHolidaysMapping(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		body string
+		want bool
+	}{
+		{name: "enabled", body: `{"mute_on_holidays":true}`, want: true},
+		{name: "disabled", body: `{"mute_on_holidays":false}`},
+		{name: "older client omits field", body: `{}`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var request TriggerModel
+
+			require.NoError(t, json.Unmarshal([]byte(test.body), &request))
+			require.Equal(t, test.want, request.ToMoiraTrigger().MuteOnHolidays)
+
+			response := CreateTriggerModel(&moira.Trigger{MuteOnHolidays: test.want})
+			require.Equal(t, test.want, response.MuteOnHolidays)
+			encoded, err := json.Marshal(response)
+			require.NoError(t, err)
+
+			var fields map[string]json.RawMessage
+
+			require.NoError(t, json.Unmarshal(encoded, &fields))
+
+			if test.want {
+				require.JSONEq(t, "true", string(fields["mute_on_holidays"]))
+			} else {
+				require.NotContains(t, fields, "mute_on_holidays")
+			}
+		})
+	}
 }
 
 func shuffleArray[S interface{ ~[]E }, E any](slice S) S {

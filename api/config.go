@@ -24,6 +24,7 @@ type FeatureFlags struct {
 	IsSubscriptionToAllTagsAvailable bool            `json:"isSubscriptionToAllTagsAvailable" binding:"required" example:"false"`
 	IsReadonlyEnabled                bool            `json:"isReadonlyEnabled" binding:"required" example:"false"`
 	CelebrationMode                  CelebrationMode `json:"celebrationMode" swaggertype:"string" binding:"required" example:"new_year"`
+	IsHolidayCalendarEnabled         bool            `json:"holiday_calendar_enabled,omitempty"   example:"false"`
 }
 
 // CelebrationMode is type for celebrate Moira.
