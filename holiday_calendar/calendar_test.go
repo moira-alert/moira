@@ -45,8 +45,7 @@ func TestCalendarDatesAndOffsets(t *testing.T) {
 
 			require.Equal(t, test.holiday, calendar.IsHoliday(now, test.offset))
 			next := calendar.NextNonHoliday(now, test.offset)
-			require.Equal(t, wantNext, next)
-			require.Same(t, time.UTC, next.Location())
+			require.True(t, wantNext.Equal(next), "expected %s, got %s", wantNext, next)
 			require.False(t, calendar.IsHoliday(next, test.offset))
 		})
 	}
@@ -88,7 +87,7 @@ func TestNilCalendarAllowsEveryDate(t *testing.T) {
 	now := parseCalendarTime(t, "2026-01-09T12:00:00Z").In(time.FixedZone("input", 3*60*60))
 
 	require.False(t, calendar.IsHoliday(now, -180))
-	require.Equal(t, now.UTC(), calendar.NextNonHoliday(now, -180))
+	require.WithinDuration(t, now, calendar.NextNonHoliday(now, -180), 0)
 }
 
 func TestCalendarLineEndings(t *testing.T) {
@@ -217,7 +216,7 @@ func TestEmptyCalendarAllowsEveryDate(t *testing.T) {
 
 	now := parseCalendarTime(t, "2026-01-09T12:00:00Z")
 	require.False(t, calendar.IsHoliday(now, -180))
-	require.Equal(t, now, calendar.NextNonHoliday(now, -180))
+	require.WithinDuration(t, now, calendar.NextNonHoliday(now, -180), 0)
 }
 
 func writeCalendarFile(t *testing.T, contents string) string {

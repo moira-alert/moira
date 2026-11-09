@@ -8,6 +8,7 @@ import (
 	"time"
 
 	ics "github.com/arran4/golang-ical"
+	"github.com/moira-alert/moira/clock"
 )
 
 // Calendar contains holidays as set.
@@ -207,18 +208,13 @@ func readDateValue(event *ics.VEvent, name ics.ComponentProperty) (string, error
 	return property.Value, nil
 }
 
-// scheduleLocation returns a fixed timezone for given schedule offset. converts tzOffset in minutes and the converts the sign, cause in schedule it is stored with "-" for eastern regions and "+" for western.
-func scheduleLocation(tzOffset int64) *time.Location {
-	return time.FixedZone("", int(-tzOffset*60))
-}
-
 // IsHoliday return true if timestamp falls on a holiday in calendar, using tzOffset to resolve to the local calendar date.
 func (calendar *Calendar) IsHoliday(timestamp time.Time, tzOffset int64) bool {
 	if calendar == nil {
 		return false
 	}
 
-	local := timestamp.In(scheduleLocation(tzOffset))
+	local := timestamp.In(clock.ScheduleLocation(tzOffset))
 	key := local.Format(time.DateOnly)
 	_, holiday := calendar.days[key]
 
@@ -228,17 +224,8 @@ func (calendar *Calendar) IsHoliday(timestamp time.Time, tzOffset int64) bool {
 // NextNonHoliday returns the earliest moment at or after timestamp that does not fall an a holiday.
 func (calendar *Calendar) NextNonHoliday(timestamp time.Time, tzOffset int64) time.Time {
 	for calendar.IsHoliday(timestamp, tzOffset) {
-		timestamp = nextLocalMidnight(timestamp, tzOffset)
+		timestamp = clock.NextLocalMidnight(timestamp, tzOffset)
 	}
 
-	return timestamp.UTC()
-}
-
-// nextLocalMidnight returns the start of the next local day relative to timestamp in the zone difined by tzOffset.
-func nextLocalMidnight(timestamp time.Time, tzOffset int64) time.Time {
-	location := scheduleLocation(tzOffset)
-	local := timestamp.In(location)
-	year, month, day := local.Date()
-
-	return time.Date(year, month, day+1, 0, 0, 0, 0, location)
+	return timestamp
 }

@@ -183,7 +183,7 @@ func (scheduler *StandardScheduler) applySubscriptionSchedule(
 	const maxIterations = 1000
 
 	for range maxIterations {
-		next = calendar.NextNonHoliday(next, tzOffset)
+		next = calendar.NextNonHoliday(next, tzOffset).UTC()
 
 		delivery, err := calculateNextDelivery(&subscription.Schedule, next)
 		if err != nil || !calendar.IsHoliday(delivery, tzOffset) {
