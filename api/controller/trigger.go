@@ -286,12 +286,11 @@ func GetTriggerDescriptionPreview(descriptionPreviewRequest dto.TriggerDescripti
 	}
 
 	result := &dto.TriggerDescriptionPreview{
-		DescriptionRender: dto.DescriptionRenderResult{Status: dto.DescriptionRenderSuccess, EventsSource: source},
+		DescriptionRender: dto.DescriptionRenderResult{EventsSource: source},
 	}
 
 	description, err := dto.PopulatedDescription(descriptionPreviewRequest.TriggerName, descriptionPreviewRequest.Description, events)
 	if err != nil {
-		result.DescriptionRender.Status = dto.DescriptionRenderTemplateError
 		result.DescriptionRender.Error = err.Error()
 
 		return result

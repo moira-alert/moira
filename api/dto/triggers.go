@@ -674,10 +674,8 @@ func (*TriggerNoisinessList) Render(http.ResponseWriter, *http.Request) error {
 }
 
 const (
-	DescriptionRenderSuccess       = "success"
-	DescriptionRenderTemplateError = "template_error"
-	DescriptionEventsReal          = "real"
-	DescriptionEventsDemo          = "demo"
+	DescriptionEventsReal = "real"
+	DescriptionEventsDemo = "demo"
 )
 
 type TriggerDescriptionPreviewRequest struct {
@@ -695,7 +693,6 @@ func (preview *TriggerDescriptionPreviewRequest) Bind(_ *http.Request) error {
 }
 
 type DescriptionRenderResult struct {
-	Status       string `json:"status" enums:"success,template_error"`
 	EventsSource string `json:"events_source" enums:"real,demo"`
 	Error        string `json:"error,omitempty"`
 }
