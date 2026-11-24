@@ -232,6 +232,22 @@ func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorRespons
 		return nil
 	}
 
+	events, errResponse := getTriggerDescriptionEvents(trigger.ID)
+	if errResponse != nil {
+		return errResponse
+	}
+
+	newDescription, err := dto.PopulatedDescription(trigger.Name, trigger.Desc, events)
+	if err != nil {
+		return api.ErrorRender(err)
+	}
+
+	trigger.Desc = newDescription
+
+	return nil
+}
+
+func getTriggerDescriptionEvents(triggerID string) (moira.NotificationEvents, *api.ErrorResponse) {
 	const (
 		page = 0
 		size = 3
@@ -242,19 +258,12 @@ func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorRespons
 		allStates       map[string]struct{}
 	)
 
-	eventsList, errResponse := controller.GetTriggerEvents(database, trigger.ID, page, size, eventDefaultFrom, eventDefaultTo, allMetricRegexp, allStates)
+	events, errResponse := controller.GetTriggerEvents(database, triggerID, page, size, eventDefaultFrom, eventDefaultTo, allMetricRegexp, allStates)
 	if errResponse != nil {
-		return errResponse
+		return nil, errResponse
 	}
 
-	newDescription, err := trigger.PopulatedDescription(eventsList.List)
-	if err != nil {
-		return api.ErrorRender(err)
-	}
-
-	trigger.Desc = newDescription
-
-	return nil
+	return events.List, nil
 }
 
 // nolint: gofmt,goimports
@@ -376,6 +385,32 @@ func triggerDump(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, err) //nolint
 	} else {
 		render.JSON(writer, request, dump)
+	}
+}
+
+func getTriggerDescriptionPreview(writer http.ResponseWriter, request *http.Request) {
+	var previewRequest dto.TriggerDescriptionPreviewRequest
+	if err := render.Bind(request, &previewRequest); err != nil {
+		_ = render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+
+	var events moira.NotificationEvents
+
+	if previewRequest.TriggerID != "" {
+		var errResponse *api.ErrorResponse
+
+		events, errResponse = getTriggerDescriptionEvents(previewRequest.TriggerID)
+		if errResponse != nil {
+			_ = render.Render(writer, request, errResponse)
+
+			return
+		}
+	}
+
+	preview := controller.GetTriggerDescriptionPreview(previewRequest, events, time.Now().UTC())
+	if err := render.Render(writer, request, preview); err != nil {
+		_ = render.Render(writer, request, api.ErrorRender(err))
 	}
 }
 

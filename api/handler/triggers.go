@@ -45,6 +45,7 @@ func triggers(searcher moira.Searcher) func(chi.Router) {
 
 		router.Put("/", createTrigger)
 		router.Put("/check", triggerCheck)
+		router.Post("/description/preview", getTriggerDescriptionPreview)
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
 		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
@@ -171,7 +172,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if trigger.Desc != nil {
-		_, err := trigger.PopulatedDescription(moira.NotificationEvents{{}})
+		_, err := dto.PopulatedDescription(trigger.Name, trigger.Desc, moira.NotificationEvents{{}})
 		if err != nil {
 			render.Render(writer, request, api.ErrorRender(err)) //nolint
 			return

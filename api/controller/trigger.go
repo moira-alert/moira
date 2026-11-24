@@ -277,3 +277,38 @@ func GetTriggerDump(database moira.Database, logger moira.Logger, triggerID stri
 		Metrics:   metrics,
 	}, nil
 }
+
+func GetTriggerDescriptionPreview(descriptionPreviewRequest dto.TriggerDescriptionPreviewRequest, events moira.NotificationEvents, now time.Time) *dto.TriggerDescriptionPreview {
+	source := dto.DescriptionEventsReal
+	if len(events) == 0 {
+		source = dto.DescriptionEventsDemo
+		events = makeDescriptionPreviewEvents(now)
+	}
+
+	result := &dto.TriggerDescriptionPreview{
+		DescriptionRender: dto.DescriptionRenderResult{Status: dto.DescriptionRenderSuccess, EventsSource: source},
+	}
+
+	description, err := dto.PopulatedDescription(descriptionPreviewRequest.TriggerName, descriptionPreviewRequest.Description, events)
+	if err != nil {
+		result.DescriptionRender.Status = dto.DescriptionRenderTemplateError
+		result.DescriptionRender.Error = err.Error()
+
+		return result
+	}
+
+	result.Description = *description
+
+	return result
+}
+
+func makeDescriptionPreviewEvents(now time.Time) moira.NotificationEvents {
+	value := 1.0
+
+	return moira.NotificationEvents{{
+		Metric:    "demo.metric.path",
+		Timestamp: now.Unix(),
+		Value:     &value,
+		State:     moira.StateERROR,
+	}}
+}

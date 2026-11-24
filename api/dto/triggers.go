@@ -565,15 +565,15 @@ func (*Trigger) Render(http.ResponseWriter, *http.Request) error {
 }
 
 // PopulatedDescription returns new trigger description after template populating.
-func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) (*string, error) {
+func PopulatedDescription(name string, description *string, events moira.NotificationEvents) (*string, error) {
 	emptyString := ""
 
-	if trigger.Desc == nil {
+	if description == nil {
 		return &emptyString, nil
 	}
 
-	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(trigger.Name, events.ToTemplateEvents())
-	newDescription, err := triggerDescriptionPopulater.Populate(*trigger.Desc)
+	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(name, events.ToTemplateEvents())
+	newDescription, err := triggerDescriptionPopulater.Populate(*description)
 	if err != nil {
 		return &emptyString, fmt.Errorf("you have an error in your Go template: %v", err)
 	}
@@ -670,5 +670,41 @@ func (*TriggerNoisiness) Render(http.ResponseWriter, *http.Request) error {
 type TriggerNoisinessList ListDTO[*TriggerNoisiness]
 
 func (*TriggerNoisinessList) Render(http.ResponseWriter, *http.Request) error {
+	return nil
+}
+
+const (
+	DescriptionRenderSuccess       = "success"
+	DescriptionRenderTemplateError = "template_error"
+	DescriptionEventsReal          = "real"
+	DescriptionEventsDemo          = "demo"
+)
+
+type TriggerDescriptionPreviewRequest struct {
+	TriggerID   string  `json:"trigger_id,omitempty"`
+	TriggerName string  `json:"name"`
+	Description *string `json:"description" binding:"required"`
+}
+
+func (preview *TriggerDescriptionPreviewRequest) Bind(_ *http.Request) error {
+	if preview.Description == nil {
+		return errors.New("description must be provided as a string")
+	}
+
+	return nil
+}
+
+type DescriptionRenderResult struct {
+	Status       string `json:"status" enums:"success,template_error"`
+	EventsSource string `json:"events_source" enums:"real,demo"`
+	Error        string `json:"error,omitempty"`
+}
+
+type TriggerDescriptionPreview struct {
+	Description       string                  `json:"description"`
+	DescriptionRender DescriptionRenderResult `json:"description_render"`
+}
+
+func (*TriggerDescriptionPreview) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
