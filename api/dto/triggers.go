@@ -674,7 +674,9 @@ func (*TriggerNoisinessList) Render(http.ResponseWriter, *http.Request) error {
 }
 
 const (
+	// DescriptionEventsReal indicates that the preview used existing trigger events.
 	DescriptionEventsReal = "real"
+	// DescriptionEventsDemo indicates that the preview used demo trigger events.
 	DescriptionEventsDemo = "demo"
 )
 
@@ -692,14 +694,9 @@ func (preview *TriggerDescriptionPreviewRequest) Bind(_ *http.Request) error {
 	return nil
 }
 
-type DescriptionRenderResult struct {
-	EventsSource string `json:"events_source" enums:"real,demo"`
-	Error        string `json:"error,omitempty"`
-}
-
 type TriggerDescriptionPreview struct {
-	Description       string                  `json:"description"`
-	DescriptionRender DescriptionRenderResult `json:"description_render"`
+	Description  string `json:"description"`
+	EventsSource string `json:"events_source" enums:"real,demo"`
 }
 
 func (*TriggerDescriptionPreview) Render(http.ResponseWriter, *http.Request) error {

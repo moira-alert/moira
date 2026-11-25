@@ -278,29 +278,26 @@ func GetTriggerDump(database moira.Database, logger moira.Logger, triggerID stri
 	}, nil
 }
 
-func GetTriggerDescriptionPreview(descriptionPreviewRequest dto.TriggerDescriptionPreviewRequest, events moira.NotificationEvents, now time.Time) *dto.TriggerDescriptionPreview {
+// GetTriggerDescriptionPreview returns a trigger handled trigger description without saving it, if no events available it uses mock events.
+func GetTriggerDescriptionPreview(descriptionPreviewRequest dto.TriggerDescriptionPreviewRequest, events moira.NotificationEvents, now time.Time) (*dto.TriggerDescriptionPreview, *api.ErrorResponse) {
 	source := dto.DescriptionEventsReal
 	if len(events) == 0 {
 		source = dto.DescriptionEventsDemo
 		events = makeDescriptionPreviewEvents(now)
 	}
 
-	result := &dto.TriggerDescriptionPreview{
-		DescriptionRender: dto.DescriptionRenderResult{EventsSource: source},
-	}
-
 	description, err := dto.PopulatedDescription(descriptionPreviewRequest.TriggerName, descriptionPreviewRequest.Description, events)
 	if err != nil {
-		result.DescriptionRender.Error = err.Error()
-
-		return result
+		return nil, api.ErrorRender(err)
 	}
 
-	result.Description = *description
-
-	return result
+	return &dto.TriggerDescriptionPreview{
+		Description:  *description,
+		EventsSource: source,
+	}, nil
 }
 
+// makeDescriptionPreviewEvents creates ERROR event for description previews.
 func makeDescriptionPreviewEvents(now time.Time) moira.NotificationEvents {
 	value := 1.0
 

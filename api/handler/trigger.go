@@ -247,6 +247,7 @@ func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorRespons
 	return nil
 }
 
+// getTriggerDescriptionEvents fetches up to three recent trigger events for both populated trigger descriptions and previews.
 func getTriggerDescriptionEvents(triggerID string) (moira.NotificationEvents, *api.ErrorResponse) {
 	const (
 		page = 0
@@ -394,10 +395,12 @@ func triggerDump(writer http.ResponseWriter, request *http.Request) {
 //	@id			 preview-trigger-description
 //	@description uses up to three recent events, or demo event if no events are available
 //	@tags		 trigger
+//	@accept      json
 //	@produce	 json
 //	@param		 preview body	dto.TriggerDescriptionPreviewRequest	true "Current form values; trigger_id is optional"
 //	@success	 200			{object}	dto.TriggerDescriptionPreview
 //	@failure	 400			{object}	api.ErrorResponse	"Invalid request"
+//	@failure	 422			{object}	api.ErrorResponse	"Template rendering error"
 //	@failure	 500			{object}	api.ErrorResponse	"Internal server error"
 //	@router		 /trigger/description/preview [post]
 func getTriggerDescriptionPreview(writer http.ResponseWriter, request *http.Request) {
@@ -420,7 +423,13 @@ func getTriggerDescriptionPreview(writer http.ResponseWriter, request *http.Requ
 		}
 	}
 
-	preview := controller.GetTriggerDescriptionPreview(previewRequest, events, time.Now().UTC())
+	preview, errResponse := controller.GetTriggerDescriptionPreview(previewRequest, events, time.Now())
+	if errResponse != nil {
+		_ = render.Render(writer, request, errResponse)
+
+		return
+	}
+
 	if err := render.Render(writer, request, preview); err != nil {
 		_ = render.Render(writer, request, api.ErrorRender(err))
 	}
