@@ -388,6 +388,18 @@ func triggerDump(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// nolint: gofmt,goimports
+//
+//	@summary	 preview a trigger description without saving it
+//	@id			 preview-trigger-description
+//	@description uses up to three recent events, or demo event if no events are available
+//	@tags		 trigger
+//	@produce	 json
+//	@param		 preview body	dto.TriggerDescriptionPreviewRequest	true "Current form values; trigger_id is optional"
+//	@success	 200			{object}	dto.TriggerDescriptionPreview
+//	@failure	 400			{object}	api.ErrorResponse	"Invalid request"
+//	@failure	 500			{object}	api.ErrorResponse	"Internal server error"
+//	@router		 /trigger/description/preview [post]
 func getTriggerDescriptionPreview(writer http.ResponseWriter, request *http.Request) {
 	var previewRequest dto.TriggerDescriptionPreviewRequest
 	if err := render.Bind(request, &previewRequest); err != nil {
