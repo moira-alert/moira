@@ -70,12 +70,18 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira Notifier stopped.")
 
+	holidayCalendar, err := config.HolidayCalendar.LoadCalendar()
+	if err != nil {
+		logger.Fatal().Error(err).Msg("Can`t configure holiday calendar")
+	}
+
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
 			Msg("Can not configure telemetry")
 	}
+
 	defer telemetry.Stop()
 
 	clusterList := cmd.MakeClusterList(config.Remotes)
@@ -99,6 +105,7 @@ func main() {
 
 	systemClock := clock.NewSystemClock()
 	schedulerConfig := notifier.SchedulerConfig{
+		HolidayCalendar:   holidayCalendar,
 		ReschedulingDelay: notifierConfig.ReschedulingDelay,
 	}
 

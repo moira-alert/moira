@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/holiday_calendar"
 	"github.com/moira-alert/moira/metric_source/retries"
 	"github.com/moira-alert/moira/metrics"
 
@@ -20,6 +21,22 @@ import (
 
 	"github.com/moira-alert/moira/database/redis"
 )
+
+// HolidayCalendarConfig defines optional top-level holiday_calendar configuration section.
+type HolidayCalendarConfig struct {
+	Enabled          bool     `yaml:"enabled"`
+	File             string   `yaml:"file"`
+	ExcludeSummaries []string `yaml:"exclude_summaries,omitempty"`
+}
+
+// LoadCalendar loads the ics file when holiday muting is enabled.
+func (config HolidayCalendarConfig) LoadCalendar() (*holiday_calendar.Calendar, error) {
+	if !config.Enabled {
+		return nil, nil
+	}
+
+	return holiday_calendar.New(config.File, config.ExcludeSummaries)
+}
 
 // RedisConfig is a redis config structure that initialises at the start of moira.
 // Redis configuration depends on fields specified in redis config section:

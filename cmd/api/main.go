@@ -67,7 +67,7 @@ func main() {
 
 	apiConfig := applicationConfig.API.getSettings(
 		applicationConfig.ClustersMetricTTL(),
-		applicationConfig.Web.getFeatureFlags(),
+		applicationConfig.Web.getFeatureFlags(applicationConfig.HolidayCalendar.Enabled),
 		&applicationConfig.Web,
 	)
 
@@ -148,7 +148,7 @@ func main() {
 	statsManager.Start()
 	defer statsManager.Stop() //nolint
 
-	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes, applicationConfig.Redis, applicationConfig.Local)
+	webConfig := applicationConfig.Web.getSettings(len(metricSourceProvider.GetAllSources()) > 0, applicationConfig.Remotes, applicationConfig.Redis, applicationConfig.Local, applicationConfig.HolidayCalendar.Enabled)
 	selfStateChecksConfig := toCheckConfig(applicationConfig.Checks)
 
 	httpHandler := handler.NewHandler(

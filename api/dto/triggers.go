@@ -121,6 +121,8 @@ type TriggerModel struct {
 	ClusterId moira.ClusterId `json:"cluster_id" binding:"required" example:"default"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics" binding:"required" example:"false"`
+	// Supress events on holidays
+	MuteOnHolidays bool `json:"mute_on_holidays,omitempty" example:"false"`
 	// A list of targets that have only alone metrics
 	AloneMetrics map[string]bool `json:"alone_metrics" binding:"required" example:"t1:true"`
 	// Datetime when the trigger was created
@@ -162,6 +164,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		TriggerSource:      model.TriggerSource,
 		ClusterId:          model.ClusterId,
 		MuteNewMetrics:     model.MuteNewMetrics,
+		MuteOnHolidays:     model.MuteOnHolidays,
 		AloneMetrics:       model.AloneMetrics,
 		UpdatedBy:          model.UpdatedBy,
 	}
@@ -194,6 +197,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		TriggerSource:  trigger.TriggerSource,
 		ClusterId:      trigger.ClusterId,
 		MuteNewMetrics: trigger.MuteNewMetrics,
+		MuteOnHolidays: trigger.MuteOnHolidays,
 		AloneMetrics:   trigger.AloneMetrics,
 		CreatedAt:      getDateTime(trigger.CreatedAt),
 		UpdatedAt:      getDateTime(trigger.UpdatedAt),

@@ -11,12 +11,13 @@ import (
 )
 
 type config struct {
-	Redis     cmd.RedisConfig     `yaml:"redis"`
-	Logger    cmd.LoggerConfig    `yaml:"log"`
-	Checker   checkerConfig       `yaml:"checker"`
-	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
-	Local     localCheckConfig    `yaml:"local"`
-	Remotes   cmd.RemotesConfig   `yaml:",inline"`
+	HolidayCalendar cmd.HolidayCalendarConfig `yaml:"holiday_calendar,omitempty"`
+	Redis           cmd.RedisConfig           `yaml:"redis"`
+	Logger          cmd.LoggerConfig          `yaml:"log"`
+	Checker         checkerConfig             `yaml:"checker"`
+	Telemetry       cmd.TelemetryConfig       `yaml:"telemetry"`
+	Local           localCheckConfig          `yaml:"local"`
+	Remotes         cmd.RemotesConfig         `yaml:",inline"`
 }
 
 type triggerLogConfig struct {

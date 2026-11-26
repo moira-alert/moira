@@ -24,6 +24,7 @@ RUN apk add --no-cache ca-certificates \
 
 COPY pkg/checker/checker.yml /etc/moira/checker.yml
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/checker /usr/bin/checker
+COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/
 
 USER moira
 

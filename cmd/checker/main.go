@@ -70,6 +70,11 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira Checker stopped")
 
+	holidayCalendar, err := config.HolidayCalendar.LoadCalendar()
+	if err != nil {
+		logger.Fatal().Error(err).Msg("Can`t configure holiday calendar")
+	}
+
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().
@@ -100,6 +105,7 @@ func main() {
 	}
 
 	checkerSettings := config.getSettings(logger)
+	checkerSettings.HolidayCalendar = holidayCalendar
 
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
