@@ -13,6 +13,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -688,10 +689,10 @@ func TestGetTriggerDescriptionPreviewWithDemoEvents(t *testing.T) {
 	getTriggerDescriptionPreview(responseWriter, request)
 
 	require.Equal(t, http.StatusOK, responseWriter.Code)
-	require.JSONEq(t, `{
-		"description": "Unsaved trigger: demo.metric.path / ERROR",
+	require.JSONEq(t, fmt.Sprintf(`{
+		"description": "Unsaved trigger: %s / ERROR",
 		"events_source": "demo"
-	}`, responseWriter.Body.String())
+	}`, controller.DescriptionPreviewDemoMetric), responseWriter.Body.String())
 }
 
 func TestGetTriggerDescriptionPreviewReturnsRenderingError(t *testing.T) {

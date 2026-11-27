@@ -14,6 +14,8 @@ import (
 
 const maxTriggerLockAttempts = 30
 
+const DescriptionPreviewDemoMetric = "demo.metric;host=demo-host;application=demo-application;service=demo-service"
+
 // UpdateTrigger update trigger data and trigger metrics in last state.
 func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if !isTeamIDValid(trigger.TeamID) {
@@ -302,7 +304,7 @@ func makeDescriptionPreviewEvents(now time.Time) moira.NotificationEvents {
 	value := 1.0
 
 	return moira.NotificationEvents{{
-		Metric:    "demo.metric.path",
+		Metric:    DescriptionPreviewDemoMetric,
 		Timestamp: now.Unix(),
 		Value:     &value,
 		State:     moira.StateERROR,
