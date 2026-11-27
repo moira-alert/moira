@@ -610,6 +610,7 @@ type CheckData struct {
 	SuppressedState              State  `json:"suppressed_state,omitempty"`
 	Message                      string `json:"msg,omitempty"`
 	Clock                        Clock  `json:"-"`
+	CheckedBy                    string `json:"checked_by,omitempty"`
 }
 
 // RemoveDeadMetrics Need to not show the user metrics that should have been deleted due to ttlState = Del,

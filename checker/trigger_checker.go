@@ -139,3 +139,13 @@ func calculateFrom(lastCheckTimestamp, triggerTTL int64) int64 {
 
 	return lastCheckTimestamp - tenMinInSec
 }
+
+func (c *TriggerChecker) SetSource(source metricSource.MetricSource) {
+	c.source = source
+}
+
+func (c *TriggerChecker) SetCheckedBy(checkedBy string) {
+	if c.lastCheck != nil {
+		c.lastCheck.CheckedBy = checkedBy
+	}
+}
