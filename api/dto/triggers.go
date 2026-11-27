@@ -565,15 +565,15 @@ func (*Trigger) Render(http.ResponseWriter, *http.Request) error {
 }
 
 // PopulatedDescription returns new trigger description after template populating.
-func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) (*string, error) {
+func PopulatedDescription(name string, description *string, events moira.NotificationEvents) (*string, error) {
 	emptyString := ""
 
-	if trigger.Desc == nil {
+	if description == nil {
 		return &emptyString, nil
 	}
 
-	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(trigger.Name, events.ToTemplateEvents())
-	newDescription, err := triggerDescriptionPopulater.Populate(*trigger.Desc)
+	triggerDescriptionPopulater := templating.NewTriggerDescriptionPopulater(name, events.ToTemplateEvents())
+	newDescription, err := triggerDescriptionPopulater.Populate(*description)
 	if err != nil {
 		return &emptyString, fmt.Errorf("you have an error in your Go template: %v", err)
 	}

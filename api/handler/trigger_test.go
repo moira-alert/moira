@@ -13,6 +13,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -674,6 +675,64 @@ func Test_getFrom(t *testing.T) {
 
 			result := getFrom(req)
 			require.Equal(t, tt.expectedResult, result)
+		})
+	}
+}
+
+func TestGetTriggerDescriptionPreviewWithDemoEvents(t *testing.T) {
+	request := httptest.NewRequest(http.MethodPost, "/trigger/description/preview", bytes.NewBufferString(
+		`{"name":"Unsaved trigger","description":"{{ .Trigger.Name }}: {{ (index .Events 0).Metric }} / {{ (index .Events 0).State }}"}`,
+	))
+	request.Header.Set("Content-Type", "application/json")
+
+	responseWriter := httptest.NewRecorder()
+	getTriggerDescriptionPreview(responseWriter, request)
+
+	require.Equal(t, http.StatusOK, responseWriter.Code)
+	require.JSONEq(t, fmt.Sprintf(`{
+		"description": "Unsaved trigger: %s / ERROR",
+		"events_source": "demo"
+	}`, controller.DescriptionPreviewDemoMetric), responseWriter.Body.String())
+}
+
+func TestGetTriggerDescriptionPreviewReturnsRenderingError(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		description string
+		wantError   string
+	}{
+		{
+			name:        "invalid template syntax",
+			description: "{{",
+			wantError:   "unclosed action",
+		},
+		{
+			name:        "template execution failure",
+			description: "{{ index (index .Events 0).MetricElements 99 }}",
+			wantError:   "index out of range",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			body, err := json.Marshal(map[string]string{
+				"name":        "Unsaved trigger",
+				"description": test.description,
+			})
+			require.NoError(t, err)
+
+			request := httptest.NewRequest(http.MethodPost, "/trigger/description/preview", bytes.NewReader(body))
+			request.Header.Set("Content-Type", "application/json")
+
+			responseWriter := httptest.NewRecorder()
+			getTriggerDescriptionPreview(responseWriter, request)
+
+			require.Equal(t, http.StatusUnprocessableEntity, responseWriter.Code)
+
+			var response map[string]string
+
+			require.NoError(t, json.Unmarshal(responseWriter.Body.Bytes(), &response))
+			require.Len(t, response, 2)
+			require.Equal(t, "Error rendering response", response["status"])
+			require.Contains(t, response["error"], test.wantError)
 		})
 	}
 }

@@ -14,6 +14,8 @@ import (
 
 const maxTriggerLockAttempts = 30
 
+const DescriptionPreviewDemoMetric = "demo.metric;host=demo-host;application=demo-application;service=demo-service"
+
 // UpdateTrigger update trigger data and trigger metrics in last state.
 func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if !isTeamIDValid(trigger.TeamID) {
@@ -276,4 +278,35 @@ func GetTriggerDump(database moira.Database, logger moira.Logger, triggerID stri
 		Trigger:   *trigger,
 		Metrics:   metrics,
 	}, nil
+}
+
+// GetTriggerDescriptionPreview returns a trigger handled trigger description without saving it, if no events available it uses mock events.
+func GetTriggerDescriptionPreview(descriptionPreviewRequest dto.TriggerDescriptionPreviewRequest, events moira.NotificationEvents, now time.Time) (*dto.TriggerDescriptionPreview, *api.ErrorResponse) {
+	source := dto.DescriptionEventsReal
+	if len(events) == 0 {
+		source = dto.DescriptionEventsDemo
+		events = makeDescriptionPreviewEvents(now)
+	}
+
+	description, err := dto.PopulatedDescription(descriptionPreviewRequest.TriggerName, descriptionPreviewRequest.Description, events)
+	if err != nil {
+		return nil, api.ErrorRender(err)
+	}
+
+	return &dto.TriggerDescriptionPreview{
+		Description:  *description,
+		EventsSource: source,
+	}, nil
+}
+
+// makeDescriptionPreviewEvents creates ERROR event for description previews.
+func makeDescriptionPreviewEvents(now time.Time) moira.NotificationEvents {
+	value := 1.0
+
+	return moira.NotificationEvents{{
+		Metric:    DescriptionPreviewDemoMetric,
+		Timestamp: now.Unix(),
+		Value:     &value,
+		State:     moira.StateERROR,
+	}}
 }

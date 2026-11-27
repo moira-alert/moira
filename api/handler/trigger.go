@@ -232,6 +232,23 @@ func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorRespons
 		return nil
 	}
 
+	events, errResponse := getTriggerDescriptionEvents(trigger.ID)
+	if errResponse != nil {
+		return errResponse
+	}
+
+	newDescription, err := dto.PopulatedDescription(trigger.Name, trigger.Desc, events)
+	if err != nil {
+		return api.ErrorRender(err)
+	}
+
+	trigger.Desc = newDescription
+
+	return nil
+}
+
+// getTriggerDescriptionEvents fetches up to three recent trigger events for both populated trigger descriptions and previews.
+func getTriggerDescriptionEvents(triggerID string) (moira.NotificationEvents, *api.ErrorResponse) {
 	const (
 		page = 0
 		size = 3
@@ -242,19 +259,12 @@ func fillTemplate(request *http.Request, trigger *dto.Trigger) *api.ErrorRespons
 		allStates       map[string]struct{}
 	)
 
-	eventsList, errResponse := controller.GetTriggerEvents(database, trigger.ID, page, size, eventDefaultFrom, eventDefaultTo, allMetricRegexp, allStates)
+	events, errResponse := controller.GetTriggerEvents(database, triggerID, page, size, eventDefaultFrom, eventDefaultTo, allMetricRegexp, allStates)
 	if errResponse != nil {
-		return errResponse
+		return nil, errResponse
 	}
 
-	newDescription, err := trigger.PopulatedDescription(eventsList.List)
-	if err != nil {
-		return api.ErrorRender(err)
-	}
-
-	trigger.Desc = newDescription
-
-	return nil
+	return events.List, nil
 }
 
 // nolint: gofmt,goimports
@@ -376,6 +386,52 @@ func triggerDump(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, err) //nolint
 	} else {
 		render.JSON(writer, request, dump)
+	}
+}
+
+// nolint: gofmt,goimports
+//
+//	@summary	 preview a trigger description without saving it
+//	@id			 preview-trigger-description
+//	@description uses up to three recent events, or demo event if no events are available
+//	@tags		 trigger
+//	@accept      json
+//	@produce	 json
+//	@param		 preview body	dto.TriggerDescriptionPreviewRequest	true "Current form values; trigger_id is optional"
+//	@success	 200			{object}	dto.TriggerDescriptionPreview
+//	@failure	 400			{object}	api.ErrorResponse	"Invalid request"
+//	@failure	 422			{object}	api.ErrorResponse	"Template rendering error"
+//	@failure	 500			{object}	api.ErrorResponse	"Internal server error"
+//	@router		 /trigger/description/preview [post]
+func getTriggerDescriptionPreview(writer http.ResponseWriter, request *http.Request) {
+	var previewRequest dto.TriggerDescriptionPreviewRequest
+	if err := render.Bind(request, &previewRequest); err != nil {
+		_ = render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+
+	var events moira.NotificationEvents
+
+	if previewRequest.TriggerID != "" {
+		var errResponse *api.ErrorResponse
+
+		events, errResponse = getTriggerDescriptionEvents(previewRequest.TriggerID)
+		if errResponse != nil {
+			_ = render.Render(writer, request, errResponse)
+
+			return
+		}
+	}
+
+	preview, errResponse := controller.GetTriggerDescriptionPreview(previewRequest, events, time.Now())
+	if errResponse != nil {
+		_ = render.Render(writer, request, errResponse)
+
+		return
+	}
+
+	if err := render.Render(writer, request, preview); err != nil {
+		_ = render.Render(writer, request, api.ErrorRender(err))
 	}
 }
 
