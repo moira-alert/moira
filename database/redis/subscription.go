@@ -247,6 +247,31 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 	return connector.GetSubscriptions(subscriptionsIDs)
 }
 
+// DisableSubscription make subscription disable or drop broken contact.
+func (connector *DbConnector) DisableSubscription(subscriptionID, brokenContactID string) (bool, error) {
+	isSubscriptionDisabled := false
+
+	subscription, err := connector.GetSubscription(subscriptionID)
+	if err != nil {
+		return false, err
+	}
+
+	if len(subscription.Contacts) == 1 {
+		subscription.Enabled = false
+		isSubscriptionDisabled = true
+	} else {
+		workedContacts := moira.Remove(subscription.Contacts, brokenContactID)
+		subscription.Contacts = workedContacts
+	}
+
+	err = connector.SaveSubscription(&subscription)
+	if err != nil {
+		return isSubscriptionDisabled, err
+	}
+
+	return isSubscriptionDisabled, nil
+}
+
 func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string, error) {
 	c := *connector.client
 

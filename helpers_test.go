@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 )
@@ -642,5 +644,31 @@ func TestCalculatePercentage(t *testing.T) {
 				So(res, ShouldResemble, c.expected)
 			})
 		}
+	})
+}
+
+func TestRemove(t *testing.T) {
+	t.Run("remove existing value", func(t *testing.T) {
+		got := Remove([]string{"a", "b", "c"}, "b")
+
+		require.Equal(t, []string{"a", "c"}, got)
+	})
+
+	t.Run("remove all occurrences", func(t *testing.T) {
+		got := Remove([]string{"a", "b", "c", "b", "d"}, "b")
+
+		require.Equal(t, []string{"a", "c", "d"}, got)
+	})
+
+	t.Run("value does not exist", func(t *testing.T) {
+		got := Remove([]string{"a", "b", "c"}, "d")
+
+		require.Equal(t, []string{"a", "b", "c"}, got)
+	})
+
+	t.Run("empty slice", func(t *testing.T) {
+		got := Remove([]string{}, "a")
+
+		require.Empty(t, got)
 	})
 }

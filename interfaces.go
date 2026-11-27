@@ -75,6 +75,7 @@ type Database interface {
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
 	GetTeamSubscriptionIDs(teamID string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
+	DisableSubscription(subscriptionID, brokenContact string) (bool, error)
 
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
