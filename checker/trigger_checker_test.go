@@ -209,7 +209,7 @@ func TestInitTriggerChecker(t *testing.T) {
 				Timestamp: actual.until - hourInSec,
 				Clock:     clock.NewSystemClock(),
 			},
-			from:    actual.until - hourInSec - tenMinInSec,
+			from:    actual.until - hourInSec - defaultTriggerTTLTimestamp,
 			until:   actual.until,
 			metrics: metrics,
 		}
@@ -235,7 +235,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			ttl:       0,
 			ttlState:  moira.TTLStateNODATA,
 			lastCheck: &expectedLastCheck,
-			from:      lastCheck.Timestamp - tenMinInSec,
+			from:      lastCheck.Timestamp - defaultTriggerTTLTimestamp,
 			until:     actual.until,
 			metrics:   metrics,
 		}

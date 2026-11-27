@@ -1,14 +1,10 @@
 package checker
 
 import (
+	"time"
+
 	"github.com/moira-alert/moira"
 )
-
-var badStateReminder = map[moira.State]int64{
-	moira.StateERROR:     86400, //nolint
-	moira.StateNODATA:    86400, //nolint
-	moira.StateEXCEPTION: 86400, //nolint
-}
 
 func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.CheckData) (moira.CheckData, error) {
 	lastCheck := triggerChecker.lastCheck
@@ -34,7 +30,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	currentCheck.SuppressedState = lastStateSuppressedValue
 
 	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(lastCheck, nil)
-	eventInfo, needSend := isStateChanged(
+	eventInfo, needSend := triggerChecker.isStateChanged(
 		currentStateValue,
 		lastStateValue,
 		currentCheckTimestamp,
@@ -98,7 +94,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	currentState.SuppressedState = lastState.SuppressedState
 
 	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(triggerChecker.lastCheck, &currentState)
-	eventInfo, needSend := isStateChanged(
+	eventInfo, needSend := triggerChecker.isStateChanged(
 		currentState.State,
 		lastState.State,
 		currentState.Timestamp,
@@ -157,7 +153,7 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(timestamp int64, maint
 	return !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) || maintenanceTimestamp >= timestamp
 }
 
-func isStateChanged(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenanceInfo moira.MaintenanceInfo) (*moira.EventInfo, bool) {
+func (triggerChecker *TriggerChecker) isStateChanged(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenanceInfo moira.MaintenanceInfo) (*moira.EventInfo, bool) {
 	if !isLastCheckSuppressed && currentStateValue != lastStateValue {
 		return nil, true
 	}
@@ -166,9 +162,13 @@ func isStateChanged(currentStateValue moira.State, lastStateValue moira.State, c
 		return &moira.EventInfo{Maintenance: &maintenanceInfo}, true
 	}
 
-	remindInterval, ok := badStateReminder[currentStateValue]
-	if ok && needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
-		interval := remindInterval / 3600 //nolint
+	remindInterval, ok := triggerChecker.badStateReminder[currentStateValue]
+	if !ok {
+		remindInterval = moira.DefaultBadStateReminder
+	}
+
+	if needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
+		interval := remindInterval / int64((1 * time.Hour).Seconds())
 		return &moira.EventInfo{Interval: &interval}, true
 	}
 
